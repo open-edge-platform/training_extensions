@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -11,7 +11,7 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetRevisionDB, MediaDB, PipelineDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, DatasetRevision, Pipeline, Project
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
 from app.services import (
     DatasetRevisionService,
     DatasetService,
@@ -310,11 +310,11 @@ class TestDatasetRevisionServiceIntegration:
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
         db_session: Session,
     ) -> None:
         """Test saving a dataset revision."""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         revision_id = fxt_dataset_revision_service.save_revision(
@@ -326,14 +326,30 @@ class TestDatasetRevisionServiceIntegration:
         assert db_session.get(DatasetRevisionDB, str(revision_id)) is not None
         assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id) / "data.parquet").exists()
 
-    def test_get_dataset_revision(
+    def test_save_revision_zero_count(
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
-        """Test getting a dataset revision."""
+        """Test saving a dataset revision."""
         project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        with pytest.raises(ValueError):
+            fxt_dataset_revision_service.save_revision(
+                project_id=project.id,
+                dataset=dataset,
+            )
+
+    def test_get_dataset_revision(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test getting a dataset revision."""
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -369,10 +385,10 @@ class TestDatasetRevisionServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test getting a dataset revision with wrong project ID raises error."""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision for the project
@@ -393,10 +409,10 @@ class TestDatasetRevisionServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test updating name of a dataset revision"""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -425,7 +441,6 @@ class TestDatasetRevisionServiceIntegration:
 
     def test_count_dataset_revision_items(
         self,
-        fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
         fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
@@ -436,21 +451,10 @@ class TestDatasetRevisionServiceIntegration:
         dataset = fxt_dataset_service.get_dm_dataset(
             project.id, project.task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
         )
-        assert len(dataset) > 0
-
-        # Create a non-empty parquet file on disk
-        revision_id = fxt_dataset_revision_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
-        assert revision_path.exists()
-        assert (revision_path / "data.parquet").exists()
-        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
 
         # Count items in each subset
-        counts = fxt_dataset_revision_service.count_dataset_revision_items(
-            project_id=project.id, dataset_revision=revision
+        counts = fxt_dataset_revision_service._count_dataset_revision_items(
+            dataset=dataset,
         )
 
         # Calculate expected counts from fixture data
@@ -467,33 +471,15 @@ class TestDatasetRevisionServiceIntegration:
         assert counts.testing == expected_counts["testing"]
         assert counts.total == expected_total
 
-    def test_count_dataset_revision_items_in_deleted_revision(
-        self,
-        fxt_dataset_revision_service: DatasetRevisionService,
-    ) -> None:
-        revision = DatasetRevision(
-            id=uuid4(),
-            name="Deleted Revision",
-            created_at=datetime.now(UTC),
-            files_deleted=True,
-        )
-
-        counts = fxt_dataset_revision_service.count_dataset_revision_items(
-            project_id=uuid4(), dataset_revision=revision
-        )
-
-        assert counts is None
-
     def test_delete_dataset_revision_files(
         self,
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test deleting dataset revision files."""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -538,11 +524,11 @@ class TestDatasetRevisionServiceIntegration:
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
         db_session: Session,
     ) -> None:
         """Test deleting dataset revision files that are already deleted is idempotent."""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -600,10 +586,10 @@ class TestDatasetRevisionServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test loading a dataset revision as a Datumaro dataset."""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -624,10 +610,10 @@ class TestDatasetRevisionServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test loading a revision with deleted files raises error."""
-        project, _ = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
