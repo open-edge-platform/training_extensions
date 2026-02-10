@@ -119,7 +119,7 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         {
             "type": "video",
             "name": "test4",
-            "format": "mp4",
+            "format": "avi",
             "size": 1024,
             "width": 1024,
             "height": 768,
@@ -429,16 +429,6 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
-FOURCC_DICT = {
-    VideoFormat.MP4: "HVC1",
-    VideoFormat.MOV: "HVC1",
-    VideoFormat.MKV: "HVC1",
-    VideoFormat.WEBM: "VP80",
-    VideoFormat.AVI: "MJPG",
-    VideoFormat.M4V: "HVC1",
-}
-
-
 @pytest.fixture
 def fxt_video_data() -> Callable[[Path], None]:
     def _generate_video_file(path: Path) -> None:
@@ -447,7 +437,7 @@ def fxt_video_data() -> Callable[[Path], None]:
         width = 640
         height = 480
 
-        fourccc = cv2.VideoWriter.fourcc(*"mp4v")
+        fourccc = cv2.VideoWriter.fourcc(*"MJPG")
         writer = cv2.VideoWriter(str(path), fourccc, fps, (width, height), isColor=True)
         assert writer.isOpened()
 
@@ -526,7 +516,7 @@ class TestMediaServiceIntegration:
         project, pipeline = fxt_project_with_pipeline
 
         # Generate video
-        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=True) as tmp_file:
+        with tempfile.NamedTemporaryFile(suffix=".avi", delete=True) as tmp_file:
             fxt_video_data(Path(tmp_file.name))
             with open(tmp_file.name, mode="rb") as data:
                 created_media = fxt_media_service.create_video(
