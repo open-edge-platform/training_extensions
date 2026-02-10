@@ -14,9 +14,6 @@ from app.models.model_activation import ModelActivationState
 from app.repositories import ModelRevisionRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 
-# It's safer to default to CPU since inference with other devices sometimes results in degraded prediction quality
-# See for example: https://github.com/open-edge-platform/model_api/issues/460
-MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "CPU")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
@@ -40,6 +37,26 @@ class ActiveModelService:
         self._loaded_model: LoadedModel | None = None
 
     @staticmethod
+    def _get_ov_device_name(raw_device_name: str) -> str:
+        """
+        Convert raw device name to the one expected by OpenVINO.
+
+        Examples:
+            "cpu" -> "CPU"
+            "xpu" -> "GPU"
+            "xpu-1" -> "GPU.1"
+        """
+        if raw_device_name.lower() == "cpu":
+            return "CPU"
+        if raw_device_name.lower().startswith("xpu"):
+            parts = raw_device_name.split("-")
+            if len(parts) == 1:
+                return "GPU"
+            if len(parts) == 2 and parts[1].isdigit():
+                return f"GPU.{parts[1]}"
+        raise ValueError(f"Unsupported device name: {raw_device_name}")
+
+    @staticmethod
     def _load_state() -> ModelActivationState:
         """Load the state from the file if it exists, otherwise initialize an empty state"""
         with get_db_session() as db:
@@ -50,16 +67,19 @@ class ActiveModelService:
                     project_id=None,
                     active_model_id=None,
                     available_models=[],
-                    device=MODELAPI_DEVICE,
+                    device="",
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all()
             pipeline_device = active_model_repo.get_active_pipeline_device()
+            if pipeline_device is None:
+                raise RuntimeError("Active pipeline must have a device configured")
+            ov_device = ActiveModelService._get_ov_device_name(pipeline_device)
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
                 available_models=[UUID(m.id) for m in available_models],
-                device=pipeline_device.upper() if pipeline_device else MODELAPI_DEVICE,
+                device=ov_device,
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:

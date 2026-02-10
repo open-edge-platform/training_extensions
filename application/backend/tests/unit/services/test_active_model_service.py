@@ -42,6 +42,20 @@ def fxt_active_model_service(fxt_model_activation_state) -> Iterator[ActiveModel
 class TestActiveModelServiceUnit:
     """Unit tests for ActiveModelService."""
 
+    @pytest.mark.parametrize(
+        "raw_device_name, expected_ov_device_name",
+        [
+            ("cpu", "CPU"),
+            ("xpu", "GPU"),
+            ("xpu-0", "GPU.0"),
+            ("xpu-1", "GPU.1"),
+        ],
+    )
+    def test_get_ov_device_name(self, raw_device_name, expected_ov_device_name) -> None:
+        """Test conversion of raw device names to OpenVINO device names."""
+        ov_device_name = ActiveModelService._get_ov_device_name(raw_device_name)
+        assert ov_device_name == expected_ov_device_name
+
     def test_get_model_file_path(self, fxt_active_model_service):
         """Test retrieval of model file path."""
         project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
