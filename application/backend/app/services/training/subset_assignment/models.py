@@ -21,10 +21,47 @@ class SplitRatios:
             raise ValueError(f"Split ratios must sum to 1.0, got {total}")
 
     def to_fold_sizes(self, total_items: int) -> dict[DatasetItemSubset, int]:
-        """Convert split ratios to absolute fold sizes based on total items"""
-        train_size = int(total_items * self.train)
-        val_size = int(total_items * self.val)
-        test_size = total_items - (train_size + val_size)
+        """
+        Convert split ratios to absolute fold sizes based on total items
+
+        Each fold is guaranteed to receive at least 1 item. If the sum of rounded sizes exceeds total_items (due to
+        the minimum of 1 per fold), the excess is reduced from the fold with the largest ratio first. When ratios are
+        equal, reduction priority is: val > train > test.
+
+        Args:
+            total_items: Total number of items to distribute across folds
+
+        Returns:
+            Dictionary mapping each subset to its absolute size
+
+        Raises:
+            ValueError: If total_items < 3 (need at least 1 item per fold)
+        """
+        if total_items < 3:
+            raise ValueError(f"Need at least 3 items to create all subsets, got {total_items}")
+
+        # Ensure minimum of 1 per fold
+        train_size = max(1, round(total_items * self.train))
+        val_size = max(1, round(total_items * self.val))
+        test_size = max(1, round(total_items * self.test))
+
+        # Adjust to match exact total by reducing from the largest fold
+        diff = (train_size + val_size + test_size) - total_items
+        if diff > 0:
+            # Sort by ratio to reduce from the largest first, prioritizing val over the train if equal
+            folds = [(self.val, "val"), (self.train, "train"), (self.test, "test")]
+            folds.sort(reverse=True, key=lambda x: x[0])
+
+            sizes = {"train": train_size, "val": val_size, "test": test_size}
+
+            for _, fold_name in folds:
+                if sizes[fold_name] > 1 and diff > 0:
+                    reduction = min(sizes[fold_name] - 1, diff)
+                    sizes[fold_name] -= reduction
+                    diff -= reduction
+
+            train_size, val_size, test_size = sizes["train"], sizes["val"], sizes["test"]
+
         return {
             DatasetItemSubset.TRAINING: train_size,
             DatasetItemSubset.VALIDATION: val_size,

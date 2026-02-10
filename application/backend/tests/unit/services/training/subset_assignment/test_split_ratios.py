@@ -39,24 +39,32 @@ class TestSplitRatios:
         assert split.train + split.val + split.test == 1.01
 
     @pytest.mark.parametrize(
-        "target,train,val,test",
+        "target,train,val,test,ratios",
         [
-            (100, 70, 20, 10),  # basic
-            (10, 7, 2, 1),  # small numbers
-            (50, 35, 10, 5),  # half size
-            (97, 67, 19, 11),  # rounding case
-            (1, 0, 0, 1),  # single item
+            (100, 70, 20, 10, (0.7, 0.2, 0.1)),  # basic
+            (97, 68, 19, 10, (0.7, 0.2, 0.1)),  # rounding case
+            (300, 99, 99, 102, (0.33, 0.33, 0.34)),  # equal ratios with rounding
+            (4, 2, 1, 1, (0.5, 0.5, 0)),  # reduction priority when val and train are equal
+            (11, 7, 3, 1, (0.6, 0.3, 0.1)),  # reduction from the largest
+            (3, 1, 1, 1, (0.8, 0.15, 0.05)),  # each fold gets at least 1 item, even if ratios are skewed
+            (3, 1, 1, 1, (1.0, 0.0, 0.0)),  # all train, but still need to assign 1 to val and test
         ],
     )
-    def test_to_fold_sizes(self, target, train, val, test):
+    def test_to_fold_sizes(self, target: int, train: int, val: int, test: int, ratios: tuple[int, ...]):
         """Test conversion of split ratios to absolute fold sizes"""
-        split = SplitRatios(train=0.7, val=0.2, test=0.1)
+        split = SplitRatios(*ratios)
         fold_sizes = split.to_fold_sizes(target)
 
         assert fold_sizes[DatasetItemSubset.TRAINING] == train
         assert fold_sizes[DatasetItemSubset.VALIDATION] == val
         assert fold_sizes[DatasetItemSubset.TESTING] == test
         assert sum(fold_sizes.values()) == target
+
+    def test_to_fold_sizes_boundary_low(self):
+        """Test that to_fold_sizes raises error for less than 3 items"""
+        split = SplitRatios(train=0.7, val=0.2, test=0.1)
+        with pytest.raises(ValueError, match="Need at least 3 items to create all subsets"):
+            split.to_fold_sizes(2)
 
     def test_to_list(self):
         """Test conversion of split ratios to list"""
@@ -65,23 +73,3 @@ class TestSplitRatios:
 
         assert ratios_list == [0.7, 0.2, 0.1]
         assert len(ratios_list) == 3
-
-    def test_all_train(self):
-        """Test split with all items in training"""
-        split = SplitRatios(train=1.0, val=0.0, test=0.0)
-        fold_sizes = split.to_fold_sizes(100)
-
-        assert fold_sizes[DatasetItemSubset.TRAINING] == 100
-        assert fold_sizes[DatasetItemSubset.VALIDATION] == 0
-        assert fold_sizes[DatasetItemSubset.TESTING] == 0
-
-    def test_equal_split(self):
-        """Test equal split across all subsets"""
-        split = SplitRatios(train=0.33, val=0.33, test=0.34)
-        fold_sizes = split.to_fold_sizes(300)
-
-        assert fold_sizes[DatasetItemSubset.TRAINING] == 99
-        assert fold_sizes[DatasetItemSubset.VALIDATION] == 99
-        # Test gets the remainder to ensure total is preserved
-        assert fold_sizes[DatasetItemSubset.TESTING] == 102
-        assert sum(fold_sizes.values()) == 300
