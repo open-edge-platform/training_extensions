@@ -20,11 +20,11 @@ export const SelectDatasetRevision = () => {
                     <ContextualHelp variant={'info'} placement={'top'}>
                         <Heading>Selecting a dataset</Heading>
                         <Content>
-                            Choose the version of the dataset to use for training. If you want to train the new model on
-                            the exact same data (media and annotations) as another model, please select the
+                            {`Choose the version of the dataset to use for training. If you want to train the new model 
+                            on the exact same data (media and annotations) as another model, please select the
                             corresponding dataset revision. Conversely, if you want to train on the most recent version
-                            of the data (what you see in the &ldquo;Dataset&rdquo; page), please select &ldquo;Use
-                            current dataset&rdquo;.
+                            of the data (what you see in the "Dataset" page), please select "Use
+                            current dataset".`}
                         </Content>
                     </ContextualHelp>
                 }
