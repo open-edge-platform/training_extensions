@@ -14,7 +14,7 @@ class TestSubsetDistribution:
     def test_create_distribution_empty(self):
         """Test creation of empty distribution"""
         distribution = SubsetDistribution(counts={})
-        assert distribution.total == 0
+        assert distribution.total_assigned == 0
 
     def test_create_distribution_with_counts(self):
         """Test creation of distribution with initial counts"""
@@ -22,13 +22,15 @@ class TestSubsetDistribution:
             DatasetItemSubset.TRAINING: 70,
             DatasetItemSubset.VALIDATION: 20,
             DatasetItemSubset.TESTING: 10,
+            DatasetItemSubset.UNASSIGNED: 10,  # Should not be included in total
         }
         distribution = SubsetDistribution(counts=counts)
 
         assert distribution.get_count(DatasetItemSubset.TRAINING) == 70
         assert distribution.get_count(DatasetItemSubset.VALIDATION) == 20
         assert distribution.get_count(DatasetItemSubset.TESTING) == 10
-        assert distribution.total == 100
+        assert distribution.get_count(DatasetItemSubset.UNASSIGNED) == 10
+        assert distribution.total_assigned == 100
 
     def test_get_count_existing_subset(self):
         """Test getting count for an existing subset"""
