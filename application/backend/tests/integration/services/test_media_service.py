@@ -119,7 +119,7 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         {
             "type": "video",
             "name": "test4",
-            "format": "avi",
+            "format": "mp4",
             "size": 1024,
             "width": 1024,
             "height": 768,
@@ -429,6 +429,16 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
+FOURCC_DICT = {
+    VideoFormat.MP4: "HVC1",
+    VideoFormat.MOV: "HVC1",
+    VideoFormat.MKV: "HVC1",
+    VideoFormat.WEBM: "VP80",
+    VideoFormat.AVI: "MJPG",
+    VideoFormat.M4V: "HVC1",
+}
+
+
 @pytest.fixture
 def fxt_video_data() -> Callable[[Path], None]:
     def _generate_video_file(path: Path) -> None:
@@ -437,8 +447,8 @@ def fxt_video_data() -> Callable[[Path], None]:
         width = 640
         height = 480
 
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # pyrefly: ignore[missing-attribute]
-        writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height), isColor=True)
+        fourccc = cv2.VideoWriter.fourcc(*"mp4v")
+        writer = cv2.VideoWriter(str(path), fourccc, fps, (width, height), isColor=True)
         assert writer.isOpened()
 
         black_frame = np.zeros((height, width, 3), dtype=np.uint8)
