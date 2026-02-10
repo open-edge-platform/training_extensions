@@ -7,6 +7,7 @@ import {
     Button,
     ButtonGroup,
     Checkbox,
+    dimensionValue,
     Divider,
     Flex,
     Heading,
@@ -25,6 +26,7 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
+import { ExportDataset } from '../export-dataset/export-dataset.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
@@ -41,7 +43,7 @@ type AnnotateButtonProps = {
 
 const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     return (
-        <Button variant={'primary'} onPress={onClick} isDisabled={isDisabled}>
+        <Button margin={0} variant={'primary'} onPress={onClick} isDisabled={isDisabled}>
             Annotate
         </Button>
     );
@@ -122,7 +124,8 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
             <Flex alignItems={'center'} justifyContent={'space-between'}>
                 <Heading level={1}>Dataset</Heading>
-                <ButtonGroup>
+                <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
+                    <ExportDataset />
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
                     <TrainModel />
                     <AnnotateButton
