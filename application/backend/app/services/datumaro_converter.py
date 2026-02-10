@@ -283,7 +283,7 @@ def convert_multilabel_classification_dataset(
         return MultilabelClassificationSample(
             id=str(dataset_item.id),
             image=image_path,
-            image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
+            image_info=ImageInfo(width=media.width, height=media.height),
             label=np.array(labels_indexes),
             confidence=np.array(annotation.confidences) if annotation.confidences else None,
             subset=convert_to_dm_subset(dataset_item.subset),
@@ -355,7 +355,7 @@ def convert_detection_dataset(
         return DetectionSample(
             id=str(dataset_item.id),
             image=image_path,
-            image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
+            image_info=ImageInfo(width=media.width, height=media.height),
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
@@ -435,7 +435,7 @@ def convert_instance_segmentation_dataset(
         return InstanceSegmentationSample(
             id=str(dataset_item.id),
             image=image_path,
-            image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
+            image_info=ImageInfo(width=media.width, height=media.height),
             polygons=polygons_np,
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
