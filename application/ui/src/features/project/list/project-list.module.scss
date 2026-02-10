@@ -27,15 +27,17 @@
     border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
-    height: 100%;
+    height: var(--spectrum-global-dimension-size-2000);
     transition:
         background-color,
         border 0.2s ease-in-out;
 
     img {
-        height: 100%;
+        height: calc(var(--spectrum-global-dimension-size-2000) - var(--spectrum-global-dimension-size-50));
         width: var(--spectrum-global-dimension-size-2000);
         object-fit: cover;
+        text-align: center;
+        line-height: calc(var(--spectrum-global-dimension-size-2000) - var(--spectrum-global-dimension-size-50));
     }
 
     &:hover {
@@ -65,6 +67,5 @@
 
 .activeTag {
     color: var(--spectrum-gray-50);
-
     background-color: var(--energy-blue) !important;
 }

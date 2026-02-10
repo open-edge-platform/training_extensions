@@ -3,6 +3,8 @@
 
 import { API_BASE_URL } from '../api/client';
 
+export const getProjectThumbnailUrl = (projectId: string) => `${API_BASE_URL}/api/projects/${projectId}/thumbnail`;
+
 const getMediaBaseUrl = (projectId: string, itemId: string) =>
     `${API_BASE_URL}/api/projects/${projectId}/dataset/media/${itemId}`;
 
