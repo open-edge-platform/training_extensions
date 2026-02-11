@@ -133,6 +133,15 @@ class MediaDB(BaseID):
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
 
 
+class VideoFrameDB(BaseID):
+    __tablename__ = "video_frames"
+    __table_args__ = ()
+
+    id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), primary_key=True, nullable=False)
+    video_id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), nullable=False)
+    timestamp: Mapped[float] = mapped_column(Float, nullable=False)
+
+
 class LabelDB(BaseID):
     __tablename__ = "labels"
     __table_args__ = (
