@@ -153,6 +153,8 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["video_id"], ["media.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_index("idx_video_frames_video_id", "video_frames", ["video_id"], unique=False)
+    op.create_index("idx_video_frames_video_id_timestamp", "video_frames", ["video_id", "timestamp"], unique=False)
     op.create_table(
         "dataset_items",
         sa.Column("id", sa.Text(), nullable=False),
@@ -234,6 +236,8 @@ def downgrade() -> None:
     op.drop_table("evaluations")
     op.drop_index("idx_dataset_items_user_reviewed", table_name="dataset_items")
     op.drop_table("dataset_items")
+    op.drop_index("idx_video_frames_video_id_timestamp", table_name="video_frames")
+    op.drop_index("idx_video_frames_video_id", table_name="video_frames")
     op.drop_table("video_frames")
     op.drop_index("idx_model_revisions_project_status", table_name="model_revisions")
     op.drop_index("idx_model_revisions_architecture", table_name="model_revisions")

@@ -133,9 +133,12 @@ class MediaDB(BaseID):
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
 
 
-class VideoFrameDB(BaseID):
+class VideoFrameDB(Base):
     __tablename__ = "video_frames"
-    __table_args__ = ()
+    __table_args__ = (
+        Index("idx_video_frames_video_id", "video_id"),
+        Index("idx_video_frames_video_id_timestamp", "video_id", "timestamp"),
+    )
 
     id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), primary_key=True, nullable=False)
     video_id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), nullable=False)
