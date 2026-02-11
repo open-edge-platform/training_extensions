@@ -49,6 +49,11 @@ const simulateError = (instance: MockEventSource) => {
     instance.onerror?.({} as Event);
 };
 
+afterAll(() => {
+    vi.unstubAllGlobals();
+    mockEventSourceInstances = [];
+});
+
 describe('connectSSE', () => {
     beforeEach(() => {
         mockEventSourceInstances = [];
