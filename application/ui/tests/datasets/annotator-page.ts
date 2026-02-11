@@ -90,7 +90,7 @@ export class AnnotatorPage {
     }
 
     getAnnotationsList() {
-        return this.page.getByTestId('annotations-canvas-tools');
+        return this.page.getByTestId('annotation-list');
     }
 
     async getAnnotationsListItems(label: 'annotation rect' | 'prediction rect') {
