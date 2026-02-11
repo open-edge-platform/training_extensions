@@ -10,6 +10,12 @@ interface AddMediaButtonProps {
     multiple?: boolean;
 }
 
+const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
+const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png'];
+const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
+
+const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
+
 export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,6 +46,7 @@ export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaBut
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
                 aria-label={'Upload media files'}
+                accept={acceptedExtensions}
             />
             <Button variant={'secondary'} onPress={handleClick}>
                 Upload Files
