@@ -10,7 +10,7 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 import torch
 from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
@@ -32,9 +32,12 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
@@ -172,7 +175,11 @@ class RFDETR(DFine):
         # Store rfdetr_args for optimizer configuration
         self.rfdetr_args = rfdetr_args
 
-        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")  # pyrefly: ignore[bad-argument-type]
+        load_checkpoint(
+            cast("torch.nn.Module", lwdetr_model),
+            self._pretrained_weights[self.model_name],
+            map_location="cpu",
+        )
         # Create RFDETRDetector wrapper
         return RFDETRDetector(
             lwdetr_model=lwdetr_model,  # pyrefly: ignore[bad-argument-type]
@@ -306,10 +313,18 @@ class RFDETR(DFine):
 
         return [optimizer], lr_scheduler_configs
 
-    def forward_for_tracing(self, inputs):
+    def forward_for_tracing(self, inputs: torch.Tensor) -> dict[str, Any] | tuple[torch.Tensor, ...]:
+        """Forward pass used for model tracing/export."""
         return self.model.export(inputs)  # pyrefly: ignore[not-callable]
 
-    def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
+    def export(
+        self,
+        output_dir: Path,
+        base_name: str,
+        export_format: OTXExportFormatType,
+        precision: OTXPrecisionType = OTXPrecisionType.FP32,
+    ) -> Path:
+        """Export the model to the requested format."""
         self.model.lwdetr.export()  # pyrefly: ignore[missing-attribute]
         if self.explain_mode:
             msg = "Explain mode is not supported for RF-DETR model."

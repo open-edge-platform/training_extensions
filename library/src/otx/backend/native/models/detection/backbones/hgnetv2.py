@@ -498,7 +498,7 @@ class HGNetv2Module(nn.Module):
 
         # stages
         self.stages = nn.ModuleList()
-        for k in stage_config:
+        for stage in stage_config.values():
             (
                 in_channels,
                 mid_channels,
@@ -508,7 +508,7 @@ class HGNetv2Module(nn.Module):
                 light_block,
                 kernel_size,
                 layer_num,
-            ) = stage_config[k]
+            ) = stage
             self.stages.append(
                 HGStage(
                     in_channels,

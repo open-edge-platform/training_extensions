@@ -19,7 +19,7 @@ from otx.backend.native.models.detection.utils.rfdetr_batch_utils import (
     _subset_target,
     limit_batch_objects,
 )
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity import OTXPredictionBatch as OTXPredBatch
 
 
 class TestRFDETRBatchLimitingUtils:

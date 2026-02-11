@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 import torch
 from rfdetr import (
@@ -19,9 +19,9 @@ from rfdetr import (
 from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
+from torch.export import Dim
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
-from torch.export import Dim
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -34,10 +34,14 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
+from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from lightning.pytorch.utilities.types import OptimizerLRScheduler
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
@@ -268,7 +272,10 @@ class RFDETRInst(OTXInstanceSegModel):
                 if isinstance(v, torch.Tensor):
                     losses[k] = v
                 elif isinstance(v, list):
-                    losses[k] = sum((_loss.mean() for _loss in v), torch.tensor(0.0))  # pyrefly: ignore[unsupported-operation]
+                    losses[k] = sum(
+                        (_loss.mean() for _loss in v),
+                        torch.tensor(0.0),
+                    )  # pyrefly: ignore[unsupported-operation]
             return losses
 
         # Inference: get predictions from the model wrapper
@@ -276,7 +283,10 @@ class RFDETRInst(OTXInstanceSegModel):
         original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
 
         # Model forward returns outputs dict, postprocess it
-        scores_list, boxes_list, labels_list, masks_list = self.model.postprocess(outputs, original_sizes)  # pyrefly: ignore[not-callable]
+        scores_list, boxes_list, labels_list, masks_list = self.model.postprocess(  # pyrefly: ignore[not-callable]
+            outputs,
+            original_sizes,
+        )
 
         # Convert masks to proper format for OTX
         formatted_masks = []
@@ -307,7 +317,7 @@ class RFDETRInst(OTXInstanceSegModel):
             masks=formatted_masks,
         )
 
-    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:  # pyrefly: ignore[bad-override]
+    def configure_optimizers(self) -> OptimizerLRScheduler:
         """Configure optimizer and learning-rate schedulers.
 
         Uses rfdetr's get_param_dict to create proper parameter groups with
@@ -344,12 +354,20 @@ class RFDETRInst(OTXInstanceSegModel):
                 lr_scheduler_config["monitor"] = scheduler.monitor
             lr_scheduler_configs.append(lr_scheduler_config)
 
-        return [optimizer], lr_scheduler_configs
+        return cast("OptimizerLRScheduler", ([optimizer], lr_scheduler_configs))
 
-    def forward_for_tracing(self, inputs):
+    def forward_for_tracing(self, inputs: torch.Tensor) -> dict[str, Any] | tuple[torch.Tensor, ...]:
+        """Forward pass used for model tracing/export."""
         return self.model.export(inputs)  # pyrefly: ignore[not-callable]
 
-    def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
+    def export(
+        self,
+        output_dir: Path,
+        base_name: str,
+        export_format: OTXExportFormatType,
+        precision: OTXPrecisionType = OTXPrecisionType.FP32,
+    ) -> Path:
+        """Export the model to the requested format."""
         self.model.lwdetr.export()  # pyrefly: ignore[missing-attribute]
         if self.explain_mode:
             msg = "Explain mode is not supported for RF-DETR model."

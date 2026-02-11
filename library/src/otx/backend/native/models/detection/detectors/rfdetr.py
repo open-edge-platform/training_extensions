@@ -10,7 +10,7 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import torch
@@ -102,8 +102,15 @@ class RFDETRDetector(BaseModule):
                 raise ValueError(msg)
 
             loss_dict = self.criterion(outputs, targets)
-            weight_dict = self.criterion.weight_dict  # pyrefly: ignore[missing-attribute]
-            return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}  # pyrefly: ignore[bad-index, unsupported-operation]
+            weight_dict = cast(
+                "dict[str, float]",
+                self.criterion.weight_dict,  # pyrefly: ignore[missing-attribute]
+            )
+            return {
+                k: v * weight_dict[k]
+                for k, v in loss_dict.items()
+                if k in weight_dict
+            }
 
         return outputs
 
@@ -160,8 +167,12 @@ class RFDETRDetector(BaseModule):
         """
         outputs = self.lwdetr(batch_inputs)
         # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
-        if len(outputs) == 3:
-            pred_boxes, pred_logits, pred_masks = outputs
+        if isinstance(outputs, dict):
+            pred_boxes = outputs["pred_boxes"]
+            pred_logits = outputs["pred_logits"]
+            pred_masks = outputs.get("pred_masks")
+        elif len(outputs) >= 3:
+            pred_boxes, pred_logits, pred_masks = outputs[:3]
         else:
             pred_boxes, pred_logits = outputs
             pred_masks = None

@@ -5,11 +5,13 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import torch
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.instance_segmentation.rfdetr_inst import RFDETRInst
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity import OTXPredictionBatch as OTXPredBatch
 
 
 class TestRFDETRInst:
@@ -62,7 +64,10 @@ class TestRFDETRInst:
         )
 
         # Test configure_optimizers method
-        optimizers, schedulers = model.configure_optimizers()
+        optimizers, schedulers = cast(
+            "tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]",
+            model.configure_optimizers(),
+        )
 
         assert len(optimizers) == 1
         assert isinstance(optimizers[0], torch.optim.Optimizer)
