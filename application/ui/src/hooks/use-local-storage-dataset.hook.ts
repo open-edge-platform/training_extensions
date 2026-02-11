@@ -18,17 +18,22 @@ const getParsedLocalStorage = <T>(key: string): T | null => {
 export const useLocalStorageDataset = () => {
     const projectId = useProjectIdentifier();
 
-    const [_lsExportProject, setLsExportId] = useLocalStorage<string[] | null>(EXPORT_DATASET_KEY(projectId), () =>
-        getParsedLocalStorage(EXPORT_DATASET_KEY(projectId))
+    const [_lsExportProject, setLsExportId] = useLocalStorage<string[] | null>(
+        EXPORT_DATASET_KEY(projectId),
+        () => getParsedLocalStorage(EXPORT_DATASET_KEY(projectId)) ?? []
     );
 
     const getLsExportIds = (): string[] | null => {
         return getParsedLocalStorage<string[]>(EXPORT_DATASET_KEY(projectId));
     };
 
-    const addLsExportId = (data: string): void => setLsExportId((prevState) => [...(prevState ?? []), data]);
+    const addLsExportId = (jobId: string) => {
+        return setLsExportId((prevState) => [...(prevState ?? []), jobId]);
+    };
 
-    const removeLsExportId = (): void => setLsExportId(null);
+    const removeLsExportId = (jobId: string): void => {
+        return setLsExportId((prevState) => (prevState ? prevState.filter((id) => id !== jobId) : null));
+    };
 
     return {
         getLsExportIds,

@@ -4,7 +4,6 @@
 import { dimensionValue, Flex, useViewMode } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
-import { ExportDatasetStatus } from '../../features/dataset/gallery/export-dataset-status/export-dataset-status.component';
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 
@@ -20,7 +19,6 @@ export const Dataset = () => {
             UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
             <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
-            <ExportDatasetStatus />
 
             <Gallery
                 items={items}

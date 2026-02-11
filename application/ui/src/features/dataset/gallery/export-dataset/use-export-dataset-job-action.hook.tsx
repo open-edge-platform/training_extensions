@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { useActionState } from 'react';
@@ -8,20 +8,17 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isString } from 'lodash';
 
 import { $api } from '../../../../api/client';
-import { components } from '../../../../api/openapi-spec';
-
-type DatasetItemSubset = components['schemas']['DatasetItemSubset'];
 
 type FormValues = {
     labels: string[];
+    export_format: string;
     include_unannotated: boolean;
-    subsets: DatasetItemSubset[];
 };
 
 const initialState: FormValues = {
     labels: [],
+    export_format: 'geti',
     include_unannotated: false,
-    subsets: [],
 };
 
 type useExportDatasetJobActionProps = {
@@ -35,20 +32,20 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
 
     return useActionState<FormValues, FormData>(async (_prevState, formData) => {
         const filters: FormValues = {
+            export_format: String(formData.get('export_format')),
             labels: formData.getAll('labels').filter(isString),
-            subsets: formData.getAll('subsets') as DatasetItemSubset[],
             include_unannotated: formData.get('include_unannotated') === 'on',
         };
 
-        const response = await exportJobMutation.mutateAsync({
+        const { job_id } = await exportJobMutation.mutateAsync({
             body: {
                 project_id,
                 job_type: 'export_dataset',
-                parameters: { filters, export_format: 'coco' },
+                parameters: { filters, export_format: filters.export_format },
             },
         });
 
-        addLsExportId(response.job_id);
+        addLsExportId(job_id);
         onSuccess();
 
         return filters;

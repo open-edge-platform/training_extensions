@@ -26,7 +26,7 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
-import { ExportDataset } from '../export-dataset/export-dataset.component';
+import { DatasetImportExport } from '../dataset-import-export/dataset-import-export.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
@@ -125,9 +125,12 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
             <Flex alignItems={'center'} justifyContent={'space-between'}>
                 <Heading level={1}>Dataset</Heading>
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
-                    <ExportDataset />
+                    <DatasetImportExport />
+
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
+
                     <TrainModel />
+
                     <AnnotateButton
                         isDisabled={items.at(0) === undefined}
                         onClick={items.at(0) === undefined ? undefined : () => onSelectedMediaItemChange(items[0])}
