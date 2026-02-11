@@ -50,7 +50,7 @@ class DatasetExport(Execution):
         self._dataset_revision_service = dataset_revision_service
         self._db_session_factory = db_session_factory
 
-    @step("Prepare dataset for export", 10)
+    @step("Prepare dataset for export", 20)
     def prepare_dataset(self, export_params: ExportDatasetJobParams) -> tuple[UUID, Dataset | None]:
         with self._db_session_factory() as session:
             if export_params.dataset_id is None:

@@ -126,36 +126,29 @@ class TestDatasetExporter:
         dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
 
-        with patch("app.execution.dataset_export.exporter.save_dataset") as mock_save_dataset:
+        with patch("app.execution.dataset_export.export.save_dataset") as mock_save_dataset:
             target_dir = fxt_exporter.export_dataset(dataset_id, dataset, export_format)
 
             assert target_dir
             assert target_dir == fxt_staged_datasets_dir / str(dataset_id)
-            if export_format == DatasetFormat.COCO:
-                mock_save_dataset.assert_called_once_with(
-                    dataset=dataset,
-                    data_format=data_format,
-                    images_dir_path=str(target_dir / "images"),
-                    annotations_path=str(target_dir / "annotations.json"),
-                )
-            elif export_format == DatasetFormat.YOLO:
-                mock_save_dataset.assert_called_once_with(
-                    dataset=dataset,
-                    data_format=data_format,
-                    root_dir=str(target_dir),
-                )
+            mock_save_dataset.assert_called_once_with(
+                dataset=dataset,
+                data_format=data_format,
+                output_path=str(fxt_staged_datasets_dir / str(dataset_id) / f"dataset-{export_format}.zip"),
+                as_zip=True,
+            )
 
     def test_export_dataset_geti(self, fxt_exporter: DatasetExport, fxt_staged_datasets_dir: Path):
         dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
 
         with (
-            patch("app.execution.dataset_export.exporter.export_dataset") as mock_export_dataset,
-            patch("app.execution.dataset_export.exporter.Path.rename") as rename_mock,
+            patch("app.execution.dataset_export.export.export_dataset") as mock_export_dataset,
         ):
             target_dir = fxt_exporter.export_dataset(dataset_id, dataset, DatasetFormat.GETI)
 
             assert target_dir
             assert target_dir == fxt_staged_datasets_dir / str(dataset_id)
-            mock_export_dataset.assert_called_once_with(dataset=dataset, output_path=target_dir, as_zip=True)
-            rename_mock.assert_called_once_with(target_dir / "dataset-geti.zip")
+            mock_export_dataset.assert_called_once_with(
+                dataset=dataset, output_path=str(target_dir / f"dataset-{DatasetFormat.GETI}.zip"), as_zip=True
+            )
