@@ -371,5 +371,22 @@ test.describe('Annotator', () => {
 
             await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
         });
+
+        await test.step('Verify tool resets when switching modes', async () => {
+            // Select SAM tool because polygon is the default tool for segmentation projects
+            await page.getByRole('button', { name: 'sam tool' }).click();
+
+            await annotatorPage.openPredictionMode();
+
+            await expect(page.getByTestId('primary-toolbar-id')).toBeHidden();
+
+            await annotatorPage.openAnnotationMode();
+
+            await expect(page.getByTestId('primary-toolbar-id')).toBeVisible();
+
+            // Verify polygon tool is active by drawing a polygon without manually selecting it
+            await polygonTool.drawPolygon(smallPolygon);
+            await expect(page.getByLabel(`label ${redLabel.name}`).nth(2)).toBeInViewport();
+        });
     });
 });

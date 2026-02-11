@@ -78,7 +78,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     };
 
     return (
-        <ToolProvider>
+        <ToolProvider mode={mode}>
             <AnnotatorProviders
                 key={mediaItem.id}
                 mediaItem={mediaItem}

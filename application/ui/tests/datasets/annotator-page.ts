@@ -90,7 +90,7 @@ export class AnnotatorPage {
     }
 
     getAnnotationsList() {
-        return this.page.getByTestId('annotation-list');
+        return this.page.getByTestId('annotation-layer');
     }
 
     async getAnnotationsListItems(label: 'annotation rect' | 'prediction rect') {
