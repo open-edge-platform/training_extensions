@@ -9,7 +9,7 @@ factory for registering and instantiating Runnable implementations. Runnables en
 a given execution context, supporting progress reporting.
 
 Classes:
-    ExecutionContext: Carries execution parameters, progress reporting, and heartbeat callbacks.
+    ExecutionContext: Carries execution parameters and progress reporting.
     Runnable: Protocol for executable activities.
     RunnableFactory: Factory for registering and creating Runnable instances by type.
 """
