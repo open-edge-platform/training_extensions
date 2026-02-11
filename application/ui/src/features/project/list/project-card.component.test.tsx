@@ -5,6 +5,7 @@ import { fireEvent, screen } from '@testing-library/react';
 import { getMockedProject } from 'mocks/mock-project';
 import { render } from 'test-utils/render';
 
+import { API_BASE_URL } from '../../../api/client';
 import { ProjectCard } from './project-card.component';
 
 describe('ProjectCard', () => {
@@ -29,6 +30,7 @@ describe('ProjectCard', () => {
         const thumbnail = await screen.findByRole('img', { name: 'Test Project' });
         expect(thumbnail).toBeInTheDocument();
         expect(thumbnail).toHaveAttribute('alt', 'Test Project');
+        expect(thumbnail).toHaveAttribute('src', `${API_BASE_URL}/api/projects/test-project-id/thumbnail`);
 
         expect(await screen.findByText('Detection')).toBeInTheDocument();
         expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();

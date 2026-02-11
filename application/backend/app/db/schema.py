@@ -96,6 +96,10 @@ class DatasetRevisionDB(BaseID):
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    training_count: Mapped[int] = mapped_column(Integer, default=0)
+    validation_count: Mapped[int] = mapped_column(Integer, default=0)
+    testing_count: Mapped[int] = mapped_column(Integer, default=0)
+    total_count: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class DatasetItemDB(Base):
@@ -123,6 +127,8 @@ class MediaDB(BaseID):
     format: Mapped[str] = mapped_column(String(50), nullable=False)
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
+    fps: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    frame_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
 

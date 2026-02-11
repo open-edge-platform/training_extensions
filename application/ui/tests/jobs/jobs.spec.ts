@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedJob } from 'mocks/mock-job';
-import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
@@ -26,12 +25,6 @@ const mockedTrainingJob = getMockedJob({
     finished_at: null,
 });
 
-const mockedModelArchitectures = [
-    getMockedModelArchitecture({ id: 'Object_Detection_SSD', name: 'Object_Detection_SSD' }),
-    getMockedModelArchitecture({ id: 'Object_Detection_YOLOX_X', name: 'Object_Detection_YOLOX_X' }),
-    getMockedModelArchitecture({ id: 'Custom_Object_Detection_Gen3_ATSS', name: 'Custom_Object_Detection_Gen3_ATSS' }),
-];
-
 test.describe('Jobs - Current Training', () => {
     test.beforeEach(({ network }) => {
         network.use(
@@ -40,16 +33,6 @@ test.describe('Jobs - Current Training', () => {
             }),
             http.post('/api/jobs/{job_id}:cancel', () => {
                 return HttpResponse.json(null, { status: 204 });
-            }),
-            http.get('/api/model_architectures', () => {
-                return HttpResponse.json({
-                    model_architectures: mockedModelArchitectures,
-                    top_picks: {
-                        balance: mockedModelArchitectures[0].id,
-                        speed: mockedModelArchitectures[1].id,
-                        accuracy: mockedModelArchitectures[2].id,
-                    },
-                });
             })
         );
     });

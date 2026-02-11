@@ -1,7 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Checkbox, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { Dispatch, SetStateAction } from 'react';
+
+import {
+    Button,
+    ButtonGroup,
+    Checkbox,
+    Divider,
+    Flex,
+    Heading,
+    MediaViewModes,
+    Text,
+    toast,
+    ViewModes,
+} from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
@@ -17,6 +30,8 @@ import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
     items: Media[];
+    viewMode: ViewModes;
+    setViewMode: Dispatch<SetStateAction<ViewModes>>;
 };
 
 type AnnotateButtonProps = {
@@ -32,9 +47,10 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
+
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
@@ -151,7 +167,14 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                     )}
                 </Flex>
 
-                <Text>{message}</Text>
+                <Flex gap={'size-200'} alignItems={'center'}>
+                    <Text>{message}</Text>
+                    <MediaViewModes
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        items={[ViewModes.LARGE, ViewModes.MEDIUM, ViewModes.SMALL]}
+                    />
+                </Flex>
             </Flex>
 
             <Divider size='S' />

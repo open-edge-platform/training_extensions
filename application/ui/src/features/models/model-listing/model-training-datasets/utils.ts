@@ -26,5 +26,7 @@ export const datasetRevisionItemToMedia = (item: DatasetRevisionItem): Media => 
         height: item.height ?? 1,
         size: 1, // Revision items don't track file size
         source_id: null,
+        fps: null,
+        frame_count: null,
     };
 };

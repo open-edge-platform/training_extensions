@@ -319,7 +319,7 @@ test.describe('Models', () => {
         await expect(modelsPage.getDatasetHeaderByName('Renamed Dataset')).toBeVisible();
     });
 
-    test('handles dataset revision deletion correctly', async ({ modelsPage, network, page }) => {
+    test('can delete a dataset revision', async ({ modelsPage, network, page }) => {
         await modelsPage.goto();
 
         await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeVisible();

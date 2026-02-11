@@ -1,8 +1,8 @@
 """schema
 
-Revision ID: 1127bd7a7649
+Revision ID: 9b945d895014
 Revises:
-Create Date: 2026-01-19 17:06:35.524887
+Create Date: 2026-02-08 11:51:05.866607
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "1127bd7a7649"
+revision: str = "9b945d895014"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -61,6 +61,10 @@ def upgrade() -> None:
         sa.Column("project_id", sa.Text(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("files_deleted", sa.Boolean(), nullable=False),
+        sa.Column("training_count", sa.Integer(), nullable=False),
+        sa.Column("validation_count", sa.Integer(), nullable=False),
+        sa.Column("testing_count", sa.Integer(), nullable=False),
+        sa.Column("total_count", sa.Integer(), nullable=False),
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
@@ -90,6 +94,8 @@ def upgrade() -> None:
         sa.Column("format", sa.String(length=50), nullable=False),
         sa.Column("width", sa.Integer(), nullable=False),
         sa.Column("height", sa.Integer(), nullable=False),
+        sa.Column("fps", sa.Float(), nullable=True),
+        sa.Column("frame_count", sa.Integer(), nullable=True),
         sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("source_id", sa.Text(), nullable=True),
         sa.Column("id", sa.Text(), nullable=False),
@@ -127,15 +133,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["parent_revision"],
-            ["model_revisions.id"],
-        ),
+        sa.ForeignKeyConstraint(["parent_revision"], ["model_revisions.id"]),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["training_dataset_id"],
-            ["dataset_revisions.id"],
-        ),
+        sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_model_revisions_architecture", "model_revisions", ["project_id", "architecture"], unique=False)

@@ -6,10 +6,9 @@ import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
 import type { SchemaProjectView } from '../../../api/openapi-spec';
-// TODO: replace mock thumbnail once /api/projects/{project_id}/thumbnail is finished
-import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../constants/paths';
 import { TaskType } from '../../../constants/shared-types';
+import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 import { isClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
 
@@ -56,9 +55,9 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
         <div style={{ position: 'relative' }}>
             <NavLink to={paths.project.dataset({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
-                    <View aria-label={'project thumbnail'}>
-                        <img src={thumbnailUrl} alt={item.name} />
-                    </View>
+                    <Flex>
+                        <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />
+                    </Flex>
 
                     <View width={'100%'} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
