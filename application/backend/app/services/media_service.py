@@ -3,6 +3,7 @@
 
 import os
 import os.path
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
@@ -17,12 +18,16 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import MediaDB
 from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
+from app.models.media import ImageFormat, VideoFormat
 from app.repositories import MediaRepository
+from app.services.video import extract_video_frame, get_video_metadata
 from app.utils.images import crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 
 DEFAULT_THUMBNAIL_SIZE = 256
+
+VIDEO_WRITE_CHUNK_SIZE = 100 * 1024 * 1024  # 100 MB
 
 
 class InvalidImageError(Exception):
@@ -78,11 +83,11 @@ class MediaService(BaseSessionManagedService):
         self,
         project: Project,
         name: str,
-        format: str,
+        format: ImageFormat,
         data: Image.Image | np.ndarray | BinaryIO | BytesIO,
         source_id: UUID | None = None,
     ) -> Media:
-        """Creates a new media"""
+        """Creates a new media (image)"""
         media_id = uuid4()
         match data:
             case Image.Image():
@@ -104,7 +109,7 @@ class MediaService(BaseSessionManagedService):
             project_id=str(project.id),
             type=MediaType.IMAGE,
             name=name,
-            format=format,
+            format=str(format),
             width=image.width,
             height=image.height,
             size=os.path.getsize(binary_path),
@@ -113,6 +118,50 @@ class MediaService(BaseSessionManagedService):
 
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
         db_media = repo.save(media)
+        return Media.model_validate(db_media)
+
+    def create_video(
+        self,
+        project: Project,
+        name: str,
+        format: VideoFormat,
+        data: BinaryIO,
+        source_id: UUID | None = None,
+    ) -> Media:
+        """Creates a new media (video)"""
+        media_id = uuid4()
+
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        binary_path = dataset_dir / f"{media_id}.{format}"
+
+        data.seek(0)
+        with open(binary_path, "wb") as f:
+            # Read in chunks to avoid memory issues for large files
+            while chunk := data.read(VIDEO_WRITE_CHUNK_SIZE):
+                f.write(chunk)
+
+        try:
+            video_metadata = get_video_metadata(video_path=binary_path)
+            media = MediaDB(
+                id=str(media_id),
+                project_id=str(project.id),
+                type=MediaType.VIDEO,
+                name=name,
+                format=str(format),
+                width=video_metadata.width,
+                height=video_metadata.height,
+                frame_count=video_metadata.frame_count,
+                fps=video_metadata.fps,
+                size=os.path.getsize(binary_path),
+                source_id=str(source_id) if source_id is not None else None,
+            )
+
+            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            db_media = repo.save(media)
+        except Exception as e:
+            binary_path.unlink(missing_ok=True)
+            raise e
         return Media.model_validate(db_media)
 
     def count_media(
@@ -185,13 +234,44 @@ class MediaService(BaseSessionManagedService):
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
         dataset_dir = self.projects_dir / f"{project.id}/dataset"
         binary_path = dataset_dir / f"{media.id}.{media.format}"
+
+        if media.type == MediaType.IMAGE:
+            return MediaService.generate_image_thumbnail(binary_path)
+        if media.type == MediaType.VIDEO:
+            return MediaService.generate_video_thumbnail(
+                binary_path=binary_path,
+                time=(media.frame_count / media.fps) // 2,  # pyrefly: ignore
+            )
+        raise RuntimeError(f"Unknown media type: {media.type}")
+
+    @staticmethod
+    def generate_image_thumbnail(binary_path: Path) -> Image.Image:
+        """Regenerate an image thumbnail by its path"""
         try:
             with Image.open(binary_path) as image:
-                thumbnail = crop_to_thumbnail(image=image, target_width=64, target_height=64)
+                thumbnail = crop_to_thumbnail(
+                    image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
+                )
         except UnidentifiedImageError:
             logger.error("Failed to open image {} for thumbnail generation", binary_path)
             raise InvalidImageError("Failed to open image for thumbnail generation.")
         return thumbnail
+
+    @staticmethod
+    def generate_video_thumbnail(binary_path: Path, time: float) -> Image.Image:
+        """Regenerate a video thumbnail by its path"""
+        fd, temp_path = tempfile.mkstemp(suffix=".jpg")
+        os.close(fd)
+
+        frame_file_path = Path(temp_path)
+        try:
+            extract_video_frame(video_path=binary_path, video_frame_path=frame_file_path, time=time)
+            return MediaService.generate_image_thumbnail(frame_file_path)
+        finally:
+            try:
+                os.remove(temp_path)
+            except FileNotFoundError:
+                pass
 
     def delete_media(self, project: Project, media_id: UUID) -> None:
         """Delete a media by its ID"""
