@@ -33,8 +33,8 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-    const disabledKeys =
-        isFailedModel(model) || isTrainingModel(model) ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
+    const disableRenameAndActive = isFailedModel(model) || isTrainingModel(model);
+    const disabledKeys = disableRenameAndActive ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
 
     const handleAction = (key: Key) => {
         if (key === MODEL_ACTIONS.ACTIVE) {
