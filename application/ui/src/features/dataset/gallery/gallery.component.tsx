@@ -52,7 +52,7 @@ export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetc
                 contentItem={(item) => {
                     const mediaUrl = getThumbnailUrl(projectId, item.id);
                     const fullMediaUrl = getMediaBinaryUrl(projectId, item.id);
-                    const mediaFileName = `${item.name}.${item.format};`;
+                    const mediaFileName = `${item.name}.${item.format}`;
 
                     return (
                         <MediaItem
