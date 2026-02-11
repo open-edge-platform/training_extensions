@@ -144,6 +144,16 @@ const test = testBase.extend<Fixtures>({
                     pagination: { offset: 0, limit: 20, count: 1, total: 1 },
                 });
             }),
+            http.get('/api/jobs/{job_id}/status', () => {
+                // Just a valid SSE response with no data
+                return new HttpResponse(':ok\n\n', {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                    },
+                });
+            }),
         ],
     }),
     streamPage: async ({ page }, use) => {
