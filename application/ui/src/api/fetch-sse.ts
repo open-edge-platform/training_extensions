@@ -21,16 +21,20 @@ export const connectSSE = <T = unknown>(path: string, options: SSEOptions<T>): S
     const eventSource = new EventSource(url);
 
     let closed = false;
+    let resolveDone: (() => void) | null = null;
 
     const close = () => {
         if (!closed) {
             closed = true;
             eventSource.close();
             options.onClose?.();
+            resolveDone?.();
         }
     };
 
     const done = new Promise<void>((resolve) => {
+        resolveDone = resolve;
+
         eventSource.onopen = () => {
             options.onOpen?.();
         };
@@ -47,7 +51,6 @@ export const connectSSE = <T = unknown>(path: string, options: SSEOptions<T>): S
         eventSource.onerror = (event: Event) => {
             options.onError?.(event);
             close();
-            resolve();
         };
     });
 

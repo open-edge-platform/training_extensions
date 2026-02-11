@@ -35,6 +35,11 @@ const MockEventSourceConstructor = vi.fn().mockImplementation((url: string) => {
 
 vi.stubGlobal('EventSource', MockEventSourceConstructor);
 
+afterAll(() => {
+    vi.unstubAllGlobals();
+    mockEventSourceInstances = [];
+});
+
 const getLastEventSource = (): MockEventSource => {
     const instance = mockEventSourceInstances.at(-1);
     if (!instance) {

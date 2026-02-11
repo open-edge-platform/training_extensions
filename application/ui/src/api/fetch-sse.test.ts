@@ -148,14 +148,15 @@ describe('connectSSE', () => {
         expect(eventSource.close).toHaveBeenCalledOnce();
     });
 
-    it('manual close() closes the EventSource', () => {
-        const { close } = connectSSE('/api/test', { onMessage: vi.fn() });
+    it('manual close() closes the EventSource', async () => {
+        const { close, done } = connectSSE('/api/test', { onMessage: vi.fn() });
         const eventSource = getLastEventSource();
 
         simulateOpen(eventSource);
         close();
 
         expect(eventSource.close).toHaveBeenCalledOnce();
+        await expect(done).resolves.toBeUndefined();
     });
 
     it('returns the underlying EventSource instance', () => {

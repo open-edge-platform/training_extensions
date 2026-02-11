@@ -95,7 +95,7 @@ export const TrainingModelRow = ({
         ? dayjs(job.started_at).format('DD MMM YYYY, hh:mm A')
         : 'Waiting to start...';
     const formattedElapsed = job.started_at
-        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('mm:ss') + 'm'
+        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H:mm:ss')
         : '';
 
     return (
