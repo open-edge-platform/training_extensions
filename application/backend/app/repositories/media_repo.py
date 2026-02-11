@@ -68,7 +68,9 @@ class MediaRepository:
             select(func.count(func.distinct(MediaDB.id)))
             .select_from(MediaDB)
             .join(
-                DatasetItemDB, DatasetItemDB.id == MediaDB.id, isouter=True,
+                DatasetItemDB,
+                DatasetItemDB.id == MediaDB.id,
+                isouter=True,
             )
             .where(MediaDB.project_id == self.project_id)
         )
@@ -89,9 +91,7 @@ class MediaRepository:
         label_ids: list[str] | None = None,
         subset: str | None = None,
     ) -> list[MediaDB]:
-        stmt = self._base_select().join(
-            DatasetItemDB, DatasetItemDB.id == MediaDB.id, isouter=True
-        )
+        stmt = self._base_select().join(DatasetItemDB, DatasetItemDB.id == MediaDB.id, isouter=True)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         stmt = self._apply_subset_filter(stmt, subset)
