@@ -30,35 +30,37 @@ class WebRTCManager:
         self._frame_broadcaster = frame_broadcaster
         self._settings = settings
         self._sdp_handler = sdp_handler
+        self._lock = asyncio.Lock()
 
     async def handle_offer(self, offer: Offer) -> Answer:
         """Create an SDP offer for a new WebRTC connection."""
-        pc = RTCPeerConnection(configuration=self._settings.config)
-        self._pcs[offer.webrtc_id] = pc
+        async with self._lock:
+            pc = RTCPeerConnection(configuration=self._settings.config)
+            self._pcs[offer.webrtc_id] = pc
 
-        # Add video track
-        stream_queue = self._frame_broadcaster.register(webrtc_id=offer.webrtc_id)
-        track = InferenceVideoStreamTrack(stream_queue=stream_queue)
-        pc.addTrack(track)
+            # Add video track
+            stream_queue = self._frame_broadcaster.register(webrtc_id=offer.webrtc_id)
+            track = InferenceVideoStreamTrack(stream_queue=stream_queue)
+            pc.addTrack(track)
 
-        @pc.on("connectionstatechange")
-        async def connection_state_change() -> None:
-            if pc.connectionState in ["failed", "closed"]:
-                await self.cleanup_connection(offer.webrtc_id)
+            @pc.on("connectionstatechange")
+            async def connection_state_change() -> None:
+                if pc.connectionState in ["failed", "closed"]:
+                    await self.cleanup_connection(offer.webrtc_id)
 
-        # Set remote description from client's offer
-        await pc.setRemoteDescription(RTCSessionDescription(sdp=offer.sdp, type=offer.type))
+            # Set remote description from client's offer
+            await pc.setRemoteDescription(RTCSessionDescription(sdp=offer.sdp, type=offer.type))
 
-        # Create answer
-        answer = await pc.createAnswer()
-        await pc.setLocalDescription(answer)
+            # Create answer
+            answer = await pc.createAnswer()
+            await pc.setLocalDescription(answer)
 
-        # Mangle SDP if public IP is configured
-        sdp = pc.localDescription.sdp
-        if self._settings.advertise_ip:
-            sdp = await self._sdp_handler.mangle_sdp(sdp, self._settings.advertise_ip)
+            # Mangle SDP if public IP is configured
+            sdp = pc.localDescription.sdp
+            if self._settings.advertise_ip:
+                sdp = await self._sdp_handler.mangle_sdp(sdp, self._settings.advertise_ip)
 
-        return Answer(sdp=sdp, type=pc.localDescription.type)
+            return Answer(sdp=sdp, type=pc.localDescription.type)
 
     def set_input(self, data: InputData) -> None:
         """Set input data for specific WebRTC connection"""
@@ -69,19 +71,21 @@ class WebRTCManager:
 
     async def cleanup_connection(self, webrtc_id: str) -> None:
         """Clean up a specific WebRTC connection by its ID."""
-        if webrtc_id in self._pcs:
-            logger.debug("Cleaning up connection: {}", webrtc_id)
-            pc = self._pcs.pop(webrtc_id)
-            await pc.close()
-            logger.debug("Connection {} successfully closed.", webrtc_id)
-            self._input_data.pop(webrtc_id, None)
-        self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
+        async with self._lock:
+            if webrtc_id in self._pcs:
+                logger.debug("Cleaning up connection: {}", webrtc_id)
+                pc = self._pcs.pop(webrtc_id)
+                await pc.close()
+                logger.debug("Connection {} successfully closed.", webrtc_id)
+                self._input_data.pop(webrtc_id, None)
+            self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
 
     async def cleanup(self) -> None:
         """Clean up all connections"""
-        for webrtc_id, pc in list(self._pcs.items()):
-            await pc.close()
-            self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
-        self._pcs.clear()
-        self._input_data.clear()
-        self._frame_broadcaster.cleanup()
+        async with self._lock:
+            for webrtc_id, pc in list(self._pcs.items()):
+                await pc.close()
+                self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
+            self._pcs.clear()
+            self._input_data.clear()
+            self._frame_broadcaster.cleanup()
