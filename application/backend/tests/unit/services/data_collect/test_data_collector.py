@@ -6,6 +6,7 @@ from unittest.mock import ANY, MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
+import pydantic_core
 import pytest
 import time_machine
 
@@ -16,8 +17,8 @@ from app.models import (
     FullImage,
     Label,
     LabelReference,
-    MediaFormat,
 )
+from app.models.media import ImageFormat
 from app.services import DatasetService, LabelService, MediaService
 from app.services.data_collect.data_collector import (
     ConfidenceThresholdPolicyChecker,
@@ -28,6 +29,20 @@ from app.services.data_collect.data_collector import (
 
 class TestFixedRatePolicyCheckerUnit:
     """Unit tests for FixedRatePolicyChecker."""
+
+    def test_zero_rate_raises_error_in_policy(self):
+        # Arrange, Act and Assert
+        with pytest.raises(pydantic_core.ValidationError):
+            FixedRateDataCollectionPolicy(rate=0)  # type: ignore[bad_argument_type]
+
+    def test_zero_rate_raises_error_in_checker(self):
+        # Arrange
+        policy = FixedRateDataCollectionPolicy(rate=0.1)
+        policy.rate = 0
+
+        # Act and Assert
+        with pytest.raises(ValueError):
+            FixedRatePolicyChecker(policy)
 
     def test_should_collect_true(self):
         # Arrange
@@ -173,7 +188,7 @@ class TestDataCollectorUnit:
             project=project,
             data=ANY,
             name="1735689601_0000",
-            format=MediaFormat.JPG,
+            format=ImageFormat.JPG,
             source_id=pipeline.source_id,
         )
         mock_create_dataset_item.assert_called_once_with(
@@ -234,7 +249,7 @@ class TestDataCollectorUnit:
             project=project,
             data=ANY,
             name="1735689601_0000",
-            format=MediaFormat.JPG,
+            format=ImageFormat.JPG,
             source_id=pipeline.source_id,
         )
         mock_create_dataset_item.assert_called_once_with(

@@ -8,13 +8,8 @@ import numpy as np
 from loguru import logger
 
 from app.db import get_db_session
-from app.models import (
-    ConfidenceThresholdDataCollectionPolicy,
-    FixedRateDataCollectionPolicy,
-    MediaFormat,
-    Pipeline,
-    Project,
-)
+from app.models import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, Pipeline, Project
+from app.models.media import ImageFormat
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import InferenceData
@@ -49,6 +44,8 @@ class FixedRatePolicyChecker(PolicyChecker):
     """
 
     def __init__(self, policy: FixedRateDataCollectionPolicy):
+        if policy.rate is None or policy.rate <= 0:
+            raise ValueError(f"Collection rate must be a positive float, got {policy.rate} instead.")
         self.min_interval = 1.0 / policy.rate
         self.last_collect_time = 0.0
 
@@ -210,7 +207,7 @@ class DataCollector:
                 project=project,
                 data=frame_data,
                 name=f"{timestamp:.4f}".replace(".", "_"),
-                format=MediaFormat.JPG,
+                format=ImageFormat.JPG,
                 source_id=pipeline.source_id,
             )
             dataset_service.create_dataset_item(
