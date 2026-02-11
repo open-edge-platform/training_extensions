@@ -18,6 +18,8 @@ class MediaView(BaseRequiredIDNameModel):
     width: int
     height: int
     size: int
+    fps: float | None
+    frame_count: int | None
     source_id: UUID | None = None
 
     model_config = {

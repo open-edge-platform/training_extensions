@@ -8,13 +8,8 @@ import numpy as np
 from loguru import logger
 
 from app.db import get_db_session
-from app.models import (
-    ConfidenceThresholdDataCollectionPolicy,
-    FixedRateDataCollectionPolicy,
-    MediaFormat,
-    Pipeline,
-    Project,
-)
+from app.models import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, Pipeline, Project
+from app.models.media import ImageFormat
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import InferenceData
@@ -212,7 +207,7 @@ class DataCollector:
                 project=project,
                 data=frame_data,
                 name=f"{timestamp:.4f}".replace(".", "_"),
-                format=MediaFormat.JPG,
+                format=ImageFormat.JPG,
                 source_id=pipeline.source_id,
             )
             dataset_service.create_dataset_item(
