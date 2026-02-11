@@ -107,6 +107,13 @@ class FrameBroadcaster[T]:
                         break
             self._latest_frame = None
 
+    def cleanup(self) -> None:
+        """
+        Drop all queues and frames from memory
+        """
+        self.queues.clear()
+        self._latest_frame = None
+
     def _handle_full_queue(self, queue: Queue[T], frame: T) -> None:
         """Handle a full queue by dropping the oldest frame and adding the new one."""
         try:
