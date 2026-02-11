@@ -165,4 +165,5 @@ pythonpath = [
 
 [tool.pyrefly]
 python-version = "3.13.0"
+project-includes = ["app/**/*.py*", "pyinstaller/**/*.py*", "tests/**/*.py*"]
 ignore-missing-imports = ["*"]
