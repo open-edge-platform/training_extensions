@@ -29,6 +29,16 @@ class FrameBroadcaster[T]:
         """Get the most recently broadcasted frame."""
         return self._latest_frame
 
+    def is_registered(self, webrtc_id: str) -> bool:
+        """Check if a consumer is registered."""
+        with self._lock:
+            return webrtc_id in self.queues
+
+    def consumer_count(self) -> int:
+        """Get the number of registered consumers."""
+        with self._lock:
+            return len(self.queues)
+
     def register(self, webrtc_id: str) -> Queue[T]:
         """Register a new consumer and return its personal queue.
 
@@ -36,6 +46,16 @@ class FrameBroadcaster[T]:
         added to the new consumer's queue so they don't miss the current state.
         """
         with self._lock:
+            # If this webrtc_id is already registered, return the existing queue
+            existing_queue = self.queues.get(webrtc_id)
+            if existing_queue is not None:
+                logger.warning(
+                    "FrameBroadcaster received duplicate registration for webrtc_id {}; "
+                    "returning existing consumer queue",
+                    webrtc_id,
+                )
+                return existing_queue
+
             queue: Queue[T] = Queue(maxsize=5)
             self.queues[webrtc_id] = queue
 
@@ -46,23 +66,23 @@ class FrameBroadcaster[T]:
                 except Full:
                     logger.warning("Could not send latest frame to new consumer - queue full")
 
-            logger.info("FrameBroadcaster registered a new consumer. Total consumers: %d", len(self.queues))
+            logger.info("FrameBroadcaster registered a new consumer. Total consumers: {}", len(self.queues))
             return queue
 
     def unregister(self, webrtc_id: str) -> None:
-        """Unregister a consumer by its queue."""
+        """Unregister a consumer by its WebRTC ID."""
         with self._lock:
             try:
                 del self.queues[webrtc_id]
-                logger.info("FrameBroadcaster unregistered a consumer. Total consumers:%d", len(self.queues))
+                logger.info("FrameBroadcaster unregistered a consumer. Total consumers: {}", len(self.queues))
             except KeyError:
                 # if a client unregisters twice.
                 pass
 
     def broadcast(self, frame: T) -> None:
         """Broadcast frame to all registered queues."""
-        self._latest_frame = frame
         with self._lock:
+            self._latest_frame = frame
             for queue in self.queues.values():
                 try:
                     queue.put_nowait(frame)
@@ -83,9 +103,16 @@ class FrameBroadcaster[T]:
                     try:
                         q.get_nowait()
                     except Empty:
-                        logger.debug("Drained queued frames for consumer queue %s", id(q))
+                        logger.debug("Drained queued frames for consumer queue {}", id(q))
                         break
             self._latest_frame = None
+
+    def cleanup(self) -> None:
+        """
+        Drop all queues and frames from memory
+        """
+        self.queues.clear()
+        self._latest_frame = None
 
     def _handle_full_queue(self, queue: Queue[T], frame: T) -> None:
         """Handle a full queue by dropping the oldest frame and adding the new one."""
