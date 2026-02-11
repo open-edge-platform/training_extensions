@@ -1,10 +1,11 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { Delete, Pin, Unpin } from '@geti/ui/icons';
+import { debounce } from 'lodash-es';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
@@ -47,9 +48,17 @@ export const LabelRow = ({
         onUpdate(label.id, { name: name.trim(), color, hotkey: label.hotkey });
     };
 
+    const debouncedUpdate = useMemo(
+        () =>
+            debounce((newColor: string, currentName: string) => {
+                onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
+            }, 300),
+        [onUpdate, label.id, label.hotkey]
+    );
+
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
-        onUpdate(label.id, { name: getValidName(), color: newColor, hotkey: label.hotkey });
+        debouncedUpdate(newColor, getValidName());
     };
 
     return (
