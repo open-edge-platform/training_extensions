@@ -176,7 +176,9 @@ def get_media_binary(
     """Get media binary content"""
     try:
         binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
-        return FileResponse(path=binary_path)
+        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+        filename = f"{media.name}.{media.format.value.lower()}"
+        return FileResponse(path=binary_path, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
