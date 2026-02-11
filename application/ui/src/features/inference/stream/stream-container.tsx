@@ -35,8 +35,9 @@ export const StreamContainer = () => {
     useEffect(() => {
         if (status === 'failed') {
             toast({ type: 'error', message: 'Failed to connect to the stream' });
+            disablePipelineMutation.mutate({ params: { path: { project_id: projectId } } });
         }
-    }, [status]);
+    }, [status, disablePipelineMutation, projectId]);
 
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>

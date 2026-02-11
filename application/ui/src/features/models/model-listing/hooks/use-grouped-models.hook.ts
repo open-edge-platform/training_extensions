@@ -26,7 +26,7 @@ type UseGroupedModelsOptions = {
 };
 
 // Responsible for:
-// - Filtering models based on searchBy query and fail status (only models that are not currently training)
+// - Filtering models based on searchBy query and failed status (only models that are not currently training)
 // - Grouping models based on the selected grouping mode
 // - Sorting models within each group based on the selected sorting criteria
 // - Pinning the active model to the top of its group if the pinActive option is enabled
