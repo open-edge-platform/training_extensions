@@ -102,7 +102,7 @@ class RFDETRDetector(BaseModule):
                 raise ValueError(msg)
 
             loss_dict = self.criterion(outputs, targets)
-            weight_dict: dict[str, float] = self.criterion.weight_dict # pyrefly: ignore[bad-assignment]
+            weight_dict: dict[str, float] = self.criterion.weight_dict  # pyrefly: ignore[bad-assignment]
             return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}
 
         return outputs

@@ -147,9 +147,11 @@ class RFDETR(DFine):
         )
         # Get the actual LWDETR model
         lwdetr_model = rfdetr.model.model
-        load_checkpoint(lwdetr_model, # pyrefly: ignore[bad-argument-type]
-                        self._pretrained_weights[self.model_name],
-                        map_location="cpu")
+        load_checkpoint(
+            lwdetr_model,  # pyrefly: ignore[bad-argument-type]
+            self._pretrained_weights[self.model_name],
+            map_location="cpu",
+        )
         # Reinitialize detection head with correct num_classes (this modifies the model in-place)
         rfdetr.model.reinitialize_detection_head(num_classes)
         # Update args for criterion building

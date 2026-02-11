@@ -146,9 +146,11 @@ class RFDETRInst(OTXInstanceSegModel):
         detector = model_class(pretrain_weights=None, gradient_checkpointing=True)
         # Get the actual LWDETR model with segmentation head
         lwdetr_model = detector.model.model
-        load_checkpoint(lwdetr_model, # pyrefly: ignore[bad-argument-type]
-                        self._pretrained_weights[self.model_name],
-                        map_location="cpu")
+        load_checkpoint(
+            lwdetr_model,  # pyrefly: ignore[bad-argument-type]
+            self._pretrained_weights[self.model_name],
+            map_location="cpu",
+        )
         # Reinitialize detection head for our num_classes
         detector.model.reinitialize_detection_head(num_classes)
         # Update args for criterion building
