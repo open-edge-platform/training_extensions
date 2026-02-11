@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { Button, Flex, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
-import { useEnablePipeline } from 'hooks/api/pipeline.hook';
+import { useDisablePipeline, useEnablePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { Stream } from './stream';
@@ -17,11 +17,19 @@ export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { start, status } = useWebRTCConnection();
     const enablePipelineMutation = useEnablePipeline();
+    const disablePipelineMutation = useDisablePipeline();
     const projectId = useProjectIdentifier();
 
     const handleStartStream = () => {
-        start();
-        enablePipelineMutation.mutate({ params: { path: { project_id: projectId } } });
+        enablePipelineMutation.mutate(
+            { params: { path: { project_id: projectId } } },
+            {
+                onSuccess: start,
+                onError: () => {
+                    disablePipelineMutation.mutate({ params: { path: { project_id: projectId } } });
+                },
+            }
+        );
     };
 
     useEffect(() => {
