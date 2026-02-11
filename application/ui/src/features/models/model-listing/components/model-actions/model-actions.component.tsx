@@ -11,7 +11,7 @@ import type { Model } from '../../../../../constants/shared-types';
 import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
 import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
-import { isFailedModel } from '../../utils/utils';
+import { isFailedModel, isTrainingModel } from '../../utils/utils';
 import { RenameModelDialog } from '../model-row/rename-model-dialog.component';
 
 const MODEL_ACTIONS = {
@@ -33,7 +33,8 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-    const disabledKeys = isFailedModel(model) ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
+    const disabledKeys =
+        isFailedModel(model) || isTrainingModel(model) ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
 
     const handleAction = (key: Key) => {
         if (key === MODEL_ACTIONS.ACTIVE) {
