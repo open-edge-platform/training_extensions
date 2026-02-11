@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap');
+@font-face {
+    src: url('./assets/fonts/roboto-flex-v30-latin-regular.woff2') format('woff2');
+    font-family: 'Roboto Flex';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
 
 * {
     box-sizing: border-box;
