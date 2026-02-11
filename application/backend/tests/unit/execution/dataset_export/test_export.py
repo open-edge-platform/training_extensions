@@ -159,28 +159,3 @@ class TestDatasetExporter:
             assert target_dir == fxt_staged_datasets_dir / str(dataset_id)
             mock_export_dataset.assert_called_once_with(dataset=dataset, output_path=target_dir, as_zip=True)
             rename_mock.assert_called_once_with(target_dir / "dataset-geti.zip")
-
-    def test_zip_dataset_contents(self, fxt_exporter: DatasetExport, fxt_staged_datasets_dir: Path):
-        target_dir = fxt_staged_datasets_dir / str(uuid4())
-        target_dir.mkdir(parents=True, exist_ok=True)
-        (target_dir / "file1.txt").write_text("content1")
-        (target_dir / "file2.txt").write_text("content2")
-
-        zipped_path = fxt_exporter.zip_dataset_contents(target_dir=target_dir, export_format=DatasetFormat.COCO)
-
-        assert zipped_path == target_dir / "dataset-coco.zip"
-        assert zipped_path.exists()
-
-    def test_cleanup(self, fxt_exporter: DatasetExport, fxt_staged_datasets_dir: Path):
-        target_dir = fxt_staged_datasets_dir / str(uuid4())
-        target_dir.mkdir(parents=True, exist_ok=True)
-        (target_dir / "file1.txt").write_text("content1")
-        (target_dir / "file2.txt").write_text("content2")
-        zip_path = target_dir / "dataset-coco.zip"
-        zip_path.write_text("zip content")
-
-        fxt_exporter.cleanup(zip_path=zip_path)
-
-        assert (target_dir / "file1.txt").exists() is False
-        assert (target_dir / "file2.txt").exists() is False
-        assert zip_path.exists()

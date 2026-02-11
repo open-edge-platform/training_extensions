@@ -23,13 +23,14 @@ class DetectionSampleFactory(SampleFactory):
     def create_sample(self, dataset_item: DatasetItem, media: Media, image_path: str) -> DetectionSample | None:
         if dataset_item.annotation_data is None:
             return DetectionSample(
+                id=str(dataset_item.id),
                 image=image_path,
                 image_info=ImageInfo(width=media.width, height=media.height),
                 bboxes=np.array([]),
                 label=np.array([]),
                 confidence=None,
                 subset=SubsetConverter.to_datumaro(dataset_item.subset),
-                user_reviewed=False,
+                # user_reviewed=False,
             )
 
         bboxes = self._extract_bboxes(dataset_item.annotation_data)
@@ -41,13 +42,14 @@ class DetectionSampleFactory(SampleFactory):
         confidences = self._extract_confidences(dataset_item.annotation_data)
 
         return DetectionSample(
+            id=str(dataset_item.id),
             image=image_path,
             image_info=ImageInfo(width=media.width, height=media.height),
             bboxes=np.array(bboxes),
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            user_reviewed=True,
+            # user_reviewed=True,
         )
 
     @staticmethod

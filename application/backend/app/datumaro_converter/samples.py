@@ -7,7 +7,6 @@ from datumaro.experimental.fields import (
     ImageInfo,
     Subset,
     bbox_field,
-    bool_field,
     image_info_field,
     image_path_field,
     label_field,
@@ -31,11 +30,12 @@ class BaseSample(Sample):
         subset: Subset name to which the sample belongs to
         user_reviewed: Whether the sample is annotated (True) or unannotated (False)
     """
+
     id: str = string_field()
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     subset: Subset = subset_field()
-    user_reviewed: bool = bool_field()
+    # user_reviewed: bool = bool_field()
 
 
 class ClassificationSample(BaseSample):

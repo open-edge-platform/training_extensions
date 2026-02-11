@@ -27,13 +27,14 @@ class InstanceSegmentationSampleFactory(SampleFactory):
     ) -> InstanceSegmentationSample | None:
         if dataset_item.annotation_data is None:
             return InstanceSegmentationSample(
+                id=str(dataset_item.id),
                 image=image_path,
                 image_info=ImageInfo(width=media.width, height=media.height),
                 subset=SubsetConverter.to_datumaro(dataset_item.subset),
                 polygons=np.array([]),
                 label=np.array([]),
                 confidence=None,
-                user_reviewed=False,
+                # user_reviewed=False,
             )
 
         polygons = self._extract_polygons(dataset_item.annotation_data)
@@ -45,13 +46,14 @@ class InstanceSegmentationSampleFactory(SampleFactory):
         confidences = self._extract_confidences(dataset_item.annotation_data)
 
         return InstanceSegmentationSample(
+            id=str(dataset_item.id),
             image=image_path,
             image_info=ImageInfo(width=media.width, height=media.height),
             polygons=polygons,
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            user_reviewed=True,
+            # user_reviewed=True,
         )
 
     def _extract_polygons(self, annotations: Sequence[DatasetItemAnnotation]) -> ndarray:

@@ -1,8 +1,5 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os
-import shutil
-import zipfile
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
@@ -87,24 +84,18 @@ class DatasetExport(Execution):
                 dataset = filtered_dataset
             return export_params.dataset_id or uuid4(), dataset
 
-    @step("Export dataset", 80)
+    @step("Export dataset", 100)
     def export_dataset(self, dataset_id: UUID, dataset: Dataset, export_format: DatasetFormat) -> Path | None:
         target_dir = self._staged_datasets_dir / str(dataset_id)
         logger.info("Exporting dataset {} to {} in {} format", dataset_id, target_dir, export_format)
         target_dir.mkdir(parents=True, exist_ok=True)
         match export_format:
-            case DatasetFormat.COCO:
+            case DatasetFormat.COCO | DatasetFormat.YOLO:
                 save_dataset(
                     dataset=dataset,
                     data_format=get_dm_format(export_format),
-                    images_dir_path=str(target_dir / "images"),
-                    annotations_path=str(target_dir / "annotations.json"),
-                )
-            case DatasetFormat.YOLO:
-                save_dataset(
-                    dataset=dataset,
-                    data_format=get_dm_format(export_format),
-                    root_dir=str(target_dir),
+                    output_path=str(target_dir / f"dataset-{export_format}.zip"),
+                    as_zip=True,
                 )
             case DatasetFormat.VOC:
                 # todo: implement after datumaro VOC exporter is implemented:
@@ -113,41 +104,12 @@ class DatasetExport(Execution):
             case DatasetFormat.GETI:
                 export_dataset(
                     dataset=dataset,
-                    output_path=target_dir,
+                    output_path=str(target_dir / f"dataset-{export_format}.zip"),
                     as_zip=True,
                 )
-                original_zip = target_dir / "dataset.zip"
-                new_zip = target_dir / "dataset-geti.zip"
-                original_zip.rename(new_zip)
             case _:
                 raise ValueError(f"Unsupported dataset format for export: {export_format}")
         return target_dir
-
-    @step("Compress dataset folder to zip archive", 90)
-    def zip_dataset_contents(self, target_dir: Path, export_format: str) -> Path:
-        zip_name = f"dataset-{export_format}.zip"
-        zip_path = target_dir / zip_name
-
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for root, _, files in os.walk(target_dir):
-                root_path = Path(root)
-                for file_name in files:
-                    file_path = root_path / file_name
-                    if file_path == zip_path:
-                        continue
-                    arcname = file_path.relative_to(target_dir)
-                    zf.write(file_path, arcname)
-        return zip_path
-
-    @step("Remove dataset folder contents", 100)
-    def cleanup(self, zip_path: Path) -> None:
-        for item in zip_path.parent.iterdir():
-            if item == zip_path:
-                continue
-            if item.is_file():
-                item.unlink()
-            elif item.is_dir():
-                shutil.rmtree(item)
 
     def run(self, ctx: ExecutionContext) -> None:
         self._ctx = ctx
@@ -160,8 +122,4 @@ class DatasetExport(Execution):
                 export_params.project_id,
             )
             return
-        target_dir = self.export_dataset(dataset_id, dataset, export_params.export_format)
-        if export_params.export_format != DatasetFormat.GETI:
-            # todo: remove after https://github.com/open-edge-platform/datumaro/issues/2026 is implemented
-            zip_path = self.zip_dataset_contents(target_dir, export_params.export_format)
-            self.cleanup(zip_path)
+        self.export_dataset(dataset_id, dataset, export_params.export_format)

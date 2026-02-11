@@ -23,8 +23,8 @@ from .pipeline_service import PipelineService
 from .project_service import ProjectService
 from .sink_service import SinkService
 from .source_service import SourceService, SourceUpdateService
-from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 from .staged_dataset_service import StagedDatasetService
+from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 from .system_service import SystemService
 from .training_configuration_service import TrainingConfigurationService
 from .video_stream_service import VideoStreamService

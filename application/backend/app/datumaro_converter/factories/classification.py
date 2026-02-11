@@ -21,12 +21,13 @@ class ClassificationSampleFactory(SampleFactory):
     def create_sample(self, dataset_item: DatasetItem, media: Media, image_path: str) -> ClassificationSample | None:
         if dataset_item.annotation_data is None:
             return ClassificationSample(
+                id=str(dataset_item.id),
                 image=image_path,
                 image_info=ImageInfo(width=media.width, height=media.height),
                 subset=SubsetConverter.to_datumaro(dataset_item.subset),
                 label=None,
                 confidence=None,
-                user_reviewed=False,
+                # user_reviewed=False,
             )
 
         annotation = dataset_item.annotation_data[0]
@@ -37,10 +38,11 @@ class ClassificationSampleFactory(SampleFactory):
             return None
 
         return ClassificationSample(
+            id=str(dataset_item.id),
             image=image_path,
             image_info=ImageInfo(width=media.width, height=media.height),
             label=label_index,
             confidence=annotation.confidences[0] if annotation.confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            user_reviewed=True,
+            # user_reviewed=True,
         )

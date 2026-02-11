@@ -172,6 +172,18 @@ def step_exported_dataset_has_items(context: Context, count: int) -> None:
                 data_format=get_dm_format(export_format),
                 root_dir=str(extract_dir),
             )
+        case DatasetFormat.COCO:
+            extract_dir = dataset_path.with_suffix("")
+            extract_dir.mkdir(parents=True, exist_ok=True)
+
+            with zipfile.ZipFile(dataset_path, "r") as zip_ref:
+                zip_ref.extractall(extract_dir)
+
+            dataset = load_dataset(
+                data_format=get_dm_format(export_format),
+                images_dir_path=str(extract_dir / "images"),
+                annotations_path=str(extract_dir / "annotations.json"),
+            )
         case _:
             raise Exception(f"Unknown export format: {export_format}")
 
