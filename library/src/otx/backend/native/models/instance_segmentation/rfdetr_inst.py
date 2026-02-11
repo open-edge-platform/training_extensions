@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from rfdetr import (
@@ -41,7 +41,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from lightning.pytorch.utilities.types import OptimizerLRScheduler
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
@@ -145,17 +144,15 @@ class RFDETRInst(OTXInstanceSegModel):
         # Create RF-DETR Segmentation model with segmentation_head=True
         model_class = self._model_class_mapping[self.model_name]
         detector = model_class(pretrain_weights=None, gradient_checkpointing=True)
-        lwdetr_model = detector.model.model
-        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")
-
-        # Reinitialize detection head for our num_classes
-        detector.model.reinitialize_detection_head(num_classes)
-
-        # Update args for criterion building
-        detector.model.args.num_classes = num_classes
-
         # Get the actual LWDETR model with segmentation head
         lwdetr_model = detector.model.model
+        load_checkpoint(lwdetr_model, # pyrefly: ignore[bad-argument-type]
+                        self._pretrained_weights[self.model_name],
+                        map_location="cpu")
+        # Reinitialize detection head for our num_classes
+        detector.model.reinitialize_detection_head(num_classes)
+        # Update args for criterion building
+        detector.model.args.num_classes = num_classes
 
         # Build criterion and postprocessor with correct args (including segmentation_head=True)
         model_cfg = detector.get_model_config().model_dump()
@@ -317,7 +314,7 @@ class RFDETRInst(OTXInstanceSegModel):
             masks=formatted_masks,
         )
 
-    def configure_optimizers(self) -> OptimizerLRScheduler:
+    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
         """Configure optimizer and learning-rate schedulers.
 
         Uses rfdetr's get_param_dict to create proper parameter groups with
@@ -354,7 +351,7 @@ class RFDETRInst(OTXInstanceSegModel):
                 lr_scheduler_config["monitor"] = scheduler.monitor
             lr_scheduler_configs.append(lr_scheduler_config)
 
-        return cast("OptimizerLRScheduler", ([optimizer], lr_scheduler_configs))
+        return [optimizer], lr_scheduler_configs
 
     def forward_for_tracing(self, inputs: torch.Tensor) -> dict[str, Any] | tuple[torch.Tensor, ...]:
         """Forward pass used for model tracing/export."""

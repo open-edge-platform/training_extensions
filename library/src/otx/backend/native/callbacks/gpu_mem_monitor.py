@@ -19,24 +19,17 @@ class GPUMemMonitor(Callback):
 
     This callback monitors GPU memory usage and optionally clears CUDA cache
     to reduce memory consumption during training.
-
-    Args:
-        cleanup_on_batch_end: Whether to clean up CUDA cache after each training batch.
-            Default: False.
-        cleanup_on_epoch_end: Whether to clean up CUDA cache after each epoch.
-            Default: False.
     """
 
-    def __init__(self, cleanup_on_batch_end: bool = False, cleanup_on_epoch_end: bool = False) -> None:
+    def __init__(self, iter_to_clean: int = 50) -> None:
         """Initialize GPU memory monitor.
 
         Args:
-            cleanup_on_batch_end: Clean CUDA cache after each batch.
-            cleanup_on_epoch_end: Clean CUDA cache after each epoch.
+            iter_to_clean: Clean CUDA cache after a certain number of iterations.
+                Set to -1 to disable cache cleaning. Defaults to 50.
         """
         super().__init__()
-        self.cleanup_on_batch_end = cleanup_on_batch_end
-        self.cleanup_on_epoch_end = cleanup_on_epoch_end
+        self.iter_to_clean = iter_to_clean
 
     def _get_and_log_device_stats(
         self,
@@ -96,7 +89,7 @@ class GPUMemMonitor(Callback):
         batch: Any,  # noqa: ANN401
         batch_idx: int,
     ) -> None:
-        """Clean up CUDA cache at the end of every train batch if enabled.
+        """Clean up CUDA cache every 50 train iterations if enabled.
 
         Args:
             trainer (Trainer): pl trainer.
@@ -105,7 +98,7 @@ class GPUMemMonitor(Callback):
             batch (Any): current batch.
             batch_idx (int): current batch index.
         """
-        if self.cleanup_on_batch_end and torch.cuda.is_available():
+        if torch.cuda.is_available() and self.iter_to_clean != -1 and (batch_idx + 1) % self.iter_to_clean == 0:
             torch.cuda.empty_cache()
 
     def on_validation_batch_start(
@@ -129,31 +122,3 @@ class GPUMemMonitor(Callback):
             trainer,
             pl_module,
         )
-
-    def on_train_epoch_end(
-        self,
-        trainer: Trainer,
-        pl_module: LightningModule,
-    ) -> None:
-        """Clean up CUDA cache at the end of every epoch if enabled.
-
-        Args:
-            trainer (Trainer): pl trainer.
-            pl_module (LightningModule): pl module.
-        """
-        if self.cleanup_on_epoch_end and torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-    def on_validation_epoch_end(
-        self,
-        trainer: Trainer,
-        pl_module: LightningModule,
-    ) -> None:
-        """Clean up CUDA cache at the end of every validation epoch if enabled.
-
-        Args:
-            trainer (Trainer): pl trainer.
-            pl_module (LightningModule): pl module.
-        """
-        if self.cleanup_on_epoch_end and torch.cuda.is_available():
-            torch.cuda.empty_cache()

@@ -10,7 +10,7 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
@@ -74,7 +74,7 @@ class RFDETR(DFine):
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
         "rfdetr_base": "https://storage.googleapis.com/rfdetr/rf-detr-base-coco.pth",
-        "rfdetr_large": "https://storage.googleapis.com/rfdetr/rf-detr-large.pth",
+        "rfdetr_large": "https://storage.googleapis.com/rfdetr/rf-detr-large-2026.pth",
         "rfdetr_nano": "https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth",
         "rfdetr_small": "https://storage.googleapis.com/rfdetr/small_coco/checkpoint_best_regular.pth",
         "rfdetr_medium": "https://storage.googleapis.com/rfdetr/medium_coco/checkpoint_best_regular.pth",
@@ -145,13 +145,15 @@ class RFDETR(DFine):
         rfdetr = model_class_mapping[self.model_name](
             num_classes=num_classes, pretrained_weights=None, gradient_checkpointing=self.gradient_checkpointing
         )
-        rfdetr.model.reinitialize_detection_head(num_classes)
-
-        # Update args for criterion building
-        rfdetr.model.args.num_classes = num_classes
-
         # Get the actual LWDETR model
         lwdetr_model = rfdetr.model.model
+        load_checkpoint(lwdetr_model, # pyrefly: ignore[bad-argument-type]
+                        self._pretrained_weights[self.model_name],
+                        map_location="cpu")
+        # Reinitialize detection head with correct num_classes (this modifies the model in-place)
+        rfdetr.model.reinitialize_detection_head(num_classes)
+        # Update args for criterion building
+        rfdetr.model.args.num_classes = num_classes
 
         # Build criterion and postprocessor with correct args
         model_cfg = rfdetr.get_model_config().model_dump()
@@ -175,11 +177,6 @@ class RFDETR(DFine):
         # Store rfdetr_args for optimizer configuration
         self.rfdetr_args = rfdetr_args
 
-        load_checkpoint(
-            cast("torch.nn.Module", lwdetr_model),
-            self._pretrained_weights[self.model_name],
-            map_location="cpu",
-        )
         # Create RFDETRDetector wrapper
         return RFDETRDetector(
             lwdetr_model=lwdetr_model,  # pyrefly: ignore[bad-argument-type]
