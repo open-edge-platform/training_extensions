@@ -31,7 +31,7 @@ class MultilabelClassificationSampleFactory(SampleFactory):
                 subset=SubsetConverter.to_datumaro(dataset_item.subset),
                 label=np.array([]),
                 confidence=None,
-                # user_reviewed=False,
+                user_reviewed=False,
             )
 
         label_indices = self._extract_label_indices(dataset_item)
@@ -47,7 +47,7 @@ class MultilabelClassificationSampleFactory(SampleFactory):
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            # user_reviewed=True,
+            user_reviewed=True,
         )
 
     def _extract_label_indices(self, dataset_item: DatasetItem) -> list[int] | None:

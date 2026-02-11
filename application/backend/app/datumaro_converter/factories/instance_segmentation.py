@@ -34,7 +34,7 @@ class InstanceSegmentationSampleFactory(SampleFactory):
                 polygons=np.array([]),
                 label=np.array([]),
                 confidence=None,
-                # user_reviewed=False,
+                user_reviewed=False,
             )
 
         polygons = self._extract_polygons(dataset_item.annotation_data)
@@ -53,7 +53,7 @@ class InstanceSegmentationSampleFactory(SampleFactory):
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            # user_reviewed=True,
+            user_reviewed=True,
         )
 
     def _extract_polygons(self, annotations: Sequence[DatasetItemAnnotation]) -> ndarray:

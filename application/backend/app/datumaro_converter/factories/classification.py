@@ -27,7 +27,7 @@ class ClassificationSampleFactory(SampleFactory):
                 subset=SubsetConverter.to_datumaro(dataset_item.subset),
                 label=None,
                 confidence=None,
-                # user_reviewed=False,
+                user_reviewed=False,
             )
 
         annotation = dataset_item.annotation_data[0]
@@ -44,5 +44,5 @@ class ClassificationSampleFactory(SampleFactory):
             label=label_index,
             confidence=annotation.confidences[0] if annotation.confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            # user_reviewed=True,
+            user_reviewed=True,
         )

@@ -30,7 +30,7 @@ class DetectionSampleFactory(SampleFactory):
                 label=np.array([]),
                 confidence=None,
                 subset=SubsetConverter.to_datumaro(dataset_item.subset),
-                # user_reviewed=False,
+                user_reviewed=False,
             )
 
         bboxes = self._extract_bboxes(dataset_item.annotation_data)
@@ -49,7 +49,7 @@ class DetectionSampleFactory(SampleFactory):
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
             subset=SubsetConverter.to_datumaro(dataset_item.subset),
-            # user_reviewed=True,
+            user_reviewed=True,
         )
 
     @staticmethod
