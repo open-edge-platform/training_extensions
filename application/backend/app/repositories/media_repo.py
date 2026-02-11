@@ -67,15 +67,18 @@ class MediaRepository:
         stmt = (
             select(func.count(func.distinct(MediaDB.id)))
             .select_from(MediaDB)
-            .join(DatasetItemDB)
-            .where(DatasetItemDB.id == MediaDB.id, DatasetItemDB.project_id == MediaDB.project_id)
+            .join(
+                DatasetItemDB,
+                DatasetItemDB.id == MediaDB.id,
+                isouter=True,
+            )
             .where(MediaDB.project_id == self.project_id)
         )
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         stmt = self._apply_subset_filter(stmt, subset)
         if label_ids:
-            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
+            stmt = stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
 
     def list_items(
@@ -88,12 +91,14 @@ class MediaRepository:
         label_ids: list[str] | None = None,
         subset: str | None = None,
     ) -> list[MediaDB]:
-        stmt = self._base_select().join(DatasetItemDB).where(DatasetItemDB.id == MediaDB.id)
+        stmt = self._base_select().join(DatasetItemDB, DatasetItemDB.id == MediaDB.id, isouter=True)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         stmt = self._apply_subset_filter(stmt, subset)
         if label_ids:
-            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
+            stmt = (
+                stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
+            )
         stmt = stmt.order_by(MediaDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
