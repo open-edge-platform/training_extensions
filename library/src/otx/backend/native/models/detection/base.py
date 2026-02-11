@@ -122,7 +122,7 @@ class OTXDetectionModel(OTXModel):
             msg = "Expected OTXPredictionBatch, got Tensor"
             raise TypeError(msg)
 
-        # 1. Filter outputs by threshold
+        # 1. Convert predictions to metric input format
         metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         # 2. Update metric
@@ -158,7 +158,7 @@ class OTXDetectionModel(OTXModel):
         # NOTE: best_confidence_threshold comes from:
         # 1. During validation: FMeasure metric computes optimal threshold, stored in hparams via _log_metrics
         # 2. During test/predict: Uses the threshold computed during validation (from hparams)
-        # 3. If no threshold available: defaults to 0.0
+        # 3. If no threshold available: defaults to 0.5
         confidence_threshold = self.best_confidence_threshold
         if confidence_threshold == 0.0:
             return outputs

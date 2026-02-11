@@ -298,6 +298,7 @@ class OTXInstanceSegModel(OTXModel):
             msg = "Expected OTXPredictionBatch, got Tensor"
             raise TypeError(msg)
 
+        # 1. Convert predictions to metric input format
         metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         # 2. Update metric
