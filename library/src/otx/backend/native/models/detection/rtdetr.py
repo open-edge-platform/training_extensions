@@ -147,7 +147,8 @@ class RTDETR(OTXDetectionModel):
         if entity.bboxes is not None and entity.labels is not None:
             for bb, ll in zip(entity.bboxes, entity.labels):
                 # convert to cxcywh if needed
-                if len(scaled_bboxes := bb):
+                scaled_bboxes = bb
+                if len(bb):
                     converted_bboxes = (
                         box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
                     )

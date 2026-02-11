@@ -18,16 +18,16 @@ class TestRFDETRInst:
     def test_init(self) -> None:
         """Test RF-DETR instance segmentation model initialization."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=3,
         )
-        assert model.model_name == "rfdetr_seg_preview"
+        assert model.model_name == "rfdetr_seg_n"
         assert model.num_classes == 3
 
     def test_create_model(self) -> None:
         """Test RF-DETR instance segmentation model creation."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=10,
         )
         created_model = model._create_model()
@@ -42,22 +42,22 @@ class TestRFDETRInst:
     def test_default_preprocessing_params(self) -> None:
         """Test default preprocessing parameters for RF-DETR instance segmentation."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=3,
         )
 
         # Check that default params use 0-255 range normalization
         default_params = model._default_preprocessing_params
-        assert "rfdetr_seg_preview" in default_params
-        assert default_params["rfdetr_seg_preview"].input_size == (432, 432)
+        assert "rfdetr_seg_n" in default_params
+        assert default_params["rfdetr_seg_n"].input_size == (312, 312)
         # ImageNet mean in 0-255 range
-        assert default_params["rfdetr_seg_preview"].mean == (123.675, 116.28, 103.53)
-        assert default_params["rfdetr_seg_preview"].std == (58.395, 57.12, 57.375)
+        assert default_params["rfdetr_seg_n"].mean == (123.675, 116.28, 103.53)
+        assert default_params["rfdetr_seg_n"].std == (58.395, 57.12, 57.375)
 
     def test_optimizer_configuration(self) -> None:
         """Test that optimizer configuration is properly set."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=5,
         )
 
@@ -76,9 +76,9 @@ class TestRFDETRInst:
     def test_loss_computation(self, fxt_instance_seg_batch) -> None:
         """Test RF-DETR instance segmentation loss computation in training mode."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=3,
-            data_input_params=DataInputParams((432, 432), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((312, 312), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
         # Move model to CPU for unit tests
@@ -86,8 +86,8 @@ class TestRFDETRInst:
 
         # Adjust batch images to match input size
         fxt_instance_seg_batch.images = [
-            torch.randn(3, 432, 432),
-            torch.randn(3, 432, 432),
+            torch.randn(3, 312, 312),
+            torch.randn(3, 312, 312),
         ]
 
         # Set model to training mode
@@ -112,9 +112,9 @@ class TestRFDETRInst:
     def test_predict(self, fxt_instance_seg_batch) -> None:
         """Test RF-DETR instance segmentation prediction in evaluation mode."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=3,
-            data_input_params=DataInputParams((432, 432), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((312, 312), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
         # Move model to CPU for unit tests
@@ -122,8 +122,8 @@ class TestRFDETRInst:
 
         # Adjust batch images to match input size
         fxt_instance_seg_batch.images = [
-            torch.randn(3, 432, 432),
-            torch.randn(3, 432, 432),
+            torch.randn(3, 312, 312),
+            torch.randn(3, 312, 312),
         ]
 
         # Set model to evaluation mode
@@ -141,7 +141,7 @@ class TestRFDETRInst:
     def test_export(self) -> None:
         """Test RF-DETR instance segmentation export functionality."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=3,
         )
 
@@ -152,14 +152,14 @@ class TestRFDETRInst:
         model.eval()
 
         # Test export forward pass
-        output = model.forward_for_tracing(torch.randn(1, 3, 432, 432))
+        output = model.forward_for_tracing(torch.randn(1, 3, 312, 312))
         # Should return boxes, labels, scores, masks
         assert len(output) == 4
 
     def test_customize_inputs(self, fxt_instance_seg_batch) -> None:
         """Test input customization for RF-DETR format."""
         model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
+            model_name="rfdetr_seg_n",
             label_info=3,
         )
 

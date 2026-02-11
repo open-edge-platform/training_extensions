@@ -544,6 +544,7 @@ def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
         model_id = template.get("model_manifest_id")
 
         model_config_path = TEMPLATE_ID_MAPPING[model_id]["recipe_path"]
+        assert isinstance(model_config_path, Path)
         model_task = OTXTaskType(model_config_path.parent.name.upper())
         has_tiling = (
             template["hyperparameters"].get("dataset_preparation", {}).get("augmentation", {}).get("tiling", None)

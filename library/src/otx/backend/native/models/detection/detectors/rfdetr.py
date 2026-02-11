@@ -102,8 +102,8 @@ class RFDETRDetector(BaseModule):
                 raise ValueError(msg)
 
             loss_dict = self.criterion(outputs, targets)
-            weight_dict = self.criterion.weight_dict
-            return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}
+            weight_dict = self.criterion.weight_dict  # pyrefly: ignore[missing-attribute]
+            return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}  # pyrefly: ignore[bad-index, unsupported-operation]
 
         return outputs
 

@@ -90,10 +90,13 @@ class DummyCriterion(nn.Module):
         }
 
 
-class DummyPostprocessor:
+class DummyPostprocessor(nn.Module):
     """Dummy postprocessor for testing."""
 
-    def __call__(self, outputs, target_sizes):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, outputs, target_sizes):
         """Return dummy detection results."""
         batch = outputs["pred_logits"].shape[0]
         return [
@@ -123,7 +126,7 @@ class TestRFDETRDetector:
             lwdetr_model=DummyLWDETR(num_classes=10),
             criterion=DummyCriterion(),
             postprocessor=DummyPostprocessor(),
-            rfdetr_args=rfdetr_args,
+            rfdetr_args=rfdetr_args,  # pyrefly: ignore[bad-argument-type]
             input_size=560,
             multi_scale=False,
         )
@@ -174,7 +177,7 @@ class TestRFDETRDetector:
             lwdetr_model=DummyLWDETR(),
             criterion=DummyCriterion(),
             postprocessor=DummyPostprocessor(),
-            rfdetr_args=rfdetr_args,
+            rfdetr_args=rfdetr_args,  # pyrefly: ignore[bad-argument-type]
             input_size=560,
             multi_scale=True,
         )
@@ -209,7 +212,7 @@ class TestRFDETRDetector:
         rfdetr_detector.eval()
         # Ensure underlying model is set to export mode if required
         if hasattr(rfdetr_detector.lwdetr, "export"):
-            rfdetr_detector.lwdetr.export()
+            rfdetr_detector.lwdetr.export()  # pyrefly: ignore[not-callable]
 
         result = rfdetr_detector.export(images)
 

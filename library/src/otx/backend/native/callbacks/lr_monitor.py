@@ -10,7 +10,7 @@ This simplified version only logs a single representative LR value.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import torch
 from lightning.pytorch.callbacks import LearningRateMonitor
@@ -35,7 +35,7 @@ class SimpleLearningRateMonitor(LearningRateMonitor):
         >>> trainer = Trainer(callbacks=[lr_monitor])
     """
 
-    def __init__(self, logging_interval: str = "epoch") -> None:
+    def __init__(self, logging_interval: Literal["epoch", "step"] = "epoch") -> None:
         # Don't log momentum or weight decay - keep it simple
         super().__init__(logging_interval=logging_interval, log_momentum=False, log_weight_decay=False)
 

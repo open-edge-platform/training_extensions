@@ -408,7 +408,7 @@ class TestRFDETR:
     def test_init(self, model_name: str) -> None:
         """Test RF-DETR model initialization."""
         model = RFDETR(
-            model_name=model_name,
+            model_name=model_name,  # pyrefly: ignore[bad-argument-type]
             label_info=3,
         )
         assert model.model_name == model_name
@@ -479,7 +479,7 @@ class TestRFDETR:
             "rfdetr_base": (560, 560),
         }
         model = RFDETR(
-            model_name=model_name,
+            model_name=model_name,  # pyrefly: ignore[bad-argument-type]
             label_info=label_info,
         )
 
@@ -516,7 +516,7 @@ class TestRFDETR:
         input_size = input_sizes[model_name]
 
         model = RFDETR(
-            model_name=model_name,
+            model_name=model_name,  # pyrefly: ignore[bad-argument-type]
             label_info=3,
         )
 
@@ -553,7 +553,7 @@ class TestRFDETR:
         input_size = input_sizes[model_name]
 
         model = RFDETR(
-            model_name=model_name,
+            model_name=model_name,  # pyrefly: ignore[bad-argument-type]
             label_info=3,
         )
 

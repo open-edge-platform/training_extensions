@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from torch import Tensor
@@ -803,7 +803,7 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
         to correctly obtain F1 score from a test set.
     """
 
-    def __init__(self, box_format: str, iou_type: str, label_info: LabelInfo, **kwargs):
+    def __init__(self, box_format: Literal["xyxy", "xywh", "cxcywh"], iou_type: Literal["bbox", "segm"], label_info: LabelInfo, **kwargs):
         map_kwargs = self._filter_kwargs(MeanAveragePrecision, kwargs)
         fmeasure_kwargs = self._filter_kwargs(FMeasure, kwargs)
         map_compute_class = (
@@ -832,7 +832,7 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
         """
         result = {}
         for k, m in self.items(keep_base=True, copy_state=False):
-            res = m.compute(best_confidence_threshold=best_confidence_threshold) if k == "FMeasure" else m.compute()
+            res = m.compute(best_confidence_threshold=best_confidence_threshold) if k == "FMeasure" else m.compute()  # pyrefly: ignore[unexpected-keyword]
             result[k] = res
 
         _, duplicates = _flatten_dict(result)

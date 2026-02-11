@@ -175,7 +175,7 @@ class DetectionSample(OTXSample):
     def __post_init__(self) -> None:
         # Convert bboxes to tv_tensors format
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-        self.bboxes = tv_tensors.BoundingBoxes(
+        self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
             self.bboxes,
             format=tv_tensors.BoundingBoxFormat.XYXY,
             canvas_size=shape,

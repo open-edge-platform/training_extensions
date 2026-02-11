@@ -294,6 +294,10 @@ class OTXInstanceSegModel(OTXModel):
         if isinstance(preds, OTXBatchLossEntity):
             raise TypeError(preds)
 
+        if isinstance(preds, torch.Tensor):
+            msg = "Expected OTXPredictionBatch, got Tensor"
+            raise TypeError(msg)
+
         metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         # 2. Update metric

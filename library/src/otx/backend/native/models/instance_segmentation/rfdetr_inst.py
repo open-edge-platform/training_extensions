@@ -180,7 +180,7 @@ class RFDETRInst(OTXInstanceSegModel):
             lwdetr_model=lwdetr_model,
             criterion=criterion,
             postprocessor=postprocessor,
-            rfdetr_args=self.rfdetr_args,
+            rfdetr_args=self.rfdetr_args,  # pyrefly: ignore[bad-argument-type]
             input_size=self.data_input_params.input_size[0],
             multi_scale=self.multi_scale,
         )
@@ -243,7 +243,7 @@ class RFDETRInst(OTXInstanceSegModel):
             "targets": targets,
         }
 
-    def _customize_outputs(
+    def _customize_outputs(  # pyrefly: ignore[bad-override]
         self,
         outputs: dict | tuple,  # type: ignore[override]
         inputs: OTXSampleBatch,
@@ -268,7 +268,7 @@ class RFDETRInst(OTXInstanceSegModel):
                 if isinstance(v, torch.Tensor):
                     losses[k] = v
                 elif isinstance(v, list):
-                    losses[k] = sum(_loss.mean() for _loss in v)
+                    losses[k] = sum((_loss.mean() for _loss in v), torch.tensor(0.0))  # pyrefly: ignore[unsupported-operation]
             return losses
 
         # Inference: get predictions from the model wrapper
@@ -276,7 +276,7 @@ class RFDETRInst(OTXInstanceSegModel):
         original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
 
         # Model forward returns outputs dict, postprocess it
-        scores_list, boxes_list, labels_list, masks_list = self.model.postprocess(outputs, original_sizes)
+        scores_list, boxes_list, labels_list, masks_list = self.model.postprocess(outputs, original_sizes)  # pyrefly: ignore[not-callable]
 
         # Convert masks to proper format for OTX
         formatted_masks = []
@@ -307,7 +307,7 @@ class RFDETRInst(OTXInstanceSegModel):
             masks=formatted_masks,
         )
 
-    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
+    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:  # pyrefly: ignore[bad-override]
         """Configure optimizer and learning-rate schedulers.
 
         Uses rfdetr's get_param_dict to create proper parameter groups with
@@ -326,7 +326,7 @@ class RFDETRInst(OTXInstanceSegModel):
         # Access the LWDETR model inside the wrapper
         self.rfdetr_args.lr = default_lr
         self.rfdetr_args.weight_decay = default_weight_decay
-        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)
+        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)  # pyrefly: ignore[bad-argument-type]
 
         # Create optimizer and schedulers
         optimizer = self.optimizer_callable(param_groups)
@@ -347,10 +347,10 @@ class RFDETRInst(OTXInstanceSegModel):
         return [optimizer], lr_scheduler_configs
 
     def forward_for_tracing(self, inputs):
-        return self.model.export(inputs)
+        return self.model.export(inputs)  # pyrefly: ignore[not-callable]
 
     def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
-        self.model.lwdetr.export()
+        self.model.lwdetr.export()  # pyrefly: ignore[missing-attribute]
         if self.explain_mode:
             msg = "Explain mode is not supported for RF-DETR model."
             raise ValueError(msg)

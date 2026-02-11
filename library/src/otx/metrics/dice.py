@@ -37,13 +37,13 @@ class OTXDice(DiceScore):
         self,
         num_classes: int | None = None,
         average: Literal["micro", "macro", "none"] = "macro",
-        aggregation_level: str = "global",
+        aggregation_level: Literal["global", "samplewise"] = "global",
         ignore_index: int | None = None,
         input_format: Literal["one-hot", "index", "mixed"] = "index",
         **kwargs,
     ) -> None:
         super().__init__(
-            num_classes=num_classes,
+            num_classes=num_classes,  # pyrefly: ignore[bad-argument-type]
             average=average,
             aggregation_level=aggregation_level,
             input_format=input_format,

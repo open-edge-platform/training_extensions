@@ -114,7 +114,7 @@ class RFDETR(DFine):
             multi_scale=multi_scale,
         )
 
-    def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:
+    def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:  # pyrefly: ignore[bad-override]
         """Create RF-DETR model using rfdetr package.
 
         Creates the RFDETRDetector wrapper which contains:
@@ -172,13 +172,13 @@ class RFDETR(DFine):
         # Store rfdetr_args for optimizer configuration
         self.rfdetr_args = rfdetr_args
 
-        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")  # pyrefly: ignore[bad-argument-type]
         # Create RFDETRDetector wrapper
         return RFDETRDetector(
-            lwdetr_model=lwdetr_model,
+            lwdetr_model=lwdetr_model,  # pyrefly: ignore[bad-argument-type]
             criterion=criterion,
             postprocessor=postprocessor,
-            rfdetr_args=self.rfdetr_args,
+            rfdetr_args=self.rfdetr_args,  # pyrefly: ignore[bad-argument-type]
             input_size=self.data_input_params.input_size[0],
             multi_scale=self.multi_scale,
         )
@@ -204,7 +204,8 @@ class RFDETR(DFine):
         # Prepare bboxes for the model
         if entity.bboxes is not None and entity.labels is not None:
             for bb, ll in zip(entity.bboxes, entity.labels):
-                if len(scaled_bboxes := bb):
+                scaled_bboxes = bb
+                if len(bb):
                     converted_bboxes = (
                         box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
                     )
@@ -235,7 +236,7 @@ class RFDETR(DFine):
             "targets": targets,
         }
 
-    def _customize_outputs(
+    def _customize_outputs(  # pyrefly: ignore[bad-override]
         self,
         outputs: tuple[torch.Tensor, ...] | dict[str, Any],  # type: ignore[override]
         inputs: OTXSampleBatch,
@@ -247,7 +248,7 @@ class RFDETR(DFine):
             losses = OTXBatchLossEntity()
             for k, v in outputs.items():
                 if isinstance(v, list):
-                    losses[k] = sum(v)
+                    losses[k] = sum(v, torch.tensor(0.0))  # pyrefly: ignore[unsupported-operation]
                 elif isinstance(v, torch.Tensor):
                     losses[k] = v
                 else:
@@ -256,7 +257,7 @@ class RFDETR(DFine):
             return losses
 
         image_shapes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
-        scores, bboxes, labels, _ = self.model.postprocess(outputs, image_shapes)
+        scores, bboxes, labels, _ = self.model.postprocess(outputs, image_shapes)  # pyrefly: ignore[not-callable]
 
         return OTXPredictionBatch(
             images=inputs.images,
@@ -285,7 +286,7 @@ class RFDETR(DFine):
         # Access the LWDETR model inside the wrapper
         self.rfdetr_args.lr = default_lr
         self.rfdetr_args.weight_decay = default_weight_decay
-        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)
+        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)  # pyrefly: ignore[bad-argument-type]
 
         # Create optimizer and schedulers
         optimizer = self.optimizer_callable(param_groups)
@@ -306,10 +307,10 @@ class RFDETR(DFine):
         return [optimizer], lr_scheduler_configs
 
     def forward_for_tracing(self, inputs):
-        return self.model.export(inputs)
+        return self.model.export(inputs)  # pyrefly: ignore[not-callable]
 
     def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
-        self.model.lwdetr.export()
+        self.model.lwdetr.export()  # pyrefly: ignore[missing-attribute]
         if self.explain_mode:
             msg = "Explain mode is not supported for RF-DETR model."
             raise ValueError(msg)
