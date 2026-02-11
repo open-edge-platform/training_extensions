@@ -7,10 +7,10 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../../../../api/client';
 
 export const DatasetStatistics = () => {
-    const project_id = useProjectIdentifier();
+    const projectId = useProjectIdentifier();
 
     const { data: datasetItems } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
-        params: { path: { project_id } },
+        params: { path: { project_id: projectId } },
     });
     const totalItems = datasetItems?.pagination.total ?? 0;
 

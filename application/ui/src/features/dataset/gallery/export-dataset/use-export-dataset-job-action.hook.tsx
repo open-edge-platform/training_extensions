@@ -26,7 +26,7 @@ type useExportDatasetJobActionProps = {
 };
 
 export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActionProps) => {
-    const project_id = useProjectIdentifier();
+    const projectId = useProjectIdentifier();
     const { addLsExportId } = useLocalStorageDataset();
     const exportJobMutation = $api.useMutation('post', '/api/jobs');
 
@@ -39,9 +39,15 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
 
         const { job_id } = await exportJobMutation.mutateAsync({
             body: {
-                project_id,
+                project_id: projectId,
                 job_type: 'export_dataset',
-                parameters: { filters, export_format: filters.export_format },
+                parameters: {
+                    export_format: filters.export_format,
+                    filters: {
+                        labels: filters.labels,
+                        include_unannotated: filters.include_unannotated,
+                    },
+                },
             },
         });
 

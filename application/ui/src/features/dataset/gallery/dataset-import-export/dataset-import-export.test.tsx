@@ -15,6 +15,17 @@ describe('DatasetImportExport', () => {
         server.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(getMockedProject({ id: '123' }));
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    pagination: {
+                        total: 10,
+                        offset: 0,
+                        limit: 0,
+                        count: 0,
+                    },
+                    items: [],
+                });
             })
         );
 
