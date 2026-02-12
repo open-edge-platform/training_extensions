@@ -5,18 +5,24 @@ set -euo pipefail
 # run.sh - Script to run the Geti Tune FastAPI server
 #
 # Features:
-# - Optionally seed the database before starting the server by setting:
-#     SEED_DB=true
-# - Optionally download test video and model files before starting the server by setting:
-#     DOWNLOAD_FILES=true
+# - Optionally set up demo projects before starting the server by using:
+#     --setup-demo
+#   This will delete all existing data, reset the database to a clean state,
+#   and import demo projects from S3.
 #
 # Usage:
-#   SEED_DB=true DOWNLOAD_FILES=true ./run.sh     # Seed database, download data and launch the server
-#   ./run.sh                                      # Run server without seeding or downloading files
+#   ./run.sh --setup-demo                    # Reset database and set up demo projects, then launch the server
+#   ./run.sh --setup-demo --force-import    # Same as above, but bypass schema version checks during import
+#   ./run.sh                                # Run server with existing data
+#
+# Arguments:
+#   --setup-demo    Deletes all existing data, resets the database,
+#                   and imports demo projects before starting the server.
+#   --force-import  Bypasses database schema version checks during import.
+#                   Use with caution as this may cause import errors or data corruption.
+#                   (Only valid when used with --setup-demo)
 #
 # Environment variables:
-#   SEED_DB         If set to "true", runs `uv run app/cli seed` before starting the server.
-#   DOWNLOAD_FILES  If set to "true", downloads test video and model files if not already present.
 #   APP_MODULE      Python module to run (default: app/main.py)
 #   UV_CMD          Command to launch Uvicorn (default: "uv run")
 #
@@ -25,77 +31,113 @@ set -euo pipefail
 # - Python modules and dependencies installed correctly
 # -----------------------------------------------------------------------------
 
-SEED_DB=${SEED_DB:-false}
-DOWNLOAD_FILES=${DOWNLOAD_FILES:-false}
+# Default values
+SETUP_DEMO=false
+FORCE_IMPORT=false
 APP_MODULE=${APP_MODULE:-app/main.py}
 UV_CMD=${UV_CMD:-uv run}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --setup-demo)
+      SETUP_DEMO=true
+      shift
+      ;;
+    --force-import)
+      FORCE_IMPORT=true
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: $0 [--setup-demo] [--force-import]"
+      echo ""
+      echo "Options:"
+      echo "  --setup-demo    Reset database and import demo projects"
+      echo "  --force-import  Bypass schema version checks (use with --setup-demo)"
+      echo "  -h, --help      Show this help message"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
+done
+
+# Validate arguments
+if [[ "$FORCE_IMPORT" == "true" && "$SETUP_DEMO" != "true" ]]; then
+  echo "Error: --force-import can only be used with --setup-demo"
+  exit 1
+fi
 
 export PYTHONUNBUFFERED=1
 export PYTHONPATH=.
 
-if [[ "$SEED_DB" == "true" ]]; then
-  echo "Seeding the database..."
-  rm data/geti_tune.db || true
-  $UV_CMD app/cli.py init-db
-  $UV_CMD app/cli.py seed --with-model=True
-fi
+# Demo project archives hosted in S3
+DEMO_PROJECT_URLS=(
+  # TODO populate this list with proper projects
+  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/cats-dogs.zip"
+  # Add more demo project URLs here as needed
+)
 
-# URLs and target paths
-DETECTION_VIDEO_URL="https://storage.geti.intel.com/test-data/geti-tune/media/card-video.mp4"
-DETECTION_VIDEO_TARGET="data/media/card-video.mp4"
-DETECTION_MODEL_BASE_URL="https://storage.geti.intel.com/test-data/geti-tune/models/yolox-s-cards-detection"
-DETECTION_MODEL_TARGET_DIR="data/projects/9d6af8e8-6017-4ebe-9126-33aae739c5fa/models/977eeb18-eaac-449d-bc80-e340fbe052ad"
+# Temporary directory for downloaded archives
+DEMO_ARCHIVES_DIR="data/.demo_archives"
 
-SEGMENTATION_VIDEO_URL="https://storage.geti.intel.com/test-data/geti-tune/media/fish-video.mp4"
-SEGMENTATION_VIDEO_TARGET="data/media/fish-video.mp4"
-SEGMENTATION_MODEL_BASE_URL="https://storage.geti.intel.com/test-data/geti-tune/models/rtmdet-tiny-fish-segmentation"
-SEGMENTATION_MODEL_TARGET_DIR="data/projects/a1b2c3d4-e5f6-7890-abcd-ef1234567890/models/c3d4e5f6-a7b8-9012-cdef-123456789012"
-
-# Model file extensions to download
-MODEL_EXTENSIONS="xml bin onnx ckpt"
-
-# Function to download a video file
-download_video() {
+# Function to download and import a demo project
+import_demo_project() {
   local url="$1"
-  local target="$2"
-  if [ ! -f "$target" ]; then
-    mkdir -p "$(dirname "$target")"
-    echo "Downloading video to $target..."
-    curl -fL "$url" -o "$target"
+  local filename
+  filename=$(basename "$url")
+  local archive_path="$DEMO_ARCHIVES_DIR/$filename"
+
+  # Download archive if not already present
+  if [ ! -f "$archive_path" ]; then
+    echo "Downloading demo project archive: $filename..."
+    curl -fL "$url" -o "$archive_path"
   else
-    echo "Video already exists at $target"
+    echo "Demo project archive already downloaded: $filename"
   fi
+
+  # Import the project with optional force flag
+  echo "Importing demo project from: $filename..."
+  local import_cmd="$UV_CMD app/db/import_export/import_project.py --input $archive_path"
+  if [[ "$FORCE_IMPORT" == "true" ]]; then
+    import_cmd="$import_cmd --force-import"
+    echo "  (using --force flag to bypass schema version checks)"
+  fi
+
+  $import_cmd
 }
 
-# Function to download model files
-download_model() {
-  local base_url="$1"
-  local target_dir="$2"
-  mkdir -p "$target_dir"
-  for ext in $MODEL_EXTENSIONS; do
-    MODEL_FILE="$target_dir/model.$ext"
-    if [ ! -f "$MODEL_FILE" ]; then
-      echo "Downloading model .$ext file to $target_dir..."
-      curl -fL "$base_url.$ext" -o "$MODEL_FILE"
-    else
-      echo "Model .$ext file already exists at $MODEL_FILE"
-    fi
-  done
-}
+if [[ "$SETUP_DEMO" == "true" ]]; then
+  echo "Setting up demo projects..."
+  echo "WARNING: This will delete all existing data and reset the database!"
+  read -p "Do you want to continue? (yes/no): " -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]es$ ]]; then
+    echo "Demo setup cancelled. Starting server with existing data..."
+  else
+    # Remove existing database and projects to start fresh
+    rm -f data/geti_tune.db
+    rm -rf data/projects/*
+    rm -rf data/output/*
 
-if [[ "$DOWNLOAD_FILES" == "true" ]]; then
-  echo "Downloading required files if not present..."
+    # Initialize the database
+    $UV_CMD app/cli.py init-db
 
-  # Download videos
-  download_video "$DETECTION_VIDEO_URL" "$DETECTION_VIDEO_TARGET"
-  download_video "$SEGMENTATION_VIDEO_URL" "$SEGMENTATION_VIDEO_TARGET"
+    # Create directory for downloaded archives
+    mkdir -p "$DEMO_ARCHIVES_DIR"
 
-  # Download model files
-  download_model "$DETECTION_MODEL_BASE_URL" "$DETECTION_MODEL_TARGET_DIR"
-  download_model "$SEGMENTATION_MODEL_BASE_URL" "$SEGMENTATION_MODEL_TARGET_DIR"
+    # Download and import each demo project
+    for url in "${DEMO_PROJECT_URLS[@]}"; do
+      import_demo_project "$url"
+    done
+
+    echo "Demo setup complete."
+  fi
 fi
 
 echo "Starting FastAPI server..."
 
 exec $UV_CMD "$APP_MODULE"
- 
