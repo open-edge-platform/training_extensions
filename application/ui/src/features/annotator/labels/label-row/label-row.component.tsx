@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { Delete, Pin, Unpin } from '@geti/ui/icons';
@@ -12,6 +12,8 @@ import { SilentCheckbox } from '../../../../components/label-fields/silent-check
 import type { Label } from '../../../../constants/shared-types';
 
 import classes from './label-row.module.scss';
+
+const COLOR_DEBOUNCE_MS = 300;
 
 type LabelRowProps = {
     label: Label;
@@ -52,9 +54,15 @@ export const LabelRow = ({
         () =>
             debounce((newColor: string, currentName: string) => {
                 onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
-            }, 300),
+            }, COLOR_DEBOUNCE_MS),
         [onUpdate, label.id, label.hotkey]
     );
+
+    useEffect(() => {
+        return () => {
+            debouncedUpdate.cancel();
+        };
+    }, [debouncedUpdate]);
 
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
