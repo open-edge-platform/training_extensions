@@ -1,15 +1,15 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { Delete, Pin, Unpin } from '@geti/ui/icons';
-import { debounce } from 'lodash-es';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
+import { useDebounce } from '../../../../hooks/use-debounce.hook';
 
 import classes from './label-row.module.scss';
 
@@ -50,19 +50,13 @@ export const LabelRow = ({
         onUpdate(label.id, { name: name.trim(), color, hotkey: label.hotkey });
     };
 
-    const debouncedUpdate = useMemo(
-        () =>
-            debounce((newColor: string, currentName: string) => {
-                onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
-            }, COLOR_DEBOUNCE_MS),
+    const debouncedUpdate = useDebounce(
+        (newColor: string, currentName: string) => {
+            onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
+        },
+        COLOR_DEBOUNCE_MS,
         [onUpdate, label.id, label.hotkey]
     );
-
-    useEffect(() => {
-        return () => {
-            debouncedUpdate.cancel();
-        };
-    }, [debouncedUpdate]);
 
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
