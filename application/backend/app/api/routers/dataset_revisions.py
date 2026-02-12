@@ -8,11 +8,7 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
-from app.api.schemas.dataset_item import (
-    DatasetItemsWithPagination,
-    DatasetRevisionItemsWithPagination,
-    DatasetRevisionItemView,
-)
+from app.api.schemas.dataset_item import DatasetRevisionItemsWithPagination, DatasetRevisionItemView
 from app.api.schemas.dataset_revision import DatasetRevisionView
 from app.api.validators import DatasetItemID, DatasetRevisionID
 from app.core.models import Pagination
@@ -57,17 +53,10 @@ def list_dataset_revisions(
 ) -> list[DatasetRevisionView]:
     """List the dataset revisions in a project."""
     try:
-        dataset_revision_views = []
-        for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
-            dataset_revision_view_data = dataset_revision.model_dump()
-            dataset_revision_item_counts = dataset_revision_service.count_dataset_revision_items(
-                project_id=project.id, dataset_revision=dataset_revision
-            )
-            if dataset_revision_item_counts is not None:
-                dataset_revision_view_data |= {"item_counts": dataset_revision_item_counts.model_dump()}
-            dataset_revision_view = DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
-            dataset_revision_views.append(dataset_revision_view)
-        return dataset_revision_views
+        return [
+            DatasetRevisionView.model_validate(dataset_revision.model_dump(), from_attributes=True)
+            for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id)
+        ]
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -82,21 +71,10 @@ def list_dataset_revisions(
     },
 )
 def get_dataset_revision_details(
-    project: Annotated[Project, Depends(get_project)],
     dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
-    dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionView:
     """Get information about a specific dataset revision."""
-    try:
-        dataset_revision_view_data = dataset_revision.model_dump()
-        dataset_revision_item_counts = dataset_revision_service.count_dataset_revision_items(
-            project_id=project.id, dataset_revision=dataset_revision
-        )
-        if dataset_revision_item_counts is not None:
-            dataset_revision_view_data |= {"item_counts": dataset_revision_item_counts.model_dump()}
-        return DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return DatasetRevisionView.model_validate(dataset_revision.model_dump(), from_attributes=True)
 
 
 @router.patch(
@@ -134,13 +112,7 @@ def rename_dataset_revision(
             dataset_revision=dataset_revision,
             new_name=new_name,
         )
-        dataset_revision_view_data = dataset_revision.model_dump()
-        dataset_revision_item_counts = dataset_revision_service.count_dataset_revision_items(
-            project_id=project.id, dataset_revision=dataset_revision
-        )
-        if dataset_revision_item_counts is not None:
-            dataset_revision_view_data |= {"item_counts": dataset_revision_item_counts.model_dump()}
-        return DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
+        return DatasetRevisionView.model_validate(dataset_revision.model_dump(), from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -150,7 +122,7 @@ def rename_dataset_revision(
     responses={
         status.HTTP_200_OK: {
             "description": "List of dataset items in the revision",
-            "model": DatasetItemsWithPagination,
+            "model": DatasetRevisionItemsWithPagination,
         },
         status.HTTP_404_NOT_FOUND: {"description": "Dataset revision or project not found"},
     },

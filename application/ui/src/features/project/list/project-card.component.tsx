@@ -1,34 +1,63 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Heading, Tag, Text, View } from '@geti/ui';
+import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
 import type { SchemaProjectView } from '../../../api/openapi-spec';
-// TODO: replace mock thumbnail once /api/projects/{project_id}/thumbnail is finished
-import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../constants/paths';
+import { TaskType } from '../../../constants/shared-types';
+import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
+import { isClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
 
 import classes from './project-list.module.scss';
+
+const cardPadding = 'size-200';
+
+const MAP_PROJECT_TYPE_TO_TITLE: Record<TaskType, string> = {
+    detection: 'Detection',
+    classification: 'Classification',
+    instance_segmentation: 'Instance segmentation',
+};
+
+type ProjectTypeBadgeProps = {
+    type: string;
+};
+
+const ProjectTypeBadge = ({ type }: ProjectTypeBadgeProps) => {
+    return (
+        <Badge variant={'neutral'} UNSAFE_className={classes.tag}>
+            <Text>{type}</Text>
+        </Badge>
+    );
+};
+
+const ActiveProjectBadge = () => {
+    return (
+        <Badge variant={'neutral'} UNSAFE_className={classes.activeTag}>
+            <Text>Active</Text>
+        </Badge>
+    );
+};
 
 type ProjectCardProps = {
     item: SchemaProjectView;
 };
 
-const cardPadding = 'size-200';
-
 export const ProjectCard = ({ item }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
+    const isClassification = isClassificationTask(item.task.task_type);
+    const isMultiLabel = isClassification && item.task.exclusive_labels === false;
 
     return (
         <div style={{ position: 'relative' }}>
             <NavLink to={paths.project.dataset({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
-                    <View aria-label={'project thumbnail'}>
-                        <img src={thumbnailUrl} alt={item.name} />
-                    </View>
+                    <Flex>
+                        <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />
+                    </Flex>
 
                     <View width={'100%'} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
@@ -38,10 +67,12 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
                         </Flex>
 
                         <Flex marginBottom={cardPadding} gap={'size-50'}>
-                            {isActive && (
-                                <Tag withDot={false} text='Active' className={clsx(classes.tag, classes.activeTag)} />
+                            {isActive && <ActiveProjectBadge />}
+                            {isMultiLabel ? (
+                                <ProjectTypeBadge type={'Multi-label classification'} />
+                            ) : (
+                                <ProjectTypeBadge type={MAP_PROJECT_TYPE_TO_TITLE[item.task.task_type]} />
                             )}
-                            <Tag withDot={false} text={item.task.task_type} className={classes.tag} />
                         </Flex>
 
                         <Flex gap={'size-100'} direction={'column'}>

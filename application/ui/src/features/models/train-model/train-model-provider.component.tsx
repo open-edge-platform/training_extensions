@@ -44,7 +44,7 @@ const useDatasetRevisions = () => {
     const { data: datasetRevisions } = useGetDatasetRevisions();
     return {
         datasetRevisions: [
-            { id: 'use-current-dataset-revision', name: 'Use current revision', value: null },
+            { id: 'use-current-dataset-revision', name: 'Use current dataset', value: null },
             ...(datasetRevisions?.map(({ id, name }) => ({ id, name, value: String(id) })) ?? []),
         ],
     };

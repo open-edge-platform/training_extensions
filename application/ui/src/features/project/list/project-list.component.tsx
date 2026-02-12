@@ -22,7 +22,7 @@ const ProjectGrid = () => {
             height={'100%'}
             marginX={'auto'}
             maxHeight={'75vh'}
-            autoRows={'size-2400'}
+            autoRows={'size-2000'}
             justifyContent={'center'}
             UNSAFE_style={{ overflow: 'auto' }}
             columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}

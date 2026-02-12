@@ -1,9 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import BaseRequiredIDModel
+from app.models import DatasetFormat, StagedDataset
 
 
 class DatasetFilters(BaseModel):
@@ -31,7 +32,7 @@ class DatasetFilters(BaseModel):
 
 
 class StagedDatasetView(BaseRequiredIDModel):
-    format: str = Field(..., description="Dataset format, e.g., 'coco', 'datumaro'")
+    format: DatasetFormat = Field(..., description="Dataset format")
     compressed: bool = Field(..., description="Whether the dataset is compressed")
     ready_for_export: bool = Field(..., description="Whether the dataset is ready for export")
     ready_for_import: bool = Field(..., description="Whether the dataset is ready for import")
@@ -42,7 +43,7 @@ class StagedDatasetView(BaseRequiredIDModel):
         "json_schema_extra": {
             "example": {
                 "id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
-                "format": "datumaro",
+                "format": "geti",
                 "compressed": False,
                 "ready_for_export": False,
                 "ready_for_import": True,
@@ -56,3 +57,18 @@ class StagedDatasetView(BaseRequiredIDModel):
             },
         }
     }
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_metadata(cls, data: object) -> object:
+        if isinstance(data, StagedDataset):
+            return {
+                "id": data.id,
+                "compressed": data.compressed,
+                "size": data.size,
+                "format": data.format,
+                "ready_for_export": data.compressed,
+                "ready_for_import": data.format == DatasetFormat.GETI and not data.compressed,
+                "metadata": data.metadata,
+            }
+        return data
