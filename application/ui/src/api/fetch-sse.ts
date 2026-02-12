@@ -9,7 +9,7 @@ type SSEConnection = {
     eventSource: EventSource;
 };
 
-export type SSEOptions<T> = {
+type SSEOptions<T> = {
     onMessage: (data: T) => void;
     onError?: (error: Event) => void;
     onOpen?: () => void;
