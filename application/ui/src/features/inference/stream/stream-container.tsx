@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 
 import { Button, Flex, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { Stream } from './stream';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
@@ -15,13 +14,12 @@ import classes from './stream.module.scss';
 export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { start, status } = useWebRTCConnection();
-    const projectId = useProjectIdentifier();
 
     useEffect(() => {
         if (status === 'failed') {
             toast({ type: 'error', message: 'Failed to connect to the stream' });
         }
-    }, [status, projectId]);
+    }, [status]);
 
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
