@@ -147,6 +147,7 @@ jobs:
       contents: read
     needs:
       - check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
     strategy:
       fail-fast: false
       matrix:
