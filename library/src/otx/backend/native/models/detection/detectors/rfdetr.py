@@ -159,8 +159,12 @@ class RFDETRDetector(BaseModule):
             Tuple of (boxes, labels, scores, masks) tensors.
         """
         outputs = self.lwdetr(batch_inputs)
-        # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
-        if len(outputs) == 3:
+        # outputs may be dict or tuple in export mode
+        if isinstance(outputs, dict):
+            pred_boxes = outputs["pred_boxes"]
+            pred_logits = outputs["pred_logits"]
+            pred_masks = outputs.get("pred_masks")
+        elif len(outputs) == 3:
             pred_boxes, pred_logits, pred_masks = outputs
         else:
             pred_boxes, pred_logits = outputs
