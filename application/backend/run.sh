@@ -76,9 +76,9 @@ export PYTHONPATH=.
 
 # Demo project archives hosted in S3
 DEMO_PROJECT_URLS=(
-  # TODO populate this list with proper projects
-  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/cats-dogs.zip"
-  # Add more demo project URLs here as needed
+  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/apples-tomatoes-classification.zip"
+  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/horses-segmentation.zip"
+  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-segmentation.zip"
 )
 
 # Temporary directory for downloaded archives
