@@ -58,12 +58,6 @@ const useWebRTCConnectionState = () => {
         } catch (error) {
             console.error('Failed to start WebRTC connection:', error);
             setStatus('failed');
-
-            try {
-                await webRTCConnectionRef.current.stop();
-            } catch (stopError) {
-                console.error('Failed to stop WebRTC connection during cleanup:', stopError);
-            }
         }
     }, []);
 
