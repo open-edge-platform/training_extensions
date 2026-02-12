@@ -5,8 +5,8 @@ import { fireEvent, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../../api/utils';
-import { server } from '../../../../../msw-node-setup';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
 import { DeleteProjectDialog } from './delete-project-dialog.component';
 
 describe('DeleteProjectDialog', () => {

@@ -9,9 +9,16 @@ type DeleteProjectDialogProps = {
     projectId: string;
     projectName: string;
     onClose: () => void;
+    onSuccess?: () => void;
 };
 
-export const DeleteProjectDialog = ({ isOpen, projectId, projectName, onClose }: DeleteProjectDialogProps) => {
+export const DeleteProjectDialog = ({
+    isOpen,
+    projectId,
+    projectName,
+    onClose,
+    onSuccess,
+}: DeleteProjectDialogProps) => {
     const deleteMutation = useDeleteProject();
 
     const handleDelete = () => {
@@ -20,10 +27,9 @@ export const DeleteProjectDialog = ({ isOpen, projectId, projectName, onClose }:
             {
                 onSuccess: () => {
                     toast({ type: 'success', message: 'Project deleted successfully' });
+                    onSuccess?.();
                 },
-                onSettled: () => {
-                    onClose();
-                },
+                onSettled: onClose,
             }
         );
     };
