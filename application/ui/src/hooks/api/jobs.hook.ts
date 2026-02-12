@@ -1,50 +1,38 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
-
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../api/client';
-import { connectSSE } from '../../api/fetch-sse';
 import type { Job } from '../../constants/shared-types';
+import { useSSE } from '../use-sse.hook';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
 
 export const useStreamJobStatus = (jobId: string | undefined) => {
     const queryClient = useQueryClient();
 
-    useEffect(() => {
-        if (!jobId) {
-            return;
-        }
-
-        const connection = connectSSE<Job>(`/api/jobs/${jobId}/status`, {
-            onMessage: (updatedJob) => {
-                // Update the job in the cache optimistically to reflect real-time progress
-                queryClient.setQueryData<Job[]>(['get', '/api/jobs'], (prevJobs) => {
-                    if (!prevJobs) {
-                        return [updatedJob];
-                    }
-
-                    return prevJobs.map((job) => (job.job_id === updatedJob.job_id ? updatedJob : job));
-                });
-
-                if (TERMINAL_STATUSES.includes(updatedJob.status)) {
-                    connection.close();
+    const { close } = useSSE<Job>(jobId ? `/api/jobs/${jobId}/status` : undefined, {
+        onMessage: (updatedJob) => {
+            // Update the job in the cache optimistically to reflect real-time progress
+            queryClient.setQueryData<Job[]>(['get', '/api/jobs'], (prevJobs) => {
+                if (!prevJobs) {
+                    return [updatedJob];
                 }
-            },
-            onClose: () => {
-                queryClient.invalidateQueries({ queryKey: ['get', '/api/jobs'] });
-                queryClient.invalidateQueries({ queryKey: ['get', '/api/projects/{project_id}/models'] });
-            },
-        });
 
-        return () => {
-            connection.close();
-        };
-    }, [jobId, queryClient]);
+                return prevJobs.map((job) => (job.job_id === updatedJob.job_id ? updatedJob : job));
+            });
+
+            if (TERMINAL_STATUSES.includes(updatedJob.status)) {
+                close();
+            }
+        },
+        onClose: () => {
+            queryClient.invalidateQueries({ queryKey: ['get', '/api/jobs'] });
+            queryClient.invalidateQueries({ queryKey: ['get', '/api/projects/{project_id}/models'] });
+        },
+    });
 };
 
 export const useSubmitJob = () => {

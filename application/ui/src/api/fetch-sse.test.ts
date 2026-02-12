@@ -1,63 +1,19 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+    getLastEventSource,
+    MockEventSourceConstructor,
+    resetMockEventSource,
+    simulateSSEError,
+    simulateSSEMessage,
+    simulateSSEOpen,
+} from '../test-utils/mock-event-source';
 import { connectSSE } from './fetch-sse';
-
-type MockEventSource = {
-    onopen: ((event: Event) => void) | null;
-    onmessage: ((event: MessageEvent) => void) | null;
-    onerror: ((event: Event) => void) | null;
-    close: ReturnType<typeof vi.fn>;
-    url: string;
-    readyState: number;
-};
-
-let mockEventSourceInstances: MockEventSource[] = [];
-
-const MockEventSourceConstructor = vi.fn().mockImplementation((url: string) => {
-    const instance: MockEventSource = {
-        onopen: null,
-        onmessage: null,
-        onerror: null,
-        close: vi.fn(),
-        url,
-        readyState: 0,
-    };
-    mockEventSourceInstances.push(instance);
-    return instance;
-});
-
-vi.stubGlobal('EventSource', MockEventSourceConstructor);
-
-const getLastEventSource = (): MockEventSource => {
-    const instance = mockEventSourceInstances.at(-1);
-    if (!instance) {
-        throw new Error('No MockEventSource instance found');
-    }
-    return instance;
-};
-
-const simulateMessage = (instance: MockEventSource, data: string) => {
-    instance.onmessage?.({ data } as MessageEvent);
-};
-
-const simulateOpen = (instance: MockEventSource) => {
-    instance.onopen?.({} as Event);
-};
-
-const simulateError = (instance: MockEventSource) => {
-    instance.onerror?.({} as Event);
-};
-
-afterAll(() => {
-    vi.unstubAllGlobals();
-    mockEventSourceInstances = [];
-});
 
 describe('connectSSE', () => {
     beforeEach(() => {
-        mockEventSourceInstances = [];
-        MockEventSourceConstructor.mockClear();
+        resetMockEventSource();
     });
 
     it('creates an EventSource with the correct URL including API base', () => {
@@ -71,7 +27,7 @@ describe('connectSSE', () => {
         connectSSE<{ value: number }>('/api/test', { onMessage });
         const eventSource = getLastEventSource();
 
-        simulateMessage(eventSource, JSON.stringify({ value: 42 }));
+        simulateSSEMessage(eventSource, { value: 42 });
 
         expect(onMessage).toHaveBeenCalledWith({ value: 42 });
     });
@@ -83,9 +39,9 @@ describe('connectSSE', () => {
         });
         const eventSource = getLastEventSource();
 
-        simulateMessage(eventSource, JSON.stringify({ n: 1 }));
-        simulateMessage(eventSource, JSON.stringify({ n: 2 }));
-        simulateMessage(eventSource, JSON.stringify({ n: 3 }));
+        simulateSSEMessage(eventSource, { n: 1 });
+        simulateSSEMessage(eventSource, { n: 2 });
+        simulateSSEMessage(eventSource, { n: 3 });
         expect(messages).toEqual([1, 2, 3]);
     });
 
@@ -94,7 +50,7 @@ describe('connectSSE', () => {
         const onClose = vi.fn();
         const { done } = connectSSE('/api/test', { onMessage, onClose });
         const eventSource = getLastEventSource();
-        simulateError(eventSource);
+        simulateSSEError(eventSource);
 
         await done;
 
@@ -107,7 +63,7 @@ describe('connectSSE', () => {
         connectSSE('/api/test', { onMessage: vi.fn(), onOpen });
         const eventSource = getLastEventSource();
 
-        simulateOpen(eventSource);
+        simulateSSEOpen(eventSource);
         expect(onOpen).toHaveBeenCalledOnce();
     });
 
@@ -117,7 +73,7 @@ describe('connectSSE', () => {
         const { done } = connectSSE('/api/test', { onMessage: vi.fn(), onError, onClose });
         const eventSource = getLastEventSource();
 
-        simulateError(eventSource);
+        simulateSSEError(eventSource);
 
         await done;
 
@@ -131,7 +87,7 @@ describe('connectSSE', () => {
         connectSSE('/api/test', { onMessage });
         const eventSource = getLastEventSource();
 
-        simulateMessage(eventSource, 'not valid json');
+        eventSource.onmessage?.({ data: 'not valid json' } as MessageEvent);
         expect(onMessage).not.toHaveBeenCalled();
     });
 
@@ -152,7 +108,7 @@ describe('connectSSE', () => {
         const { close, done } = connectSSE('/api/test', { onMessage: vi.fn() });
         const eventSource = getLastEventSource();
 
-        simulateOpen(eventSource);
+        simulateSSEOpen(eventSource);
         close();
 
         expect(eventSource.close).toHaveBeenCalledOnce();

@@ -98,6 +98,8 @@ export const TrainingModelRow = ({
         ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H:mm:ss')
         : '';
 
+    const statusMessage = job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...');
+
     return (
         <BottomProgressBar progress={job.progress}>
             <Grid
@@ -114,7 +116,7 @@ export const TrainingModelRow = ({
 
                     <Flex alignItems={'start'}>
                         <TrainingTag />
-                        <StatusTag status={job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...')} />
+                        <StatusTag status={statusMessage} />
                     </Flex>
 
                     <Text UNSAFE_className={classes.metaText}>
