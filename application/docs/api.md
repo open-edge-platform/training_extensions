@@ -58,12 +58,12 @@
 ## Media
 
 | Method   | Path                                              | Payload | Return                         | Description                                |
-| -------- |---------------------------------------------------| ------- |--------------------------------|--------------------------------------------|
+| -------- | ------------------------------------------------- | ------- | ------------------------------ | ------------------------------------------ |
 | `GET`    | `/api/projects/<id>/dataset/media`                | -       | list of dataset media          | List the dataset media (images and videos) |
 | `GET`    | `/api/projects/<id>/dataset/media/<id>`           | -       | dataset media info             | Get info about a dataset media             |
 | `GET`    | `/api/projects/<id>/dataset/media/<id>/frames`    | -       | list of annotated video frames | List the annotated video frames            |
 | `GET`    | `/api/projects/<id>/dataset/media/<id>/binary`    | -       | binary                         | Get the image data of a media (full res)   |
-| `GET`    | `/api/projects/<id>/dataset/media/<id>/thumbnail` | -       | binary                         | Get the thumbnail of a media        |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/thumbnail` | -       | binary                         | Get the thumbnail of a media               |
 | `POST`   | `/api/projects/<id>/dataset/media`                | binary  | media info                     | Upload an image or a video to the dataset  |
 | `DELETE` | `/api/projects/<id>/dataset/media/<id>`           | -       | -                              | Delete a dataset media                     |
 
@@ -77,10 +77,10 @@
 
 ## Dataset items
 
-| Method   | Path                                              | Payload | Return                | Description                                        |
-| -------- | ------------------------------------------------- | ------- | --------------------- | -------------------------------------------------- |
-| `GET`    | `/api/projects/<id>/dataset/items`                | -       | list of dataset items | List the dataset items (option 'with_annotations') |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>`           | -       | dataset item info     | Get info about a dataset item                      |
+| Method | Path                                    | Payload | Return                | Description                                        |
+| ------ | --------------------------------------- | ------- | --------------------- | -------------------------------------------------- |
+| `GET`  | `/api/projects/<id>/dataset/items`      | -       | list of dataset items | List the dataset items (option 'with_annotations') |
+| `GET`  | `/api/projects/<id>/dataset/items/<id>` | -       | dataset item info     | Get info about a dataset item                      |
 
 ### Tags
 
@@ -121,16 +121,26 @@
 | `GET`    | `/api/projects/<id>/dataset_revisions/items/<id>/thumbnail` | -       | binary        | Get the thumbnail of a dataset item                |
 | `DELETE` | `/api/projects/<id>/dataset_revisions`                      | -       | -             | Remove the dataset files to free space             |
 
+### Staged datasets
+
+| Method   | Path                            | Payload | Return           | Description                            |
+| -------- | ------------------------------- | ------- | ---------------- | -------------------------------------- |
+| `GET`    | `/api/staged_datasets`          | -       | list of datasets | List datasets from the staging area    |
+| `POST`   | `/api/staged_datasets`          | binary  | item info        | Upload dataset archive to staging area |
+| `GET`    | `/api/staged_datasets/<id>`     | -       | item info        | Get info about staged dataset          |
+| `GET`    | `/api/staged_datasets/<id>/zip` | -       | binary           | Download archive from the staging area |
+| `DELETE` | `/api/staged_datasets/<id>`     | -       | -                | Remove dataset from the staging area   |
+
 ## Jobs
 
-| Method | Path                    | Payload              | Return       | Description                                        |
-| ------ | ----------------------- | -------------------- | ------------ | -------------------------------------------------- |
-| `POST` | `/api/jobs`             | job type and params  | job id       | Create and submit a new job                        |
-| `GET`  | `/api/jobs`             | -                    | list of jobs | List the jobs in a project (scheduled or running)  |
-| `GET`  | `/api/jobs/<id>`        | -                    | job info     | Get info about a specific job                      |
-| `POST` | `/api/jobs/<id>:cancel` | -                    | -            | Cancel a job                                       |
-| `GET`  | `/api/jobs/<id>/status` | -                    | job status   | Stream real-time status updates for a specific job |
-| `GET`  | `/api/jobs/<id>/logs`   | -                    | job logs     | Stream real-time log output for a specific job     |
+| Method | Path                    | Payload             | Return       | Description                                        |
+| ------ | ----------------------- | ------------------- | ------------ | -------------------------------------------------- |
+| `POST` | `/api/jobs`             | job type and params | job id       | Create and submit a new job                        |
+| `GET`  | `/api/jobs`             | -                   | list of jobs | List the jobs in a project (scheduled or running)  |
+| `GET`  | `/api/jobs/<id>`        | -                   | job info     | Get info about a specific job                      |
+| `POST` | `/api/jobs/<id>:cancel` | -                   | -            | Cancel a job                                       |
+| `GET`  | `/api/jobs/<id>/status` | -                   | job status   | Stream real-time status updates for a specific job |
+| `GET`  | `/api/jobs/<id>/logs`   | -                   | job logs     | Stream real-time log output for a specific job     |
 
 Job types:
 
@@ -140,4 +150,3 @@ Job types:
 - `import_dataset_as_new_project`
 - `export_dataset`
 - `stage_dataset`
-

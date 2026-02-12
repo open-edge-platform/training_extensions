@@ -7,7 +7,8 @@
         background-color: var(--spectrum-global-color-gray-100);
     }
 
-    &:hover .deleteButton {
+    &:hover .deleteButton,
+    &:hover .pinButton {
         opacity: 1;
     }
 }
@@ -15,4 +16,13 @@
 .deleteButton {
     opacity: 0;
     transition: opacity 0.15s ease;
+}
+
+.pinButton {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.pinButtonPinned {
+    opacity: 1;
 }

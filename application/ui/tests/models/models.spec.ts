@@ -195,6 +195,28 @@ test.describe('Models', () => {
         expect(modelNames[0]).toContain('YOLOX Model v1');
     });
 
+    test('can toggle to show and hide failed models', async ({ modelsPage, network }) => {
+        const failedModel = getMockedModel({
+            id: 'model-3',
+            name: 'Failed model',
+            training_info: { status: 'failed' },
+        });
+
+        network.use(
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json([...mockedModels, failedModel]);
+            })
+        );
+
+        await modelsPage.goto();
+
+        await expect(modelsPage.getModelByName('Failed model')).toBeVisible();
+
+        await modelsPage.toggleShowHideFailedModels();
+
+        await expect(modelsPage.getModelByName('Failed model')).toBeHidden();
+    });
+
     test('can rename a model', async ({ modelsPage, network }) => {
         network.use(
             http.patch('/api/projects/{project_id}/models/{model_id}', async ({ request }) => {
@@ -297,7 +319,7 @@ test.describe('Models', () => {
         await expect(modelsPage.getDatasetHeaderByName('Renamed Dataset')).toBeVisible();
     });
 
-    test('handles dataset revision deletion correctly', async ({ modelsPage, network, page }) => {
+    test('can delete a dataset revision', async ({ modelsPage, network, page }) => {
         await modelsPage.goto();
 
         await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeVisible();

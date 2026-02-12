@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, Grid, Heading, Text, View } from '@geti/ui';
+import { Suspense } from 'react';
+
+import { Content, Grid, Heading, Loading, Text, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useProjects } from '../../../hooks/api/project.hook';
@@ -11,9 +13,29 @@ import { ProjectCard } from './project-card.component';
 import backgroundStyles from '../project-background.module.scss';
 import classes from './project-list.module.scss';
 
-export const ProjectList = () => {
+const ProjectGrid = () => {
     const projects = useProjects();
 
+    return (
+        <Grid
+            gap={'size-300'}
+            height={'100%'}
+            marginX={'auto'}
+            maxHeight={'75vh'}
+            autoRows={'size-2000'}
+            justifyContent={'center'}
+            UNSAFE_style={{ overflow: 'auto' }}
+            columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
+        >
+            <NewProjectLink />
+            {projects.data.map((item) => (
+                <ProjectCard key={item.id} item={item} />
+            ))}
+        </Grid>
+    );
+};
+
+export const ProjectList = () => {
     return (
         <View UNSAFE_className={backgroundStyles.projectBackground} paddingTop={'size-1000'} height={'100%'}>
             <Content height={'100%'} maxHeight={'90vh'} maxWidth={'1052px'} margin={'0 auto'}>
@@ -34,21 +56,9 @@ export const ProjectList = () => {
                     test the project to confirm it runs smoothly and meets your goals.
                 </Text>
 
-                <Grid
-                    gap={'size-300'}
-                    marginX={'auto'}
-                    justifyContent={'center'}
-                    columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
-                    UNSAFE_style={{ overflow: 'auto' }}
-                    maxHeight={'75vh'}
-                    height={'100%'}
-                    autoRows={'size-2400'}
-                >
-                    <NewProjectLink />
-                    {projects.data.map((item) => (
-                        <ProjectCard key={item.id} item={item} />
-                    ))}
-                </Grid>
+                <Suspense fallback={<Loading size='M' mode='inline' />}>
+                    <ProjectGrid />
+                </Suspense>
             </Content>
         </View>
     );
