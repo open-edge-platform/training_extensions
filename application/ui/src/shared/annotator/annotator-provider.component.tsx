@@ -1,21 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 
-import type { Label, Media, TaskType } from '../../constants/shared-types';
+import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
-import type { ToolType } from '../../features/annotator/tools/interface';
-import { isClassificationTask, isSegmentationTask } from '../../features/project/task-type-guards';
+import { isClassificationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
 import type { RegionOfInterest } from '../types';
 import { useProjectLabelsWithEmptyLabel } from './labels';
 
 type AnnotatorContext = {
-    // Tools
-    activeTool: ToolType | null;
-    setActiveTool: Dispatch<SetStateAction<ToolType | null>>;
-
     // Labels
     selectedLabelId: string | null;
     setSelectedLabelId: (id: string | null) => void;
@@ -47,36 +42,12 @@ const useSelectedLabel = () => {
     };
 };
 
-const getDefaultTool = (taskType: TaskType | null, mode?: 'annotation' | 'prediction'): ToolType | null => {
-    if (mode === 'prediction') {
-        return null;
-    }
-
-    if (isClassificationTask(taskType)) {
-        return null;
-    }
-
-    if (isSegmentationTask(taskType)) {
-        return 'polygon';
-    }
-
-    return 'bounding-box';
+type AnnotatorProviderProps = {
+    mediaItem: Media;
+    children: ReactNode;
 };
 
-export const AnnotatorProvider = ({
-    mediaItem,
-    mode,
-    children,
-}: {
-    mediaItem: Media;
-    mode?: 'annotation' | 'prediction';
-    children: ReactNode;
-}) => {
-    const { data: selectedProject } = useProject();
-    const [activeTool, setActiveTool] = useState<ToolType | null>(() =>
-        getDefaultTool(selectedProject?.task.task_type, mode)
-    );
-
+export const AnnotatorProvider = ({ mediaItem, children }: AnnotatorProviderProps) => {
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();
 
     const imageQuery = useLoadImageQuery(mediaItem);
@@ -84,9 +55,6 @@ export const AnnotatorProvider = ({
     return (
         <AnnotatorProviderContext.Provider
             value={{
-                activeTool,
-                setActiveTool,
-
                 setSelectedLabelId,
                 selectedLabelId,
                 selectedLabel,

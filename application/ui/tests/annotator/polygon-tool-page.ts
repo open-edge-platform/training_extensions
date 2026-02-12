@@ -42,12 +42,12 @@ export class PolygonToolPage {
         }
     }
 
-    async getTool() {
+    getTool() {
         return this.page.getByRole('button', { name: 'Polygon' });
     }
 
     async selectPolygonTool() {
-        await (await this.getTool()).click();
+        await this.getTool().click();
     }
 
     async openPointContextMenu(point: { x: number; y: number }) {
