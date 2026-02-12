@@ -62,10 +62,12 @@ class Execution(Runnable, ABC):
     @abstractmethod
     def run(self, ctx: ExecutionContext) -> None: ...
 
-    def report_progress(self, msg: str = "", percent: float = 0.0, exc: bool = False) -> None:
+    def report_progress(
+        self, msg: str = "", percent: float = 0.0, metadata: dict[str, Any] | None = None, exc: bool = False
+    ) -> None:
         if self._ctx is not None:
             if exc:
                 logger.exception(msg)
             else:
                 logger.info(msg)
-            self._ctx.report(msg, percent)
+            self._ctx.report(msg, percent, metadata)

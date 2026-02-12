@@ -36,7 +36,7 @@ class BaseSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     subset: Subset = subset_field()
-    user_reviewed: bool = bool_field()
+    user_reviewed: bool = bool_field(semantic="user_reviewed")
 
 
 class ClassificationSample(BaseSample):

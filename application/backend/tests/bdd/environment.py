@@ -8,11 +8,9 @@ import tempfile
 import time
 from collections.abc import Generator
 from pathlib import Path
-from typing import cast
 
 import requests
 from behave import fixture, use_fixture
-from behave.model import Scenario
 from behave.runner import Context
 
 
@@ -68,11 +66,3 @@ def fastapi_server(context: Context) -> Generator[None]:
 def before_all(context: Context) -> None:
     """Set up the server before each scenario."""
     use_fixture(fastapi_server, context)
-
-
-def after_scenario(context: Context, _: Scenario) -> None:
-    """Delete dataset .zip archive after each scenario."""
-    if hasattr(context, "staged_dataset_path"):
-        dataset_path = cast(Path, context.staged_dataset_path)
-        if dataset_path.exists():
-            dataset_path.unlink()

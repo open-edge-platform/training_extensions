@@ -17,6 +17,7 @@ from datumaro.experimental.export_import import import_dataset
 
 from app.api.schemas import ProjectView
 from app.api.schemas.jobs import JobView
+from app.api.schemas.jobs.dataset_export import ExportDatasetMetadata
 from app.core.jobs.models import JobStatus, JobType
 from app.execution.dataset_export import get_dm_format
 from app.models import DatasetFormat, TaskType
@@ -99,6 +100,23 @@ def step_dataset_has_annotated_images(context: Context, count: int, subset: str)
                         }
                     ]
                 }
+            case TaskType.INSTANCE_SEGMENTATION:
+                annotation_body = {
+                    "annotations": [
+                        {
+                            "labels": [{"id": random.choice(label_ids)}],
+                            "shape": {
+                                "type": "polygon",
+                                "points": [
+                                    {"x": 10 + secrets.randbelow(50), "y": 20 + secrets.randbelow(50)},
+                                    {"x": 60 + secrets.randbelow(50), "y": 20 + secrets.randbelow(50)},
+                                    {"x": 60 + secrets.randbelow(50), "y": 120 + secrets.randbelow(150)},
+                                    {"x": 10 + secrets.randbelow(50), "y": 120 + secrets.randbelow(150)},
+                                ],
+                            },
+                        }
+                    ]
+                }
         requests.post(
             f"{context.base_url}/api/projects/{project.id}/dataset/items/{dataset_item_id}/annotations",
             json=annotation_body,
@@ -137,27 +155,26 @@ def step_export_dataset(context: Context, export_format: str, filters: str) -> N
 
     job = cast(JobView, context.job)
     assert job.status == JobStatus.DONE.name, f"Expected job to be DONE, but got {job.status}, error: {job.error}"
+    context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
 
 
 @then("the staged dataset archive {archive_name} should exist")  # pyrefly: ignore
 def step_staged_dataset_archive_exists(context: Context, archive_name: str) -> None:
-    staged_datasets_dir = cast(Path, context.tmp_path) / "data" / "staged_datasets"
-
-    matching_archives = [f for f in staged_datasets_dir.glob("**/*.zip") if f.name.endswith(archive_name)]
-
-    assert len(matching_archives) > 0, (
-        f"No archive ending with '{archive_name}' found in {staged_datasets_dir}. "
-        f"Available archives: {list(staged_datasets_dir.glob('*.zip'))}"
-    )
-
-    context.staged_dataset_path = staged_datasets_dir / matching_archives[0]
+    response = requests.get(f"{context.base_url}/api/staged_datasets/{context.dataset_id}")
+    assert response.status_code == 200
 
 
 @then("the exported dataset has {count:d} images")  # pyrefly: ignore
 def step_exported_dataset_has_items(context: Context, count: int) -> None:
     dataset = None
     export_format = context.export_format
-    dataset_path = cast(Path, context.staged_dataset_path)
+    dataset_path = (
+        cast(Path, context.tmp_path)
+        / "data"
+        / "staged_datasets"
+        / str(context.dataset_id)
+        / f"dataset-{str(export_format)}.zip"
+    )
     match export_format:
         case DatasetFormat.GETI:
             dataset = import_dataset(dataset_path)

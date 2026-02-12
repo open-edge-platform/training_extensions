@@ -43,26 +43,27 @@ Feature: Dataset Export
      | GETI   | dataset-geti.zip     | { "subsets": ["training", "testing"] }              | 15              |
      | GETI   | dataset-geti.zip     | { "labels": ["cat"], "include_unannotated": false } | 9               |
      | GETI   | dataset-geti.zip     | { "include_unannotated": false }                    | 15              |
-#     | VOC    | dataset-voc.zip      | { "include_unannotated": true }        | 20              |
-#     | VOC    | dataset-voc.zip      | { "subsets": ["training", "testing"] } | 10              |
-#     | VOC    | dataset-voc.zip      | { "include_unannotated": false }       | 15              |
+#     | VOC    | dataset-voc.zip      | { "include_unannotated": true }                     | 20              |
+#     | VOC    | dataset-voc.zip      | { "subsets": ["training", "testing"] }              | 10              |
+#     | VOC    | dataset-voc.zip      | { "labels": ["cat"], "include_unannotated": false } | 9               |
+#     | VOC    | dataset-voc.zip      | { "include_unannotated": false }                    | 15              |
 
-#  @export @segmentation
-#  Scenario Outline: Export segmentation project dataset
-#    Given An "instance_segmentation" project "traffic" with labels ["car", "person"] exists
-#    And the project dataset has 6 images with annotations in subset "training"
-#    And the project dataset has 3 images with annotations in subset "validation"
-#    And the project dataset has 3 images with annotations in subset "testing"
-#    And the project dataset has 3 unannotated images
-#    When I export the project dataset in <export format> format with filters=<filters>
-#    Then the staged dataset archive <archive name> should exist
-#    And the exported dataset has <expected images> images
-#
-#    Examples:
-#     | export format | archive name  | filters                                    | expected images |
-##     | GETI   | dataset-geti.zip     | { "include_unannotated": true }            | 15              |
-#     | GETI   | dataset-geti.zip     | { "subsets": ["training", "validation"] }  | 9               |
-#     | GETI   | dataset-geti.zip     | { "include_unannotated": false }           | 12              |
-##     | COCO   | dataset-coco.zip     | { "include_unannotated": true }            | 15              |
-##     | COCO    | dataset-voc.zip      | { "subsets": ["training", "validation"] } | 9               |
-##     | COCO    | dataset-voc.zip      | { "include_unannotated": false }          | 12              |
+  @export @segmentation
+  Scenario Outline: Export segmentation project dataset
+    Given An "instance_segmentation" project "traffic" with labels ["car", "person"] exists
+    And the project dataset has 6 images with annotations in subset "training"
+    And the project dataset has 3 images with annotations in subset "validation"
+    And the project dataset has 3 images with annotations in subset "testing"
+    And the project dataset has 3 unannotated images in subset "testing"
+    When I export the project dataset in <export format> format with filters=<filters>
+    Then the staged dataset archive <archive name> should exist
+    And the exported dataset has <expected images> images
+
+    Examples:
+     | export format | archive name  | filters                                    | expected images |
+     | GETI   | dataset-geti.zip     | { "include_unannotated": true }            | 15              |
+     | GETI   | dataset-geti.zip     | { "subsets": ["training", "validation"] }  | 9               |
+     | GETI   | dataset-geti.zip     | { "include_unannotated": false }           | 12              |
+     | COCO   | dataset-coco.zip     | { "include_unannotated": true }            | 15              |
+     | COCO   | dataset-coco.zip     | { "subsets": ["training", "validation"] }  | 9               |
+     | COCO   | dataset-coco.zip     | { "include_unannotated": false }           | 12              |

@@ -117,9 +117,10 @@ class DatasetExport(Execution):
         dataset_id, dataset = self.prepare_dataset(export_params)
         if not dataset:
             logger.warning(
-                "Dataset {} for project {} is empty after applying filters",
+                "Dataset {} for project {} is empty after applying filters. Nothing to export.",
                 export_params.dataset_id,
                 export_params.project_id,
             )
             return
+        self.report_progress(metadata={"dataset_id": dataset_id})
         self.export_dataset(dataset_id, dataset, export_params.export_format)
