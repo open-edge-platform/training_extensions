@@ -7,6 +7,7 @@ import cv2
 import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
+from loguru import logger
 
 from app.models.system import CameraInfo, DeviceInfo, DeviceType
 
@@ -111,7 +112,11 @@ class SystemService:
         Returns:
             bool: True if the device is available, False otherwise
         """
-        device_type, device_index = self._parse_device(device_str)
+        try:
+            device_type, device_index = self._parse_device(device_str)
+        except ValueError:
+            logger.debug("Cannot parse invalid device string: {}", device_str)
+            return False
 
         # CPU is always available
         if device_type == DeviceType.CPU:

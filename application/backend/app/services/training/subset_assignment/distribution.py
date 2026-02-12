@@ -13,8 +13,9 @@ class SubsetDistribution:
         self._counts = counts.copy()
 
     @property
-    def total(self) -> int:
-        return sum(self._counts.values())
+    def total_assigned(self) -> int:
+        """Total count of assigned items across train, validation, and test subsets."""
+        return sum(count for subset, count in self._counts.items() if subset != DatasetItemSubset.UNASSIGNED)
 
     def get_count(self, subset: DatasetItemSubset) -> int:
         return self._counts.get(subset, 0)
@@ -30,7 +31,7 @@ class SubsetDistribution:
         if unassigned_count == 0:
             return target_ratios
 
-        target_counts = target_ratios.to_fold_sizes(self.total + unassigned_count)
+        target_counts = target_ratios.to_fold_sizes(self.total_assigned + unassigned_count)
 
         # Calculate how many more items are needed in each subset
         needed = {

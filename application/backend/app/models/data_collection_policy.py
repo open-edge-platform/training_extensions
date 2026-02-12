@@ -12,7 +12,7 @@ class DataCollectionPolicyBase(BaseModel):
 
 class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
     type: Literal["fixed_rate"] = "fixed_rate"
-    rate: float
+    rate: float = Field(gt=0)
 
 
 class ConfidenceThresholdDataCollectionPolicy(DataCollectionPolicyBase):

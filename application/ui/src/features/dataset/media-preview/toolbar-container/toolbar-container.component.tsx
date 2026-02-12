@@ -24,7 +24,7 @@ type ToolbarSectionProps = {
 
 const ToolbarSection = ({ children }: ToolbarSectionProps) => {
     return (
-        <View backgroundColor={'gray-50'} padding={'size-100'}>
+        <View borderRadius={'regular'} backgroundColor={'gray-50'} padding={'size-100'}>
             {children}
         </View>
     );

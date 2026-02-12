@@ -20,13 +20,13 @@ export const ModelListing = ({ groupedModels, hasNoResults }: ModelListingProps)
                     <EmptySearchResults />
                 </Flex>
             ) : (
-                <Flex direction={'column'} gap={'size-300'} flex={1}>
-                    {groupedModels.map(({ group, models }, index) => (
-                        <GroupModelsContainer
-                            key={'id' in group ? group.id : `${group.name}-${index}`}
-                            group={group}
-                            models={models}
-                        />
+                <Flex
+                    direction={'column'}
+                    flex={1}
+                    UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}
+                >
+                    {groupedModels.map(({ group, models }) => (
+                        <GroupModelsContainer key={group.id} group={group} models={models} />
                     ))}
                 </Flex>
             )}

@@ -82,7 +82,7 @@ class ModelRevision(BaseEntity):
 
     @model_validator(mode="before")
     @classmethod
-    def populate_training_info(cls, data: object) -> object:
+    def populate_model_revision(cls, data: object) -> object:
         if isinstance(data, ModelRevisionDB):
             return {
                 "id": data.id,

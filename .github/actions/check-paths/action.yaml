@@ -1,0 +1,32 @@
+name: Check paths
+description: Determine if a workflow should run based on event type and changed paths
+
+inputs:
+  files_yaml:
+    description: YAML map of path groups for tj-actions/changed-files
+    required: true
+
+outputs:
+  run:
+    description: Whether the workflow should run (true/false)
+    value: ${{ steps.run_workflow.outputs.run }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get all paths that should trigger the workflow
+      id: changed-files-yaml
+      uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+      with:
+        files_yaml: ${{ inputs.files_yaml }}
+
+    - name: Set run flag
+      id: run_workflow
+      shell: bash
+      run: |
+        if [[ "${{ github.event_name }}" =~ ^(push|workflow_dispatch|workflow_call)$ ]] || \
+           [ "${{ steps.changed-files-yaml.outputs.test_any_changed }}" = "true" ]; then
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "run=false" >> "$GITHUB_OUTPUT"
+        fi

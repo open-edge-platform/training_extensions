@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
 import { mockedMedia } from 'mocks/mock-media';
+import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
@@ -45,6 +46,25 @@ const test = testBase.extend<Fixtures>({
             }),
             http.get('/api/projects/{project_id}/models', ({ response }) => {
                 return response(200).json([]);
+            }),
+            http.get('/api/model_architectures', () => {
+                const mockedModelArchitectures = [
+                    getMockedModelArchitecture({ id: 'Object_Detection_SSD', name: 'Object_Detection_SSD' }),
+                    getMockedModelArchitecture({ id: 'Object_Detection_YOLOX_X', name: 'Object_Detection_YOLOX_X' }),
+                    getMockedModelArchitecture({
+                        id: 'Custom_Object_Detection_Gen3_ATSS',
+                        name: 'Custom_Object_Detection_Gen3_ATSS',
+                    }),
+                ];
+
+                return HttpResponse.json({
+                    model_architectures: mockedModelArchitectures,
+                    top_picks: {
+                        balance: mockedModelArchitectures[0].id,
+                        speed: mockedModelArchitectures[1].id,
+                        accuracy: mockedModelArchitectures[2].id,
+                    },
+                });
             }),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json({

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
-import { MutationCache, QueryClient } from '@tanstack/react-query';
+import { matchQuery, MutationCache, QueryClient } from '@tanstack/react-query';
 
 import { paths } from '../api/openapi-spec';
 import { Meta, QueryKey } from './query-client.interface';
@@ -48,8 +48,12 @@ export const queryClient = new QueryClient({
             const invalidateQueries = meta?.invalidateQueries;
 
             if (invalidateQueries) {
-                invalidateQueries.forEach((queryKey) => {
-                    queryClient.invalidateQueries({ queryKey });
+                queryClient.invalidateQueries({
+                    predicate: (query) => {
+                        return invalidateQueries.some((queryKey) => {
+                            return matchQuery({ queryKey }, query);
+                        });
+                    },
                 });
             }
         },

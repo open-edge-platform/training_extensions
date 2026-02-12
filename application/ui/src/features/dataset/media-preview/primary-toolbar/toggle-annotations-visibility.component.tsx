@@ -14,7 +14,7 @@ export const ToggleAnnotationsVisibility = () => {
     useHotkeys(HOTKEYS.toggleAnnotationsVisibility, toggleVisibility, [toggleVisibility]);
 
     return (
-        <TooltipTrigger>
+        <TooltipTrigger placement={'right'}>
             <ActionButton aria-label={`${isVisible ? 'Hide' : 'Show'} annotations`} isQuiet onPress={toggleVisibility}>
                 {isVisible ? <Visible /> : <Invisible />}
             </ActionButton>

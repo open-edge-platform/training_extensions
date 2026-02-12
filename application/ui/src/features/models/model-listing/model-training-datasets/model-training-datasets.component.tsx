@@ -18,6 +18,8 @@ type SubsetBoxProps = {
     totalItems: number;
 };
 
+// TODO: Uncomment when we want to support subset actions
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BoxActions = () => {
     return (
         <Flex marginStart={'auto'} gap={'size-50'}>
@@ -62,9 +64,8 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
                     <Heading level={5}>
                         {title} {formatter.format(subsetPercentage)}
                     </Heading>
-                    <Text>({totalCount})</Text>
+                    <Text UNSAFE_className={classes.totalCount}>({totalCount})</Text>
                 </Flex>
-                <BoxActions />
             </Flex>
 
             <Content UNSAFE_className={classes.boxContent}>
@@ -74,7 +75,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
-                    isLoading={isPending}
+                    isPending={isPending}
                 />
             </Content>
         </Flex>
