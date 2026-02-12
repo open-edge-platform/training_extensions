@@ -48,6 +48,14 @@ def _query_evaluations(engine: Engine, metadata: MetaData, project_id: str):
     return select(e).join(mr, e.c.model_revision_id == mr.c.id).where(mr.c.project_id == project_id)
 
 
+def _query_video_frames(engine: Engine, metadata: MetaData, project_id: str):
+    """Join through media (video_id) to get project-related video frames."""
+    vf = Table("video_frames", metadata, autoload_with=engine)
+    media = Table("media", metadata, autoload_with=engine)
+
+    return select(vf).join(media, vf.c.video_id == media.c.id).where(media.c.project_id == project_id)
+
+
 # Mapping of table names to their query strategy to fetch the relevant records for the given project.
 # Strategies:
 # - None: the table is excluded from export
@@ -71,6 +79,7 @@ QUERY_STRATEGY_BY_TABLE = {
     "dataset_items_labels": _query_dataset_items_labels,
     "evaluations": _query_evaluations,
     "metric_scores": _query_metric_scores,
+    "video_frames": _query_video_frames,
 }
 
 
