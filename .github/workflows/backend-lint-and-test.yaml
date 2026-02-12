@@ -27,7 +27,8 @@ jobs:
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
-      - name: Checkout repository
+      - &checkout
+        name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
@@ -52,10 +53,7 @@ jobs:
     permissions:
       contents: read # to checkout code
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
@@ -90,31 +88,26 @@ jobs:
       - name: Check imports with import-linter
         if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
-        run: |
-          uv run lint-imports
+        run: uv run lint-imports
 
       - name: Check source code with Pyrefly
         if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
-        run: |
-          uv run pyrefly check
+        run: uv run pyrefly check
 
       - name: Run unit tests
         working-directory: application/backend
-        run: |
-          uv run pytest tests/unit
+        run: uv run pytest tests/unit
 
       - name: Run ubuntu integration tests
         if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
-        run: |
-          uv run pytest tests/integration
+        run: uv run pytest tests/integration
 
       - name: Run windows integration tests # Skip tests with docker issues on Windows
         if: matrix.os == 'windows-latest'
         working-directory: application/backend
-        run: |
-          uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py --ignore=tests/integration/services/dispatchers/test_mqtt.py tests/integration
+        run: uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py --ignore=tests/integration/services/dispatchers/test_mqtt.py tests/integration
 
   required_check:
     name: Required Check backend-lint-and-test
