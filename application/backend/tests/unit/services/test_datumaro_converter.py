@@ -14,13 +14,13 @@ from app.models import (
     Label,
     LabelReference,
     Media,
-    MediaFormat,
     MediaType,
     Point,
     Polygon,
     Rectangle,
     Shape,
 )
+from app.models.media import ImageFormat
 from app.services.datumaro_converter import (
     ClassificationSample,
     DetectionSample,
@@ -147,9 +147,11 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
         name="test",
         width=200,
         height=100,
-        format=MediaFormat.JPG,
+        format=ImageFormat.JPG,
         size=1024,
         source_id=None,
+        fps=None,
+        frame_count=None,
     )
     dataset_item_1 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[0].id), 4, 5, 10, 10)
     dataset_item_2 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[1].id), 14, 35, 10, 10)
@@ -195,9 +197,11 @@ def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_class
         name="test",
         width=200,
         height=100,
-        format=MediaFormat.JPG,
+        format=ImageFormat.JPG,
         size=1024,
         source_id=None,
+        fps=None,
+        frame_count=None,
     )
     dataset_item_1 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[0].id))
     dataset_item_2 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[1].id))
@@ -245,9 +249,11 @@ def test_convert_multilabel_classification_dataset_item(
         name="test",
         width=200,
         height=100,
-        format=MediaFormat.JPG,
+        format=ImageFormat.JPG,
         size=1024,
         source_id=None,
+        fps=None,
+        frame_count=None,
     )
     dataset_item = fxt_multilabel_classification_dataset_item(
         project_id, [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
@@ -281,9 +287,11 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
         name="test",
         width=200,
         height=100,
-        format=MediaFormat.JPG,
+        format=ImageFormat.JPG,
         size=1024,
         source_id=None,
+        fps=None,
+        frame_count=None,
     )
     dataset_item_1 = fxt_instance_segmentation_dataset_item(
         project_id,

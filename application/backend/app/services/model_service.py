@@ -414,3 +414,35 @@ class ModelService(BaseSessionManagedService):
             metrics.append(metric)
 
         return metrics
+
+    def get_logs(self, project_id: UUID, model_id: UUID) -> Path | None:
+        """
+        Get the training logs for a model revision.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            Path | None: Path to the training log file.
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
+            ValueError: If the model is in NOT_STARTED or IN_PROGRESS status.
+        """
+        model_revision = self.get_model(project_id=project_id, model_id=model_id)
+
+        if model_revision.training_info and model_revision.training_info.status in (
+            TrainingStatus.NOT_STARTED,
+            TrainingStatus.IN_PROGRESS,
+        ):
+            raise ValueError(
+                "Logs are not available for models that have not started or are currently in progress of training"
+            )
+
+        log_file = self._projects_dir / str(project_id) / "models" / str(model_id) / "training.log"
+
+        if not log_file.exists():
+            return None
+
+        return log_file

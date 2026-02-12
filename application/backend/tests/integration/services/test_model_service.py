@@ -428,3 +428,97 @@ class TestModelServiceIntegration:
             fxt_model_service.get_model_training_metrics(project_id=fxt_project_id, model_id=fxt_model_id)
 
         assert "metrics.csv not found" in str(exc_info.value)
+
+    @pytest.mark.parametrize("training_status", [TrainingStatus.SUCCESSFUL, TrainingStatus.FAILED])
+    def test_get_logs_success(
+        self,
+        training_status: TrainingStatus,
+        tmp_path: Path,
+        fxt_model_id: UUID,
+        fxt_project_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test retrieving training logs for a trained model."""
+        # Arrange
+        model_rev_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_rev_db
+        model_rev_db.training_status = training_status
+        db_session.add(model_rev_db)
+        db_session.flush()
+
+        log_file = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "training.log"
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"
+        log_file.write_text(log_content)
+
+        # Act
+        result = fxt_model_service.get_logs(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        # Assert
+        assert result is not None
+        assert result.exists()
+        assert result.read_text() == log_content
+
+    @pytest.mark.parametrize("training_status", [TrainingStatus.NOT_STARTED, TrainingStatus.IN_PROGRESS])
+    def test_get_logs_in_status(
+        self,
+        training_status: TrainingStatus,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test retrieving logs for a model that has not started or in_progress training status."""
+        # Arrange
+        model_rev_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_rev_db
+        model_rev_db.training_status = training_status
+        db_session.add(model_rev_db)
+        db_session.flush()
+
+        # Act & Assert
+        with pytest.raises(ValueError) as excinfo:
+            fxt_model_service.get_logs(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        assert (
+            str(excinfo.value)
+            == "Logs are not available for models that have not started or are currently in progress of training"
+        )
+
+    def test_get_logs_file_not_exists(
+        self,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test retrieving logs when the log file does not exist."""
+        # Arrange
+        model_rev_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_rev_db
+        model_rev_db.training_status = TrainingStatus.SUCCESSFUL
+        db_session.add(model_rev_db)
+        db_session.flush()
+
+        # Act
+        result = fxt_model_service.get_logs(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        # Assert
+        assert result is None
+
+    def test_get_logs_non_existent_model(
+        self,
+        fxt_project_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test retrieving logs for a non-existent model."""
+        # Arrange
+        model_id = uuid4()
+
+        # Act & Assert
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_model_service.get_logs(project_id=fxt_project_id, model_id=model_id)
+
+        assert excinfo.value.resource_type == ResourceType.MODEL
+        assert excinfo.value.resource_id == str(model_id)

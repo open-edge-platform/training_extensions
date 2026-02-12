@@ -10,17 +10,38 @@ import { MediaThumbnail } from './media-thumbnail.component';
 describe('MediaThumbnail', () => {
     it('calls onClick when image is clicked', async () => {
         const mockedClick = vi.fn();
-        render(<MediaThumbnail url='test-image.jpg' alt='Test Image' onClick={mockedClick} />);
+        render(<MediaThumbnail url='test-image.jpg' alt='Test Image' onClick={mockedClick} item={{ type: 'image' }} />);
 
-        userEvent.click(screen.getByRole('img', { name: 'Test Image' }));
+        await userEvent.click(screen.getByRole('img', { name: 'Test Image' }));
         await waitFor(() => expect(mockedClick).toHaveBeenCalled());
     });
 
     it('calls onDoubleClick when image is double-clicked', async () => {
         const mockedDblClick = vi.fn();
-        render(<MediaThumbnail url='test-image.jpg' alt='Test Image' onDoubleClick={mockedDblClick} />);
+        render(
+            <MediaThumbnail
+                url='test-image.jpg'
+                alt='Test Image'
+                onDoubleClick={mockedDblClick}
+                item={{ type: 'image' }}
+            />
+        );
 
-        userEvent.dblClick(screen.getByRole('img', { name: 'Test Image' }));
+        await userEvent.dblClick(screen.getByRole('img', { name: 'Test Image' }));
         await waitFor(() => expect(mockedDblClick).toHaveBeenCalled());
+    });
+
+    it('displays frames count when item is a video', async () => {
+        const mockedClick = vi.fn();
+        render(
+            <MediaThumbnail
+                url='test-video.mp4'
+                alt='Test Image'
+                onClick={mockedClick}
+                item={{ type: 'video', frame_count: 3600 }}
+            />
+        );
+
+        expect(screen.getByText('3600 frames')).toBeInTheDocument();
     });
 });

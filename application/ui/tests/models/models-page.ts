@@ -34,6 +34,10 @@ export class ModelsPage {
         await this.page.getByRole('button', { name: 'Pin active model on top' }).click();
     }
 
+    async toggleShowHideFailedModels() {
+        await this.page.getByRole('button', { name: 'Show failed models' }).click();
+    }
+
     getSearchInput() {
         return this.page.getByLabel('Search models');
     }

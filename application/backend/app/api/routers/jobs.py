@@ -192,14 +192,7 @@ async def stream_job_logs(
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    if job.status >= JobStatus.DONE:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Job has already completed; logs are no longer available for streaming",
-        )
-
     log_path = job_dir / job.log_file
-
     if not log_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
 
@@ -233,13 +226,24 @@ async def __gen_log_stream(job_id: UUID, log_path: Path, job_queue: JobQueue) ->
                 j = job_queue.get(job_id)
                 if not j:
                     break
+
                 line = await f.readline()
-                if not line:
-                    await asyncio.sleep(0.3)
+                if line:
+                    yield ServerSentEvent(data=line.rstrip("\n"))
                     continue
-                yield ServerSentEvent(data=line.rstrip("\n"))
+
+                # No more lines available
                 if j.status >= JobStatus.DONE:
-                    break
+                    # Job is done and no new lines - wait briefly to catch any final writes
+                    await asyncio.sleep(0.5)
+                    final_line = await f.readline()
+                    if final_line:
+                        yield ServerSentEvent(data=final_line.rstrip("\n"))
+                        continue
+                    break  # Job is done and no more lines, exit the loop
+
+                # Job still running, wait for more logs
+                await asyncio.sleep(0.3)
     except asyncio.CancelledError:
         raise
     except Exception as e:

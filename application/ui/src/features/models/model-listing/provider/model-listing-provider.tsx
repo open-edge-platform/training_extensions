@@ -21,6 +21,7 @@ interface ModelListingContextValue {
     groupedModels: GroupedModels[];
     searchBy: string;
     datasetRevisions: DatasetRevision[];
+    showFailedModels: boolean;
 
     // Actions
     onGroupByChange: (mode: GroupByMode) => void;
@@ -28,6 +29,7 @@ interface ModelListingContextValue {
     onPinActiveToggle: () => void;
     onExpandModel: (modelId: string) => void;
     onSearchChange: (query: string) => void;
+    onToggleShowFailedModels: () => void;
 }
 
 const ModelListingContext = createContext<ModelListingContextValue | null>(null);
@@ -40,13 +42,21 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [groupBy, setGroupBy] = useState<GroupByMode>('dataset');
     const [sortBy, setSortBy] = useState<SortBy>('score');
     const [pinActive, setPinActive] = useState<boolean>(false);
+    const [showFailedModels, setShowFailedModels] = useState<boolean>(true);
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
     const [searchBy, setSearchBy] = useState<string>('');
 
     const activeModel = useGetActiveModel();
     const { data: models } = useGetModels();
     const { data: datasetRevisions = [] } = useGetDatasetRevisions();
-    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy, datasetRevisions });
+    const groupedModels = useGroupedModels(models, {
+        groupBy,
+        sortBy,
+        pinActive,
+        searchBy,
+        datasetRevisions,
+        showFailedModels,
+    });
 
     const onGroupByChange = (mode: GroupByMode) => {
         setGroupBy(mode);
@@ -58,6 +68,10 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
 
     const onPinActiveToggle = () => {
         setPinActive((prev) => !prev);
+    };
+
+    const toggleShowFailedModels = () => {
+        setShowFailedModels((prev) => !prev);
     };
 
     const onSearchChange = (query: string) => {
@@ -87,11 +101,14 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         groupedModels,
         searchBy,
         datasetRevisions,
+        showFailedModels,
+
         onGroupByChange,
         onSortChange,
         onPinActiveToggle,
         onExpandModel,
         onSearchChange,
+        onToggleShowFailedModels: toggleShowFailedModels,
     };
 
     return <ModelListingContext.Provider value={value}>{children}</ModelListingContext.Provider>;

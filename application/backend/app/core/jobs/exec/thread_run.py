@@ -3,7 +3,6 @@
 
 import asyncio
 import threading
-import time
 import warnings
 from collections.abc import Iterator
 from queue import Empty, Queue
@@ -104,14 +103,9 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
                 self.runner = runner
 
             def report(self, message: str = "training", progress: float = 0.0):  # pyrefly: ignore[bad-override]
-                if not self.runner._cancel_event.is_set():
-                    self.runner._event_queue.put(Progress(message, progress))
-
-            def heartbeat(self):
                 if self.runner._cancel_event.is_set():
                     raise CancelledExc("Job cancelled")
-                # Small sleep to simulate work and allow for responsive cancellation
-                time.sleep(0.01)
+                self.runner._event_queue.put(Progress(message, progress))
 
         return ThreadAwareExecutionContext(self)
 

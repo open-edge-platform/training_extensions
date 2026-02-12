@@ -14,9 +14,6 @@ from app.models.model_activation import ModelActivationState
 from app.repositories import ModelRevisionRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 
-# It's safer to default to CPU since inference with other devices sometimes results in degraded prediction quality
-# See for example: https://github.com/open-edge-platform/model_api/issues/460
-MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "CPU")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
@@ -24,6 +21,39 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 class LoadedModel:
     id: UUID
     model: Model
+    device: str
+
+
+@dataclass(frozen=True)
+class DeviceType:
+    """Value object representing a device type with optional index."""
+
+    name: str
+    index: int | None = None
+
+    def __str__(self) -> str:
+        """Convert to OpenVINO device string format (e.g., 'GPU.1')."""
+        return f"{self.name.upper()}.{self.index}" if self.index is not None else self.name.upper()
+
+    @classmethod
+    def from_raw(cls, raw_device_name: str) -> "DeviceType":
+        """
+        Parse raw device name into DeviceType.
+        Examples:
+            "cpu" -> DeviceType(name="CPU", index=None)
+            "xpu" -> DeviceType(name="GPU", index=None)
+            "xpu-1" -> DeviceType(name="GPU", index=1)
+        """
+        if raw_device_name.lower() == "cpu":
+            return cls(name="CPU")
+
+        if raw_device_name.lower().startswith("xpu"):
+            parts = raw_device_name.split("-")
+            if len(parts) == 1:
+                return DeviceType(name="GPU")
+            if len(parts) == 2 and parts[1].isdigit():
+                return DeviceType(name="GPU", index=int(parts[1]))
+        raise ValueError(f"Unsupported device name: {raw_device_name}")
 
 
 class ActiveModelService:
@@ -49,13 +79,19 @@ class ActiveModelService:
                     project_id=None,
                     active_model_id=None,
                     available_models=[],
+                    device="",
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all()
+            pipeline_device = active_model_repo.get_active_pipeline_device()
+            if pipeline_device is None:
+                raise RuntimeError("Active pipeline must have a device configured")
+            ov_device = DeviceType.from_raw(pipeline_device)
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
                 available_models=[UUID(m.id) for m in available_models],
+                device=str(ov_device),
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
@@ -83,15 +119,21 @@ class ActiveModelService:
 
         project_id = self._model_activation_state.project_id
         active_model_id = self._model_activation_state.active_model_id
-        if self._loaded_model is None or self._loaded_model.id != active_model_id:
-            logger.info("Loading model with ID '{}'", active_model_id)
+        device = self._model_activation_state.device
+        needs_reload = (
+            self._loaded_model is None
+            or self._loaded_model.id != active_model_id
+            or self._loaded_model.device != device
+        )
+        if needs_reload:
+            logger.info("Loading model with ID '{}' on device '{}'", active_model_id, device)
             try:
                 # Ensure all necessary model files exist before loading the model
                 model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
                 _ = self._get_model_file_path(project_id, active_model_id, "bin")
                 mapi_model = Model.create_model(
                     model=str(model_xml_path),
-                    device=MODELAPI_DEVICE,
+                    device=device,
                     nstreams=MODELAPI_NSTREAMS,
                 )
             except FileNotFoundError:
@@ -101,5 +143,6 @@ class ActiveModelService:
             self._loaded_model = LoadedModel(
                 id=self._model_activation_state.active_model_id,
                 model=mapi_model,
+                device=device,
             )
         return self._loaded_model

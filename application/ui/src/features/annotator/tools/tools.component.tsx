@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton } from '@geti/ui';
+import { ActionButton, Tooltip, TooltipTrigger } from '@geti/ui';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Fragment } from 'react/jsx-runtime';
 
@@ -18,16 +18,21 @@ const Tool = ({ tool, activeTool, setActiveTool }: ToolProps) => {
     useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool]);
 
     return (
-        <ActionButton
-            isQuiet
-            width={'size-400'}
-            onPress={() => setActiveTool(tool.type)}
-            aria-label={`${tool.type} tool`}
-        >
-            <IconWrapper isSelected={activeTool === tool.type}>
-                <tool.icon data-tool={tool.type} />
-            </IconWrapper>
-        </ActionButton>
+        <TooltipTrigger placement={'right'}>
+            <ActionButton
+                isQuiet
+                width={'size-400'}
+                onPress={() => setActiveTool(tool.type)}
+                aria-label={`${tool.type} tool`}
+            >
+                <IconWrapper isSelected={activeTool === tool.type}>
+                    <tool.icon data-tool={tool.type} />
+                </IconWrapper>
+            </ActionButton>
+            <Tooltip>
+                {tool.label} ({tool.hotkey})
+            </Tooltip>
+        </TooltipTrigger>
     );
 };
 
