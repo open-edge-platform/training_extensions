@@ -11,6 +11,7 @@ import { TrainModelProvider } from './train-model-provider.component';
 type TrainModelProps = {
     preSelectedDatasetRevisionId?: string;
 };
+
 export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) => {
     return (
         <DialogTrigger>

@@ -6,10 +6,10 @@ Runnable protocol and factory definitions.
 
 This module defines the generic interface for activities (Runnables) that can be executed by runners, along with a
 factory for registering and instantiating Runnable implementations. Runnables encapsulate the logic to be executed with
-a given execution context, supporting progress reporting and heartbeats.
+a given execution context, supporting progress reporting.
 
 Classes:
-    ExecutionContext: Carries execution parameters, progress reporting, and heartbeat callbacks.
+    ExecutionContext: Carries execution parameters and progress reporting.
     Runnable: Protocol for executable activities.
     RunnableFactory: Factory for registering and creating Runnable instances by type.
 """
@@ -19,14 +19,12 @@ from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
 
 ReportFn = Callable[[str, float], None]
-HeartbeatFn = Callable[[], None]
 
 
 @dataclass(kw_only=True)
 class ExecutionContext:
     payload: str
     report: ReportFn
-    heartbeat: HeartbeatFn
 
 
 class Runnable(Protocol):  # ignore

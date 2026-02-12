@@ -34,9 +34,9 @@ export const getMockedExtendedModel = (overrides: Partial<ExtendedModel> = {}): 
             dataset_revision_id: '3c6c6d38-1cd8-4458-b759-b9880c048b78',
             subset: 'testing',
             metrics: [
-                { name: 'accuracy', value: 0.97 },
-                { name: 'precision', value: 0.98 },
-                { name: 'recall', value: 0.94 },
+                { name: 'Accuracy', value: 0.97, primary: true },
+                { name: 'Precision', value: 0.98, primary: false },
+                { name: 'Recall', value: 0.94, primary: false },
             ],
         },
     ],

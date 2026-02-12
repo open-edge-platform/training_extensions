@@ -9,55 +9,51 @@ permissions: {} # No permissions by default
 
 jobs:
   build:
-    name: Build
+    name: Build & publish package
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: write # required by svenstaro/upload-release-action
+      id-token: write # required by trusted publisher
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+
       - name: Set up Python 3.12
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: "3.12"
+
       - name: Install build tools
         run: python -m pip install build
+
       - name: Build sdist
         run: python -m build --sdist library/
+
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: artifact-sdist
           path: library/dist/*.tar.gz
+
       - name: Build wheel
         run: python -m build --wheel library/
+
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: artifact-wheel
           path: library/dist/*.whl
 
-  publish_package:
-    name: Publish package
-    needs: [build]
-    environment: pypi
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # required by svenstaro/upload-release-action
-      id-token: write # required by trusted publisher
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-        with:
-          path: library/dist
-          pattern: artifact-*
-          merge-multiple: true
-      # to determine where to publish the package distribution to PyPI or TestPyPI
+      # Determine where to publish the package distribution to PyPI or TestPyPI
       - name: Check tag
         id: check-tag
         uses: actions-ecosystem/action-regex-match@9e6c4fb3d5e898f505be7a1fb6e7b0a278f6665b # v2.0.2
         with:
           text: ${{ github.ref }}
           regex: '^refs/tags/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+rc[0-9]+|rc[0-9]+)?$'
-      - name: Upload package distributions to github
+
+      - name: Upload package distributions to GitHub
         if: ${{ steps.check-tag.outputs.match != '' }}
         uses: svenstaro/upload-release-action@6b7fa9f267e90b50a19fef07b3596790bb941741 # v2
         with:
@@ -66,9 +62,11 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
+
       - name: Publish package distributions to PyPI
         if: ${{ steps.check-tag.outputs.match != '' }}
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+
       - name: Publish package distributions to TestPyPI
         if: ${{ steps.check-tag.outputs.match == '' }}
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0

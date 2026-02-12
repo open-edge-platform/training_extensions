@@ -14,7 +14,7 @@ from app.services import ProjectService
 
 
 @pytest.fixture
-def fxt_client():
+def fxt_client() -> TestClient:
     return TestClient(app)
 
 

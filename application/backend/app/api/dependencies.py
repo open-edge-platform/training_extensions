@@ -28,6 +28,7 @@ from app.services import (
     ResourceNotFoundError,
     SinkService,
     SourceUpdateService,
+    StagedDatasetService,
     SystemService,
 )
 from app.services.data_collect import DataCollector
@@ -77,6 +78,11 @@ def get_data_dir(request: Request) -> Path:
 def get_job_dir(request: Request) -> Path:
     """Provides the path to the folder where the jobs logs are saved. This path is defined in the app settings."""
     return request.app.state.settings.job_dir
+
+
+def get_staged_datasets_dir(request: Request) -> Path:
+    """Provides the path to the folder where the staged datasets are saved. This path is defined in the app settings."""
+    return request.app.state.settings.staged_datasets_dir
 
 
 def get_ice_servers(request: Request) -> list[dict]:
@@ -229,6 +235,13 @@ def get_source(
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
     """Provides a BaseWeightsService instance for managing base weights."""
     return BaseWeightsService(data_dir)
+
+
+def get_staged_dataset_service(
+    staged_datasets_dir: Annotated[Path, Depends(get_staged_datasets_dir)],
+) -> StagedDatasetService:
+    """Provides a StagedDatasetService instance for managing staged datasets."""
+    return StagedDatasetService(staged_datasets_dir)
 
 
 def get_job_queue(request: Request) -> JobQueue:

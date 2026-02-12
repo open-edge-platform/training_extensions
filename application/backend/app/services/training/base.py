@@ -75,7 +75,3 @@ class Trainer(Runnable, ABC):
             else:
                 logger.info(msg)
             self._ctx.report(msg, percent)
-
-    def heartbeat(self) -> None:
-        if self._ctx is not None:
-            self._ctx.heartbeat()

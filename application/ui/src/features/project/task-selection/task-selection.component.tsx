@@ -51,7 +51,7 @@ const Option = ({ taskOption, onPress }: TaskOptionProps) => {
             </View>
 
             <View padding={'size-300'}>
-                <Flex justifyContent={'space-between'} alignItems={'center'}>
+                <Flex justifyContent={'space-between'} gap={'size-50'} alignItems={'center'}>
                     <Heading level={2} UNSAFE_className={classes.title}>
                         {taskOption.title}
                     </Heading>

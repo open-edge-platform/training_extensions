@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as ONNX } from '../../../../assets/icons/onnx-logo.svg';
 import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-logo.svg';
@@ -16,7 +17,7 @@ type ModelVariantsTabsProps = {
 };
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
-    if (!model.variants || model.variants.length === 0) {
+    if (isEmpty(model.variants)) {
         return (
             <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
                 <Text>There are no model variants available.</Text>
@@ -27,13 +28,13 @@ export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
     return (
         <Tabs aria-label='Model variants' UNSAFE_className={classes.tabs}>
             <TabList>
-                <Item key='openvino' textValue='openvino'>
+                <Item aria-label='openvino tab' key='openvino' textValue='openvino'>
                     <OpenVINO />
                 </Item>
-                <Item key='pytorch' textValue='pytorch'>
+                <Item aria-label='pytorch tab' key='pytorch' textValue='pytorch'>
                     <Pytorch />
                 </Item>
-                <Item key='onnx' textValue='onnx'>
+                <Item aria-label='onnx tab' key='onnx' textValue='onnx'>
                     <ONNX />
                 </Item>
             </TabList>

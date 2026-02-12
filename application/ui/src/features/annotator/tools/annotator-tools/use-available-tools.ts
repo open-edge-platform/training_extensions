@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
-import { useProjectTask } from 'hooks/use-project-task.hook';
 
+import { ReactComponent as MagneticLasso } from '../../../../assets/icons/magnetic-lasso.svg';
+import { useProjectTask } from '../../../../hooks/use-project-task.hook';
 import { HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { ToolConfig } from '../interface';
 
@@ -33,7 +34,7 @@ const POLYGON_TOOL_CONFIG: ToolConfig = {
 };
 const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
     type: 'magnetic-lasso',
-    icon: Polygon,
+    icon: MagneticLasso,
     hotkey: HOTKEYS.magneticLassoTool,
     label: 'Magnetic Lasso',
 };
@@ -43,9 +44,9 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_CONFIG],
     instance_segmentation: [
         SELECTION_TOOL_CONFIG,
-        AUTO_SEGMENTATION_CONFIG,
         POLYGON_TOOL_CONFIG,
         MAGNETIC_LASSO_TOOL_CONFIG,
+        AUTO_SEGMENTATION_CONFIG,
     ],
 };
 
