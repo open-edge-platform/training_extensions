@@ -1,0 +1,7 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spectrum-global-dimension-size-250);
+    padding: var(--spectrum-global-dimension-size-275);
+    background: var(--spectrum-global-color-gray-50);
+}
