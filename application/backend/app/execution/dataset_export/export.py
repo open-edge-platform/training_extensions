@@ -71,17 +71,10 @@ class DatasetExport(Execution):
                 dataset = self._dataset_revision_service.load_revision(
                     project_id=export_params.project_id, dataset_revision_id=export_params.dataset_id
                 )
-            filtered_dataset = None
             if dataset and export_params.subsets:
-                # todo: datumaro API seems to lack a proper way to filter by multiple subsets,
-                #  so we chain multiple filter calls for now
-                for subset in export_params.subsets:
-                    filtered_by_subset = dataset.filter_by_subset(subset=SubsetConverter.to_datumaro(subset))
-                    if filtered_dataset:
-                        filtered_dataset.append_dataset(filtered_by_subset)
-                    else:
-                        filtered_dataset = filtered_by_subset
-                dataset = filtered_dataset
+                dataset = dataset.filter_by_subset(
+                    subset=[SubsetConverter.to_datumaro(subset) for subset in export_params.subsets]
+                )
             return export_params.dataset_id or uuid4(), dataset
 
     @step("Export dataset", 100)

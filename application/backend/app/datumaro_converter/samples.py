@@ -32,7 +32,7 @@ class BaseSample(Sample):
         user_reviewed: Whether the sample is annotated (True) or unannotated (False)
     """
 
-    id: str = string_field()
+    id: str = string_field(semantic="id")
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     subset: Subset = subset_field()
@@ -49,7 +49,7 @@ class ClassificationSample(BaseSample):
     """
 
     label: int | None = label_field(dtype=pl.UInt8(), is_list=False)
-    confidence: float | None = numeric_field(dtype=pl.Float32())
+    confidence: float | None = numeric_field(dtype=pl.Float32(), semantic="confidence")
 
 
 class MultilabelClassificationSample(BaseSample):
@@ -62,7 +62,7 @@ class MultilabelClassificationSample(BaseSample):
     """
 
     label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
-    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
 
 class DetectionSample(BaseSample):
@@ -77,7 +77,7 @@ class DetectionSample(BaseSample):
 
     bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
-    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
 
 class InstanceSegmentationSample(BaseSample):
@@ -92,4 +92,4 @@ class InstanceSegmentationSample(BaseSample):
 
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
-    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")

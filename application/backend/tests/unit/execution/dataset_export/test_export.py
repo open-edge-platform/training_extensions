@@ -3,7 +3,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import pytest
@@ -79,9 +79,10 @@ class TestDatasetExporter:
             annotation_status=DatasetItemAnnotationStatus.REVIEWED,
             label_names=fxt_export_params.labels,
         )
-        dataset.filter_by_subset.assert_has_calls(
-            [call(subset=SubsetConverter.to_datumaro(subset)) for subset in (subsets or [])]
-        )
+        if subsets:
+            dataset.filter_by_subset.assert_called_once_with(
+                subset=[SubsetConverter.to_datumaro(subset) for subset in subsets]
+            )
 
     @pytest.mark.parametrize(
         "subsets", [[DatasetItemSubset.TESTING], [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], None]
@@ -105,9 +106,10 @@ class TestDatasetExporter:
             project_id=fxt_export_params.project_id,
             dataset_revision_id=fxt_export_params.dataset_id,
         )
-        dataset.filter_by_subset.assert_has_calls(
-            [call(subset=SubsetConverter.to_datumaro(subset)) for subset in (subsets or [])]
-        )
+        if subsets:
+            dataset.filter_by_subset.assert_called_once_with(
+                subset=[SubsetConverter.to_datumaro(subset) for subset in subsets]
+            )
 
     @pytest.mark.parametrize(
         "export_format, data_format",
