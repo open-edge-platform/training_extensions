@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from otx import LabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
-from otx.data.entity.sample import InstanceSegmentationSample
+from otx.data.entity.sample import InstanceSegmentationSample, with_image_dtype
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
@@ -40,8 +40,9 @@ class OTXInstanceSegDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = InstanceSegmentationSample
+        sample_type = with_image_dtype(InstanceSegmentationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
@@ -51,6 +52,7 @@ class OTXInstanceSegDataset(OTXDataset):
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
+            storage_dtype=storage_dtype,
         )
 
         labels = list(dm_subset.schema.attributes["label"].categories.labels)

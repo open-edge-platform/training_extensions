@@ -17,6 +17,7 @@ from otx.data.entity.sample import (
     ClassificationHierarchicalSample,
     ClassificationMultiLabelSample,
     ClassificationSample,
+    with_image_dtype,
 )
 from otx.types import OTXTaskType
 
@@ -59,8 +60,9 @@ class OTXMulticlassClsDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = ClassificationSample
+        sample_type = with_image_dtype(ClassificationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
@@ -70,6 +72,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
+            storage_dtype=storage_dtype,
         )
 
         labels = dm_subset.schema.attributes["label"].categories.labels
@@ -142,8 +145,9 @@ class OTXMultilabelClsDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = ClassificationMultiLabelSample
+        sample_type = with_image_dtype(ClassificationMultiLabelSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
@@ -152,6 +156,7 @@ class OTXMultilabelClsDataset(OTXDataset):
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
+            storage_dtype=storage_dtype,
         )
 
         labels = dm_subset.schema.attributes["label"].categories.labels
@@ -259,8 +264,9 @@ class OTXHlabelClsDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = ClassificationHierarchicalSample
+        sample_type = with_image_dtype(ClassificationHierarchicalSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
@@ -270,6 +276,7 @@ class OTXHlabelClsDataset(OTXDataset):
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
+            storage_dtype=storage_dtype,
         )
         self.dm_categories = dm_subset.schema.attributes["label"].categories
         self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)

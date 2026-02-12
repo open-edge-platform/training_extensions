@@ -5,14 +5,13 @@ input_size:
 data_format: common_semantic_segmentation_with_subset_dirs
 unannotated_items_ratio: 0.0
 ignore_index: 255
+
 train_subset:
   subset_name: train
   batch_size: 8
   num_workers: 4
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: otx.data.transform_libs.torchvision.RandomResizedCrop
+  augmentations_cpu:
+    - class_path: torchvision.transforms.v2.RandomResizedCrop
       init_args:
         scale: $(input_size)
         crop_ratio_range:
@@ -21,7 +20,20 @@ train_subset:
         aspect_ratio_range:
           - 0.5
           - 2.0
-        transform_mask: true
+  augmentations_gpu:
+    - class_path: kornia.augmentation.RandomHorizontalFlip
+      init_args:
+        p: 0.5
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -30,13 +42,23 @@ val_subset:
   subset_name: val
   batch_size: 8
   num_workers: 4
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
+  augmentations_cpu:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
-        scale: $(input_size)
-        transform_mask: true
+        size: $(input_size)
+        keep_aspect_ratio: false
+        resize_targets: false
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -45,13 +67,23 @@ test_subset:
   subset_name: test
   num_workers: 4
   batch_size: 8
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
+  augmentations_cpu:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
-        scale: $(input_size)
-        transform_mask: true
+        size: $(input_size)
+        keep_aspect_ratio: true
+        resize_targets: false
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null

@@ -32,6 +32,7 @@ from kornia.augmentation.container import ops
 
 from otx.data.entity.sample import OTXSample
 from otx.data.utils import import_object_from_module
+from otx.data.augmentation.intensity import build_intensity_transform
 
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
@@ -63,6 +64,24 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):
         return _original_transform_list.__func__(cls, input, module, param, extra_args)
 
 ops.MaskSequentialOps.transform_list = _fixed_transform_list
+
+class _SampleImageAdapter(nn.Module):
+    """Wrap a tensor→tensor transform to operate on the ``.image`` field of a sample.
+
+    This allows raw tensor transforms (e.g. intensity mapping) to be used
+    inside ``CPUAugmentationPipeline`` whose ``forward()`` passes full
+    :class:`OTXSample` objects through non-native transforms.
+    """
+
+    def __init__(self, transform: nn.Module) -> None:
+        super().__init__()
+        self.transform = transform
+
+    def forward(self, sample: OTXSample) -> OTXSample:
+        """Apply wrapped transform to ``sample.image`` in-place and return sample."""
+        sample.image = self.transform(sample.image)
+        return sample
+
 
 class CPUAugmentationPipeline(nn.Module):
     """CPU-stage augmentation pipeline using torchvision.transforms.v2.
@@ -110,42 +129,54 @@ class CPUAugmentationPipeline(nn.Module):
         """Build CPU augmentation pipeline from SubsetConfig.
 
         This function handles:
-        - New `augmentations_cpu` field (preferred)
-        - Input size placeholder replacement $(input_size)
+        - Intensity mapping (prepended automatically from ``IntensityConfig``)
+        - New ``augmentations_cpu`` field (preferred)
+        - Input size placeholder replacement ``$(input_size)``
         - Torch dtype string resolution
 
+        The intensity transform is always the **first** operation in the
+        pipeline.  For uint8 with ``mode="scale_to_unit"`` this is equivalent
+        to the old ``to_dtype(float32, scale=True)``; for uint16 / thermal /
+        medical inputs it applies the correct domain-specific mapping.
+
         Args:
-            config: SubsetConfig with augmentations_cpu.
+            config: SubsetConfig with augmentations_cpu and intensity.
 
         Returns:
             CPUAugmentationPipeline ready for use in Dataset.
         """
         input_size = getattr(config, "input_size", None)
         aug_configs = config.augmentations_cpu
+        intensity_config = getattr(config, "intensity", None)
 
-        if not aug_configs:
-            return cls([])
+        augmentations: list[nn.Module] = []
 
-        augmentations = []
-        for aug_config in aug_configs:
-            cfg = copy(aug_config)
-            if isinstance(cfg, (dict, DictConfig)):
-                # Skip disabled transforms
-                if not cfg.get("enable", True):
-                    continue
+        # --- 1. Prepend intensity mapping transform ---------------------------
+        if intensity_config is not None:
+            intensity_transform = build_intensity_transform(intensity_config)
+            augmentations.append(_SampleImageAdapter(intensity_transform))
 
-                # Handle input_size placeholder
-                cfg = cls._configure_input_size(dict(cfg), input_size)
+        # --- 2. User-configured augmentations ---------------------------------
+        if aug_configs:
+            for aug_config in aug_configs:
+                cfg = copy(aug_config)
+                if isinstance(cfg, (dict, DictConfig)):
+                    # Skip disabled transforms
+                    if not cfg.get("enable", True):
+                        continue
 
-                # Instantiate the transform
-                transform = cls._dispatch_transform(cfg)
-            elif isinstance(cfg, nn.Module):
-                transform = cfg
-            else:
-                msg = f"Unsupported augmentation config type: {type(cfg)}"
-                raise TypeError(msg)
+                    # Handle input_size placeholder
+                    cfg = cls._configure_input_size(dict(cfg), input_size)
 
-            augmentations.append(transform)
+                    # Instantiate the transform
+                    transform = cls._dispatch_transform(cfg)
+                elif isinstance(cfg, nn.Module):
+                    transform = cfg
+                else:
+                    msg = f"Unsupported augmentation config type: {type(cfg)}"
+                    raise TypeError(msg)
+
+                augmentations.append(transform)
 
         return cls(augmentations)
 
@@ -375,6 +406,7 @@ class CPUAugmentationPipeline(nn.Module):
     def forward(self, *inputs: OTXSample) -> OTXSample | None:
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
+        outputs: OTXSample | None = inputs[0]  # type: ignore[assignment]
         for transform in self.augmentations:
             if self._is_native_torchvision_transform(transform):
                 # Apply native transforms only to image-related fields
@@ -516,18 +548,13 @@ class GPUAugmentationPipeline(nn.Module):
     @classmethod
     def list_available_transforms(cls) -> list[type]:
         """List available Kornia augmentation classes."""
-        try:
-            import kornia.augmentation as K
-
-            return [
-                obj
-                for name in dir(K)
-                if (obj := getattr(K, name))
-                and isclass(obj)
-                and issubclass(obj, (K.AugmentationBase2D, K.IntensityAugmentationBase2D))
-            ]
-        except ImportError:
-            return []
+        return [
+            obj
+            for name in dir(K)
+            if (obj := getattr(K, name))
+            and isclass(obj)
+            and issubclass(obj, (K.AugmentationBase2D, K.IntensityAugmentationBase2D))
+        ]
 
     @classmethod
     def from_config(

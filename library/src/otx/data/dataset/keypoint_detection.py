@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Callable, List, Union
 import torch
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
-from otx.data.entity.sample import KeypointSample
+from otx.data.entity.sample import KeypointSample, with_image_dtype
 from otx.data.transform_libs.torchvision import Compose
 from otx.types import OTXTaskType
 from otx.types.label import LabelInfo
@@ -58,8 +58,9 @@ class OTXKeypointDetectionDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = KeypointSample
+        sample_type = with_image_dtype(KeypointSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
@@ -69,6 +70,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
+            storage_dtype=storage_dtype,
         )
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
