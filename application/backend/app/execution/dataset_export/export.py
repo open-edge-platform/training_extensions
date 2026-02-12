@@ -56,7 +56,7 @@ class DatasetExport(Execution):
             if export_params.dataset_id is None:
                 self._dataset_service.set_db_session(session)
                 annotation_status = (
-                    DatasetItemAnnotationStatus.REVIEWED_WITH_UNANNOTATED
+                    DatasetItemAnnotationStatus.REVIEWED_OR_UNANNOTATED
                     if export_params.include_unannotated
                     else DatasetItemAnnotationStatus.REVIEWED
                 )
