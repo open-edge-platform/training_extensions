@@ -114,6 +114,8 @@ export const SubsetGallery = ({
                         <MediaItem
                             contentElement={() => (
                                 <MediaThumbnail
+                                    // TODO: Revisit this once API supports required props in DatasetRevisionItem
+                                    item={{ ...item, type: 'image' }}
                                     alt={`${item.subset} item`}
                                     url={getDatasetRevisionThumbnailUrl(projectId, datasetRevisionId, item.id)}
                                     onDoubleClick={() => setSelectedItem(item)}

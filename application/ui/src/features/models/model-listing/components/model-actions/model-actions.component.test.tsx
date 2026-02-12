@@ -61,4 +61,32 @@ describe('ModelActions', () => {
         expect(screen.getByRole('alertdialog', { name: 'Delete model' })).toBeInTheDocument();
         expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
     });
+
+    it('should disable "Set as active" and "Rename" when model is currently training', async () => {
+        const trainingModel = getMockedModel({
+            ...mockModel,
+            training_info: {
+                status: 'in_progress',
+                label_schema_revision: {
+                    labels: [],
+                },
+                start_time: '2025-01-10T10:00:00.000000+00:00',
+                end_time: null,
+                dataset_revision_id: 'dataset-123',
+            },
+        });
+
+        render(<ModelActions model={trainingModel} />);
+
+        const menuButton = screen.getByRole('button', { name: 'Model actions' });
+        await userEvent.click(menuButton);
+
+        const setActiveItem = screen.getByRole('menuitem', { name: 'Set as active' });
+        const renameItem = screen.getByRole('menuitem', { name: 'Rename' });
+        const deleteItem = screen.getByRole('menuitem', { name: 'Delete' });
+
+        expect(setActiveItem).toHaveAttribute('aria-disabled', 'true');
+        expect(renameItem).toHaveAttribute('aria-disabled', 'true');
+        expect(deleteItem).not.toHaveAttribute('aria-disabled', 'true');
+    });
 });

@@ -94,6 +94,8 @@ def upgrade() -> None:
         sa.Column("format", sa.String(length=50), nullable=False),
         sa.Column("width", sa.Integer(), nullable=False),
         sa.Column("height", sa.Integer(), nullable=False),
+        sa.Column("fps", sa.Float(), nullable=True),
+        sa.Column("frame_count", sa.Integer(), nullable=True),
         sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("source_id", sa.Text(), nullable=True),
         sa.Column("id", sa.Text(), nullable=False),
@@ -140,6 +142,19 @@ def upgrade() -> None:
     op.create_index(
         "idx_model_revisions_project_status", "model_revisions", ["project_id", "training_status"], unique=False
     )
+    op.create_table(
+        "video_frames",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("video_id", sa.Text(), nullable=False),
+        sa.Column("timestamp", sa.Float(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["id"], ["media.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["video_id"], ["media.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("idx_video_frames_video_id", "video_frames", ["video_id"], unique=False)
+    op.create_index("idx_video_frames_video_id_timestamp", "video_frames", ["video_id", "timestamp"], unique=False)
     op.create_table(
         "dataset_items",
         sa.Column("id", sa.Text(), nullable=False),
@@ -221,6 +236,9 @@ def downgrade() -> None:
     op.drop_table("evaluations")
     op.drop_index("idx_dataset_items_user_reviewed", table_name="dataset_items")
     op.drop_table("dataset_items")
+    op.drop_index("idx_video_frames_video_id_timestamp", table_name="video_frames")
+    op.drop_index("idx_video_frames_video_id", table_name="video_frames")
+    op.drop_table("video_frames")
     op.drop_index("idx_model_revisions_project_status", table_name="model_revisions")
     op.drop_index("idx_model_revisions_architecture", table_name="model_revisions")
     op.drop_table("model_revisions")

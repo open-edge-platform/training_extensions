@@ -14,6 +14,7 @@ from app.api.schemas.media import MediaView, MediaWithPagination
 from app.api.validators import MediaID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
+from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, MediaService, ResourceNotFoundError
 from app.services.media_service import InvalidImageError, MediaFilters
 
@@ -21,6 +22,19 @@ router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Med
 
 DEFAULT_MEDIA_NUMBER_RETURNED = 10
 MAX_MEDIA_NUMBER_RETURNED = 100
+
+
+def _parse_media_format(extension: str) -> ImageFormat | VideoFormat:
+    try:
+        return ImageFormat[extension.upper()]
+    except KeyError:
+        try:
+            return VideoFormat[extension.upper()]
+        except KeyError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Unsupported media extension: {extension}",
+            )
 
 
 @router.post(
@@ -40,20 +54,30 @@ def add_media(
     file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
     file: Annotated[UploadFile, File()],
 ) -> MediaView:
-    """Add a new media to the dataset by uploading an image"""
-    name, format = file_name_and_extension
+    """Add a new media to the dataset by uploading an image or a video"""
+    name, extension = file_name_and_extension
+    format = _parse_media_format(extension)
     try:
-        media = media_service.create_image(
-            project=project,
-            data=file.file,
-            name=name,
-            format=format,
-        )
-        dataset_service.create_dataset_item(
-            project=project,
-            media=media,
-            user_reviewed=False,
-        )
+        if isinstance(format, ImageFormat):
+            media = media_service.create_image(
+                project=project,
+                data=file.file,
+                name=name,
+                format=format,
+            )
+            dataset_service.create_dataset_item(
+                project=project,
+                media=media,
+                user_reviewed=False,
+            )
+        else:
+            # Dataset items for videos are created separately after video upload for each frame being annotated
+            media = media_service.create_video(
+                project=project,
+                data=file.file,
+                name=name,
+                format=format,
+            )
         return MediaView.model_validate(media, from_attributes=True)
     except InvalidImageError:
         raise HTTPException(
@@ -152,7 +176,9 @@ def get_media_binary(
     """Get media binary content"""
     try:
         binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
-        return FileResponse(path=binary_path)
+        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+        filename = f"{media.name}.{media.format.value.lower()}"
+        return FileResponse(path=binary_path, filename=filename)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
