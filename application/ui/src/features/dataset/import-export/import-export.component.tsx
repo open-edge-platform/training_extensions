@@ -4,9 +4,9 @@
 import { Button, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
-import { ExportDataset } from '../export-dataset/export-dataset.component';
+import { ExportDataset } from './export-dataset/export-dataset.component';
 
-export const DatasetImportExport = () => {
+export const ImportExport = () => {
     const dialogState = useOverlayTriggerState({});
 
     const handleMenuAction = (option: Key) => {

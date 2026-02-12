@@ -31,7 +31,7 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
     const exportJobMutation = $api.useMutation('post', '/api/jobs');
 
     return useActionState<FormValues, FormData>(async (_prevState, formData) => {
-        const filters: FormValues = {
+        const options: FormValues = {
             export_format: String(formData.get('export_format')),
             labels: formData.getAll('labels').filter(isString),
             include_unannotated: formData.get('include_unannotated') === 'on',
@@ -40,12 +40,13 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
         const { job_id } = await exportJobMutation.mutateAsync({
             body: {
                 project_id: projectId,
+                staged_dataset_id: projectId,
                 job_type: 'export_dataset',
                 parameters: {
-                    export_format: filters.export_format,
+                    export_format: options.export_format,
                     filters: {
-                        labels: filters.labels,
-                        include_unannotated: filters.include_unannotated,
+                        labels: options.labels,
+                        include_unannotated: options.include_unannotated,
                     },
                 },
             },
@@ -54,6 +55,6 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
         addLsExportId(job_id);
         onSuccess();
 
-        return filters;
+        return options;
     }, initialState);
 };

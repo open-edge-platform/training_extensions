@@ -6,11 +6,11 @@ import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../api/utils';
-import { server } from '../../../../msw-node-setup';
-import { DatasetImportExport } from './dataset-import-export.component';
+import { http } from '../../../api/utils';
+import { server } from '../../../msw-node-setup';
+import { ImportExport } from './import-export.component';
 
-describe('DatasetImportExport', () => {
+describe('ImportExport', () => {
     it('opens the export dialog when export option is selected', async () => {
         server.use(
             http.get('/api/projects/{project_id}', () => {
@@ -29,7 +29,7 @@ describe('DatasetImportExport', () => {
             })
         );
 
-        render(<DatasetImportExport />);
+        render(<ImportExport />);
 
         fireEvent.click(await screen.findByRole('button', { name: /import-export dataset/i }));
         fireEvent.click(await screen.findByRole('menuitem', { name: /Export dataset/i }));

@@ -107,3 +107,19 @@ svg {
 [data-testid='underlay'] {
     z-index: 2 !important;
 }
+
+[class*='spectrum-Radio-input'] {
+    cursor: pointer !important;
+
+    &:checked + [class*='spectrum-Radio-button']:before {
+        border-color: var(--spectrum-global-color-informative) !important;
+    }
+}
+
+[class*='spectrum-Checkbox-input'] {
+    cursor: pointer !important;
+
+    &:checked + [class*='spectrum-Checkbox-box']:before {
+        border-color: var(--spectrum-global-color-informative) !important;
+    }
+}

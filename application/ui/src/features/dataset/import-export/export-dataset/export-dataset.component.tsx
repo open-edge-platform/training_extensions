@@ -20,7 +20,7 @@ import {
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
-import { DatasetStatistics } from './dataset-statistics.component';
+import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { useExportDatasetJobAction } from './use-export-dataset-job-action.hook';
 
 import classes from './export-dataset.module.scss';
@@ -37,7 +37,7 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
         onSuccess: dialogState.close,
     });
 
-    const labels = selectedProject?.task?.labels ?? [];
+    const labels = selectedProject.task?.labels ?? [];
 
     return (
         <DialogContainer onDismiss={dialogState.close}>

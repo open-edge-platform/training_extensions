@@ -25,8 +25,8 @@ import type { Media } from '../../../../constants/shared-types';
 import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
+import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../selected-data-provider.component';
-import { DatasetImportExport } from '../dataset-import-export/dataset-import-export.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
@@ -125,7 +125,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
             <Flex alignItems={'center'} justifyContent={'space-between'}>
                 <Heading level={1}>Dataset</Heading>
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
-                    <DatasetImportExport />
+                    <ImportExport />
 
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
 
