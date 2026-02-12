@@ -3,9 +3,6 @@
 
 import { MouseEvent, useCallback } from 'react';
 
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-
-import { API_BASE_URL } from '../../../api/client';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
