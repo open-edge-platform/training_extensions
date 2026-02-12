@@ -83,7 +83,7 @@ class WebRTCManager:
     async def cleanup(self) -> None:
         """Clean up all connections"""
         async with self._lock:
-            for webrtc_id, pc in list(self._pcs.items()):
+            for webrtc_id, pc in self._pcs.items():
                 await pc.close()
                 self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
             self._pcs.clear()
