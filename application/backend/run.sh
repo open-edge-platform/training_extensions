@@ -104,7 +104,7 @@ import_demo_project() {
   local import_cmd="$UV_CMD app/db/import_export/import_project.py --input $archive_path"
   if [[ "$FORCE_IMPORT" == "true" ]]; then
     import_cmd="$import_cmd --force-import"
-    echo "  (using --force flag to bypass schema version checks)"
+    echo "  (using --force-import flag to bypass schema version checks)"
   fi
 
   $import_cmd

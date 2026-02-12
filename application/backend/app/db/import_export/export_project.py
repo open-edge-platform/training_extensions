@@ -123,7 +123,7 @@ def _export_table(engine: Engine, metadata: MetaData, table_name: str, project_i
 
 def _validate_output_path(output_path: Path) -> None:
     """Validate that the output path is valid for writing the zip archive."""
-    if output_path.suffix != ".zip":
+    if output_path.suffix.lower() != ".zip":
         raise ValueError(f"Output file must have .zip extension: {output_path}")
     if not output_path.parent.exists():
         raise FileNotFoundError(f"Output directory does not exist: {output_path.parent}")
