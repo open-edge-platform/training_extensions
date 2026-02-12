@@ -40,20 +40,28 @@ class EventBus(BaseEventBus[EventType]):
     def model_reload_event(self) -> Event | None:
         return self._model_reload_event
 
-    def _notify_all(self, condition: Condition | None) -> None:
+    @staticmethod
+    def _notify_all(condition: Condition | None) -> None:
         if not condition:
             return
         with condition:
             condition.notify_all()
 
-    def _should_notify_source(self, event_type: EventType) -> bool:
+    @staticmethod
+    def _should_notify_source(event_type: EventType) -> bool:
         return event_type in (EventType.SOURCE_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
 
-    def _should_notify_sink(self, event_type: EventType) -> bool:
+    @staticmethod
+    def _should_notify_sink(event_type: EventType) -> bool:
         return event_type in (EventType.SINK_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
 
-    def _should_notify_model(self, event_type: EventType) -> bool:
+    @staticmethod
+    def _should_notify_model(event_type: EventType) -> bool:
         return event_type in (EventType.MODEL_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
+
+    @staticmethod
+    def _should_notify_device(event_type: EventType) -> bool:
+        return event_type == EventType.INFERENCE_DEVICE_CHANGED
 
     def emit_event(self, event_type: EventType) -> None:
         super().emit_event(event_type)
@@ -64,5 +72,7 @@ class EventBus(BaseEventBus[EventType]):
         if self._should_notify_sink(event_type):
             self._notify_all(self._sink_changed_condition)
 
-        if self._should_notify_model(event_type) and self._model_reload_event:
+        if (
+            self._should_notify_model(event_type) or self._should_notify_device(event_type)
+        ) and self._model_reload_event:
             self._model_reload_event.set()
