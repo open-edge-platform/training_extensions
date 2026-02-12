@@ -1,7 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, useContext, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    type Dispatch,
+    type ReactNode,
+    type SetStateAction,
+} from 'react';
 
 import type { TaskType } from '../../constants/shared-types';
 import type { ToolType } from '../../features/annotator/tools/interface';
@@ -53,11 +61,9 @@ export const ToolProvider = ({ mode, children }: ToolProviderProps) => {
         getDefaultTool(selectedProject.task.task_type, mode)
     );
 
-    if (mode === 'prediction' && activeTool !== null) {
-        setActiveTool(null);
-    } else if (mode === 'annotation' && activeTool === null) {
+    useEffect(() => {
         setActiveTool(getDefaultTool(selectedProject.task.task_type, mode));
-    }
+    }, [mode, selectedProject.task.task_type]);
 
     return <ToolContext.Provider value={{ activeTool, setActiveTool }}>{children}</ToolContext.Provider>;
 };
