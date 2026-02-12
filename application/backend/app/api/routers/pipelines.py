@@ -61,7 +61,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
     ),
     "change_device": Example(
         summary="Change inference device",
-        description="Change the device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')",
+        description="Change the device used for model inference (e.g., 'cpu', 'xpu', 'xpu-1')",
         value={"device": "xpu"},
     ),
 }
