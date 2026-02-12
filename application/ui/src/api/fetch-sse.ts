@@ -3,7 +3,7 @@
 
 import { API_BASE_URL } from './client';
 
-export type SSEConnection = {
+type SSEConnection = {
     close: () => void;
     done: Promise<void>;
     eventSource: EventSource;
