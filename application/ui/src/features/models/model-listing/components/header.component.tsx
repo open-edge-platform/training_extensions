@@ -8,8 +8,18 @@ import type { GroupByMode, SortBy } from '../types';
 import { ExpandableSearch } from './expandable-search/expandable-search.component';
 
 export const Header = () => {
-    const { groupBy, sortBy, onGroupByChange, onSortChange, onPinActiveToggle, searchBy, onSearchChange } =
-        useModelListing();
+    const {
+        groupBy,
+        sortBy,
+        onGroupByChange,
+        onSortChange,
+        onPinActiveToggle,
+        searchBy,
+        onSearchChange,
+        pinActive,
+        showFailedModels,
+        onToggleShowFailedModels,
+    } = useModelListing();
 
     return (
         <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
@@ -41,9 +51,13 @@ export const Header = () => {
                 </Picker>
             </Flex>
 
-            <Flex>
-                <ToggleButton isEmphasized onChange={onPinActiveToggle}>
+            <Flex gap={'size-100'}>
+                <ToggleButton isEmphasized isSelected={pinActive} onChange={onPinActiveToggle}>
                     Pin active model on top
+                </ToggleButton>
+
+                <ToggleButton isEmphasized isSelected={showFailedModels} onChange={onToggleShowFailedModels}>
+                    Show failed models
                 </ToggleButton>
             </Flex>
 

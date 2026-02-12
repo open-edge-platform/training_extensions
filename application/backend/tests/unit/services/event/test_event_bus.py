@@ -110,3 +110,15 @@ class TestEventBus:
             notified = sink_changed_condition.acquire()
         assert notified
         assert model_reload_event.is_set()
+
+    def test_inference_device_changed(self, fxt_event_bus: EventBusFactory) -> None:
+        """Test inference device changed triggers model reload"""
+        handler = MagicMock(spec=Callable)
+        model_reload_event = mp.Event()
+        event_bus = fxt_event_bus(None, None, model_reload_event)
+        event_bus.subscribe(event_types=[EventType.INFERENCE_DEVICE_CHANGED], handler=handler)
+
+        event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
+
+        handler.assert_called_once_with()
+        assert model_reload_event.is_set()

@@ -1,14 +1,14 @@
 @font-face {
-    font-family: intelOne;
-    src: url(./assets/fonts/intelone-text-regular.woff);
-    font-weight: normal;
+    src: url('./assets/fonts/roboto-flex-v30-latin-regular.woff2') format('woff2');
+    font-family: 'Roboto Flex';
     font-style: normal;
+    font-weight: 400;
     font-display: swap;
 }
 
 * {
     box-sizing: border-box;
-    font-family: intelOne;
+    font-family: 'Roboto Flex', sans-serif;
 }
 
 :root {

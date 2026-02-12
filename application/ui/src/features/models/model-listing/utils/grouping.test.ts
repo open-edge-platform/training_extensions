@@ -77,11 +77,11 @@ describe('groupModelsByDataset', () => {
         ];
 
         const groupedModels = groupModelsByDataset(models, { datasetRevisions });
+        const group = groupedModels[0].group as DatasetGroup;
 
         expect(groupedModels).toHaveLength(1);
-        expect(groupedModels[0].group.name).toBe('My Custom Dataset');
+        expect(group.name).toBe('My Custom Dataset');
 
-        const group = groupedModels[0].group as DatasetGroup;
         expect(group.imageCount).toBe(100);
         expect(group.trainingSubsets).toEqual({
             training: 70,
@@ -105,11 +105,11 @@ describe('groupModelsByDataset', () => {
         const datasetRevisions: DatasetRevision[] = [];
 
         const groupedModels = groupModelsByDataset(models, { datasetRevisions });
+        const group: DatasetGroup = groupedModels[0].group as DatasetGroup;
 
         expect(groupedModels).toHaveLength(1);
-        expect(groupedModels[0].group.name).toBe('Dataset #dataset-');
+        expect(group.name).toBe('Dataset #dataset-');
 
-        const group: DatasetGroup = groupedModels[0].group as DatasetGroup;
         expect(group.imageCount).toBe(0);
         expect(group.trainingSubsets).toEqual({
             training: 0,
@@ -137,8 +137,8 @@ describe('groupModelsByArchitecture', () => {
 
         expect(groupedModels).toHaveLength(2);
 
-        const yoloxGroup = groupedModels.find(({ group }) => group.name === 'YOLOX');
-        const mobileNetGroup = groupedModels.find(({ group }) => group.name === 'MobileNet');
+        const yoloxGroup = groupedModels.find(({ group }) => group.id === 'YOLOX');
+        const mobileNetGroup = groupedModels.find(({ group }) => group.id === 'MobileNet');
 
         expect(yoloxGroup?.models).toHaveLength(2);
         expect(mobileNetGroup?.models).toHaveLength(1);

@@ -9,6 +9,7 @@ from .data_collection_policy import (
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
 )
+from .dataset import DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
@@ -47,6 +48,7 @@ __all__ = [
     "DataCollectionConfig",
     "DataCollectionPolicy",
     "DataCollectionPolicyAdapter",
+    "DatasetFormat",
     "DatasetItem",
     "DatasetItemAnnotation",
     "DatasetItemAnnotationStatus",
@@ -82,6 +84,7 @@ __all__ = [
     "Source",
     "SourceAdapter",
     "SourceType",
+    "StagedDataset",
     "Task",
     "TaskType",
     "TrainingInfo",

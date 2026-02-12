@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -18,6 +17,7 @@ from app.db.schema import DatasetRevisionDB
 from app.models import DatasetItemSubset
 from app.models.dataset_item_revision import DatasetRevisionItem
 from app.models.dataset_revision import DatasetRevision, DatasetRevisionCounts
+from app.models.media import ImageFormat
 from app.repositories import DatasetRevisionRepository
 from app.utils.images import crop_to_thumbnail
 
@@ -44,6 +44,11 @@ class DatasetRevisionService(BaseSessionManagedService):
         Returns:
             UUID: The UUID of the newly created dataset revision.
         """
+        item_counts = self._count_dataset_revision_items(dataset=dataset)
+        if not (item_counts.training and item_counts.validation and item_counts.testing):
+            raise ValueError(
+                f"Cannot save dataset revision for {project_id} with an empty subset. Item counts: {item_counts}"
+            )
         revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         dataset_revision_id = str(uuid4())
         short_id = dataset_revision_id.split("-")[0]
@@ -53,6 +58,10 @@ class DatasetRevisionService(BaseSessionManagedService):
                 id=dataset_revision_id,
                 project_id=str(project_id),
                 name=dataset_name,
+                total_count=item_counts.total,
+                training_count=item_counts.training,
+                validation_count=item_counts.validation,
+                testing_count=item_counts.testing,
             )
         )
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
@@ -200,50 +209,29 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         return parquet_path
 
-    @lru_cache(maxsize=64)
-    def __count_dataset_revision_items(self, project_id: UUID, dataset_revision_id: UUID) -> DatasetRevisionCounts:
-        """Refer to DatasetRevisionService.count_dataset_revision_items"""
-        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
-        lf = pl.scan_parquet(parquet_path)
-        subset_counts_raw = lf.group_by("subset").len().collect().to_dicts()  # [{"subset": "TRAINING", "len": 12}, ...]
-        counts_by_subset = {row["subset"].lower(): row["len"] for row in subset_counts_raw}  # {"training": 12, ...}
-        try:
-            dataset_revision_counts = DatasetRevisionCounts(
-                training=counts_by_subset["training"],
-                validation=counts_by_subset["validation"],
-                testing=counts_by_subset["testing"],
-                total=sum(counts_by_subset.values()),
-            )
-        except KeyError as exc:
-            logger.error(
-                "Failed to count dataset revision items for project_id='{}', dataset_revision_id='{}'. Error: {}",
-                project_id,
-                dataset_revision_id,
-                exc,
-            )
-            raise
-        return dataset_revision_counts
-
-    def count_dataset_revision_items(
-        self, project_id: UUID, dataset_revision: DatasetRevision
-    ) -> DatasetRevisionCounts | None:
+    def _count_dataset_revision_items(self, dataset: dm.Dataset) -> DatasetRevisionCounts:
         """
         Count the number of dataset items in a dataset revision, grouped by subset.
 
-        This method scans the dataset revision Parquet file and efficiently computes:
         - The total number of items ("total")
         - The number of items in each subset (e.g., "training", "validation", "testing")
 
         Args:
-            project_id: The UUID of the project.
-            dataset_revision: The dataset revision.
+            dataset: A Datumaro dataset.
 
         Returns:
-            DatasetRevisionCounts | None: The counts of dataset items, or None if files are deleted
+            DatasetRevisionCounts: The counts of dataset items.
         """
-        if dataset_revision.files_deleted:
-            return None
-        return self.__count_dataset_revision_items(project_id, dataset_revision.id)
+        subset_counts_raw = (
+            dataset.df.lazy().group_by("subset").len().collect().to_dicts()
+        )  # [{"subset": "TRAINING", "len": 12}, ...]
+        counts_by_subset = {row["subset"].lower(): row["len"] for row in subset_counts_raw}  # {"training": 12, ...}
+        return DatasetRevisionCounts(
+            training=counts_by_subset.get("training", 0),
+            validation=counts_by_subset.get("validation", 0),
+            testing=counts_by_subset.get("testing", 0),
+            total=sum(counts_by_subset.values()),
+        )
 
     def _parse_revision_item_from_df_row_dict(
         self, project_id: UUID, dataset_revision_id: UUID, df_revision_item: dict[str, Any]
@@ -274,30 +262,13 @@ class DatasetRevisionService(BaseSessionManagedService):
         """
         dataset_revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision_id)
         try:
-            # The path stored in the 'image' column is relative to the dataset revision base folder
-            image_rel_path = Path(df_revision_item["image"])
-
-            if "data/projects" in str(image_rel_path):
-                # TODO due to a bug in Datumaro, the above assumption doesn't always hold true, and the image path
-                #  may be relative to the app data folder instead. This workaround can be removed after the bug is fixed
-                #  in Datumaro: https://github.com/open-edge-platform/datumaro/issues/2019
-                image_path = image_rel_path
-            else:
-                image_path = dataset_revision_path / image_rel_path
-
-            if "id" not in df_revision_item:
-                # Fallback: if the 'id' field is missing, try to extract it from the image filename
-                # TODO remove this fallback logic after ensuring the 'id' is always saved in the parquet file
-                #  https://github.com/open-edge-platform/training_extensions/issues/5350
-                logger.warning(
-                    "Dataset revision item is missing 'id' field, attempting to extract from image filename: {}",
-                    image_rel_path,
-                )
-                df_revision_item["id"] = image_rel_path.stem  # Filename without extension
+            # The value stored in the 'image' column is expected to be the name of the image file,
+            # relative to the dataset revision's images/ directory.
+            image_path = dataset_revision_path / "images" / Path(df_revision_item["image"])
 
             return DatasetRevisionItem(
                 id=UUID(df_revision_item["id"]),
-                format=image_rel_path.suffix.lstrip("."),
+                format=ImageFormat(image_path.suffix.lstrip(".").lower()),
                 image_path=image_path,
                 width=df_revision_item["image_info"]["width"],
                 height=df_revision_item["image_info"]["height"],

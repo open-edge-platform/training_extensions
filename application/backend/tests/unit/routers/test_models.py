@@ -8,22 +8,47 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_model_service
-from app.api.schemas import ModelView
+from app.api.schemas.model import ModelVariant
 from app.main import app
-from app.models import TrainingInfo, TrainingStatus
+from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingInfo, TrainingStatus
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
 
 @pytest.fixture
-def fxt_model() -> ModelView:
-    return ModelView(
-        id=uuid4(),
+def fxt_model() -> ModelRevision:
+    model_revision_id = uuid4()
+    dataset_revision_id = uuid4()
+    return ModelRevision(
+        id=model_revision_id,
         name="YOLOX-X (abc123)",
         architecture="object-detection-yolox-x",
-        training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
-        size=0,
-    )  # type: ignore
+        parent_revision=uuid4(),
+        training_info=TrainingInfo(
+            status=TrainingStatus.NOT_STARTED,
+            label_schema_revision={"labels": [{"name": "dog", "id": "05db02c9-6a54-4089-bd8e-b85dfe3bec03"}]},
+            dataset_revision_id=dataset_revision_id,
+        ),
+        training_configuration={"learning_rate": 0.001, "batch_size": 16},
+        evaluations=[
+            EvaluationResult(
+                model_revision_id=model_revision_id,
+                dataset_revision_id=dataset_revision_id,
+                subset=DatasetItemSubset.TESTING,
+                metrics={"map": 0.85, "map_50": 0.90, "map_75": 0.80, "mar_1": 0.88, "mar_10": 0.90, "mar_100": 0.92},
+            )
+        ],
+        files_deleted=False,
+    )
+
+
+@pytest.fixture
+def fxt_model_variants() -> list[ModelVariant]:
+    return [
+        ModelVariant(format="openvino", precision="fp16", weights_size=100000),
+        ModelVariant(format="onnx", precision="fp16", weights_size=100100),
+        ModelVariant(format="pytorch", precision="fp32", weights_size=100200),
+    ]
 
 
 @pytest.fixture
@@ -34,10 +59,10 @@ def fxt_model_service() -> MagicMock:
 
 
 class TestModelEndpoints:
-    def test_list_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
+    def test_list_model_success(self, fxt_model, fxt_model_variants, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.list_models.return_value = [fxt_model] * 2
-        fxt_model_service.get_model_size_in_bytes.side_effect = [1024] * 2
-        fxt_model_service.get_model_variants.side_effect = [[], []]
+        fxt_model_service.get_model_size_in_bytes.side_effect = [300200] * 2
+        fxt_model_service.get_model_variants.side_effect = [fxt_model_variants, fxt_model_variants]
 
         dataset_revision_id = uuid4()
         response = fxt_client.get(
@@ -77,10 +102,10 @@ class TestModelEndpoints:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_model_service.list_models.assert_not_called()
 
-    def test_get_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
+    def test_get_model_success(self, fxt_model, fxt_model_variants, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.get_model.return_value = fxt_model
-        fxt_model_service.get_model_size_in_bytes.return_value = 1024
-        fxt_model_service.get_model_variants.return_value = []
+        fxt_model_service.get_model_size_in_bytes.return_value = 300100
+        fxt_model_service.get_model_variants.return_value = fxt_model_variants
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}")
 
@@ -92,6 +117,38 @@ class TestModelEndpoints:
         fxt_model_service.get_model_variants.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=fxt_model.id
         )
+        response_data = response.json()
+        assert response_data["id"] == str(fxt_model.id)
+        assert response_data["name"] == fxt_model.name
+        assert response_data["architecture"] == fxt_model.architecture
+        assert response_data["parent_revision"] == str(fxt_model.parent_revision)
+        assert response_data["training_info"]["status"] == fxt_model.training_info.status.value
+        assert response_data["training_info"]["label_schema_revision"] == fxt_model.training_info.label_schema_revision
+        assert response_data["training_info"]["dataset_revision_id"] == str(fxt_model.training_info.dataset_revision_id)
+        assert response_data["training_configuration"] == fxt_model.training_configuration
+        assert response_data["evaluations"] == [
+            {
+                "dataset_revision_id": str(fxt_model.evaluations[0].dataset_revision_id),
+                "subset": fxt_model.evaluations[0].subset.value,
+                "metrics": [
+                    {"name": "mAP", "value": 0.85, "primary": True},
+                    {"name": "mAP@0.5", "value": 0.90, "primary": False},
+                    {"name": "mAP@0.75", "value": 0.80, "primary": False},
+                    {"name": "mAR@1", "value": 0.88, "primary": False},
+                    {"name": "mAR@10", "value": 0.90, "primary": False},
+                    {"name": "mAR@100", "value": 0.92, "primary": False},
+                ],
+            }
+        ]
+        assert response_data["variants"] == [
+            {
+                "format": variant.format,
+                "precision": variant.precision,
+                "weights_size": variant.weights_size,
+            }
+            for variant in fxt_model_variants
+        ]
+        assert response_data["size"] == 300100
 
     @pytest.mark.parametrize(
         "http_method, service_method",
@@ -259,3 +316,51 @@ class TestModelEndpoints:
         fxt_model_service.rename_model.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=model_id, model_metadata={"name": "New name"}
         )
+
+    def test_get_training_logs_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
+        log_file = tmp_path / "training.log"
+        log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"
+        log_file.write_text(log_content, newline="\n")
+
+        fxt_model_service.get_logs.return_value = log_file
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "text/plain; charset=utf-8"
+        assert response.text == log_content
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+
+    def test_get_training_logs_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
+        model_id = uuid4()
+        fxt_model_service.get_logs.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/logs")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+
+    def test_get_training_logs_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/logs")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_model_service.get_logs.assert_not_called()
+
+    def test_get_training_logs_not_available(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client):
+        fxt_model_service.get_logs.side_effect = ValueError(
+            "Logs are not available for models that have not started or are currently in progress of training"
+        )
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+
+    def test_get_training_logs_file_not_exists(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client):
+        fxt_model_service.get_logs.return_value = None
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Log file not found"}
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)

@@ -1,7 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Checkbox, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { Dispatch, SetStateAction } from 'react';
+
+import {
+    Button,
+    ButtonGroup,
+    Checkbox,
+    Divider,
+    Flex,
+    Heading,
+    MediaViewModes,
+    Text,
+    toast,
+    ViewModes,
+} from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
@@ -12,10 +25,13 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
+import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
     items: Media[];
+    viewMode: ViewModes;
+    setViewMode: Dispatch<SetStateAction<ViewModes>>;
 };
 
 type AnnotateButtonProps = {
@@ -31,11 +47,12 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
-    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys, onSelectedMediaItemChange } =
-        useSelectedData();
+
+    const { onSelectedMediaItemChange } = useSelectDatasetItem();
+    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
 
@@ -104,7 +121,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
             <Flex alignItems={'center'} justifyContent={'space-between'}>
-                <Heading level={1}>Data collection</Heading>
+                <Heading level={1}>Dataset</Heading>
                 <ButtonGroup>
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
                     <TrainModel />
@@ -150,7 +167,14 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                     )}
                 </Flex>
 
-                <Text>{message}</Text>
+                <Flex gap={'size-200'} alignItems={'center'}>
+                    <Text>{message}</Text>
+                    <MediaViewModes
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        items={[ViewModes.LARGE, ViewModes.MEDIUM, ViewModes.SMALL]}
+                    />
+                </Flex>
             </Flex>
 
             <Divider size='S' />

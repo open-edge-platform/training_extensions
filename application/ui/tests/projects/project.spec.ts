@@ -34,22 +34,13 @@ const fillProjectForm = async ({
 test.describe('Project', () => {
     test.beforeEach(({ network }) => {
         network.use(
-            http.get('/api/projects', () => {
-                return HttpResponse.json([
-                    getMockedProject({
-                        id: 'id-1',
-                        name: 'Project 1',
-                    }),
-                    getMockedProject({
-                        id: 'id-2',
-                        name: 'Project 2',
-                    }),
-                    getMockedProject({
-                        id: 'id-3',
-                        name: 'Project 3',
-                    }),
-                ]);
-            })
+            http.get('/api/projects', () =>
+                HttpResponse.json([
+                    getMockedProject({ id: 'id-1', name: 'Project 1' }),
+                    getMockedProject({ id: 'id-2', name: 'Project 2' }),
+                    getMockedProject({ id: 'id-3', name: 'Project 3' }),
+                ])
+            )
         );
     });
 
@@ -93,18 +84,9 @@ test.describe('Project', () => {
         network.use(
             http.get('/api/projects', () => {
                 return HttpResponse.json([
-                    getMockedProject({
-                        id: '1',
-                        name: 'Project 1',
-                    }),
-                    getMockedProject({
-                        id: '2',
-                        name: 'Project 2',
-                    }),
-                    getMockedProject({
-                        id: 'id-3',
-                        name: 'Project 3',
-                    }),
+                    getMockedProject({ id: '1', name: 'Project 1' }),
+                    getMockedProject({ id: '2', name: 'Project 2' }),
+                    getMockedProject({ id: 'id-3', name: 'Project 3' }),
                     getMockedProject({
                         id: 'new project id',
                         name: 'New Project',
@@ -158,6 +140,7 @@ test.describe('Project', () => {
         );
 
         await page.getByText(/Delete/).click();
+        await page.getByRole('button', { name: /Delete/ }).click();
 
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
 

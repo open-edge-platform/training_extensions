@@ -4,12 +4,21 @@
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
 import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
 
+import { type DatasetRevision } from '../../../../constants/shared-types';
+import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
 import { ModelsTableHeader } from '../components/models-table-header.component';
+import { GroupByMode } from '../types';
 import { TrainingModelRow } from './training-model-row.component';
 
-export const CurrentModelTraining = () => {
+type CurrentModelTrainingProps = {
+    groupBy: GroupByMode;
+    datasetRevisions: DatasetRevision[];
+};
+
+export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModelTrainingProps) => {
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
+    const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelTraining = () => {
         if (activeTrainingJob?.job_id) {
@@ -26,7 +35,6 @@ export const CurrentModelTraining = () => {
             gap={'size-200'}
             direction={'column'}
             UNSAFE_style={{ padding: 'var(--spectrum-global-dimension-size-300)' }}
-            marginBottom={'size-200'}
         >
             <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                 Current training
@@ -35,7 +43,13 @@ export const CurrentModelTraining = () => {
             <View backgroundColor={'gray-75'}>
                 <ModelsTableHeader />
 
-                <TrainingModelRow job={activeTrainingJob} onCancel={handleCancelTraining} />
+                <TrainingModelRow
+                    job={activeTrainingJob}
+                    onCancel={handleCancelTraining}
+                    groupBy={groupBy}
+                    datasetRevisions={datasetRevisions}
+                    modelArchitectures={modelArchitectures}
+                />
             </View>
         </Flex>
     );

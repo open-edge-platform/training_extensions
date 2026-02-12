@@ -28,13 +28,13 @@ export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
     return (
         <Tabs aria-label='Model variants' UNSAFE_className={classes.tabs}>
             <TabList>
-                <Item key='openvino' textValue='openvino'>
+                <Item aria-label='openvino tab' key='openvino' textValue='openvino'>
                     <OpenVINO />
                 </Item>
-                <Item key='pytorch' textValue='pytorch'>
+                <Item aria-label='pytorch tab' key='pytorch' textValue='pytorch'>
                     <Pytorch />
                 </Item>
-                <Item key='onnx' textValue='onnx'>
+                <Item aria-label='onnx tab' key='onnx' textValue='onnx'>
                     <ONNX />
                 </Item>
             </TabList>

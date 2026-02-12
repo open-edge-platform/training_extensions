@@ -1,11 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useMemo } from 'react';
+
 import { dimensionValue, Flex, Grid, Text } from '@geti/ui';
 import { SortDown } from '@geti/ui/icons';
 
 import { GRID_COLUMNS } from '../constants';
 import { useModelListing } from '../provider/model-listing-provider';
+import { getFirstAvailableTestingMetric } from './model-row/utils';
 
 const ColumnHeader = ({ label, isSorted }: { label: string; isSorted?: boolean }) => (
     <Flex alignItems='center' gap='size-50'>
@@ -18,7 +21,13 @@ const ColumnHeader = ({ label, isSorted }: { label: string; isSorted?: boolean }
 // We are just rendering the result of the sort, not doing the sort itself on the table.
 // The actual sorting comes from the models screen Header.
 export const ModelsTableHeader = () => {
-    const { groupBy, sortBy } = useModelListing();
+    const { groupBy, sortBy, groupedModels } = useModelListing();
+
+    const performanceColumnName = useMemo(() => {
+        const models = groupedModels.flatMap((group) => group.models);
+
+        return getFirstAvailableTestingMetric(models)?.name ?? 'Score';
+    }, [groupedModels]);
 
     return (
         <Grid
@@ -39,7 +48,7 @@ export const ModelsTableHeader = () => {
                 isSorted={sortBy === 'architecture'}
             />
             <ColumnHeader label='Total size' isSorted={sortBy === 'size'} />
-            <ColumnHeader label='Score' isSorted={sortBy === 'score'} />
+            <ColumnHeader label={performanceColumnName} isSorted={sortBy === 'score'} />
             <div />
         </Grid>
     );
