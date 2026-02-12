@@ -13,6 +13,7 @@ type ExportJobStatusProps = {
     jobId: string;
 };
 
+/* TODO: Update once https://github.com/open-edge-platform/training_extensions/pull/5443 gets merged*/
 const useExportStatus = (job_id: string) => {
     return {
         job: getMockedJob({
@@ -22,32 +23,10 @@ const useExportStatus = (job_id: string) => {
             status: 'PENDING',
             metadata: {
                 project_id: '456',
-                export_format: 'coco',
                 staged_dataset_id: '123',
                 filters: {
                     include_unannotated: true,
-                    labels: [
-                        '359df657-9e93-4dca-a3d6-52fce0f1b3a9',
-                        '05b6dd25-4451-4382-8fb2-fd65efb76c2a',
-                        '284aede6-9ee8-4b38-b602-8f647b7521b1',
-                        '1f144258-622b-4a72-93e0-f32ef3d30266',
-                        '2b20b64b-eccb-4c6c-8b10-a6f7a9d29d5a',
-                        'fcff3437-3436-4443-9ee5-087ca34924b7',
-                        'b297fb7c-36f7-499e-98ec-0088a3ffd644',
-                        '65a59fd3-eb40-4192-b5fa-af43d24c437c',
-                        'ff0d6fa0-23f8-4ac4-8610-6fa20db5a9bc',
-                        '47cc6f96-dfb4-4bc8-ac81-9b5cca10c6e7',
-                        'b9548539-f5d1-4525-aaea-758c8bfe1b95',
-                        '92c6c686-be2b-4210-93aa-a4876c416fe5',
-                        '10e00881-91b2-42e1-bd9e-004a09a79197',
-                        '7eacb6cf-2618-40d1-bd7b-1f5458a4ed55',
-                        '37020f2f-dc29-4cff-981e-81b1eba0a78c',
-                        '998c3e6f-d324-4176-a90f-1e8cf0a2f25d',
-                        'cc1be5a4-612f-4e70-9d21-c4efa84f9e9a',
-                        '1fdfb457-adb5-45fc-a195-f3ecd366ddb1',
-                        '444fbdf5-23f0-4e21-bb06-f6873aca0768',
-                        'aac2432d-3cfc-4366-a9c4-5031f5158599',
-                    ],
+                    labels: [],
                 },
             },
         }),

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Flex, Text, View } from '@geti/ui';
+import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
 
 import { ExportDatasetMetadata, Job } from '../../../../../constants/shared-types';
 import { ExportDetails } from './export-details.component';
@@ -11,13 +12,15 @@ type ExportCompletedJobProps = {
 };
 
 export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
+    const { removeLsExportId } = useLocalStorageDataset();
     const metadata = job?.metadata as unknown as ExportDatasetMetadata;
 
     const handleClose = () => {
-        console.log('Close export job');
+        removeLsExportId(job.job_id);
     };
 
     const handleDownload = () => {
+        /* TODO: Implement download functionality https://github.com/open-edge-platform/training_extensions/pull/5443 */
         console.log('Download export job');
     };
 
@@ -26,12 +29,19 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
             <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                 <ExportDetails metadata={metadata} />
 
-                <Button variant='secondary' style='fill' aria-label='close export dataset status' onPress={handleClose}>
-                    Close
-                </Button>
-                <Button variant='secondary' aria-label='download dataset' width='size-3000' onPress={handleDownload}>
-                    Download
-                </Button>
+                <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
+                    <Button
+                        variant='secondary'
+                        style='fill'
+                        aria-label='close export dataset status'
+                        onPress={handleClose}
+                    >
+                        Close
+                    </Button>
+                    <Button variant='secondary' aria-label='download dataset' onPress={handleDownload}>
+                        Download
+                    </Button>
+                </Flex>
             </Flex>
 
             <Text>Main Dataset is ready to download</Text>
