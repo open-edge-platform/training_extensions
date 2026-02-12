@@ -11,7 +11,7 @@ from model_api.models import Model
 
 from app.models.model_activation import ModelActivationState
 from app.services import ActiveModelService
-from app.services.active_model_service import LoadedModel
+from app.services.active_model_service import DeviceType, LoadedModel
 
 
 @pytest.fixture
@@ -53,8 +53,8 @@ class TestActiveModelServiceUnit:
     )
     def test_get_ov_device_name(self, raw_device_name, expected_ov_device_name) -> None:
         """Test conversion of raw device names to OpenVINO device names."""
-        ov_device_name = ActiveModelService._get_ov_device_name(raw_device_name)
-        assert ov_device_name == expected_ov_device_name
+        ov_device_name = DeviceType.from_raw(raw_device_name)
+        assert str(ov_device_name) == expected_ov_device_name
 
     def test_get_model_file_path(self, fxt_active_model_service):
         """Test retrieval of model file path."""

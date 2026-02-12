@@ -24,6 +24,38 @@ class LoadedModel:
     device: str
 
 
+@dataclass(frozen=True)
+class DeviceType:
+    """Value object representing a device type with optional index."""
+
+    name: str
+    index: int | None = None
+
+    def __str__(self) -> str:
+        """Convert to OpenVINO device string format (e.g., 'GPU.1')."""
+        return f"{self.name.upper()}.{self.index}" if self.index is not None else self.name.upper()
+
+    @classmethod
+    def from_raw(cls, raw_device_name: str) -> "DeviceType":
+        """
+        Parse raw device name into DeviceType.
+        Examples:
+            "cpu" -> DeviceType(name="CPU", index=None)
+            "xpu" -> DeviceType(name="GPU", index=None)
+            "xpu-1" -> DeviceType(name="GPU", index=1)
+        """
+        if raw_device_name.lower() == "cpu":
+            return cls(name="CPU")
+
+        if raw_device_name.lower().startswith("xpu"):
+            parts = raw_device_name.split("-")
+            if len(parts) == 1:
+                return DeviceType(name="GPU")
+            if len(parts) == 2 and parts[1].isdigit():
+                return DeviceType(name="GPU", index=int(parts[1]))
+        raise ValueError(f"Unsupported device name: {raw_device_name}")
+
+
 class ActiveModelService:
     """
     Service to fetch the currently active model for inference.
@@ -35,26 +67,6 @@ class ActiveModelService:
         self.projects_dir = data_dir / "projects"
         self._model_activation_state: ModelActivationState = self._load_state()
         self._loaded_model: LoadedModel | None = None
-
-    @staticmethod
-    def _get_ov_device_name(raw_device_name: str) -> str:
-        """
-        Convert raw device name to the one expected by OpenVINO.
-
-        Examples:
-            "cpu" -> "CPU"
-            "xpu" -> "GPU"
-            "xpu-1" -> "GPU.1"
-        """
-        if raw_device_name.lower() == "cpu":
-            return "CPU"
-        if raw_device_name.lower().startswith("xpu"):
-            parts = raw_device_name.split("-")
-            if len(parts) == 1:
-                return "GPU"
-            if len(parts) == 2 and parts[1].isdigit():
-                return f"GPU.{parts[1]}"
-        raise ValueError(f"Unsupported device name: {raw_device_name}")
 
     @staticmethod
     def _load_state() -> ModelActivationState:
@@ -74,12 +86,12 @@ class ActiveModelService:
             pipeline_device = active_model_repo.get_active_pipeline_device()
             if pipeline_device is None:
                 raise RuntimeError("Active pipeline must have a device configured")
-            ov_device = ActiveModelService._get_ov_device_name(pipeline_device)
+            ov_device = DeviceType.from_raw(pipeline_device)
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
                 available_models=[UUID(m.id) for m in available_models],
-                device=ov_device,
+                device=str(ov_device),
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
