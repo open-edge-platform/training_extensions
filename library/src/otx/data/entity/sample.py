@@ -41,6 +41,89 @@ from otx.data.entity.validation import (
 if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
+# ---------------------------------------------------------------------------
+# Dtype helpers for 16-bit image support
+# ---------------------------------------------------------------------------
+
+#: Map from IntensityConfig.storage_dtype strings to Polars dtype instances.
+STORAGE_DTYPE_MAP: dict[str, pl.DataType] = {
+    "uint8": pl.UInt8(),
+    "uint16": pl.UInt16(),
+    "int16": pl.Int16(),
+    "float32": pl.Float32(),
+}
+
+
+def with_image_dtype(
+    sample_cls: type[Sample],
+    storage_dtype: str,
+) -> type[Sample]:
+    """Create a variant of *sample_cls* whose ``image`` field uses *storage_dtype*.
+
+    When ``storage_dtype == "uint8"`` (the default) the original class is
+    returned unchanged — zero overhead for the common case.
+
+    For other dtypes a thin **dynamic subclass** is created that overrides the
+    ``image`` class-variable with the requested Polars dtype.  The subclass is
+    cached so repeated calls with the same arguments return the same class
+    object (important for Datumaro schema identity comparisons).
+
+    Args:
+        sample_cls: One of the concrete sample classes (e.g.
+            :class:`ClassificationSample`, :class:`DetectionSample`).
+        storage_dtype: A key from :data:`STORAGE_DTYPE_MAP` — ``"uint8"``,
+            ``"uint16"``, ``"int16"``, or ``"float32"``.
+
+    Returns:
+        Either *sample_cls* itself (uint8) or a dynamically created subclass
+        with the overridden ``image`` field.
+    """
+    if storage_dtype == "uint8":
+        return sample_cls
+
+    pl_dtype = STORAGE_DTYPE_MAP.get(storage_dtype)
+    if pl_dtype is None:
+        msg = (
+            f"Unsupported storage_dtype={storage_dtype!r}. "
+            f"Supported values: {list(STORAGE_DTYPE_MAP)}"
+        )
+        raise ValueError(msg)
+
+    cache_key = (sample_cls, storage_dtype)
+    if cache_key in _SAMPLE_DTYPE_CACHE:
+        return _SAMPLE_DTYPE_CACHE[cache_key]
+
+    # Detect the original image_field kwargs by inspecting the existing field
+    orig_image_field = sample_cls.__dataclass_fields__["image"]  # type: ignore[attr-defined]
+    orig_default = orig_image_field.default
+    # The original default is an ImageField dataclass produced by image_field().
+    # We need to reconstruct it with the new dtype.
+    channels_first = getattr(orig_default, "channels_first", True)
+    fmt = getattr(orig_default, "format", "RGB")
+
+    new_image_default = image_field(dtype=pl_dtype, channels_first=channels_first, format=fmt)
+
+    # Create a new dataclass that inherits from sample_cls with overridden image field
+    new_cls_name = f"{sample_cls.__name__}_{storage_dtype}"
+
+    # We use dataclass inheritance: the new class just overrides the image field
+    new_cls = dataclass(
+        type(new_cls_name, (sample_cls,), {
+            "__annotations__": {"image": tv_tensors.Image | torch.Tensor},
+            "image": new_image_default,
+        })
+    )
+
+    # Register with pytree so torchvision v2 transforms work
+    register_pytree_node(new_cls)
+
+    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls
+    return new_cls
+
+
+#: Cache for dynamically created sample classes to avoid re-creation
+_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}
+
 
 def register_pytree_node(cls: type[Sample]) -> type[Sample]:
     """Decorator to register an OTX data entity with PyTorch's PyTree.

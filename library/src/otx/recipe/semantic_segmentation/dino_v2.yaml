@@ -54,7 +54,7 @@ overrides:
       - 518
       - 518
     train_subset:
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.RandomResizedCrop
           init_args:
             scale: $(input_size)
@@ -65,15 +65,15 @@ overrides:
               - 0.75
               - 1.34
     val_subset:
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
-            scale: $(input_size)
+            size: $(input_size)
     test_subset:
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
-            scale: $(input_size)
+            size: $(input_size)
   callbacks:
     - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:

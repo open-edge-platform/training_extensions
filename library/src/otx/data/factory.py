@@ -69,11 +69,18 @@ class OTXDatasetFactory:
     ) -> OTXDataset:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
+
+        # Extract storage_dtype from IntensityConfig for 16-bit image support
+        storage_dtype = "uint8"
+        if hasattr(cfg_subset, "intensity") and cfg_subset.intensity is not None:
+            storage_dtype = cfg_subset.intensity.storage_dtype
+
         common_kwargs = {
             "dm_subset": dm_subset,
             "transforms": transforms,
             "data_format": data_format,
             "to_tv_image": cfg_subset.to_tv_image,
+            "storage_dtype": storage_dtype,
         }
 
         if task == OTXTaskType.MULTI_CLASS_CLS:

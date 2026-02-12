@@ -14,18 +14,40 @@ from typing import Any
 
 @dataclass
 class IntensityConfig:
-    """Configuration for high-bit-depth intensity mapping.
+    """Configuration for intensity mapping (uint8, uint16, or other high-bit-depth inputs).
 
-    Used for medical imaging where inputs may be uint16 (0-65535).
+    Controls how raw pixel values are converted to float32 [0, 1] before augmentations.
+    For standard uint8 images the default ``mode="scale_to_unit"`` divides by 255.
+    For high-bit-depth inputs (uint16 thermal, medical, etc.) select an appropriate mode.
+
+    Supported modes:
+        - ``"scale_to_unit"``: Divide by ``max_value`` and clamp to [0, 1].
+          Default for both uint8 (max_value=255) and uint16 (max_value=65535).
+        - ``"window"``: Window/level mapping for CT-style imaging.
+          Clips to ``[window_center - window_width/2, window_center + window_width/2]``
+          then normalizes to [0, 1].
+        - ``"percentile"``: Per-image percentile clipping for microscopy / variable-range data.
+          Clips to ``[percentile_low, percentile_high]`` quantiles then normalizes.
+        - ``"range_scale"``: Multiply by ``scale_factor``, clip to ``[min_value, max_value]``,
+          normalize to [0, 1].  Designed for thermal cameras where raw pixel values
+          need a conversion factor and a physical temperature range (see ``process_raw_thermal.py``).
 
     Attributes:
-        storage_dtype: Input storage dtype ("uint8", "uint16", "int16", "float32").
-        max_value: Maximum input value for scaling. None = auto (255 for uint8, 65535 for uint16).
-        mode: Intensity mapping mode ("scale_to_unit", "window", "percentile").
-        window_center: Center of intensity window (for mode="window").
-        window_width: Width of intensity window (for mode="window").
-        percentile_low: Low percentile for clipping (for mode="percentile").
-        percentile_high: High percentile for clipping (for mode="percentile").
+        storage_dtype: Input storage dtype: ``"uint8"`` | ``"uint16"`` | ``"int16"`` | ``"float32"``.
+            Determines the Polars/Datumaro schema used for image decode.
+        max_value: Maximum raw value for ``"scale_to_unit"`` mode.
+            ``None`` = auto (255 for uint8, 65535 for uint16, 32767 for int16).
+        mode: Intensity mapping mode (see above).
+        window_center: Center of the intensity window (``"window"`` mode).
+        window_width: Width of the intensity window (``"window"`` mode).
+        percentile_low: Low percentile for clipping (``"percentile"`` mode, default 1.0).
+        percentile_high: High percentile for clipping (``"percentile"`` mode, default 99.0).
+        scale_factor: Multiplicative factor applied to raw pixels before clipping
+            (``"range_scale"`` mode, e.g. 0.4 for thermal Kelvin conversion).
+        min_value: Minimum physical value after scaling, used as clip lower bound
+            (``"range_scale"`` mode, e.g. 295.15 K).
+        repeat_channels: If > 0, repeat single-channel images to this many channels
+            (e.g. 3 for pretrained RGB backbones). 0 = no repeat.
     """
 
     storage_dtype: str = "uint8"
@@ -35,6 +57,9 @@ class IntensityConfig:
     window_width: float | None = None
     percentile_low: float = 1.0
     percentile_high: float = 99.0
+    scale_factor: float = 1.0
+    min_value: float = 0.0
+    repeat_channels: int = 0
 
 
 @dataclass

@@ -6,8 +6,17 @@
 This module provides a two-stage augmentation pipeline:
 - CPU stage: Size-dependent augmentations in Dataset workers (torchvision.transforms.v2)
 - GPU stage: Batch-level augmentations via Lightning Callback (Kornia)
+- Intensity mapping: High-bit-depth (uint16) → float32 [0,1] conversion
 """
 
+from otx.data.augmentation.intensity import (
+    PercentileClip,
+    RangeScale,
+    RepeatChannels,
+    ScaleToUnit,
+    WindowLevel,
+    build_intensity_transform,
+)
 from otx.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
@@ -16,4 +25,10 @@ from otx.data.augmentation.pipeline import (
 __all__ = [
     "CPUAugmentationPipeline",
     "GPUAugmentationPipeline",
+    "PercentileClip",
+    "RangeScale",
+    "RepeatChannels",
+    "ScaleToUnit",
+    "WindowLevel",
+    "build_intensity_transform",
 ]

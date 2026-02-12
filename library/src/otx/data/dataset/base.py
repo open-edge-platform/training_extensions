@@ -77,8 +77,20 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         if not isinstance(img, torch.Tensor):
             msg = f"Expected torch.Tensor but got {type(img)}. Images should be converted to tensors in the dataset pipeline."
             raise TypeError(msg)
-        # Convert to float32 if not already
+        # Convert to float32 if not already.
+        # For int32/int16 tensors (16-bit images) the intensity transform should
+        # have already produced float32 in [0,1].  If we get here with an integer
+        # dtype it means the intensity transform is missing — raise an error
+        # instead of silently producing wrong values.
         if img.dtype != torch.float32:
+            if img.dtype in (torch.int32, torch.int16, torch.int64):
+                msg = (
+                    f"Image tensor has dtype {img.dtype} which looks like a high-bit-depth image "
+                    "that was not converted to float32. Please configure an intensity transform "
+                    "(IntensityConfig) in the recipe to map raw pixel values to [0, 1] float32."
+                )
+                raise TypeError(msg)
+            # uint8 → float32 (safe, values 0-255 → 0.0-255.0 — GPU pipeline normalizes)
             img = img.float()
         # Ensure image is in CHW format
         img = _ensure_chw_format(img)
@@ -134,6 +146,7 @@ class OTXDataset(TorchDataset):
         to_tv_image: bool = True,
         data_format: str = "",
         sample_type: type[OTXSample] = OTXSample,
+        storage_dtype: str = "uint8",
     ) -> None:
         self.transforms = transforms
         self.stack_images = stack_images
@@ -141,6 +154,7 @@ class OTXDataset(TorchDataset):
         self.sample_type = sample_type
         self.max_refetch = max_refetch
         self.data_format = data_format
+        self.storage_dtype = storage_dtype
         self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset
 
@@ -148,7 +162,18 @@ class OTXDataset(TorchDataset):
         return len(self.dm_subset)
 
     def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
-        entity.image = f.to_dtype(entity.image, dtype=torch.float32, scale=True)
+        # Intensity mapping: convert raw pixels to float32 [0, 1].
+        #
+        # When a CPUAugmentationPipeline is used the pipeline itself prepends
+        # the correct intensity transform (built from IntensityConfig), so we
+        # must NOT scale here — the intensity transform will do it.
+        #
+        # For legacy paths (Compose, callable) or when no transforms are set we
+        # keep the original uint8-only scaling as a safe default.
+        if not isinstance(self.transforms, CPUAugmentationPipeline):
+            # Legacy path: always scale assuming uint8 input (backward-compat)
+            entity.image = f.to_dtype(entity.image, dtype=torch.float32, scale=True)
+
         if self.transforms is None:
             return entity
 

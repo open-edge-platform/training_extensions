@@ -503,11 +503,12 @@ class TestCachedMosaic:
 
         results = cached_mosaic(deepcopy(entity))
 
-        assert results.image.shape[:2] == (256, 256)
+        # Image is CHW tensor format, so shape[-2:] gives (H, W)
+        assert results.image.shape[-2:] == (256, 256)
         assert results.label.shape[0] == results.bboxes.shape[0]
         assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[-2:]
         assert results.masks.shape[1:] == (256, 256)
 
 

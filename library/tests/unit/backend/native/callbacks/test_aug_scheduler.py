@@ -1,7 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for data augmentation scheduler components."""
+"""Tests for data augmentation scheduler components (CPU/GPU pipeline)."""
+
+from __future__ import annotations
 
 import secrets
 from multiprocessing import Value
@@ -10,421 +12,502 @@ from unittest.mock import MagicMock, patch
 import pytest
 import torch
 from lightning.pytorch import LightningModule, Trainer
-from torchvision.transforms.v2 import Compose, ToDtype
+from lightning.pytorch.callbacks.callback import Callback
 
 from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
+from otx.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeline
 
 
+# ---------------------------------------------------------------------------
+# Helpers / fixtures shared across test classes
+# ---------------------------------------------------------------------------
+
+def _make_minimal_policies(
+    *,
+    cpu_class: str = "otx.data.transform_libs.torchvision.Resize",
+    gpu_class: str = "kornia.augmentation.Normalize",
+) -> dict:
+    """Return a 4-policy dict with simple Resize (CPU) + Normalize (GPU)."""
+    cpu_entry = {
+        "class_path": cpu_class,
+        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+    }
+    gpu_entry = {
+        "class_path": gpu_class,
+        "init_args": {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]},
+    }
+    gpu_entry_flip = {
+        "class_path": "kornia.augmentation.RandomHorizontalFlip",
+        "init_args": {"p": 0.5},
+    }
+    return {
+        "no_aug": {
+            "augmentations_cpu": [cpu_entry],
+            "augmentations_gpu": [gpu_entry],
+        },
+        "strong_aug_1": {
+            "augmentations_cpu": [cpu_entry],
+            "augmentations_gpu": [gpu_entry_flip, gpu_entry],
+        },
+        "strong_aug_2": {
+            "augmentations_cpu": [cpu_entry],
+            "augmentations_gpu": [gpu_entry_flip, gpu_entry],
+        },
+        "light_aug": {
+            "augmentations_cpu": [cpu_entry],
+            "augmentations_gpu": [gpu_entry],
+        },
+    }
+
+
+POLICY_EPOCHS = [4, 23, 40]
+
+
+# ===================================================================
+# TestDataAugSwitch
+# ===================================================================
 class TestDataAugSwitch:
-    """Test cases for DataAugSwitch."""
+    """Tests for DataAugSwitch with the CPU/GPU pipeline architecture."""
 
-    @pytest.fixture
-    def sample_policies(self):
-        """Create sample augmentation policies."""
-        return {
-            "no_aug": {
-                "to_tv_image": True,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
-                ],
-            },
-            "strong_aug_1": {
-                "to_tv_image": True,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
-                ],
-            },
-            "strong_aug_2": {
-                "to_tv_image": False,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.int32"}},
-                ],
-            },
-            "light_aug": {
-                "to_tv_image": True,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
-                ],
-            },
-        }
+    # -- fixtures -------------------------------------------------------
 
-    @pytest.fixture
-    def policy_epochs(self):
-        """Create sample policy epochs."""
-        return [4, 29, 50]
+    @pytest.fixture()
+    def policies(self):
+        return _make_minimal_policies()
 
-    @pytest.fixture
-    def data_aug_switch(self, policy_epochs, sample_policies):
-        """Create a DataAugSwitch instance."""
-        with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
-            # Mock the transform generation to return simple transforms
-            mock_generate.return_value = Compose([ToDtype(dtype=torch.float32)])
-            return DataAugSwitch(policy_epochs, sample_policies)
+    @pytest.fixture()
+    def switch(self, policies):
+        return DataAugSwitch(POLICY_EPOCHS, policies, input_size=[640, 640])
 
-    def test_init_valid_policy_epochs(self, policy_epochs, sample_policies):
-        """Test DataAugSwitch initialization with valid policy epochs."""
-        with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
-            mock_generate.return_value = Compose([ToDtype(dtype=torch.float32)])
-            switch = DataAugSwitch(policy_epochs, sample_policies)
+    @pytest.fixture()
+    def switch_with_epoch(self, switch):
+        """Switch with a shared epoch pre-set to 0."""
+        switch.set_shared_epoch(Value("i", 0))
+        return switch
 
-            assert switch.policy_epochs == policy_epochs
-            assert len(switch.policies) == len(sample_policies)
-            assert switch._shared_epoch is None
+    # -- init -----------------------------------------------------------
 
-    def test_init_invalid_policy_epochs(self, sample_policies):
-        """Test DataAugSwitch initialization with invalid policy epochs."""
-        invalid_epochs = [4, 29]  # Only 2 epochs instead of 3
+    def test_init_stores_policy_epochs(self, switch):
+        assert switch.policy_epochs == POLICY_EPOCHS
 
+    def test_init_stores_input_size_as_tuple(self, switch):
+        assert switch.input_size == (640, 640)
+
+    def test_init_builds_cpu_pipeline_per_policy(self, switch):
+        for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug"):
+            assert name in switch.policies
+            assert isinstance(switch.policies[name]["cpu_pipeline"], CPUAugmentationPipeline)
+
+    def test_init_stores_gpu_configs_per_policy(self, switch):
+        for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug"):
+            assert isinstance(switch.policies[name]["gpu_aug_configs"], list)
+            assert len(switch.policies[name]["gpu_aug_configs"]) >= 1
+
+    def test_init_invalid_policy_epochs_length(self, policies):
         with pytest.raises(ValueError, match="Expected 3 policy epochs"):
-            DataAugSwitch(invalid_epochs, sample_policies)
+            DataAugSwitch([4, 29], policies)
 
-    def test_set_shared_epoch(self, data_aug_switch):
-        """Test setting shared epoch."""
-        shared_epoch = Value("i", 0)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_init_no_input_size(self, policies):
+        switch = DataAugSwitch(POLICY_EPOCHS, policies, input_size=None)
+        assert switch.input_size is None
 
-        assert data_aug_switch._shared_epoch is shared_epoch
+    def test_init_empty_gpu_augmentations(self):
+        """Policy with no GPU augmentations should store empty list."""
+        policies = {
+            name: {
+                "augmentations_cpu": [
+                    {"class_path": "otx.data.transform_libs.torchvision.Resize",
+                     "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
+                ],
+            }
+            for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug")
+        }
+        switch = DataAugSwitch(POLICY_EPOCHS, policies, input_size=[640, 640])
+        assert switch.get_gpu_aug_configs("no_aug") == []
 
-    def test_epoch_property_without_shared_epoch(self, data_aug_switch):
-        """Test epoch property when shared epoch is not set."""
+    # -- shared epoch ---------------------------------------------------
+
+    def test_set_shared_epoch(self, switch):
+        v = Value("i", 7)
+        switch.set_shared_epoch(v)
+        assert switch._shared_epoch is v
+
+    def test_epoch_getter_raises_without_shared(self, switch):
         with pytest.raises(ValueError, match="Shared epoch not set"):
-            _ = data_aug_switch.epoch
+            _ = switch.epoch
 
-    def test_epoch_property_with_shared_epoch(self, data_aug_switch):
-        """Test epoch property when shared epoch is set."""
-        shared_epoch = Value("i", 10)
-        data_aug_switch.set_shared_epoch(shared_epoch)
-
-        assert data_aug_switch.epoch == 10
-
-    def test_epoch_setter_without_shared_epoch(self, data_aug_switch):
-        """Test epoch setter when shared epoch is not set."""
+    def test_epoch_setter_raises_without_shared(self, switch):
         with pytest.raises(ValueError, match="Shared epoch not set"):
-            data_aug_switch.epoch = 5
+            switch.epoch = 5
 
-    def test_epoch_setter_with_shared_epoch(self, data_aug_switch):
-        """Test epoch setter when shared epoch is set."""
-        shared_epoch = Value("i", 0)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_epoch_getter_and_setter(self, switch_with_epoch):
+        switch_with_epoch.epoch = 12
+        assert switch_with_epoch.epoch == 12
 
-        data_aug_switch.epoch = 15
-        assert data_aug_switch.epoch == 15
-        assert shared_epoch.value == 15
+    # -- current_policy_name (stochastic) --------------------------------
 
-    def test_current_policy_name_no_aug_stage(self, data_aug_switch):
-        """Test current_policy_name in no_aug stage (epoch < 4)."""
-        shared_epoch = Value("i", 2)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_policy_name_no_aug_stage(self, switch_with_epoch):
+        for e in (0, 1, 3):
+            switch_with_epoch.epoch = e
+            assert switch_with_epoch.current_policy_name == "no_aug"
 
-        assert data_aug_switch.current_policy_name == "no_aug"
+    def test_policy_name_strong_aug_stage_random(self, switch_with_epoch):
+        switch_with_epoch.epoch = 10
+        with patch.object(secrets, "choice", return_value="strong_aug_2") as m:
+            assert switch_with_epoch.current_policy_name == "strong_aug_2"
+            m.assert_called_once_with(["strong_aug_1", "strong_aug_2"])
 
-    def test_current_policy_name_strong_aug_stage(self, data_aug_switch):
-        """Test current_policy_name in strong_aug stage (4 <= epoch < 29)."""
-        shared_epoch = Value("i", 15)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_policy_name_light_aug_stage(self, switch_with_epoch):
+        for e in (23, 30, 40, 100):
+            switch_with_epoch.epoch = e
+            assert switch_with_epoch.current_policy_name == "light_aug"
 
+    def test_policy_name_boundary_at_p0(self, switch_with_epoch):
+        """epoch == p0 should enter strong_aug stage."""
+        switch_with_epoch.epoch = 4
         with patch.object(secrets, "choice", return_value="strong_aug_1"):
-            policy_name = data_aug_switch.current_policy_name
-            assert policy_name in ["strong_aug_1", "strong_aug_2"]
+            assert switch_with_epoch.current_policy_name == "strong_aug_1"
 
-    def test_current_policy_name_light_aug_stage(self, data_aug_switch):
-        """Test current_policy_name in light_aug stage (epoch >= 29)."""
-        shared_epoch = Value("i", 35)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_policy_name_boundary_at_p1(self, switch_with_epoch):
+        """epoch == p1 should enter light_aug stage."""
+        switch_with_epoch.epoch = 23
+        assert switch_with_epoch.current_policy_name == "light_aug"
 
-        assert data_aug_switch.current_policy_name == "light_aug"
+    # -- current_phase (deterministic) -----------------------------------
 
-    def test_current_policy_name_boundary_conditions(self, data_aug_switch):
-        """Test current_policy_name at boundary conditions."""
-        shared_epoch = Value("i", 0)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_phase_no_aug(self, switch_with_epoch):
+        switch_with_epoch.epoch = 0
+        assert switch_with_epoch.current_phase == "no_aug"
 
-        # Test exact boundary values
-        test_cases = [
-            (3, "no_aug"),  # Just before first boundary
-            (4, "strong_aug_1"),  # At first boundary (mocked)
-            (28, "strong_aug_2"),  # Just before second boundary (mocked)
-            (29, "light_aug"),  # At second boundary
-            (50, "light_aug"),  # Beyond all boundaries
-        ]
+    def test_phase_strong_aug(self, switch_with_epoch):
+        for e in (4, 10, 22):
+            switch_with_epoch.epoch = e
+            assert switch_with_epoch.current_phase == "strong_aug"
 
-        for epoch, expected_stage in test_cases:
-            data_aug_switch.epoch = epoch
-            if expected_stage in ["strong_aug_1", "strong_aug_2"]:
-                with patch.object(secrets, "choice", return_value=expected_stage):
-                    assert data_aug_switch.current_policy_name == expected_stage
-            else:
-                assert data_aug_switch.current_policy_name == expected_stage
+    def test_phase_light_aug(self, switch_with_epoch):
+        for e in (23, 40, 100):
+            switch_with_epoch.epoch = e
+            assert switch_with_epoch.current_phase == "light_aug"
 
-    def test_current_transforms_property(self, data_aug_switch):
-        """Test current_transforms property."""
-        shared_epoch = Value("i", 2)
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_phase_is_deterministic(self, switch_with_epoch):
+        """current_phase must always return the same value for the same epoch."""
+        switch_with_epoch.epoch = 10
+        results = {switch_with_epoch.current_phase for _ in range(50)}
+        assert results == {"strong_aug"}
 
-        to_tv_image, transforms = data_aug_switch.current_transforms
+    # -- current_cpu_pipeline -------------------------------------------
 
-        assert isinstance(to_tv_image, bool)
-        assert isinstance(transforms, Compose)
+    def test_current_cpu_pipeline_returns_correct_type(self, switch_with_epoch):
+        switch_with_epoch.epoch = 0
+        assert isinstance(switch_with_epoch.current_cpu_pipeline, CPUAugmentationPipeline)
 
-    def test_secrets_choice_randomness(self, data_aug_switch):
-        """Test that secrets.choice is used for random selection."""
-        shared_epoch = Value("i", 15)  # In strong_aug stage
-        data_aug_switch.set_shared_epoch(shared_epoch)
+    def test_current_cpu_pipeline_changes_with_policy(self, switch_with_epoch):
+        switch_with_epoch.epoch = 0
+        no_aug_pipeline = switch_with_epoch.current_cpu_pipeline
 
-        with patch.object(secrets, "choice") as mock_choice:
-            mock_choice.return_value = "strong_aug_1"
-            policy_name = data_aug_switch.current_policy_name
+        switch_with_epoch.epoch = 30
+        light_aug_pipeline = switch_with_epoch.current_cpu_pipeline
 
-            mock_choice.assert_called_once_with(["strong_aug_1", "strong_aug_2"])
-            assert policy_name == "strong_aug_1"
+        assert isinstance(no_aug_pipeline, CPUAugmentationPipeline)
+        assert isinstance(light_aug_pipeline, CPUAugmentationPipeline)
 
-    def test_policy_processing_during_init(self, policy_epochs, sample_policies):
-        """Test that policies are properly processed during initialization."""
-        with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
-            mock_transform = Compose([ToDtype(dtype=torch.float32)])
-            mock_generate.return_value = mock_transform
+    # -- get_gpu_aug_configs --------------------------------------------
 
-            switch = DataAugSwitch(policy_epochs, sample_policies)
+    def test_get_gpu_aug_configs_returns_list(self, switch):
+        configs = switch.get_gpu_aug_configs("no_aug")
+        assert isinstance(configs, list)
+        assert len(configs) == 1  # just Normalize
 
-            # Check that generate was called for each policy
-            assert mock_generate.call_count == len(sample_policies)
+    def test_get_gpu_aug_configs_strong_has_flip(self, switch):
+        configs = switch.get_gpu_aug_configs("strong_aug_1")
+        class_paths = [c["class_path"] for c in configs]
+        assert "kornia.augmentation.RandomHorizontalFlip" in class_paths
 
-            # Check that policies were processed correctly
-            for policy_name in sample_policies:
-                assert policy_name in switch.policies
-                assert "to_tv_image" in switch.policies[policy_name]
-                assert "transforms" in switch.policies[policy_name]
-                assert switch.policies[policy_name]["transforms"] is mock_transform
+    # -- build_gpu_pipeline ---------------------------------------------
+
+    def test_build_gpu_pipeline_returns_correct_type(self, switch):
+        gpu = switch.build_gpu_pipeline("no_aug", data_keys=["input", "bbox_xyxy", "label"])
+        assert isinstance(gpu, GPUAugmentationPipeline)
+
+    def test_build_gpu_pipeline_data_keys_propagated(self, switch):
+        keys = ["input", "bbox_xyxy", "label"]
+        gpu = switch.build_gpu_pipeline("strong_aug_1", data_keys=keys)
+        assert gpu.data_keys == keys
+
+    def test_build_gpu_pipeline_empty_configs(self):
+        """Policy with no GPU augmentations produces an empty pipeline."""
+        policies = {
+            name: {
+                "augmentations_cpu": [
+                    {"class_path": "otx.data.transform_libs.torchvision.Resize",
+                     "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
+                ],
+            }
+            for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug")
+        }
+        switch = DataAugSwitch(POLICY_EPOCHS, policies, input_size=[640, 640])
+        gpu = switch.build_gpu_pipeline("no_aug")
+        assert isinstance(gpu, GPUAugmentationPipeline)
 
 
+# ===================================================================
+# TestAugmentationSchedulerCallback
+# ===================================================================
 class TestAugmentationSchedulerCallback:
-    """Test cases for AugmentationSchedulerCallback."""
+    """Tests for AugmentationSchedulerCallback with GPU pipeline swapping."""
 
-    @pytest.fixture
-    def mock_data_aug_switch(self):
-        """Create a mock DataAugSwitch."""
-        return MagicMock(spec=DataAugSwitch)
+    # -- fixtures -------------------------------------------------------
 
-    @pytest.fixture
-    def callback_with_switch(self, mock_data_aug_switch):
-        """Create callback with DataAugSwitch."""
-        return AugmentationSchedulerCallback(mock_data_aug_switch)
+    @pytest.fixture()
+    def switch(self):
+        s = DataAugSwitch(POLICY_EPOCHS, _make_minimal_policies(), input_size=[640, 640])
+        s.set_shared_epoch(Value("i", 0))
+        return s
 
-    @pytest.fixture
-    def callback_without_switch(self):
-        """Create callback without DataAugSwitch."""
-        return AugmentationSchedulerCallback()
+    @pytest.fixture()
+    def mock_gpu_callback(self):
+        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
-    @pytest.fixture
-    def mock_trainer(self):
-        """Create a mock trainer."""
+        cb = MagicMock(spec=GPUAugmentationCallback)
+        mock_pipeline = MagicMock(spec=GPUAugmentationPipeline)
+        mock_pipeline.data_keys = ["input", "bbox_xyxy", "label"]
+        cb._train_pipeline = mock_pipeline
+        return cb
+
+    @pytest.fixture()
+    def mock_trainer(self, mock_gpu_callback):
         trainer = MagicMock(spec=Trainer)
-        trainer.current_epoch = 10
+        trainer.current_epoch = 0
+        trainer.callbacks = [mock_gpu_callback]
         return trainer
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_pl_module(self):
-        """Create a mock Lightning module."""
-        return MagicMock(spec=LightningModule)
+        pl = MagicMock(spec=LightningModule)
+        param = torch.nn.Parameter(torch.zeros(1))
+        pl.parameters.side_effect = lambda: iter([param])
+        return pl
 
-    def test_init_with_data_aug_switch(self, mock_data_aug_switch):
-        """Test callback initialization with DataAugSwitch."""
-        callback = AugmentationSchedulerCallback(mock_data_aug_switch)
+    @pytest.fixture()
+    def callback(self, switch):
+        return AugmentationSchedulerCallback(data_aug_switch=switch)
 
-        assert callback.data_aug_switch is mock_data_aug_switch
+    # -- init -----------------------------------------------------------
 
-    def test_init_without_data_aug_switch(self):
-        """Test callback initialization without DataAugSwitch."""
-        callback = AugmentationSchedulerCallback()
+    def test_inherits_from_lightning_callback(self, callback):
+        assert isinstance(callback, Callback)
 
-        assert callback.data_aug_switch is None
+    def test_init_with_switch(self, switch):
+        cb = AugmentationSchedulerCallback(data_aug_switch=switch)
+        assert cb.data_aug_switch is switch
+        assert cb._gpu_aug_callback is None
+        assert cb._last_gpu_policy is None
 
-    def test_set_data_aug_switch(self, callback_without_switch, mock_data_aug_switch):
-        """Test setting DataAugSwitch after initialization."""
-        callback_without_switch.set_data_aug_switch(mock_data_aug_switch)
+    def test_init_without_switch(self):
+        cb = AugmentationSchedulerCallback()
+        assert cb.data_aug_switch is None
 
-        assert callback_without_switch.data_aug_switch is mock_data_aug_switch
+    # -- setup ----------------------------------------------------------
 
-    def test_on_train_epoch_start_with_switch(self, callback_with_switch, mock_trainer, mock_pl_module):
-        """Test on_train_epoch_start when DataAugSwitch is available."""
-        callback_with_switch.on_train_epoch_start(mock_trainer, mock_pl_module)
+    def test_setup_finds_gpu_callback(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
+        assert callback._gpu_aug_callback is mock_gpu_callback
 
-        # Check that epoch was set on the DataAugSwitch
-        assert callback_with_switch.data_aug_switch.epoch == mock_trainer.current_epoch
+    def test_setup_no_gpu_callback(self, callback, mock_pl_module):
+        trainer = MagicMock(spec=Trainer)
+        trainer.callbacks = []
+        callback.setup(trainer, mock_pl_module, stage="fit")
+        assert callback._gpu_aug_callback is None
 
-    def test_on_train_epoch_start_without_switch(self, callback_without_switch, mock_trainer, mock_pl_module):
-        """Test on_train_epoch_start when DataAugSwitch is not available."""
-        # This should not raise an exception but will fail due to None
-        with pytest.raises(AttributeError):
-            callback_without_switch.on_train_epoch_start(mock_trainer, mock_pl_module)
+    # -- set_data_aug_switch --------------------------------------------
 
-    def test_on_train_epoch_start_updates_epoch(self, callback_with_switch, mock_pl_module):
-        """Test that on_train_epoch_start updates epoch correctly."""
-        # Test different epoch values
-        for epoch in [0, 5, 10, 25, 50]:
-            mock_trainer = MagicMock(spec=Trainer)
-            mock_trainer.current_epoch = epoch
-
-            callback_with_switch.on_train_epoch_start(mock_trainer, mock_pl_module)
-
-            assert callback_with_switch.data_aug_switch.epoch == epoch
-
-    def test_callback_inheritance(self, callback_with_switch):
-        """Test that callback properly inherits from Lightning Callback."""
-        from lightning.pytorch.callbacks.callback import Callback
-
-        assert isinstance(callback_with_switch, Callback)
-
-    def test_set_data_aug_switch_replaces_existing(self, callback_with_switch):
-        """Test that set_data_aug_switch replaces existing switch."""
-        original_switch = callback_with_switch.data_aug_switch
+    def test_set_data_aug_switch(self, callback, switch):
         new_switch = MagicMock(spec=DataAugSwitch)
+        callback.set_data_aug_switch(new_switch)
+        assert callback.data_aug_switch is new_switch
 
-        callback_with_switch.set_data_aug_switch(new_switch)
+    # -- on_train_epoch_start -------------------------------------------
 
-        assert callback_with_switch.data_aug_switch is new_switch
-        assert callback_with_switch.data_aug_switch is not original_switch
+    def test_epoch_start_noop_when_no_switch(self, mock_trainer, mock_pl_module):
+        cb = AugmentationSchedulerCallback(data_aug_switch=None)
+        cb.on_train_epoch_start(mock_trainer, mock_pl_module)  # should not raise
 
-    def test_multiple_epoch_updates(self, callback_with_switch, mock_pl_module):
-        """Test multiple epoch updates during training."""
-        epochs = [0, 1, 2, 5, 10, 15, 20, 25, 30]
+    def test_epoch_start_updates_shared_epoch(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
+        mock_trainer.current_epoch = 7
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback.data_aug_switch.epoch == 7
 
-        for epoch in epochs:
-            mock_trainer = MagicMock(spec=Trainer)
-            mock_trainer.current_epoch = epoch
+    def test_epoch_start_swaps_gpu_on_phase_change(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
+        mock_trainer.current_epoch = 0
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback._last_gpu_policy == "no_aug"
+        assert mock_gpu_callback._train_pipeline is not None
 
-            callback_with_switch.on_train_epoch_start(mock_trainer, mock_pl_module)
+    def test_epoch_start_no_swap_same_phase(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
 
-            # Verify the epoch was set correctly
-            callback_with_switch.data_aug_switch.epoch = epoch
+        mock_trainer.current_epoch = 0
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback._last_gpu_policy == "no_aug"
 
+        mock_trainer.current_epoch = 1
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback._last_gpu_policy == "no_aug"
 
-class TestDataAugSwitchIntegration:
-    """Integration tests for DataAugSwitch and AugmentationSchedulerCallback."""
+    def test_epoch_start_detects_phase_transitions(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
 
-    @pytest.fixture
-    def sample_policies(self):
-        """Create sample augmentation policies."""
-        return {
-            "no_aug": {
-                "to_tv_image": True,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
+        mock_trainer.current_epoch = 0
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback._last_gpu_policy == "no_aug"
+
+        mock_trainer.current_epoch = 4
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback._last_gpu_policy == "strong_aug"
+
+        mock_trainer.current_epoch = 23
+        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        assert callback._last_gpu_policy == "light_aug"
+
+    # -- _swap_gpu_pipeline ---------------------------------------------
+
+    def test_swap_gpu_pipeline_noop_without_gpu_callback(self, callback, mock_pl_module):
+        callback._gpu_aug_callback = None
+        callback._swap_gpu_pipeline("no_aug", mock_pl_module)  # should not crash
+
+    def test_swap_gpu_pipeline_noop_without_switch(self, mock_pl_module):
+        cb = AugmentationSchedulerCallback(data_aug_switch=None)
+        cb._gpu_aug_callback = MagicMock()
+        cb._swap_gpu_pipeline("no_aug", mock_pl_module)  # should not crash
+
+    def test_swap_gpu_pipeline_builds_and_assigns(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
+        callback._swap_gpu_pipeline("strong_aug_1", mock_pl_module)
+        new_pipeline = mock_gpu_callback._train_pipeline
+        assert isinstance(new_pipeline, GPUAugmentationPipeline)
+
+    def test_swap_gpu_pipeline_preserves_data_keys(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
+        callback._swap_gpu_pipeline("strong_aug_1", mock_pl_module)
+        new_pipeline = mock_gpu_callback._train_pipeline
+        assert isinstance(new_pipeline, GPUAugmentationPipeline)
+        assert new_pipeline.data_keys == ["input", "bbox_xyxy", "label"]
+
+    def test_swap_gpu_pipeline_skips_empty_configs(self, mock_pl_module):
+        """If a policy has no GPU augmentations, keep the current pipeline."""
+        policies = {
+            name: {
+                "augmentations_cpu": [
+                    {"class_path": "otx.data.transform_libs.torchvision.Resize",
+                     "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
                 ],
-            },
-            "strong_aug_1": {
-                "to_tv_image": True,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
-                ],
-            },
-            "strong_aug_2": {
-                "to_tv_image": False,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.int32"}},
-                ],
-            },
-            "light_aug": {
-                "to_tv_image": True,
-                "transforms": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
-                ],
-            },
+            }
+            for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug")
         }
+        switch = DataAugSwitch(POLICY_EPOCHS, policies, input_size=[640, 640])
+        switch.set_shared_epoch(Value("i", 0))
 
-    @pytest.fixture
-    def integration_setup(self, sample_policies):
-        """Set up DataAugSwitch and AugmentationSchedulerCallback for integration testing."""
-        with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
-            mock_generate.return_value = Compose([ToDtype(dtype=torch.float32)])
+        from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
-            # Create DataAugSwitch
-            switch = DataAugSwitch([4, 29, 50], sample_policies)
+        mock_gpu_cb = MagicMock(spec=GPUAugmentationCallback)
+        original_pipeline = MagicMock()
+        mock_gpu_cb._train_pipeline = original_pipeline
 
-            # Create shared epoch
-            shared_epoch = Value("i", 0)
-            switch.set_shared_epoch(shared_epoch)
+        cb = AugmentationSchedulerCallback(data_aug_switch=switch)
+        cb._gpu_aug_callback = mock_gpu_cb
+        cb._swap_gpu_pipeline("no_aug", mock_pl_module)
+        assert mock_gpu_cb._train_pipeline is original_pipeline
 
-            # Create callback
-            callback = AugmentationSchedulerCallback(switch)
+    # -- full training simulation ----------------------------------------
 
-            return switch, callback, shared_epoch
+    def test_full_training_simulation(self, callback, mock_trainer, mock_pl_module, mock_gpu_callback):
+        """Simulate a full training run through all 3 phase transitions."""
+        callback.setup(mock_trainer, mock_pl_module, stage="fit")
 
-    def test_full_training_simulation(self, integration_setup):
-        """Test full training simulation with epoch updates."""
-        switch, callback, shared_epoch = integration_setup
-
-        # Simulate training epochs
-        test_epochs = [0, 3, 4, 15, 28, 29, 35, 50]
-        expected_policies = [
-            "no_aug",
-            "no_aug",
-            "strong_aug",
-            "strong_aug",
-            "strong_aug",
-            "light_aug",
-            "light_aug",
-            "light_aug",
-        ]
-
-        for epoch, expected_policy_type in zip(test_epochs, expected_policies):
-            # Simulate trainer epoch update
-            mock_trainer = MagicMock(spec=Trainer)
+        phase_history = []
+        for epoch in range(50):
             mock_trainer.current_epoch = epoch
-            mock_pl_module = MagicMock(spec=LightningModule)
-
-            # Update epoch via callback
             callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+            phase_history.append(callback._last_gpu_policy)
 
-            # Check that shared epoch was updated
-            assert shared_epoch.value == epoch
-            assert switch.epoch == epoch
+        assert all(p == "no_aug" for p in phase_history[:4])
+        assert all(p == "strong_aug" for p in phase_history[4:23])
+        assert all(p == "light_aug" for p in phase_history[23:])
 
-            # Check policy type
-            current_policy = switch.current_policy_name
-            if expected_policy_type == "strong_aug":
-                assert current_policy in ["strong_aug_1", "strong_aug_2"]
-            else:
-                assert current_policy == expected_policy_type
+    def test_error_without_shared_epoch(self):
+        """Callback should propagate ValueError if shared epoch not set."""
+        switch = DataAugSwitch(POLICY_EPOCHS, _make_minimal_policies(), input_size=[640, 640])
+        cb = AugmentationSchedulerCallback(data_aug_switch=switch)
 
-    def test_concurrent_access_simulation(self, integration_setup):
-        """Test simulation of concurrent access to shared epoch."""
-        switch, callback, shared_epoch = integration_setup
-
-        # Simulate callback updating epoch
         mock_trainer = MagicMock(spec=Trainer)
-        mock_trainer.current_epoch = 15
+        mock_trainer.current_epoch = 10
         mock_pl_module = MagicMock(spec=LightningModule)
 
-        callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        with pytest.raises(ValueError, match="Shared epoch not set"):
+            cb.on_train_epoch_start(mock_trainer, mock_pl_module)
 
-        # Simulate dataset reading epoch (this would happen in parallel)
-        current_epoch = switch.epoch
-        policy_name = switch.current_policy_name
 
-        assert current_epoch == 15
-        assert policy_name in ["strong_aug_1", "strong_aug_2"]
+# ===================================================================
+# Integration-style tests with real pipelines
+# ===================================================================
+class TestDataAugSwitchIntegration:
+    """Integration tests using real CPUAugmentationPipeline and GPUAugmentationPipeline."""
 
-        # Verify both callback and switch see the same epoch
-        assert callback.data_aug_switch.epoch == 15
+    @pytest.fixture()
+    def switch(self):
+        return DataAugSwitch(
+            policy_epochs=POLICY_EPOCHS,
+            policies=_make_minimal_policies(),
+            input_size=[640, 640],
+        )
 
-    def test_error_handling_integration(self, sample_policies):
-        """Test error handling in integration scenarios."""
-        with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
-            mock_generate.return_value = Compose([ToDtype(dtype=torch.float32)])
+    def test_all_policies_have_callable_cpu_pipeline(self, switch):
+        for name, policy in switch.policies.items():
+            pipeline = policy["cpu_pipeline"]
+            assert callable(pipeline), f"CPU pipeline for '{name}' is not callable"
 
-            # Create switch without shared epoch
-            switch = DataAugSwitch([4, 29, 50], sample_policies)
-            callback = AugmentationSchedulerCallback(switch)
+    def test_build_gpu_pipeline_produces_aug_sequential(self, switch):
+        gpu = switch.build_gpu_pipeline("strong_aug_1", data_keys=["input", "bbox_xyxy", "label"])
+        assert gpu.aug_sequential is not None
+        assert len(gpu._augmentations_list) == 2
 
-            # Try to use without setting shared epoch
-            with pytest.raises(ValueError, match="Shared epoch not set"):
-                _ = switch.current_policy_name
+    def test_gpu_pipeline_normalize_extraction(self, switch):
+        gpu = switch.build_gpu_pipeline("no_aug", data_keys=["input", "bbox_xyxy", "label"])
+        assert gpu.mean is not None
+        assert gpu.std is not None
+        # mean/std may be tuple or tensor depending on implementation
+        mean_t = torch.tensor(gpu.mean) if not isinstance(gpu.mean, torch.Tensor) else gpu.mean
+        std_t = torch.tensor(gpu.std) if not isinstance(gpu.std, torch.Tensor) else gpu.std
+        assert torch.allclose(mean_t, torch.tensor([0.485, 0.456, 0.406]), atol=1e-4)
+        assert torch.allclose(std_t, torch.tensor([0.229, 0.224, 0.225]), atol=1e-4)
 
-            # Try to update epoch via callback without shared epoch
-            mock_trainer = MagicMock(spec=Trainer)
-            mock_trainer.current_epoch = 10
-            mock_pl_module = MagicMock(spec=LightningModule)
+    def test_end_to_end_phase_cycle(self):
+        switch = DataAugSwitch(POLICY_EPOCHS, _make_minimal_policies(), input_size=[640, 640])
+        switch.set_shared_epoch(Value("i", 0))
 
-            with pytest.raises(ValueError, match="Shared epoch not set"):
-                callback.on_train_epoch_start(mock_trainer, mock_pl_module)
+        expected_phases = {
+            0: "no_aug",
+            3: "no_aug",
+            4: "strong_aug",
+            22: "strong_aug",
+            23: "light_aug",
+            40: "light_aug",
+        }
+
+        for epoch, expected in expected_phases.items():
+            switch.epoch = epoch
+            assert switch.current_phase == expected, f"Epoch {epoch}: expected {expected}, got {switch.current_phase}"
+
+    def test_concurrent_access_simulation(self):
+        """Shared epoch is mp.Value, safe for concurrent read/write."""
+        switch = DataAugSwitch(POLICY_EPOCHS, _make_minimal_policies(), input_size=[640, 640])
+        shared = Value("i", 0)
+        switch.set_shared_epoch(shared)
+
+        # Simulate callback writing
+        switch.epoch = 15
+        # Simulate worker reading
+        assert switch.epoch == 15
+        assert switch.current_policy_name in ("strong_aug_1", "strong_aug_2")

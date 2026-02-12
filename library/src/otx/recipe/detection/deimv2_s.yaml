@@ -57,65 +57,53 @@ callbacks:
         class_path: otx.backend.native.callbacks.aug_scheduler.DataAugSwitch
         init_args:
           policy_epochs: [4, 40, 70]
+          input_size: [640, 640]
           policies:
             no_aug:
-              to_tv_image: false
-              transforms:
+              augmentations_cpu:
                 - class_path: otx.data.transform_libs.torchvision.Resize
                   init_args:
-                    scale: [640, 640]
-                    transform_bbox: true
-                    keep_ratio: false
-                - class_path: otx.data.transform_libs.torchvision.RandomFlip
-                  init_args:
-                    probability: 0.5
-                - class_path: torchvision.transforms.v2.ToDtype
-                  init_args:
-                    dtype: ${as_torch_dtype:torch.float32}
-                    scale: false
-                - class_path: torchvision.transforms.v2.Normalize
-                  init_args:
-                    mean: [123.675, 116.280, 103.530]
-                    std: [58.395, 57.120, 57.375]
-            light_aug:
-              to_tv_image: true
-              transforms:
-                - class_path: torchvision.transforms.v2.ToImage
-                - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:
                     p: 0.5
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
+            light_aug:
+              augmentations_cpu:
                 - class_path: torchvision.transforms.v2.RandomZoomOut
                   init_args:
                     fill: 0
                     p: 0.5
-                - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
-                  init_args:
-                    probability: 0.8
+                - class_path: torchvision.transforms.v2.RandomIoUCrop
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
-                    min_area: 1
-                - class_path: otx.data.transform_libs.torchvision.RandomFlip
-                  init_args:
-                    probability: 0.5
-                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-                  init_args:
-                    min_area: 1
+                    min_size: 1
                 - class_path: otx.data.transform_libs.torchvision.Resize
                   init_args:
-                    scale: [640, 640]
-                    transform_bbox: true
-                    keep_ratio: false
-                - class_path: torchvision.transforms.v2.ToDtype
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.ColorJiggle
                   init_args:
-                    dtype: ${as_torch_dtype:torch.float32}
-                    scale: false
-                - class_path: torchvision.transforms.v2.Normalize
+                    brightness: 0.125
+                    contrast: 0.5
+                    saturation: 0.5
+                    hue: 0.05
+                    p: 0.5
+                - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:
-                    mean: [123.675, 116.280, 103.530]
-                    std: [58.395, 57.120, 57.375]
+                    p: 0.5
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
             strong_aug_1:
-              to_tv_image: false
-              transforms:
+              augmentations_cpu:
                 - class_path: otx.data.transform_libs.torchvision.CachedMosaic
                   init_args:
                     random_pop: true
@@ -123,78 +111,76 @@ callbacks:
                     img_scale: [640, 640]
                 - class_path: otx.data.transform_libs.torchvision.CachedMixUp
                   init_args:
-                    img_scale: [640, 640] # (H, W)
-                    ratio_range:
-                      - 1.0
-                      - 1.0
+                    img_scale: [640, 640]
+                    ratio_range: [1.0, 1.0]
                     probability: 0.5
                     random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
-                    min_area: 1
+                    min_size: 1
                 - class_path: otx.data.transform_libs.torchvision.Resize
                   init_args:
-                    scale: [640, 640] # (H, W)
-                    keep_ratio: false
-                    transform_bbox: true
-                - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
-                - class_path: otx.data.transform_libs.torchvision.RandomFlip
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:
-                    probability: 0.5
-                - class_path: torchvision.transforms.v2.ToDtype
+                    p: 0.5
+                - class_path: kornia.augmentation.ColorJiggle
                   init_args:
-                    dtype: ${as_torch_dtype:torch.float32}
-                    scale: false
-                - class_path: torchvision.transforms.v2.Normalize
+                    brightness: 0.125
+                    contrast: 0.5
+                    saturation: 0.5
+                    hue: 0.05
+                    p: 0.5
+                - class_path: kornia.augmentation.Normalize
                   init_args:
-                    mean: [123.675, 116.280, 103.530]
-                    std: [58.395, 57.120, 57.375]
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
             strong_aug_2:
-              to_tv_image: true
-              transforms:
-                - class_path: torchvision.transforms.v2.ToImage
+              augmentations_cpu:
                 - class_path: torchvision.transforms.v2.RandomPhotometricDistort
                   init_args:
                     p: 0.5
-                - class_path: torchvision.transforms.v2.RandomZoomOut # Can't be used when using CachedMosaic
+                - class_path: torchvision.transforms.v2.RandomZoomOut
                   init_args:
                     fill: 0
                     p: 0.5
-                - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
-                  init_args:
-                    probability: 0.8
+                    side_range: [1.0, 2.0]
+                - class_path: torchvision.transforms.v2.RandomIoUCrop
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
-                    min_area: 1
+                    min_size: 1
                 - class_path: otx.data.transform_libs.torchvision.CachedMixUp
                   init_args:
-                    img_scale: [640, 640] # (H, W)
-                    ratio_range:
-                      - 1.0
-                      - 1.0
+                    img_scale: [640, 640]
+                    ratio_range: [1.0, 1.0]
                     probability: 0.5
                     random_pop: true
                     max_cached_images: 10
-                - class_path: otx.data.transform_libs.torchvision.RandomFlip
-                  init_args:
-                    probability: 0.5
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
-                    min_area: 1
+                    min_size: 1
                 - class_path: otx.data.transform_libs.torchvision.Resize
                   init_args:
-                    scale: [640, 640]
-                    transform_bbox: true
-                    keep_ratio: false
-                - class_path: torchvision.transforms.v2.ToDtype
+                    size: [640, 640]
+                    keep_aspect_ratio: false
+              augmentations_gpu:
+                - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:
-                    dtype: ${as_torch_dtype:torch.float32}
-                    scale: false
-                - class_path: torchvision.transforms.v2.Normalize
+                    p: 0.5
+                - class_path: kornia.augmentation.ColorJiggle
                   init_args:
-                    mean: [123.675, 116.280, 103.530]
-                    std: [58.395, 57.120, 57.375]
+                    brightness: 0.125
+                    contrast: 0.5
+                    saturation: 0.5
+                    hue: 0.05
+                    p: 0.5
+                - class_path: kornia.augmentation.Normalize
+                  init_args:
+                    mean: [0.485, 0.456, 0.406]
+                    std: [0.229, 0.224, 0.225]
 data: ../_base_/data/torchvision_base.yaml
 overrides:
   callbacks:
@@ -216,52 +202,43 @@ overrides:
     train_subset:
       batch_size: 8
       num_workers: 4
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: false
-        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu:
+        - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
-            probability: 0.5
-        - class_path: torchvision.transforms.v2.ToDtype
+            p: 0.5
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.280, 103.530]
-            std: [58.395, 57.120, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 8
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: false
-        - class_path: torchvision.transforms.v2.ToDtype
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.280, 103.530]
-            std: [58.395, 57.120, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
     test_subset:
       batch_size: 8
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: false
-        - class_path: torchvision.transforms.v2.ToDtype
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.280, 103.530]
-            std: [58.395, 57.120, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
