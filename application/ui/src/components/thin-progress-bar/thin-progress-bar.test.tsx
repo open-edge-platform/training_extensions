@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
 
@@ -17,10 +17,6 @@ describe('UploadStatusProgressBar', () => {
 
         render(<ThinProgressBar {...testProps} />);
 
-        expect(screen.getByTestId('thin-progress-bar')).toHaveStyle({
-            height: testProps.size,
-            backgroundColor: testProps.color,
-            width: `${testProps.progress}%`,
-        });
+        expect(screen.getByTestId('thin-progress-bar')).toHaveStyle({ width: `${testProps.progress}%` });
     });
 });

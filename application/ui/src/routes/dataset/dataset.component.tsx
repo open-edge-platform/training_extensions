@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, useViewMode } from '@geti/ui';
+import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
@@ -13,24 +13,30 @@ export const Dataset = () => {
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage, isPending } = useGetDatasetMediaItems();
 
     return (
-        <Flex
+        <Grid
             height='100%'
             gridArea='content'
-            direction='column'
+            rows={['auto', 'auto', '1fr']}
             UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
-            <ExportJobsList />
+            <View gridRow='1'>
+                <ExportJobsList />
+            </View>
 
-            <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
+            <View gridRow='2'>
+                <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
+            </View>
 
-            <Gallery
-                items={items}
-                viewMode={viewMode}
-                isPending={isPending}
-                fetchNextPage={fetchNextPage}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-            />
-        </Flex>
+            <View gridRow='3'>
+                <Gallery
+                    items={items}
+                    viewMode={viewMode}
+                    isPending={isPending}
+                    fetchNextPage={fetchNextPage}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                />
+            </View>
+        </Grid>
     );
 };

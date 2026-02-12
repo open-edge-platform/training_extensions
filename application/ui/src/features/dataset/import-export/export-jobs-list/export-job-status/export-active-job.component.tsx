@@ -1,11 +1,12 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { Divider, Flex, Loading, Text, View } from '@geti/ui';
 
 import { ThinProgressBar } from '../../../../../components/thin-progress-bar/thin-progress-bar.component';
 import { ExportDatasetMetadata, Job } from '../../../../../constants/shared-types';
 import { isJobRunning } from '../util';
+import { CancelJobConfirmation } from './cancel-job-confimation/cancel-job-confimation.component';
 import { ExportDetails } from './export-details.component';
 
 type ExportActiveJobProps = {
@@ -16,19 +17,12 @@ export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
     const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
     const metadata = job?.metadata as unknown as ExportDatasetMetadata;
 
-    const handleCancel = () => {
-        console.log('Cancel export job');
-    };
-
     return (
         <>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <ExportDetails metadata={metadata} />
-
-                    <Button variant='negative' style='outline' onPress={handleCancel}>
-                        Cancel
-                    </Button>
+                    <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 
                 <Text>Main dataset is being processed in order to export it</Text>
