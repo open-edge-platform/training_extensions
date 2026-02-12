@@ -39,9 +39,7 @@ describe('DeleteProjectDialog', () => {
             })
         );
 
-        render(
-            <DeleteProjectDialog projectId={projectId} projectName={projectName} isOpen={true} onClose={() => {}} />
-        );
+        render(<DeleteProjectDialog projectId={projectId} projectName={projectName} isOpen={true} onClose={vi.fn()} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 

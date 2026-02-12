@@ -26,10 +26,10 @@ export const DeleteProjectDialog = ({
             { params: { path: { project_id: projectId } } },
             {
                 onSuccess: () => {
+                    onClose();
                     toast({ type: 'success', message: 'Project deleted successfully' });
                     onSuccess?.();
                 },
-                onSettled: onClose,
             }
         );
     };
