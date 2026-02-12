@@ -25,7 +25,8 @@ jobs:
       run_actions: "${{ steps.prepare_outputs.outputs.run_actions }}"
       run_rust: "${{ steps.prepare_outputs.outputs.run_rust }}"
     steps:
-      - name: Checkout repository
+      - &checkout
+        name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
@@ -92,23 +93,16 @@ jobs:
       matrix:
         include:
           - language: actions
-            build-mode: none
             run: ${{ needs.check_paths.outputs.run_actions || 'true' }}
           - language: python
-            build-mode: none
             run: ${{ needs.check_paths.outputs.run_python || 'true' }}
           - language: javascript-typescript
-            build-mode: none
             run: ${{ needs.check_paths.outputs.run_javascript_typescript || 'true' }}
           - language: rust
-            build-mode: none
             run: ${{ needs.check_paths.outputs.run_rust || 'true' }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -116,7 +110,7 @@ jobs:
         if: ${{ matrix.run == 'true' }}
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          build-mode: none
           queries: security-extended
 
       - name: Perform CodeQL Analysis

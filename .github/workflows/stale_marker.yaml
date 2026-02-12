@@ -3,12 +3,14 @@ on:
   schedule:
     - cron: "30 1 * * *"
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions: {} # No permissions by default
 
 jobs:
   stale:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       - uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
