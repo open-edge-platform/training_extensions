@@ -1,9 +1,8 @@
 #  Copyright (C) 2026 Intel Corporation
 #  SPDX-License-Identifier: Apache-2.0
 
-# Run with: uv run app/db/import_export/export_project.py --project-id <id> --output <archive_path>
+# Run through the CLI: uv run app/cli.py export-project --project-id <id> --output <archive_path>
 
-import argparse
 import json
 import shutil
 import tempfile
@@ -268,18 +267,3 @@ def export_project(project_id: str, output_archive: str) -> None:  # noqa: C901,
             raise ValueError(f"Failed to create zip archive: {str(e)}") from e
 
         logger.success("Export complete. Archive saved to: {}", output_path)
-
-
-def main() -> None:
-    """Command-line interface for exporting project data."""
-    parser = argparse.ArgumentParser(description="Export project data from SQLite database")
-    parser.add_argument("--project-id", required=True, help="ID of the project to export")
-    parser.add_argument("--output", required=True, help="Output path for zip archive")
-
-    args = parser.parse_args()
-
-    export_project(project_id=args.project_id, output_archive=args.output)
-
-
-if __name__ == "__main__":
-    main()

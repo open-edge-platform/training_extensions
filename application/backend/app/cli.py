@@ -85,5 +85,40 @@ def gen_api(target_path: str) -> None:
     click.echo("Waiting for threading to finish...")
 
 
+@cli.command()
+@click.option("--project-id", required=True, help="ID of the project to export")
+@click.option("--output", required=True, help="Output path for zip archive")
+def export_project(project_id: str, output: str) -> None:
+    """Export project data from SQLite database to a zip archive."""
+    from app.db.import_export.export_project import export_project as do_export
+
+    try:
+        do_export(project_id=project_id, output_archive=output)
+        click.echo("✓ Project exported successfully!")
+    except Exception as e:
+        click.echo(f"✗ Export failed: {e}")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--input", "input_archive", required=True, help="Path to zip archive containing project data")
+@click.option(
+    "-f",
+    "--force-import",
+    is_flag=True,
+    help="Bypass database schema version check and attempt import anyway (use at your own risk)",
+)
+def import_project(input_archive: str, force_import: bool) -> None:
+    """Import project data from a zip archive into the SQLite database."""
+    from app.db.import_export.import_project import import_project as do_import
+
+    try:
+        do_import(input_archive=input_archive, allow_mismatching_db_schema=force_import)
+        click.echo("✓ Project imported successfully!")
+    except Exception as e:
+        click.echo(f"✗ Import failed: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     cli()

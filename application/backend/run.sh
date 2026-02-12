@@ -101,7 +101,7 @@ import_demo_project() {
 
   # Import the project with optional force flag
   echo "Importing demo project from: $filename..."
-  local import_cmd="$UV_CMD app/db/import_export/import_project.py --input $archive_path"
+  local import_cmd="$UV_CMD app/cli.py import-project --input $archive_path"
   if [[ "$FORCE_IMPORT" == "true" ]]; then
     import_cmd="$import_cmd --force-import"
     echo "  (using --force-import flag to bypass schema version checks)"

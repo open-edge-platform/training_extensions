@@ -1,9 +1,8 @@
 #  Copyright (C) 2026 Intel Corporation
 #  SPDX-License-Identifier: Apache-2.0
 
-# Run with: uv run app/db/import_export/import_project.py --input <archive_path>
+# Run through the CLI: uv run app/cli.py import-project --input <archive_path>
 
-import argparse
 import json
 import shutil
 import tempfile
@@ -281,23 +280,3 @@ def import_project(input_archive: str, allow_mismatching_db_schema: bool = False
             raise
 
         logger.success("Import complete. Project '{}' has been imported.", project_id)
-
-
-def main() -> None:
-    """Command-line interface for importing project data from a zip archive into the SQLite database."""
-    parser = argparse.ArgumentParser(description="Import project data into SQLite database")
-    parser.add_argument("--input", required=True, help="Path to zip archive containing project data")
-    parser.add_argument(
-        "-f",
-        "--force-import",
-        action="store_true",
-        help="Bypass database schema version check and attempt import anyway (use at your own risk)",
-    )
-
-    args = parser.parse_args()
-
-    import_project(input_archive=args.input, allow_mismatching_db_schema=args.force_import)
-
-
-if __name__ == "__main__":
-    main()
