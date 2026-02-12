@@ -3,35 +3,30 @@
 
 import type { CSSProperties } from 'react';
 
-import { ActionButton, Item, Key, Menu, MenuTrigger } from '@geti/ui';
+import { ActionButton, Item, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { useOverlayTriggerState } from 'react-stately';
 
-import { DeleteProjectDialog } from './delete-project-dialog/delete-project-dialog.component';
-import { EditProjectNameDialog } from './edit-project-name-dialog/edit-project-name-dialog.component';
+import { DeleteProjectDialog } from '../../../../components/project-dialogs/delete-project-dialog.component';
+import { EditProjectNameDialog } from '../../../../components/project-dialogs/edit-project-name-dialog.component';
+import { useProjectMenuActions } from './use-project-menu-actions';
+
+import classes from './menu-actions.module.scss';
 
 type MenuActionsProps = {
     projectId: string;
     projectName: string;
-    actionButtonStyle: CSSProperties;
+    actionButtonStyle?: CSSProperties;
 };
 
 export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuActionsProps) => {
     const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
 
-    const handleMenuAction = (key: Key) => {
-        switch (key) {
-            case 'rename':
-                editProjectNameDialogState.open();
-                break;
-            case 'delete':
-                deleteProjectDialogState.open();
-                break;
-            default:
-                break;
-        }
-    };
+    const { menuActions, handleAction } = useProjectMenuActions(projectId, {
+        onRename: editProjectNameDialogState.open,
+        onDelete: deleteProjectDialogState.open,
+    });
 
     return (
         <>
@@ -47,9 +42,10 @@ export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuA
                 >
                     <MoreMenu />
                 </ActionButton>
-                <Menu onAction={handleMenuAction}>
-                    <Item key={'rename'}>Rename</Item>
-                    <Item key={'delete'}>Delete</Item>
+                <Menu onAction={handleAction} UNSAFE_className={classes.actionMenu}>
+                    {Object.entries(menuActions).map(([key, label]) => (
+                        <Item key={key}>{label}</Item>
+                    ))}
                 </Menu>
             </MenuTrigger>
 
