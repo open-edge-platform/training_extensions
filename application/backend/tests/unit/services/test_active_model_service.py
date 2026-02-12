@@ -11,7 +11,7 @@ from model_api.models import Model
 
 from app.models.model_activation import ModelActivationState
 from app.services import ActiveModelService
-from app.services.active_model_service import LoadedModel
+from app.services.active_model_service import DeviceType, LoadedModel
 
 
 @pytest.fixture
@@ -25,6 +25,7 @@ def fxt_model_activation_state() -> ModelActivationState:
         project_id=project_id,
         active_model_id=active_model_id,
         available_models=available_models,
+        device="CPU",
     )
 
 
@@ -40,6 +41,20 @@ def fxt_active_model_service(fxt_model_activation_state) -> Iterator[ActiveModel
 
 class TestActiveModelServiceUnit:
     """Unit tests for ActiveModelService."""
+
+    @pytest.mark.parametrize(
+        "raw_device_name, expected_ov_device_name",
+        [
+            ("cpu", "CPU"),
+            ("xpu", "GPU"),
+            ("xpu-0", "GPU.0"),
+            ("xpu-1", "GPU.1"),
+        ],
+    )
+    def test_get_ov_device_name(self, raw_device_name, expected_ov_device_name) -> None:
+        """Test conversion of raw device names to OpenVINO device names."""
+        ov_device_name = DeviceType.from_raw(raw_device_name)
+        assert str(ov_device_name) == expected_ov_device_name
 
     def test_get_model_file_path(self, fxt_active_model_service):
         """Test retrieval of model file path."""
@@ -81,3 +96,4 @@ class TestActiveModelServiceUnit:
             assert isinstance(loaded, LoadedModel)
             assert loaded.id == fxt_model_activation_state.active_model_id
             assert loaded.model is dummy_model
+            assert loaded.device == fxt_model_activation_state.device

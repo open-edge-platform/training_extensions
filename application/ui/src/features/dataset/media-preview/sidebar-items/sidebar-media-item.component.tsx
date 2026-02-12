@@ -20,6 +20,7 @@ export const SidebarMediaItem = ({ item, onSelectedMediaItem }: SidebarMediaItem
         <MediaItem
             contentElement={() => (
                 <MediaThumbnail
+                    item={item}
                     alt={item.name}
                     url={getThumbnailUrl(projectId, String(item.id))}
                     onClick={() => onSelectedMediaItem(item)}
