@@ -58,6 +58,7 @@ export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetc
                         <MediaItem
                             contentElement={() => (
                                 <MediaThumbnail
+                                    item={item}
                                     alt={item.name}
                                     url={mediaUrl}
                                     onDoubleClick={() => onSelectedMediaItemChange(item)}

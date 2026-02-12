@@ -8,7 +8,7 @@ on:
     - cron: "0 2 * * *"
   workflow_dispatch:
 
-permissions: {}
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   analysis:

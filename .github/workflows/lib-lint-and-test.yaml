@@ -28,7 +28,8 @@ jobs:
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
-      - name: Checkout repository
+      - &checkout
+        name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
@@ -49,10 +50,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
@@ -77,8 +75,7 @@ jobs:
 
       - name: Check source code with Pyrefly
         working-directory: library
-        run: |
-          uv run pyrefly check --baseline=pyrefly-baseline.json
+        run: uv run pyrefly check --baseline=pyrefly-baseline.json
 
   unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]
@@ -87,7 +84,6 @@ jobs:
       # The id-token permission is required by Codecov to use OIDC
       id-token: write
     needs:
-      - code-quality-checks
       - check-paths
     if: needs.check-paths.outputs.run_workflow == 'true'
     timeout-minutes: 120
@@ -97,6 +93,7 @@ jobs:
         python-version: ["3.10", "3.14"]
     name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
+      # YAML anchors not used cause currently zizmor don't support them in matrix strategies
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -149,8 +146,8 @@ jobs:
     permissions:
       contents: read
     needs:
-      - unit-tests
       - check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -165,6 +162,7 @@ jobs:
           - "semantic_segmentation"
     name: integration-tests-${{ matrix.task }}-py${{ matrix.python-version }}
     steps:
+      # YAML anchors aren't used because Zizmor fails here and support for them is best-effort for now
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
