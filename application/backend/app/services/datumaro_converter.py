@@ -40,11 +40,11 @@ class ClassificationSample(Sample):
         confidence: Confidence score for the label. Only for model predictions.
     """
 
-    id: str = string_field()
+    id: str = string_field(semantic="id")
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.UInt8(), is_list=False)
-    confidence: float | None = numeric_field(dtype=pl.Float32())
+    confidence: float | None = numeric_field(dtype=pl.Float32(), semantic="confidence")
     subset: Subset = subset_field()
 
 
@@ -60,11 +60,11 @@ class MultilabelClassificationSample(Sample):
         confidence: Array of confidence scores for each label. Only for model predictions.
     """
 
-    id: str = string_field()
+    id: str = string_field(semantic="id")
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
-    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
     subset: Subset = subset_field()
 
 
@@ -81,12 +81,12 @@ class DetectionSample(Sample):
         confidence: Array of confidence scores for each bounding box. Only for model predictions.
     """
 
-    id: str = string_field()
+    id: str = string_field(semantic="id")
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
-    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
     subset: Subset = subset_field()
 
 
@@ -103,12 +103,12 @@ class InstanceSegmentationSample(Sample):
         confidence: Array of confidence scores for each polygon. Only for model predictions.
     """
 
-    id: str = string_field()
+    id: str = string_field(semantic="id")
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
-    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
     subset: Subset = subset_field()
 
 
