@@ -23,3 +23,17 @@
     padding-inline-start: 0;
     overflow: auto;
 }
+
+.projectName {
+    text-align: start;
+    font-size: var(--spectrum-global-dimension-size-150);
+}
+
+.statusTag {
+    background-color: transparent !important;
+    width: fit-content !important;
+
+    span[class*='ActionButton-label'] {
+        padding: 0 !important;
+    }
+}
