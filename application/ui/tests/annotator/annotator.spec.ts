@@ -7,10 +7,12 @@ import { fileURLToPath } from 'url';
 
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
+import { mockedMedia } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
 import { AnnotationDTO } from '../../src/constants/shared-types';
+import { Polygon } from '../../src/shared/types';
 import { http, test } from '../fixtures';
 
 const filename = fileURLToPath(import.meta.url);
@@ -285,6 +287,106 @@ test.describe('Annotator', () => {
 
             expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+        });
+    });
+
+    test('Tool selection persists across media items', async ({ page, polygonTool, annotatorPage, network }) => {
+        const smallPolygon: Polygon = {
+            type: 'polygon',
+            points: [
+                { x: 100, y: 100 },
+                { x: 150, y: 100 },
+                { x: 150, y: 150 },
+                { x: 100, y: 150 },
+            ],
+        };
+
+        const mediaItems = [
+            mockedMedia({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            mockedMedia({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+        const mockedSegmentationProject = getMockedProject({
+            id: '123e4567-e89b-12d3-a456-426614174000',
+            task: {
+                exclusive_labels: true,
+                task_type: 'instance_segmentation',
+                labels: [redLabel, blueLabel],
+            },
+        });
+
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedSegmentationProject);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', () => {
+                return HttpResponse.json({
+                    annotations: [],
+                    user_reviewed: true,
+                });
+            })
+        );
+
+        await page.goto(`/projects/${mockedSegmentationProject.id}/dataset`);
+        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+        await test.step('Select polygon tool on first media item', async () => {
+            await polygonTool.selectPolygonTool();
+        });
+
+        await test.step('Navigate to second media item by clicking in sidebar', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+        });
+
+        await test.step('Verify polygon tool persisted by drawing a polygon', async () => {
+            // If polygon tool persisted, we should be able to draw immediately without reselecting
+            await polygonTool.drawPolygon(smallPolygon);
+
+            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+        });
+
+        await test.step('Navigate back to first media item', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+        });
+
+        await test.step('Verify polygon tool still works after navigating back', async () => {
+            // Draw another polygon to verify tool is still active
+            await polygonTool.drawPolygon(smallPolygon);
+
+            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+        });
+
+        await test.step('Verify tool resets when switching modes', async () => {
+            // Select SAM tool because polygon is the default tool for segmentation projects
+            await page.getByRole('button', { name: 'sam tool' }).click();
+
+            await annotatorPage.openPredictionMode();
+
+            await expect(page.getByTestId('primary-toolbar-id')).toBeHidden();
+
+            await annotatorPage.openAnnotationMode();
+
+            await expect(page.getByTestId('primary-toolbar-id')).toBeVisible();
+
+            // Verify polygon tool is active by drawing a polygon without manually selecting it
+            await polygonTool.drawPolygon(smallPolygon);
+            await expect(page.getByLabel(`label ${redLabel.name}`).nth(2)).toBeInViewport();
         });
     });
 });
