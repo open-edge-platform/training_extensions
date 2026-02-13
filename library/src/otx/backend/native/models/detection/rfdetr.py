@@ -34,6 +34,7 @@ from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
+from otx.backend.native.models.detection.base import OTXDetectionModel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -45,7 +46,7 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class RFDETR(DFine):
+class RFDETR(OTXDetectionModel):
     """OTX Detection model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
@@ -99,7 +100,7 @@ class RFDETR(DFine):
         multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        max_total_objects_per_batch: int | None = 600,
+        max_total_objects_per_batch: int | None = None,
         gradient_checkpointing: bool = False,
     ) -> None:
         self.multi_scale = multi_scale
@@ -114,7 +115,6 @@ class RFDETR(DFine):
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
-            multi_scale=multi_scale,
         )
 
     def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:  # pyrefly: ignore[bad-override]
@@ -242,7 +242,7 @@ class RFDETR(DFine):
             "targets": targets,
         }
 
-    def _customize_outputs(  # pyrefly: ignore[bad-override]
+    def _customize_outputs(
         self,
         outputs: tuple[torch.Tensor, ...] | dict[str, Any],  # type: ignore[override]
         inputs: OTXSampleBatch,

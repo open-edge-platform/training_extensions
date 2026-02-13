@@ -109,7 +109,7 @@ class RFDETRInst(OTXInstanceSegModel):
         multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        max_total_objects_per_batch: int | None = 600,
+        max_total_objects_per_batch: int | None = None,
     ) -> None:
         self.multi_scale = multi_scale
         self.max_total_objects_per_batch = max_total_objects_per_batch

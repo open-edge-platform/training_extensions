@@ -169,18 +169,19 @@ class DetectionSample(OTXSample):
         dtype=pl.UInt8(), format="BGR", channels_first=True
     )
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
-    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    bboxes: torch.Tensor | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
         # Convert bboxes to tv_tensors format
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-        self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
-            self.bboxes,
-            format=tv_tensors.BoundingBoxFormat.XYXY,
-            canvas_size=shape,
-            dtype=torch.float32,
-        )
+        if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
+            self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
 
         self.img_info = ImageInfo(
             img_idx=0,
@@ -213,7 +214,7 @@ class InstanceSegmentationSample(OTXSample):
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    bboxes: torch.Tensor | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
@@ -221,8 +222,8 @@ class InstanceSegmentationSample(OTXSample):
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
         # Convert bboxes to tv_tensors format
-        if isinstance(self.bboxes, np.ndarray):
-            self.bboxes = tv_tensors.BoundingBoxes(
+        if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
+            self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
                 self.bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=shape,
