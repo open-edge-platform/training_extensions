@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Sequence
+import numpy as np
 
 import polars as pl
 import torch
@@ -39,7 +40,6 @@ from otx.data.entity.validation import (
 )
 
 if TYPE_CHECKING:
-    import numpy as np
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
@@ -175,7 +175,7 @@ class DetectionSample(OTXSample):
     def __post_init__(self) -> None:
         # Convert bboxes to tv_tensors format
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-        if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
+        if isinstance(self.bboxes, np.ndarray):
             self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
                 self.bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
@@ -222,7 +222,7 @@ class InstanceSegmentationSample(OTXSample):
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
         # Convert bboxes to tv_tensors format
-        if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
+        if isinstance(self.bboxes, np.ndarray):
             self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
                 self.bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,

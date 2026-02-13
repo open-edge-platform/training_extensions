@@ -55,7 +55,6 @@ dependencies = [
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
     "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@develop",
-    "pillow-avif-plugin>=1.5.2",
 ]
 
 [dependency-groups]
