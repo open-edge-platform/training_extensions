@@ -368,7 +368,10 @@ class ModelService(BaseSessionManagedService):
         if model_revision.files_deleted:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
-        metrics_file = self._projects_dir / str(project_id) / "models" / str(model_id) / "metrics.csv"
+        # training metrics are version_0, validation metrics are version_1
+        metrics_file = (
+            self._projects_dir / str(project_id) / "models" / str(model_id) / "metrics" / "version_0" / "metrics.csv"
+        )
         if not metrics_file.exists():
             raise ResourceNotFoundError(ResourceType.MODEL, f"{model_id} (metrics.csv not found)")
 
@@ -387,8 +390,8 @@ class ModelService(BaseSessionManagedService):
         """
         metrics: list[dict] = []
 
-        # Read the CSV file
-        df = pd.read_csv(metrics_file)
+        # Read the CSV file, and fill nan values
+        df = pd.read_csv(metrics_file).fillna(0)
 
         for col in df.columns:
             mapped_name = KEY_MAPPING.get(col)
