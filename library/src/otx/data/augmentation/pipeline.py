@@ -132,7 +132,6 @@ class CPUAugmentationPipeline(nn.Module):
         - Intensity mapping (prepended automatically from ``IntensityConfig``)
         - New ``augmentations_cpu`` field (preferred)
         - Input size placeholder replacement ``$(input_size)``
-        - Torch dtype string resolution
 
         The intensity transform is always the **first** operation in the
         pipeline.  For uint8 with ``mode="scale_to_unit"`` this is equivalent
@@ -202,41 +201,6 @@ class CPUAugmentationPipeline(nn.Module):
             f"However, its type is {type(cfg_transform)}."
         )
         raise TypeError(msg)
-
-    @classmethod
-    def _resolve_torch_dtypes(cls, cfg: dict[str, Any]) -> dict[str, Any]:
-        """Resolve torch dtype strings to actual torch.dtype objects.
-
-        Handles strings like 'torch.float32', 'torch.uint8', etc. in init_args.
-
-        Args:
-            cfg: Augmentation config dict with class_path and init_args.
-
-        Returns:
-            Config with dtype strings resolved to torch.dtype objects.
-        """
-        init_args = cfg.get("init_args", {})
-        if not init_args:
-            return cfg
-
-        dtype_map = {
-            "torch.float32": torch.float32,
-            "torch.float16": torch.float16,
-            "torch.float64": torch.float64,
-            "torch.bfloat16": torch.bfloat16,
-            "torch.int8": torch.int8,
-            "torch.int16": torch.int16,
-            "torch.int32": torch.int32,
-            "torch.int64": torch.int64,
-            "torch.uint8": torch.uint8,
-            "torch.bool": torch.bool,
-        }
-
-        for key, val in init_args.items():
-            if isinstance(val, str) and val in dtype_map:
-                init_args[key] = dtype_map[val]
-
-        return cfg
 
     @classmethod
     def _configure_input_size(
