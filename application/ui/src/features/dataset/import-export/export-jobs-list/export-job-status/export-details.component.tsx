@@ -32,7 +32,7 @@ export const ExportDetails = ({ metadata }: ExportDetailsProps) => {
                 </>
             )}
 
-            {metadata.filters.include_unannotated && (
+            {metadata.filters.include_unannotated === false && (
                 <>
                     <Divider orientation='vertical' size='S' />
                     <Text>Excluded: Unannotated</Text>

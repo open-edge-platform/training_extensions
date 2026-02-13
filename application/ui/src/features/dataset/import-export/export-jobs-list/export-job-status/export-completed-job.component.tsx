@@ -21,7 +21,6 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
 
     const handleDownload = () => {
         /* TODO: Implement download functionality https://github.com/open-edge-platform/training_extensions/pull/5443 */
-        console.log('Download export job');
     };
 
     return (

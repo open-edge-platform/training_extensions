@@ -6,7 +6,7 @@ import { Divider, Flex, Loading, Text, View } from '@geti/ui';
 import { ThinProgressBar } from '../../../../../components/thin-progress-bar/thin-progress-bar.component';
 import { ExportDatasetMetadata, Job } from '../../../../../constants/shared-types';
 import { isJobRunning } from '../util';
-import { CancelJobConfirmation } from './cancel-job-confimation/cancel-job-confimation.component';
+import { CancelJobConfirmation } from './cancel-job-confirmation/cancel-job-confirmation.component';
 import { ExportDetails } from './export-details.component';
 
 type ExportActiveJobProps = {
@@ -25,7 +25,7 @@ export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
                     <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 
-                <Text>Main dataset is being processed in order to export it</Text>
+                <Text>Main Dataset is being processed in order to export it</Text>
 
                 <Divider size='S' marginY='size-150' />
 

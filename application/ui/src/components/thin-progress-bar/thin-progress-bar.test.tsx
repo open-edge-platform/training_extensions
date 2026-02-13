@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react';
 
 import { ThinProgressBar, ThinProgressBarProps } from './thin-progress-bar.component';
 
-describe('UploadStatusProgressBar', () => {
+describe('ThinProgressBar', () => {
     it('renders an element with the correct styles based on props', () => {
         const testProps: ThinProgressBarProps = {
             progress: 0,

@@ -14,7 +14,7 @@ export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
 
 export type Job = components['schemas']['JobView'];
 /* 
-TODO: replace one https://github.com/open-edge-platform/training_extensions/pull/5443 gets merged
+TODO: replace once https://github.com/open-edge-platform/training_extensions/pull/5443 gets merged
 export type ExportDatasetMetadata = components['schemas']['ExportDatasetMetadata']; 
 */
 export type ExportDatasetMetadata = {

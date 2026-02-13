@@ -13,8 +13,8 @@ type CancelJobConfirmationProps = {
 };
 
 export const CancelJobConfirmation = ({ jobId }: CancelJobConfirmationProps) => {
+    const dialogState = useOverlayTriggerState({});
     const { removeLsExportId } = useLocalStorageDataset();
-    const deleteProjectDialogState = useOverlayTriggerState({});
     const cancelMutation = $api.useMutation('post', `/api/jobs/{job_id}:cancel`);
 
     const handleCancel = () => {
@@ -26,6 +26,9 @@ export const CancelJobConfirmation = ({ jobId }: CancelJobConfirmationProps) => 
                 },
                 onError: (error) => {
                     isInvalidJob(error) && removeLsExportId(jobId);
+                },
+                onSettled: () => {
+                    dialogState.close();
                 },
             }
         );
@@ -43,7 +46,7 @@ export const CancelJobConfirmation = ({ jobId }: CancelJobConfirmationProps) => 
                 autoFocusButton='primary'
                 primaryActionLabel='Cancel Job'
                 onPrimaryAction={handleCancel}
-                onSecondaryAction={deleteProjectDialogState.close}
+                onSecondaryAction={dialogState.close}
                 isPrimaryActionDisabled={cancelMutation.isPending}
             >
                 {`Are you sure you want to cancel the job "${jobId}"?`}
