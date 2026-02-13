@@ -55,9 +55,9 @@ callbacks:
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
-  # - class_path: lightning.pytorch.callbacks.EMAWeightAveraging
-  #   init_args:
-  #     decay: 0.993
+  - class_path: lightning.pytorch.callbacks.EMAWeightAveraging
+    init_args:
+      decay: 0.993
 
 overrides:
   gradient_clip_val: 0.1

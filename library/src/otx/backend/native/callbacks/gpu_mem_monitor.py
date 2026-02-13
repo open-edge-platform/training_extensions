@@ -15,21 +15,10 @@ if TYPE_CHECKING:
 
 
 class GPUMemMonitor(Callback):
-    """Monitor GPU memory hook with optional CUDA cache cleanup.
+    """Monitor GPU memory hook.
 
-    This callback monitors GPU memory usage and optionally clears CUDA cache
-    to reduce memory consumption during training.
+    This callback monitors GPU memory usage and logs it.
     """
-
-    def __init__(self, iter_to_clean: int = 50) -> None:
-        """Initialize GPU memory monitor.
-
-        Args:
-            iter_to_clean: Clean CUDA cache after a certain number of iterations.
-                Set to -1 to disable cache cleaning. Defaults to 50.
-        """
-        super().__init__()
-        self.iter_to_clean = iter_to_clean
 
     def _get_and_log_device_stats(
         self,
@@ -48,14 +37,22 @@ class GPUMemMonitor(Callback):
             return
 
         device_stats = trainer.accelerator.get_device_stats(device)
-        allocated = device_stats["allocated_bytes.all.current"]
-        reserved = device_stats["reserved_bytes.all.current"]
-        used_memory = (allocated + reserved) / 1024**3  # convert to GiB
-        used_memory = round(used_memory, 2)
+        allocated = int(device_stats.get("allocated_bytes.all.current", torch.cuda.memory_allocated(device)))
+        reserved = int(device_stats.get("reserved_bytes.all.current", torch.cuda.memory_reserved(device)))
+
+        allocated_gib = round(allocated / 1024**3, 2)
+        reserved_gib = round(reserved / 1024**3, 2)
 
         pl_module.log(
-            name="gpu_mem",
-            value=used_memory,
+            name="gpu_mem_allocated_gib",
+            value=allocated_gib,
+            prog_bar=True,
+            on_step=True,
+            on_epoch=False,
+        )
+        pl_module.log(
+            name="gpu_mem_reserved_gib",
+            value=reserved_gib,
             prog_bar=True,
             on_step=True,
             on_epoch=False,
@@ -80,26 +77,6 @@ class GPUMemMonitor(Callback):
             trainer,
             pl_module,
         )
-
-    def on_train_batch_end(
-        self,
-        trainer: Trainer,
-        pl_module: LightningModule,
-        outputs: Any,  # noqa: ANN401
-        batch: Any,  # noqa: ANN401
-        batch_idx: int,
-    ) -> None:
-        """Clean up CUDA cache every 50 train iterations if enabled.
-
-        Args:
-            trainer (Trainer): pl trainer.
-            pl_module (LightningModule): pl module.
-            outputs (Any): batch outputs.
-            batch (Any): current batch.
-            batch_idx (int): current batch index.
-        """
-        if torch.cuda.is_available() and self.iter_to_clean != -1 and (batch_idx + 1) % self.iter_to_clean == 0:
-            torch.cuda.empty_cache()
 
     def on_validation_batch_start(
         self,

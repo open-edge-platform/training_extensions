@@ -90,7 +90,7 @@ def load_checkpoint(
     if Path(checkpoint).exists():
         load_checkpoint_to_model(
             model,
-            torch.load(checkpoint, map_location, weights_only=False),
+            torch.load(checkpoint, map_location),
             strict=strict,
             prefix=prefix,
             key_mapping=key_mapping,

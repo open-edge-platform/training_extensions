@@ -481,9 +481,9 @@ class HGNetv2Module(nn.Module):
         self.use_lab = use_lab
         self.return_idx = return_idx
 
-        stem_channels: list[int] = self.arch_configs[name]["stem_channels"]  # pyrefly: ignore[bad-assignment]
-        stage_config: dict[str, list] = self.arch_configs[name]["stage_config"]  # pyrefly: ignore[bad-assignment]
-        download_url: str = self.arch_configs[name]["url"]  # pyrefly: ignore[bad-assignment]
+        stem_channels: list[int] = self.arch_configs[name]["stem_channels"]
+        stage_config: dict[str, list] = self.arch_configs[name]["stage_config"]
+        download_url: str = self.arch_configs[name]["url"]
 
         self._out_strides = [4, 8, 16, 32]
         self._out_channels = [stage_config[k][2] for k in stage_config]
