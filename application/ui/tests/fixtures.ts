@@ -79,6 +79,9 @@ const test = testBase.extend<Fixtures>({
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
                 return HttpResponse.json(null, { status: 204 });
             }),
+            http.post('/api/projects/{project_id}/pipeline:disable', () => {
+                return HttpResponse.json(null, { status: 204 });
+            }),
             http.get('/api/projects', ({ response }) => {
                 return response(200).json([
                     {
