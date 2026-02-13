@@ -69,7 +69,6 @@ test('Inference', async ({ streamPage, page, network }) => {
         await page.goto('/projects/id-1/inference');
 
         await expect(page.getByRole('button', { name: 'Enable Pipeline' })).toBeEnabled();
-        await page.getByRole('button', { name: 'Enable Pipeline' }).click();
 
         network.use(
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
@@ -80,11 +79,9 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.reload();
+        await page.getByRole('button', { name: 'Enable Pipeline' }).click();
 
         await expect(page.getByRole('button', { name: 'Disable Pipeline' })).toBeEnabled();
-        await page.getByRole('button', { name: 'Disable Pipeline' }).click();
-
         network.use(
             http.post('/api/projects/{project_id}/pipeline:disable', () => {
                 return HttpResponse.json(null, { status: 204 });
@@ -94,7 +91,7 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.reload();
+        await page.getByRole('button', { name: 'Disable Pipeline' }).click();
 
         await expect(page.getByRole('button', { name: 'Enable Pipeline' })).toBeEnabled();
     });
