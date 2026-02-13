@@ -1,3 +1,5 @@
+@use '../../shared/styles/line-clamp' as lineClamp;
+
 .panelButtons {
     padding-block-start: 0;
 }
@@ -25,6 +27,8 @@
 }
 
 .projectName {
+    @include lineClamp.clamp(3);
+
     text-align: start;
     font-size: var(--spectrum-global-dimension-size-150);
 }
@@ -36,4 +40,10 @@
     span[class*='ActionButton-label'] {
         padding: 0 !important;
     }
+}
+
+.selectedProjectButton {
+    display: flex;
+    justify-content: start;
+    flex: 1;
 }
