@@ -3,8 +3,8 @@
 
 import { View } from '@geti/ui';
 import { isNil } from 'lodash-es';
-import { getMockedJob } from 'mocks/mock-job';
 
+import { Job } from '../../../../../constants/shared-types';
 import { isJobDone, isJobPending, isJobRunning } from '../util';
 import { ExportActiveJob } from './export-active-job.component';
 import { ExportCompletedJob } from './export-completed-job.component';
@@ -16,7 +16,7 @@ type ExportJobProps = {
 /* TODO: Update once https://github.com/open-edge-platform/training_extensions/pull/5443 gets merged*/
 const useExportStatus = (job_id: string) => {
     return {
-        job: getMockedJob({
+        job: {
             job_id,
             progress: 89.99999999,
             message: 'Exporting dataset',
@@ -29,7 +29,7 @@ const useExportStatus = (job_id: string) => {
                     labels: [],
                 },
             },
-        }),
+        } as unknown as Job,
         stagedDatasetId: '123',
         isFetching: false,
     };
