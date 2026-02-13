@@ -1,3 +1,5 @@
+@use '../../../shared/styles/line-clamp' as lineClamp;
+
 .dialog {
     background-color: var(--spectrum-gray-100);
     background-image: url('./../../../assets/background.png');
@@ -71,4 +73,12 @@
 .activeTag {
     color: var(--spectrum-gray-50);
     background-color: var(--energy-blue) !important;
+}
+
+.projectName {
+    @include lineClamp.clamp(1);
+}
+
+.labelList {
+    @include lineClamp.clamp(3);
 }
