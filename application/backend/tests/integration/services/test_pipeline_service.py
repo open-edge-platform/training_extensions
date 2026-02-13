@@ -12,6 +12,7 @@ from app.models import DataCollectionConfig, PipelineStatus
 from app.models.data_collection_policy import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType, SystemService
 from app.services.event.event_bus import EventType
+from app.services.pipeline_service import OtherProjectActiveError
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
@@ -35,23 +36,23 @@ def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> Pipel
 @pytest.fixture
 def fxt_project_with_pipeline(
     fxt_db_projects, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session
-) -> Callable[[bool, list[dict] | None], tuple[ProjectDB, PipelineDB]]:
+) -> Callable[[bool, int, list[dict] | None, str], tuple[ProjectDB, PipelineDB]]:
     """Fixture to create a ProjectDB with an associated PipelineDB."""
 
     def _create_project_with_pipeline(
-        is_running: bool, data_policies: list[dict] | None = None, device: str = "cpu"
+        is_running: bool, project_index: int = 0, data_policies: list[dict] | None = None, device: str = "cpu"
     ) -> tuple[ProjectDB, PipelineDB]:
         db_session.add_all(fxt_db_sources)
         db_session.add_all(fxt_db_sinks)
         db_session.flush()
         project_db = (
             ProjectTestDataFactory(db_session)
-            .with_project(fxt_db_projects[0])
+            .with_project(fxt_db_projects[project_index])
             .with_pipeline(
                 is_running=is_running,
-                model_id=fxt_db_models[0].id,
-                source_id=fxt_db_sources[0].id,
-                sink_id=fxt_db_sinks[0].id,
+                model_id=fxt_db_models[project_index].id,
+                source_id=fxt_db_sources[project_index].id,
+                sink_id=fxt_db_sinks[project_index].id,
                 device=device,
             )
             .with_models(fxt_db_models)
@@ -132,6 +133,21 @@ class TestPipelineServiceIntegration:
 
         assert excinfo.value.resource_type == ResourceType.PIPELINE
         assert excinfo.value.resource_id == str(pipeline_id)
+
+    def test_update_pipeline_raises_error_if_other_project_active(
+        self,
+        fxt_pipeline_service,
+        fxt_project_with_pipeline,
+    ):
+        """Test that updating a pipeline to running raises error if another project's pipeline is already running."""
+        # Create an active pipeline in one project
+        _, active_pipeline = fxt_project_with_pipeline(is_running=True, project_index=0)
+        # Create a second project/pipeline (not running)
+        _, other_pipeline = fxt_project_with_pipeline(is_running=False, project_index=1)
+        # Try to activate the second pipeline while the first is still running
+        with pytest.raises(OtherProjectActiveError) as excinfo:
+            fxt_pipeline_service.update_pipeline(other_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+        assert str(active_pipeline.project_id) in str(excinfo.value)
 
     @pytest.mark.parametrize("pipeline_attr", [PipelineField.SINK_ID, PipelineField.SOURCE_ID])
     def test_reconfigure_running_pipeline(
