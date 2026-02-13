@@ -9,6 +9,7 @@ import { GroupByMode, GroupedModels, SortBy } from '../types';
 import {
     filterBySearch,
     filterOutFailedModels,
+    filterOutTrainingModels,
     groupModels,
     pinModel,
     removeEmpty,
@@ -25,7 +26,7 @@ type UseGroupedModelsOptions = {
 };
 
 // Responsible for:
-// - Filtering models based on searchBy query
+// - Filtering models based on searchBy query and failed status (only models that are not currently training)
 // - Grouping models based on the selected grouping mode
 // - Sorting models within each group based on the selected sorting criteria
 // - Pinning the active model to the top of its group if the pinActive option is enabled
@@ -36,7 +37,10 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
     return useMemo(() => {
         if (!models) return [];
 
-        const filteredByFailedModels = showFailedModels ? models : filterOutFailedModels(models);
+        const filteredByTraining = filterOutTrainingModels(models);
+        const filteredByFailedModels = showFailedModels
+            ? filteredByTraining
+            : filterOutFailedModels(filteredByTraining);
         const filteredBySearch = filterBySearch(filteredByFailedModels, searchBy);
         const grouped = groupModels(filteredBySearch, groupBy, datasetRevisions);
         const sorted = sortGroupedModels(grouped, sortBy);

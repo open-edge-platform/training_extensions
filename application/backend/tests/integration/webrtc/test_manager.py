@@ -1,14 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import queue
 import socket
 
+import numpy as np
 import pytest
 from aiortc import RTCConfiguration
 
 from app.models.webrtc import InputData, Offer
 from app.webrtc import SDPHandler
+from app.webrtc.broadcaster import FrameBroadcaster
 from app.webrtc.manager import WebRTCManager, WebRTCSettings
 
 VALID_SDP = (
@@ -29,8 +30,8 @@ VALID_SDP = (
 
 
 @pytest.fixture
-def fxt_stream_queue():
-    return queue.Queue()
+def fxt_frame_broadcaster():
+    return FrameBroadcaster[np.ndarray]()
 
 
 @pytest.fixture
@@ -44,8 +45,8 @@ def fxt_sdp_handler():
 
 
 @pytest.fixture
-def fxt_manager(fxt_stream_queue, fxt_settings, fxt_sdp_handler):
-    return WebRTCManager(fxt_stream_queue, fxt_settings, fxt_sdp_handler)
+def fxt_manager(fxt_frame_broadcaster, fxt_settings, fxt_sdp_handler):
+    return WebRTCManager(fxt_frame_broadcaster, fxt_settings, fxt_sdp_handler)
 
 
 @pytest.fixture
@@ -73,21 +74,26 @@ class TestWebRTCManager:
         assert get_local_ip() in answer.sdp
         assert answer.type == "answer"
         assert "test_id" in fxt_manager._pcs
+        assert fxt_manager._frame_broadcaster.is_registered("test_id")
 
     @pytest.mark.asyncio
-    async def test_handle_offer_with_host_resolution(self, fxt_stream_queue, fxt_sdp_handler, fxt_offer):
+    async def test_handle_offer_with_host_resolution(self, fxt_frame_broadcaster, fxt_sdp_handler, fxt_offer):
         settings = WebRTCSettings(config=RTCConfiguration(iceServers=[]), advertise_ip="localhost")
-        manager = WebRTCManager(fxt_stream_queue, settings, fxt_sdp_handler)
+        manager = WebRTCManager(fxt_frame_broadcaster, settings, fxt_sdp_handler)
         answer = await manager.handle_offer(fxt_offer)
         assert "127.0.0.1" in answer.sdp
         assert answer.type == "answer"
         assert "test_id" in manager._pcs
+        assert manager._frame_broadcaster.is_registered("test_id")
 
     @pytest.mark.asyncio
     async def test_cleanup_connection_removes_pc(self, fxt_manager, fxt_offer):
         await fxt_manager.handle_offer(fxt_offer)
+        assert "test_id" in fxt_manager._pcs
+        assert fxt_manager._frame_broadcaster.is_registered("test_id")
         await fxt_manager.cleanup_connection("test_id")
         assert "test_id" not in fxt_manager._pcs
+        assert not fxt_manager._frame_broadcaster.is_registered("test_id")
 
     def test_set_input_stores_data(self, fxt_manager):
         data = InputData(webrtc_id="test_id", conf_threshold=0.5)
@@ -101,3 +107,4 @@ class TestWebRTCManager:
         await fxt_manager.cleanup()
         assert not fxt_manager._pcs
         assert not fxt_manager._input_data
+        assert fxt_manager._frame_broadcaster.consumer_count() == 0

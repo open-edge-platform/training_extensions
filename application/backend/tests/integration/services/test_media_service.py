@@ -601,7 +601,7 @@ class TestMediaServiceIntegration:
 
         count = fxt_media_service.count_media(project=project, start_date=start_date, end_date=end_date)
 
-        assert count == 0 if start_date_out_of_range or end_date_out_of_range else len(db_media_list)
+        assert count == 0 if start_date_out_of_range or end_date_out_of_range else count == len(db_media_list)
 
     @pytest.mark.parametrize("limit, limit_out_of_range", [(10, False), (0, True)])
     @pytest.mark.parametrize("offset, offset_out_of_range", [(0, False), (10, True)])
@@ -650,7 +650,7 @@ class TestMediaServiceIntegration:
         assert (
             len(media_list) == 0
             if start_date_out_of_range or end_date_out_of_range or limit_out_of_range or offset_out_of_range
-            else len(db_media_list)
+            else len(media_list) == len(db_media_list)
         )
 
     def test_get_media_by_id(

@@ -17,14 +17,14 @@ import {
 } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { usePatchProject } from '../../../../../hooks/api/project.hook';
+import { usePatchProject } from '../../hooks/api/project.hook';
 
-interface EditProjectNameDialogProps {
+type EditProjectNameDialogProps = {
     onClose: () => void;
     isOpen: boolean;
     projectId: string;
     projectName: string;
-}
+};
 
 const PROJECT_NAME_MAX_LENGTH = 100;
 
@@ -58,7 +58,7 @@ export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName 
             return;
         }
 
-        await editProjectName(newProjectName);
+        editProjectName(newProjectName);
     };
 
     return (

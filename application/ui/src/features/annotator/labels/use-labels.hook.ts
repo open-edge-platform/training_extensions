@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useCallback } from 'react';
+
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 
@@ -148,23 +150,23 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
         });
     };
 
-    const updateLabel = (
-        labelId: string,
-        updates: { name: string; color: string; hotkey: string | null | undefined }
-    ) => {
-        updateLabelMutation.mutate({
-            body: {
-                labels_to_edit: [
-                    { id: labelId, new_name: updates.name, new_color: updates.color, new_hotkey: updates.hotkey },
-                ],
-            },
-            params: {
-                path: {
-                    project_id: projectId,
+    const updateLabel = useCallback(
+        (labelId: string, updates: { name: string; color: string; hotkey: string | null | undefined }) => {
+            updateLabelMutation.mutate({
+                body: {
+                    labels_to_edit: [
+                        { id: labelId, new_name: updates.name, new_color: updates.color, new_hotkey: updates.hotkey },
+                    ],
                 },
-            },
-        });
-    };
+                params: {
+                    path: {
+                        project_id: projectId,
+                    },
+                },
+            });
+        },
+        [updateLabelMutation, projectId]
+    );
 
     const deleteLabel = (labelId: string) => {
         updateLabelMutation.mutate({

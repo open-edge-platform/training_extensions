@@ -25,6 +25,7 @@ const ModelListingContent = () => {
                 direction={'column'}
                 height={'100%'}
                 alignItems={'center'}
+                justifyContent={isEmpty(trainingJob) ? 'center' : 'start'}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
                 <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />

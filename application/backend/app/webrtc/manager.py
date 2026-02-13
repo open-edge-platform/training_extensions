@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import queue
 from dataclasses import dataclass
 from typing import Any
 
@@ -11,6 +10,7 @@ from loguru import logger
 
 from app.models.webrtc import Answer, InputData, Offer
 
+from .broadcaster import FrameBroadcaster
 from .sdp_handler import SDPHandler
 from .stream import InferenceVideoStreamTrack
 
@@ -24,20 +24,24 @@ class WebRTCSettings:
 class WebRTCManager:
     """Manager for handling WebRTC connections."""
 
-    def __init__(self, stream_queue: queue.Queue, settings: WebRTCSettings, sdp_handler: SDPHandler) -> None:
+    def __init__(self, frame_broadcaster: FrameBroadcaster, settings: WebRTCSettings, sdp_handler: SDPHandler) -> None:
         self._pcs: dict[str, RTCPeerConnection] = {}
         self._input_data: dict[str, Any] = {}
-        self._stream_queue = stream_queue
+        self._frame_broadcaster = frame_broadcaster
         self._settings = settings
         self._sdp_handler = sdp_handler
+        self._lock = asyncio.Lock()
 
     async def handle_offer(self, offer: Offer) -> Answer:
         """Create an SDP offer for a new WebRTC connection."""
         pc = RTCPeerConnection(configuration=self._settings.config)
-        self._pcs[offer.webrtc_id] = pc
+
+        async with self._lock:
+            self._pcs[offer.webrtc_id] = pc
 
         # Add video track
-        track = InferenceVideoStreamTrack(self._stream_queue)
+        stream_queue = self._frame_broadcaster.register(webrtc_id=offer.webrtc_id)
+        track = InferenceVideoStreamTrack(stream_queue=stream_queue)
         pc.addTrack(track)
 
         @pc.on("connectionstatechange")
@@ -68,16 +72,21 @@ class WebRTCManager:
 
     async def cleanup_connection(self, webrtc_id: str) -> None:
         """Clean up a specific WebRTC connection by its ID."""
-        if webrtc_id in self._pcs:
-            logger.debug("Cleaning up connection: {}", webrtc_id)
-            pc = self._pcs.pop(webrtc_id)
-            await pc.close()
-            logger.debug("Connection {} successfully closed.", webrtc_id)
-            self._input_data.pop(webrtc_id, None)
+        async with self._lock:
+            if webrtc_id in self._pcs:
+                logger.debug("Cleaning up connection: {}", webrtc_id)
+                pc = self._pcs.pop(webrtc_id)
+                await pc.close()
+                logger.debug("Connection {} successfully closed.", webrtc_id)
+                self._input_data.pop(webrtc_id, None)
+            self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
 
     async def cleanup(self) -> None:
         """Clean up all connections"""
-        for pc in list(self._pcs.values()):
-            await pc.close()
-        self._pcs.clear()
-        self._input_data.clear()
+        async with self._lock:
+            for webrtc_id, pc in self._pcs.items():
+                await pc.close()
+                self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
+            self._pcs.clear()
+            self._input_data.clear()
+            self._frame_broadcaster.cleanup()
