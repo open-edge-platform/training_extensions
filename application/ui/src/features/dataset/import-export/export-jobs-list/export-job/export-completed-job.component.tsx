@@ -5,7 +5,7 @@ import { Button, Flex, Text, View } from '@geti/ui';
 import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
 
 import { ExportDatasetMetadata, Job } from '../../../../../constants/shared-types';
-import { ExportDetails } from './export-details.component';
+import { ExportJobDetails } from './export-details.component';
 
 type ExportCompletedJobProps = {
     job: Job;
@@ -26,7 +26,7 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
     return (
         <View padding='size-150'>
             <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                <ExportDetails metadata={metadata} />
+                <ExportJobDetails metadata={metadata} />
 
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <Button

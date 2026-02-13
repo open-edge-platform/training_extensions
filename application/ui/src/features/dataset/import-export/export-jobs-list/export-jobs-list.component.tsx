@@ -5,7 +5,7 @@ import { Flex } from '@geti/ui';
 import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
 import { isEmpty } from 'lodash-es';
 
-import { ExportJobStatus } from './export-job-status/export-job-status.component';
+import { ExportJob } from './export-job/export-job.component';
 
 export const ExportJobsList = () => {
     const { getLsExportIds } = useLocalStorageDataset();
@@ -22,10 +22,10 @@ export const ExportJobsList = () => {
             direction='column'
             maxHeight='size-3400'
             marginBottom='size-250'
-            UNSAFE_style={{ overflow: 'auto' }}
+            UNSAFE_style={{ overflowY: 'auto' }}
         >
             {exportIds.map((id) => (
-                <ExportJobStatus key={id} jobId={id} />
+                <ExportJob key={id} jobId={id} />
             ))}
         </Flex>
     );

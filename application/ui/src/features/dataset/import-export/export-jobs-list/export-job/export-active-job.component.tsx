@@ -3,25 +3,26 @@
 
 import { Divider, Flex, Loading, Text, View } from '@geti/ui';
 
-import { ThinProgressBar } from '../../../../../components/thin-progress-bar/thin-progress-bar.component';
 import { ExportDatasetMetadata, Job } from '../../../../../constants/shared-types';
+import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { isJobRunning } from '../util';
 import { CancelJobConfirmation } from './cancel-job-confirmation/cancel-job-confirmation.component';
-import { ExportDetails } from './export-details.component';
+import { ExportJobDetails } from './export-details.component';
 
 type ExportActiveJobProps = {
     job: Job;
 };
 
 export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
+    const isRunning = isJobRunning(job);
     const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
     const metadata = job?.metadata as unknown as ExportDatasetMetadata;
 
     return (
-        <>
+        <BottomProgressBar progress={progress}>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                    <ExportDetails metadata={metadata} />
+                    <ExportJobDetails metadata={metadata} />
                     <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 
@@ -31,19 +32,13 @@ export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
 
                 <Flex justifyContent='space-between'>
                     <Flex alignItems='center' gap='size-100'>
-                        {isJobRunning(job) && <Loading mode='inline' size='S' />}
+                        {isRunning && <Loading mode='inline' size='S' />}
                         <Text>{job?.message}</Text>
                     </Flex>
 
-                    {isJobRunning(job) && <Text>{progress}%</Text>}
+                    {isRunning && <Text>{progress}%</Text>}
                 </Flex>
             </View>
-
-            {isJobRunning(job) && (
-                <View position='absolute' left={0} right={0} bottom={0}>
-                    <ThinProgressBar size='size-25' customColor='var(--energy-blue-shade)' progress={progress} />
-                </View>
-            )}
-        </>
+        </BottomProgressBar>
     );
 };

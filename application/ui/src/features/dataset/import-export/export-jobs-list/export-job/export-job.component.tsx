@@ -9,7 +9,7 @@ import { isJobDone, isJobPending, isJobRunning } from '../util';
 import { ExportActiveJob } from './export-active-job.component';
 import { ExportCompletedJob } from './export-completed-job.component';
 
-type ExportJobStatusProps = {
+type ExportJobProps = {
     jobId: string;
 };
 
@@ -35,7 +35,7 @@ const useExportStatus = (job_id: string) => {
     };
 };
 
-export const ExportJobStatus = ({ jobId }: ExportJobStatusProps) => {
+export const ExportJob = ({ jobId }: ExportJobProps) => {
     const { job } = useExportStatus(jobId);
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
