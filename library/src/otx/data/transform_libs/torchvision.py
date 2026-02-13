@@ -1056,14 +1056,13 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
             if mode == 1 and contrast_flag:
                 img *= alpha_value
 
-            # TODO (sungchul): OTX consumes RGB images but mmx assumes they are BGR.
-            # convert color from BGR to HSV
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # f32 -> f32
+            # Convert RGB to HSV for color augmentation
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # f32 -> f32
 
             # random saturation
             if saturation_flag:
                 img[..., 1] *= saturation_value
-                # For image(type=float32), after convert bgr to hsv by opencv,
+                # For image(type=float32), after convert rgb to hsv by opencv,
                 # valid saturation value range is [0, 1]
                 if saturation_value > 1:
                     img[..., 1] = img[..., 1].clip(0, 1)
@@ -1074,8 +1073,8 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
                 img[..., 0][img[..., 0] > 360] -= 360
                 img[..., 0][img[..., 0] < 0] += 360
 
-            # convert color from HSV to BGR
-            img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)  # f32 -> f32
+            # Convert HSV back to RGB
+            img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)  # f32 -> f32
 
             # random contrast
             if mode == 0 and contrast_flag:
@@ -2069,13 +2068,13 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         img: np.ndarray = to_np_image(inputs.image)
         hsv_gains = self._get_hsv_gains()
-        # TODO (sungchul): OTX det models except for YOLOX-S, L, X consume RGB images but mmdet assumes they are BGR.
-        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.int16)
+        # Convert RGB to HSV for color augmentation
+        img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV).astype(np.int16)
 
         img_hsv[..., 0] = (img_hsv[..., 0] + hsv_gains[0]) % 180
         img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_gains[1], 0, 255)
         img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_gains[2], 0, 255)
-        img = cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR)
+        img = cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2RGB)
         inputs.image = img
         return self.convert(inputs)
 
