@@ -44,7 +44,7 @@ class ResizeObserverMock {
 
 global.ResizeObserver = ResizeObserverMock;
 
-const localStorageMock = (() => {
+const createLocalStorageMock = () => {
     let store: Record<string, string> = {};
 
     return {
@@ -58,9 +58,14 @@ const localStorageMock = (() => {
         clear: () => {
             store = {};
         },
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: (index: number) => {
+            const keys = Object.keys(store);
+            return keys[index] || null;
+        },
     };
-})();
+};
 
-Object.defineProperty(global, 'localStorage', {
-    value: localStorageMock,
-});
+vi.stubGlobal('localStorage', createLocalStorageMock());
