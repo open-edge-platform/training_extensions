@@ -7,17 +7,22 @@ set -euo pipefail
 # Features:
 # - Optionally set up demo projects before starting the server by using:
 #     --setup-demo
-#   This will delete all existing data, reset the database to a clean state,
-#   and import demo projects from S3.
+#   This will import demo projects from S3.
+# - Optionally clean all existing data before starting the server by using:
+#     --clean
+#   This will delete all existing data and reset the database to a clean state.
 #
 # Usage:
-#   ./run.sh --setup-demo                    # Reset database and set up demo projects, then launch the server
-#   ./run.sh --setup-demo --force-import    # Same as above, but bypass schema version checks during import
-#   ./run.sh                                # Run server with existing data
+#   ./run.sh --clean --setup-demo                 # Clean data, set up demo projects, then launch the server
+#   ./run.sh --clean --setup-demo --force-import  # Same as above, but bypass schema version checks during import
+#   ./run.sh --setup-demo                         # Import demo projects without cleaning existing data
+#   ./run.sh --clean                              # Clean all data and start fresh
+#   ./run.sh                                      # Run server with existing data
 #
 # Arguments:
-#   --setup-demo    Deletes all existing data, resets the database,
-#                   and imports demo projects before starting the server.
+#   --clean         Deletes all existing data and resets the database to a clean state.
+#                   Prompts for confirmation before proceeding.
+#   --setup-demo    Imports demo projects before starting the server.
 #   --force-import  Bypasses database schema version checks during import.
 #                   Use with caution as this may cause import errors or data corruption.
 #                   (Only valid when used with --setup-demo)
@@ -32,6 +37,7 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 
 # Default values
+CLEAN=false
 SETUP_DEMO=false
 FORCE_IMPORT=false
 APP_MODULE=${APP_MODULE:-app/main.py}
@@ -40,6 +46,10 @@ UV_CMD=${UV_CMD:-uv run}
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --clean)
+      CLEAN=true
+      shift
+      ;;
     --setup-demo)
       SETUP_DEMO=true
       shift
@@ -49,10 +59,11 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      echo "Usage: $0 [--setup-demo] [--force-import]"
+      echo "Usage: $0 [--clean] [--setup-demo] [--force-import]"
       echo ""
       echo "Options:"
-      echo "  --setup-demo    Reset database and import demo projects"
+      echo "  --clean         Delete all existing data and reset the database"
+      echo "  --setup-demo    Import demo projects"
       echo "  --force-import  Bypass schema version checks (use with --setup-demo)"
       echo "  -h, --help      Show this help message"
       exit 0
@@ -89,10 +100,10 @@ DEMO_VIDEO_URLS=(
 )
 
 # Directory for downloaded demo videos
-DEMO_VIDEOS_DIR="data/.demo_videos"
+DEMO_VIDEOS_DIR="data/.demo_cache/videos"
 
 # Temporary directory for downloaded archives
-DEMO_ARCHIVES_DIR="data/.demo_archives"
+DEMO_ARCHIVES_DIR="data/.demo_cache/archives"
 
 # Function to download and import a demo project
 import_demo_project() {
@@ -166,36 +177,43 @@ setup_demo_sources() {
   $cmd
 }
 
-if [[ "$SETUP_DEMO" == "true" ]]; then
-  echo "Setting up demo projects..."
+# Handle data cleanup
+if [[ "$CLEAN" == "true" ]]; then
   echo "WARNING: This will delete all existing data and reset the database!"
   read -p "Do you want to continue? (yes/no): " -r
   echo
   if [[ ! $REPLY =~ ^[Yy]es$ ]]; then
-    echo "Demo setup cancelled. Starting server with existing data..."
+    echo "Clean operation cancelled. Starting server with existing data..."
+    CLEAN=false
   else
+    echo "Cleaning existing data..."
     # Remove existing database and projects to start fresh
     rm -f data/geti_tune.db
     rm -rf data/projects/*
     rm -rf data/output/*
-    rm -rf data/demo_videos/*
 
     # Initialize the database
     $UV_CMD app/cli.py init-db
-
-    # Create directory for downloaded archives
-    mkdir -p "$DEMO_ARCHIVES_DIR"
-
-    # Download and import each demo project
-    for url in "${DEMO_PROJECT_URLS[@]}"; do
-      import_demo_project "$url"
-    done
-
-    # Setup demo sources (videos)
-    setup_demo_sources
-
-    echo "Demo setup complete."
+    echo "Database cleaned and reinitialized."
   fi
+fi
+
+# Handle demo setup
+if [[ "$SETUP_DEMO" == "true" ]]; then
+  echo "Setting up demo projects..."
+
+  # Create directory for downloaded archives
+  mkdir -p "$DEMO_ARCHIVES_DIR"
+
+  # Download and import each demo project
+  for url in "${DEMO_PROJECT_URLS[@]}"; do
+    import_demo_project "$url"
+  done
+
+  # Setup demo sources (videos)
+  setup_demo_sources
+
+  echo "Demo setup complete."
 fi
 
 echo "Starting FastAPI server..."
