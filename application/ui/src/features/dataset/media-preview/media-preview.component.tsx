@@ -10,6 +10,7 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { useSelectedData } from '../selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
@@ -96,7 +97,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                         onAcceptPrediction={handleSubmitAnnotations}
                     />
                 ) : (
-                    <>
+                    <VideoPlayerProvider>
                         <View gridArea={'header'}>
                             <SecondaryToolbar
                                 mode={mode}
@@ -122,7 +123,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                                 <AnnotatorCanvas mediaItem={mediaItem} />
                             </AnnotatorCanvasSettings>
                         </View>
-                    </>
+                    </VideoPlayerProvider>
                 )}
             </AnnotatorProviders>
         </ToolProvider>
