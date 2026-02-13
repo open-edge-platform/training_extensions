@@ -5,11 +5,11 @@ import { screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { getMockedProject } from '../../../../../mocks/mock-project';
-import { SchemaProjectView } from '../../../../api/openapi-spec';
-import { http } from '../../../../api/utils';
-import { server } from '../../../../msw-node-setup';
-import { ExportDataset } from './export-dataset.component';
+import { getMockedProject } from '../../../mocks/mock-project';
+import { SchemaProjectView } from '../../api/openapi-spec';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
+import { ExportDataset } from './export-dataset-config.component';
 
 describe('ExportDataset', () => {
     const mockDialogState = {

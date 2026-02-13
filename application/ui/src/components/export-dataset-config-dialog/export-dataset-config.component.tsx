@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactNode } from 'react';
+
 import {
     Button,
     ButtonGroup,
@@ -14,26 +16,28 @@ import {
     Radio,
     RadioGroup,
     Link as SpectrumLink,
+    TextField,
     View,
 } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
-import { MultiSelectList } from '../../../../components/multi-select-list/multi-select-list.component';
-import { isClassificationTask } from '../../../project/task-type-guards';
-import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
-import { useExportDatasetJobAction } from './hooks/use-export-dataset-job-action.hook';
+import { isClassificationTask } from '../../features/project/task-type-guards';
+import { useExportDatasetJobAction } from '../../hooks/use-export-dataset-job-action.hook';
+import { MultiSelectList } from '../multi-select-list/multi-select-list.component';
 
-import classes from './export-dataset.module.scss';
+import classes from './export-dataset-config.module.scss';
 
-type ExportDatasetProps = {
+type ExportDatasetConfigProps = {
+    datasetId: string | null;
+    statistics: ReactNode;
     dialogState: OverlayTriggerState;
 };
 
 const FORM_ID = 'export-dataset-form';
 
-export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
+export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: ExportDatasetConfigProps) => {
     const { data: selectedProject } = useProject();
 
     const [formState, submitAction, isPending] = useExportDatasetJobAction({
@@ -56,12 +60,14 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
                     <Divider />
                     <Content UNSAFE_className={classes.container}>
                         <Heading>Exported dataset statistics</Heading>
-                        <DatasetStatistics />
+                        {statistics}
 
                         <Heading>Export settings</Heading>
 
                         <View backgroundColor='gray-75' padding='size-200' borderRadius='regular'>
                             <Form id={FORM_ID} validationBehavior='native' action={submitAction}>
+                                <TextField isHidden label='dataset_id' name='dataset_id' value={datasetId ?? 'null'} />
+
                                 <MultiSelectList
                                     name='labels'
                                     items={labels}
