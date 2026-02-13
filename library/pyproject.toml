@@ -54,7 +54,7 @@ dependencies = [
     "pyyaml==6.0.3",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
-    "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@develop",
+    "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@bf69fe2d11ee6b7e0698e4a27af2081134f9b483",
 ]
 
 [dependency-groups]
