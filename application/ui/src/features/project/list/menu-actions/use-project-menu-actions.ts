@@ -3,7 +3,6 @@
 
 import { Key, toast } from '@geti/ui';
 
-import { $api } from '../../../../api/client';
 import { useDisablePipeline, useEnablePipeline } from '../../../../hooks/api/pipeline.hook';
 
 const PROJECT_ACTIONS = { rename: 'Rename', delete: 'Delete' };
@@ -13,15 +12,11 @@ type ProjectMenuCallbacks = {
     onDelete: () => void;
 };
 
-export const useProjectMenuActions = (projectId: string, callbacks: ProjectMenuCallbacks) => {
-    const { data: pipeline } = $api.useQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
-
+export const useProjectMenuActions = (projectId: string, callbacks: ProjectMenuCallbacks, activePipeline?: boolean) => {
     const enablePipelineMutation = useEnablePipeline();
     const disablePipelineMutation = useDisablePipeline();
 
-    const isPipelineRunning = pipeline?.status === 'running';
+    const isPipelineRunning = activePipeline ?? false;
 
     const menuActions = {
         ...(isPipelineRunning ? { 'disable-pipeline': 'Disable pipeline' } : { 'enable-pipeline': 'Enable pipeline' }),

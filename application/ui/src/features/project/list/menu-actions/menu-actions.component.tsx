@@ -16,17 +16,29 @@ import classes from './menu-actions.module.scss';
 type MenuActionsProps = {
     projectId: string;
     projectName: string;
+    activePipeline?: boolean;
     actionButtonStyle?: CSSProperties;
+    onDeleted?: () => void;
 };
 
-export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuActionsProps) => {
+export const MenuActions = ({
+    projectId,
+    projectName,
+    activePipeline,
+    actionButtonStyle,
+    onDeleted,
+}: MenuActionsProps) => {
     const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
 
-    const { menuActions, handleAction } = useProjectMenuActions(projectId, {
-        onRename: editProjectNameDialogState.open,
-        onDelete: deleteProjectDialogState.open,
-    });
+    const { menuActions, handleAction } = useProjectMenuActions(
+        projectId,
+        {
+            onRename: editProjectNameDialogState.open,
+            onDelete: deleteProjectDialogState.open,
+        },
+        activePipeline
+    );
 
     return (
         <>
@@ -61,6 +73,7 @@ export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuA
                 projectName={projectName}
                 isOpen={deleteProjectDialogState.isOpen}
                 onClose={deleteProjectDialogState.close}
+                onDeleted={onDeleted}
             />
         </>
     );

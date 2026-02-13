@@ -67,16 +67,18 @@ export const useEnablePipeline = () => {
                 },
             }
         ) => {
-            queryClient.invalidateQueries({
-                queryKey: getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/pipeline',
-                    { params: { path: { project_id } } },
-                ]),
-            });
-            return queryClient.invalidateQueries({
-                queryKey: getQueryKey(['get', '/api/projects']),
-            });
+            return Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey([
+                        'get',
+                        '/api/projects/{project_id}/pipeline',
+                        { params: { path: { project_id } } },
+                    ]),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey(['get', '/api/projects']),
+                }),
+            ]);
         },
     });
 };
@@ -93,16 +95,18 @@ export const useDisablePipeline = () => {
                 },
             }
         ) => {
-            queryClient.invalidateQueries({
-                queryKey: getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/pipeline',
-                    { params: { path: { project_id } } },
-                ]),
-            });
-            return queryClient.invalidateQueries({
-                queryKey: getQueryKey(['get', '/api/projects']),
-            });
+            return Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey([
+                        'get',
+                        '/api/projects/{project_id}/pipeline',
+                        { params: { path: { project_id } } },
+                    ]),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey(['get', '/api/projects']),
+                }),
+            ]);
         },
     });
 };
