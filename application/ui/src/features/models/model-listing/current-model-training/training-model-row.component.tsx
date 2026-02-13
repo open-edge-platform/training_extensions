@@ -91,6 +91,15 @@ export const TrainingModelRow = ({
             ? labelSchemaRevision.labels.length
             : undefined;
 
+    const formattedStartedAt = job.started_at
+        ? dayjs(job.started_at).format('DD MMM YYYY, hh:mm A')
+        : 'Waiting to start...';
+    const formattedElapsed = job.started_at
+        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H:mm:ss')
+        : '';
+
+    const statusMessage = job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...');
+
     return (
         <BottomProgressBar progress={job.progress}>
             <Grid
@@ -107,13 +116,17 @@ export const TrainingModelRow = ({
 
                     <Flex alignItems={'start'}>
                         <TrainingTag />
-                        <StatusTag status={job.message || 'Running...'} />
+                        <StatusTag status={statusMessage} />
                     </Flex>
 
                     <Text UNSAFE_className={classes.metaText}>
-                        {`Started: ${dayjs(job.started_at).format('DD MMM YYYY, hh:mm A')}`}
-                        <Divider orientation={'vertical'} />
-                        {`Elapsed: ${dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('mm:ss')}m`}
+                        {`Started: ${formattedStartedAt}`}
+                        {formattedElapsed && (
+                            <>
+                                <Divider orientation={'vertical'} />
+                                {`Elapsed: ${formattedElapsed}`}
+                            </>
+                        )}
                     </Text>
                 </Flex>
 
