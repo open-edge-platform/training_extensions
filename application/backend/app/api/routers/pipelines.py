@@ -73,6 +73,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
     response_model=PipelineView,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline found"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
     },
 )
@@ -93,7 +94,7 @@ def get_pipeline(
     response_model=PipelineView,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline successfully reconfigured"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid request body"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid request body or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
     },
@@ -144,6 +145,7 @@ def update_pipeline(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully enabled"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
     },
@@ -169,6 +171,7 @@ def enable_pipeline(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully disabled"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
     },
 )

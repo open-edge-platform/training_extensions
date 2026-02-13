@@ -36,7 +36,7 @@ def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> Pipel
 @pytest.fixture
 def fxt_project_with_pipeline(
     fxt_db_projects, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session
-) -> Callable[[bool, int, list[dict] | None], tuple[ProjectDB, PipelineDB]]:
+) -> Callable[[bool, int, list[dict] | None, str], tuple[ProjectDB, PipelineDB]]:
     """Fixture to create a ProjectDB with an associated PipelineDB."""
 
     def _create_project_with_pipeline(
