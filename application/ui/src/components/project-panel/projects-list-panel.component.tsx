@@ -49,7 +49,7 @@ const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => 
                 </View>
                 <Flex direction={'column'} minWidth={0}>
                     <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
-                        {name}
+                        <span title={name}>{name}</span>
                     </View>
                     {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
                 </Flex>
