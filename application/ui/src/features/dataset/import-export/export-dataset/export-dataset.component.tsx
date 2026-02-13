@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    ActionButton,
     Button,
     ButtonGroup,
     Checkbox,
@@ -11,15 +12,16 @@ import {
     Divider,
     Form,
     Heading,
-    Item,
-    Picker,
     Radio,
     RadioGroup,
     View,
 } from '@geti/ui';
+import { LinkOut } from '@geti/ui/icons';
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
+import { MultiSelectList } from '../../../../components/multi-select-list/multi-select-list.component';
+import { openNewTab } from '../../../../shared/util';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { useExportDatasetJobAction } from './use-export-dataset-job-action.hook';
 
@@ -33,6 +35,7 @@ const FORM_ID = 'export-dataset-form';
 
 export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
     const { data: selectedProject } = useProject();
+
     const [formState, submitAction, isPending] = useExportDatasetJobAction({
         onSuccess: dialogState.close,
     });
@@ -52,17 +55,13 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
                         <Heading>Export settings</Heading>
 
                         <View backgroundColor='gray-75' padding='size-200' borderRadius='regular'>
-                            <Form id={FORM_ID} validationBehavior={'native'} action={submitAction}>
-                                {/* TODO: temporary, the final implementation will need a custom implementation */}
-                                <Picker
+                            <Form id={FORM_ID} validationBehavior='native' action={submitAction}>
+                                <MultiSelectList
                                     name='labels'
+                                    items={labels}
+                                    maxHeight='size-2000'
                                     label='Choose images by label to export'
-                                    defaultSelectedKey={formState.labels[0]}
-                                >
-                                    {labels.map((label) => (
-                                        <Item key={label.id}>{label.name}</Item>
-                                    ))}
-                                </Picker>
+                                />
 
                                 <Checkbox name='include_unannotated' defaultSelected={formState.include_unannotated}>
                                     Include unannotated
@@ -80,6 +79,18 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
                                     <Radio value='coco'>COCO</Radio>
                                 </RadioGroup>
                             </Form>
+
+                            {/* TODO: pending link url
+                            https://github.com/open-edge-platform/training_extensions/issues/5512 */}
+                            <ActionButton
+                                isQuiet
+                                marginTop='size-100'
+                                onPress={() => openNewTab('/')}
+                                UNSAFE_className={classes.linkButton}
+                            >
+                                Learn more about export formats
+                                <LinkOut size='S' />
+                            </ActionButton>
                         </View>
                     </Content>
 

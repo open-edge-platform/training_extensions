@@ -5,3 +5,13 @@
     padding: var(--spectrum-global-dimension-size-275);
     background: var(--spectrum-global-color-gray-50);
 }
+
+.linkButton {
+    &:not(:hover) {
+        color: var(--energy-blue);
+
+        > svg {
+            fill: var(--energy-blue) !important;
+        }
+    }
+}
