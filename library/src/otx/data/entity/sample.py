@@ -8,7 +8,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Sequence
 
-import numpy as np
 import polars as pl
 import torch
 import torch.utils._pytree as pytree
@@ -40,6 +39,7 @@ from otx.data.entity.validation import (
 )
 
 if TYPE_CHECKING:
+    import numpy as np
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
@@ -169,7 +169,7 @@ class DetectionSample(OTXSample):
         dtype=pl.UInt8(), format="BGR", channels_first=True
     )
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
-    bboxes: torch.Tensor | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -214,7 +214,7 @@ class InstanceSegmentationSample(OTXSample):
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    bboxes: torch.Tensor | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(is_list=True)
     dm_image_info: DmImageInfo = image_info_field()

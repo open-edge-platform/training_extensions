@@ -24,7 +24,7 @@ from torchvision.tv_tensors import BoundingBoxFormat
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.d_fine import DFine
+from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
 from otx.backend.native.models.detection.utils import limit_batch_objects
 from otx.backend.native.models.utils.utils import load_checkpoint
@@ -34,7 +34,6 @@ from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
-from otx.backend.native.models.detection.base import OTXDetectionModel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -242,9 +241,9 @@ class RFDETR(OTXDetectionModel):
             "targets": targets,
         }
 
-    def _customize_outputs(
+    def _customize_outputs(  # pyrefly: ignore[bad-override]
         self,
-        outputs: tuple[torch.Tensor, ...] | dict[str, Any],  # type: ignore[override]
+        outputs: tuple[torch.Tensor, ...] | dict[str, Any],
         inputs: OTXSampleBatch,
     ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
