@@ -37,10 +37,6 @@ export const useAnnotationsQuery = (datasetItemId: string) => {
                 }
             );
 
-            if (error !== undefined) {
-                return { annotations: [], user_reviewed: false };
-            }
-
             if (isUnannotatedError(error)) {
                 return { annotations: [], user_reviewed: false };
             }

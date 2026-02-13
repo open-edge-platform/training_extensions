@@ -1,22 +1,24 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { RefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect } from 'react';
 
 import { VisuallyHidden } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { type Media } from '../../../constants/shared-types';
 import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
+import { useVideoPlayer } from './video-player-provider.component';
 
 type VideoFrameProps = {
     canvasRef: RefObject<HTMLCanvasElement | null>;
     mediaItem: Media;
 };
 
-const useRequestVideoFrameCallback = (canvasRef: RefObject<HTMLCanvasElement | null>) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-
+const useRequestVideoFrameCallback = (
+    videoRef: RefObject<HTMLVideoElement | null>,
+    canvasRef: RefObject<HTMLCanvasElement | null>
+) => {
     useEffect(() => {
         if (videoRef.current === null) {
             return;
@@ -26,7 +28,7 @@ const useRequestVideoFrameCallback = (canvasRef: RefObject<HTMLCanvasElement | n
 
         let callbackId: number | null = null;
 
-        const updateCanvas: VideoFrameRequestCallback = (now, metadata) => {
+        const updateCanvas: VideoFrameRequestCallback = () => {
             if (videoRef.current === null) {
                 return;
             }
@@ -36,8 +38,6 @@ const useRequestVideoFrameCallback = (canvasRef: RefObject<HTMLCanvasElement | n
             if (ctx == null) {
                 return;
             }
-
-            console.log({ now, metadata });
 
             ctx.drawImage(video, 0, 0);
 
@@ -51,22 +51,16 @@ const useRequestVideoFrameCallback = (canvasRef: RefObject<HTMLCanvasElement | n
                 video.cancelVideoFrameCallback(callbackId);
             }
         };
-    }, [canvasRef]);
-
-    useEffect(() => {
-        if (videoRef.current === null) {
-            return;
-        }
-
-        // videoRef.current.play();
-    }, []);
+    }, [videoRef, canvasRef]);
 
     return videoRef;
 };
 
 export const VideoFrame = ({ canvasRef, mediaItem }: VideoFrameProps) => {
     const projectId = useProjectIdentifier();
-    const videoRef = useRequestVideoFrameCallback(canvasRef);
+    const { videoRef } = useVideoPlayer();
+
+    useRequestVideoFrameCallback(videoRef, canvasRef);
 
     return (
         <VisuallyHidden>
