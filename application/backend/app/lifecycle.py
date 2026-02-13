@@ -121,7 +121,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         advertise_ip=settings.webrtc_advertise_ip,
     )
     sdp_handler = SDPHandler()
-    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue, webrtc_settings, sdp_handler)
+    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_broadcaster, webrtc_settings, sdp_handler)
     app.state.webrtc_manager = webrtc_manager
     logger.info("Application startup completed")
 

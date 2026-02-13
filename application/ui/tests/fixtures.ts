@@ -79,6 +79,9 @@ const test = testBase.extend<Fixtures>({
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
                 return HttpResponse.json(null, { status: 204 });
             }),
+            http.post('/api/projects/{project_id}/pipeline:disable', () => {
+                return HttpResponse.json(null, { status: 204 });
+            }),
             http.get('/api/projects', ({ response }) => {
                 return response(200).json([
                     {
@@ -142,6 +145,16 @@ const test = testBase.extend<Fixtures>({
                 return HttpResponse.json({
                     items: [mockedMedia({ width: 1000, height: 750 })],
                     pagination: { offset: 0, limit: 20, count: 1, total: 1 },
+                });
+            }),
+            http.get('/api/jobs/{job_id}/status', () => {
+                // Just a valid SSE response with no data
+                return new HttpResponse(':ok\n\n', {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                    },
                 });
             }),
         ],

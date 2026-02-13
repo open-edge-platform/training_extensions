@@ -6,9 +6,9 @@ import { Suspense } from 'react';
 import { Divider, Flex, Loading, View } from '@geti/ui';
 
 import { ActiveModel } from './active-model.component';
-import { DisablePipelineButton } from './disable-pipeline-button.component';
 import { InferenceDevices } from './inference-devices.component';
 import { InputOutputSetup } from './input-output-setup.component';
+import { TogglePipelineButton } from './toggle-pipeline-button.component';
 
 export const Header = () => {
     return (
@@ -33,7 +33,7 @@ export const Header = () => {
                 </Suspense>
 
                 <Flex marginStart='auto' gap={'size-100'}>
-                    <DisablePipelineButton />
+                    <TogglePipelineButton />
                     <InputOutputSetup />
                 </Flex>
             </Flex>
