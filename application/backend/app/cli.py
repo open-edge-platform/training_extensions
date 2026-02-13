@@ -188,5 +188,35 @@ def setup_demo_sources(video_paths: tuple[str, ...]) -> None:
             sys.exit(1)
 
 
+@cli.command()
+def setup_demo_sinks() -> None:
+    """Create default sinks for demo purposes."""
+    from app.db.engine import get_db_session
+    from app.db.schema import SinkDB
+
+    # Define the default output folder sink
+    output_path = settings.data_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    sink = SinkDB(
+        name="Default output folder",
+        sink_type="folder",
+        rate_limit=0.2,
+        config_data={"folder_path": str(output_path)},
+        output_formats=["image_with_predictions", "predictions"],
+    )
+
+    click.echo(f"Creating default folder sink: {sink.name}")
+    try:
+        with get_db_session() as db:
+            db.add(sink)
+            db.flush()
+            db.commit()
+        click.echo("✓ Created demo sink successfully!")
+    except Exception as e:
+        click.echo(f"✗ Failed to create sink: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     cli()

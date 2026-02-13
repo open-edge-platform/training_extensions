@@ -177,6 +177,12 @@ setup_demo_sources() {
   $cmd
 }
 
+# Function to setup demo sinks
+setup_demo_sinks() {
+  echo "Setting up demo sinks..."
+  $UV_CMD app/cli.py setup-demo-sinks
+}
+
 # Handle data cleanup
 if [[ "$CLEAN" == "true" ]]; then
   echo "WARNING: This will delete all existing data and reset the database!"
@@ -212,6 +218,9 @@ if [[ "$SETUP_DEMO" == "true" ]]; then
 
   # Setup demo sources (videos)
   setup_demo_sources
+
+  # Setup demo sinks
+  setup_demo_sinks
 
   echo "Demo setup complete."
 fi
