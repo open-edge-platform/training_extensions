@@ -5,6 +5,7 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 
 import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
+import { isVideo } from '../../features/dataset/utils';
 import { isClassificationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
 import type { RegionOfInterest } from '../types';
@@ -42,6 +43,15 @@ const useSelectedLabel = () => {
     };
 };
 
+const getMediaItem = (mediaItem: Media) => {
+    if (isVideo(mediaItem)) {
+        // For video, we want to get the first frame of the video, that's not supported right now
+        return undefined;
+    }
+
+    return mediaItem;
+};
+
 type AnnotatorProviderProps = {
     mediaItem: Media;
     children: ReactNode;
@@ -50,7 +60,9 @@ type AnnotatorProviderProps = {
 export const AnnotatorProvider = ({ mediaItem, children }: AnnotatorProviderProps) => {
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();
 
-    const imageQuery = useLoadImageQuery(mediaItem);
+    const media = getMediaItem(mediaItem);
+
+    const imageQuery = useLoadImageQuery(media?.id);
 
     return (
         <AnnotatorProviderContext.Provider
