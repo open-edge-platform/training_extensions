@@ -30,7 +30,7 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
             const remainingProjects = projects.filter((p) => p.id !== project.id);
 
             if (remainingProjects.length > 0) {
-                navigate(paths.project.dataset({ projectId: remainingProjects[0].id }));
+                navigate(paths.project.index({}));
             } else {
                 navigate(paths.project.new({}));
             }
