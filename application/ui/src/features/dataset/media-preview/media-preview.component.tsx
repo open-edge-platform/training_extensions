@@ -11,7 +11,9 @@ import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
+import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
+import { isVideo } from '../utils';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -115,6 +117,12 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                                 <PrimaryToolbar />
                             </View>
 
+                            {isVideo(mediaItem) && (
+                                <View gridArea={'video-toolbar'}>
+                                    <VideoToolbar />
+                                </View>
+                            )}
+
                             <View gridArea={'bottom'}>
                                 <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
                             </View>
@@ -148,9 +156,14 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     gap='size-125'
                     width='100%'
                     height='100%'
-                    rows='auto 1fr auto'
+                    rows='auto 1fr auto auto'
                     columns={['size-700', '1fr', SIDEBAR_WIDTH]}
-                    areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
+                    areas={[
+                        'header header aside',
+                        'toolbar canvas aside',
+                        'toolbar video-toolbar aside',
+                        'toolbar bottom aside',
+                    ]}
                 >
                     <Suspense fallback={<CanvasAreaLoading />}>
                         <MediaPreviewContent
