@@ -9,7 +9,7 @@ import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.componen
 
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetMediaItems();
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage, isPending } = useGetDatasetMediaItems();
 
     return (
         <Flex
@@ -23,6 +23,7 @@ export const Dataset = () => {
             <Gallery
                 items={items}
                 viewMode={viewMode}
+                isPending={isPending}
                 fetchNextPage={fetchNextPage}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
