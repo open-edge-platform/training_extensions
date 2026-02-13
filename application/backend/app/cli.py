@@ -4,6 +4,7 @@
 """Command line interface for interacting with the Geti Tune application."""
 
 import sys
+from pathlib import Path
 
 import click
 
@@ -118,6 +119,73 @@ def import_project(input_archive: str, force_import: bool) -> None:
     except Exception as e:
         click.echo(f"✗ Import failed: {e}")
         sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--video-path",
+    "video_paths",
+    multiple=True,
+    required=True,
+    help="Path(s) to local video files to register as sources (can be specified multiple times)",
+)
+def setup_demo_sources(video_paths: tuple[str, ...]) -> None:
+    """Register local video files as sources in the database."""
+    from app.db.engine import get_db_session
+    from app.db.schema import SourceDB
+
+    sources_to_create: list[SourceDB] = []
+
+    for video_path_str in video_paths:
+        video_path = Path(video_path_str).resolve()
+
+        # Validate that the file exists
+        if not video_path.exists():
+            click.echo(f"✗ Video file not found: {video_path}")
+            sys.exit(1)
+
+        if not video_path.is_file():
+            click.echo(f"✗ Path is not a file: {video_path}")
+            sys.exit(1)
+
+        click.echo(f"Registering video: {video_path.name}")
+
+        # Convert to relative path from current working directory
+        # This ensures the path includes "data/" prefix
+        cwd = Path.cwd()
+        data_dir_abs = settings.data_dir.resolve()
+
+        try:
+            # Check if video is under data directory
+            video_path.relative_to(data_dir_abs)
+            # Calculate relative path from cwd (which includes "data/")
+            video_path_for_db = str(video_path.relative_to(cwd))
+        except ValueError:
+            # If video is not under data_dir, use absolute path as fallback
+            click.echo(f"⚠ Warning: Video path is not under data directory ({settings.data_dir})")
+            video_path_for_db = str(video_path)
+
+        # Create source record
+        source_name = video_path.stem.replace("-", " ").replace("_", " ").title()
+        source = SourceDB(
+            name=source_name,
+            source_type="video_file",
+            config_data={"video_path": video_path_for_db},
+        )
+        sources_to_create.append(source)
+
+    # Insert sources into database
+    if sources_to_create:
+        click.echo(f"Creating {len(sources_to_create)} source record(s) in database...")
+        try:
+            with get_db_session() as db:
+                db.add_all(sources_to_create)
+                db.flush()
+                db.commit()
+            click.echo(f"✓ Created {len(sources_to_create)} demo source(s) successfully!")
+        except Exception as e:
+            click.echo(f"✗ Failed to create sources: {e}")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

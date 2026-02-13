@@ -81,6 +81,16 @@ DEMO_PROJECT_URLS=(
   "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-segmentation.zip"
 )
 
+# Demo video sources hosted in S3
+DEMO_VIDEO_URLS=(
+  "https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/apples.mp4"
+  "https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/horses.mp4"
+  "https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/airplanes.mp4"
+)
+
+# Directory for downloaded demo videos
+DEMO_VIDEOS_DIR="data/.demo_videos"
+
 # Temporary directory for downloaded archives
 DEMO_ARCHIVES_DIR="data/.demo_archives"
 
@@ -110,6 +120,52 @@ import_demo_project() {
   $import_cmd
 }
 
+# Function to download a demo video
+download_demo_video() {
+  local url="$1"
+  local filename
+  filename=$(basename "$url")
+  local video_path="$DEMO_VIDEOS_DIR/$filename"
+
+  # Download video if not already present
+  if [ ! -f "$video_path" ]; then
+    echo "Downloading demo video: $filename..." >&2
+    if ! curl -fL "$url" -o "$video_path"; then
+      echo "Error: Failed to download demo video from: $url" >&2
+      exit 1
+    fi
+  else
+    echo "Demo video already downloaded: $filename" >&2
+  fi
+
+  # Return the local path (only this goes to stdout)
+  echo "$video_path"
+}
+
+# Function to setup demo sources
+setup_demo_sources() {
+  echo "Setting up demo video sources..."
+
+  # Create directory for demo videos
+  mkdir -p "$DEMO_VIDEOS_DIR"
+
+  # Download all videos and collect local paths
+  local video_paths=()
+  for url in "${DEMO_VIDEO_URLS[@]}"; do
+    local video_path
+    video_path=$(download_demo_video "$url")
+    video_paths+=("$video_path")
+  done
+
+  # Build the CLI command with local file paths
+  local cmd="$UV_CMD app/cli.py setup-demo-sources"
+  for path in "${video_paths[@]}"; do
+    cmd="$cmd --video-path $path"
+  done
+
+  $cmd
+}
+
 if [[ "$SETUP_DEMO" == "true" ]]; then
   echo "Setting up demo projects..."
   echo "WARNING: This will delete all existing data and reset the database!"
@@ -122,6 +178,7 @@ if [[ "$SETUP_DEMO" == "true" ]]; then
     rm -f data/geti_tune.db
     rm -rf data/projects/*
     rm -rf data/output/*
+    rm -rf data/demo_videos/*
 
     # Initialize the database
     $UV_CMD app/cli.py init-db
@@ -133,6 +190,9 @@ if [[ "$SETUP_DEMO" == "true" ]]; then
     for url in "${DEMO_PROJECT_URLS[@]}"; do
       import_demo_project "$url"
     done
+
+    # Setup demo sources (videos)
+    setup_demo_sources
 
     echo "Demo setup complete."
   fi
