@@ -3,10 +3,11 @@
 
 import asyncio
 from collections.abc import Iterator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
+from app.core.jobs import CancellationResult
 from app.core.jobs.control_plane import JobController, JobQueue
 from app.core.jobs.models import Cancelled, Done, ExecutionEvent, Failed, JobStatus, Progress, Started
 from app.core.run import RunnerFactory
@@ -66,18 +67,20 @@ class TestJobController:
         assert len(controller._tasks) == 0
 
     @pytest.mark.asyncio
-    async def test_start_creates_supervisor_task(self, fxt_job_controller):
+    async def test_start_creates_supervisor_and_monitor_task(self, fxt_job_controller):
         """Test start method creates supervisor task."""
         await fxt_job_controller.start()
 
         assert fxt_job_controller._running is True
         assert fxt_job_controller._supervisor_task is not None
         assert fxt_job_controller._supervisor_task.get_name() == "supervisor"
+        assert fxt_job_controller._stale_monitor_task is not None
+        assert fxt_job_controller._stale_monitor_task.get_name() == "stale_monitor"
 
         await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_stop_cancels_supervisor_and_tasks(self, fxt_job_controller):
+    async def test_stop_cancels_supervisor_monitor_and_tasks(self, fxt_job_controller):
         """Test stop method properly cancels all tasks."""
         await fxt_job_controller.start()
 
@@ -87,12 +90,14 @@ class TestJobController:
 
         fxt_job_controller._tasks.add(asyncio.create_task(_task()))
 
+        supervisor_task = fxt_job_controller._supervisor_task
+        stale_monitor_task = fxt_job_controller._stale_monitor_task
+
         await fxt_job_controller.stop()
 
         assert fxt_job_controller._running is False
-        with pytest.raises(asyncio.CancelledError):
-            await fxt_job_controller._supervisor_task
-        assert fxt_job_controller._supervisor_task.cancelled()
+        assert supervisor_task.cancelled()
+        assert stale_monitor_task.cancelled()
 
     @pytest.mark.asyncio
     async def test_supervise_loop_processes_jobs(self, fxt_job_controller, fxt_job_queue, fxt_runner_factory, fxt_job):
@@ -124,6 +129,67 @@ class TestJobController:
             await fxt_job_controller.stop()
 
             mock_logger.exception.assert_called_with("Exception during supervise loop")
+
+    @pytest.mark.asyncio
+    async def test_monitor_stale_jobs_terminates_stale_jobs(self, fxt_job_controller, fxt_job_queue, fxt_job):
+        """Test stale monitor detects and terminates jobs that haven't updated."""
+        stale_job1 = fxt_job()
+        stale_job2 = fxt_job()
+
+        fxt_job_queue.list_stale_jobs = Mock(return_value=[stale_job1, stale_job2])
+        fxt_job_queue.cancel = Mock(return_value=[None, CancellationResult.RUNNING_CANCELLING])
+
+        with patch("app.core.jobs.control_plane.controller.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            # First sleep completes immediately, second raises CancelledError to exit loop
+            mock_sleep.side_effect = [None, asyncio.CancelledError()]
+
+            await fxt_job_controller.start()
+
+            await fxt_job_controller.stop()
+
+        # Verify stale jobs were checked
+        fxt_job_queue.list_stale_jobs.assert_called_once_with(3600)
+
+        # Verify cancellation was requested for both stale jobs
+        fxt_job_queue.cancel.assert_has_calls(calls=[call(stale_job1.id), call(stale_job2.id)], any_order=True)
+
+    @pytest.mark.asyncio
+    async def test_monitor_stale_jobs_handles_exceptions(self, fxt_job_controller, fxt_job_queue):
+        """Test stale monitor handles exceptions gracefully and continues running."""
+        fxt_job_queue.list_stale_jobs = Mock(side_effect=[Exception("Test error"), []])
+
+        with (
+            patch("app.core.jobs.control_plane.controller.logger") as mock_logger,
+            patch("app.core.jobs.control_plane.controller.asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
+            mock_sleep.side_effect = [None, None, asyncio.CancelledError()]
+
+            await fxt_job_controller.start()
+            await fxt_job_controller.stop()
+
+            # Verify exception was logged
+            mock_logger.exception.assert_called_with("Exception during stale job monitoring")
+
+            # Verify monitor continued after exception (called list_stale_jobs twice)
+            assert fxt_job_queue.list_stale_jobs.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_monitor_stale_jobs_no_stale_jobs(self, fxt_job_controller, fxt_job_queue):
+        """Test stale monitor handles empty stale job list correctly."""
+        fxt_job_queue.list_stale_jobs = Mock(return_value=[])
+        fxt_job_queue.cancel = Mock(return_value=(None, CancellationResult.RUNNING_CANCELLING))
+
+        with patch("app.core.jobs.control_plane.controller.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            mock_sleep.side_effect = [None, asyncio.CancelledError()]
+
+            await fxt_job_controller.start()
+            await fxt_job_controller.stop()
+
+            # Verify check was performed
+            fxt_job_queue.list_stale_jobs.assert_called()
+
+            # Verify no cancellation requests were made
+            fxt_job_queue.cancel.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handle_job_events_unknown_event(self, fxt_job_controller, fxt_job):
