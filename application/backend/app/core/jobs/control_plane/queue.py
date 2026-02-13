@@ -69,7 +69,7 @@ class JobQueue:
 
     def list_stale_jobs(self, threshold_seconds: int = 3600) -> list[Job]:
         """
-        List jobs that are in a stale state (e.g., RUNNING for too long).
+        List jobs that are in a stale state (determined by being in RUNNING status for longer than the threshold).
 
         Args:
             threshold_seconds: Time in seconds to consider a job stale

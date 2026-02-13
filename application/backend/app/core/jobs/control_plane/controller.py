@@ -56,16 +56,14 @@ class JobController:
         self._stale_monitor_task = asyncio.create_task(self._monitor_stale_loop(), name="stale_monitor")
 
     async def stop(self) -> None:
-        if self._supervisor_task:
-            self._supervisor_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._supervisor_task
-        if self._stale_monitor_task:
-            self._stale_monitor_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._stale_monitor_task
-        await asyncio.gather(*self._tasks, return_exceptions=True)
         self._running = False
+        loop_tasks = [self._supervisor_task, self._stale_monitor_task]
+        for task in loop_tasks:
+            if task:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+        await asyncio.gather(*self._tasks, return_exceptions=True)
 
     async def _supervise_loop(self) -> None:
         while self._running:
