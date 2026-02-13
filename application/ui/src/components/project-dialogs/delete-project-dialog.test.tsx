@@ -20,9 +20,8 @@ describe('DeleteProjectDialog', () => {
             })
         );
 
-        render(
-            <DeleteProjectDialog projectId={projectId} projectName={projectName} isOpen={true} onClose={() => {}} />
-        );
+        const onClose = vi.fn();
+        render(<DeleteProjectDialog projectId={projectId} projectName={projectName} isOpen onClose={onClose} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
@@ -39,7 +38,8 @@ describe('DeleteProjectDialog', () => {
             })
         );
 
-        render(<DeleteProjectDialog projectId={projectId} projectName={projectName} isOpen={true} onClose={vi.fn()} />);
+        const onClose = vi.fn();
+        render(<DeleteProjectDialog projectId={projectId} projectName={projectName} isOpen onClose={onClose} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 

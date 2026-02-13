@@ -24,18 +24,11 @@ type EditProjectNameDialogProps = {
     isOpen: boolean;
     projectId: string;
     projectName: string;
-    onSuccess?: (newName: string) => void;
 };
 
 const PROJECT_NAME_MAX_LENGTH = 100;
 
-export const EditProjectNameDialog = ({
-    onClose,
-    isOpen,
-    projectId,
-    projectName,
-    onSuccess,
-}: EditProjectNameDialogProps) => {
+export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName }: EditProjectNameDialogProps) => {
     const patchProjectMutation = usePatchProject();
     const [newProjectName, setNewProjectName] = useState(projectName);
 
@@ -53,7 +46,6 @@ export const EditProjectNameDialog = ({
                 onSuccess: () => {
                     onClose();
                     toast({ type: 'success', message: 'Project updated successfully' });
-                    onSuccess?.(newName);
                 },
             }
         );
