@@ -5,6 +5,7 @@ import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
 import { useGetDatasetRevisions } from '../../../../hooks/use-get-dataset-revisions.hook';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
+import { useModelLogs } from '../../training-logs/hooks/use-model-logs.hook';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
 import { ModelTrainingDatasets } from '../model-training-datasets/model-training-datasets.component';
 import { ModelTrainingParameters } from '../model-training-parameters/model-training-parameters.component';
@@ -17,6 +18,16 @@ interface ModelDetailsTabsProps {
 export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
     const { isPending, isError, data: model } = useGetModel(modelId);
     const { data: datasetRevisions = [] } = useGetDatasetRevisions();
+
+    // TODO: remove. temporary integration for testing
+    const modelLogs = useModelLogs(modelId);
+    console.info('[ModelLogs]', {
+        modelId,
+        status: modelLogs.status,
+        logCount: modelLogs.data?.length,
+        logs: modelLogs.data,
+        error: modelLogs.error,
+    });
 
     if (isPending) {
         return (

@@ -6,6 +6,7 @@ import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
+import { useStreamJobLogs } from '../../training-logs/hooks/use-stream-job-logs.hook';
 import { ModelsTableHeader } from '../components/models-table-header.component';
 import { GroupByMode } from '../types';
 import { TrainingModelRow } from './training-model-row.component';
@@ -18,6 +19,16 @@ type CurrentModelTrainingProps = {
 export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModelTrainingProps) => {
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
+
+    // TODO: remove. temporary integration for testing
+    const { logs, isConnected, error } = useStreamJobLogs(activeTrainingJob?.job_id);
+    console.info('[TrainingLogs]', {
+        jobId: activeTrainingJob?.job_id,
+        isConnected,
+        error,
+        logCount: logs.length,
+        logs,
+    });
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelTraining = () => {
