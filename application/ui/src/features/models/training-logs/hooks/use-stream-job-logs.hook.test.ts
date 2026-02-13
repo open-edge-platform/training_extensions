@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { act, waitFor } from '@testing-library/react';
+import { getMockedLogEntry } from 'mocks/mock-log-entry';
 import { renderHook } from 'test-utils/render';
 
 import {
@@ -12,7 +13,6 @@ import {
     simulateSSEMessage,
     simulateSSEOpen,
 } from '../../../../test-utils/mock-event-source';
-import { getMockedLogEntry } from 'mocks/mock-log-entry';
 import { useStreamJobLogs } from './use-stream-job-logs.hook';
 
 describe('useStreamJobLogs', () => {

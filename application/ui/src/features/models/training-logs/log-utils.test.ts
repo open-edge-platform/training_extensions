@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedLogEntry, getMockedLogEntryJson } from 'mocks/mock-log-entry';
+
 import { filterLogs, parseLogLine } from './log-utils';
 
 describe('parseLogLine', () => {
