@@ -6,8 +6,8 @@ import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../../api/utils';
-import { server } from '../../../../../msw-node-setup';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
 import { EditProjectNameDialog } from './edit-project-name-dialog.component';
 
 describe('EditProjectNameDialog', () => {

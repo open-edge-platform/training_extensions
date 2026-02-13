@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import {
     ActionButton,
     ButtonGroup,
@@ -80,8 +78,6 @@ export const ProjectsListPanel = () => {
     const projectId = useProjectIdentifier();
     const { data } = useProjects();
 
-    const [projectInEdition, setProjectInEdition] = useState<string | null>(null);
-
     const selectedProject = data.find((project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
     const hasActivePipeline = Boolean(selectedProject?.active_pipeline);
@@ -117,11 +113,7 @@ export const ProjectsListPanel = () => {
                 <Content>
                     <Divider size={'S'} marginY={'size-200'} />
 
-                    <ProjectsList
-                        projects={data}
-                        projectIdInEdition={projectInEdition}
-                        setProjectInEdition={setProjectInEdition}
-                    />
+                    <ProjectsList projects={data} />
 
                     <Divider size={'S'} marginY={'size-200'} />
                 </Content>
