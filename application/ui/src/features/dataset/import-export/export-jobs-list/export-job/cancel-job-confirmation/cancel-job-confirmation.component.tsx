@@ -3,9 +3,9 @@
 
 import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
-import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
 
 import { $api } from '../../../../../../api/client';
+import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
 import { isInvalidJob } from '../../util';
 
 type CancelJobConfirmationProps = {
@@ -14,7 +14,7 @@ type CancelJobConfirmationProps = {
 
 export const CancelJobConfirmation = ({ jobId }: CancelJobConfirmationProps) => {
     const dialogState = useOverlayTriggerState({});
-    const { removeLsExportId } = useLocalStorageDataset();
+    const { removeLsExportId } = useExportDataset();
     const cancelMutation = $api.useMutation('post', `/api/jobs/{job_id}:cancel`);
 
     const handleCancel = () => {

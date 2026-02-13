@@ -2,18 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Flex, Text, View } from '@geti/ui';
-import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
 
-import { ExportDatasetMetadata, Job } from '../../../../../constants/shared-types';
+import { ExportDatasetJob } from '../../../../../constants/shared-types';
+import { useExportDataset } from '../../../../../hooks/localStorage/use-export-dataset.hook';
 import { ExportJobDetails } from './export-details.component';
 
 type ExportCompletedJobProps = {
-    job: Job;
+    job: ExportDatasetJob;
 };
 
 export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
-    const { removeLsExportId } = useLocalStorageDataset();
-    const metadata = job?.metadata as unknown as ExportDatasetMetadata;
+    const { removeLsExportId } = useExportDataset();
 
     const handleClose = () => {
         removeLsExportId(job.job_id);
@@ -26,7 +25,7 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
     return (
         <View padding='size-150'>
             <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                <ExportJobDetails metadata={metadata} />
+                <ExportJobDetails metadata={job.metadata} />
 
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <Button

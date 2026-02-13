@@ -3,11 +3,11 @@
 
 import { useActionState } from 'react';
 
-import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isString } from 'lodash';
 
 import { $api } from '../../../../api/client';
+import { useExportDataset } from '../../../../hooks/localStorage/use-export-dataset.hook';
+import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 
 type FormValues = {
     labels: string[];
@@ -27,7 +27,7 @@ type useExportDatasetJobActionProps = {
 
 export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActionProps) => {
     const projectId = useProjectIdentifier();
-    const { addLsExportId } = useLocalStorageDataset();
+    const { addLsExportId } = useExportDataset();
     const exportJobMutation = $api.useMutation('post', '/api/jobs');
 
     return useActionState<FormValues, FormData>(async (_prevState, formData) => {
@@ -40,8 +40,7 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
         const { job_id } = await exportJobMutation.mutateAsync({
             body: {
                 project_id: projectId,
-                dataset_id: projectId, // FIXME: targets either specific dataset revision id or null if project
-                // dataset should be exported
+                dataset_id: null,
                 job_type: 'export_dataset',
                 parameters: {
                     export_format: options.export_format,
