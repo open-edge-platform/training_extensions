@@ -88,43 +88,45 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                {mode === 'prediction' ? (
-                    <ReadOnlyAnnotator
-                        mediaItem={mediaItem}
-                        isUserReviewed={isUserReviewed}
-                        onModeChange={setMode}
-                        onClose={onClose}
-                        onAcceptPrediction={handleSubmitAnnotations}
-                    />
-                ) : (
-                    <VideoPlayerProvider>
-                        <View gridArea={'header'}>
-                            <SecondaryToolbar
-                                mode={mode}
-                                items={items}
-                                onClose={onClose}
-                                mediaItem={mediaItem}
-                                onSelectedMediaItem={onSelectedMediaItem}
-                                onModeChange={setMode}
-                                onAcceptPrediction={handleSubmitAnnotations}
-                            />
-                        </View>
+                <VideoPlayerProvider>
+                    {mode === 'prediction' ? (
+                        <ReadOnlyAnnotator
+                            mediaItem={mediaItem}
+                            isUserReviewed={isUserReviewed}
+                            onModeChange={setMode}
+                            onClose={onClose}
+                            onAcceptPrediction={handleSubmitAnnotations}
+                        />
+                    ) : (
+                        <>
+                            <View gridArea={'header'}>
+                                <SecondaryToolbar
+                                    mode={mode}
+                                    items={items}
+                                    onClose={onClose}
+                                    mediaItem={mediaItem}
+                                    onSelectedMediaItem={onSelectedMediaItem}
+                                    onModeChange={setMode}
+                                    onAcceptPrediction={handleSubmitAnnotations}
+                                />
+                            </View>
 
-                        <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
-                            <PrimaryToolbar />
-                        </View>
+                            <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
+                                <PrimaryToolbar />
+                            </View>
 
-                        <View gridArea={'bottom'}>
-                            <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
-                        </View>
+                            <View gridArea={'bottom'}>
+                                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                            </View>
 
-                        <View gridArea={'canvas'} overflow={'hidden'}>
-                            <AnnotatorCanvasSettings>
-                                <AnnotatorCanvas mediaItem={mediaItem} />
-                            </AnnotatorCanvasSettings>
-                        </View>
-                    </VideoPlayerProvider>
-                )}
+                            <View gridArea={'canvas'} overflow={'hidden'}>
+                                <AnnotatorCanvasSettings>
+                                    <AnnotatorCanvas mediaItem={mediaItem} />
+                                </AnnotatorCanvasSettings>
+                            </View>
+                        </>
+                    )}
+                </VideoPlayerProvider>
             </AnnotatorProviders>
         </ToolProvider>
     );

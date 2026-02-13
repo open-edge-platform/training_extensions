@@ -12,6 +12,7 @@ import { AlertDialogContent } from '../delete-media-item/alert-dialog-content.co
 const MEDIA_ACTIONS = {
     DOWNLOAD: 'download',
     DELETE: 'delete',
+    ANNOTATE: 'annotate',
 };
 
 type MediaItemActionsProps = {
@@ -19,9 +20,10 @@ type MediaItemActionsProps = {
     mediaUrl: string;
     mediaFileName: string;
     onDeleted: (deletedIds: string[]) => void;
+    onAnnotate: () => void;
 };
 
-export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName }: MediaItemActionsProps) => {
+export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName, onAnnotate }: MediaItemActionsProps) => {
     const { closeDeleteDialog, openDeleteDialog, isDeleteDialogOpen, deleteMedia, isPending } = useDeleteMediaItem();
 
     const handleDownload = () => {
@@ -38,6 +40,8 @@ export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName }: Med
             handleDownload();
         } else if (key === MEDIA_ACTIONS.DELETE) {
             openDeleteDialog();
+        } else if (key === MEDIA_ACTIONS.ANNOTATE) {
+            onAnnotate();
         }
     };
 
@@ -52,6 +56,7 @@ export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName }: Med
                     <MoreMenu />
                 </ActionButton>
                 <Menu onAction={handleAction} aria-label={'Media actions menu'}>
+                    <Item key={MEDIA_ACTIONS.ANNOTATE}>Annotate</Item>
                     <Item key={MEDIA_ACTIONS.DOWNLOAD}>Download</Item>
                     <Item key={MEDIA_ACTIONS.DELETE}>Delete</Item>
                 </Menu>

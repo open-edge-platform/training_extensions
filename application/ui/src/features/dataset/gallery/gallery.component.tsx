@@ -95,6 +95,7 @@ export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetc
                                     onDeleted={toggleSelectedKeys}
                                     mediaUrl={fullMediaUrl}
                                     mediaFileName={mediaFileName}
+                                    onAnnotate={() => onSelectedMediaItemChange(item)}
                                 />
                             )}
                         />
