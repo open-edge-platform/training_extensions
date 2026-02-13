@@ -6,12 +6,14 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../api/client';
 import type { Job } from '../../constants/shared-types';
+import { getQueryKey } from '../../query-client/query-client';
 import { useSSE } from '../use-sse.hook';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
 
 export const useStreamJobStatus = (jobId: string | undefined) => {
     const queryClient = useQueryClient();
+    const projectId = useProjectIdentifier();
 
     const { close } = useSSE<Job>(jobId ? `/api/jobs/${jobId}/status` : undefined, {
         onMessage: (updatedJob) => {
@@ -29,8 +31,14 @@ export const useStreamJobStatus = (jobId: string | undefined) => {
             }
         },
         onClose: () => {
-            queryClient.invalidateQueries({ queryKey: ['get', '/api/jobs'] });
-            queryClient.invalidateQueries({ queryKey: ['get', '/api/projects/{project_id}/models'] });
+            queryClient.invalidateQueries({ queryKey: getQueryKey(['get', '/api/jobs']) });
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/models',
+                    { params: { path: { project_id: projectId } } },
+                ]),
+            });
         },
     });
 };

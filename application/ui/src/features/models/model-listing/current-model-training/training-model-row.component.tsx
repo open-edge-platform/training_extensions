@@ -121,8 +121,12 @@ export const TrainingModelRow = ({
 
                     <Text UNSAFE_className={classes.metaText}>
                         {`Started: ${formattedStartedAt}`}
-                        <Divider orientation={'vertical'} />
-                        {`Elapsed: ${formattedElapsed}`}
+                        {formattedElapsed && (
+                            <>
+                                <Divider orientation={'vertical'} />
+                                {`Elapsed: ${formattedElapsed}`}
+                            </>
+                        )}
                     </Text>
                 </Flex>
 
