@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    ActionButton,
     Button,
     ButtonGroup,
     Checkbox,
@@ -14,6 +13,7 @@ import {
     Heading,
     Radio,
     RadioGroup,
+    Link as SpectrumLink,
     View,
 } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
@@ -21,7 +21,6 @@ import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
 import { MultiSelectList } from '../../../../components/multi-select-list/multi-select-list.component';
-import { openNewTab } from '../../../../shared/util';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { useExportDatasetJobAction } from './use-export-dataset-job-action.hook';
 
@@ -82,15 +81,12 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
 
                             {/* TODO: pending link url
                             https://github.com/open-edge-platform/training_extensions/issues/5512 */}
-                            <ActionButton
-                                isQuiet
-                                marginTop='size-100'
-                                onPress={() => openNewTab('/')}
-                                UNSAFE_className={classes.linkButton}
-                            >
-                                Learn more about export formats
-                                <LinkOut size='S' />
-                            </ActionButton>
+                            <SpectrumLink UNSAFE_className={classes.link}>
+                                <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>
+                                    Learn more about export formats
+                                    <LinkOut size='XS' />
+                                </a>
+                            </SpectrumLink>
                         </View>
                     </Content>
 

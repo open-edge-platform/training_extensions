@@ -6,12 +6,9 @@
     background: var(--spectrum-global-color-gray-50);
 }
 
-.linkButton {
-    &:not(:hover) {
-        color: var(--energy-blue);
-
-        > svg {
-            fill: var(--energy-blue) !important;
-        }
-    }
+.link {
+    display: flex;
+    align-items: center;
+    gap: var(--spectrum-global-dimension-size-125);
+    margin-top: var(--spectrum-global-dimension-size-125);
 }

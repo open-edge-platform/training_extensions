@@ -10,7 +10,7 @@ import classes from './multi-select-list.module.scss';
 type ListViewProps = ComponentProps<typeof ListView>;
 
 interface MultiSelectListProps
-    extends Omit<ListViewProps, 'selectionMode' | 'onSelectionChange' | 'items' | 'selectionMode' | 'children'> {
+    extends Omit<ListViewProps, 'selectionMode' | 'onSelectionChange' | 'items' | 'defaultSelectedKeys' | 'children'> {
     name: string;
     label: string;
     items: { id: string; name: string }[];
