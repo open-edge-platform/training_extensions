@@ -88,8 +88,8 @@ export PYTHONPATH=.
 # Demo project archives hosted in S3
 DEMO_PROJECT_URLS=(
   "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/apples-tomatoes-classification.zip"
+  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-detection.zip"
   "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/horses-segmentation.zip"
-  "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-segmentation.zip"
 )
 
 # Demo video sources hosted in S3
