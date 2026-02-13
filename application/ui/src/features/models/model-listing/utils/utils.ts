@@ -10,5 +10,6 @@ const TRAINING_STATUS = {
 
 export const isFailedModel = (model: Pick<Model, 'training_info'>): boolean =>
     model.training_info?.status === TRAINING_STATUS.Failed;
+
 export const isTrainingModel = (model: Pick<Model, 'training_info'>): boolean =>
     model.training_info?.status === TRAINING_STATUS.InProgress;

@@ -1,14 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
+import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component';
 import { MagneticLasso } from './magnetic-lasso/magnetic-lasso.component';
 import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
 
 export const ToolManager = () => {
-    const { activeTool } = useAnnotator();
+    const { activeTool } = useTool();
 
     if (activeTool === 'bounding-box') {
         return <BoundingBoxTool />;

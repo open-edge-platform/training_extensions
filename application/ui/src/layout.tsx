@@ -15,6 +15,8 @@ import { ProjectsListPanel } from './components/project-panel/projects-list-pane
 import { paths } from './constants/paths';
 import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 
+import classes from './layout.module.scss';
+
 const iconStyles = {
     width: 'var(--spectrum-global-dimension-size-200)',
     height: 'var(--spectrum-global-dimension-size-200)',
@@ -24,12 +26,12 @@ const Header = () => {
     const projectId = useProjectIdentifier();
 
     return (
-        <View backgroundColor={'gray-300'} gridArea={'header'}>
+        <View backgroundColor={'gray-200'} gridArea={'header'}>
             <Grid
                 height='100%'
                 gap={'size-200'}
-                marginX={'size-200'}
-                columns={['auto', '2fr', 'auto']}
+                marginStart={'size-200'}
+                columns={['auto', '2fr', 'size-2400']}
                 rows={'1fr'}
                 alignItems={'center'}
             >
@@ -37,13 +39,7 @@ const Header = () => {
                     <Link to={paths.project.index({})}>Geti Tune</Link>
                 </View>
 
-                <TabList
-                    height={'100%'}
-                    UNSAFE_style={{
-                        '--spectrum-tabs-rule-height': '4px',
-                        '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
-                    }}
-                >
+                <TabList height={'100%'} UNSAFE_className={classes.tabList}>
                     <Item
                         textValue='Data collection page to visualise your media items'
                         key={'dataset'}

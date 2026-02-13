@@ -18,6 +18,19 @@ from .system_service import DEFAULT_DEVICE, SystemService
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
 
+class OtherProjectActiveError(Exception):
+    """
+    Exception raised when trying to run a pipeline in one project, while a pipeline of another project is still running.
+    """
+
+    def __init__(self, requested_project_id: str, active_project_id: str):
+        super().__init__(
+            f"Attempted to enable a pipeline in project with ID {requested_project_id}, while a pipeline is still "
+            f"enabled in another project with ID {active_project_id}. Please first disable pipeline in project with "
+            f"ID {active_project_id}"
+        )
+
+
 class PipelineService:
     def __init__(self, event_bus: EventBus, db_session: Session, system_service: SystemService) -> None:
         self._event_bus: EventBus = event_bus
@@ -78,6 +91,13 @@ class PipelineService:
             data_collection=to_update.data_collection.model_dump(),
             device=to_update.device,
         )
+        if to_update_db.is_running:
+            # Only one pipeline can run at the same time. Note that only one pipeline per project exists.
+            active_pipeline_db = pipeline_repo.get_active_pipeline()
+            if active_pipeline_db is not None and to_update_db.project_id != active_pipeline_db.project_id:
+                raise OtherProjectActiveError(
+                    requested_project_id=to_update_db.project_id, active_project_id=active_pipeline_db.project_id
+                )
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:

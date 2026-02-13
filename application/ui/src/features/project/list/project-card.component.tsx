@@ -85,6 +85,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
             <MenuActions
                 projectId={item.id}
                 projectName={item.name}
+                activePipeline={item.active_pipeline}
                 actionButtonStyle={{
                     top: dimensionValue(cardPadding),
                     right: dimensionValue(cardPadding),

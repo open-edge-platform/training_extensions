@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import '@testing-library/jest-dom';
@@ -7,6 +7,8 @@ import fetchPolyfill, { Request as RequestPolyfill } from 'node-fetch';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { server } from './msw-node-setup';
+
+import './test-utils/mock-event-source';
 
 process.env.PUBLIC_API_BASE_URL = 'http://localhost:7860';
 
@@ -43,3 +45,29 @@ class ResizeObserverMock {
 }
 
 global.ResizeObserver = ResizeObserverMock;
+
+const createLocalStorageMock = () => {
+    let store: Record<string, string> = {};
+
+    return {
+        getItem: (key: string) => store[key] || null,
+        setItem: (key: string, value: string) => {
+            store[key] = value.toString();
+        },
+        removeItem: (key: string) => {
+            delete store[key];
+        },
+        clear: () => {
+            store = {};
+        },
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: (index: number) => {
+            const keys = Object.keys(store);
+            return keys[index] || null;
+        },
+    };
+};
+
+vi.stubGlobal('localStorage', createLocalStorageMock());

@@ -7,7 +7,6 @@ from uuid import uuid4
 
 import pytest
 from fastapi import status
-from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
 from app.api.schemas import PipelineView
@@ -15,6 +14,7 @@ from app.main import app
 from app.models import DataCollectionConfig, FixedRateDataCollectionPolicy, PipelineStatus
 from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
+from app.services.pipeline_service import OtherProjectActiveError
 
 
 @pytest.fixture
@@ -121,7 +121,7 @@ class TestPipelineEndpoints:
             },
         )
 
-        assert response.status_code == status.HTTP_409_CONFLICT
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_pipeline_service.update_pipeline.assert_not_called()
 
     def test_update_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -176,16 +176,8 @@ class TestPipelineEndpoints:
         fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
     def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
-        fxt_pipeline_service.update_pipeline.side_effect = ValidationError.from_exception_data(
-            "Pipeline",
-            [
-                {
-                    "type": "missing",
-                    "loc": ("name",),
-                    "msg": "Field required",
-                    "input": {},
-                }
-            ],
+        fxt_pipeline_service.update_pipeline.side_effect = OtherProjectActiveError(
+            requested_project_id="this_project_id", active_project_id="active_project_id"
         )
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")

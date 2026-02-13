@@ -1,10 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogContainer, Flex, Size, ViewModes } from '@geti/ui';
+import { Checkbox, DialogContainer, Flex, Heading, Size, ViewModes } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isEmpty } from 'lodash-es';
 import { GridLayoutOptions } from 'react-aria-components';
 
+import { ReactComponent as EmptyDataset } from '../../../assets/empty-dataset.svg';
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
@@ -36,6 +38,15 @@ export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetc
     const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
+
+    if (isEmpty(items)) {
+        return (
+            <Flex direction={'column'} gap={'size-200'} alignItems={'center'} justifyContent={'center'} height={'100%'}>
+                <EmptyDataset />
+                <Heading level={2}>Your dataset is empty. Upload your first media item to get started.</Heading>
+            </Flex>
+        );
+    }
 
     return (
         <>
@@ -84,6 +95,7 @@ export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetc
                                     onDeleted={toggleSelectedKeys}
                                     mediaUrl={fullMediaUrl}
                                     mediaFileName={mediaFileName}
+                                    onAnnotate={() => onSelectedMediaItemChange(item)}
                                 />
                             )}
                         />
