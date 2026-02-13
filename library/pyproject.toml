@@ -55,12 +55,7 @@ dependencies = [
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
     "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@develop",
-    "aiohttp==3.13.3",
-    "certifi>=2024.7.4",
-    "filelock>=3.20.3",
-    "idna>=3.7",
-    "urllib3>=2.6.3",
-    "Werkzeug>=3.1.5",
+    "pillow-avif-plugin>=1.5.2",
 ]
 
 [dependency-groups]
@@ -140,9 +135,6 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
 default-groups = ["dev", "lint"]
-override-dependencies = [
-    "torch==2.10.0",
-]
 conflicts = [
     [
         { extra = "cpu" },

@@ -29,9 +29,6 @@ conflicts = [[
     { package = "otx", extra = "xpu" },
 ]]
 
-[manifest]
-overrides = [{ name = "torch", specifier = "==2.10.0" }]
-
 [[package]]
 name = "about-time"
 version = "4.2.1"
@@ -61,7 +58,10 @@ dependencies = [
     { name = "psutil" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4a/8e/ac2a9566747a93f8be36ee08532eb0160558b07630a081a6056a9f89bf1d/accelerate-1.12.0.tar.gz", hash = "sha256:70988c352feb481887077d2ab845125024b2a137a5090d6d7a32b57d03a45df6", size = 398399, upload-time = "2025-11-21T11:27:46.973Z" }
 wheels = [
@@ -862,7 +862,7 @@ name = "cuda-bindings"
 version = "12.9.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-pathfinder", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "cuda-pathfinder", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/37/31/bfcc870f69c6a017c4ad5c42316207fc7551940db6f3639aa4466ec5faf3/cuda_bindings-12.9.4-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a022c96b8bd847e8dc0675523431149a4c3e872f440e3002213dbb9e08f0331a", size = 11800959, upload-time = "2025-10-21T14:51:26.458Z" },
@@ -981,6 +981,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1f/53/a5da4f2c5739cf66290fac1431ee52aff6851c7c8ffd8264f13affd7bcdd/docutils-0.20.1.tar.gz", hash = "sha256:f08a4e276c3a1583a86dce3e34aba3fe04d02bba2dd51ed16106244e8a923e3b", size = 2058365, upload-time = "2023-05-16T23:39:19.748Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/26/87/f238c0670b94533ac0353a4e2a1a771a0cc73277b88bff23d3ae35a256c1/docutils-0.20.1-py3-none-any.whl", hash = "sha256:96f387a2c5562db4476f09f13bbab2192e764cac08ebbf3a34a95d9b1e4a59d6", size = 572666, upload-time = "2023-05-16T23:39:15.976Z" },
+]
+
+[[package]]
+name = "dpcpp-cpp-rt"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-openmp", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-sycl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9a/1f/ff1b20fe45c1a2077f1a11e2447826881987a76983facab763a72ee29fc8/dpcpp_cpp_rt-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:6564f19dc5745c00b49ea74952df13c26c4e23aa20b7292928a30d75e384f986", size = 28799, upload-time = "2025-11-03T05:32:44.118Z" },
+    { url = "https://files.pythonhosted.org/packages/16/d6/3e3de9926b01bc070564cc3e79a5d89e86be654263a4a229fed120f6bcdf/dpcpp_cpp_rt-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:d853f3a0a44432ac03ff0a75ac2f28615773c64d5891ac1bc4eb63af7409219d", size = 58376, upload-time = "2025-11-03T05:32:05.469Z" },
 ]
 
 [[package]]
@@ -1379,6 +1393,15 @@ wheels = [
 ]
 
 [[package]]
+name = "impi-rt"
+version = "2021.17.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/f9/4d676df06d5069144d1533a52860401ae9204cfe84ab69dc59a595233464/impi_rt-2021.17.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:7b65c5a5e9df8a2fe0cc98ee5a44ea4e18f90e7d11847ab6b9f9b0df59c1d03a", size = 102598722, upload-time = "2025-10-22T17:58:46.855Z" },
+    { url = "https://files.pythonhosted.org/packages/46/55/376f8c095326b10109d89e08eb46d05600c494d813df94300d65e94e5ab6/impi_rt-2021.17.0-py2.py3-none-win_amd64.whl", hash = "sha256:34993304c1034474f1b52b94e484807029d571e246c1c842bab2dce44252c20a", size = 17439414, upload-time = "2025-10-22T17:57:07.971Z" },
+]
+
+[[package]]
 name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1406,6 +1429,84 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730", size = 20503, upload-time = "2025-10-18T21:55:43.219Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12", size = 7484, upload-time = "2025-10-18T21:55:41.639Z" },
+]
+
+[[package]]
+name = "intel-cmplr-lib-rt"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/66/26dfd6a19f7faf595da12c21bdb4102c6f30755511c7f167f745b203fbb7/intel_cmplr_lib_rt-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:57f657aa49442723e59102fb9e3f5eb70799d9371eca7ab2ad46f44facf210cf", size = 48073835, upload-time = "2025-11-03T05:32:48.883Z" },
+    { url = "https://files.pythonhosted.org/packages/df/95/58b8a42f53a395890aaecd58ebc6aaeb60a0a5e860234b00c964c663e0d4/intel_cmplr_lib_rt-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:dbae2c6d5163b8e5cfe20946cf6c63b65b05847bb79e33303bf2e35f86fd8523", size = 17740365, upload-time = "2025-11-03T05:32:02.685Z" },
+]
+
+[[package]]
+name = "intel-cmplr-lib-ur"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "umf", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/9a/a338de7fc24087c40d38401372618c8465103795baefe941eea3acf55678/intel_cmplr_lib_ur-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:1730cce0c65591d157d5fa1acdc8447a9ed419b527ea52e66db0815a0fb5e444", size = 30771263, upload-time = "2025-11-03T05:32:33.173Z" },
+    { url = "https://files.pythonhosted.org/packages/52/69/fa0bb5e1634761836259a9cca5a748770ba1806de6394606e18723c6bc4d/intel_cmplr_lib_ur-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:f34122b85a5e7747566643719fde8a547f7f8e73994c2b8c539c2c789d708f02", size = 1256177, upload-time = "2025-11-03T05:32:07.313Z" },
+]
+
+[[package]]
+name = "intel-cmplr-lic-rt"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/3b/30ce9123fd5368ac4f9abceca8cd7ee2f495c3e2b6f1b244285737210a8d/intel_cmplr_lic_rt-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ad651c2690692bf8c940ee65a26bb063d06959a7e2ad27722f6edbbf1f53ca46", size = 18910, upload-time = "2025-11-03T05:32:24.641Z" },
+    { url = "https://files.pythonhosted.org/packages/93/7a/b32de96bebdf688e3d23db9f2a496c9550992eea4321f18f1ac6693967c9/intel_cmplr_lic_rt-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:c6d327bdc5a5dd28473181caf716348890e2c6daf07da86d4e036c38a9810199", size = 49550, upload-time = "2025-11-03T05:31:58.069Z" },
+]
+
+[[package]]
+name = "intel-opencl-rt"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "intel-cmplr-lic-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "tbb", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8b/de/6a4fa1e6e1ff1441a4197f08c92798367074f98e4f43ce0d94f36913ae90/intel_opencl_rt-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:f54c797fd839b9e5e441c894eab0e1adc8394a06b3c4df3804522d6005a661d9", size = 201110569, upload-time = "2025-11-03T05:32:39.769Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/f5/b97d0641efce2541a434e6fea98a5fa2827e0dafbc42d7d12f028e19f111/intel_opencl_rt-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:f91556db0590d3169a9ef183e1081ad414d29d23d809835ffa531621c8dd1f2e", size = 109877941, upload-time = "2025-11-03T05:32:11.825Z" },
+]
+
+[[package]]
+name = "intel-openmp"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "intel-cmplr-lib-ur", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/ad/72e2fb7e30f5fd2b7650b721c5979cf2a614538fd99afb45672b31157fb9/intel_openmp-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:2c3541ea275f0e8417243612a16b6f1f4d15c1e9fcc96667db0824d0735f1413", size = 74333087, upload-time = "2025-11-03T05:32:21.171Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/e4/cacef8ad8570b4ae2b850f3eaab86be0b0296fc9683bdcd9ae8e10be7ecb/intel_openmp-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:bf325e802d9f52f95ca8d2558bb66f30d1839aed30426533063a78a3587e9035", size = 32084006, upload-time = "2025-11-03T05:31:54.415Z" },
+]
+
+[[package]]
+name = "intel-pti"
+version = "0.15.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/f0/56874c288e637e1b8619813d5a928778a712e96456f19a2ca1f52b4c9eb0/intel_pti-0.15.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:629fbdfb4c1701987dcc9f8e2c03fc18b3ec9ab5c8462ee9de71c96c62b82ecc", size = 1199268, upload-time = "2025-11-17T20:43:08.208Z" },
+    { url = "https://files.pythonhosted.org/packages/22/7b/21f757c218d624b24398e86b93f370503bd76ba20ea7f64dd9f82a73c379/intel_pti-0.15.0-py2.py3-none-win_amd64.whl", hash = "sha256:8b894cb650c0dfc30723beca4a469b59af66e9ae460b759c8d2c1f78d05a2163", size = 657812, upload-time = "2025-11-17T20:43:33.711Z" },
+]
+
+[[package]]
+name = "intel-sycl-rt"
+version = "2025.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "intel-cmplr-lib-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-cmplr-lib-ur", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-cmplr-lic-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/74/27684e2d0d32923da293f22b418c0c13919839444b67e86a8986f44938e7/intel_sycl_rt-2025.3.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:296d94598e150bf6ea4c5a8f1505f98e8a483bf38b6935b8ddad6f72b1d25b9f", size = 113891386, upload-time = "2025-11-03T05:32:28.467Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/9c/e214bef9333e46ce873788a2326c5eeb3de0d19d0203a48440ff5bbd3a6b/intel_sycl_rt-2025.3.1-py2.py3-none-win_amd64.whl", hash = "sha256:a663c9d42a02492c2c159d33c82822e2329f7e46be508ad37bdc3e7940515fe5", size = 49646997, upload-time = "2025-11-03T05:32:16.698Z" },
 ]
 
 [[package]]
@@ -1679,7 +1780,10 @@ dependencies = [
     { name = "packaging" },
     { name = "pytorch-lightning" },
     { name = "pyyaml" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchmetrics" },
     { name = "tqdm" },
     { name = "typing-extensions" },
@@ -2050,6 +2154,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/9d/55/d01f0c4b45ade6536c51170b9043db8b2ec6ddf4a35c7ea3f5f559ac935b/mistune-3.2.0.tar.gz", hash = "sha256:708487c8a8cdd99c9d90eb3ed4c3ed961246ff78ac82f03418f5183ab70e398a", size = 95467, upload-time = "2025-12-23T11:36:34.994Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9b/f7/4a5e785ec9fbd65146a27b6b70b6cdc161a66f2024e4b04ac06a67f5578b/mistune-3.2.0-py3-none-any.whl", hash = "sha256:febdc629a3c78616b94393c6580551e0e34cc289987ec6c35ed3f4be42d0eee1", size = 53598, upload-time = "2025-12-23T11:36:33.211Z" },
+]
+
+[[package]]
+name = "mkl"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "intel-openmp", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-license", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "tbb", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6d/b4/ef531295ed33b929c6c5214421eeebe370f1be22536b6956b4aaf18fdbc5/mkl-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:7b81f5d2e034637b187ca58666878c4e8889988a78e39e0b6ee92e846568f660", size = 195022935, upload-time = "2025-10-22T17:56:20.854Z" },
+    { url = "https://files.pythonhosted.org/packages/75/0e/b863a60889643e21d5d8d6b619f913703257878979b1df22d344a56276d0/mkl-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:2dbf81b016150c2ce418d80707dcce11d0e3c56f20e1d54813174e7665405561", size = 155530420, upload-time = "2025-10-22T17:57:46.918Z" },
 ]
 
 [[package]]
@@ -2533,7 +2651,7 @@ name = "nvidia-cudnn-cu12"
 version = "9.10.2.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cublas-cu12", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fa/41/e79269ce215c857c935fd86bcfe91a451a584dfc27f1e068f568b9ad1ab7/nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:c9132cc3f8958447b4910a1720036d9eff5928cc3179b0a51fb6d167c6cc87d8", size = 705026878, upload-time = "2025-06-06T21:52:51.348Z" },
@@ -2546,7 +2664,7 @@ name = "nvidia-cufft-cu12"
 version = "11.3.3.83"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/bc/7771846d3a0272026c416fbb7e5f4c1f146d6d80704534d0b187dd6f4800/nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:848ef7224d6305cdb2a4df928759dca7b1201874787083b6e7550dd6765ce69a", size = 193109211, upload-time = "2025-03-07T01:44:56.873Z" },
@@ -2578,9 +2696,9 @@ name = "nvidia-cusolver-cu12"
 version = "11.7.3.90"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cusparse-cu12", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-nvjitlink-cu12", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cublas-cu12", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusparse-cu12", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/32/f7cd6ce8a7690544d084ea21c26e910a97e077c9b7f07bf5de623ee19981/nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:db9ed69dbef9715071232caa9b69c52ac7de3a95773c2db65bdba85916e4e5c0", size = 267229841, upload-time = "2025-03-07T01:46:54.356Z" },
@@ -2593,7 +2711,7 @@ name = "nvidia-cusparse-cu12"
 version = "12.5.8.93"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "sys_platform == 'linux' or sys_platform == 'win32' or extra != 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/f7/cd777c4109681367721b00a106f491e0d0d15cfa1fd59672ce580ce42a97/nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:9b6c161cb130be1a07a27ea6923df8141f3c295852f4b260c65f18f3e0a091dc", size = 288117129, upload-time = "2025-03-07T01:47:40.407Z" },
@@ -2660,6 +2778,110 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/09/48/6388f1bb9da707110532cb70ec4d2822858ddfb44f1cdf1233c20a80ea4b/omegaconf-2.3.0.tar.gz", hash = "sha256:d5d4b6d29955cc50ad50c46dc269bcd92c6e00f5f90d23ab5fee7bfca4ba4cc7", size = 3298120, upload-time = "2022-12-08T20:59:22.753Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/94/1843518e420fa3ed6919835845df698c7e27e183cb997394e4a670973a65/omegaconf-2.3.0-py3-none-any.whl", hash = "sha256:7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b", size = 79500, upload-time = "2022-12-08T20:59:19.686Z" },
+]
+
+[[package]]
+name = "oneccl"
+version = "2021.17.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "impi-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-sycl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/69/8050e96e5b099b349d9109f727ce39b4f57414a24d3eb71a12fdc48bad87/oneccl-2021.17.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:c77b16a1686d252ece7df331da8e4feeb3776c40bdd03a8f8e9942ad378d8ff8", size = 181268831, upload-time = "2025-11-17T20:43:27.546Z" },
+]
+
+[[package]]
+name = "oneccl-devel"
+version = "2021.17.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "oneccl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6f/69/761af812bbccc4decd4f5b7492aa533654773ae9dfc3487edec44a4d8126/oneccl_devel-2021.17.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:c3f7438f12b9763dd2bcb3ce4f48b2462788534947545a68117f503b9ab01d2a", size = 45851455, upload-time = "2025-11-17T20:43:15.198Z" },
+]
+
+[[package]]
+name = "onemkl-license"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/11/b43e8cde058c368ce7f8f9b1ca9f812f7397e4309148da7d24cb6b81b513/onemkl_license-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:a810b25bb24a90db4492d81c71cde13183d8951ce26960d6dc56d4f4e3dc95ff", size = 58936, upload-time = "2025-10-22T17:55:41.998Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/8e/98ad8181e4af2ea7a6c7827ef6d24c73b6ee96a2890eacf46103f596195d/onemkl_license-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:35a179620bcadbcc3d17d74f7f72cab75889f3736b89685f6a68158325b65e91", size = 58961, upload-time = "2025-10-22T17:57:54.095Z" },
+]
+
+[[package]]
+name = "onemkl-sycl-blas"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "mkl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/07/df0cd5b0ec5f0a0bcbc8e73e4b2cfca78449b3b521868b1e366bfe6f97a3/onemkl_sycl_blas-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:e7bb5f28afc045fcbbd898914f477d7e7535ec9fb45bb946ed9f817bd1ef1f5b", size = 22611941, upload-time = "2025-10-22T17:56:07.225Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/f2/b5d5eb894b5a9b09fdafc09bc7ec5d3aea3d976d0430be38e30f6b661548/onemkl_sycl_blas-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:e594c19b43e5d0bc496352d2111851b5e722c08047f16841dfdcc7e0a36c1d63", size = 17500058, upload-time = "2025-10-22T17:58:18.51Z" },
+]
+
+[[package]]
+name = "onemkl-sycl-dft"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "mkl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/b8/1ec88922a9a479f567183cf82d49041451bcb7afbb3195202d9a57e5a0ff/onemkl_sycl_dft-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:3ae23f3820f0651c8b43cff646ddd24dac29382af6cb24bf46d5c8a472c8b899", size = 6841748, upload-time = "2025-10-22T17:56:14.247Z" },
+    { url = "https://files.pythonhosted.org/packages/89/8e/2b9f724b65966d4367f2b5aef3f2c09c9ebfd1fffa378a52bf8ed5794cd5/onemkl_sycl_dft-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:28347c15c737f131d4d261adb65cee7eb11d8a55d225ba1e8c99cfc24c040fd3", size = 6075959, upload-time = "2025-10-22T17:58:16.03Z" },
+]
+
+[[package]]
+name = "onemkl-sycl-lapack"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "mkl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-blas", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/78/c4/c2cf3e1990707f7f1918f1073e3a26c56e92f06c1525af39501b271ede23/onemkl_sycl_lapack-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:d2a4d7ba26b90ab33a2f64ed6c95c596c8721ee251983eaf9a4c9856d1e34c7b", size = 9552268, upload-time = "2025-10-22T17:55:46.349Z" },
+    { url = "https://files.pythonhosted.org/packages/55/31/35d4d7fd1ead9cf173e26ff94e3001024301eb61b22fbc41487a4e808d2e/onemkl_sycl_lapack-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:54ede6283cd2f0300c8ee5f97a3487c1cecab322493108b016ae057b3865e6ce", size = 7588221, upload-time = "2025-10-22T17:58:38.27Z" },
+]
+
+[[package]]
+name = "onemkl-sycl-rng"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "mkl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/94/6a/3fc34f47c69bdfbfce1f6d02f18e0fd41459bb4e1204e2a5cae179c0986e/onemkl_sycl_rng-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:e440641b7c1a021c4975b95b99828b80155048d890ebfd24f34060feaa5b3375", size = 24793215, upload-time = "2025-10-22T17:55:16.051Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/f3/9ccc135fbc2a3688b22df9d1785d6d1b31c34d108598ebb13cbbae385281/onemkl_sycl_rng-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:ae32b40d10a018e183a8e3a96df86842f92e75e08e5ded416aabdccb7e75919a", size = 16292812, upload-time = "2025-10-22T17:57:51.776Z" },
+]
+
+[[package]]
+name = "onemkl-sycl-sparse"
+version = "2025.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "mkl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-blas", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/5f/4f0b81e5f83f5e42c549bd29a9398b507890ec24080d27cd7afada61521e/onemkl_sycl_sparse-2025.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:930cd2d14aae5a1bfec07fa10b817c444783453aa1a65540de46e0cbf9d00de6", size = 23047847, upload-time = "2025-10-22T17:55:19.84Z" },
+    { url = "https://files.pythonhosted.org/packages/91/0b/c5e8fa014686e2fa3cca1a0760f363b63081596e3928823d5002a9aca92b/onemkl_sycl_sparse-2025.3.0-py2.py3-none-win_amd64.whl", hash = "sha256:a3e200ec012ff66a5da08f516df6a02223b4e76fed1e1454865958889e9f64c8", size = 17905267, upload-time = "2025-10-22T17:58:11.629Z" },
 ]
 
 [[package]]
@@ -2921,14 +3143,10 @@ wheels = [
 name = "otx"
 source = { editable = "." }
 dependencies = [
-    { name = "aiohttp" },
-    { name = "certifi" },
     { name = "datumaro", extra = ["experimental"] },
     { name = "docstring-parser" },
     { name = "einops" },
-    { name = "filelock" },
     { name = "ftfy" },
-    { name = "idna" },
     { name = "importlib-resources" },
     { name = "jsonargparse" },
     { name = "lightning" },
@@ -2940,6 +3158,7 @@ dependencies = [
     { name = "onnxscript" },
     { name = "openvino" },
     { name = "openvino-model-api" },
+    { name = "pillow-avif-plugin" },
     { name = "pytorchcv" },
     { name = "pyyaml" },
     { name = "regex" },
@@ -2952,8 +3171,6 @@ dependencies = [
     { name = "timm" },
     { name = "torchmetrics" },
     { name = "typeguard" },
-    { name = "urllib3" },
-    { name = "werkzeug" },
 ]
 
 [package.optional-dependencies]
@@ -2961,12 +3178,13 @@ ci-publish = [
     { name = "build" },
 ]
 cpu = [
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
 ]
 cuda = [
-    { name = "torch" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
     { name = "torchvision", version = "0.25.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
 ]
 docs = [
@@ -2985,7 +3203,7 @@ docs = [
     { name = "sphinxemoji" },
 ]
 xpu = [
-    { name = "torch" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
     { name = "torchvision", version = "0.25.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
     { name = "triton-xpu" },
 ]
@@ -3022,16 +3240,12 @@ lint = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = "==3.13.3" },
     { name = "build", marker = "extra == 'ci-publish'", specifier = "==1.2.2.post1" },
-    { name = "certifi", specifier = ">=2024.7.4" },
     { name = "datumaro", extras = ["experimental"], git = "https://github.com/open-edge-platform/datumaro.git?rev=develop" },
     { name = "docstring-parser", specifier = "==0.16" },
     { name = "einops", specifier = "==0.8.1" },
-    { name = "filelock", specifier = ">=3.20.3" },
     { name = "ftfy", specifier = "==6.3.1" },
     { name = "furo", marker = "extra == 'docs'" },
-    { name = "idna", specifier = ">=3.7" },
     { name = "importlib-resources", specifier = "==6.5.2" },
     { name = "jsonargparse", specifier = "==4.35.0" },
     { name = "lightning", specifier = "==2.6.0" },
@@ -3046,6 +3260,7 @@ requires-dist = [
     { name = "onnxscript", git = "https://github.com/microsoft/onnxscript.git?rev=519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e" },
     { name = "openvino", specifier = "==2025.4.1" },
     { name = "openvino-model-api", git = "https://github.com/open-edge-platform/model_api.git" },
+    { name = "pillow-avif-plugin", specifier = ">=1.5.2" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },
     { name = "pytorchcv", specifier = "==0.0.74" },
     { name = "pyyaml", specifier = "==6.0.3" },
@@ -3075,8 +3290,6 @@ requires-dist = [
     { name = "torchvision", marker = "extra == 'xpu'", specifier = "==0.25.0+xpu", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "otx", extra = "xpu" } },
     { name = "triton-xpu", marker = "extra == 'xpu'", specifier = "==3.6.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "otx", extra = "xpu" } },
     { name = "typeguard", specifier = ">=4.3,<4.5" },
-    { name = "urllib3", specifier = ">=2.6.3" },
-    { name = "werkzeug", specifier = ">=3.1.5" },
 ]
 provides-extras = ["cpu", "cuda", "xpu", "docs", "ci-publish"]
 
@@ -3200,7 +3413,10 @@ dependencies = [
     { name = "psutil" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "tqdm" },
     { name = "transformers" },
 ]
@@ -4116,7 +4332,10 @@ dependencies = [
     { name = "lightning-utilities" },
     { name = "packaging" },
     { name = "pyyaml" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchmetrics" },
     { name = "tqdm" },
     { name = "typing-extensions" },
@@ -4133,7 +4352,10 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "requests" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
@@ -4467,7 +4689,10 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "supervision" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
@@ -5316,6 +5541,27 @@ wheels = [
 ]
 
 [[package]]
+name = "tbb"
+version = "2022.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tcmlib", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/9e/b7f1f7af53580e4e8cf39cf51b14c8e295d767b3ae9d78b5007d6058cfc8/tbb-2022.3.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:a7e122cb98a6f8823940341aa323dcdfffa77e36712a22a1ae3a76430fa9f412", size = 4178631, upload-time = "2025-10-22T18:00:00.181Z" },
+    { url = "https://files.pythonhosted.org/packages/19/e7/8a3ae90c12186033dfd38a7292b2caef3ed10813162ab4713149191d70ef/tbb-2022.3.0-py3-none-win_amd64.whl", hash = "sha256:bb893f5772855ff2fd21867cb5c2806cb7d2960a178e660b342bc6a706a6ebf4", size = 422733, upload-time = "2025-10-22T18:01:20.903Z" },
+]
+
+[[package]]
+name = "tcmlib"
+version = "1.4.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/a4/38e8b5a27b66ab286168ba6c449771ed71d71ec76524e7f12401474a5151/tcmlib-1.4.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:0d5bd98db48d31bec7fedba5c23599bf9ae43c7016d4c3946d25242d320cee89", size = 2731276, upload-time = "2025-10-22T17:57:02.392Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/4d/2b1d55dba475f602197e284b9a5e5460139a9c5ef2bfb63c8d2a1fafc163/tcmlib-1.4.1-py2.py3-none-win_amd64.whl", hash = "sha256:5202a1fd8541182fbd4ef72848784e4bf94340152d7ddff33d401d30930fa53c", size = 370347, upload-time = "2025-10-22T18:00:36.37Z" },
+]
+
+[[package]]
 name = "tensorboard"
 version = "2.20.0"
 source = { registry = "https://pypi.org/simple" }
@@ -5424,7 +5670,10 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.25.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
@@ -5544,37 +5793,47 @@ wheels = [
 name = "torch"
 version = "2.10.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version >= '3.13' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version == '3.12.*' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version == '3.11.*' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+    "python_full_version < '3.11' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu'",
+]
 dependencies = [
-    { name = "cuda-bindings", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "filelock" },
-    { name = "fsspec" },
-    { name = "jinja2" },
-    { name = "networkx" },
-    { name = "nvidia-cublas-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cuda-cupti-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cuda-nvrtc-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cuda-runtime-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cudnn-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cufft-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cufile-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-curand-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cusolver-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cusparse-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-cusparselt-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-nccl-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-nvjitlink-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-nvshmem-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "nvidia-nvtx-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "setuptools", marker = "python_full_version >= '3.12' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "sympy" },
-    { name = "triton", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "typing-extensions" },
+    { name = "cuda-bindings", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "filelock", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "fsspec", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "jinja2", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "networkx", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "nvidia-cublas-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cuda-cupti-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cuda-nvrtc-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cuda-runtime-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cudnn-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cufft-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cufile-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-curand-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusolver-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusparse-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusparselt-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nccl-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvshmem-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvtx-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.12' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.12' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.12' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version >= '3.12' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "sympy", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "triton", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/ea/304cf7afb744aa626fa9855245526484ee55aba610d9973a0521c552a843/torch-2.10.0-1-cp310-none-macosx_11_0_arm64.whl", hash = "sha256:c37fc46eedd9175f9c81814cc47308f1b42cfe4987e532d4b423d23852f2bf63", size = 79411450, upload-time = "2026-02-06T17:37:35.75Z" },
-    { url = "https://files.pythonhosted.org/packages/25/d8/9e6b8e7df981a1e3ea3907fd5a74673e791da483e8c307f0b6ff012626d0/torch-2.10.0-1-cp311-none-macosx_11_0_arm64.whl", hash = "sha256:f699f31a236a677b3118bc0a3ef3d89c0c29b5ec0b20f4c4bf0b110378487464", size = 79423460, upload-time = "2026-02-06T17:37:39.657Z" },
-    { url = "https://files.pythonhosted.org/packages/c9/2f/0b295dd8d199ef71e6f176f576473d645d41357b7b8aa978cc6b042575df/torch-2.10.0-1-cp312-none-macosx_11_0_arm64.whl", hash = "sha256:6abb224c2b6e9e27b592a1c0015c33a504b00a0e0938f1499f7f514e9b7bfb5c", size = 79498197, upload-time = "2026-02-06T17:37:27.627Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/1b/af5fccb50c341bd69dc016769503cb0857c1423fbe9343410dfeb65240f2/torch-2.10.0-1-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:7350f6652dfd761f11f9ecb590bfe95b573e2961f7a242eccb3c8e78348d26fe", size = 79498248, upload-time = "2026-02-06T17:37:31.982Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/30/bfebdd8ec77db9a79775121789992d6b3b75ee5494971294d7b4b7c999bc/torch-2.10.0-2-cp310-none-macosx_11_0_arm64.whl", hash = "sha256:2b980edd8d7c0a68c4e951ee1856334a43193f98730d97408fbd148c1a933313", size = 79411457, upload-time = "2026-02-10T21:44:59.189Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/8b/4b61d6e13f7108f36910df9ab4b58fd389cc2520d54d81b88660804aad99/torch-2.10.0-2-cp311-none-macosx_11_0_arm64.whl", hash = "sha256:418997cb02d0a0f1497cf6a09f63166f9f5df9f3e16c8a716ab76a72127c714f", size = 79423467, upload-time = "2026-02-10T21:44:48.711Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/54/a2ba279afcca44bbd320d4e73675b282fcee3d81400ea1b53934efca6462/torch-2.10.0-2-cp312-none-macosx_11_0_arm64.whl", hash = "sha256:13ec4add8c3faaed8d13e0574f5cd4a323c11655546f91fbe6afa77b57423574", size = 79498202, upload-time = "2026-02-10T21:44:52.603Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/23/2c9fe0c9c27f7f6cb865abcea8a4568f29f00acaeadfc6a37f6801f84cb4/torch-2.10.0-2-cp313-none-macosx_11_0_arm64.whl", hash = "sha256:e521c9f030a3774ed770a9c011751fb47c4d12029a3d6522116e48431f2ff89e", size = 79498254, upload-time = "2026-02-10T21:44:44.095Z" },
     { url = "https://files.pythonhosted.org/packages/0c/1a/c61f36cfd446170ec27b3a4984f072fd06dab6b5d7ce27e11adb35d6c838/torch-2.10.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:5276fa790a666ee8becaffff8acb711922252521b28fbce5db7db5cf9cb2026d", size = 145992962, upload-time = "2026-01-21T16:24:14.04Z" },
     { url = "https://files.pythonhosted.org/packages/b5/60/6662535354191e2d1555296045b63e4279e5a9dbad49acf55a5d38655a39/torch-2.10.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:aaf663927bcd490ae971469a624c322202a2a1e68936eb952535ca4cd3b90444", size = 915599237, upload-time = "2026-01-21T16:23:25.497Z" },
     { url = "https://files.pythonhosted.org/packages/40/b8/66bbe96f0d79be2b5c697b2e0b187ed792a15c6c4b8904613454651db848/torch-2.10.0-cp310-cp310-win_amd64.whl", hash = "sha256:a4be6a2a190b32ff5c8002a0977a25ea60e64f7ba46b1be37093c141d9c49aeb", size = 113720931, upload-time = "2026-01-21T16:24:23.743Z" },
@@ -5606,6 +5865,184 @@ wheels = [
 ]
 
 [[package]]
+name = "torch"
+version = "2.10.0+cpu"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "(python_full_version >= '3.13' and sys_platform == 'linux') or (python_full_version >= '3.13' and sys_platform == 'win32')",
+    "(python_full_version == '3.12.*' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform == 'win32')",
+    "(python_full_version == '3.11.*' and sys_platform == 'linux') or (python_full_version == '3.11.*' and sys_platform == 'win32')",
+    "(python_full_version < '3.11' and sys_platform == 'linux') or (python_full_version < '3.11' and sys_platform == 'win32')",
+]
+dependencies = [
+    { name = "filelock", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "fsspec", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "jinja2", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "networkx", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (python_full_version >= '3.12' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "sympy", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp310-cp310-linux_aarch64.whl", hash = "sha256:31ae44836c8b9bbd1a3943d29c7c7457709ddf7c6173aa34aefe9d2203e4c405" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp310-cp310-linux_s390x.whl", hash = "sha256:beadc2a6a1785b09a46daad378de91ef274b8d3eea7af0bc2d017d97f115afdf" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:d63ee6a80982fd73fe44bb70d97d2976e010312ff6db81d7bfb9167b06dd45b9" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:a280ffaea7b9c828e0c1b9b3bd502d9b6a649dc9416997b69b84544bd469f215" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp310-cp310-win_amd64.whl", hash = "sha256:6c6f0df770144907092a0d067048d96ed4f278a6c840376d2ff0e27e7579b925" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp311-cp311-linux_aarch64.whl", hash = "sha256:ce5c113d1f55f8c1f5af05047a24e50d11d293e0cbbb5bf7a75c6c761edd6eaa" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp311-cp311-linux_s390x.whl", hash = "sha256:0e286fcf6ce0cc7b204396c9b4ea0d375f1f0c3e752f68ce3d3aeb265511db8c" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:1cfcb9b1558c6e52dffd0d4effce83b13c5ae5d97338164c372048c21f9cfccb" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:b7cb1ec66cefb90fd7b676eac72cfda3b8d4e4d0cacd7a531963bc2e0a9710ab" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp311-cp311-win_amd64.whl", hash = "sha256:17a09465bab2aab8f0f273410297133d8d8fb6dd84dccbd252ca4a4f3a111847" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp311-cp311-win_arm64.whl", hash = "sha256:c35c0de592941d4944698dbfa87271ab85d3370eca3b694943a2ab307ac34b3f" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-linux_aarch64.whl", hash = "sha256:8de5a36371b775e2d4881ed12cc7f2de400b1ad3d728aa74a281f649f87c9b8c" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-linux_s390x.whl", hash = "sha256:9accc30b56cb6756d4a9d04fcb8ebc0bb68c7d55c1ed31a8657397d316d31596" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:179451716487f8cb09b56459667fa1f5c4c0946c1e75fbeae77cfc40a5768d87" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:ee40b8a4b4b2cf0670c6fd4f35a7ef23871af956fecb238fbf5da15a72650b1d" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-win_amd64.whl", hash = "sha256:21cb5436978ef47c823b7a813ff0f8c2892e266cfe0f1d944879b5fba81bf4e1" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-win_arm64.whl", hash = "sha256:3eaa727e6a73affa61564d86b9d03191df45c8650d0666bd3d57c8597ef61e78" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_aarch64.whl", hash = "sha256:fd215f3d0f681905c5b56b0630a3d666900a37fcc3ca5b937f95275c66f9fd9c" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_s390x.whl", hash = "sha256:170a0623108055be5199370335cf9b41ba6875b3cb6f086db4aee583331a4899" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:e51994492cdb76edce29da88de3672a3022f9ef0ffd90345436948d4992be2c7" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:8d316e5bf121f1eab1147e49ad0511a9d92e4c45cc357d1ab0bee440da71a095" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:b719da5af01b59126ac13eefd6ba3dd12d002dc0e8e79b8b365e55267a8189d3" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_arm64.whl", hash = "sha256:b67d91326e4ed9eccbd6b7d84ed7ffa43f93103aa3f0b24145f3001f3b11b714" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_aarch64.whl", hash = "sha256:5af75e5f49de21b0bdf7672bc27139bd285f9e8dbcabe2d617a2eb656514ac36" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_s390x.whl", hash = "sha256:ba51ef01a510baf8fff576174f702c47e1aa54389a9f1fba323bb1a5003ff0bf" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:0fedcb1a77e8f2aaf7bfd21591bf6d1e0b207473268c9be16b17cb7783253969" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:106dd1930cb30a4a337366ba3f9b25318ebf940f51fd46f789281dd9e736bdc4" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:eb1bde1ce198f05c8770017de27e001d404499cf552aaaa014569eff56ca25c0" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314-linux_aarch64.whl", hash = "sha256:ea2bcc9d1fca66974a71d4bf9a502539283f35d61fcab5a799b4e120846f1e02" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314-linux_s390x.whl", hash = "sha256:f8294fd2fc6dd8f4435a891a0122307a043b14b21f0dac1bca63c85bfb59e586" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:a28fdbcfa2fbacffec81300f24dd1bed2b0ccfdbed107a823cff12bc1db070f6" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:aada8afc068add586464b2a55adb7cc9091eec55caf5320447204741cb6a0604" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314-win_amd64.whl", hash = "sha256:2adc71fe471e98a608723bfc837f7e1929885ebb912c693597711e139c1cda41" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314t-linux_aarch64.whl", hash = "sha256:9412bd37b70f5ebd1205242c4ba4cabae35a605947f2b30806d5c9b467936db9" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314t-linux_s390x.whl", hash = "sha256:e71c476517c33e7db69825a9ff46c7f47a723ec4dac5b2481cff4246d1c632be" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:23882f8d882460aca809882fc42f5e343bf07585274f929ced00177d1be1eb67" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:4fcd8b4cc2ae20f2b7749fb275349c55432393868778c2d50a08e81d5ee5591e" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp314-cp314t-win_amd64.whl", hash = "sha256:ffc8da9a1341092d6a90cb5b1c1a33cd61abf0fb43f0cd88443c27fa372c26ae" },
+]
+
+[[package]]
+name = "torch"
+version = "2.10.0+cu128"
+source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+dependencies = [
+    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "filelock", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "fsspec", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "jinja2", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "networkx", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cublas-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cuda-cupti-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cuda-nvrtc-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cuda-runtime-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cudnn-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cufft-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cufile-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-curand-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusolver-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusparse-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-cusparselt-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nccl-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvshmem-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "nvidia-nvtx-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "sympy", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "typing-extensions", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:e186f57ef1de1aa877943259819468fc6f27efb583b4a91f9215ada7b7f4e6cc" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:36368507b56eaa51acbd3c96ac8893bb9a86991ffcd0699fea3a1a74a2b8bdcb" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp310-cp310-win_amd64.whl", hash = "sha256:14d2831b9292c3a9b0d80116451315a08ffe8db745d403d06000bc47165b1f9e" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:85ed7944655ea6fd69377692e9cbfd7bba28d99696ceae79985e7caa99cf0a95" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:1d01ffaebf64715c0f507a39463149cb19e596ff702bd4bcf862601f2881dabc" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp311-cp311-win_amd64.whl", hash = "sha256:3523fda6e2cfab2b04ae09b1424681358e508bb3faa11ceb67004113d5e7acad" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:6f09cdf2415516be028ae82e6b985bcfc3eac37bc52ab401142689f6224516ca" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:628e89bd5110ced7debee2a57c69959725b7fbc64eab81a39dd70e46c7e28ba5" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp312-cp312-win_amd64.whl", hash = "sha256:fbde8f6a9ec8c76979a0d14df21c10b9e5cab6f0d106a73ca73e2179bc597cae" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:bdbcc703382f948e951c063448c9406bf38ce66c41dd698d9e2733fcf96c037a" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7b4bd23ed63de97456fcc81c26fea9f02ee02ce1112111c4dac0d8cfe574b23e" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-win_amd64.whl", hash = "sha256:4d1b0b49c54223c7c04050b49eac141d77b6edbc34aea1dfc74a6fdb661baa8c" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:f1f8b840c64b645a4bc61a393db48effb9c92b2dc26c8373873911f0750d1ea7" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:23f58258012bcf1c349cb22af387e33aadca7f83ea617b080e774eb41e4fe8ff" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313t-win_amd64.whl", hash = "sha256:01b216e097b17a5277cfb47c383cdcacf06abeadcb0daca0c76b59e72854c3b6" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:c42377bc2607e3e1c60da71b792fb507c3938c87fd6edab8b21c59c91473c36d" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:37d71feea068776855686a1512058df3f19f6f040a151f055aa746601678744f" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp314-cp314-win_amd64.whl", hash = "sha256:c57017ca29e62271e362fdeee7d20070e254755a5148b30b553d8a10fc83c7ef" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:777461f50b2daf77e4bdd8e2ad34bdfc5a993bf1bdf2ab9ef39f5edfe4e9c12b" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:7bcba6a7c5f0987a13298b1ca843155dcceceac758fa3c7ccd5c7af4059a1080" },
+    { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp314-cp314t-win_amd64.whl", hash = "sha256:70d89143c956389d4806cb4e5fe0b1129fe0db280e1073288d17fa76c101cba4" },
+]
+
+[[package]]
+name = "torch"
+version = "2.10.0+xpu"
+source = { registry = "https://download.pytorch.org/whl/xpu" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+dependencies = [
+    { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "filelock", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "fsspec", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "impi-rt", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-cmplr-lib-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-cmplr-lib-ur", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-cmplr-lic-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-opencl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-openmp", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-pti", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "intel-sycl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "jinja2", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "mkl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "networkx", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "oneccl", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "oneccl-devel", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-3-otx-xpu') or (platform_machine != 'x86_64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-license", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-blas", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-dft", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-lapack", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-rng", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "onemkl-sycl-sparse", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "sympy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "tbb", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "tcmlib", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "triton-xpu", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "typing-extensions", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "umf", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:abb1d1ec1ac672bac0ff35420c965f2df0c636ef9d94e2a830e34578489d0a57" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp310-cp310-win_amd64.whl", hash = "sha256:ce50691ab3fb6301d9b7bb8b3834cf5fa7152a2b5f91fd24c5efdc601a25b780" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp311-cp311-linux_x86_64.whl", hash = "sha256:71ad2f82da0f41eaec159f39fc85854e27c2391efa91b373e550648a6f4aaad3" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp311-cp311-win_amd64.whl", hash = "sha256:cb9d37f21cb9fb7df67d62863f021c3144e8d8832b9ea8e8523ac308bc620ea1" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp312-cp312-linux_x86_64.whl", hash = "sha256:b473571d478912f92881cc13f15fa18f8463fb0fb8a068c96ed47a7d45a4da0a" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp312-cp312-win_amd64.whl", hash = "sha256:3ad605be4728b6d3a28a44d07dd794b1a9e45551b0057815bf25eb2a6d6a56a7" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp313-cp313-linux_x86_64.whl", hash = "sha256:3bc64a746ff25a93de140902c60c9e819d7413f5cea1e88d80999c27a5901e9c" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp313-cp313-win_amd64.whl", hash = "sha256:2b4b56dd6c792aef82006904fa888692e3782e4ae5da27526801bad4898f05a5" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp313-cp313t-linux_x86_64.whl", hash = "sha256:e0536d112fe04deee60897de1f92f2705d129ce19ac9a98d5947877adf5d8e4c" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp313-cp313t-win_amd64.whl", hash = "sha256:5979758de3e0563896bbf045a5dfbc36bff440f5fe669d8a5e71869013f0a802" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp314-cp314-linux_x86_64.whl", hash = "sha256:34937622124a3412beaa98b32f261c1cb56764613072ffc343f4da1b3420ed7f" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp314-cp314-win_amd64.whl", hash = "sha256:aa90a6d0eef8baa037d5a3de8d4eb132701b71594eb3a4e5d24aadabb49fe3b8" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp314-cp314t-linux_x86_64.whl", hash = "sha256:28dd7f7c2e06f78d63583629f5387b29fae24ae3180846a6f59218b0f37cc079" },
+    { url = "https://download.pytorch.org/whl/xpu/torch-2.10.0%2Bxpu-cp314-cp314t-win_amd64.whl", hash = "sha256:5eda78bd60f8e93d570b078d28fa6319b227ee05cd8ceb4eddf6366aee62029e" },
+]
+
+[[package]]
 name = "torchmetrics"
 version = "1.8.2"
 source = { registry = "https://pypi.org/simple" }
@@ -5613,7 +6050,10 @@ dependencies = [
     { name = "lightning-utilities" },
     { name = "numpy" },
     { name = "packaging" },
-    { name = "torch" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/85/2e/48a887a59ecc4a10ce9e8b35b3e3c5cef29d902c4eac143378526e7485cb/torchmetrics-1.8.2.tar.gz", hash = "sha256:cf64a901036bf107f17a524009eea7781c9c5315d130713aeca5747a686fe7a5", size = 580679, upload-time = "2025-09-03T14:00:54.077Z" }
 wheels = [
@@ -5637,7 +6077,7 @@ resolution-markers = [
 dependencies = [
     { name = "numpy", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
     { name = "pillow", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
-    { name = "torch", marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/50/ae/cbf727421eb73f1cf907fbe5788326a08f111b3f6b6ddca15426b53fec9a/torchvision-0.25.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:a95c47abb817d4e90ea1a8e57bd0d728e3e6b533b3495ae77d84d883c4d11f56", size = 1874919, upload-time = "2026-01-21T16:27:47.617Z" },
@@ -5683,7 +6123,7 @@ resolution-markers = [
 dependencies = [
     { name = "numpy", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "pillow", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/cpu/torchvision-0.25.0%2Bcpu-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:73ce04dea64914ff1110008311204c366107d651d3b04faa0dbee77efb7133b7" },
@@ -5722,7 +6162,7 @@ resolution-markers = [
 dependencies = [
     { name = "numpy", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "pillow", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/cu128/torchvision-0.25.0%2Bcu128-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:7fe593ec669dcb74c3749548c21ae302edbb610d1844bf2bae622accdef76dbc" },
@@ -5761,7 +6201,7 @@ resolution-markers = [
 dependencies = [
     { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "pillow", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/xpu/torchvision-0.25.0%2Bxpu-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:7e1e7b170fcf7161c8499b67156c5a05462243626dc0974010791a0bab4378d3" },
@@ -5867,7 +6307,7 @@ name = "triton-xpu"
 version = "3.6.0"
 source = { registry = "https://download.pytorch.org/whl/xpu" }
 dependencies = [
-    { name = "pyelftools" },
+    { name = "pyelftools", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/triton_xpu-3.6.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl" },
@@ -6010,6 +6450,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/91/7a/146a99696aee0609e3712f2b44c6274566bc368dfe8375191278045186b8/uc-micro-py-1.0.3.tar.gz", hash = "sha256:d321b92cff673ec58027c04015fcaa8bb1e005478643ff4a500882eaab88c48a", size = 6043, upload-time = "2024-02-09T16:52:01.654Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/37/87/1f677586e8ac487e29672e4b17455758fce261de06a0d086167bb760361a/uc_micro_py-1.0.3-py3-none-any.whl", hash = "sha256:db1dffff340817673d7b466ec86114a9dc0e9d4d9b5ba229d9d60e5c12600cd5", size = 6229, upload-time = "2024-02-09T16:52:00.371Z" },
+]
+
+[[package]]
+name = "umf"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tcmlib", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/8e/4a90b6aa955268988e7491f502b7ac2bd65cb954b4979bfcc892cf019b50/umf-1.0.2-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ef4d144a2007a73a1a22ee575ee4f5a1894a206532c6f6d77b4cf548643502fb", size = 359878, upload-time = "2025-10-22T17:58:50.929Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/8c/dfbcedb97b56b2e87a9fe61e43e70b09abb439ed90e06e08d4365fc60c5f/umf-1.0.2-py2.py3-none-win_amd64.whl", hash = "sha256:695b6be076a7bd2037b0cdbe5ee025f9ae74934cc78bdf25df8b52e8f746e457", size = 249097, upload-time = "2025-10-22T17:57:00.279Z" },
 ]
 
 [[package]]
