@@ -40,14 +40,16 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
     return (
         <li className={classes.projectListItem} onClick={handleNavigateToProject}>
             <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
-                <Flex alignItems={'center'} gap={'size-100'}>
+                <Flex alignItems={'center'} gap={'size-100'} minWidth={0}>
                     <PhotoPlaceholder
                         name={project.name}
                         indicator={project.id ?? project.name}
                         height={'size-300'}
                         width={'size-300'}
                     />
-                    <Text>{project.name}</Text>
+                    <Text UNSAFE_className={classes.projectName}>
+                        <span title={project.name}>{project.name}</span>
+                    </Text>
                 </Flex>
                 <MenuActions
                     projectId={project.id}
