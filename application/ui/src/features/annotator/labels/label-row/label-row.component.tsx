@@ -9,8 +9,11 @@ import { Delete, Pin, Unpin } from '@geti/ui/icons';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
+import { useDebounce } from '../../../../hooks/use-debounce.hook';
 
 import classes from './label-row.module.scss';
+
+const COLOR_DEBOUNCE_MS = 300;
 
 type LabelRowProps = {
     label: Label;
@@ -47,9 +50,17 @@ export const LabelRow = ({
         onUpdate(label.id, { name: name.trim(), color, hotkey: label.hotkey });
     };
 
+    const debouncedUpdate = useDebounce(
+        (newColor: string, currentName: string) => {
+            onUpdate(label.id, { name: currentName, color: newColor, hotkey: label.hotkey });
+        },
+        COLOR_DEBOUNCE_MS,
+        [onUpdate, label.id, label.hotkey]
+    );
+
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
-        onUpdate(label.id, { name: getValidName(), color: newColor, hotkey: label.hotkey });
+        debouncedUpdate(newColor, getValidName());
     };
 
     return (
