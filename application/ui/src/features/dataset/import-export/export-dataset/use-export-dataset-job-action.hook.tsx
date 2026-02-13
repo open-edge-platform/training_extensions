@@ -40,7 +40,8 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
         const { job_id } = await exportJobMutation.mutateAsync({
             body: {
                 project_id: projectId,
-                staged_dataset_id: projectId,
+                dataset_id: projectId, // FIXME: targets either specific dataset revision id or null if project
+                // dataset should be exported
                 job_type: 'export_dataset',
                 parameters: {
                     export_format: options.export_format,
