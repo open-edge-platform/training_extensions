@@ -258,8 +258,21 @@ def test_convert_multilabel_classification_dataset_item(
     dataset_item = fxt_multilabel_classification_dataset_item(
         project_id, [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
     )
-    get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item, media)], []])
-    get_image_path = MagicMock(side_effect=["path1"])
+    dataset_item_empty_label_training = fxt_multilabel_classification_dataset_item(project_id, [])
+    dataset_item_empty_label_training.subset = DatasetItemSubset.TRAINING
+    dataset_item_empty_label_validation = fxt_multilabel_classification_dataset_item(project_id, [])
+    dataset_item_empty_label_validation.subset = DatasetItemSubset.VALIDATION
+    get_dataset_items_and_media = MagicMock(
+        side_effect=[
+            [
+                (dataset_item, media),
+                (dataset_item_empty_label_training, media),
+                (dataset_item_empty_label_validation, media),
+            ],
+            [],
+        ]
+    )
+    get_image_path = MagicMock(side_effect=["path1", "path2", "path3"])
 
     dataset = convert_multilabel_classification_dataset(
         project_labels=fxt_project_labels,
@@ -267,7 +280,7 @@ def test_convert_multilabel_classification_dataset_item(
         get_image_path=get_image_path,
     )
 
-    assert len(dataset) == 1
+    assert len(dataset) == 2
     assert (
         isinstance(dataset[0], MultilabelClassificationSample)
         and dataset[0].image == "path1"
@@ -275,7 +288,14 @@ def test_convert_multilabel_classification_dataset_item(
         and dataset[0].image_info.width == 200
         and dataset[0].image_info.height == 100
     )
-    get_image_path.assert_called_once_with(dataset_item)
+    assert isinstance(dataset[1], MultilabelClassificationSample) and dataset[1].image == "path3"
+    get_image_path.assert_has_calls(
+        [
+            call(dataset_item),
+            call(dataset_item_empty_label_training),
+            call(dataset_item_empty_label_validation),
+        ]
+    )
 
 
 def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_segmentation_dataset_item) -> None:
