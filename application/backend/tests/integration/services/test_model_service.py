@@ -317,7 +317,7 @@ class TestModelServiceIntegration:
         db_session.flush()
         model_id = uuid4()
         dataset_revision_id = UUID(dataset_revision_db.id)
-        architecture_id = "MODEL_ARCHITECTURE_ID"
+        architecture_id = "object-detection-atss-mobilenet-v2"
 
         fxt_model_service.create_revision(
             ModelRevisionMetadata(
@@ -337,6 +337,7 @@ class TestModelServiceIntegration:
         assert model_db.training_dataset_id == str(dataset_revision_id)
         assert model_db.architecture == architecture_id
         assert model_db.training_status == TrainingStatus.IN_PROGRESS
+        assert model_db.name == f"ATSS-MobileNet-V2 ({str(model_id).split('-')[0]})"
 
     def test_update_revision(
         self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
