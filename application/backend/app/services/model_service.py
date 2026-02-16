@@ -17,6 +17,7 @@ from app.models import EvaluationResult, ModelRevision, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
+from app.supported_models import SupportedModels
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .parent_process_guard import parent_process_only
@@ -233,11 +234,13 @@ class ModelService(BaseSessionManagedService):
         project_id = str(metadata.project_id)
         label_repo = LabelRepository(project_id=project_id, db=self.db_session)
         labels_schema_rev = {"labels": [{"name": label.name, "id": label.id} for label in label_repo.list_all()]}
+        arch_name = SupportedModels.get_model_manifest_by_id(metadata.architecture_id).name
+
         model_revision_repo = ModelRevisionRepository(project_id=project_id, db=self.db_session)
         model_revision_repo.save(
             ModelRevisionDB(
                 id=str(metadata.model_id),
-                name=f"{metadata.architecture_id} ({str(metadata.model_id).split('-')[0]})",
+                name=f"{arch_name} ({str(metadata.model_id).split('-')[0]})",
                 project_id=str(metadata.project_id),
                 architecture=metadata.architecture_id,
                 parent_revision=str(metadata.parent_revision_id) if metadata.parent_revision_id else None,
