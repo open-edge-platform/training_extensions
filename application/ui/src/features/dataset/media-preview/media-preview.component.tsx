@@ -8,7 +8,9 @@ import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';
+import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { useSelectedData } from '../selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
@@ -77,52 +79,56 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     };
 
     return (
-        <AnnotatorProviders
-            key={mediaItem.id}
-            mediaItem={mediaItem}
-            initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
-            initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
-            isUserReviewed={isUserReviewed}
-            mode={mode}
-        >
-            {mode === 'prediction' ? (
-                <ReadOnlyAnnotator
-                    mediaItem={mediaItem}
-                    isUserReviewed={isUserReviewed}
-                    onModeChange={setMode}
-                    onClose={onClose}
-                    onAcceptPrediction={handleSubmitAnnotations}
-                />
-            ) : (
-                <>
-                    <View gridArea={'header'}>
-                        <SecondaryToolbar
-                            mode={mode}
-                            items={items}
-                            onClose={onClose}
+        <ToolProvider mode={mode}>
+            <AnnotatorProviders
+                key={mediaItem.id}
+                mediaItem={mediaItem}
+                initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
+                initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
+                isUserReviewed={isUserReviewed}
+                mode={mode}
+            >
+                <VideoPlayerProvider>
+                    {mode === 'prediction' ? (
+                        <ReadOnlyAnnotator
                             mediaItem={mediaItem}
-                            onSelectedMediaItem={onSelectedMediaItem}
+                            isUserReviewed={isUserReviewed}
                             onModeChange={setMode}
+                            onClose={onClose}
                             onAcceptPrediction={handleSubmitAnnotations}
                         />
-                    </View>
+                    ) : (
+                        <>
+                            <View gridArea={'header'}>
+                                <SecondaryToolbar
+                                    mode={mode}
+                                    items={items}
+                                    onClose={onClose}
+                                    mediaItem={mediaItem}
+                                    onSelectedMediaItem={onSelectedMediaItem}
+                                    onModeChange={setMode}
+                                    onAcceptPrediction={handleSubmitAnnotations}
+                                />
+                            </View>
 
-                    <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
-                        <PrimaryToolbar />
-                    </View>
+                            <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
+                                <PrimaryToolbar />
+                            </View>
 
-                    <View gridArea={'bottom'}>
-                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
-                    </View>
+                            <View gridArea={'bottom'}>
+                                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                            </View>
 
-                    <View gridArea={'canvas'} overflow={'hidden'}>
-                        <AnnotatorCanvasSettings>
-                            <AnnotatorCanvas mediaItem={mediaItem} />
-                        </AnnotatorCanvasSettings>
-                    </View>
-                </>
-            )}
-        </AnnotatorProviders>
+                            <View gridArea={'canvas'} overflow={'hidden'}>
+                                <AnnotatorCanvasSettings>
+                                    <AnnotatorCanvas mediaItem={mediaItem} />
+                                </AnnotatorCanvasSettings>
+                            </View>
+                        </>
+                    )}
+                </VideoPlayerProvider>
+            </AnnotatorProviders>
+        </ToolProvider>
     );
 };
 

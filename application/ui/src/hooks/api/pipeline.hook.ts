@@ -67,13 +67,18 @@ export const useEnablePipeline = () => {
                 },
             }
         ) => {
-            return queryClient.invalidateQueries({
-                queryKey: getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/pipeline',
-                    { params: { path: { project_id } } },
-                ]),
-            });
+            return Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey([
+                        'get',
+                        '/api/projects/{project_id}/pipeline',
+                        { params: { path: { project_id } } },
+                    ]),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey(['get', '/api/projects']),
+                }),
+            ]);
         },
     });
 };
@@ -90,13 +95,18 @@ export const useDisablePipeline = () => {
                 },
             }
         ) => {
-            return queryClient.invalidateQueries({
-                queryKey: getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/pipeline',
-                    { params: { path: { project_id } } },
-                ]),
-            });
+            return Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey([
+                        'get',
+                        '/api/projects/{project_id}/pipeline',
+                        { params: { path: { project_id } } },
+                    ]),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey(['get', '/api/projects']),
+                }),
+            ]);
         },
     });
 };

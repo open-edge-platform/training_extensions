@@ -1,0 +1,61 @@
+.donut {
+    /* --percentage: 75%; */
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: conic-gradient(#b14a00 0 var(--percentage), #ff9b5f 0 100%);
+
+    display: grid;
+    position: relative;
+    place-items: center;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: var(--spectrum-global-dimension-size-150);
+        background: var(--spectrum-global-color-gray-75);
+        border-radius: 50%;
+    }
+
+    & div {
+        position: relative;
+        color: #fff;
+        text-align: center;
+    }
+}
+
+.totalMedia {
+    text-align: center;
+    position: absolute;
+}
+
+.totalMediaItems {
+    font-size: var(--spectrum-global-dimension-size-300);
+    line-height: var(--spectrum-global-dimension-size-300);
+}
+
+.mediaSubtitle {
+    font-weight: 500;
+    font-size: var(--spectrum-global-dimension-size-175);
+}
+
+.unannotatedStats,
+.annotatedStats {
+    text-align: right;
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-size-150);
+
+    span:first-child {
+        color: var(--spectrum-global-color-gray-900);
+    }
+
+    span {
+        line-height: var(--spectrum-global-dimension-size-225);
+    }
+}
+
+.annotatedStats {
+    text-align: right;
+}
