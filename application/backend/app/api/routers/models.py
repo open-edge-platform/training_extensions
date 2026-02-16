@@ -220,10 +220,8 @@ def get_training_metrics(
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> TrainingMetricsView:
-    """Get training metrics for a model.
-
-    Returns metrics computed during training such as loss over time, validation accuracy over time, etc.
-    The metrics are parsed from the metrics.csv file stored alongside the model.
+    """
+    Get metrics computed at training time, such as loss over time, validation accuracy over time, etc.
     """
     try:
         training_metrics = model_service.get_model_training_metrics(project_id=project.id, model_id=model_id)

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Annotated, Literal
@@ -12,7 +12,6 @@ class DataValue(BaseModel):
     header: str = Field(..., description="Display name of the metric")
     key: str = Field(..., description="Metric key")
     value: float = Field(..., description="Metric value")
-    color: str | None = Field(default=None, description="Metric color in hex")
 
 
 class DataPoint(BaseModel):
@@ -29,7 +28,6 @@ class LineData(BaseModel):
     header: str = Field(..., description="Display name of the metric")
     key: str = Field(..., description="Metric key")
     points: list[DataPoint] = Field(..., description="List of data points")
-    color: str | None = Field(default=None, description="Metric color in hex")
 
 
 class SeriesData(BaseModel):

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
-import pandas as pd
+import polars as pl
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -28,14 +28,21 @@ from .parent_process_guard import parent_process_only
 KEY_MAPPING = {
     "epoch": "Epoch",
     "lr-SGD": "Learning rate (SGD)",
+    "lr-SGD-1": "Learning rate (SGD-1)",
+    "lr-SGD-1-momentum": "Learning rate momentum (SGD-1)",
     "lr-SGD-momentum": "Learning rate momentum (SGD)",
     "step": "Step",
     "train/data_time": "Training data time",
     "train/iter_time": "Training iteration time",
+    "train/loss": "Training loss",
     "train/loss_bbox": "Training loss bbox",
+    "train/loss_centerness": "Training loss centerness",
     "train/loss_cls": "Training loss cls",
+    "train/loss_mask": "Training loss mask",
     "train/loss_obj": "Training loss obj",
     "train/total_loss": "Training total loss",
+    "val/accuracy": "Validation accuracy",
+    "val/classes": "Validation classes",
     "val/f1-score": "Validation F1 score",
     "val/map": "Validation mAP",
     "val/map_50": "Validation mAP@50",
@@ -54,6 +61,10 @@ KEY_MAPPING = {
     "validation/data_time": "Validation data time",
     "validation/iter_time": "Validation iteration time",
 }
+
+# Columns that should be excluded from metrics parsing
+# (used as axis values or are not actual metrics)
+BLACKLISTED_KEYS = {"epoch", "step"}
 
 
 @dataclass(frozen=True)
@@ -371,7 +382,7 @@ class ModelService(BaseSessionManagedService):
         if model_revision.files_deleted:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
-        # training metrics are version_0, validation metrics are version_1
+        # training + validation metrics are version_0, testing metrics are version_1
         metrics_file = (
             self._projects_dir / str(project_id) / "models" / str(model_id) / "metrics" / "version_0" / "metrics.csv"
         )
@@ -385,6 +396,12 @@ class ModelService(BaseSessionManagedService):
         """
         Parse a metrics CSV file and return the formatted metrics.
 
+        For each metric column (excluding 'epoch', 'step', and blacklisted keys):
+        1. Filter out rows with null values in the metric column
+        2. Determine if the metric is epoch-based or step-based by checking if 'step'
+           contains consecutive integers from 1 to N
+        3. Build a TrainingMetrics object for that metric
+
         Args:
             metrics_file (Path): Path to the metrics.csv file.
 
@@ -393,26 +410,54 @@ class ModelService(BaseSessionManagedService):
         """
         metrics: list[dict] = []
 
-        # Read the CSV file, and fill nan values
-        df = pd.read_csv(metrics_file).fillna(0)
+        # Read the CSV file with polars
+        df = pl.read_csv(metrics_file)
 
-        for col in df.columns:
+        # Get all metric columns (exclude 'epoch', 'step', and blacklisted keys)
+        metric_columns = [col for col in df.columns if col not in BLACKLISTED_KEYS and col in KEY_MAPPING]
+
+        for col in metric_columns:
             mapped_name = KEY_MAPPING.get(col)
-            if not mapped_name:
-                logger.debug("Metric key '{}' not in KEY_MAPPING, skipping", col)
+
+            # Filter to include only 'epoch', 'step', and the current metric column
+            # Then filter out rows where the metric column has null values
+            metric_df = df.select(["epoch", "step", col]).filter(pl.col(col).is_not_null())
+
+            if metric_df.is_empty():
+                logger.debug("Metric '{}' has no non-null values, skipping", col)
                 continue
+
+            # Determine if the metric is step-based or epoch-based
+            # Step-based: 'step' column contains consecutive integers from 1 to N
+            # Epoch-based: 'epoch' column contains consecutive integers from 1 to N
+            is_step_based = ModelService._is_step_based(metric_df)
+
+            # Choose the appropriate x-axis column
+            x_axis_col = "step" if is_step_based else "epoch"
+            x_axis_label = "Step" if is_step_based else "Epoch"
+
+            # If it is epoch-based, then we still want the x-axis to be consecutive integers starting from 0,
+            # rather than 0,4,9,14,19. So we will divide the epoch values by the first epoch value + 1
+            y_scale_coef = 1 if is_step_based else (metric_df[x_axis_col][0] + 1)
+
+            # Build the points list
+            points = [
+                {"x": float(row[x_axis_col] // y_scale_coef), "y": float(row[col]), "type": "point"}
+                for row in metric_df.iter_rows(named=True)
+            ]
+
             metric = {
                 "header": mapped_name,
                 "type": "line",
                 "key": mapped_name,
                 "value": {
-                    "x_axis_label": "Timestamp",
+                    "x_axis_label": x_axis_label,
                     "y_axis_label": mapped_name,
                     "line_data": [
                         {
                             "header": mapped_name,
                             "key": mapped_name,
-                            "points": [{"x": x, "y": y, "type": "point"} for x, y in zip(df["epoch"], df[col])],
+                            "points": points,
                         }
                     ],
                 },
@@ -420,6 +465,39 @@ class ModelService(BaseSessionManagedService):
             metrics.append(metric)
 
         return metrics
+
+    @staticmethod
+    def _is_step_based(metric_df: pl.DataFrame) -> bool:
+        """
+        Determine if a metric is step-based by checking if the 'step' column
+        contains all consecutive integers from 1 to N without skipping any value.
+
+        Args:
+            metric_df (pl.DataFrame): DataFrame to check for step-based or epoch-based metric.
+                It is expected to have 'step' and 'epoch' columns, and at least one metric column (with no null values)
+
+        Returns:
+            bool: True if the metric is step-based, False if epoch-based.
+        """
+        # Get the step values and filter out nulls
+        step_values = metric_df.select("step")
+        epoch_values = metric_df.select("epoch")
+
+        if step_values.is_empty() or epoch_values.is_empty():
+            raise ValueError("Malformed metrics data: 'step' or 'epoch' column is missing or empty")
+
+        # Get unique step values and sort them
+        unique_steps = step_values["step"].unique()
+
+        # Get the minimum and maximum step values
+        min_step = int(unique_steps.min())  # pyrefly: ignore[no-matching-overload]
+        max_step = int(unique_steps.max())  # pyrefly: ignore[no-matching-overload]
+
+        # Expected count for consecutive integers from min to max
+        expected_count = max_step - min_step + 1
+
+        # If the number of unique steps equals the expected count, they are consecutive and hence step-based
+        return len(unique_steps) == expected_count
 
     def get_logs(self, project_id: UUID, model_id: UUID) -> Path | None:
         """
