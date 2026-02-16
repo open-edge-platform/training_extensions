@@ -66,6 +66,7 @@ export default defineConfig({
                 "worker-src 'self' blob:; " +
                 "connect-src 'self' http://localhost:7860 data:; " +
                 "img-src 'self' http://localhost:7860 data: blob:; " +
+                "media-src 'self' http://localhost:7860 blob: data:; " +
                 "style-src 'self' 'unsafe-inline';",
         },
     },

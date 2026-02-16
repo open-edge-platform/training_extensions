@@ -20,6 +20,7 @@ import { MediaItemActions } from './media-item-actions/media-item-actions.compon
 type GalleryProps = {
     items: Media[];
     viewMode: ViewModes;
+    isPending: boolean;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
@@ -32,14 +33,21 @@ export const VIEW_MODE_SETTINGS = {
     [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
 } as Record<ViewModes, GridLayoutOptions>;
 
-export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
+export const Gallery = ({
+    items,
+    viewMode,
+    isPending,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+}: GalleryProps) => {
     const projectId = useProjectIdentifier();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
-    if (isEmpty(items)) {
+    if (!isPending && isEmpty(items)) {
         return (
             <Flex direction={'column'} gap={'size-200'} alignItems={'center'} justifyContent={'center'} height={'100%'}>
                 <EmptyDataset />
@@ -95,6 +103,7 @@ export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetc
                                     onDeleted={toggleSelectedKeys}
                                     mediaUrl={fullMediaUrl}
                                     mediaFileName={mediaFileName}
+                                    onAnnotate={() => onSelectedMediaItemChange(item)}
                                 />
                             )}
                         />

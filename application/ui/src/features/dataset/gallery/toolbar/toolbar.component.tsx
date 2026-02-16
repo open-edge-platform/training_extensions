@@ -151,7 +151,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
                     <Checkbox
                         aria-label={'select all'}
                         onChange={handleToggleManyItemSelection}
-                        isSelected={totalSelectedElements === items.length}
+                        isSelected={hasSelectedElements && totalSelectedElements === items.length}
                     />
 
                     <Divider orientation={'vertical'} size={'S'} />
