@@ -7,7 +7,7 @@ from uuid import UUID
 
 from loguru import logger
 
-from app.core.jobs.models import Job, JobStatus
+from app.core.jobs.models import Job, JobStatus, now_utc_ts
 
 
 class CancellationResult(StrEnum):
@@ -66,6 +66,23 @@ class JobQueue:
     def list_non_completed(self) -> list[Job]:
         """List all non-completed jobs."""
         return [job for job in self._by_id.values() if job.status < JobStatus.DONE]
+
+    def list_stale_jobs(self, threshold_seconds: int = 3600) -> list[Job]:
+        """
+        List jobs that are in a stale state (determined by being in RUNNING status for longer than the threshold).
+
+        Args:
+            threshold_seconds: Time in seconds to consider a job stale
+
+        Returns:
+            List of stale jobs that are currently in a running state
+        """
+        current_time = now_utc_ts()
+        return [
+            job
+            for job in self._by_id.values()
+            if job.status == JobStatus.RUNNING and (current_time - job.updated_at) > threshold_seconds
+        ]
 
     def cancel(self, job_id: UUID) -> tuple[Job | None, CancellationResult]:
         """Attempt to cancel a job by its ID."""
