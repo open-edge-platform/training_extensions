@@ -280,7 +280,7 @@ def convert_multilabel_classification_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
-        # Filter empty label for training datasubset
+        # Filter out empty-labeled items in the training subset
         if not labels_indexes and dataset_item.subset == DatasetItemSubset.TRAINING:
             return None
         return MultilabelClassificationSample(
