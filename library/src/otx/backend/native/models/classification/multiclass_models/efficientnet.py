@@ -97,21 +97,3 @@ class EfficientNetMulticlassCls(OTXMulticlassClsModel):
             return self.model(images=image, mode="explain")
 
         return self.model(images=image, mode="tensor")
-
-    @property
-    def transforms(self):
-        if self.training:
-            return kornia.augmentation.AugmentationSequential(
-                    # kornia.augmentation.RandomResizedCrop(self.data_input_params.input_size, scale=(0.08, 1.0)),
-                    kornia.augmentation.RandomAffine(degrees=10.0, translate=[0.1, 0.1], scale=[0.5,1.5], shear=2.0),
-                    kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
-                    kornia.augmentation.RandomHorizontalFlip(),
-                    kornia.augmentation.RandomGaussianBlur(5, (0.1, 2.0)),
-                    kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-                    data_keys=["input"],
-                    same_on_batch=False
-            )
-        return kornia.augmentation.AugmentationSequential(
-            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-            data_keys=["input"],
-        )

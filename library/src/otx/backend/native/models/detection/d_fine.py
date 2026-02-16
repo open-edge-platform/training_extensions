@@ -175,17 +175,3 @@ class DFine(RTDETR):
             ckpt.pop("model.decoder.anchors")
             ckpt.pop("model.decoder.valid_mask")
             return super().load_state_dict(ckpt, *args, strict=False, **kwargs)
-
-    @property
-    def transforms(self):
-        if self.training:
-            return kornia.augmentation.AugmentationSequential(
-                    kornia.augmentation.RandomHorizontalFlip(),
-                    kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-                    data_keys=["input", "bbox"],
-                    same_on_batch=False
-            )
-        return kornia.augmentation.AugmentationSequential(
-            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-            data_keys=["input", "bbox"],
-        )
