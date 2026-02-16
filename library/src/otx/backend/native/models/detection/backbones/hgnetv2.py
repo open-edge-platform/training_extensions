@@ -145,6 +145,7 @@ class LightConvBNAct(nn.Module):
             out_chs,
             kernel_size=kernel_size,
             groups=out_chs,
+            use_act=True,
             use_lab=use_lab,
         )
 
@@ -190,12 +191,14 @@ class HGNetv2StemBlock(nn.Module):
             mid_chs,
             mid_chs // 2,
             kernel_size=2,
+            stride=1,
             use_lab=use_lab,
         )
         self.stem2b = ConvBNAct(
             mid_chs // 2,
             mid_chs,
             kernel_size=2,
+            stride=1,
             use_lab=use_lab,
         )
         self.stem3 = ConvBNAct(
@@ -209,6 +212,7 @@ class HGNetv2StemBlock(nn.Module):
             mid_chs,
             out_chs,
             kernel_size=1,
+            stride=1,
             use_lab=use_lab,
         )
         self.pool = nn.MaxPool2d(kernel_size=2, stride=1, ceil_mode=True)
@@ -291,12 +295,14 @@ class HGBlock(nn.Module):
             total_chs,
             out_chs // 2,
             kernel_size=1,
+            stride=1,
             use_lab=use_lab,
         )
         aggregation_excitation_conv = ConvBNAct(
             out_chs // 2,
             out_chs,
             kernel_size=1,
+            stride=1,
             use_lab=use_lab,
         )
         self.aggregation = nn.Sequential(
