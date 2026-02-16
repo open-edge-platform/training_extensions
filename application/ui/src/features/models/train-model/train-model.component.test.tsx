@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { getMockedDatasetItem } from 'mocks/mock-dataset-item';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -40,14 +41,14 @@ describe('TrainModel', () => {
             http.get('/api/projects/{project_id}/dataset/items', () => {
                 return HttpResponse.json({
                     items: [
-                        {
+                        getMockedDatasetItem({
                             id: '1',
                             subset: 'unassigned',
-                        },
-                        {
+                        }),
+                        getMockedDatasetItem({
                             id: '2',
                             subset: 'unassigned',
-                        },
+                        }),
                     ],
                     pagination: {
                         total: 2,
@@ -73,22 +74,22 @@ describe('TrainModel', () => {
             http.get('/api/projects/{project_id}/dataset/items', () => {
                 return HttpResponse.json({
                     items: [
-                        {
+                        getMockedDatasetItem({
                             id: '1',
                             subset: 'unassigned',
-                        },
-                        {
+                        }),
+                        getMockedDatasetItem({
                             id: '2',
                             subset: 'unassigned',
-                        },
-                        {
+                        }),
+                        getMockedDatasetItem({
                             id: '3',
                             subset: 'unassigned',
-                        },
-                        {
+                        }),
+                        getMockedDatasetItem({
                             id: '4',
                             subset: 'unassigned',
-                        },
+                        }),
                     ],
                     pagination: {
                         total: 4,
