@@ -5,7 +5,7 @@ import { createContext, ReactNode, useContext, useState, type Dispatch, type Set
 
 import { Selection } from '@geti/ui';
 
-import { MediaStateMap } from '../../constants/shared-types';
+import { MediaStateMap } from '../../../constants/shared-types';
 
 type SelectedDataState = null | {
     selectedKeys: Selection;

@@ -22,6 +22,7 @@ export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
         fileName,
     } = usePrepareImportStatus({
         onError: () => onNextStep('dropzone'),
+        onSuccess: () => onNextStep('labelMapping'),
     });
 
     const progress = getJobProgress(job?.progress);

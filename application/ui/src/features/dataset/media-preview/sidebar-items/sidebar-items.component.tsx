@@ -7,7 +7,7 @@ import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../../constants/shared-types';
-import { useSelectedData } from '../../selected-data-provider.component';
+import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { SIDEBAR_MEDIA_SIZE } from '../constants';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';

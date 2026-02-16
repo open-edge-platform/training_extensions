@@ -6,6 +6,7 @@ import { InfoOutline } from '@geti/ui/icons';
 
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { formatBytes } from '../../../../../shared/util';
+import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 
 type ImportCompletedJobProps = {
     size: number;
@@ -14,12 +15,15 @@ type ImportCompletedJobProps = {
 };
 
 export const ImportCompletedJob = ({ job: _job, size, fileName }: ImportCompletedJobProps) => {
+    const { datasetImportDialogState } = useImportDatasetDialogState();
+
     const handleDelete = () => {
         // Todo: implement once https://github.com/open-edge-platform/training_extensions/pull/5558 gets merged
     };
 
     const handleContinue = () => {
         // Todo: implement once https://github.com/open-edge-platform/training_extensions/pull/5558 gets merged
+        datasetImportDialogState.open();
     };
 
     return (

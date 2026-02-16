@@ -14,7 +14,7 @@ import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canv
 import { MediaItemImageLoader, useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
-import { useSelectedData } from '../selected-data-provider.component';
+import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';

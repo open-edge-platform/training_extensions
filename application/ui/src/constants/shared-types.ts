@@ -24,6 +24,11 @@ export type PrepareImportDatasetJob = Job & {
     metadata: components['schemas']['PrepareDatasetForImportRequest'];
 };
 
+export type ImportDatasetToProjectJob = Job & {
+    type: 'import_dataset_to_project';
+    metadata: components['schemas']['ImportDatasetToProjectRequest'];
+};
+
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];
 export type MediaVideoFrameDTO = components['schemas']['VideoFrameView'];
