@@ -145,7 +145,6 @@ class LightConvBNAct(nn.Module):
             out_chs,
             kernel_size=kernel_size,
             groups=out_chs,
-            use_act=True,
             use_lab=use_lab,
         )
 
@@ -191,14 +190,12 @@ class HGNetv2StemBlock(nn.Module):
             mid_chs,
             mid_chs // 2,
             kernel_size=2,
-            stride=1,
             use_lab=use_lab,
         )
         self.stem2b = ConvBNAct(
             mid_chs // 2,
             mid_chs,
             kernel_size=2,
-            stride=1,
             use_lab=use_lab,
         )
         self.stem3 = ConvBNAct(
@@ -212,7 +209,6 @@ class HGNetv2StemBlock(nn.Module):
             mid_chs,
             out_chs,
             kernel_size=1,
-            stride=1,
             use_lab=use_lab,
         )
         self.pool = nn.MaxPool2d(kernel_size=2, stride=1, ceil_mode=True)
@@ -295,14 +291,12 @@ class HGBlock(nn.Module):
             total_chs,
             out_chs // 2,
             kernel_size=1,
-            stride=1,
             use_lab=use_lab,
         )
         aggregation_excitation_conv = ConvBNAct(
             out_chs // 2,
             out_chs,
             kernel_size=1,
-            stride=1,
             use_lab=use_lab,
         )
         self.aggregation = nn.Sequential(
@@ -420,7 +414,7 @@ class HGNetv2Module(nn.Module):
         pretrained (bool, optional): Use backbone pretrained weight. Defaults to False.
     """
 
-    arch_configs: ClassVar = {
+    arch_configs: ClassVar[dict[str, dict[str, Any]]] = {
         "B0": {
             "stem_channels": [3, 16, 16],
             "stage_config": {
@@ -481,9 +475,10 @@ class HGNetv2Module(nn.Module):
         self.use_lab = use_lab
         self.return_idx = return_idx
 
-        stem_channels = self.arch_configs[name]["stem_channels"]
-        stage_config = self.arch_configs[name]["stage_config"]
-        download_url = self.arch_configs[name]["url"]
+        # Explicit type annotations for static analysis
+        stem_channels: list[int] = list(self.arch_configs[name]["stem_channels"])
+        stage_config: dict[str, list[int | bool]] = dict(self.arch_configs[name]["stage_config"])
+        download_url: str = str(self.arch_configs[name]["url"])
 
         self._out_strides = [4, 8, 16, 32]
         self._out_channels = [stage_config[k][2] for k in stage_config]
@@ -498,7 +493,7 @@ class HGNetv2Module(nn.Module):
 
         # stages
         self.stages = nn.ModuleList()
-        for k in stage_config:
+        for v in stage_config.values():
             (
                 in_channels,
                 mid_channels,
@@ -508,7 +503,7 @@ class HGNetv2Module(nn.Module):
                 light_block,
                 kernel_size,
                 layer_num,
-            ) = stage_config[k]
+            ) = v
             self.stages.append(
                 HGStage(
                     in_channels,
