@@ -112,8 +112,7 @@ jobs:
       - name: Run bdd tests
         if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
-        run: |
-          uv run behave tests/bdd
+        run: uv run behave tests/bdd
 
   required_check:
     name: Required Check backend-lint-and-test
