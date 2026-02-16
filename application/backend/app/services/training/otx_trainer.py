@@ -373,7 +373,7 @@ class OTXTrainer(Trainer):
             max_epochs=training_config["max_epochs"],
             precision=training_config["precision"],
             callbacks=callbacks_list,
-            **train_kwargs,  # type: ignore[bad-argument-type]
+            **train_kwargs,  # pyrefly: ignore[bad-argument-type]
         )
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
