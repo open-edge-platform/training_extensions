@@ -1,0 +1,12 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.tabList {
+    --spectrum-tabs-rule-height: var(--spectrum-global-dimension-size-50);
+    --spectrum-tabs-selection-indicator-color: var(--energy-blue);
+
+    div[class*='spectrum-Tabs'],
+    div[class*='spectrum-TabList'] {
+        border-bottom-color: var(--spectrum-global-color-gray-200) !important;
+    }
+}

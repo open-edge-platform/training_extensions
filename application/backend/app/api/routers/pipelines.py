@@ -15,6 +15,7 @@ from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, PipelineStatus
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
+from app.services.pipeline_service import OtherProjectActiveError
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
@@ -73,7 +74,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
     responses={
         status.HTTP_200_OK: {"description": "Pipeline found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
     },
 )
 def get_pipeline(
@@ -93,9 +94,9 @@ def get_pipeline(
     response_model=PipelineView,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline successfully reconfigured"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
-        status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
-        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be reconfigured"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid request body or project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
     },
 )
 def update_pipeline(
@@ -131,9 +132,11 @@ def update_pipeline(
             pipeline_config["data_collection"] = DataCollectionConfig.model_validate(data_collection)
         updated = pipeline_service.update_pipeline(project_id, pipeline_config)
         return PipelineView.model_validate(updated, from_attributes=True)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ValidationError as e:
+    except OtherProjectActiveError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -159,7 +162,7 @@ def enable_pipeline(
         pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.RUNNING})
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ValidationError as e:
+    except OtherProjectActiveError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -169,7 +172,7 @@ def enable_pipeline(
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully disabled"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
     },
 )
 def disable_pipeline(

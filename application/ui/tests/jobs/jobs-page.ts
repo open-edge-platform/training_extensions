@@ -28,8 +28,13 @@ export class JobsPage {
         return this.page.getByRole('button', { name: 'Cancel training job' });
     }
 
+    getConfirmCancelDialog() {
+        return this.page.getByRole('alertdialog', { name: 'Cancel training' });
+    }
+
     async cancelTrainingJob() {
         await this.getCancelButton().click();
+        await this.getConfirmCancelDialog().getByRole('button', { name: 'Cancel' }).click();
     }
 
     getArchitectureText(architecture: string) {

@@ -15,7 +15,7 @@ type TrainModelProps = {
 export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) => {
     return (
         <DialogTrigger>
-            <Button>Train model</Button>
+            <Button margin={0}>Train model</Button>
             {(close) => (
                 <Suspense
                     fallback={
