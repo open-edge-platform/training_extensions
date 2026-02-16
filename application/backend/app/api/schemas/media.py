@@ -24,7 +24,7 @@ class MediaView(BaseRequiredIDNameModel):
 
     @computed_field
     @property
-    def duration(self) -> int | None:
+    def duration(self) -> float | None:
         """Return duration in seconds"""
         return self.frame_count // self.fps if self.frame_count is not None and self.fps is not None else None
 
