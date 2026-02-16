@@ -3,6 +3,8 @@
 
 import { createContext, ReactNode, RefObject, use, useRef, useState } from 'react';
 
+import { type Media } from '../../../constants/shared-types';
+
 type VideoPlayerContextProps = {
     videoRef: RefObject<HTMLVideoElement | null>;
 
@@ -12,15 +14,22 @@ type VideoPlayerContextProps = {
 
     isMuted: boolean;
     toggleMute: () => void;
+
+    nextFrame: () => void;
+    canSelectNextFrame: boolean;
+
+    previousFrame: () => void;
+    canSelectPreviousFrame: boolean;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
+    videoFrame: Media | undefined;
 };
 
-export const VideoPlayerProvider = ({ children }: VideoPlayerProviderProps) => {
+export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProviderProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -49,8 +58,46 @@ export const VideoPlayerProvider = ({ children }: VideoPlayerProviderProps) => {
         videoRef.current.muted = !isMuted;
     };
 
+    const frames = videoFrame?.frame_count ?? 1;
+    const fps = videoFrame?.fps ?? 1;
+    const step = (frames / fps) * 0.01;
+    const currentTime = videoRef.current?.currentTime ?? 0;
+
+    // TODO: These will change once API for video frames is supported
+    const canSelectPreviousFrame = currentTime - step >= 0;
+    const canSelectNextFrame = currentTime + step <= frames * fps;
+
+    const nextFrame = () => {
+        if (!canSelectNextFrame || videoRef.current === null) {
+            return;
+        }
+
+        videoRef.current.currentTime = videoRef.current.currentTime + step;
+    };
+
+    const previousFrame = () => {
+        if (!canSelectPreviousFrame || videoRef.current === null) {
+            return;
+        }
+
+        videoRef.current.currentTime = videoRef.current.currentTime - step;
+    };
+
     return (
-        <VideoPlayerContext value={{ videoRef, isPlaying, play, pause, toggleMute, isMuted }}>
+        <VideoPlayerContext
+            value={{
+                videoRef,
+                isPlaying,
+                play,
+                pause,
+                toggleMute,
+                isMuted,
+                nextFrame,
+                previousFrame,
+                canSelectNextFrame,
+                canSelectPreviousFrame,
+            }}
+        >
             {children}
         </VideoPlayerContext>
     );

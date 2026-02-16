@@ -9,11 +9,11 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
-import { isVideo } from '../utils';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -90,7 +90,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider>
+                <VideoPlayerProvider videoFrame={isVideoFrame(mediaItem) || isVideo(mediaItem) ? mediaItem : undefined}>
                     {mode === 'prediction' ? (
                         <ReadOnlyAnnotator
                             mediaItem={mediaItem}

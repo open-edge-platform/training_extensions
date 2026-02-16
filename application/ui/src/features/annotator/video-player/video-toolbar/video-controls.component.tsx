@@ -7,12 +7,27 @@ import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti
 import { useVideoPlayer } from '../video-player-provider.component';
 
 export const VideoControls = () => {
-    const { isMuted, isPlaying, play, pause, toggleMute } = useVideoPlayer();
+    const {
+        isMuted,
+        isPlaying,
+        play,
+        pause,
+        toggleMute,
+        canSelectNextFrame,
+        canSelectPreviousFrame,
+        nextFrame,
+        previousFrame,
+    } = useVideoPlayer();
 
     return (
         <Flex alignItems={'center'} gap={'size-100'}>
             <Flex alignItems={'center'}>
-                <ActionButton isQuiet aria-label={'Go to previous frame'}>
+                <ActionButton
+                    isQuiet
+                    aria-label={'Go to previous frame'}
+                    isDisabled={!canSelectPreviousFrame}
+                    onPress={previousFrame}
+                >
                     <StepBackward />
                 </ActionButton>
                 {isPlaying ? (
@@ -24,7 +39,12 @@ export const VideoControls = () => {
                         <Play />
                     </ActionButton>
                 )}
-                <ActionButton isQuiet aria-label={'Go to next frame'}>
+                <ActionButton
+                    isQuiet
+                    aria-label={'Go to next frame'}
+                    isDisabled={!canSelectNextFrame}
+                    onPress={nextFrame}
+                >
                     <StepForward />
                 </ActionButton>
             </Flex>
