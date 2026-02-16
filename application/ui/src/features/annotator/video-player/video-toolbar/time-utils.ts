@@ -15,7 +15,7 @@ const getTimeUnits = (duration: number) => {
 
 const paddedString = (number: number): string => Math.floor(number).toString().padStart(2, '0');
 
-export const useDurationText = (duration: number): string => {
+export const formatDurationText = (duration: number): string => {
     const { hours, minutes, seconds } = getTimeUnits(duration);
 
     return `${paddedString(hours)}:${paddedString(minutes)}:${paddedString(seconds)}`;

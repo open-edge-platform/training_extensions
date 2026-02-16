@@ -40,8 +40,15 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
         if (videoRef.current === null) {
             return;
         }
-        setIsPlaying(true);
-        await videoRef.current.play();
+        try {
+            setIsPlaying(true);
+            await videoRef.current.play();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+
+            setIsPlaying(false);
+            console.error(`Error while playing video: ${message}`);
+        }
     };
 
     const pause = () => {
@@ -53,21 +60,27 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
     };
 
     const toggleMute = () => {
-        if (videoRef.current === null) {
-            return;
-        }
-        setIsMuted(!isMuted);
-        videoRef.current.muted = !isMuted;
+        setIsMuted((prevIsMuted) => {
+            const nextIsMuted = !prevIsMuted;
+
+            if (videoRef.current === null) {
+                return nextIsMuted;
+            }
+
+            videoRef.current.muted = nextIsMuted;
+
+            return nextIsMuted;
+        });
     };
 
     const frames = videoFrame?.frame_count ?? 1;
-    const fps = videoFrame?.fps ?? 1;
-    const step = (frames / fps) * 0.01;
+    const fps = videoFrame?.fps || 1;
+    const step = 1 / fps;
     const currentTime = videoRef.current?.currentTime ?? 0;
 
     // TODO: These will change once API for video frames is supported
     const canSelectPreviousFrame = currentTime - step >= 0;
-    const canSelectNextFrame = currentTime + step <= frames * fps;
+    const canSelectNextFrame = currentTime + step <= frames / fps;
 
     const nextFrame = () => {
         if (!canSelectNextFrame || videoRef.current === null) {
