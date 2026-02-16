@@ -24,14 +24,16 @@ class JobController:
 
     Architecture:
         - Supervisor loop: Continuously polls the job queue for runnable jobs
+        - Stale job monitor: Periodically checks for jobs that haven't updated within a threshold
+          (default 1 hour) and automatically schedules their termination
         - Capacity control: Enforces maximum parallel job limits via semaphore-based permits
         - Event-driven communication: Jobs emit domain events (Started, Progress, Done, etc.)
           which are pumped from runner threads to the async event loop for state management
         - Cancellation support: Monitors cancellation requests and triggers graceful shutdowns
 
-    The scheduler maintains separation between CPU-intensive job execution (handled by runners
+    The controller maintains separation between CPU-intensive job execution (handled by runners
     in separate processes/threads) and lightweight async orchestration (job lifecycle management,
-    event handling, capacity control).
+    event handling, capacity control, stale detection).
 
     Args:
         jobs_queue: Source of jobs to execute and cancellation state tracker
@@ -45,18 +47,22 @@ class JobController:
         self._capacity = Capacity(max_parallel_jobs)
         self._running = False
         self._supervisor_task: asyncio.Task | None = None
+        self._stale_monitor_task: asyncio.Task | None = None
         self._tasks: set[asyncio.Task] = set()
 
     async def start(self) -> None:
         self._running = True
         self._supervisor_task = asyncio.create_task(self._supervise_loop(), name="supervisor")
+        self._stale_monitor_task = asyncio.create_task(self._monitor_stale_loop(), name="stale_monitor")
 
     async def stop(self) -> None:
         self._running = False
-        if self._supervisor_task:
-            self._supervisor_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._supervisor_task
+        loop_tasks = [self._supervisor_task, self._stale_monitor_task]
+        for task in loop_tasks:
+            if task:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
         await asyncio.gather(*self._tasks, return_exceptions=True)
 
     async def _supervise_loop(self) -> None:
@@ -67,6 +73,27 @@ class JobController:
                 self._start_job(job)
             except Exception:
                 logger.exception("Exception during supervise loop")
+
+    async def _monitor_stale_loop(self) -> None:
+        """Monitor running jobs and terminate those that haven't updated in 1 hour."""
+        stale_threshold = 3600  # 1 hour inactivity threshold
+        check_interval = 60  # Check every minute
+
+        while self._running:
+            try:
+                await asyncio.sleep(check_interval)
+                stale_jobs = self._jobs_q.list_stale_jobs(stale_threshold)
+
+                for job in stale_jobs:
+                    logger.warning(
+                        "Job {} has not updated in {} seconds, marking as stale and scheduling termination",
+                        job.id,
+                        stale_threshold,
+                    )
+                    _, result = self._jobs_q.cancel(job.id)
+                    logger.info("Cancelling job with ID {} and result {}", job.id, result)
+            except Exception:
+                logger.exception("Exception during stale job monitoring")
 
     def _start_job(self, job: Job) -> None:
         task = asyncio.create_task(self._run_job(job))
