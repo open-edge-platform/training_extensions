@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Sequence
-import numpy as np
 
+import numpy as np
 import polars as pl
 import torch
 import torch.utils._pytree as pytree
