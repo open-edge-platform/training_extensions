@@ -9,6 +9,8 @@
 
 import sys
 
+from app.services.base import ResourceNotFoundError
+
 if getattr(sys, "frozen", False) and __name__ == "__main__":
     print("Calling multiprocessing.freeze_support()")
     import multiprocessing
@@ -26,9 +28,9 @@ from pathlib import Path
 from typing import cast
 
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
@@ -121,6 +123,15 @@ async def security_headers_middleware(
     response.headers.setdefault("Cross-Origin-Embedder-Policy", "require-corp")
     response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
     return response
+
+
+@app.exception_handler(ResourceNotFoundError)
+async def resource_not_found_exception_handler(request: Request, exc: ResourceNotFoundError) -> JSONResponse:  # noqa: ARG001
+    """Catch resource not found errors and return 404 response"""
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": str(exc)},
+    )
 
 
 static_dir = settings.static_files_dir
