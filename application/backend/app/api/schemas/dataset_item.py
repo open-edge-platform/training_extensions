@@ -39,12 +39,14 @@ class DatasetItemView(BaseRequiredIDModel):
     """
 
     subset: DatasetItemSubset
+    user_reviewed: bool
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
-                "subset": "unassigned",
+                "user_reviewed": False,
+                "subset": "training",
             }
         }
     }
