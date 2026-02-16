@@ -153,6 +153,7 @@ class Benchmark:
         if self.num_epoch > 0:
             kwargs["max_epochs"] = self.num_epoch
 
+        breakpoint()
         # ======Train======
         start_time = time()
         engine.train(**kwargs)
