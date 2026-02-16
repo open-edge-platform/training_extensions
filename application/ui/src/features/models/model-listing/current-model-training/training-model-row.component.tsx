@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import duration from 'dayjs/plugin/duration';
 
 import { DatasetRevision, Job, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
+import { TrainingLogsDialog } from '../../training-logs/training-logs-dialog.component';
 import { ArchitectureColumn } from '../components/model-row/architecture-column.component';
 import { DatasetColumn } from '../components/model-row/dataset-revision-column.component';
 import { GRID_COLUMNS } from '../constants';
@@ -77,6 +78,7 @@ export const TrainingModelRow = ({
     groupBy,
     modelArchitectures,
 }: TrainingModelRowProps) => {
+    const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
     const modelArchitectureId = 'model' in job.metadata && job.metadata.model?.architecture;
@@ -144,8 +146,17 @@ export const TrainingModelRow = ({
 
                 <Text UNSAFE_className={classes.smallText}>...</Text>
 
-                {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : <div />}
+                <Flex gap={'size-100'} alignItems={'center'}>
+                    <Button variant={'secondary'} onPress={() => setIsLogsDialogOpen(true)} aria-label={'View logs'}>
+                        View Logs
+                    </Button>
+                    {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : null}
+                </Flex>
             </Grid>
+
+            <DialogContainer type={'fullscreen'} onDismiss={() => setIsLogsDialogOpen(false)}>
+                {isLogsDialogOpen && <TrainingLogsDialog jobId={job.job_id} />}
+            </DialogContainer>
         </BottomProgressBar>
     );
 };

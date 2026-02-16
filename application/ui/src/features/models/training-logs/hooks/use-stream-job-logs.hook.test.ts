@@ -55,7 +55,7 @@ describe('useStreamJobLogs', () => {
         });
     });
 
-    it('sets isConnected to false and error on SSE error', async () => {
+    it('sets connectionStatus to connecting on SSE error (retry)', async () => {
         const { result } = renderHook(() => useStreamJobLogs('job-1'));
         const eventSource = getLastEventSource();
 
@@ -64,7 +64,7 @@ describe('useStreamJobLogs', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.isConnected).toBe(true);
+            expect(result.current.connectionStatus).toBe('connected');
         });
 
         act(() => {
@@ -72,8 +72,7 @@ describe('useStreamJobLogs', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.isConnected).toBe(false);
-            expect(result.current.error).toBeInstanceOf(Error);
+            expect(result.current.connectionStatus).toBe('connecting');
         });
     });
 

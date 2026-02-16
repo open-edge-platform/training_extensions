@@ -6,6 +6,7 @@ import { Model } from '../../../../constants/shared-types';
 const TRAINING_STATUS = {
     Failed: 'failed',
     InProgress: 'in_progress',
+    Successful: 'successful',
 } as const;
 
 export const isFailedModel = (model: Pick<Model, 'training_info'>): boolean =>
@@ -13,3 +14,7 @@ export const isFailedModel = (model: Pick<Model, 'training_info'>): boolean =>
 
 export const isTrainingModel = (model: Pick<Model, 'training_info'>): boolean =>
     model.training_info?.status === TRAINING_STATUS.InProgress;
+
+export const hasTrainingLogs = (model: Pick<Model, 'training_info'>): boolean =>
+    model.training_info?.status === TRAINING_STATUS.Successful ||
+    model.training_info?.status === TRAINING_STATUS.Failed;
