@@ -39,7 +39,7 @@ class DatasetItemView(BaseRequiredIDModel):
     """
 
     subset: DatasetItemSubset
-    user_reviewed: bool
+    user_reviewed: bool = False
 
     model_config = {
         "json_schema_extra": {
