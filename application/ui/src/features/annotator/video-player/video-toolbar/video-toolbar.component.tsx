@@ -8,6 +8,7 @@ import { ChevronDownLight } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
 import { Toolbar } from '../../../dataset/media-preview/toolbar-container/toolbar-container.component';
+import { VideoAnnotations } from './video-annotations.component';
 import { VideoControls } from './video-controls.component';
 import { VideoDuration } from './video-duration.component';
 
@@ -39,6 +40,7 @@ export const VideoToolbar = () => {
                             />
                         </ActionButton>
                     </Flex>
+                    {isExpanded && <VideoAnnotations />}
                 </View>
             </Toolbar.Section>
         </Toolbar.Container>

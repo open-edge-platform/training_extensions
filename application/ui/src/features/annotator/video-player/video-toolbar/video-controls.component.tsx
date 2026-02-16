@@ -4,8 +4,10 @@
 import { ActionButton, Flex } from '@geti/ui';
 import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti/ui/icons';
 
+import { useVideoPlayer } from '../video-player-provider.component';
+
 export const VideoControls = () => {
-    const isMuted = false;
+    const { isMuted, isPlaying, play, pause, toggleMute } = useVideoPlayer();
 
     return (
         <Flex alignItems={'center'} gap={'size-100'}>
@@ -13,17 +15,20 @@ export const VideoControls = () => {
                 <ActionButton isQuiet aria-label={'Go to previous frame'}>
                     <StepBackward />
                 </ActionButton>
-                <ActionButton isQuiet aria-label={'Play video'}>
-                    <Play />
-                </ActionButton>
-                <ActionButton isQuiet aria-label={'Pause video'}>
-                    <Pause />
-                </ActionButton>
+                {isPlaying ? (
+                    <ActionButton isQuiet aria-label={'Pause video'} onPress={pause}>
+                        <Pause />
+                    </ActionButton>
+                ) : (
+                    <ActionButton isQuiet aria-label={'Play video'} onPress={play}>
+                        <Play />
+                    </ActionButton>
+                )}
                 <ActionButton isQuiet aria-label={'Go to next frame'}>
                     <StepForward />
                 </ActionButton>
             </Flex>
-            <ActionButton isQuiet aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}>
+            <ActionButton isQuiet aria-label={isMuted ? 'Unmute audio' : 'Mute audio'} onPress={toggleMute}>
                 {isMuted ? <SoundOff /> : <SoundOn />}
             </ActionButton>
         </Flex>
