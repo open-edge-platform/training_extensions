@@ -8,6 +8,7 @@ import { ChevronDownLight } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
 import { Toolbar } from '../../../dataset/media-preview/toolbar-container/toolbar-container.component';
+import { useVideoPlayer } from '../video-player-provider.component';
 import { VideoAnnotations } from './video-annotations.component';
 import { VideoControls } from './video-controls.component';
 import { VideoDuration } from './video-duration.component';
@@ -15,6 +16,7 @@ import { VideoDuration } from './video-duration.component';
 import classes from './video-toolbar.module.scss';
 
 export const VideoToolbar = () => {
+    const { videoFrame } = useVideoPlayer();
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
@@ -28,17 +30,20 @@ export const VideoToolbar = () => {
                             <VideoDuration />
                         </Flex>
 
-                        <ActionButton
-                            isQuiet
-                            onPress={() => setIsExpanded((prev) => !prev)}
-                            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} toolbar`}
-                        >
-                            <ChevronDownLight
-                                className={clsx(classes.chevronButton, {
-                                    [classes.chevronButtonCollapsed]: !isExpanded,
-                                })}
-                            />
-                        </ActionButton>
+                        <Flex alignItems={'center'} gap={'size-100'}>
+                            <Text>Current frame: 0 / Total frames: {videoFrame?.frame_count}</Text>
+                            <ActionButton
+                                isQuiet
+                                onPress={() => setIsExpanded((prev) => !prev)}
+                                aria-label={`${isExpanded ? 'Collapse' : 'Expand'} toolbar`}
+                            >
+                                <ChevronDownLight
+                                    className={clsx(classes.chevronButton, {
+                                        [classes.chevronButtonCollapsed]: !isExpanded,
+                                    })}
+                                />
+                            </ActionButton>
+                        </Flex>
                     </Flex>
                     {isExpanded && <VideoAnnotations />}
                 </View>

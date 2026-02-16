@@ -20,6 +20,8 @@ type VideoPlayerContextProps = {
 
     previousFrame: () => void;
     canSelectPreviousFrame: boolean;
+
+    videoFrame: Media | undefined;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
@@ -86,6 +88,7 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
     return (
         <VideoPlayerContext
             value={{
+                videoFrame,
                 videoRef,
                 isPlaying,
                 play,
