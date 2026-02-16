@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useSSE } from '../../../../hooks/use-sse.hook';
 import { type LogEntry } from '../log-types';
@@ -16,12 +16,10 @@ export const useStreamJobLogs = (jobId: string | undefined): UseStreamJobLogsRet
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isConnected, setIsConnected] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const logsRef = useRef<LogEntry[]>([]);
 
     useSSE<LogEntry>(jobId ? `/api/jobs/${jobId}/logs` : undefined, {
         onMessage: (entry) => {
-            logsRef.current = [...logsRef.current, entry];
-            setLogs(logsRef.current);
+            setLogs((prev) => [...prev, entry]);
         },
         onOpen: () => {
             setIsConnected(true);
