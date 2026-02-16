@@ -12,11 +12,21 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_dataset_service, get_media_service
-from app.api.schemas.media import MediaView
+from app.api.schemas.media import MediaView, SetMediaAnnotations
 from app.main import app
-from app.models import DatasetItemAnnotationStatus, Media, MediaType
+from app.models import (
+    DatasetItem,
+    DatasetItemAnnotation,
+    DatasetItemAnnotationStatus,
+    LabelReference,
+    Media,
+    MediaType,
+    Rectangle,
+    VideoFrame,
+)
 from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
+from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import MediaFilters
 
 
@@ -177,12 +187,14 @@ class TestMediaEndpoints:
             annotation_status=None,
             label_ids=None,
             subset=None,
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
         fxt_media_service.list_media.assert_called_once_with(
             project_id=fxt_get_project.id,
             filters=MediaFilters(
                 limit=10, offset=0, start_date=None, end_date=None, annotation_status=None, label_ids=None, subset=None
             ),
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
 
     def test_list_media_filtering_and_pagination(
@@ -203,6 +215,7 @@ class TestMediaEndpoints:
             annotation_status=None,
             label_ids=None,
             subset=None,
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
         fxt_media_service.list_media.assert_called_once_with(
             project_id=fxt_get_project.id,
@@ -215,6 +228,7 @@ class TestMediaEndpoints:
                 label_ids=None,
                 subset=None,
             ),
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
 
     @pytest.mark.parametrize("limit", [1000, 0, -20])
@@ -264,6 +278,7 @@ class TestMediaEndpoints:
             annotation_status=annotation_status,
             label_ids=None,
             subset=None,
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
         fxt_media_service.list_media.assert_called_once_with(
             project_id=fxt_get_project.id,
@@ -276,6 +291,7 @@ class TestMediaEndpoints:
                 label_ids=None,
                 subset=None,
             ),
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
 
     @pytest.mark.parametrize("subset", ["unassigned", "training", "validation", "testing"])
@@ -295,6 +311,7 @@ class TestMediaEndpoints:
             annotation_status=None,
             label_ids=None,
             subset=subset,
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
         fxt_media_service.list_media.assert_called_once_with(
             project_id=fxt_get_project.id,
@@ -307,26 +324,48 @@ class TestMediaEndpoints:
                 label_ids=None,
                 subset=subset,
             ),
+            exclude_types=[MediaType.VIDEO_FRAME],
         )
 
     @pytest.mark.parametrize(
-        "http_method, http_path, service_method",
+        "http_method, http_path, service_name, service_method",
         [
-            ("get", f"/api/projects/{uuid4()}/dataset/media/invalid-id", "get_media_by_id"),
-            ("get", f"/api/projects/{uuid4()}/dataset/media/invalid-id/binary", "get_media_binary_path_by_id"),
+            ("get", f"/api/projects/{uuid4()}/dataset/media/invalid-id", "fxt_media_service", "get_media_by_id"),
+            (
+                "get",
+                f"/api/projects/{uuid4()}/dataset/media/invalid-id/binary",
+                "fxt_media_service",
+                "get_media_binary_path_by_id",
+            ),
             (
                 "get",
                 f"/api/projects/{uuid4()}/dataset/media/invalid-id/thumbnail",
+                "fxt_media_service",
                 "generate_media_thumbnail",
             ),
-            ("delete", f"/api/projects/{uuid4()}/dataset/media/invalid-id", "delete_media"),
+            ("delete", f"/api/projects/{uuid4()}/dataset/media/invalid-id", "fxt_media_service", "delete_media"),
+            (
+                "post",
+                f"/api/projects/{uuid4()}/dataset/media/invalid-id/annotations",
+                "fxt_dataset_service",
+                "set_dataset_item_annotations",
+            ),
+            (
+                "get",
+                f"/api/projects/{uuid4()}/dataset/media/invalid-id/annotations",
+                "fxt_dataset_service",
+                "get_dataset_item_by_id",
+            ),
         ],
     )
-    def test_invalid_ids(self, http_method, http_path, service_method, fxt_get_project, fxt_media_service, fxt_client):
+    def test_invalid_ids(
+        self, request, http_method, http_path, service_name, service_method, fxt_get_project, fxt_client
+    ):
+        service = request.getfixturevalue(service_name)
         response = getattr(fxt_client, http_method)(http_path)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        getattr(fxt_media_service, service_method).assert_not_called()
+        getattr(service, service_method).assert_not_called()
 
     def test_get_media_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()
@@ -432,3 +471,556 @@ class TestMediaEndpoints:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_media_service.delete_media.assert_called_once_with(project=fxt_get_project, media_id=media_id)
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_set_media_annotations_success(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidences": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=media_id,
+            annotations=annotations,
+            user_reviewed=True,
+        )
+
+    def test_set_video_annotations_missing_timestamp(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.set_dataset_item_annotations.assert_not_called()
+
+    def test_set_video_annotations_existing_frame(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        video_frame_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        video_frame = MagicMock(
+            spec=VideoFrame,
+            id=video_frame_id,
+        )
+        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = video_frame
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?ts=10",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidences": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=video_frame_id,
+            annotations=annotations,
+            user_reviewed=True,
+        )
+
+    def test_set_video_annotations_extract_frame(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        video_frame_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = None
+        video_frame_media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO_FRAME,
+        )
+        video_frame = MagicMock(
+            spec=VideoFrame,
+            id=video_frame_id,
+        )
+        fxt_media_service.extract_video_frame.return_value = video_frame_media, video_frame
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?ts=10",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidences": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_media_service.extract_video_frame.assert_called_once_with(
+            project=fxt_get_project, video_id=media_id, timestamp=10
+        )
+        fxt_dataset_service.create_dataset_item.assert_called_once_with(
+            project=fxt_get_project,
+            media=video_frame_media,
+            user_reviewed=False,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=video_frame_id,
+            annotations=annotations,
+            user_reviewed=True,
+        )
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_set_media_annotations_label_not_found(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_dataset_service.set_dataset_item_annotations.side_effect = AnnotationValidationError(str(label_id))
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=media_id,
+            annotations=annotations,
+            user_reviewed=True,
+        )
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_set_media_annotations_not_found(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_dataset_service.set_dataset_item_annotations.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(media_id)
+        )
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=media_id,
+            annotations=annotations,
+            user_reviewed=True,
+        )
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_get_media_annotations(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=[
+                DatasetItemAnnotation(
+                    labels=[LabelReference(id=label_id)],
+                    shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                )
+            ],
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidences": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_item_id=media_id,
+        )
+
+    def test_get_video_annotations_missing_timestamp(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_dataset_service.get_dataset_item_by_id.assert_not_called()
+
+    def test_get_video_annotations_existing_frame(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        video_frame_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        video_frame = MagicMock(
+            spec=VideoFrame,
+            id=video_frame_id,
+        )
+        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = video_frame
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=[
+                DatasetItemAnnotation(
+                    labels=[LabelReference(id=label_id)],
+                    shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                )
+            ],
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?ts=10")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidences": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_item_id=video_frame_id,
+        )
+
+    def test_get_video_annotations_frame_not_found(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = None
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=[
+                DatasetItemAnnotation(
+                    labels=[LabelReference(id=label_id)],
+                    shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                )
+            ],
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?ts=10")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_dataset_service.get_dataset_item_by_id.assert_not_called()
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_get_media_annotations_not_found(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_dataset_service.get_dataset_item_by_id.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(media_id)
+        )
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_item_id=media_id,
+        )
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_get_media_annotations_not_annotated(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        dataset_item = MagicMock(spec=DatasetItem, annotation_data=None, user_reviewed=False, prediction_model_id=None)
+        fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_item_id=media_id,
+        )
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_delete_media_annotations(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+
+        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.delete_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=media_id,
+        )
+
+    def test_delete_video_annotations_missing_timestamp(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+
+        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.delete_dataset_item_annotations.assert_not_called()
+
+    def test_delete_video_annotations_existing_frame(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        video_frame_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        video_frame = MagicMock(
+            spec=VideoFrame,
+            id=video_frame_id,
+        )
+        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = video_frame
+
+        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?ts=10")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.delete_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=video_frame_id,
+        )
+
+    def test_delete_video_annotations_frame_not_found(
+        self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=MediaType.VIDEO,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = None
+
+        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?ts=10")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.delete_dataset_item_annotations.assert_not_called()
+
+    @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
+    def test_delete_media_annotations_not_found(
+        self, media_type, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        media_id = uuid4()
+        media = MagicMock(
+            spec=Media,
+            type=media_type,
+        )
+        fxt_media_service.get_media_by_id.return_value = media
+        fxt_dataset_service.delete_dataset_item_annotations.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(media_id)
+        )
+
+        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_dataset_service.delete_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=media_id,
+        )

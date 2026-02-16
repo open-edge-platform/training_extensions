@@ -15,10 +15,10 @@ import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB, VideoFrameDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
-from app.models.media import ImageFormat, VideoFormat
-from app.services import LabelService, PipelineService, ProjectService, SystemService
+from app.models.media import ImageFormat, MediaType, VideoFormat
+from app.services import LabelService, PipelineService, ProjectService, SystemService, VideoFrameService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
 from app.services.media_service import InvalidImageError, MediaFilters, MediaService
@@ -51,6 +51,12 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
+def fxt_video_frame_service(db_session: Session) -> VideoFrameService:
+    """Fixture to create a VideoFrameService instance."""
+    return VideoFrameService(db_session=db_session)
+
+
+@pytest.fixture
 def fxt_project_service(
     fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
 ) -> ProjectService:
@@ -66,10 +72,13 @@ def fxt_project_service(
 @pytest.fixture
 def fxt_media_service(
     fxt_projects_dir: Path,
+    fxt_video_frame_service: VideoFrameService,
     db_session: Session,
 ) -> MediaService:
     """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
+    return MediaService(
+        data_dir=fxt_projects_dir.parent, video_frame_service=fxt_video_frame_service, db_session=db_session
+    )
 
 
 @pytest.fixture
@@ -125,6 +134,14 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
             "height": 768,
             "fps": 25.0,
             "frame_count": 100,
+        },
+        {
+            "type": "video_frame",
+            "name": "test4_10",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
         },
     ]
 
@@ -603,6 +620,24 @@ class TestMediaServiceIntegration:
 
         assert count == 0 if start_date_out_of_range or end_date_out_of_range else count == len(db_media_list)
 
+    @pytest.mark.parametrize(
+        "exclude_types, count", [([MediaType.IMAGE], 2), ([MediaType.VIDEO], 4), ([MediaType.VIDEO_FRAME], 4)]
+    )
+    def test_count_media_excluding(
+        self,
+        exclude_types: list[MediaType],
+        count: int,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+        db_session: Session,
+    ) -> None:
+        """Test counting media with media types exclusion."""
+        project, db_media_list = fxt_project_with_media
+
+        result = fxt_media_service.count_media(project=project, exclude_types=exclude_types)
+
+        assert result == count
+
     @pytest.mark.parametrize("limit, limit_out_of_range", [(10, False), (0, True)])
     @pytest.mark.parametrize("offset, offset_out_of_range", [(0, False), (10, True)])
     @pytest.mark.parametrize(
@@ -652,6 +687,26 @@ class TestMediaServiceIntegration:
             if start_date_out_of_range or end_date_out_of_range or limit_out_of_range or offset_out_of_range
             else len(media_list) == len(db_media_list)
         )
+
+    @pytest.mark.parametrize(
+        "exclude_types, count", [([MediaType.IMAGE], 2), ([MediaType.VIDEO], 4), ([MediaType.VIDEO_FRAME], 4)]
+    )
+    def test_list_media_excluding(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+        exclude_types: list[MediaType],
+        count: int,
+    ) -> None:
+        """Test listing media with media types exclusion."""
+        project, db_media_list = fxt_project_with_media
+
+        media_list = fxt_media_service.list_media(
+            project_id=project.id,
+            exclude_types=exclude_types,
+        )
+
+        assert len(media_list) == count
 
     def test_get_media_by_id(
         self,
@@ -1267,3 +1322,51 @@ class TestMediaServiceIntegration:
             ),
         )
         assert len(testing_items) == 1
+
+    def test_extract_video_frame(
+        self,
+        tmp_path: Path,
+        fxt_video_data: Callable[[Path], None],
+        fxt_projects_dir: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+        db_session: Session,
+    ):
+        """Test extracting a videoframe."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+
+        # Create the dataset directory and a test video file
+        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        video_path = dataset_dir / f"{media.id}.{media.format}"
+
+        # Generate video
+        fxt_video_data(video_path)
+
+        video_frame_media, video_frame = fxt_media_service.extract_video_frame(
+            project=project, video_id=UUID(media.id), timestamp=2
+        )
+
+        video_frame_binary_path = dataset_dir / f"{video_frame_media.id}.jpg"
+        assert os.path.exists(video_frame_binary_path)
+
+        db_video_frame_media = db_session.get(MediaDB, str(video_frame_media.id))
+        assert db_video_frame_media is not None
+        assert (
+            db_video_frame_media.id == str(video_frame_media.id)
+            and db_video_frame_media.project_id == str(project.id)
+            and db_video_frame_media.type == "video_frame"
+            and db_video_frame_media.name == "test4_frame_2.000"
+            and db_video_frame_media.format == "jpg"
+            and db_video_frame_media.width == 640
+            and db_video_frame_media.height == 480
+        )
+
+        db_video_frame = db_session.get(VideoFrameDB, str(video_frame.id))
+        assert db_video_frame is not None
+        assert (
+            db_video_frame.id == str(video_frame.id)
+            and db_video_frame.video_id == media.id
+            and db_video_frame.timestamp == 2
+        )

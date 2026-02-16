@@ -41,6 +41,7 @@ from .source import (
     VideoFileSourceConfig,
 )
 from .task import Task, TaskType
+from .video_frame import VideoFrame
 
 __all__ = [
     "BaseEntity",
@@ -91,5 +92,6 @@ __all__ = [
     "TrainingStatus",
     "USBCameraSourceConfig",
     "VideoFileSourceConfig",
+    "VideoFrame",
     "WebhookSinkConfig",
 ]
