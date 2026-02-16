@@ -53,6 +53,17 @@ class DatasetRevisionService(BaseSessionManagedService):
         dataset_revision_id = str(uuid4())
         short_id = dataset_revision_id.split("-")[0]
         dataset_name = f"Dataset ({short_id})"
+
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / dataset_revision_id
+        logger.info("Saving dataset revision '{}' to '{}'", dataset_revision_id, revision_path)
+        export_dataset(
+            dataset=dataset,
+            output_path=revision_path,
+            export_images=True,
+            as_zip=False,  # Export as uncompressed directory, see #5070 for details
+        )
+        size_in_bytes = sum(item.stat().st_size for item in revision_path.rglob("*") if item.is_file())
+
         revision_db = revision_repo.save(
             DatasetRevisionDB(
                 id=dataset_revision_id,
@@ -62,16 +73,10 @@ class DatasetRevisionService(BaseSessionManagedService):
                 training_count=item_counts.training,
                 validation_count=item_counts.validation,
                 testing_count=item_counts.testing,
+                size=size_in_bytes,
             )
         )
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
-        logger.info("Saving dataset revision '{}' to '{}'", revision_db.id, revision_path)
-        export_dataset(
-            dataset=dataset,
-            output_path=revision_path,
-            export_images=True,
-            as_zip=False,  # Export as uncompressed directory, see #5070 for details
-        )
+
         return UUID(revision_db.id)
 
     def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> dm.Dataset:
@@ -160,6 +165,7 @@ class DatasetRevisionService(BaseSessionManagedService):
                 project_id=str(project_id),
                 name=dataset_revision.name,
                 files_deleted=dataset_revision.files_deleted,
+                size=0 if dataset_revision.files_deleted else dataset_revision.size,
             )
         )
 

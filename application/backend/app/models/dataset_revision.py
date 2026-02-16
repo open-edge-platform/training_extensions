@@ -41,6 +41,7 @@ class DatasetRevision(BaseEntity):
         name: Name of the dataset revision.
         created_at: Timestamp indicating when the dataset revision was created.
         files_deleted: Flag indicating whether the files associated with this dataset revision have been deleted.
+        size: Size on disk in bytes
         item_counts: Number of items in the subsets Training, Validation and Testing and total count.
     """
 
@@ -48,6 +49,7 @@ class DatasetRevision(BaseEntity):
     name: str
     created_at: datetime
     files_deleted: bool
+    size: int
     item_counts: DatasetRevisionCounts
 
     @model_validator(mode="before")
@@ -59,6 +61,7 @@ class DatasetRevision(BaseEntity):
                 "name": data.name,
                 "created_at": data.created_at,
                 "files_deleted": data.files_deleted,
+                "size": data.size,
                 "item_counts": DatasetRevisionCounts.model_validate(data),
             }
         return data
