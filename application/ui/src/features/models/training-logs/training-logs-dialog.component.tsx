@@ -57,7 +57,7 @@ const HistoricalModelLogs = ({ modelId }: { modelId: string }) => {
 };
 
 export const TrainingLogsDialog = ({ jobId, modelId }: TrainingLogsDialogProps) => {
-    const title = jobId ? 'Training Logs (Live)' : 'Training Logs';
+    const title = jobId ? 'Training Logs' : 'Training Logs';
     const dialogContainer = useDialogContainer();
 
     return (

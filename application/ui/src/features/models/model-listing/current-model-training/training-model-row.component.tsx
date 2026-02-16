@@ -146,9 +146,9 @@ export const TrainingModelRow = ({
 
                 <Text UNSAFE_className={classes.smallText}>...</Text>
 
-                <Flex gap={'size-100'} alignItems={'center'}>
+                <Flex gap={'size-100'} direction={'column'} alignItems={'center'}>
                     <Button variant={'secondary'} onPress={() => setIsLogsDialogOpen(true)} aria-label={'View logs'}>
-                        View Logs
+                        Logs
                     </Button>
                     {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : null}
                 </Flex>
