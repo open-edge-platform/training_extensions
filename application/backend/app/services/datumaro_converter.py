@@ -242,6 +242,11 @@ def convert_classification_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
+        except IndexError as e:
+            raise ValueError(
+                f"Expected exactly one annotation for classification project, found empty list. "
+                f"Project ID {dataset_item.project_id}, Dataset Item ID: {dataset_item.id}"
+            ) from e
 
     return _convert_dataset(
         sample_type=ClassificationSample,
@@ -280,6 +285,11 @@ def convert_multilabel_classification_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
+        except IndexError as e:
+            raise ValueError(
+                f"Expected exactly one annotation for classification project, found empty list. "
+                f"Project ID {dataset_item.project_id}, Dataset Item ID: {dataset_item.id}"
+            ) from e
         # Filter out empty-labeled items in the training subset
         if not labels_indexes and dataset_item.subset == DatasetItemSubset.TRAINING:
             return None
@@ -337,6 +347,10 @@ def convert_detection_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
+        # Filter out empty-labeled items in the training subset
+        if not labels_indexes and dataset_item.subset == DatasetItemSubset.TRAINING:
+            return None
+
         # Every item must be either a model prediction (with confidence score) or a user annotation (without)
         any_with_confidence = any(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
@@ -347,6 +361,7 @@ def convert_detection_dataset(
                 dataset_item.annotation_data,
             )
             raise ValueError("Either all or none of the annotations must have confidence scores")
+
         confidences = (
             [  # list of confidence scores, one per bbox
                 annotation.confidences[0]  # type: ignore[index]
@@ -410,6 +425,10 @@ def convert_instance_segmentation_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
+        # Filter out empty-labeled items in the training subset
+        if not labels_indexes and dataset_item.subset == DatasetItemSubset.TRAINING:
+            return None
+
         # Every item must be either a model prediction (with confidence score) or a user annotation (without)
         any_with_confidence = any(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
