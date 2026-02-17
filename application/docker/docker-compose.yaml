@@ -41,7 +41,7 @@ services:
   mosquitto:
     profiles:
       - mqtt
-    image: eclipse-mosquitto:2.0@sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d
+    image: eclipse-mosquitto:2.0@sha256:6852da90a65dfff7aa3a1c8b249e92bb83c17ea8bbcce56bedff8707332a1a29
     restart: unless-stopped
     ports:
       - "1883:1883"
@@ -57,7 +57,7 @@ services:
   mqtt-web-ui:
     profiles:
       - mqtt
-    image: emqx/mqttx-web@sha256:52899b451627e7592ff440f9d5a040a2e80a81f414937affb3d3920914c34850
+    image: emqx/mqttx-web@sha256:64525ad96286280f85f9f1a3f74a98475d1bbfe7a8ee278f93fa6991e6090c9c
     restart: unless-stopped
     environment:
       - MQTT_BROKER_HOST=mosquitto
@@ -70,7 +70,7 @@ services:
   coturn-server:
     profiles:
       - coturn
-    image: quay.io/coturn/coturn
+    image: quay.io/coturn/coturn@sha256:10514b502709263f3e7216873f42b48b7f8a2679090eedb5be0954fd1bba9f94
     restart: unless-stopped
     network_mode: host
     command:

@@ -19,6 +19,7 @@ from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
+from app.execution import DatasetExport, OTXTrainer, TrainingDependencies
 from app.scheduler import Scheduler
 from app.services import (
     DatasetRevisionService,
@@ -31,14 +32,14 @@ from app.services import (
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
-from app.services.training import OTXTrainer
-from app.services.training.otx_trainer import TrainingDependencies
-from app.services.training.subset_assignment import SubsetAssigner, SubsetService
+from app.services.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
 
 
-def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
+def setup_job_controller(
+    data_dir: Path, staged_datasets_dir: Path | None, max_parallel_jobs: int
+) -> tuple[JobQueue, JobController]:
     """
     Initializes and configures the job queue and job controller for managing parallel job execution.
 
@@ -48,13 +49,18 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
 
     Args:
         data_dir: Path to the directory containing data required for job execution.
+        staged_datasets_dir: Path to the directory for storing staged datasets.
         max_parallel_jobs (int): Maximum number of jobs that can run concurrently.
 
     Returns:
         tuple[JobQueue, JobController]: The job queue and the configured job controller.
     """
+    if not staged_datasets_dir:
+        raise ValueError("staged_datasets_dir must be provided")
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
+    dataset_service = DatasetService(label_service=LabelService(), media_service=MediaService(data_dir=data_dir))
+    dataset_revision_service = DatasetRevisionService(data_dir=data_dir)
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
@@ -63,15 +69,23 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
                 base_weights_service=BaseWeightsService(data_dir=data_dir),
                 subset_service=SubsetService(),
                 subset_assigner=SubsetAssigner(),
-                dataset_service=DatasetService(
-                    label_service=LabelService(), media_service=MediaService(data_dir=data_dir)
-                ),
-                dataset_revision_service=DatasetRevisionService(data_dir=data_dir),
+                dataset_service=dataset_service,
+                dataset_revision_service=dataset_revision_service,
                 model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),
                 data_dir=data_dir,
                 db_session_factory=get_db_session,
             ),
+        ),
+    )
+    job_runnable_factory.register(
+        JobType.EXPORT_DATASET,
+        partial(
+            DatasetExport,
+            staged_datasets_dir=staged_datasets_dir,
+            dataset_service=dataset_service,
+            dataset_revision_service=dataset_revision_service,
+            db_session_factory=get_db_session,
         ),
     )
     process_runner_factory = ProcessRunnerFactory(job_runnable_factory)
@@ -121,11 +135,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         advertise_ip=settings.webrtc_advertise_ip,
     )
     sdp_handler = SDPHandler()
-    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue, webrtc_settings, sdp_handler)
+    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_broadcaster, webrtc_settings, sdp_handler)
     app.state.webrtc_manager = webrtc_manager
     logger.info("Application startup completed")
 
-    job_queue, job_controller = setup_job_controller(data_dir=settings.data_dir, max_parallel_jobs=settings.gpu_slots)
+    job_queue, job_controller = setup_job_controller(
+        data_dir=settings.data_dir,
+        staged_datasets_dir=settings.staged_datasets_dir,
+        max_parallel_jobs=settings.gpu_slots,
+    )
     app.state.job_queue = job_queue
 
     await job_controller.start()

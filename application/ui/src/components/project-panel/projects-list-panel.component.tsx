@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import {
     ActionButton,
     ButtonGroup,
@@ -14,6 +12,7 @@ import {
     Header,
     Heading,
     PhotoPlaceholder,
+    Tag,
     Text,
     View,
 } from '@geti/ui';
@@ -25,21 +24,37 @@ import { paths } from '../../constants/paths';
 import { useProjects } from '../../hooks/api/project.hook';
 import { ProjectsList } from './projects-list.component';
 
-import styles from './projects-list.module.scss';
+import classes from './projects-list.module.scss';
 
 interface SelectedProjectProps {
     name: string;
     id: string | undefined;
+    isActive: boolean;
 }
 
-const SelectedProjectButton = ({ name, id }: SelectedProjectProps) => {
+const SelectedProjectButton = ({ name, id, isActive }: SelectedProjectProps) => {
     return (
-        <ActionButton aria-label={`Selected project ${name}`} isQuiet height={'max-content'} staticColor='white'>
-            <View margin={'size-50'}>{name}</View>
-            <View margin='size-50'>
-                <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
-            </View>
-        </ActionButton>
+        <Flex alignItems={'center'} gap={'size-100'}>
+            <Divider alignSelf={'center'} height={'size-400'} orientation={'vertical'} size={'S'} />
+
+            <ActionButton
+                aria-label={`Selected project ${name}`}
+                isQuiet
+                height={'max-content'}
+                staticColor={'white'}
+                UNSAFE_className={classes.selectedProjectButton}
+            >
+                <View margin='size-50'>
+                    <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
+                </View>
+                <Flex direction={'column'} minWidth={0}>
+                    <View paddingStart={'size-50'} width={'100%'} UNSAFE_className={classes.projectName}>
+                        <span title={name}>{name}</span>
+                    </View>
+                    {isActive ? <Tag className={classes.statusTag} text={'Active'} /> : null}
+                </Flex>
+            </ActionButton>
+        </Flex>
     );
 };
 
@@ -56,7 +71,7 @@ const AddProjectButton = () => {
             width={'100%'}
             marginStart={'size-100'}
             marginEnd={'size-350'}
-            UNSAFE_className={styles.addProjectButton}
+            UNSAFE_className={classes.addProjectButton}
             onPress={addProject}
         >
             <AddCircle />
@@ -69,16 +84,15 @@ export const ProjectsListPanel = () => {
     const projectId = useProjectIdentifier();
     const { data } = useProjects();
 
-    const [projectInEdition, setProjectInEdition] = useState<string | null>(null);
-
     const selectedProject = data.find((project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
+    const hasActivePipeline = Boolean(selectedProject?.active_pipeline);
 
     return (
         <DialogTrigger type='popover' hideArrow>
-            <SelectedProjectButton name={selectedProjectName} id={projectId} />
+            <SelectedProjectButton name={selectedProjectName} id={projectId} isActive={hasActivePipeline} />
 
-            <Dialog width={'size-4600'} UNSAFE_className={styles.dialog}>
+            <Dialog width={'size-4600'} UNSAFE_className={classes.dialog}>
                 <Header>
                     <Flex
                         direction={'column'}
@@ -95,25 +109,22 @@ export const ProjectsListPanel = () => {
                             height={'size-1000'}
                             width={'size-1000'}
                         />
-                        <Heading level={2} marginBottom={0}>
+                        <Heading UNSAFE_style={{ textAlign: 'center' }} level={2} marginBottom={0}>
                             {selectedProjectName}
                         </Heading>
+                        {hasActivePipeline ? <Tag text={'Active'} /> : null}
                     </Flex>
                 </Header>
 
                 <Content>
                     <Divider size={'S'} marginY={'size-200'} />
 
-                    <ProjectsList
-                        projects={data}
-                        projectIdInEdition={projectInEdition}
-                        setProjectInEdition={setProjectInEdition}
-                    />
+                    <ProjectsList projects={data} />
 
                     <Divider size={'S'} marginY={'size-200'} />
                 </Content>
 
-                <ButtonGroup UNSAFE_className={styles.panelButtons}>
+                <ButtonGroup UNSAFE_className={classes.panelButtons}>
                     <AddProjectButton />
                 </ButtonGroup>
             </Dialog>

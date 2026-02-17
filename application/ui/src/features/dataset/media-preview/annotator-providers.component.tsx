@@ -41,7 +41,7 @@ export const AnnotatorProviders = ({
             >
                 <SelectAnnotationProvider>
                     <AnnotationVisibilityProvider>
-                        <AnnotatorProvider key={mode} mediaItem={mediaItem} mode={mode}>
+                        <AnnotatorProvider key={mode} mediaItem={mediaItem}>
                             <CanvasSettingsProvider>{children}</CanvasSettingsProvider>
                         </AnnotatorProvider>
                     </AnnotationVisibilityProvider>

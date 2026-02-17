@@ -7,7 +7,8 @@ from sqlalchemy import CursorResult, Select, delete, func, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
-from app.models import DatasetItemAnnotationStatus
+
+from .filters import _apply_annotation_status_filter, _apply_subset_filter
 
 
 class MediaRepository:
@@ -30,24 +31,6 @@ class MediaRepository:
             stmt = stmt.where(MediaDB.created_at >= start_date)
         if end_date:
             stmt = stmt.where(MediaDB.created_at < end_date)
-        return stmt
-
-    @staticmethod
-    def _apply_annotation_status_filter(stmt: Select, annotation_status: str | None = None) -> Select:
-        """Apply annotation status filter to a select statement."""
-        if annotation_status == DatasetItemAnnotationStatus.UNANNOTATED:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
-        elif annotation_status == DatasetItemAnnotationStatus.REVIEWED:
-            stmt = stmt.where(DatasetItemDB.user_reviewed.is_(True))
-        elif annotation_status == DatasetItemAnnotationStatus.TO_REVIEW:
-            stmt = stmt.where(DatasetItemDB.user_reviewed.is_(False))
-        return stmt
-
-    @staticmethod
-    def _apply_subset_filter(stmt: Select, subset: str | None = None) -> Select:
-        """Apply subset filter to a select statement."""
-        if subset is not None:
-            stmt = stmt.where(DatasetItemDB.subset == subset)
         return stmt
 
     def save(self, media_db: MediaDB) -> MediaDB:
@@ -75,8 +58,8 @@ class MediaRepository:
             .where(MediaDB.project_id == self.project_id)
         )
         stmt = self._apply_date_filters(stmt, start_date, end_date)
-        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
-        stmt = self._apply_subset_filter(stmt, subset)
+        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
@@ -93,8 +76,8 @@ class MediaRepository:
     ) -> list[MediaDB]:
         stmt = self._base_select().join(DatasetItemDB, DatasetItemDB.id == MediaDB.id, isouter=True)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
-        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
-        stmt = self._apply_subset_filter(stmt, subset)
+        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = (
                 stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()

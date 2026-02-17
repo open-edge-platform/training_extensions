@@ -61,8 +61,8 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
 
                     <View width={'100%'} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
-                            <Heading level={3} marginEnd={'size-400'}>
-                                {item.name}
+                            <Heading level={3} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
+                                <span title={item.name}>{item.name}</span>
                             </Heading>
                         </Flex>
 
@@ -76,7 +76,9 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
                         </Flex>
 
                         <Flex gap={'size-100'} direction={'column'}>
-                            <Text>• Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}</Text>
+                            <Text UNSAFE_className={classes.labelList}>
+                                • Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}
+                            </Text>
                         </Flex>
                     </View>
                 </Flex>
@@ -85,6 +87,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
             <MenuActions
                 projectId={item.id}
                 projectName={item.name}
+                activePipeline={item.active_pipeline}
                 actionButtonStyle={{
                     top: dimensionValue(cardPadding),
                     right: dimensionValue(cardPadding),
