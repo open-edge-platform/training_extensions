@@ -16,7 +16,7 @@ interface ToolProps {
 }
 
 const Tool = ({ tool, activeTool, setActiveTool, isDisabled }: ToolProps) => {
-    useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool]);
+    useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool, isDisabled], { enabled: !isDisabled });
 
     return (
         <TooltipTrigger placement={'right'}>
