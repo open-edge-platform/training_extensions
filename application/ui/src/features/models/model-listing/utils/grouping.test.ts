@@ -43,7 +43,12 @@ describe('groupModelsByDataset', () => {
             }),
         ];
 
-        const groupedModels = groupModelsByDataset(models);
+        const groupedModels = groupModelsByDataset(models, {
+            datasetRevisions: [
+                getMockedDatasetRevision({ id: 'dataset-1' }),
+                getMockedDatasetRevision({ id: 'dataset-2' }),
+            ],
+        });
 
         expect(groupedModels).toHaveLength(2);
         expect(groupedModels[0].models).toHaveLength(2);
