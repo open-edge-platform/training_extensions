@@ -3,8 +3,10 @@
 
 import { Button, Flex, Text, View } from '@geti/ui';
 
+import { $api } from '../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../constants/shared-types';
 import { useExportDataset } from '../../../../../hooks/localStorage/use-export-dataset.hook';
+import { downloadFile, formatDownloadUrl } from '../../../../../shared/util';
 import { ExportJobDetails } from './export-details.component';
 
 type ExportCompletedJobProps = {
@@ -13,13 +15,30 @@ type ExportCompletedJobProps = {
 
 export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
     const { removeLsExportId } = useExportDataset();
+    const stageDatasetResponse = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
+        params: { path: { staged_dataset_id: job.metadata.dataset_id } },
+    });
+    /*     const stagedFileResponse = $api.useQuery(
+        'get',
+        '/api/staged_datasets/{staged_dataset_id}/zip',
+        {
+            params: { path: { staged_dataset_id: job.metadata.dataset_id } },
+        },
+        {
+            enabled: stageDatasetResponse?.data?.ready_for_export,
+        }
+    ); */
 
+    console.log('status', stageDatasetResponse.data);
     const handleClose = () => {
         removeLsExportId(job.job_id);
     };
 
     const handleDownload = () => {
-        /* TODO: Implement download functionality https://github.com/open-edge-platform/training_extensions/pull/5443 */
+        downloadFile(
+            formatDownloadUrl(`/api/staged_datasets/${job.metadata.dataset_id}/zip`),
+            `dataset_${job.metadata.dataset_id}.zip`
+        );
     };
 
     return (
@@ -36,13 +55,19 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
                     >
                         Close
                     </Button>
-                    <Button variant='secondary' aria-label='download dataset' onPress={handleDownload}>
+                    <Button
+                        variant='secondary'
+                        aria-label='download dataset'
+                        onPress={handleDownload}
+                        isPending={stageDatasetResponse.isFetching}
+                        isDisabled={stageDatasetResponse.isFetching}
+                    >
                         Download
                     </Button>
                 </Flex>
             </Flex>
 
-            <Text>Main Dataset is ready to download</Text>
+            <Text>Dataset is ready to download</Text>
         </View>
     );
 };

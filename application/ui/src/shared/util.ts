@@ -10,7 +10,6 @@ export type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
 type IsValidArrayType<T> = T extends any[] ? GetElementType<T> : never;
 export const isNonEmptyArray = <T>(value: T): value is IsValidArrayType<T> => Array.isArray(value) && !isEmpty(value);
 
-// Camilo
 export const formatDownloadUrl = (url: string) => (url.startsWith('/') ? url : `/${url}`);
 
 export const downloadFile = (url: string, name?: string) => {

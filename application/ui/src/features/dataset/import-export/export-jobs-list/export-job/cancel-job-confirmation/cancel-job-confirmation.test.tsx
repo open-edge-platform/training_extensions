@@ -11,8 +11,8 @@ import { CancelJobConfirmation } from './cancel-job-confirmation.component';
 
 const mockRemoveLsExportId = vi.fn();
 
-vi.mock('hooks/use-local-storage-dataset.hook', () => ({
-    useLocalStorageDataset: () => ({
+vi.mock('hooks/localStorage/use-export-dataset.hook', () => ({
+    useExportDataset: () => ({
         removeLsExportId: mockRemoveLsExportId,
         getLsExportIds: vi.fn(() => []),
         addLsExportId: vi.fn(),

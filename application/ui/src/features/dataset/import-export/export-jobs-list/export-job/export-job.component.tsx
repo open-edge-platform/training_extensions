@@ -4,35 +4,14 @@
 import { View } from '@geti/ui';
 import { isNil } from 'lodash-es';
 
-import { Job } from '../../../../../constants/shared-types';
-import { isJobDone, isJobPending, isJobRunning } from '../util';
+import { useExportStatus } from '../hooks/use-export-status.hook';
+import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../util';
 import { ExportActiveJob } from './export-active-job.component';
 import { ExportCompletedJob } from './export-completed-job.component';
+import { ExportFailedJob } from './export-failed-job.component';
 
 type ExportJobProps = {
     jobId: string;
-};
-
-/* TODO: Update once https://github.com/open-edge-platform/training_extensions/pull/5443 gets merged*/
-const useExportStatus = (job_id: string) => {
-    return {
-        job: {
-            job_id,
-            progress: 89.99999999,
-            message: 'Exporting dataset',
-            status: 'PENDING',
-            metadata: {
-                project_id: '456',
-                staged_dataset_id: '123',
-                filters: {
-                    include_unannotated: true,
-                    labels: [],
-                },
-            },
-        } as unknown as Job,
-        stagedDatasetId: '123',
-        isFetching: false,
-    };
 };
 
 export const ExportJob = ({ jobId }: ExportJobProps) => {
@@ -53,6 +32,7 @@ export const ExportJob = ({ jobId }: ExportJobProps) => {
             borderWidth='thin'
         >
             {isJobDone(job) && <ExportCompletedJob job={job} />}
+            {isJobFailed(job) && <ExportFailedJob job={job} />}
             {isRunningOrPending && <ExportActiveJob job={job} />}
         </View>
     );

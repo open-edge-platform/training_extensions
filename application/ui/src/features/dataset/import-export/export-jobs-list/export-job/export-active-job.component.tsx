@@ -25,7 +25,7 @@ export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
                     <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 
-                <Text>Main Dataset is being processed in order to export it</Text>
+                <Text>Dataset is being processed in order to export it</Text>
 
                 <Divider size='S' marginY='size-150' />
 

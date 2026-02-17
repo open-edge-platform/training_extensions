@@ -13,7 +13,10 @@ export type ModelFormat = components['schemas']['ModelFormat'];
 export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
 
 export type Job = components['schemas']['JobView'];
-export type ExportDatasetJob = Job & { type: 'export_dataset' };
+export type ExportDatasetJob = Job & {
+    type: 'export_dataset';
+    metadata: components['schemas']['ExportDatasetMetadata'];
+};
 export type ExportDatasetMetadata = ExportDatasetJob['metadata'];
 
 export type Media = components['schemas']['MediaView'];
