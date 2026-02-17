@@ -223,11 +223,8 @@ def get_training_metrics(
     """
     Get metrics computed at training time, such as loss over time, validation accuracy over time, etc.
     """
-    try:
-        training_metrics = model_service.get_model_training_metrics(project_id=project.id, model_id=model_id)
-        return TrainingMetricsView.model_validate({"training_metrics": training_metrics})
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    training_metrics = model_service.get_model_training_metrics(project_id=project.id, model_id=model_id)
+    return TrainingMetricsView.model_validate({"training_metrics": training_metrics})
 
 
 @router.get(

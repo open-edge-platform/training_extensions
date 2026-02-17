@@ -436,13 +436,9 @@ class ModelService(BaseSessionManagedService):
             x_axis_col = "step" if is_step_based else "epoch"
             x_axis_label = "Step" if is_step_based else "Epoch"
 
-            # If it is epoch-based, then we still want the x-axis to be consecutive integers starting from 0,
-            # rather than 0,4,9,14,19. So we will divide the epoch values by the first epoch value + 1
-            y_scale_coef = 1 if is_step_based else (metric_df[x_axis_col][0] + 1)
-
             # Build the points list
             points = [
-                {"x": float(row[x_axis_col] // y_scale_coef), "y": float(row[col]), "type": "point"}
+                {"x": float(row[x_axis_col]), "y": float(row[col]), "type": "point"}
                 for row in metric_df.iter_rows(named=True)
             ]
 
