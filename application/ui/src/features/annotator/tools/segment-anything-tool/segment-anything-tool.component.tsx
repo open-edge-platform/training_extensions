@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, useCallback, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
@@ -16,6 +16,7 @@ import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
+import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 
@@ -50,6 +51,30 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
     );
 };
 
+const useWithCancel = (fn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
+    const abortController = useRef(new AbortController());
+
+    const cancellableCallback = useCallback(
+        async (...args: Parameters<typeof fn>) => {
+            abortController.current = new AbortController();
+
+            const result = await fn(...args);
+
+            if (abortController.current.signal.aborted) {
+                throw new Error('Aborted');
+            }
+
+            return result;
+        },
+        [fn]
+    );
+
+    return {
+        call: cancellableCallback,
+        cancel: () => abortController.current.abort(),
+    };
+};
+
 export const SegmentAnythingTool = () => {
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
     const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
@@ -60,6 +85,7 @@ export const SegmentAnythingTool = () => {
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
+    const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
     const canvasRef = useRef<SVGRectElement>(null);
 
@@ -78,7 +104,8 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
-        throttledDecodingQueryFn([{ ...point, positive: true }])
+        cancellableThrottledDecodingQueryFn
+            .call([{ ...point, positive: true }])
             .then((shapes) => {
                 setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
             })
@@ -116,6 +143,11 @@ export const SegmentAnythingTool = () => {
         handleAddAnnotations(previewShapes, selectedLabel);
     };
 
+    const handlePointerLeave = () => {
+        cancellableThrottledDecodingQueryFn.cancel();
+        setPreviewShapes([]);
+    };
+
     const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
         return {
             shape,
@@ -136,7 +168,7 @@ export const SegmentAnythingTool = () => {
             aria-label='SAM tool canvas'
             onPointerMove={handleMouseMove}
             onPointerDown={handlePointerDown}
-            onPointerLeave={() => setPreviewShapes([])}
+            onPointerLeave={handlePointerLeave}
             style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
