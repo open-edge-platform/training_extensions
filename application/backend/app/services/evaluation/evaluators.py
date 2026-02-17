@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.preprocessing import MultiLabelBinarizer
 
-from app.services.datumaro_converter import DetectionSample
+from app.datumaro_converter import DetectionSample
 
 
 def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
