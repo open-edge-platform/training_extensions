@@ -41,6 +41,7 @@ def test_convert_dataset_item_to_view(fxt_dataset_item) -> None:
     assert view == DatasetItemView(
         id=fxt_dataset_item.id,
         subset=DatasetItemSubset.UNASSIGNED,
+        user_reviewed=False,
     )
 
 
@@ -227,6 +228,7 @@ class TestDatasetItemEndpoints:
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {
             "id": str(fxt_dataset_item.id),
+            "user_reviewed": False,
             "subset": "unassigned",
         }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
@@ -246,6 +248,7 @@ class TestDatasetItemEndpoints:
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {
             "id": str(fxt_dataset_item.id),
+            "user_reviewed": False,
             "subset": "unassigned",
         }
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, ProjectDB
 from app.models import DatasetItemSubset
-from app.services.training.subset_assignment import SubsetAssignment, SubsetService
+from app.services.subset_assignment import SubsetAssignment, SubsetService
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
