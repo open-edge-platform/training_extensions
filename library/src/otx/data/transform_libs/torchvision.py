@@ -469,7 +469,6 @@ class Resize(tvt_v2.Transform):
             img = img.to(torch.uint8)
 
         annotated = img
-
         # Draw masks if available
         if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
             masks = sample.masks
