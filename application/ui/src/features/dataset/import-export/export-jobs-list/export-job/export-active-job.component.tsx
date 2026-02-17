@@ -7,7 +7,7 @@ import { ExportDatasetJob } from '../../../../../constants/shared-types';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { isJobRunning } from '../util';
 import { CancelJobConfirmation } from './cancel-job-confirmation/cancel-job-confirmation.component';
-import { ExportJobDetails } from './export-details.component';
+import { ExportJobDetails } from './export-details/export-details.component';
 
 type ExportActiveJobProps = {
     job: ExportDatasetJob;

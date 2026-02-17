@@ -7,15 +7,15 @@ import { isNil } from 'lodash-es';
 import { useExportStatus } from '../hooks/use-export-status.hook';
 import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../util';
 import { ExportActiveJob } from './export-active-job.component';
-import { ExportCompletedJob } from './export-completed-job.component';
-import { ExportFailedJob } from './export-failed-job.component';
+import { ExportCompletedJob } from './export-completed-job/export-completed-job.component';
+import { ExportFailedJob } from './export-failed-job/export-failed-job.component';
 
 type ExportJobProps = {
     jobId: string;
 };
 
 export const ExportJob = ({ jobId }: ExportJobProps) => {
-    const { job } = useExportStatus(jobId);
+    const { data: job } = useExportStatus(jobId);
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 

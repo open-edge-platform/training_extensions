@@ -24,7 +24,7 @@ export const ExportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {exportIds.map((id) => (
+            {exportIds.toReversed().map((id) => (
                 <ExportJob key={id} jobId={id} />
             ))}
         </Flex>

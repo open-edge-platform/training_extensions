@@ -10,16 +10,11 @@ export type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
 type IsValidArrayType<T> = T extends any[] ? GetElementType<T> : never;
 export const isNonEmptyArray = <T>(value: T): value is IsValidArrayType<T> => Array.isArray(value) && !isEmpty(value);
 
-export const formatDownloadUrl = (url: string) => (url.startsWith('/') ? url : `/${url}`);
-
-export const downloadFile = (url: string, name?: string) => {
+export const downloadFile = (url: string, name: string) => {
     const link = document.createElement('a');
 
-    if (name) {
-        link.download = name;
-    }
-
     link.href = url;
+    link.download = name;
     link.hidden = true;
     link.click();
 

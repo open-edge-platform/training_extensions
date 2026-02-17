@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '../../../../../api/client';
@@ -9,7 +9,7 @@ import { isInvalidJob, isJobDone, isJobFailed } from '../util';
 export const useExportStatus = (jobId: string) => {
     const { removeLsExportId } = useExportDataset();
 
-    const { data, ...others } = $api.useQuery(
+    const response = $api.useQuery(
         'get',
         '/api/jobs/{job_id}',
         { params: { path: { job_id: jobId } } },
@@ -19,12 +19,9 @@ export const useExportStatus = (jobId: string) => {
         }
     );
 
-    if (others.isError && isInvalidJob(others.error)) {
+    if (response.isError && isInvalidJob(response.error)) {
         removeLsExportId(jobId);
     }
 
-    return {
-        job: data,
-        ...others,
-    };
+    return response;
 };

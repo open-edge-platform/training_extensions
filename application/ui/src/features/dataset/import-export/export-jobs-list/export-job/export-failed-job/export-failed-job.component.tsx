@@ -3,9 +3,9 @@
 
 import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
-import { ExportDatasetJob } from '../../../../../constants/shared-types';
-import { useExportDataset } from '../../../../../hooks/localStorage/use-export-dataset.hook';
-import { ExportJobDetails } from './export-details.component';
+import { ExportDatasetJob } from '../../../../../../constants/shared-types';
+import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
+import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportFailedJobProps = {
     job: ExportDatasetJob;
@@ -17,7 +17,6 @@ export const ExportFailedJob = ({ job }: ExportFailedJobProps) => {
     const handleClose = () => {
         removeLsExportId(job.job_id);
     };
-    console.log('failed job', job);
 
     return (
         <View padding='size-150'>

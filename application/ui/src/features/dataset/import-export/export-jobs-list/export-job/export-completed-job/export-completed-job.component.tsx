@@ -3,11 +3,11 @@
 
 import { Button, Flex, Text, View } from '@geti/ui';
 
-import { $api } from '../../../../../api/client';
-import { ExportDatasetJob } from '../../../../../constants/shared-types';
-import { useExportDataset } from '../../../../../hooks/localStorage/use-export-dataset.hook';
-import { downloadFile, formatDownloadUrl } from '../../../../../shared/util';
-import { ExportJobDetails } from './export-details.component';
+import { $api, API_BASE_URL } from '../../../../../../api/client';
+import { ExportDatasetJob } from '../../../../../../constants/shared-types';
+import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
+import { downloadFile } from '../../../../../../shared/util';
+import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportCompletedJobProps = {
     job: ExportDatasetJob;
@@ -18,27 +18,20 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
     const stageDatasetResponse = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
         params: { path: { staged_dataset_id: job.metadata.dataset_id } },
     });
-    /*     const stagedFileResponse = $api.useQuery(
-        'get',
-        '/api/staged_datasets/{staged_dataset_id}/zip',
-        {
-            params: { path: { staged_dataset_id: job.metadata.dataset_id } },
-        },
-        {
-            enabled: stageDatasetResponse?.data?.ready_for_export,
-        }
-    ); */
 
-    console.log('status', stageDatasetResponse.data);
+    const removeStagedDatasetMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+
     const handleClose = () => {
-        removeLsExportId(job.job_id);
+        removeStagedDatasetMutation.mutate(
+            { params: { path: { staged_dataset_id: job.metadata.dataset_id } } },
+            { onSuccess: () => removeLsExportId(job.job_id) }
+        );
     };
 
     const handleDownload = () => {
-        downloadFile(
-            formatDownloadUrl(`/api/staged_datasets/${job.metadata.dataset_id}/zip`),
-            `dataset_${job.metadata.dataset_id}.zip`
-        );
+        const url = `${API_BASE_URL}/api/staged_datasets/${job.metadata.dataset_id}/zip`;
+
+        downloadFile(url, `dataset_${job.metadata.dataset_id}.zip`);
     };
 
     return (
@@ -52,6 +45,8 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
                         style='fill'
                         aria-label='close export dataset status'
                         onPress={handleClose}
+                        isPending={removeStagedDatasetMutation.isPending}
+                        isDisabled={removeStagedDatasetMutation.isPending}
                     >
                         Close
                     </Button>
@@ -60,7 +55,7 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
                         aria-label='download dataset'
                         onPress={handleDownload}
                         isPending={stageDatasetResponse.isFetching}
-                        isDisabled={stageDatasetResponse.isFetching}
+                        isDisabled={stageDatasetResponse.isFetching || removeStagedDatasetMutation.isPending}
                     >
                         Download
                     </Button>
