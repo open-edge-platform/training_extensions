@@ -420,7 +420,7 @@ class HGNetv2Module(nn.Module):
         pretrained (bool, optional): Use backbone pretrained weight. Defaults to False.
     """
 
-    arch_configs: ClassVar = {
+    arch_configs: ClassVar[dict[str, dict[str, Any]]] = {
         "B0": {
             "stem_channels": [3, 16, 16],
             "stage_config": {
@@ -481,9 +481,10 @@ class HGNetv2Module(nn.Module):
         self.use_lab = use_lab
         self.return_idx = return_idx
 
-        stem_channels = self.arch_configs[name]["stem_channels"]
-        stage_config = self.arch_configs[name]["stage_config"]
-        download_url = self.arch_configs[name]["url"]
+        # Explicit type annotations for static analysis
+        stem_channels: list[int] = list(self.arch_configs[name]["stem_channels"])
+        stage_config: dict[str, list[int | bool]] = dict(self.arch_configs[name]["stage_config"])
+        download_url: str = str(self.arch_configs[name]["url"])
 
         self._out_strides = [4, 8, 16, 32]
         self._out_channels = [stage_config[k][2] for k in stage_config]
@@ -498,7 +499,7 @@ class HGNetv2Module(nn.Module):
 
         # stages
         self.stages = nn.ModuleList()
-        for k in stage_config:
+        for v in stage_config.values():
             (
                 in_channels,
                 mid_channels,
@@ -508,7 +509,7 @@ class HGNetv2Module(nn.Module):
                 light_block,
                 kernel_size,
                 layer_num,
-            ) = stage_config[k]
+            ) = v
             self.stages.append(
                 HGStage(
                     in_channels,
