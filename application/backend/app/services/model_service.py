@@ -227,16 +227,16 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
         """
-        path = self._projects_dir / str(project_id) / "models" / str(model_id)
-        if path.exists():
-            shutil.rmtree(path)
-            logger.info("Deleted model files at '{}'", path)
-
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+            logger.info("Deleted model files at '{}'", path)
 
         self._delete_training_dataset_revision_files(deleted_model=model_rev_db)
 
