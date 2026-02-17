@@ -12,7 +12,7 @@ from fastapi.responses import StreamingResponse
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView, ProjectView
+from app.api.schemas import ModelView, ProjectView, TrainingMetricsView
 from app.api.schemas.model import ExtendedModelView
 from app.api.validators import DatasetRevisionID, ModelID
 from app.models.model_revision import ModelFormat
@@ -186,6 +186,27 @@ def delete_model(
             model_service.delete_model(project_id=project.id, model_id=model_id)
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{model_id}/training_metrics",
+    response_model=TrainingMetricsView,
+    responses={
+        status.HTTP_200_OK: {"description": "Training metrics for the model"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model, or metrics file not found"},
+    },
+)
+def get_training_metrics(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> TrainingMetricsView:
+    """
+    Get metrics computed at training time, such as loss over time, validation accuracy over time, etc.
+    """
+    training_metrics = model_service.get_model_training_metrics(project_id=project.id, model_id=model_id)
+    return TrainingMetricsView.model_validate({"training_metrics": training_metrics})
 
 
 @router.get(
