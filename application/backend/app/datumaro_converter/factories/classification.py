@@ -4,7 +4,7 @@
 from datumaro.experimental.fields import ImageInfo
 from loguru import logger
 
-from app.datumaro_converter.samples import ClassificationSample
+from app.datumaro_converter.domain import ClassificationSample
 from app.datumaro_converter.utils import SubsetConverter
 from app.models import DatasetItem, Media
 

@@ -6,8 +6,13 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
+from datumaro.experimental import Dataset, export_dataset
+from datumaro.experimental.categories import Categories, LabelCategories
+from datumaro.experimental.fields import ImageInfo, Subset
 
-from app.models import DatasetFormat
+from app.datumaro_converter import ClassificationSample
+from app.models import AnnotationType, DatasetFormat
+from app.models.dataset import DatasetMetadata
 from app.services import StagedDatasetService
 
 
@@ -18,6 +23,38 @@ def _make_dataset_archive(root: Path, file_name: str, content: bytes = b"data") 
     archive_path = ds_dir / file_name
     archive_path.write_bytes(content)
     return dataset_id, archive_path
+
+
+def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
+    dataset_id = uuid4()
+    ds_dir = root / str(dataset_id) / "dataset"
+    ds_dir.mkdir(parents=True)
+    categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
+    dataset = Dataset(ClassificationSample, categories=categories)
+    dataset.append(
+        ClassificationSample(
+            id=str(uuid4()),
+            image=str(ds_dir / "images/image1.jpg"),
+            image_info=ImageInfo(width=200, height=200),
+            label=0,
+            subset=Subset.TRAINING,
+            confidence=0.9,
+            user_reviewed=True,
+        )
+    )
+    dataset.append(
+        ClassificationSample(
+            id=str(uuid4()),
+            image=str(ds_dir / "images/image2.jpg"),
+            image_info=ImageInfo(width=200, height=200),
+            label=1,
+            subset=Subset.TRAINING,
+            confidence=0.8,
+            user_reviewed=True,
+        )
+    )
+    export_dataset(dataset, ds_dir, export_images=False)
+    return dataset_id, ds_dir
 
 
 @pytest.fixture()
@@ -69,6 +106,7 @@ class TestStagedDatasetServiceIntegration:
     ):
         coco_id, coco_path = _make_dataset_archive(tmp_path, "train_coco.zip", b"coco-bytes")
         voc_id, voc_path = _make_dataset_archive(tmp_path, "some_voc.zip", b"voc-bytes")
+        geti_id, geti_path = _make_dataset_dir(tmp_path)
 
         # non-UUID dir
         bad_dir = tmp_path / "not-a-uuid"
@@ -82,14 +120,27 @@ class TestStagedDatasetServiceIntegration:
 
         coco_ds = next(d for d in datasets if d.id == coco_id)
         voc_ds = next(d for d in datasets if d.id == voc_id)
+        geti_ds = next(d for d in datasets if d.id == geti_id)
 
         assert coco_ds.compressed
         assert coco_ds.format == DatasetFormat.COCO
         assert coco_ds.filename == str(coco_path)
+        assert not geti_ds.metadata
 
         assert voc_ds.compressed
         assert voc_ds.format == DatasetFormat.VOC
         assert voc_ds.filename == str(voc_path)
+        assert not geti_ds.metadata
+
+        assert not geti_ds.compressed
+        assert geti_ds.format == DatasetFormat.GETI
+        assert geti_ds.filename == str(geti_path)
+        assert geti_ds.metadata == DatasetMetadata(
+            num_items=2,
+            annotation_type=AnnotationType.LABEL,
+            num_annotations=2,
+            labels=["cat", "dog", "bird"],
+        )
 
     def test_list_all_ignores_empty_uuid_dirs(self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService):
         empty_id = uuid4()
@@ -103,10 +154,11 @@ class TestStagedDatasetServiceIntegration:
         assert datasets[0].filename == str(valid_path)
         assert datasets[0].format == DatasetFormat.UNKNOWN
 
+    @pytest.mark.parametrize("prefix, data_format", [("coco", DatasetFormat.COCO), ("yolo", DatasetFormat.YOLO)])
     def test_find_by_id_returns_dataset_when_present(
-        self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
+        self, prefix: str, data_format: DatasetFormat, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        dataset_id, archive_path = _make_dataset_archive(tmp_path, "my_coco_dataset.zip", b"123456")
+        dataset_id, archive_path = _make_dataset_archive(tmp_path, f"my_{prefix}_dataset.zip", b"123456")
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
 
@@ -115,7 +167,27 @@ class TestStagedDatasetServiceIntegration:
         assert result.filename == str(archive_path)
         assert result.size == 6
         assert result.compressed is True
-        assert result.format == DatasetFormat.COCO
+        assert result.format == data_format
+
+    def test_find_by_id_returns_geti_dataset_when_present(
+        self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
+    ):
+        dataset_id, dataset_path = _make_dataset_dir(tmp_path)
+
+        result = fxt_staged_dataset_service.find_by_id(dataset_id)
+
+        assert result is not None
+        assert result.id == dataset_id
+        assert result.filename == str(dataset_path)
+        assert result.size == 6
+        assert result.compressed is False
+        assert result.format == DatasetFormat.GETI
+        assert result.metadata == DatasetMetadata(
+            num_items=2,
+            annotation_type=AnnotationType.LABEL,
+            num_annotations=2,
+            labels=["cat", "dog", "bird"],
+        )
 
     def test_find_by_id_returns_none_when_dir_missing(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService

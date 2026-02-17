@@ -3,7 +3,16 @@
 
 from enum import StrEnum
 
+from pydantic import BaseModel
+
 from app.core.models import BaseRequiredIDModel
+
+
+class AnnotationType(StrEnum):
+    BOUNDING_BOX = "bounding_box"
+    POLYGON = "polygon"
+    LABEL = "label"
+    UNKNOWN = "unknown"
 
 
 class DatasetFormat(StrEnum):
@@ -15,9 +24,16 @@ class DatasetFormat(StrEnum):
     UNKNOWN = "unknown"
 
 
+class DatasetMetadata(BaseModel):
+    num_items: int
+    annotation_type: AnnotationType
+    num_annotations: int
+    labels: list[str]
+
+
 class StagedDataset(BaseRequiredIDModel):
     filename: str
     compressed: bool
     format: DatasetFormat
     size: int
-    metadata: dict | None = None
+    metadata: DatasetMetadata | None = None

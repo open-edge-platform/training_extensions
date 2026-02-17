@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import BaseRequiredIDModel
 from app.models import DatasetFormat, DatasetItemSubset, StagedDataset
+from app.models.dataset import DatasetMetadata
 
 
 class DatasetFilters(BaseModel):
@@ -37,7 +38,7 @@ class StagedDatasetView(BaseRequiredIDModel):
     ready_for_export: bool = Field(..., description="Whether the dataset is ready for export")
     ready_for_import: bool = Field(..., description="Whether the dataset is ready for import")
     size: int = Field(..., description="Dataset size in bytes")
-    metadata: dict | None = Field(None, description="Dataset metadata")
+    metadata: DatasetMetadata | None = Field(None, description="Dataset metadata")
 
     model_config = {
         "json_schema_extra": {
