@@ -129,6 +129,7 @@ class TestMediaEndpoints:
             "width": 1024,
             "fps": None,
             "frame_count": None,
+            "duration": None,
         }
         fxt_media_service.create_image.assert_called_once_with(
             project=fxt_get_project,
@@ -164,6 +165,7 @@ class TestMediaEndpoints:
             "width": 1024,
             "fps": 25.0,
             "frame_count": 1000,
+            "duration": 40,
         }
         fxt_media_service.create_video.assert_called_once_with(
             project=fxt_get_project,
@@ -376,8 +378,8 @@ class TestMediaEndpoints:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
 
-    @pytest.mark.parametrize("media_name", ["fxt_image_media", "fxt_video_media"])
-    def test_get_media_success(self, request, media_name, fxt_get_project, fxt_media_service, fxt_client):
+    @pytest.mark.parametrize("media_name, duration", [("fxt_image_media", None), ("fxt_video_media", 40)])
+    def test_get_media_success(self, request, media_name, duration, fxt_get_project, fxt_media_service, fxt_client):
         media = request.getfixturevalue(media_name)
         fxt_media_service.get_media_by_id.return_value = media
 
@@ -395,6 +397,7 @@ class TestMediaEndpoints:
             "width": media.width,
             "fps": media.fps,
             "frame_count": media.frame_count,
+            "duration": duration,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
 
