@@ -39,15 +39,12 @@ def list_models(
     ] = None,
 ) -> list[ModelView]:
     """Get all models in a project, optionally filtered by dataset revision."""
-    try:
-        model_views = []
-        for model_revision in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id):
-            model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
-            model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
-            model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
-        return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    model_views = []
+    for model_revision in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id):
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
+        model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
+    return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
 
 
 @router.get(
@@ -65,14 +62,11 @@ def get_model(
     model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> ExtendedModelView:
     """Get a specific model by ID."""
-    try:
-        model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
-        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
-        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
-        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
-        return ExtendedModelView.model_validate(model_view, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
+    model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+    model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+    model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+    return ExtendedModelView.model_validate(model_view, from_attributes=True)
 
 
 @router.get(
@@ -90,34 +84,29 @@ def download_model_binary(
     format: Annotated[ModelFormat, Query()] = ModelFormat.OPENVINO,
 ) -> StreamingResponse:
     """Download trained model weights in a desired format as a zip archive"""
-    try:
-        files_exist, paths = model_service.get_model_binary_files(
-            project_id=project.id, model_id=model_id, format=format
+    files_exist, paths = model_service.get_model_binary_files(project_id=project.id, model_id=model_id, format=format)
+    if not files_exist:
+        raise ResourceNotFoundError(
+            resource_type=ResourceType.MODEL,
+            resource_id=f"{model_id} with format {format.value}",
         )
-        if not files_exist:
-            raise ResourceNotFoundError(
-                resource_type=ResourceType.MODEL,
-                resource_id=f"{model_id} with format {format.value}",
-            )
 
-        # Create an in-memory zip file
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
-            for path in paths:
-                zip_file.write(path, arcname=os.path.split(path)[1])
+    # Create an in-memory zip file
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
+        for path in paths:
+            zip_file.write(path, arcname=os.path.split(path)[1])
 
-        zip_buffer.seek(0)
+    zip_buffer.seek(0)
 
-        precision = "fp16" if format != ModelFormat.PYTORCH else "fp32"
-        filename = f"model-{model_id}-{format.value}-{precision}.zip"
+    precision = "fp16" if format != ModelFormat.PYTORCH else "fp32"
+    filename = f"model-{model_id}-{format.value}-{precision}.zip"
 
-        return StreamingResponse(
-            zip_buffer,
-            media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-        )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 UPDATE_MODEL_BODY_DESCRIPTION = """
@@ -156,16 +145,11 @@ def rename_model(
     model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> ModelView:
     """Rename a model"""
-    try:
-        model_revision = model_service.rename_model(
-            project_id=project.id, model_id=model_id, model_metadata=model_metadata
-        )
-        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
-        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
-        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
-        return ModelView.model_validate(model_view, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    model_revision = model_service.rename_model(project_id=project.id, model_id=model_id, model_metadata=model_metadata)
+    model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+    model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+    model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+    return ModelView.model_validate(model_view, from_attributes=True)
 
 
 @router.delete(
@@ -200,8 +184,6 @@ def delete_model(
             model_service.delete_model_files(project_id=project.id, model_id=model_id)
         else:
             model_service.delete_model(project_id=project.id, model_id=model_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -232,7 +214,5 @@ async def get_training_logs(
         if not log_file:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
         return FileResponse(log_file, media_type="text/plain", filename=os.path.basename(log_file))
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
