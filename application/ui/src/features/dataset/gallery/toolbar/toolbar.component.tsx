@@ -98,13 +98,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
             queryKey: getQueryKey([
                 'get',
                 '/api/projects/{project_id}/dataset/media',
-                {
-                    params: {
-                        path: {
-                            project_id: projectId,
-                        },
-                    },
-                },
+                { params: { path: { project_id: projectId } } },
             ]),
         });
 
