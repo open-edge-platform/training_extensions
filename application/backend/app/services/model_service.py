@@ -259,7 +259,7 @@ class ModelService(BaseSessionManagedService):
             )
         ):
             DatasetRevisionService(
-                data_dir=self._projects_dir.parent, db_session=self._db_session
+                data_dir=self._projects_dir.parent, db_session=self.db_session
             ).delete_dataset_revision_files(
                 project_id=UUID(deleted_model.project_id), revision_id=UUID(deleted_model.training_dataset_id)
             )
