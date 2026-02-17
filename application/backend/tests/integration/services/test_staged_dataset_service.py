@@ -115,8 +115,8 @@ class TestStagedDatasetServiceIntegration:
 
         datasets = fxt_staged_dataset_service.list_all()
 
-        # Only 2 valid UUID datasets
-        assert {d.id for d in datasets} == {coco_id, voc_id}
+        # Only 3 valid UUID datasets
+        assert {d.id for d in datasets} == {coco_id, voc_id, geti_id}
 
         coco_ds = next(d for d in datasets if d.id == coco_id)
         voc_ds = next(d for d in datasets if d.id == voc_id)
@@ -125,12 +125,12 @@ class TestStagedDatasetServiceIntegration:
         assert coco_ds.compressed
         assert coco_ds.format == DatasetFormat.COCO
         assert coco_ds.filename == str(coco_path)
-        assert not geti_ds.metadata
+        assert not coco_ds.metadata
 
         assert voc_ds.compressed
         assert voc_ds.format == DatasetFormat.VOC
         assert voc_ds.filename == str(voc_path)
-        assert not geti_ds.metadata
+        assert not voc_ds.metadata
 
         assert not geti_ds.compressed
         assert geti_ds.format == DatasetFormat.GETI
@@ -139,7 +139,7 @@ class TestStagedDatasetServiceIntegration:
             num_items=2,
             annotation_type=AnnotationType.LABEL,
             num_annotations=2,
-            labels=["cat", "dog", "bird"],
+            labels=["bird", "cat", "dog"],
         )
 
     def test_list_all_ignores_empty_uuid_dirs(self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService):
@@ -179,14 +179,14 @@ class TestStagedDatasetServiceIntegration:
         assert result is not None
         assert result.id == dataset_id
         assert result.filename == str(dataset_path)
-        assert result.size == 6
+        assert result.size == 128
         assert result.compressed is False
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
             num_items=2,
             annotation_type=AnnotationType.LABEL,
             num_annotations=2,
-            labels=["cat", "dog", "bird"],
+            labels=["bird", "cat", "dog"],
         )
 
     def test_find_by_id_returns_none_when_dir_missing(
