@@ -26,7 +26,7 @@ class MediaView(BaseRequiredIDNameModel):
     @property
     def duration(self) -> float | None:
         """Return duration in seconds"""
-        return self.frame_count // self.fps if self.frame_count is not None and self.fps is not None else None
+        return self.frame_count / self.fps if self.frame_count is not None and self.fps is not None else None
 
     model_config = {
         "json_schema_extra": {
