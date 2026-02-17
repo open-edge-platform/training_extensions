@@ -36,7 +36,7 @@ def get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
     return format_mapping[dataset_format]
 
 
-class DatasetExport(Execution):
+class ExportDataset(Execution):
     def __init__(
         self,
         staged_datasets_dir: Path,
@@ -111,7 +111,7 @@ class DatasetExport(Execution):
         if not dataset:
             logger.warning(
                 "Dataset {} for project {} is empty after applying filters. Nothing to export.",
-                export_params.dataset_id,
+                dataset_id,
                 export_params.project_id,
             )
             return

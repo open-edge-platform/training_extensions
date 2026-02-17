@@ -5,8 +5,10 @@ import zipfile
 from pathlib import Path
 from uuid import UUID
 
+from datumaro.components.dataset import Dataset
 from datumaro.experimental.data_formats.base import DataFormat, load_dataset
-from datumaro.experimental.export_import import export_dataset
+from datumaro.experimental.export_import import export_dataset, import_dataset
+from datumaro.experimental.legacy import convert_from_legacy
 from loguru import logger
 
 from app.execution.base import Execution, ExecutionContext, step
@@ -74,13 +76,8 @@ class PrepareDataset(Execution):
                 #  https://github.com/open-edge-platform/datumaro/issues/2003
                 raise NotImplementedError("VOC import is not implemented yet")
             case DatasetFormat.GETI:
-                from datumaro.experimental.export_import import import_dataset
-
                 dataset = import_dataset(str(archive_path))
             case DatasetFormat.DATUMARO_V1:
-                from datumaro.components.dataset import Dataset
-                from datumaro.experimental.legacy import convert_from_legacy
-
                 legacy_dataset = Dataset.import_from(str(archive_path))
                 dataset = convert_from_legacy(legacy_dataset)
             case _:

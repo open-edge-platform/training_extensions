@@ -1,9 +1,9 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .export import DatasetExport, get_dm_format
+from .export import ExportDataset, get_dm_format
 
 __all__ = [
-    "DatasetExport",
+    "ExportDataset",
     "get_dm_format",
 ]

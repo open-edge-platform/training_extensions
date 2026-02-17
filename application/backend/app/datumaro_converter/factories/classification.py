@@ -39,7 +39,7 @@ class ClassificationSampleFactory(SampleFactory):
         label_index = self._label_index.get_index(annotation.labels[0].id)
 
         if label_index is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
             return None
 
         return ClassificationSample(

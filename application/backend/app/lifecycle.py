@@ -19,7 +19,7 @@ from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
-from app.execution import DatasetExport, OTXTrainer, TrainingDependencies
+from app.execution import ExportDataset, OTXTrainer, TrainingDependencies
 from app.execution.dataset_import.prepare import PrepareDataset
 from app.scheduler import Scheduler
 from app.services import (
@@ -85,7 +85,7 @@ def setup_job_controller(
     job_runnable_factory.register(
         JobType.EXPORT_DATASET,
         partial(
-            DatasetExport,
+            ExportDataset,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
             dataset_revision_service=dataset_revision_service,
