@@ -154,6 +154,16 @@ class TestStagedDatasetServiceIntegration:
         assert datasets[0].filename == str(valid_path)
         assert datasets[0].format == DatasetFormat.UNKNOWN
 
+    def test_list_all_ignores_non_zip(self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService):
+        non_zip_id = uuid4()
+        non_zip_dir = tmp_path / str(non_zip_id)
+        non_zip_dir.mkdir()
+        (non_zip_dir / "file.txt").write_text("not a zip")
+
+        datasets = fxt_staged_dataset_service.list_all()
+
+        assert len(datasets) == 0
+
     @pytest.mark.parametrize("prefix, data_format", [("coco", DatasetFormat.COCO), ("yolo", DatasetFormat.YOLO)])
     def test_find_by_id_returns_dataset_when_present(
         self, prefix: str, data_format: DatasetFormat, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService

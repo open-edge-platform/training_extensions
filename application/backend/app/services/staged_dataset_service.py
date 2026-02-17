@@ -110,7 +110,7 @@ class StagedDatasetService:
                 dataset_id = UUID(item.name)
             except ValueError:
                 continue
-            files = list(item.iterdir())
+            files = [p for p in item.iterdir() if p.is_dir() or (p.is_file() and p.suffix.lower() == ".zip")]
             if not files:
                 continue
 
@@ -135,7 +135,7 @@ class StagedDatasetService:
         if not dataset_dir.is_dir():
             return None
 
-        files = list(dataset_dir.iterdir())
+        files = [p for p in dataset_dir.iterdir() if p.is_dir() or (p.is_file() and p.suffix.lower() == ".zip")]
         if not files:
             return None
 
