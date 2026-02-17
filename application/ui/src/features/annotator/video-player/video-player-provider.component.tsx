@@ -22,6 +22,9 @@ type VideoPlayerContextProps = {
     canSelectPreviousFrame: boolean;
 
     videoFrame: Media | undefined;
+
+    playbackRate: number;
+    changePlaybackRate: (rate: number) => void;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
@@ -35,6 +38,7 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(false);
+    const [playbackRate, setPlaybackRate] = useState<number>(1);
 
     const play = async () => {
         if (videoRef.current === null) {
@@ -98,6 +102,20 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
         videoRef.current.currentTime = videoRef.current.currentTime - step;
     };
 
+    const changePlaybackRate = (rate: number) => {
+        const previousRate = playbackRate;
+        if (videoRef.current === null) {
+            return;
+        }
+
+        try {
+            setPlaybackRate(rate);
+            videoRef.current.playbackRate = rate;
+        } catch {
+            setPlaybackRate(previousRate);
+        }
+    };
+
     return (
         <VideoPlayerContext
             value={{
@@ -112,6 +130,9 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
                 previousFrame,
                 canSelectNextFrame,
                 canSelectPreviousFrame,
+
+                playbackRate,
+                changePlaybackRate,
             }}
         >
             {children}

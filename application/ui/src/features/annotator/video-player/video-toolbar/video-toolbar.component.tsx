@@ -9,6 +9,7 @@ import { clsx } from 'clsx';
 
 import { Toolbar } from '../../../dataset/media-preview/toolbar-container/toolbar-container.component';
 import { useVideoPlayer } from '../video-player-provider.component';
+import { PlaybackSpeedSlider } from './playback-rate.component';
 import { VideoAnnotations } from './video-annotations.component';
 import { VideoControls } from './video-controls.component';
 import { VideoDuration } from './video-duration.component';
@@ -28,6 +29,7 @@ export const VideoToolbar = () => {
                             <Text>Frames</Text>
                             <VideoControls />
                             <VideoDuration />
+                            <PlaybackSpeedSlider />
                         </Flex>
 
                         <Flex alignItems={'center'} gap={'size-100'}>
