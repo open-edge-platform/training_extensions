@@ -519,8 +519,8 @@ class TestMediaServiceIntegration:
         with tempfile.TemporaryDirectory(delete=True) as tmp_dir:
             tmp_file = Path(tmp_dir) / "video.avi"
 
-            fxt_video_data(Path(tmp_file.name))
-            with open(tmp_file.name, mode="rb") as data:
+            fxt_video_data(Path(tmp_file))
+            with open(tmp_file, mode="rb") as data:
                 created_media = fxt_media_service.create_video(
                     project=project,
                     name="test",
