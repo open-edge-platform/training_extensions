@@ -39,20 +39,22 @@ export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDat
         const labelCount = Array.isArray(labels) ? labels.length : 0;
         const datasetRevision = datasetRevisionsMap.get(datasetId);
 
-        if (!groups[datasetId] && datasetRevision !== undefined) {
+        if (!groups[datasetId]) {
             groups[datasetId] = {
                 group: {
                     id: datasetId,
-                    name: datasetRevision.name,
-                    createdAt: formatDatasetStartTime(datasetRevision.created_at),
+                    name: datasetRevision?.name ?? `Dataset #${datasetId.slice(0, 8)}`,
+                    createdAt: formatDatasetStartTime(
+                        datasetRevision ? datasetRevision.created_at : model.training_info.start_time
+                    ),
                     labelCount,
-                    imageCount: datasetRevision.item_counts.total,
+                    imageCount: datasetRevision?.item_counts?.total ?? 0,
                     trainingSubsets: {
-                        training: datasetRevision.item_counts.training,
-                        validation: datasetRevision.item_counts.validation,
-                        testing: datasetRevision.item_counts.testing,
+                        training: datasetRevision?.item_counts?.training ?? 0,
+                        validation: datasetRevision?.item_counts?.validation ?? 0,
+                        testing: datasetRevision?.item_counts?.testing ?? 0,
                     },
-                    filesDeleted: datasetRevision.files_deleted,
+                    filesDeleted: datasetRevision?.files_deleted ?? false,
                 },
                 models: [],
             };
