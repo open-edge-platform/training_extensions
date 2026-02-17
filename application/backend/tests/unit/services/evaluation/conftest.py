@@ -9,7 +9,7 @@ from datumaro.experimental import Dataset
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 
-from app.services.datumaro_converter import (
+from app.datumaro_converter import (
     ClassificationSample,
     DetectionSample,
     InstanceSegmentationSample,
@@ -30,6 +30,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             label=0,
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         ClassificationSample(
             id=str(uuid4()),
@@ -38,6 +39,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             label=1,
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         ClassificationSample(
             id=str(uuid4()),
@@ -46,6 +48,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             label=2,
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         ClassificationSample(
             id=str(uuid4()),
@@ -54,6 +57,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             label=1,
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         ClassificationSample(
             id=str(uuid4()),
@@ -62,6 +66,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             label=2,
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -82,6 +87,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             label=0,
             confidence=0.9,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # correct
         ClassificationSample(
             id=str(uuid4()),
@@ -90,6 +96,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             label=2,
             confidence=0.6,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # wrong
         ClassificationSample(
             id=str(uuid4()),
@@ -98,6 +105,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             label=1,
             confidence=0.5,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # wrong
         ClassificationSample(
             id=str(uuid4()),
@@ -106,6 +114,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             label=1,
             confidence=0.8,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # correct
         ClassificationSample(
             id=str(uuid4()),
@@ -114,6 +123,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             label=2,
             confidence=0.9,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # correct
     )
     for sample in samples:
@@ -136,6 +146,7 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
             label=np.array([0, 1]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         MultilabelClassificationSample(
             id=str(uuid4()),
@@ -144,6 +155,7 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
             label=np.array([1]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         MultilabelClassificationSample(
             id=str(uuid4()),
@@ -152,6 +164,7 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
             label=np.array([2, 0]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -174,6 +187,7 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
             label=np.array([0]),
             confidence=np.array([0.85]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # missing one label
         MultilabelClassificationSample(
             id=str(uuid4()),
@@ -182,6 +196,7 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
             label=np.array([1, 2]),
             confidence=np.array([0.8, 0.6]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # one extra label
         MultilabelClassificationSample(
             id=str(uuid4()),
@@ -190,6 +205,7 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
             label=np.array([2, 0]),
             confidence=np.array([0.9, 0.7]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),  # correct
     )
     for sample in samples:
@@ -211,6 +227,7 @@ def fxt_detection_dataset_gt() -> Dataset:
             label=np.array([1]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         DetectionSample(
             id=str(uuid4()),
@@ -220,6 +237,7 @@ def fxt_detection_dataset_gt() -> Dataset:
             label=np.array([0, 1]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         DetectionSample(
             id=str(uuid4()),
@@ -229,6 +247,7 @@ def fxt_detection_dataset_gt() -> Dataset:
             label=np.array([0]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -250,6 +269,7 @@ def fxt_detection_dataset_pred() -> Dataset:
             label=np.array([1]),  # correct
             confidence=np.array([0.8]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         DetectionSample(
             id=str(uuid4()),
@@ -259,6 +279,7 @@ def fxt_detection_dataset_pred() -> Dataset:
             label=np.array([0, 1]),  # correct
             confidence=np.array([0.9, 0.7]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         DetectionSample(
             id=str(uuid4()),
@@ -268,6 +289,7 @@ def fxt_detection_dataset_pred() -> Dataset:
             label=np.array([1]),  # wrong
             confidence=np.array([0.6]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -289,6 +311,7 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
             label=np.array([0, 1]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
@@ -298,6 +321,7 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
             label=np.array([0]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
@@ -307,6 +331,7 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
             label=np.array([1]),
             confidence=None,
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -330,6 +355,7 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
             label=np.array([0, 1]),  # correct
             confidence=np.array([0.9, 0.75]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
@@ -339,6 +365,7 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
             label=np.array([0]),  # correct
             confidence=np.array([0.8]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
@@ -348,6 +375,7 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
             label=np.array([0]),  # wrong
             confidence=np.array([0.6]),
             subset=Subset.VALIDATION,
+            user_reviewed=True,
         ),
     )
     for sample in samples:

@@ -151,8 +151,8 @@ class JobController:
             match evt:
                 case Started():
                     job.start()
-                case Progress(message=m, value=v):
-                    job.advance(percent=v, msg=m)
+                case Progress(message=m, value=v, metadata=md):
+                    job.advance(percent=v, msg=m, metadata=md)
                 case Done():
                     job.finish()
                     break

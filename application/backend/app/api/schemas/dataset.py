@@ -4,7 +4,7 @@
 from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import BaseRequiredIDModel
-from app.models import DatasetFormat, StagedDataset
+from app.models import DatasetFormat, DatasetItemSubset, StagedDataset
 
 
 class DatasetFilters(BaseModel):
@@ -13,7 +13,7 @@ class DatasetFilters(BaseModel):
         description="List of labels to consider during import or export; any annotation with labels not present in "
         "the list will be filtered out; if the parameter is unspecified (null), then all labels will be considered",
     )
-    subsets: list[str] | None = Field(
+    subsets: list[DatasetItemSubset] | None = Field(
         None,
         description="List of subsets to consider during import or export; any item assigned a subset not present in "
         "the list will be filtered out; if the parameter is unspecified (null), then all subsets will be considered",

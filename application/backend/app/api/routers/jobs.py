@@ -16,7 +16,8 @@ from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_p
 from app.api.schemas.jobs import JobRequest, JobType, JobView
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
-from app.core.jobs.models import JobStatus, TrainingJob, TrainingJobParams
+from app.core.jobs.models import JobStatus
+from app.models import DatasetFormat, ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from app.services import ProjectService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
@@ -54,7 +55,7 @@ async def submit_job(
                 project = project_service.get_project_by_id(job_request.project_id)
                 job = TrainingJob(
                     id=job_id,
-                    project_id=job_request.project_id,
+                    project_id=project.id,
                     log_dir=job_dir,
                     data_dir=data_dir,
                     params=TrainingJobParams(
@@ -62,7 +63,7 @@ async def submit_job(
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
                         task=project.task,
-                        project_id=job_request.project_id,
+                        project_id=project.id,
                         job_id=job_id,
                         dataset_revision_id=job_request.parameters.dataset_revision_id,
                     ),
@@ -74,7 +75,20 @@ async def submit_job(
             case JobType.IMPORT_DATASET_TO_PROJECT:
                 raise NotImplementedError
             case JobType.EXPORT_DATASET:
-                raise NotImplementedError
+                project = project_service.get_project_by_id(job_request.project_id)
+                job = ExportDatasetJob(
+                    id=job_id,
+                    project_id=project.id,
+                    params=ExportDatasetJobParams(
+                        dataset_id=job_request.dataset_id,
+                        project_id=project.id,
+                        task=project.task,
+                        export_format=DatasetFormat(job_request.parameters.export_format),
+                        labels=job_request.parameters.filters.labels,
+                        subsets=job_request.parameters.filters.subsets,
+                        include_unannotated=job_request.parameters.filters.include_unannotated,
+                    ),
+                )
             case JobType.STAGE_DATASET:
                 raise NotImplementedError
             case _:
