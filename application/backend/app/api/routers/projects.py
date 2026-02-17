@@ -14,13 +14,7 @@ from app.api.dependencies import get_data_collector, get_label_service, get_proj
 from app.api.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.api.validators import ProjectID
 from app.models import Label, Task
-from app.services import (
-    LabelService,
-    ProjectService,
-    ResourceInUseError,
-    ResourceNotFoundError,
-    ResourceWithIdAlreadyExistsError,
-)
+from app.services import LabelService, ProjectService, ResourceInUseError, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
 from app.services.label_service import DuplicateLabelsError
 
@@ -126,11 +120,8 @@ def get_project_by_id(
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
     """Get info about a given project"""
-    try:
-        project = project_service.get_project_by_id(project_id)
-        return ProjectView.model_validate(project, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    project = project_service.get_project_by_id(project_id)
+    return ProjectView.model_validate(project, from_attributes=True)
 
 
 @router.patch(
@@ -148,11 +139,8 @@ def rename_project(
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
     """Rename a project"""
-    try:
-        updated = project_service.update_project_name(project_id, project_update_name.name)
-        return ProjectView.model_validate(updated, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    updated = project_service.update_project_name(project_id, project_update_name.name)
+    return ProjectView.model_validate(updated, from_attributes=True)
 
 
 @router.delete(
@@ -174,8 +162,6 @@ def delete_project(
     """Delete a project. Project with a running pipeline cannot be deleted."""
     try:
         project_service.delete_project_by_id(project_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -237,8 +223,6 @@ def update_labels(
             )
         updated_labels = label_service.list_all(project_id=project.id)
         return [LabelView.model_validate(label, from_attributes=True) for label in updated_labels]
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -256,13 +240,10 @@ def get_project_thumbnail(
     project_id: ProjectID, project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> FileResponse:
     """Get the project's thumbnail image"""
-    try:
-        thumbnail_path = project_service.get_project_thumbnail_path(project_id)
-        if thumbnail_path:
-            return FileResponse(path=thumbnail_path)
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    thumbnail_path = project_service.get_project_thumbnail_path(project_id)
+    if thumbnail_path:
+        return FileResponse(path=thumbnail_path)
+    raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(
@@ -279,8 +260,5 @@ def capture_next_pipeline_frame(
     data_collector: Annotated[DataCollector, Depends(get_data_collector)],
 ) -> None:
     """Marks next pipeline frame to be collected"""
-    try:
-        project_service.get_project_by_id(project_id)
-        data_collector.collect_next_frame()
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    project_service.get_project_by_id(project_id)
+    data_collector.collect_next_frame()

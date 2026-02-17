@@ -11,7 +11,7 @@ from app.api.schemas.dataset_item import DatasetItemAssignSubset, DatasetItemsWi
 from app.api.validators import DatasetItemID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
-from app.services import DatasetService, ResourceNotFoundError
+from app.services import DatasetService
 from app.services.dataset_service import DatasetItemFilters, SubsetAlreadyAssignedError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
@@ -87,11 +87,8 @@ def get_dataset_item(
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemView:
     """Get information about a specific dataset item"""
-    try:
-        dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
-        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
+    return DatasetItemView.model_validate(dataset_item, from_attributes=True)
 
 
 @router.patch(
@@ -117,7 +114,5 @@ def assign_dataset_item_subset(
             project_id=project.id, dataset_item_id=dataset_item_id, subset=subset_config.subset
         )
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except SubsetAlreadyAssignedError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

@@ -18,7 +18,7 @@ from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
 from app.models import DatasetFormat, ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
-from app.services import ProjectService, ResourceNotFoundError, SystemService
+from app.services import ProjectService, SystemService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -95,8 +95,6 @@ async def submit_job(
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown job type")
         await job_queue.submit(job)
         return JobView.of(job)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

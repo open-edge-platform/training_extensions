@@ -16,7 +16,7 @@ from app.api.validators import MediaID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.models.media import ImageFormat, MediaType, VideoFormat
-from app.services import DatasetService, MediaService, ResourceNotFoundError
+from app.services import DatasetService, MediaService
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import InvalidImageError, MediaFilters
 
@@ -218,11 +218,8 @@ def get_media(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> MediaView:
     """Get information about a specific media"""
-    try:
-        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-        return MediaView.model_validate(media, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    return MediaView.model_validate(media, from_attributes=True)
 
 
 @router.get(
@@ -239,13 +236,10 @@ def get_media_binary(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> FileResponse:
     """Get media binary content"""
-    try:
-        binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
-        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-        filename = f"{media.name}.{media.format.value.lower()}"
-        return FileResponse(path=binary_path, filename=filename)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    filename = f"{media.name}.{media.format.value.lower()}"
+    return FileResponse(path=binary_path, filename=filename)
 
 
 @router.get(
@@ -262,21 +256,18 @@ def get_media_thumbnail(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> StreamingResponse:
     """Get media thumbnail binary content"""
-    try:
-        thumbnail = media_service.generate_media_thumbnail(project=project, media_id=media_id)
-        buffer = BytesIO()
-        thumbnail.save(buffer, format="JPEG")
-        buffer.seek(0)
-        return StreamingResponse(
-            buffer,
-            media_type="image/jpeg",
-            headers={
-                "Content-Disposition": f"inline; filename={media_id}.jpeg",
-                "Cache-Control": "public, max-age=31536000",
-            },
-        )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    thumbnail = media_service.generate_media_thumbnail(project=project, media_id=media_id)
+    buffer = BytesIO()
+    thumbnail.save(buffer, format="JPEG")
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="image/jpeg",
+        headers={
+            "Content-Disposition": f"inline; filename={media_id}.jpeg",
+            "Cache-Control": "public, max-age=31536000",
+        },
+    )
 
 
 @router.delete(
@@ -294,10 +285,7 @@ def delete_media(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> None:
     """Delete media from the dataset"""
-    try:
-        media_service.delete_media(project=project, media_id=media_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    media_service.delete_media(project=project, media_id=media_id)
 
 
 @router.post(
@@ -352,8 +340,6 @@ def set_media_annotations(
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,
         )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except AnnotationValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -379,31 +365,28 @@ def get_media_annotations(
     """Get the media annotations"""
     # Dataset item has the same ID as media
     dataset_item_id = media_id
-    try:
-        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-        if media.type == MediaType.VIDEO:
-            # Video frames can be identified by video ID and frame timestamp
-            if ts is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
-                )
-            video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=ts)
-            if video_frame is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given timestamp."
-                )
-            dataset_item_id = video_frame.id
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    if media.type == MediaType.VIDEO:
+        # Video frames can be identified by video ID and frame timestamp
+        if ts is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
+            )
+        video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=ts)
+        if video_frame is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given timestamp."
+            )
+        dataset_item_id = video_frame.id
 
-        dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
-        if dataset_item.annotation_data is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media has not been annotated yet.")
-        return MediaAnnotations(
-            annotations=dataset_item.annotation_data,
-            prediction_model_id=dataset_item.prediction_model_id,
-            user_reviewed=dataset_item.user_reviewed,
-        )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
+    if dataset_item.annotation_data is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media has not been annotated yet.")
+    return MediaAnnotations(
+        annotations=dataset_item.annotation_data,
+        prediction_model_id=dataset_item.prediction_model_id,
+        user_reviewed=dataset_item.user_reviewed,
+    )
 
 
 @router.delete(
@@ -425,21 +408,18 @@ def delete_media_annotation(
     """Delete media annotations"""
     # Dataset item has the same ID as media
     dataset_item_id = media_id
-    try:
-        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-        if media.type == MediaType.VIDEO:
-            # Video frames can be identified by video ID and frame timestamp
-            if ts is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
-                )
-            video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=ts)
-            if video_frame is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given timestamp."
-                )
-            dataset_item_id = video_frame.id
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    if media.type == MediaType.VIDEO:
+        # Video frames can be identified by video ID and frame timestamp
+        if ts is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
+            )
+        video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=ts)
+        if video_frame is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given timestamp."
+            )
+        dataset_item_id = video_frame.id
 
-        dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
