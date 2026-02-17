@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useCallback, useRef, useState } from 'react';
+import { PointerEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
@@ -52,16 +52,19 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 };
 
 const useWithCancel = (fn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
-    const abortController = useRef(new AbortController());
+    const abortController = useRef<AbortController | null>(null);
 
     const cancellableCallback = useCallback(
         async (...args: Parameters<typeof fn>) => {
+            // Cancel any ongoing request
+            abortController.current?.abort();
+
             abortController.current = new AbortController();
 
             const result = await fn(...args);
 
             if (abortController.current.signal.aborted) {
-                throw new Error('Aborted');
+                throw new DOMException('Request aborted', 'AbortError');
             }
 
             return result;
@@ -69,9 +72,20 @@ const useWithCancel = (fn: (points: InteractiveAnnotationPoint[]) => Promise<Sha
         [fn]
     );
 
+    const cancel = useCallback(() => {
+        abortController.current?.abort();
+        abortController.current = null;
+    }, [abortController]);
+
+    useEffect(() => {
+        return () => {
+            cancel();
+        };
+    }, [cancel]);
+
     return {
         call: cancellableCallback,
-        cancel: () => abortController.current.abort(),
+        cancel,
     };
 };
 
