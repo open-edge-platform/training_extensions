@@ -3,7 +3,7 @@
 
 from datumaro.experimental import Dataset, Sample
 
-from app.services.datumaro_converter import (
+from app.datumaro_converter import (
     ClassificationSample,
     DetectionSample,
     InstanceSegmentationSample,
