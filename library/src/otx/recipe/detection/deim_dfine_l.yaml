@@ -140,9 +140,6 @@ callbacks:
                     std: [1.0, 1.0, 1.0]
             strong_aug_2:
               augmentations_cpu:
-                - class_path: torchvision.transforms.v2.RandomPhotometricDistort
-                  init_args:
-                    p: 0.5
                 - class_path: torchvision.transforms.v2.RandomZoomOut
                   init_args:
                     fill: 0
@@ -225,6 +222,7 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
+            resize_targets: false
       augmentations_gpu:
         - class_path: kornia.augmentation.Normalize
           init_args:
@@ -237,6 +235,7 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
+            resize_targets: false
       augmentations_gpu:
         - class_path: kornia.augmentation.Normalize
           init_args:

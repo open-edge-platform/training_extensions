@@ -51,6 +51,7 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         data_format: str = "",
         storage_dtype: str = "uint8",
     ) -> None:
+        categories = dm_subset.schema.attributes["labels"].categories.labels
         sample_type = with_image_dtype(DetectionSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
@@ -63,12 +64,10 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
             data_format=data_format,
             storage_dtype=storage_dtype,
         )
-
-        labels = list(dm_subset.schema.attributes["label"].categories.labels)
         self.label_info = LabelInfo(
-            label_names=labels,
-            label_groups=[labels],
-            label_ids=[str(i) for i in range(len(labels))],
+            label_names=list(categories),
+            label_groups=[list(categories)],
+            label_ids=[str(i) for i in range(len(categories))],
         )
 
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:

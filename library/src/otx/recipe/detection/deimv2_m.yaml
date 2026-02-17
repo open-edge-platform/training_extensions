@@ -225,6 +225,7 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
+            resize_targets: false
       augmentations_gpu:
         - class_path: kornia.augmentation.Normalize
           init_args:
@@ -237,6 +238,7 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
+            resize_targets: false
       augmentations_gpu:
         - class_path: kornia.augmentation.Normalize
           init_args:

@@ -41,6 +41,7 @@ from otx.data.entity.validation import (
 if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
+
 # ---------------------------------------------------------------------------
 # Dtype helpers for 16-bit image support
 # ---------------------------------------------------------------------------
@@ -258,6 +259,8 @@ class DetectionSample(OTXSample):
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
+        if self.image.shape[-2:] != shape:
+            self.image = self.image.permute(0, 2, 1)
 
         # Ensure bboxes are tv_tensors.BoundingBoxes
         if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):

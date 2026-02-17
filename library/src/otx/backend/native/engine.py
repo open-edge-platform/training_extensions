@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import copy
 import csv
+import multiprocessing
 import inspect
 import logging
 import os
 import time
 from contextlib import contextmanager
-from multiprocessing import Value
 from pathlib import Path
 from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
@@ -1067,8 +1067,10 @@ class OTXEngine(Engine):
 
         # If AugmentationSchedulerCallback exists and has a data_aug_switch, set up shared memory
         if aug_scheduler_callback is not None and aug_scheduler_callback.data_aug_switch is not None:
-            # Create shared multiprocessing.Value for epoch tracking
-            shared_epoch = Value("i", 0)
+            # Create shared multiprocessing.Value for epoch tracking.
+            # Must use "spawn" context to match the DataLoader's multiprocessing_context,
+            # otherwise the SemLock created in a fork context cannot be shared with spawn workers.
+            shared_epoch = multiprocessing.get_context("spawn").Value("i", 0)
             aug_scheduler_callback.data_aug_switch.set_shared_epoch(shared_epoch)
 
     def _setup_data_aug_switch_for_datasets(self) -> None:
