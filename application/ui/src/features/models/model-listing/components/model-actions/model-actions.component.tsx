@@ -84,7 +84,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                     <MoreMenu />
                 </ActionButton>
                 <Menu onAction={handleAction} aria-label={'Model actions menu'} disabledKeys={disabledKeys}>
-                    <Item key={MODEL_ACTIONS.ACTIVATE}>Activate</Item>
+                    <Item key={MODEL_ACTIONS.ACTIVATE}>Set as active</Item>
                     <Item key={MODEL_ACTIONS.RENAME}>Rename</Item>
                     <Item key={MODEL_ACTIONS.VIEW_LOGS}>View training logs</Item>
                     <Item key={MODEL_ACTIONS.DELETE}>Delete</Item>
