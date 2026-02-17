@@ -252,7 +252,7 @@ class MediaService(BaseSessionManagedService):
                 thumbnail = crop_to_thumbnail(
                     image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
                 )
-                if thumbnail.mode in ("RGBA", "P"):
+                if thumbnail.mode not in ("RGB", "L", "CMYK"):
                     thumbnail = thumbnail.convert("RGB")
         except UnidentifiedImageError:
             logger.error("Failed to open image {} for thumbnail generation", binary_path)
