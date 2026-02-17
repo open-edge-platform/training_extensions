@@ -18,6 +18,7 @@ from app.models import EvaluationResult, ModelRevision, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
+from app.services.dataset_revision_service import DatasetRevisionService
 from app.supported_models import SupportedModels
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
@@ -199,10 +200,7 @@ class ModelService(BaseSessionManagedService):
                 (e.g., the model is referenced by other entities).
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-
-        path = self._projects_dir / str(project_id) / "models" / str(model_id)
-        if path.exists():
-            shutil.rmtree(path)
+        model_to_delete = model_rev_repo.get_by_id(str(model_id))
 
         try:
             deleted = model_rev_repo.delete(str(model_id))
@@ -210,6 +208,14 @@ class ModelService(BaseSessionManagedService):
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+            logger.info("Deleted model files at '{}'", path)
+
+        if model_to_delete is not None:
+            self._delete_training_dataset_revision_files(deleted_model=model_to_delete)
 
     @parent_process_only
     def delete_model_files(self, project_id: UUID, model_id: UUID) -> None:
@@ -221,21 +227,42 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
         """
-        for model_format in ModelFormat:
-            exists, _ = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=model_format)
-
-            # Delete model files from disk, if at least 1 model file is present
-            if exists:
-                path = self._projects_dir / str(project_id) / "models" / str(model_id)
-                shutil.rmtree(path)
-                logger.info("Deleted model files at '{}'", path)
-                break
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+            logger.info("Deleted model files at '{}'", path)
 
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
+
+        self._delete_training_dataset_revision_files(deleted_model=model_rev_db)
+
+    def _delete_training_dataset_revision_files(self, deleted_model: ModelRevisionDB) -> None:
+        """
+        Delete training dataset revision files if all model revisions linked to it have no files
+
+        Also deletes the dataset revision files if no model is linked to it.
+
+        Args:
+            deleted_model: Recently deleted model or model which has its files deleted
+        """
+        model_rev_repo = ModelRevisionRepository(project_id=deleted_model.project_id, db=self.db_session)
+        if (
+            deleted_model is not None
+            and deleted_model.training_dataset_id is not None
+            and all(
+                model_db.files_deleted
+                for model_db in model_rev_repo.list_all(training_dataset_id=deleted_model.training_dataset_id)
+            )
+        ):
+            DatasetRevisionService(
+                data_dir=self._projects_dir.parent, db_session=self._db_session
+            ).delete_dataset_revision_files(
+                project_id=UUID(deleted_model.project_id), revision_id=UUID(deleted_model.training_dataset_id)
+            )
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
