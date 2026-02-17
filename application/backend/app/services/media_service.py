@@ -58,6 +58,8 @@ class MediaService(BaseSessionManagedService):
         self.video_frame_service = video_frame_service
         self.projects_dir = data_dir / "projects"
 
+        self.register_managed_services(video_frame_service)
+
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
         return Image.fromarray(data)

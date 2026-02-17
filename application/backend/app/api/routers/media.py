@@ -304,7 +304,7 @@ def delete_media(
     "/{media_id}/annotations",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"description": "Media\dataset item annotation created", "model": MediaAnnotations},
+        status.HTTP_201_CREATED: {"description": "Media/dataset item annotation created", "model": MediaAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
     },
@@ -362,7 +362,7 @@ def set_media_annotations(
     "/{media_id}/annotations",
     status_code=status.HTTP_200_OK,
     responses={
-        status.HTTP_200_OK: {"description": "Media\dataset item found", "model": MediaAnnotations},
+        status.HTTP_200_OK: {"description": "Media/dataset item found", "model": MediaAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or project ID"},
         status.HTTP_404_NOT_FOUND: {
             "description": "Media, dataset item or project not found or media is not annotated"
