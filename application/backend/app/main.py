@@ -9,8 +9,6 @@
 
 import sys
 
-from app.services.base import ResourceNotFoundError
-
 if getattr(sys, "frozen", False) and __name__ == "__main__":
     print("Calling multiprocessing.freeze_support()")
     import multiprocessing
@@ -52,6 +50,7 @@ from app.api.routers import (
 )
 from app.core.logging import InterceptHandler
 from app.lifecycle import lifespan
+from app.services.base import ResourceNotFoundError
 from app.settings import get_settings
 
 settings = get_settings()
