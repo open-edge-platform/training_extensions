@@ -16,6 +16,7 @@ from torch.utils._pytree import register_pytree_node
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
 
+from otx.backend.native.cli.utils import get_otx_root_path
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.tools.converter import TEMPLATE_ID_MAPPING
@@ -23,7 +24,6 @@ from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
-from otx.backend.native.cli.utils import get_otx_root_path
 
 if TYPE_CHECKING:
     import numpy as np

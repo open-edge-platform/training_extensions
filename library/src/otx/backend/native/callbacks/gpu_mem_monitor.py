@@ -33,7 +33,7 @@ class GPUMemMonitor(Callback):
             batch_size (int): batch size.
         """
         device = trainer.strategy.root_device
-        if device.type in ["cpu", "xpu", "mps"]:
+        if device.type in ["cpu", "mps"]:
             return
 
         device_stats = trainer.accelerator.get_device_stats(device)
@@ -48,6 +48,8 @@ class GPUMemMonitor(Callback):
         elif device.type == "xpu" and torch.xpu.is_available():
             allocated = int(torch.xpu.memory_allocated(device))
             reserved = int(torch.xpu.memory_reserved(device))
+        else:
+            return
 
         allocated_gib = round(allocated / 1024**3, 2)
         reserved_gib = round(reserved / 1024**3, 2)

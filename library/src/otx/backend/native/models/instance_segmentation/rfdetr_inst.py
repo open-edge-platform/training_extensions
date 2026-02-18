@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-import torch
 from rfdetr import (
     RFDETRSeg2XLarge,
     RFDETRSegLarge,
