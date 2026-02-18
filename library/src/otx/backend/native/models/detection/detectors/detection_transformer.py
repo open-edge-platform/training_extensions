@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base DETR model implementations."""
@@ -14,7 +14,7 @@ from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
 
 from otx.backend.native.models.detection.losses import DetrCriterion
-from otx.backend.native.models.detection.utils.utils import generate_scales
+from otx.backend.native.models.detection.utils import generate_scales
 from otx.backend.native.models.modules.base_module import BaseModule
 
 

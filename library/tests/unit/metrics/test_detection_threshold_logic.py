@@ -454,3 +454,5 @@ class TestIntegration:
                 # Verify that only high confidence predictions remain
                 assert len(result.scores[0]) == 3  # No filtering applied in test_step itself
                 assert result.scores[0][0] == 0.9
+                assert result.scores[0][1] == 0.7
+                assert result.scores[0][2] == 0.3

@@ -716,7 +716,20 @@ class FMeasure(Metric):
             (index,) = np.where(
                 np.isclose(list(np.arange(*boxes_pair.confidence_range)), best_confidence_threshold),
             )
-            computed_f_measure = result.per_confidence.all_classes_f_measure_curve[index.item()]
+            if index.size == 0:
+                logger.warning(
+                    "No matching confidence threshold found for %s, using best f-measure.",
+                    best_confidence_threshold,
+                )
+                computed_f_measure = result.best_f_measure
+            elif index.size > 1:
+                logger.warning(
+                    "Multiple matching confidence thresholds found for %s, using first match.",
+                    best_confidence_threshold,
+                )
+                computed_f_measure = result.per_confidence.all_classes_f_measure_curve[int(index[0])]
+            else:
+                computed_f_measure = result.per_confidence.all_classes_f_measure_curve[index.item()]
         else:
             self._f_measure_per_confidence = {
                 "xs": list(np.arange(*boxes_pair.confidence_range)),

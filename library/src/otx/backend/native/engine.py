@@ -910,7 +910,12 @@ class OTXEngine(Engine):
         if self._device.accelerator == DeviceType.xpu:
             self._cache.update(strategy="xpu_single")
             # add plugin for Automatic Mixed Precision on XPU
-            if self._cache.args.get("precision", 32) in [16, "16-mixed", "bf16-mixed", "bf16"]:
+            precision = self._cache.args.get("precision", 32)
+            # Normalize legacy integer precision for backward compatibility
+            if precision == 16:
+                precision = "16-mixed"
+                self._cache.args["precision"] = precision
+            if precision in ["16-mixed", "bf16-mixed", "bf16"]:
                 self._cache.update(
                     plugins=[
                         MixedPrecision(

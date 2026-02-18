@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Monitor GPU memory hook."""
@@ -37,8 +37,17 @@ class GPUMemMonitor(Callback):
             return
 
         device_stats = trainer.accelerator.get_device_stats(device)
-        allocated = int(device_stats.get("allocated_bytes.all.current", torch.cuda.memory_allocated(device)))
-        reserved = int(device_stats.get("reserved_bytes.all.current", torch.cuda.memory_reserved(device)))
+
+        # Prefer stats reported by the accelerator; fall back to device-specific queries.
+        if "allocated_bytes.all.current" in device_stats and "reserved_bytes.all.current" in device_stats:
+            allocated = int(device_stats["allocated_bytes.all.current"])
+            reserved = int(device_stats["reserved_bytes.all.current"])
+        elif device.type == "cuda" and torch.cuda.is_available():
+            allocated = int(torch.cuda.memory_allocated(device))
+            reserved = int(torch.cuda.memory_reserved(device))
+        elif device.type == "xpu" and torch.xpu.is_available():
+            allocated = int(torch.xpu.memory_allocated(device))
+            reserved = int(torch.xpu.memory_reserved(device))
 
         allocated_gib = round(allocated / 1024**3, 2)
         reserved_gib = round(reserved / 1024**3, 2)

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTX Dice metric used for the OTX semantic segmentation task."""
@@ -55,8 +55,14 @@ class OTXDice(DiceScore):
     def update(self, preds: Tensor, target: Tensor) -> None:
         """Update state with predictions and targets. Fix ignore_index handling."""
         # treat ignore_index as a background to exclude it from metric computation
-        preds[target == self.ignore_index] = 0
-        target[target == self.ignore_index] = 0
+        if self.ignore_index is not None:
+            mask = target == self.ignore_index
+            if mask.any():
+                # Work on copies to avoid mutating caller-provided tensors in-place
+                preds = preds.clone()
+                target = target.clone()
+                preds[mask] = 0
+                target[mask] = 0
         super().update(preds.long(), target.long())
 
 

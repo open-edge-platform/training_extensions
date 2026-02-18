@@ -23,6 +23,7 @@ from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
+from otx.backend.native.cli.utils import get_otx_root_path
 
 if TYPE_CHECKING:
     import numpy as np
@@ -530,9 +531,6 @@ def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
     Returns:
         dict: A dictionary mapping task types to lists of template paths and tiling options.
     """
-
-    from otx.backend.native.cli.utils import get_otx_root_path
-
     template_dir = Path(get_otx_root_path()).parent.parent / "tests" / "assets" / "geti" / "model_configs"
     template_paths = template_dir.rglob("*.yaml")
     template_dict = defaultdict(list)
@@ -544,7 +542,9 @@ def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
         model_id = template.get("model_manifest_id")
 
         model_config_path = TEMPLATE_ID_MAPPING[model_id]["recipe_path"]
-        assert isinstance(model_config_path, Path)
+        if not isinstance(model_config_path, Path):
+            msg = f"Expected Path for recipe_path, got {type(model_config_path)}"
+            raise TypeError(msg)
         model_task = OTXTaskType(model_config_path.parent.name.upper())
         has_tiling = (
             template["hyperparameters"].get("dataset_preparation", {}).get("augmentation", {}).get("tiling", None)

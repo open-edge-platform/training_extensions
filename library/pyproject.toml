@@ -54,6 +54,10 @@ dependencies = [
     "pyyaml==6.0.3",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
+    # NOTE: rf-detr is consumed from a specific commit that includes export fixes
+    # for torch>=2.10 and dynamo export support. Once the upstream roboflow/rf-detr
+    # repository publishes a tagged release with these changes, migrate to the
+    # official version pin.
     "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@bf69fe2d11ee6b7e0698e4a27af2081134f9b483",
 ]
 
