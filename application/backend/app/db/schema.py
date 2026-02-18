@@ -100,6 +100,7 @@ class DatasetRevisionDB(BaseID):
     validation_count: Mapped[int] = mapped_column(Integer, default=0)
     testing_count: Mapped[int] = mapped_column(Integer, default=0)
     total_count: Mapped[int] = mapped_column(Integer, default=0)
+    size: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class DatasetItemDB(Base):
