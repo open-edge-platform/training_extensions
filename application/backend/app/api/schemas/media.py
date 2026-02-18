@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from uuid import UUID
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 
 from app.core.models import BaseRequiredIDNameModel, Pagination
 from app.models import DatasetItemAnnotation, MediaFormat, MediaType
@@ -21,12 +21,7 @@ class MediaView(BaseRequiredIDNameModel):
     fps: float | None
     frame_count: int | None
     source_id: UUID | None = None
-
-    @computed_field
-    @property
-    def duration(self) -> float | None:
-        """Return duration in seconds"""
-        return self.frame_count / self.fps if self.frame_count is not None and self.fps is not None else None
+    duration: float | None
 
     model_config = {
         "json_schema_extra": {

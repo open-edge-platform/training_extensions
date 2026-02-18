@@ -34,6 +34,10 @@ class VideoFrameRepository:
         )
         return self.db.scalar(stmt)
 
-    def get_by_video_id(self, video_id: str) -> list[VideoFrameDB]:
-        stmt = select(VideoFrameDB).where(VideoFrameDB.video_id == video_id)
+    def get_by_video_id(self, video_id: str, timestamp_from: float = 0, timestamp_to: int = 10) -> list[VideoFrameDB]:
+        stmt = select(VideoFrameDB).where(
+            VideoFrameDB.video_id == video_id,
+            VideoFrameDB.timestamp >= self._normalize_timestamp(timestamp_from),
+            VideoFrameDB.timestamp < self._normalize_timestamp(timestamp_to),
+        )
         return list(self.db.scalars(stmt).all())

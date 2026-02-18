@@ -143,8 +143,8 @@ class TestVideoFrameServiceIntegration:
         fxt_video_frame: Callable[[float], tuple[MediaDB, VideoFrameDB]],
     ) -> None:
         """Test getting a list of video frames by video ID."""
-        fxt_video_frame(10.0)
-        fxt_video_frame(20.0)
+        fxt_video_frame(1.0)
+        fxt_video_frame(2.0)
 
         video_frames = fxt_video_frame_service.get_frames_by_video_id(video_id=UUID(fxt_video_media.id))
         assert video_frames is not None

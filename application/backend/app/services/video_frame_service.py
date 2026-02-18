@@ -32,7 +32,9 @@ class VideoFrameService(BaseSessionManagedService):
         db_video_frame = repo.get_by_video_id_and_timestamp(video_id=str(video_id), timestamp=timestamp)
         return VideoFrame.model_validate(db_video_frame) if db_video_frame else None
 
-    def get_frames_by_video_id(self, video_id: UUID) -> list[VideoFrame]:
+    def get_frames_by_video_id(
+        self, video_id: UUID, timestamp_from: float = 0, timestamp_to: int = 10
+    ) -> list[VideoFrame]:
         repo = VideoFrameRepository(db=self.db_session)
         db_video_frames = repo.get_by_video_id(video_id=str(video_id))
         return [VideoFrame.model_validate(frame) for frame in db_video_frames]

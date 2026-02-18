@@ -15,7 +15,7 @@ from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
 from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from .label import Label, LabelReference
-from .media import Media, MediaFormat, MediaType
+from .media import Media, MediaFormat, MediaType, VideoFrame
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
@@ -42,7 +42,6 @@ from .source import (
     VideoFileSourceConfig,
 )
 from .task import Task, TaskType
-from .video_frame import VideoFrame
 
 __all__ = [
     "BaseEntity",
