@@ -40,4 +40,24 @@ export class JobsPage {
     getArchitectureText(architecture: string) {
         return this.page.getByText(architecture);
     }
+
+    getViewLogsButton() {
+        return this.page.getByRole('button', { name: 'View logs' });
+    }
+
+    getLogsDialog() {
+        return this.page.getByRole('dialog', { name: 'Training logs' });
+    }
+
+    getCloseLogsDialogButton() {
+        return this.page.getByRole('button', { name: 'Close dialog' });
+    }
+
+    async openLogsDialog() {
+        await this.getViewLogsButton().click();
+    }
+
+    async closeLogsDialog() {
+        await this.getCloseLogsDialogButton().click();
+    }
 }

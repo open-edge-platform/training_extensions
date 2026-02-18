@@ -157,6 +157,22 @@ const test = testBase.extend<Fixtures>({
                     },
                 });
             }),
+            http.get('/api/jobs/{job_id}/logs', () => {
+                // Empty SSE stream for job logs
+                return new HttpResponse(':ok\n\n', {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
+                return new HttpResponse('', {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/plain' },
+                });
+            }),
         ],
     }),
     streamPage: async ({ page }, use) => {

@@ -127,4 +127,20 @@ export class ModelsPage {
     async clickTrainingDatasetsTab() {
         await this.page.getByRole('tab', { name: 'Training datasets' }).click();
     }
+
+    async clickViewTrainingLogsAction() {
+        await this.page.getByRole('menuitem', { name: 'View training logs' }).click();
+    }
+
+    getLogsDialog() {
+        return this.page.getByRole('dialog', { name: 'Training logs' });
+    }
+
+    getCloseLogsDialogButton() {
+        return this.page.getByRole('button', { name: 'Close dialog' });
+    }
+
+    async closeLogsDialog() {
+        await this.getCloseLogsDialogButton().click();
+    }
 }

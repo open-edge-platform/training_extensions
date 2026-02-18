@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
+import { getMockedLogEntryJson } from 'mocks/mock-log-entry';
 import { getMockedExtendedModel, getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -351,5 +352,113 @@ test.describe('Models', () => {
         await expect(page.getByRole('heading', { name: /Training/ })).toBeHidden();
         await expect(page.getByRole('heading', { name: /Validation/ })).toBeHidden();
         await expect(page.getByRole('heading', { name: /Testing/ })).toBeHidden();
+    });
+});
+
+test.describe('Models - Training Logs', () => {
+    const successfulModel = getMockedModel({
+        id: 'model-1',
+        name: 'YOLOX Model v1',
+        architecture: 'Object_Detection_YOLOX_X',
+        training_info: {
+            status: 'successful',
+            label_schema_revision: { labels: [] },
+            start_time: '2025-01-10T10:00:00.000000+00:00',
+            end_time: '2025-01-10T12:30:00.000000+00:00',
+            dataset_revision_id: 'dataset-1',
+        },
+    });
+
+    const failedModel = getMockedModel({
+        id: 'model-2',
+        name: 'Failed Model',
+        architecture: 'Object_Detection_YOLOX_X',
+        training_info: {
+            status: 'failed',
+            label_schema_revision: { labels: [] },
+            start_time: '2025-01-11T10:00:00.000000+00:00',
+            end_time: null,
+            dataset_revision_id: 'dataset-1',
+        },
+    });
+
+    test.beforeEach(({ network }) => {
+        network.use(
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json([successfulModel, failedModel]);
+            }),
+            http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
+                return new HttpResponse('', {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/plain' },
+                });
+            })
+        );
+    });
+
+    test('opens and closes training logs dialog, available for both successful and failed models', async ({
+        modelsPage,
+        page,
+    }) => {
+        await modelsPage.goto();
+
+        await test.step('opens and closes logs dialog for a successful model', async () => {
+            await modelsPage.openModelMenu();
+            await modelsPage.clickViewTrainingLogsAction();
+
+            await expect(modelsPage.getLogsDialog()).toBeVisible();
+
+            await modelsPage.closeLogsDialog();
+
+            await expect(modelsPage.getLogsDialog()).toBeHidden();
+        });
+
+        await test.step('opens logs dialog for a failed model', async () => {
+            await page.getByLabel('Model actions').nth(1).click();
+            await modelsPage.clickViewTrainingLogsAction();
+
+            await expect(modelsPage.getLogsDialog()).toBeVisible();
+
+            await modelsPage.closeLogsDialog();
+
+            await expect(modelsPage.getLogsDialog()).toBeHidden();
+        });
+    });
+
+    test('shows logs fetched from the model logs endpoint', async ({ modelsPage, network }) => {
+        const logMessage = 'Epoch 1/30';
+
+        network.use(
+            http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
+                return new HttpResponse(getMockedLogEntryJson({ message: logMessage }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/plain' },
+                });
+            })
+        );
+
+        await modelsPage.goto();
+
+        await modelsPage.openModelMenu();
+        await modelsPage.clickViewTrainingLogsAction();
+
+        await expect(modelsPage.getLogsDialog()).toBeVisible();
+        await expect(modelsPage.getLogsDialog().getByText('Epoch 1/30')).toBeVisible();
+    });
+
+    test('shows error state when model logs endpoint fails', async ({ modelsPage, network }) => {
+        network.use(
+            http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
+                return new HttpResponse(null, { status: 500, statusText: 'Internal Server Error' });
+            })
+        );
+
+        await modelsPage.goto();
+
+        await modelsPage.openModelMenu();
+        await modelsPage.clickViewTrainingLogsAction();
+
+        await expect(modelsPage.getLogsDialog()).toBeVisible();
+        await expect(modelsPage.getLogsDialog().getByText(/Failed to load logs/)).toBeVisible();
     });
 });

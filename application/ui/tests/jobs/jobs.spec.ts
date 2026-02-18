@@ -37,18 +37,16 @@ test.describe('Jobs - Current Training', () => {
         );
     });
 
-    test('displays current training section when a job is running', async ({ jobsPage }) => {
+    test('displays current training section with architecture, tags and logs button for a running job', async ({
+        jobsPage,
+    }) => {
         await jobsPage.goto();
 
         await expect(jobsPage.getCurrentTrainingSection()).toBeVisible();
         await expect(jobsPage.getTrainingTag()).toBeVisible();
         await expect(jobsPage.getStatusTag()).toBeVisible();
-    });
-
-    test('shows model architecture in training row', async ({ jobsPage }) => {
-        await jobsPage.goto();
-
         await expect(jobsPage.getArchitectureText('Custom_Object_Detection_Gen3_ATSS')).toBeVisible();
+        await expect(jobsPage.getViewLogsButton()).toBeVisible();
     });
 
     test('can cancel a running training job', async ({ jobsPage, network }) => {
@@ -78,5 +76,15 @@ test.describe('Jobs - Current Training', () => {
         await jobsPage.goto();
 
         await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
+    });
+
+    test('opens and closes training logs dialog when "Logs" button is clicked', async ({ jobsPage }) => {
+        await jobsPage.goto();
+
+        await jobsPage.openLogsDialog();
+        await expect(jobsPage.getLogsDialog()).toBeVisible();
+
+        await jobsPage.closeLogsDialog();
+        await expect(jobsPage.getLogsDialog()).toBeHidden();
     });
 });

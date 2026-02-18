@@ -26,3 +26,11 @@ export const getMockedLogEntry = (overrides: Partial<LogEntry['record']> = {}): 
 export const getMockedLogEntryJson = (overrides: Partial<LogEntry['record']> = {}): string => {
     return JSON.stringify(getMockedLogEntry(overrides));
 };
+
+export const createMockLogs = (): LogEntry[] => [
+    getMockedLogEntry({ level: { icon: '🐛', name: 'DEBUG', no: 10 }, message: 'Debug init step' }),
+    getMockedLogEntry({ level: { icon: 'ℹ️', name: 'INFO', no: 20 }, message: 'Starting training loop' }),
+    getMockedLogEntry({ level: { icon: 'ℹ️', name: 'INFO', no: 20 }, message: 'Epoch 1/30' }),
+    getMockedLogEntry({ level: { icon: '⚠️', name: 'WARNING', no: 30 }, message: 'Low GPU memory detected' }),
+    getMockedLogEntry({ level: { icon: '❌', name: 'ERROR', no: 40 }, message: 'Validation metric below threshold' }),
+];
