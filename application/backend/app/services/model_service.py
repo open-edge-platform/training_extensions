@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
+import polars as pl
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -17,9 +18,53 @@ from app.models import EvaluationResult, ModelRevision, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
+from app.supported_models import SupportedModels
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .parent_process_guard import parent_process_only
+
+# Mapping of CSV column keys to display names for series metrics.
+# Keys not included here will be ignored.
+KEY_MAPPING = {
+    "epoch": "Epoch",
+    "lr-SGD": "Learning rate (SGD)",
+    "lr-SGD-1": "Learning rate (SGD-1)",
+    "lr-SGD-1-momentum": "Learning rate momentum (SGD-1)",
+    "lr-SGD-momentum": "Learning rate momentum (SGD)",
+    "step": "Step",
+    "train/data_time": "Training data time",
+    "train/iter_time": "Training iteration time",
+    "train/loss": "Training loss",
+    "train/loss_bbox": "Training loss bbox",
+    "train/loss_centerness": "Training loss centerness",
+    "train/loss_cls": "Training loss cls",
+    "train/loss_mask": "Training loss mask",
+    "train/loss_obj": "Training loss obj",
+    "train/total_loss": "Training total loss",
+    "val/accuracy": "Validation accuracy",
+    "val/classes": "Validation classes",
+    "val/f1-score": "Validation F1 score",
+    "val/map": "Validation mAP",
+    "val/map_50": "Validation mAP@50",
+    "val/map_75": "Validation mAP@75",
+    "val/map_large": "Validation mAP large",
+    "val/map_medium": "Validation mAP medium",
+    "val/map_per_class": "Validation mAP per class",
+    "val/map_small": "Validation mAP small",
+    "val/mar_1": "Validation mAR@1",
+    "val/mar_10": "Validation mAR@10",
+    "val/mar_100": "Validation mAR@100",
+    "val/mar_100_per_class": "Validation mAR@100 per class",
+    "val/mar_large": "Validation mAR large",
+    "val/mar_medium": "Validation mAR medium",
+    "val/mar_small": "Validation mAR small",
+    "validation/data_time": "Validation data time",
+    "validation/iter_time": "Validation iteration time",
+}
+
+# Columns that should be excluded from metrics parsing
+# (used as axis values or are not actual metrics)
+BLACKLISTED_KEYS = {"epoch", "step"}
 
 
 @dataclass(frozen=True)
@@ -233,11 +278,13 @@ class ModelService(BaseSessionManagedService):
         project_id = str(metadata.project_id)
         label_repo = LabelRepository(project_id=project_id, db=self.db_session)
         labels_schema_rev = {"labels": [{"name": label.name, "id": label.id} for label in label_repo.list_all()]}
+        arch_name = SupportedModels.get_model_manifest_by_id(metadata.architecture_id).name
+
         model_revision_repo = ModelRevisionRepository(project_id=project_id, db=self.db_session)
         model_revision_repo.save(
             ModelRevisionDB(
                 id=str(metadata.model_id),
-                name=f"{metadata.architecture_id} ({str(metadata.model_id).split('-')[0]})",
+                name=f"{arch_name} ({str(metadata.model_id).split('-')[0]})",
                 project_id=str(metadata.project_id),
                 architecture=metadata.architecture_id,
                 parent_revision=str(metadata.parent_revision_id) if metadata.parent_revision_id else None,
@@ -311,6 +358,142 @@ class ModelService(BaseSessionManagedService):
 
         evaluation_repo = EvaluationRepository(self.db_session)
         evaluation_repo.save(evaluation_db)
+
+    def get_model_training_metrics(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+    ) -> list[dict]:
+        """
+        Get training metrics from the metrics.csv file for a model.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            list[dict]: A list of metric dictionaries
+
+        Raises:
+            ResourceNotFoundError: If the model or metrics file is not found.
+        """
+        # Verify the model exists
+        model_revision = self.get_model(project_id=project_id, model_id=model_id)
+        if model_revision.files_deleted:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        # training + validation metrics are version_0, testing metrics are version_1
+        metrics_file = (
+            self._projects_dir / str(project_id) / "models" / str(model_id) / "metrics" / "version_0" / "metrics.csv"
+        )
+        if not metrics_file.exists():
+            raise ResourceNotFoundError(ResourceType.MODEL, f"{model_id} (metrics.csv not found)")
+
+        return self._parse_metrics_csv(metrics_file)
+
+    @staticmethod
+    def _parse_metrics_csv(metrics_file: Path) -> list[dict]:
+        """
+        Parse a metrics CSV file and return the formatted metrics.
+
+        For each metric column (excluding 'epoch', 'step', and blacklisted keys):
+        1. Filter out rows with null values in the metric column
+        2. Determine if the metric is epoch-based or step-based by checking if 'step'
+           contains consecutive integers from 1 to N
+        3. Build a TrainingMetrics object for that metric
+
+        Args:
+            metrics_file (Path): Path to the metrics.csv file.
+
+        Returns:
+            list[dict]: A list of formatted metric dictionaries.
+        """
+        metrics: list[dict] = []
+
+        # Read the CSV file with polars
+        df = pl.read_csv(metrics_file)
+
+        # Get all metric columns (exclude 'epoch', 'step', and blacklisted keys)
+        metric_columns = [col for col in df.columns if col not in BLACKLISTED_KEYS and col in KEY_MAPPING]
+
+        for col in metric_columns:
+            mapped_name = KEY_MAPPING.get(col)
+
+            # Filter to include only 'epoch', 'step', and the current metric column
+            # Then filter out rows where the metric column has null values
+            metric_df = df.select(["epoch", "step", col]).filter(pl.col(col).is_not_null())
+
+            if metric_df.is_empty():
+                logger.debug("Metric '{}' has no non-null values, skipping", col)
+                continue
+
+            # Determine if the metric is step-based or epoch-based
+            # Step-based: 'step' column contains consecutive integers from 1 to N
+            # Epoch-based: 'epoch' column contains consecutive integers from 1 to N
+            is_step_based = ModelService._is_step_based(metric_df)
+
+            # Choose the appropriate x-axis column
+            x_axis_col = "step" if is_step_based else "epoch"
+            x_axis_label = "Step" if is_step_based else "Epoch"
+
+            # Build the points list
+            points = [
+                {"x": float(row[x_axis_col]), "y": float(row[col]), "type": "point"}
+                for row in metric_df.iter_rows(named=True)
+            ]
+
+            metric = {
+                "header": mapped_name,
+                "type": "line",
+                "key": mapped_name,
+                "value": {
+                    "x_axis_label": x_axis_label,
+                    "y_axis_label": mapped_name,
+                    "line_data": [
+                        {
+                            "header": mapped_name,
+                            "key": mapped_name,
+                            "points": points,
+                        }
+                    ],
+                },
+            }
+            metrics.append(metric)
+
+        return metrics
+
+    @staticmethod
+    def _is_step_based(metric_df: pl.DataFrame) -> bool:
+        """
+        Determine if a metric is step-based by checking if the 'step' column
+        contains all consecutive integers from 1 to N without skipping any value.
+
+        Args:
+            metric_df (pl.DataFrame): DataFrame to check for step-based or epoch-based metric.
+                It is expected to have 'step' and 'epoch' columns, and at least one metric column (with no null values)
+
+        Returns:
+            bool: True if the metric is step-based, False if epoch-based.
+        """
+        # Get the step values and filter out nulls
+        step_values = metric_df.select("step")
+        epoch_values = metric_df.select("epoch")
+
+        if step_values.is_empty() or epoch_values.is_empty():
+            raise ValueError("Malformed metrics data: 'step' or 'epoch' column is missing or empty")
+
+        # Get unique step values and sort them
+        unique_steps = step_values["step"].unique()
+
+        # Get the minimum and maximum step values
+        min_step = int(unique_steps.min())  # pyrefly: ignore[no-matching-overload]
+        max_step = int(unique_steps.max())  # pyrefly: ignore[no-matching-overload]
+
+        # Expected count for consecutive integers from min to max
+        expected_count = max_step - min_step + 1
+
+        # If the number of unique steps equals the expected count, they are consecutive and hence step-based
+        return len(unique_steps) == expected_count
 
     def get_logs(self, project_id: UUID, model_id: UUID) -> Path | None:
         """

@@ -13,6 +13,7 @@ from .dataset import DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
+from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from .label import Label, LabelReference
 from .media import Media, MediaFormat, MediaType
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
@@ -57,6 +58,8 @@ __all__ = [
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "EvaluationResult",
+    "ExportDatasetJob",
+    "ExportDatasetJobParams",
     "FixedRateDataCollectionPolicy",
     "FolderSinkConfig",
     "FullImage",
@@ -88,6 +91,8 @@ __all__ = [
     "Task",
     "TaskType",
     "TrainingInfo",
+    "TrainingJob",
+    "TrainingJobParams",
     "TrainingStatus",
     "USBCameraSourceConfig",
     "VideoFileSourceConfig",

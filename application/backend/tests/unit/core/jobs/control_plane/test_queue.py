@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.jobs.control_plane.queue import CancellationResult, JobQueue
-from app.core.jobs.models import JobStatus
+from app.core.jobs.models import JobStatus, now_utc_ts
 
 
 class TestJobQueue:
@@ -122,6 +122,31 @@ class TestJobQueue:
         assert len(result) == 2
         assert pending_job in result
         assert running_job in result
+
+    def test_list_stale_jobs(self, fxt_job):
+        """Test listing only stale jobs."""
+        queue = JobQueue()
+
+        pending_job = fxt_job()
+        running_job = fxt_job()
+        running_job.start()
+        stale_job = fxt_job()
+        stale_job.start()
+        stale_job.updated_at = now_utc_ts() - 3601
+        done_job = fxt_job()
+        done_job.finish()
+        failed_job = fxt_job()
+        failed_job.fail("error")
+        cancelled_job = fxt_job()
+        cancelled_job.cancel()
+
+        jobs = [pending_job, running_job, stale_job, done_job, failed_job, cancelled_job]
+        for job in jobs:
+            queue._by_id[job.id] = job
+
+        result = queue.list_stale_jobs()
+        assert len(result) == 1
+        assert stale_job == result[0]
 
     @pytest.mark.parametrize(
         "initial_status, expected_result, expected_status",
