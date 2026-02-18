@@ -4,6 +4,7 @@
 import { createContext, ReactNode, RefObject, use, useRef, useState } from 'react';
 
 import { type Media } from '../../../constants/shared-types';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 
 type VideoPlayerContextProps = {
     videoRef: RefObject<HTMLVideoElement | null>;
@@ -21,7 +22,7 @@ type VideoPlayerContextProps = {
     previousFrame: () => void;
     canSelectPreviousFrame: boolean;
 
-    videoFrame: Media | undefined;
+    videoFrame: Media;
 
     playbackRate: number;
     changePlaybackRate: (rate: number) => void;
@@ -31,10 +32,10 @@ const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    videoFrame: Media | undefined;
+    mediaItem: Media;
 };
 
-export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProviderProps) => {
+export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProviderProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -77,8 +78,8 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
         });
     };
 
-    const frames = videoFrame?.frame_count ?? 1;
-    const fps = videoFrame?.fps || 1;
+    const frames = mediaItem?.frame_count ?? 1;
+    const fps = mediaItem?.fps || 1;
     const step = 1 / fps;
     const currentTime = videoRef.current?.currentTime ?? 0;
 
@@ -116,28 +117,27 @@ export const VideoPlayerProvider = ({ children, videoFrame }: VideoPlayerProvide
         }
     };
 
-    return (
-        <VideoPlayerContext
-            value={{
-                videoFrame,
-                videoRef,
-                isPlaying,
-                play,
-                pause,
-                toggleMute,
-                isMuted,
-                nextFrame,
-                previousFrame,
-                canSelectNextFrame,
-                canSelectPreviousFrame,
+    const value =
+        isVideoFrame(mediaItem) || isVideo(mediaItem)
+            ? {
+                  videoFrame: mediaItem,
+                  videoRef,
+                  isPlaying,
+                  play,
+                  pause,
+                  toggleMute,
+                  isMuted,
+                  nextFrame,
+                  previousFrame,
+                  canSelectNextFrame,
+                  canSelectPreviousFrame,
 
-                playbackRate,
-                changePlaybackRate,
-            }}
-        >
-            {children}
-        </VideoPlayerContext>
-    );
+                  playbackRate,
+                  changePlaybackRate,
+              }
+            : null;
+
+    return <VideoPlayerContext value={value}>{children}</VideoPlayerContext>;
 };
 
 export const useVideoPlayer = () => {

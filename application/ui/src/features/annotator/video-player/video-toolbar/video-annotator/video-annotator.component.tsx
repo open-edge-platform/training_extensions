@@ -5,6 +5,7 @@ import { Grid, View } from '@geti/ui';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 
 import { Labels } from './labels/labels.component';
+import { VideoTimeline } from './video-timeline/video-timeline.component';
 
 export const VideoAnnotator = () => {
     const labels = useProjectLabels();
@@ -20,7 +21,9 @@ export const VideoAnnotator = () => {
             <View gridArea={'labels'}>
                 <Labels labels={labels} />
             </View>
-            <View gridArea={'timeline'} />
+            <View gridArea={'timeline'}>
+                <VideoTimeline />
+            </View>
         </Grid>
     );
 };
