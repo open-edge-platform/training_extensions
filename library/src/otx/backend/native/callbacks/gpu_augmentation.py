@@ -164,10 +164,10 @@ class GPUAugmentationCallback(Callback):
         if result.get("bboxes") is not None:
             # Kornia may return plain tensors, wrap them back to BoundingBoxes
             batch.bboxes = [
-                tv_tensors.BoundingBoxes(b, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=batch.images.shape[-2:])
+                tv_tensors.BoundingBoxes(b, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=batch.bboxes[i].canvas_size)
                 if not isinstance(b, tv_tensors.BoundingBoxes)
                 else b
-                for b in result["bboxes"]
+                for i, b in enumerate(result["bboxes"])
             ]
         if result.get("masks") is not None:
             # Kornia may return plain tensors, wrap them back to Mask

@@ -249,7 +249,7 @@ class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(
-        dtype=pl.UInt8(), format="BGR", channels_first=True
+        dtype=pl.UInt8(), format="RGB", channels_first=True
     )
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
     # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes

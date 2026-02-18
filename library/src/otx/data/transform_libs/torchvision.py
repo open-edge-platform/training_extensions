@@ -432,13 +432,13 @@ class Resize(tvt_v2.Transform):
         from PIL import Image
         from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 
-        os.makedirs("debug_resize", exist_ok=True)
+        os.makedirs("debug_resize_new", exist_ok=True)
 
         # Get unique id for this sample
         sample_id = id(sample)
 
         # Debug log to file since stdout may be redirected
-        log_file = "debug_resize/debug_log.txt"
+        log_file = "debug_resize_new/debug_log.txt"
         with open(log_file, "a") as f:
             f.write(f"\n=== Sample {sample_id} ===\n")
 
@@ -489,7 +489,7 @@ class Resize(tvt_v2.Transform):
             annotated = draw_bounding_boxes(annotated, bboxes, colors="red", width=2)
 
         # Save annotated image
-        img_path = f"debug_resize/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
+        img_path = f"debug_resize_new/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
         Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
 
 
