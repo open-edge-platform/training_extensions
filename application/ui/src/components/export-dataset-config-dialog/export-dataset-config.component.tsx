@@ -16,7 +16,6 @@ import {
     Radio,
     RadioGroup,
     Link as SpectrumLink,
-    TextField,
     View,
 } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
@@ -41,6 +40,7 @@ export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: Expo
     const { data: selectedProject } = useProject();
 
     const [formState, submitAction, isPending] = useExportDatasetJobAction({
+        datasetId,
         onSuccess: dialogState.close,
     });
 
@@ -66,8 +66,6 @@ export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: Expo
 
                         <View backgroundColor='gray-75' padding='size-200' borderRadius='regular'>
                             <Form id={FORM_ID} validationBehavior='native' action={submitAction}>
-                                <TextField isHidden label='dataset_id' name='dataset_id' value={datasetId ?? 'null'} />
-
                                 <MultiSelectList
                                     name='labels'
                                     items={labels}

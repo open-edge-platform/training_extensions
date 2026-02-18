@@ -7,12 +7,15 @@ import { isEmpty } from 'lodash-es';
 import { useExportDataset } from '../../../../hooks/localStorage/use-export-dataset.hook';
 import { ExportJob } from './export-job/export-job.component';
 
+const isMainDataset = <T extends { datasetId: string | null }>({ datasetId }: T) => datasetId === null;
+
 export const ExportJobsList = () => {
     const { getLsExportIds } = useExportDataset();
 
-    const exportIds = getLsExportIds() ?? [];
+    const exportItems = getLsExportIds() ?? [];
+    const filteredExportItems = exportItems.filter(isMainDataset);
 
-    if (isEmpty(exportIds)) {
+    if (isEmpty(filteredExportItems)) {
         return null;
     }
 
@@ -24,8 +27,8 @@ export const ExportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {exportIds.toReversed().map((id) => (
-                <ExportJob key={id} jobId={id} />
+            {filteredExportItems.toReversed().map((item) => (
+                <ExportJob key={item.jobId} jobId={item.jobId} />
             ))}
         </Flex>
     );

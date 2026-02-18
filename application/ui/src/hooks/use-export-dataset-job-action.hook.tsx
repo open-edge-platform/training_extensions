@@ -24,22 +24,21 @@ const initialState: FormValues = {
 };
 
 type useExportDatasetJobActionProps = {
+    datasetId: string | null;
     onSuccess: () => void;
 };
 
-export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActionProps) => {
+export const useExportDatasetJobAction = ({ datasetId, onSuccess }: useExportDatasetJobActionProps) => {
     const projectId = useProjectIdentifier();
-    const { addLsExportId } = useExportDataset();
     const exportJobMutation = $api.useMutation('post', '/api/jobs');
+    const { addLsExportId } = useExportDataset();
 
     return useActionState<FormValues, FormData>(async (_prevState, formData) => {
-        const datasetId = String(formData.get('dataset_id'));
-
         const options: FormValues = {
             labels: formData.getAll('labels').filter(isString),
             export_format: String(formData.get('export_format')),
             include_unannotated: formData.get('include_unannotated') === 'on',
-            dataset_id: datasetId !== 'null' ? datasetId : null,
+            dataset_id: datasetId,
         };
 
         const { job_id } = await exportJobMutation.mutateAsync({
@@ -57,9 +56,8 @@ export const useExportDatasetJobAction = ({ onSuccess }: useExportDatasetJobActi
             },
         });
 
-        addLsExportId(job_id);
+        addLsExportId(job_id, datasetId);
         onSuccess();
-        console.log('Export dataset job options:', options);
 
         return options;
     }, initialState);
