@@ -32,7 +32,7 @@ export const getMockedJobExportJob = (job: Partial<ExportDatasetJob>): ExportDat
     ...getMockedJob(),
     type: 'export_dataset',
     metadata: {
-        staged_dataset_id: 'staged-dataset-123',
+        dataset_id: 'staged-dataset-123',
         project_id: 'project-123',
         filters: {
             include_unannotated: false,

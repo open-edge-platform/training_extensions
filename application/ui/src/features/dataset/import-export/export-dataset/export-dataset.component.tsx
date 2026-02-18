@@ -42,8 +42,11 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
 
     const labels = selectedProject.task?.labels?.map((label) => ({ id: label.name, name: label.name })) ?? [];
 
-    const cocoType = isClassificationTask(selectedProject.task.task_type) ? [] : [{ label: 'COCO', value: 'coco' }];
-    const typeItems = [{ label: 'GETI', value: 'geti' }, { label: 'YOLO', value: 'yolo' }, ...cocoType];
+    const typeItems = [
+        { label: 'GETI', value: 'geti' },
+        { label: 'YOLO', value: 'yolo' },
+        { label: 'COCO', value: 'coco' },
+    ].filter((item) => item.value !== 'coco' || !isClassificationTask(selectedProject.task.task_type));
 
     return (
         <DialogContainer onDismiss={dialogState.close}>

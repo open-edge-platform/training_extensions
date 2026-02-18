@@ -18,5 +18,5 @@ export const downloadFile = (url: string, name: string) => {
     link.hidden = true;
     link.click();
 
-    link.remove();
+    URL.revokeObjectURL(url);
 };

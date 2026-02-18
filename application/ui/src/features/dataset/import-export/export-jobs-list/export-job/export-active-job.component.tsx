@@ -32,7 +32,7 @@ export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
                 <Flex justifyContent='space-between'>
                     <Flex alignItems='center' gap='size-100'>
                         <Loading mode='inline' size='S' />
-                        <Text>{job?.message}</Text>
+                        <Text>{job?.message ?? job.status.toLocaleLowerCase()}</Text>
                     </Flex>
 
                     {isRunning && <Text>{progress}%</Text>}
