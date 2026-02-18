@@ -501,7 +501,11 @@ class HGNetv2Module(nn.Module):
         self.stages = nn.ModuleList()
         for stage in stage_config.values():
             (
+                in_channels,
+                mid_channels,
+                out_channels,
                 block_num,
+                downsample,
                 light_block,
                 kernel_size,
                 layer_num,
