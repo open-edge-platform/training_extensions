@@ -48,27 +48,31 @@ type VideoSliderProps = SpectrumSliderProps & {
     highlightedFrames: number[];
     buffers?: BufferRange[];
     isLastFrame?: boolean;
+    sizePerSquare?: number;
+    leftOffset?: number;
 };
 
 const THUMB_INDEX = 0;
 
-const getTrackWidthWhileIsLastFrame = (trackRef: RefObject<HTMLDivElement | null>) => {
+const getTrackWidthWhileIsLastFrame = (trackRef: RefObject<HTMLDivElement | null>, leftOffset: number) => {
     if (trackRef.current === null) {
         return `0px`;
     }
 
     const THUMB_OFFSET = 8.51;
 
-    const width = trackRef.current.getBoundingClientRect().width - THUMB_OFFSET;
+    const width = trackRef.current.getBoundingClientRect().width - THUMB_OFFSET - leftOffset;
 
     return `${width}px`;
 };
 
 export const VideoSlider = ({
     buffers = [],
+    leftOffset = 0,
+    sizePerSquare,
     isLastFrame,
     highlightedFrames,
-    highlightedFramesColor,
+    highlightedFramesColor = 'var(--brand-daisy)',
     ...props
 }: VideoSliderProps) => {
     const trackRef = useRef<ComponentRef<'div'>>(null);
@@ -76,16 +80,25 @@ export const VideoSlider = ({
 
     const numberFormatter = useNumberFormatter(props.formatOptions);
     const state = useSliderState({ ...props, numberFormatter });
+    const [value] = state.values;
 
     const { groupProps, trackProps } = useSlider(sliderProps, state, trackRef);
 
     const trackWidth = isLastFrame
-        ? getTrackWidthWhileIsLastFrame(trackRef)
-        : `${state.getThumbPercent(THUMB_INDEX) * 100}%`;
+        ? getTrackWidthWhileIsLastFrame(trackRef, leftOffset)
+        : sizePerSquare
+          ? `${sizePerSquare * (value / state.step)}px`
+          : `${state.getThumbPercent(THUMB_INDEX) * 100}%`;
 
     return (
-        <div {...groupProps} className={classes.slider}>
-            <div {...trackProps} ref={trackRef} className={classes.track}>
+        <div
+            {...groupProps}
+            className={classes.slider}
+            style={{
+                overflow: leftOffset === 0 || value === props.minValue ? 'visible' : 'hidden',
+            }}
+        >
+            <div {...trackProps} ref={trackRef} className={classes.track} style={{ left: `${leftOffset}px` }}>
                 {buffers.map(({ startFrame, endFrame, status }, idx) => {
                     const isLoading = status === 'loading';
 

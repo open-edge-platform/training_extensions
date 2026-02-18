@@ -21,8 +21,8 @@ export const VideoAnnotator = () => {
             <View gridArea={'labels'}>
                 <Labels labels={labels} />
             </View>
-            <View gridArea={'timeline'}>
-                <VideoTimeline />
+            <View gridArea={'timeline'} UNSAFE_style={{ overflowX: 'auto' }}>
+                <VideoTimeline labels={labels} />
             </View>
         </Grid>
     );

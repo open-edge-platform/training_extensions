@@ -1,15 +1,69 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useRef } from 'react';
+
+import { useSizeHook } from 'hooks/use-size.hook';
+import useVirtual from 'react-cool-virtual';
+
+import { type Label } from '../../../../../../constants/shared-types';
 import { useVideoPlayer } from '../../../video-player-provider.component';
+import { VideoFrameSegments } from './video-frame-segment/video-frame-segments.component';
 import { VideoPlayerSlider } from './video-player-slider/video-player-slider.component';
 
-export const VideoTimeline = () => {
-    const { videoFrame } = useVideoPlayer();
+import classes from './video-timeline.module.scss';
+
+type VideoTimelineProps = {
+    labels: Label[];
+};
+
+const MIN_SIZE_OF_SEGMENT = 2 * 8;
+
+export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const size = useSizeHook(containerRef);
+    const { videoFrame, isPlaying } = useVideoPlayer();
+    const frameNumber = 0;
+    // TODO: fps * current time
+
+    const step = 60;
+    const totalFrames = Number(videoFrame.frame_count);
+
+    const totalSegments = Math.ceil(totalFrames / step);
+    const sizePerSquare = size === undefined ? 0 : Math.max(MIN_SIZE_OF_SEGMENT, size.width / totalSegments);
+    const frameOffset = Math.round(sizePerSquare / 2);
+
+    const { outerRef, innerRef, items } = useVirtual<HTMLDivElement, HTMLDivElement>({
+        horizontal: true,
+        itemCount: totalSegments,
+        itemSize: sizePerSquare,
+        overscanCount: 5,
+    });
 
     return (
-        <>
-            <VideoPlayerSlider media={videoFrame} />
-        </>
+        <div ref={containerRef}>
+            <div ref={outerRef} style={{ overflow: 'auto', width: size?.width }}>
+                <div style={{ width: sizePerSquare * totalSegments }} className={classes.timelineSliderWrapper}>
+                    <VideoPlayerSlider
+                        media={videoFrame}
+                        step={step}
+                        frameNumber={frameNumber}
+                        sizePerSquare={sizePerSquare}
+                        frameOffset={frameOffset}
+                    />
+                </div>
+                <VideoFrameSegments
+                    frameNumber={frameNumber}
+                    ref={innerRef}
+                    items={items}
+                    containerSize={size?.width ?? 0}
+                    labels={labels}
+                    step={step}
+                    totalSegments={totalSegments}
+                    minSizeOfSegment={MIN_SIZE_OF_SEGMENT}
+                    isPlaying={isPlaying}
+                />
+            </div>
+        </div>
     );
 };

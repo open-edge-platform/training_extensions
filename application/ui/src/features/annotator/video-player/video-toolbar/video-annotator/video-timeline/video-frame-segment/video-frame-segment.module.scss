@@ -1,0 +1,60 @@
+.loadingGradient {
+    background:
+        linear-gradient(
+            to right,
+            var(--spectrum-global-color-gray-400) 0%,
+            var(--spectrum-global-color-gray-500) 50%,
+            var(--spectrum-global-color-gray-400) 75%
+        ),
+        var(--spectrum-global-color-gray-300);
+    background-repeat: repeat-y;
+    background-size: 50% 60%;
+    background-position: 0 0;
+    animation: shine 2s ease infinite;
+}
+
+.labelMarker {
+    background-color: var(--spectrum-global-color-gray-300);
+}
+
+.stripedBackground {
+    --striped-background-foreground-color: var(--spectrum-global-color-gray-300);
+    --striped-background-background-color: rgba(255, 255, 255, 0);
+    background-image: repeating-linear-gradient(
+        45deg,
+        var(--striped-background-foreground-color),
+        var(--striped-background-foreground-color) 4px,
+        var(--striped-background-background-color) 4px,
+        var(--striped-background-background-color) 6px
+    );
+}
+
+.ticksText {
+    pointer-events: none;
+    position: absolute;
+    top: -28px;
+}
+
+.ticksIndicator {
+    position: relative;
+    height: 6px;
+    width: 1px;
+    border-left: var(--spectrum-global-color-gray-200) solid 1px;
+}
+
+.activeFrameOverlay {
+    opacity: 0.25;
+}
+
+.videoFrameSegmentsContainer {
+    display: grid;
+}
+
+.videoFrameSegmentContainer {
+    position: relative;
+    width: 100%;
+
+    &:hover {
+        cursor: pointer;
+    }
+}

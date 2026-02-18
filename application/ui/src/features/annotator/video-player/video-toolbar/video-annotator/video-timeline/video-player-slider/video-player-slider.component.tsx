@@ -6,14 +6,17 @@ import { useState } from 'react';
 import { Media } from '../../../../../../../constants/shared-types';
 import { VideoSlider } from './video-slider.component';
 
+import classes from './video-slider.module.scss';
+
 type VideoPlayerSliderProps = {
     media: Media;
+    step: number;
+    frameNumber: number;
+    sizePerSquare: number;
+    frameOffset?: number;
 };
 
-export const VideoPlayerSlider = ({ media }: VideoPlayerSliderProps) => {
-    // TODO: fps * current time
-    const frameNumber = 0;
-    const step = 60;
+export const VideoPlayerSlider = ({ media, step, frameNumber, sizePerSquare, frameOffset }: VideoPlayerSliderProps) => {
     const [sliderValue, setSliderValue] = useState<number>(frameNumber);
     const minValue = 0;
     const framesCount = Number(media.frame_count);
@@ -24,7 +27,7 @@ export const VideoPlayerSlider = ({ media }: VideoPlayerSliderProps) => {
     const buffers = undefined;
 
     return (
-        <div>
+        <div className={classes.sliderWrapper}>
             <VideoSlider
                 isFilled
                 width={'100%'}
@@ -39,6 +42,8 @@ export const VideoPlayerSlider = ({ media }: VideoPlayerSliderProps) => {
                 buffers={buffers}
                 highlightedFrames={highlightedFrames}
                 isLastFrame={isLastFrame}
+                sizePerSquare={sizePerSquare}
+                leftOffset={frameOffset}
             />
         </div>
     );

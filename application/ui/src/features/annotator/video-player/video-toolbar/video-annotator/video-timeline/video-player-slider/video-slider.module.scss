@@ -4,6 +4,13 @@
     cursor: pointer;
 }
 
+.sliderWrapper {
+    z-index: 1;
+    display: flex;
+    overflow: visible;
+    position: relative;
+}
+
 .track {
     height: var(--spectrum-global-dimension-size-400);
     position: relative;
@@ -31,6 +38,7 @@
 .thumb {
     --thumb-size: var(--spectrum-global-dimension-size-175);
     top: 33%;
+    cursor: pointer;
     position: relative;
     width: var(--thumb-size);
     height: calc((var(--thumb-size) / 2) + 1px);
