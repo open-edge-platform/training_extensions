@@ -148,3 +148,7 @@ export const useVideoPlayer = () => {
     }
     return context;
 };
+
+export const useVideoPlayerContext = () => {
+    return use(VideoPlayerContext);
+};
