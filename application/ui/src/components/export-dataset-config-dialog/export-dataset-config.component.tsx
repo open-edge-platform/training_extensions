@@ -22,9 +22,9 @@ import { LinkOut } from '@geti/ui/icons';
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
-import { isClassificationTask } from '../../features/project/task-type-guards';
 import { useExportDatasetJobAction } from '../../hooks/use-export-dataset-job-action.hook';
 import { MultiSelectList } from '../multi-select-list/multi-select-list.component';
+import { getFormatOptions } from './util';
 
 import classes from './export-dataset-config.module.scss';
 
@@ -44,13 +44,8 @@ export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: Expo
         onSuccess: dialogState.close,
     });
 
+    const formatOptions = getFormatOptions(selectedProject.task.task_type);
     const labels = selectedProject.task?.labels?.map((label) => ({ id: label.name, name: label.name })) ?? [];
-
-    const typeItems = [
-        { label: 'GETI', value: 'geti' },
-        { label: 'YOLO', value: 'yolo' },
-        { label: 'COCO', value: 'coco' },
-    ].filter((item) => item.value !== 'coco' || !isClassificationTask(selectedProject.task.task_type));
 
     return (
         <DialogContainer onDismiss={dialogState.close}>
@@ -84,7 +79,7 @@ export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: Expo
                                     label='Select dataset export format'
                                     defaultValue={formState.export_format}
                                 >
-                                    {typeItems.map((item) => (
+                                    {formatOptions.map((item) => (
                                         <Radio key={item.value} value={item.value}>
                                             {item.label}
                                         </Radio>

@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Grid, Text } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isNil } from 'lodash-es';
 
 import { ExportDatasetMetadata } from '../../../../../../constants/shared-types';
 import { useProject } from '../../../../../../hooks/api/project.hook';
 
 type ExportJobDetailsProps = {
+    datasetName?: string;
     metadata: ExportDatasetMetadata;
 };
-export const ExportJobDetails = ({ metadata }: ExportJobDetailsProps) => {
+export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProps) => {
     const { data: selectedProject } = useProject();
 
     const projectLabels = selectedProject.task.labels ?? [];
@@ -27,7 +28,9 @@ export const ExportJobDetails = ({ metadata }: ExportJobDetailsProps) => {
             columns={['auto', '1px', '1fr', '1px', 'auto']}
             UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}
         >
-            <Text>Export dataset - {metadata.export_format} format</Text>
+            <Text>
+                Export {isNil(datasetName) ? 'dataset' : datasetName} - {metadata.export_format} format
+            </Text>
 
             <Divider orientation='vertical' size='S' />
             <Text UNSAFE_style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>

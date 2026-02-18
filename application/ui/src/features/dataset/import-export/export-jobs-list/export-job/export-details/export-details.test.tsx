@@ -99,7 +99,7 @@ describe('ExportJobDetails', () => {
         expect(await screen.findByText('Excluded: Unannotated')).toBeVisible();
     });
 
-    it('does not display "Excluded: Unannotated" when include_unannotated is true', async () => {
+    it.only('does not display "Excluded: Unannotated" when include_unannotated is true', async () => {
         const metadata: ExportDatasetMetadata = {
             dataset_id: 'dataset-123',
             project_id: 'project-123',

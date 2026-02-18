@@ -29,7 +29,7 @@ export const ExportJobsList = ({ predicate }: ExportJobsListProps) => {
             UNSAFE_style={{ overflowY: 'auto' }}
         >
             {filteredExportItems.toReversed().map((item) => (
-                <ExportJob key={item.jobId} jobId={item.jobId} />
+                <ExportJob key={item.jobId} jobId={item.jobId} datasetId={item.datasetId} />
             ))}
         </Flex>
     );
