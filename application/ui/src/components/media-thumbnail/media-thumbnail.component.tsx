@@ -4,7 +4,7 @@
 import { View } from '@geti/ui';
 
 import type { Media } from '../../constants/shared-types';
-import { isVideo } from '../../features/dataset/utils';
+import { isVideo } from '../../shared/media-item-utils';
 
 import classes from './media-thumbnail.module.scss';
 

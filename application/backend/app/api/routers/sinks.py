@@ -17,7 +17,6 @@ from app.api.schemas.sink import SinkCreate, SinkCreateAdapter, SinkView, SinkVi
 from app.models import Sink
 from app.services import (
     ResourceInUseError,
-    ResourceNotFoundError,
     ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
     SinkService,
@@ -171,8 +170,6 @@ def update_sink(
             new_output_formats=updated_sink.output_formats,
         )
         return SinkViewAdapter.validate_python(sink, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceWithNameAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 

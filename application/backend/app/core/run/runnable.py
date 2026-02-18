@@ -16,9 +16,9 @@ Classes:
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol, TypeVar
 
-ReportFn = Callable[[str, float], None]
+ReportFn = Callable[[str, float, dict[str, Any] | None], None]
 
 
 @dataclass(kw_only=True)

@@ -22,6 +22,7 @@ from collections.abc import Iterator
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
+from typing import Any
 
 from loguru import logger
 
@@ -135,10 +136,10 @@ def _entrypoint(
 
     from app.core.jobs.models import Cancelled, Done, Failed, Progress
 
-    def report(msg: str, p: float) -> None:
+    def report(msg: str, p: float, metadata: dict[str, Any] | None = None) -> None:
         if cancel_event.is_set():
             raise CancelledExc
-        conn.send(Progress(message=msg, value=p))
+        conn.send(Progress(message=msg, value=p, metadata=metadata))
 
     runnable = get_runnable(JobType(job_type))
 

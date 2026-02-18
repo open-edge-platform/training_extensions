@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { getMockedDatasetItem } from 'mocks/mock-dataset-item';
 import { mockedMedia } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -68,7 +69,9 @@ describe('BottomToolbar', () => {
 
         server.use(
             http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                return HttpResponse.json({ id: 'media-123', subset: 'unassigned' }, { status: 200 });
+                return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', subset: 'unassigned' }), {
+                    status: 200,
+                });
             }),
             http.patch(
                 '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset',
@@ -77,7 +80,9 @@ describe('BottomToolbar', () => {
 
                     patchSpy(params, body);
 
-                    return HttpResponse.json({ id: 'media-123', subset: 'validation' }, { status: 200 });
+                    return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', subset: 'validation' }), {
+                        status: 200,
+                    });
                 }
             )
         );

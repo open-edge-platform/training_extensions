@@ -6,7 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.jobs.models import JobType, TrainingJob
+from app.core.jobs.models import JobType
+from app.models import TrainingJob
 
 from .base import BaseJobRequest
 

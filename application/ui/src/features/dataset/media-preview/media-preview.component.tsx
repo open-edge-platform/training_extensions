@@ -9,8 +9,10 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
+import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
@@ -88,7 +90,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider>
+                <VideoPlayerProvider videoFrame={isVideoFrame(mediaItem) || isVideo(mediaItem) ? mediaItem : undefined}>
                     {mode === 'prediction' ? (
                         <ReadOnlyAnnotator
                             mediaItem={mediaItem}
@@ -114,6 +116,12 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                             <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
                                 <PrimaryToolbar />
                             </View>
+
+                            {isVideo(mediaItem) && (
+                                <View gridArea={'video-toolbar'}>
+                                    <VideoToolbar />
+                                </View>
+                            )}
 
                             <View gridArea={'bottom'}>
                                 <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
@@ -148,9 +156,14 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     gap='size-125'
                     width='100%'
                     height='100%'
-                    rows='auto 1fr auto'
+                    rows='auto 1fr auto auto'
                     columns={['size-700', '1fr', SIDEBAR_WIDTH]}
-                    areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
+                    areas={[
+                        'header header aside',
+                        'toolbar canvas aside',
+                        'toolbar video-toolbar aside',
+                        'toolbar bottom aside',
+                    ]}
                 >
                     <Suspense fallback={<CanvasAreaLoading />}>
                         <MediaPreviewContent

@@ -45,6 +45,7 @@ def fxt_dataset_revision(fxt_get_project):
         name="Dataset (mock)",
         created_at=datetime(2026, 1, 1),
         files_deleted=False,
+        size=456123,
         item_counts=ItemCount(total=10, training=7, validation=2, testing=1),
     )
 
@@ -57,6 +58,7 @@ def fxt_get_dataset_revision(fxt_dataset_revision):
         name=fxt_dataset_revision.name,
         created_at=datetime(2026, 1, 1),
         files_deleted=fxt_dataset_revision.files_deleted,
+        size=456123,
         item_counts=DatasetRevisionCounts(
             total=10,
             training=7,
@@ -126,6 +128,7 @@ class TestDatasetRevisionItemEndpoints:
             name="New name",
             created_at=datetime(2026, 1, 1),
             files_deleted=False,
+            size=456123,
             item_counts=DatasetRevisionCounts(
                 total=10,
                 training=7,

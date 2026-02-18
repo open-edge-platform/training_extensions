@@ -317,6 +317,47 @@ class TestModelEndpoints:
             project_id=fxt_get_project.id, model_id=model_id, model_metadata={"name": "New name"}
         )
 
+    def test_get_training_metrics_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
+        mock_statistics = [
+            {
+                "header": "Training total loss",
+                "type": "line",
+                "key": "Training total loss",
+                "value": {
+                    "x_axis_label": "Timestamp",
+                    "y_axis_label": "Training total loss",
+                    "line_data": [
+                        {
+                            "header": "Training total loss",
+                            "key": "Training total loss",
+                            "points": [{"x": 1.0, "y": 1.0, "type": "point"}],
+                        }
+                    ],
+                },
+            }
+        ]
+        fxt_model_service.get_model_training_metrics.return_value = mock_statistics
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/training_metrics")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_model_service.get_model_training_metrics.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
+
+    def test_get_training_metrics_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
+        model_id = uuid4()
+        fxt_model_service.get_model_training_metrics.side_effect = ResourceNotFoundError(
+            ResourceType.MODEL, str(model_id)
+        )
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/training_metrics")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_model_service.get_model_training_metrics.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=model_id
+        )
+
     def test_get_training_logs_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
         log_file = tmp_path / "training.log"
         log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"

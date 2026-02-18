@@ -14,5 +14,6 @@ export const getMockedDatasetRevision = (overrides: Partial<DatasetRevision> = {
         total: 100,
     },
     files_deleted: false,
+    size: 1048576,
     ...overrides,
 });

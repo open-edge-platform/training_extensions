@@ -18,7 +18,7 @@ from app.api.schemas.dataset_item import (
 from app.api.validators import DatasetItemID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
-from app.services import DatasetService, ResourceNotFoundError
+from app.services import DatasetService
 from app.services.dataset_service import AnnotationValidationError, DatasetItemFilters, SubsetAlreadyAssignedError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
@@ -155,11 +155,8 @@ def get_dataset_item(
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemView:
     """Get information about a specific dataset item"""
-    try:
-        dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
-        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
+    return DatasetItemView.model_validate(dataset_item, from_attributes=True)
 
 
 @router.post(
@@ -193,8 +190,6 @@ def set_dataset_item_annotations(
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,
         )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except AnnotationValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -216,19 +211,14 @@ def get_dataset_item_annotations(
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotations:
     """Get the dataset item annotations"""
-    try:
-        dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
-        if dataset_item.annotation_data is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Dataset item has not been annotated yet."
-            )
-        return DatasetItemAnnotations(
-            annotations=dataset_item.annotation_data,
-            prediction_model_id=dataset_item.prediction_model_id,
-            user_reviewed=dataset_item.user_reviewed,
-        )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
+    if dataset_item.annotation_data is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset item has not been annotated yet.")
+    return DatasetItemAnnotations(
+        annotations=dataset_item.annotation_data,
+        prediction_model_id=dataset_item.prediction_model_id,
+        user_reviewed=dataset_item.user_reviewed,
+    )
 
 
 @router.delete(
@@ -246,10 +236,7 @@ def delete_dataset_item_annotation(
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete dataset item annotations"""
-    try:
-        dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
 
 
 @router.patch(
@@ -275,7 +262,5 @@ def assign_dataset_item_subset(
             project_id=project.id, dataset_item_id=dataset_item_id, subset=subset_config.subset
         )
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except SubsetAlreadyAssignedError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
