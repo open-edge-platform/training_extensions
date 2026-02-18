@@ -3,6 +3,7 @@
 
 import shutil
 from pathlib import Path
+from sqlite3 import IntegrityError
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -23,7 +24,7 @@ from app.repositories import DatasetRevisionRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.utils.images import crop_to_thumbnail
 
-from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
+from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .media_service import InvalidImageError
 
 
@@ -182,25 +183,35 @@ class DatasetRevisionService(BaseSessionManagedService):
             )
         )
 
-    def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
+    def delete_dataset_revision_files(
+        self, project_id: UUID, revision_id: UUID, delete_revision_db: bool = False
+    ) -> None:
         """
         Marks the DatasetRevision files as deleted, and deletes associated files from the disk.
 
         Args:
             project_id: The UUID of the project.
             revision_id: The UUID of the dataset revision.
+            delete_revision_db: Boolean indicating if DB entry should be removed
 
         Raises:
             ResourceNotFoundError: If the revision is not found.
         """
         revision = self.get_dataset_revision(project_id, revision_id)
-        if revision.files_deleted:
-            logger.info("Files for dataset revision '{}' are already deleted", revision_id)
-            return
 
-        # Mark as deleted in the database
-        revision.files_deleted = True
-        self.update_dataset_revision(project_id=project_id, dataset_revision=revision)
+        if delete_revision_db:
+            try:
+                revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
+                revision_repo.delete(str(revision.id))
+            except IntegrityError:
+                raise ResourceInUseError(ResourceType.DATASET_REVISION, str(revision.id))
+        else:
+            if revision.files_deleted:
+                logger.info("Files for dataset revision '{}' are already deleted", revision_id)
+                return
+            # Mark as deleted in the database
+            revision.files_deleted = True
+            self.update_dataset_revision(project_id=project_id, dataset_revision=revision)
 
         # Delete files from filesystem
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)

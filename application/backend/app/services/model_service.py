@@ -5,7 +5,6 @@ import shutil
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import cast
 from uuid import UUID
 
 import polars as pl
@@ -201,6 +200,8 @@ class ModelService(BaseSessionManagedService):
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         model_to_delete = model_rev_repo.get_by_id(str(model_id))
+        if model_to_delete is None:
+            raise ResourceInUseError(ResourceType.MODEL, str(model_id))
 
         try:
             deleted = model_rev_repo.delete(str(model_id))
@@ -214,8 +215,7 @@ class ModelService(BaseSessionManagedService):
             shutil.rmtree(path)
             logger.info("Deleted model files at '{}'", path)
 
-        if model_to_delete is not None:
-            self._delete_training_dataset_revision_files(deleted_model=model_to_delete)
+        self._delete_training_dataset_revision_files(deleted_model=model_to_delete)
 
     @parent_process_only
     def delete_model_files(self, project_id: UUID, model_id: UUID) -> None:
@@ -226,10 +226,15 @@ class ModelService(BaseSessionManagedService):
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
         """
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
+        model_rev_db = model_rev_repo.get_by_id(str(model_id))
+        if model_rev_db is None:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
 
@@ -250,19 +255,17 @@ class ModelService(BaseSessionManagedService):
             deleted_model: Recently deleted model or model which has its files deleted
         """
         model_rev_repo = ModelRevisionRepository(project_id=deleted_model.project_id, db=self.db_session)
-        if (
-            deleted_model is not None
-            and deleted_model.training_dataset_id is not None
-            and all(
-                model_db.files_deleted
-                for model_db in model_rev_repo.list_all(training_dataset_id=deleted_model.training_dataset_id)
-            )
-        ):
-            DatasetRevisionService(
-                data_dir=self._projects_dir.parent, db_session=self.db_session
-            ).delete_dataset_revision_files(
-                project_id=UUID(deleted_model.project_id), revision_id=UUID(deleted_model.training_dataset_id)
-            )
+        dataset_rev_service = DatasetRevisionService(data_dir=self._projects_dir.parent, db_session=self.db_session)
+
+        if deleted_model.training_dataset_id is not None:
+            model_list = model_rev_repo.list_all(training_dataset_id=deleted_model.training_dataset_id)
+            delete_dataset_revision = len(model_list) == 0
+            if all(model_db.files_deleted for model_db in model_list):
+                dataset_rev_service.delete_dataset_revision_files(
+                    project_id=UUID(deleted_model.project_id),
+                    revision_id=UUID(deleted_model.training_dataset_id),
+                    delete_revision_db=delete_dataset_revision,
+                )
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
