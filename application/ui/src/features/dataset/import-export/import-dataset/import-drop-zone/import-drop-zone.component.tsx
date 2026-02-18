@@ -7,6 +7,7 @@ import {
     DropZone,
     FileTrigger,
     Flex,
+    Heading,
     IllustratedMessage,
     Link as SpectrumLink,
     Text,
@@ -14,6 +15,7 @@ import {
 } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
 
+import { $api } from '../../../../../api/client';
 import { ReactComponent as EmptyDataset } from '../../../../../assets/drop-files.svg';
 import { useStageDataset } from '../../../../../hooks/localStorage/use-stage-dataset.hook';
 import { ImportDatasetState } from '../util';
@@ -27,6 +29,7 @@ type ImportDropZoneProps = {
 
 export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
     const { addLsStagingId } = useStageDataset();
+    const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
 
     const handleLoadingFile = (files: File[]) => {
         const hasMultipleFiles = files.length > 1;
@@ -47,37 +50,62 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
             return;
         }
 
-        addLsStagingId(`${files[0].name}-${Date.now()}`);
-        onNextStep('process');
+        const formData = new FormData();
+        formData.append('file', files[0]);
+
+        stagedDatasetMutation.mutate(
+            {
+                // @ts-expect-error There is an incorrect type in OpenAPI
+                body: formData,
+            },
+            {
+                onSuccess: (data) => {
+                    addLsStagingId({ name: files[0].name, id: data.id });
+                    onNextStep('process');
+                },
+            }
+        );
     };
 
     return (
-        <DropZone onDrop={async (event) => handleLoadingFile(await getFilesFromDropEvent(event))}>
+        <DropZone
+            isFilled={stagedDatasetMutation.isSuccess}
+            onDrop={async (event) => handleLoadingFile(await getFilesFromDropEvent(event))}
+        >
             <IllustratedMessage>
                 <EmptyDataset />
 
                 <Content>
-                    <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
-                        <Text>Drop the dataset .zip file here</Text>
+                    {stagedDatasetMutation.isPending && (
+                        <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
+                            <Heading level={1}>Uploading...</Heading>
+                            <Text>Dataset is being uploaded</Text>
+                        </Flex>
+                    )}
 
-                        <FileTrigger
-                            data-testid='upload-zip-file'
-                            onSelect={(data) => handleLoadingFile(formatToFileArray(data))}
-                        >
-                            <Button marginY={'size-200'} maxWidth={'size-1000'} variant={'accent'}>
-                                Upload
-                            </Button>
-                        </FileTrigger>
+                    {!stagedDatasetMutation.isPending && (
+                        <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
+                            <Text>Drop the dataset .zip file here</Text>
 
-                        <Text UNSAFE_className={classes.formatOptions}>(Geti, COCO) .zip</Text>
+                            <FileTrigger
+                                data-testid='upload-zip-file'
+                                onSelect={(data) => handleLoadingFile(formatToFileArray(data))}
+                            >
+                                <Button marginY={'size-200'} maxWidth={'size-1000'} variant={'accent'}>
+                                    Upload
+                                </Button>
+                            </FileTrigger>
 
-                        <SpectrumLink UNSAFE_className={classes.link}>
-                            <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>
-                                Learn more the different formats
-                                <LinkOut size='XS' />
-                            </a>
-                        </SpectrumLink>
-                    </Flex>
+                            <Text UNSAFE_className={classes.formatOptions}>(Geti, COCO) .zip</Text>
+
+                            <SpectrumLink UNSAFE_className={classes.link}>
+                                <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>
+                                    Learn more the different formats
+                                    <LinkOut size='XS' />
+                                </a>
+                            </SpectrumLink>
+                        </Flex>
+                    )}
                 </Content>
             </IllustratedMessage>
         </DropZone>

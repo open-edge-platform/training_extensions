@@ -4,10 +4,14 @@
 import { dimensionValue, Flex, Text } from '@geti/ui';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
+import { useStageDataset } from '../../../../../hooks/localStorage/use-stage-dataset.hook';
 
 import classes from './import-process.module.scss';
 
 export const ImportProcess = () => {
+    const { getLsStagingIds } = useStageDataset();
+    console.log('getLsStagingIds', getLsStagingIds());
+
     return (
         <Flex
             width='100%'

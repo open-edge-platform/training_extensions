@@ -5,6 +5,8 @@ import { useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
 import { OverlayTriggerState } from '@react-stately/overlays';
+import { useStageDataset } from 'hooks/localStorage/use-stage-dataset.hook';
+import { isEmpty } from 'lodash-es';
 
 import { ImportDropZone } from './import-drop-zone/import-drop-zone.component';
 import { ImportProcess } from './import-process/import-process.component';
@@ -15,7 +17,15 @@ type ImportDatasetProps = {
 };
 
 export const ImportDataset = ({ dialogState }: ImportDatasetProps) => {
-    const [currentState, setCurrentState] = useState<ImportDatasetState>('dropzone');
+    const { getLsStagingIds } = useStageDataset();
+
+    const [currentState, setCurrentState] = useState<ImportDatasetState>(() => {
+        if (!isEmpty(getLsStagingIds())) {
+            return 'process';
+        }
+
+        return 'dropzone';
+    });
 
     const handleNextStep = (step: ImportDatasetState) => {
         setCurrentState(step);
