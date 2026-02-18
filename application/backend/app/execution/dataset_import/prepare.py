@@ -49,7 +49,7 @@ class PrepareDataset(Execution):
         zip_archives = list(dataset_dir.glob("*.zip"))
         if not zip_archives:
             raise ValueError(f"Cannot find dataset zip archive in {dataset_dir}")
-        dataset_archive = zip_archives[0]
+        dataset_archive = sorted(zip_archives)[0]
         if len(zip_archives) > 1:
             logger.warning(f"Found more than one zip archive in {dataset_dir}. Using the first one: {dataset_archive}")
         return dataset_archive

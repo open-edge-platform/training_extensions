@@ -16,7 +16,7 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
     labels = []
     label_attr = dataset.schema.attributes["label"]
     if label_attr and label_attr.categories and hasattr(label_attr.categories, "labels"):
-        labels = sorted(label_attr.categories.labels)
+        labels = label_attr.categories.labels
     return DatasetMetadata(
         num_items=len(dataset),
         annotation_type=dataset[0].annotation_type() if len(dataset) > 0 else AnnotationType.UNKNOWN,
@@ -158,6 +158,8 @@ class StagedDatasetService:
     @staticmethod
     def _get_staged_dataset_from_path(dataset_id: UUID, dataset_path: Path) -> StagedDataset:
         size = dataset_path.stat().st_size
+        if dataset_path.is_dir():
+            size = sum(item.stat().st_size for item in dataset_path.rglob("*") if item.is_file())
         compressed = dataset_path.is_file() and dataset_path.suffix == ".zip"
         dataset_format = _infer_format_from_filename(dataset_path.name) if compressed else DatasetFormat.GETI
         metadata = _get_dataset_metadata(import_dataset(dataset_path)) if dataset_format == DatasetFormat.GETI else None

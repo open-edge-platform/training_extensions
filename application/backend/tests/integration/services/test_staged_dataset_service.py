@@ -189,7 +189,7 @@ class TestStagedDatasetServiceIntegration:
         assert result is not None
         assert result.id == dataset_id
         assert result.filename == str(dataset_path)
-        assert result.size == 128
+        assert result.size == 7190
         assert result.compressed is False
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
