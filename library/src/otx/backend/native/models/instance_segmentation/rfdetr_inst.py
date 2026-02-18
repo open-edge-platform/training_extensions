@@ -60,7 +60,7 @@ class RFDETRInst(RFDETRMixin, OTXInstanceSegModel):
             area (largest first). Set to ``None`` to disable. Only active
             during training.
             Note: Recommended to keep it None to avoid unintended consequences on model performance,
-            but can be set for datasets with many objects per image to avoid OOM errors.
+            but it can be set for datasets with many objects per image to avoid OOM errors.
 
     Note:
         RF-DETR Segmentation uses patch_size=12 with 2 windows for 432x432 input resolution.
