@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
@@ -16,7 +16,6 @@ import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
-import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 import { useWithCancel } from './use-with-cancel';
