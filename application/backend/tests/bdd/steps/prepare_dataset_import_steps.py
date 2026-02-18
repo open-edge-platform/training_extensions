@@ -1,0 +1,41 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from typing import cast
+from uuid import UUID
+
+import requests
+from behave import given, then, when
+from behave.runner import Context
+
+from app.api.schemas import ProjectView
+from app.api.schemas.jobs.dataset_export import ExportDatasetMetadata
+from app.models import DatasetFormat
+from tests.bdd.utils import export_dataset, prepare_dataset
+
+
+@given("the project dataset is exported in {export_format} format")  # pyrefly: ignore
+def step_project_is_exported(context: Context, export_format: str) -> None:
+    """Add multiple random unannotated images to the dataset."""
+    project = cast(ProjectView, context.project)
+    job = export_dataset(
+        base_url=str(context.base_url), project_id=str(project.id), export_format=DatasetFormat(export_format.lower())
+    )
+    context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
+
+
+@when("I prepare the staged dataset archive for import")  # pyrefly: ignore
+def step_prepare_dataset_for_import(context: Context) -> None:
+    dataset_id = cast(UUID, context.dataset_id)
+    prepare_dataset(base_url=str(context.base_url), staged_dataset_id=str(dataset_id))
+    context.export_format = DatasetFormat.GETI
+
+
+@then("the staged dataset is ready for import")  # pyrefly: ignore
+def step_dataset_archive_ready(context: Context) -> None:
+    response = requests.get(f"{str(context.base_url)}/api/staged_datasets/{context.dataset_id}")
+    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+    dataset_info = response.json()
+    assert dataset_info
+    assert dataset_info["format"] == "geti"
+    assert dataset_info["ready_for_import"]

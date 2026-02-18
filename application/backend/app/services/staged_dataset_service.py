@@ -14,13 +14,21 @@ from app.models.dataset import DatasetMetadata
 
 def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
     labels = []
-    label_attr = dataset.schema.attributes["label"]
+    label_attr_name = "label" if "label" in dataset.schema.attributes else "labels"
+    label_attr = dataset.schema.attributes[label_attr_name]
     if label_attr and label_attr.categories and hasattr(label_attr.categories, "labels"):
         labels = label_attr.categories.labels
+    annotation_type, num_annotations = AnnotationType.UNKNOWN, 0
+    if len(dataset) > 0:
+        item = dataset[0]
+        if hasattr(item, "annotation_type") and callable(getattr(item, "annotation_type")):
+            annotation_type = item.annotation_type()
+        if hasattr(item, "annotations"):
+            num_annotations = sum(item.annotations for item in dataset)
     return DatasetMetadata(
         num_items=len(dataset),
-        annotation_type=dataset[0].annotation_type() if len(dataset) > 0 else AnnotationType.UNKNOWN,
-        num_annotations=sum(item.annotations for item in dataset),
+        annotation_type=annotation_type,
+        num_annotations=num_annotations,
         labels=sorted(labels),
     )
 

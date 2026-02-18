@@ -26,7 +26,8 @@ def fastapi_server(context: Context) -> Generator[None]:
         try:
             runner.stop_server()
         finally:
-            runner.cleanup()
+            if os.getenv("KEEP_ARTIFACTS", "0").lower() not in ("1", "true"):
+                runner.cleanup()
 
 
 def before_all(context: Context) -> None:

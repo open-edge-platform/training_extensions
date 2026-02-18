@@ -1,3 +1,5 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 Feature: Dataset Export
   As a user of the application
   I want to export datasets in various formats
@@ -12,7 +14,7 @@ Feature: Dataset Export
     And the project dataset has 2 unannotated images in subset "training"
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
-    And the exported dataset has <expected images> images
+    And the staged dataset with name=<archive name> has <expected images> images
 
     Examples:
      | export format | archive name     | filters                                | expected images |
@@ -35,7 +37,7 @@ Feature: Dataset Export
     And the project dataset has 5 unannotated images in subset "training"
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
-    And the exported dataset has <expected images> images
+    And the staged dataset with name=<archive name> has <expected images> images
 
     Examples:
      | export format | archive name  | filters                                             | expected images |
@@ -57,7 +59,7 @@ Feature: Dataset Export
     And the project dataset has 3 unannotated images in subset "testing"
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
-    And the exported dataset has <expected images> images
+    And the staged dataset with name=<archive name> has <expected images> images
 
     Examples:
      | export format | archive name  | filters                                    | expected images |
