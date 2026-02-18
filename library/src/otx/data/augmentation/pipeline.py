@@ -371,6 +371,7 @@ class CPUAugmentationPipeline(nn.Module):
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
         outputs: OTXSample | None = inputs[0]  # type: ignore[assignment]
+        # self._debug_visualize(outputs, "before", 0, 0, 0, 0, [0, 0, 0, 0])
         for transform in self.augmentations:
             if self._is_native_torchvision_transform(transform):
                 # Apply native transforms only to image-related fields
@@ -380,7 +381,79 @@ class CPUAugmentationPipeline(nn.Module):
             if outputs is None:
                 return outputs
             inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
+        # self._debug_visualize(outputs, "after_cpu", 0, 0, 0, 0, [0, 0, 0, 0])
         return outputs
+
+    def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):
+        """Debug visualization - save annotated PNG for inspection."""
+        import os
+
+        from PIL import Image
+        from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
+        import numpy as np
+
+        os.makedirs("debug_resize_new", exist_ok=True)
+
+        # Get unique id for this sample
+        sample_id = id(sample)
+
+        # Debug log to file since stdout may be redirected
+        log_file = "debug_resize_new/debug_log.txt"
+        with open(log_file, "a") as f:
+            f.write(f"\n=== Sample {sample_id} ===\n")
+
+        # Convert image to CHW uint8 tensor
+        img = sample.image
+        with open(log_file, "a") as f:
+            f.write(f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n")
+        if isinstance(img, np.ndarray):
+            with open(log_file, "a") as f:
+                f.write(f"NumPy image range: min={img.min()}, max={img.max()}\n")
+            if img.ndim == 3:
+                img = torch.from_numpy(img).permute(2, 0, 1)
+            else:
+                img = torch.from_numpy(img)
+        else:
+            with open(log_file, "a") as f:
+                f.write(f"Tensor image range: min={img.min().item()}, max={img.max().item()}\n")
+
+        if img.dtype != torch.uint8:
+            img = img.float()
+            with open(log_file, "a") as f:
+                f.write(f"After float conversion: min={img.min().item()}, max={img.max().item()}\n")
+            if img.max() <= 1.0:
+                img = (img * 255.0).clamp(0, 255)
+            else:
+                # Values > 1.0, clamp to 0-255 range
+                img = img.clamp(0, 255)
+            img = img.to(torch.uint8)
+
+        annotated = img
+        # Draw masks if available
+        if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
+            masks = sample.masks
+            if isinstance(masks, np.ndarray):
+                masks = torch.from_numpy(masks)
+            if masks.dtype != torch.bool:
+                masks = masks > 0
+            if masks.ndim == 2:
+                masks = masks.unsqueeze(0)
+            annotated = draw_segmentation_masks(annotated, masks, alpha=0.5)
+
+        # Draw bboxes if available
+        if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
+            bboxes = sample.bboxes
+            if isinstance(bboxes, np.ndarray):
+                bboxes = torch.from_numpy(bboxes)
+            bboxes = bboxes.to(torch.int64)
+            annotated = draw_bounding_boxes(annotated, bboxes, colors="red", width=2)
+
+        # Save annotated image
+        img_path = f"debug_resize_new/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
+        Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
+
+
+        return sample
 
     def __repr__(self) -> str:
         """String representation of the pipeline."""
@@ -685,7 +758,7 @@ class GPUAugmentationPipeline(nn.Module):
 
         if self._debug_dir is not None:
             self._debug_visualize(
-                "after",
+                "after_gpu",
                 output["images"],
                 typing.cast(list[torch.Tensor] | None, output["bboxes"]),
                 typing.cast(list[torch.Tensor] | None, output["masks"]),
