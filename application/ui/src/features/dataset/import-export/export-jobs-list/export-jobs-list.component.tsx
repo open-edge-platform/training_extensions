@@ -7,13 +7,14 @@ import { isEmpty } from 'lodash-es';
 import { useExportDataset } from '../../../../hooks/localStorage/use-export-dataset.hook';
 import { ExportJob } from './export-job/export-job.component';
 
-const isMainDataset = <T extends { datasetId: string | null }>({ datasetId }: T) => datasetId === null;
-
-export const ExportJobsList = () => {
+type ExportJobsListProps = {
+    predicate: (item: { datasetId: string | null }) => boolean;
+};
+export const ExportJobsList = ({ predicate }: ExportJobsListProps) => {
     const { getLsExportIds } = useExportDataset();
 
     const exportItems = getLsExportIds() ?? [];
-    const filteredExportItems = exportItems.filter(isMainDataset);
+    const filteredExportItems = exportItems.filter(predicate);
 
     if (isEmpty(filteredExportItems)) {
         return null;

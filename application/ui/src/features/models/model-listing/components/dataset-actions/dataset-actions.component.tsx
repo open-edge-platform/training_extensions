@@ -11,6 +11,7 @@ import { useDeleteDatasetRevision } from '../../hooks/use-delete-dataset-revisio
 import { useRenameDatasetRevision } from '../../hooks/use-rename-dataset-revision.hook';
 import type { DatasetGroup } from '../../types';
 import { RenameDatasetRevisionDialog } from '../group-headers/rename-dataset-revision-dialog.component';
+import { DatasetRevisionStatistics } from './dataset-revision-statistics/dataset-revision-statistics.component';
 
 type DatasetActionsProps = {
     dataset: DatasetGroup;
@@ -60,7 +61,7 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
             params: { path: { project_id: projectId, dataset_revision_id: dataset.id } },
         });
     };
-    console.log('dataset', dataset);
+
     return (
         <>
             <MenuTrigger>
@@ -104,7 +105,7 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
             <ExportDatasetConfig
                 datasetId={dataset.id}
                 dialogState={exportDialog}
-                statistics={<p>statistics camilo</p>}
+                statistics={<DatasetRevisionStatistics datasetRevisionId={dataset.id} />}
             />
         </>
     );

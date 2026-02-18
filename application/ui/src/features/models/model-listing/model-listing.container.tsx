@@ -3,9 +3,10 @@
 
 import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
 import { useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isString } from 'lodash-es';
 
 import { ReactComponent as NoTrainedModels } from '../../../assets/no-trained-models.svg';
+import { ExportJobsList } from '../../dataset/import-export/export-jobs-list/export-jobs-list.component';
 import { TrainModel } from '../train-model/train-model.component';
 import { Header } from './components/header.component';
 import { CurrentModelTraining } from './current-model-training/current-model-training.component';
@@ -49,6 +50,8 @@ const ModelListingContent = () => {
 
             <Flex direction={'column'} flex={1} UNSAFE_style={{ overflowY: 'auto', scrollbarGutter: 'stable' }}>
                 <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
+
+                <ExportJobsList predicate={({ datasetId }: { datasetId: string | null }) => isString(datasetId)} />
 
                 <ModelListing hasNoResults={hasNoResults} groupedModels={groupedModels} />
             </Flex>

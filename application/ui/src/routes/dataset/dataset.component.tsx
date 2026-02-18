@@ -8,6 +8,8 @@ import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
 
+const isMainDataset = <T extends { datasetId: string | null }>({ datasetId }: T) => datasetId === null;
+
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage, isPending } = useGetDatasetMediaItems();
@@ -20,7 +22,7 @@ export const Dataset = () => {
             UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
             <View gridRow='1'>
-                <ExportJobsList />
+                <ExportJobsList predicate={isMainDataset} />
             </View>
 
             <View gridRow='2'>

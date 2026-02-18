@@ -5,7 +5,7 @@ import { Button, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
 import { ExportDatasetConfig } from '../../../components/export-dataset-config-dialog/export-dataset-config.component';
-import { DatasetStatistics } from './export-dataset/dataset-statistics/dataset-statistics.component';
+import { MainDatasetStatistics } from './export-dataset/dataset-statistics.component';
 import { ImportDataset } from './import-dataset/import-dataset.component';
 
 export const ImportExport = () => {
@@ -35,7 +35,12 @@ export const ImportExport = () => {
             </MenuTrigger>
 
             <ImportDataset dialogState={importDialogState} />
-            <ExportDatasetConfig datasetId={null} dialogState={exportDialogState} statistics={<DatasetStatistics />} />
+
+            <ExportDatasetConfig
+                datasetId={null}
+                dialogState={exportDialogState}
+                statistics={<MainDatasetStatistics />}
+            />
         </>
     );
 };

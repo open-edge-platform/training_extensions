@@ -9,9 +9,9 @@ import { getMockedProject } from '../../../mocks/mock-project';
 import { SchemaProjectView } from '../../api/openapi-spec';
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
-import { ExportDataset } from './export-dataset-config.component';
+import { ExportDatasetConfig } from './export-dataset-config.component';
 
-describe('ExportDataset', () => {
+describe('ExportDatasetConfig', () => {
     const mockDialogState = {
         isOpen: true,
         open: vi.fn(),
@@ -33,7 +33,7 @@ describe('ExportDataset', () => {
             })
         );
 
-        render(<ExportDataset dialogState={mockDialogState} />);
+        render(<ExportDatasetConfig dialogState={mockDialogState} datasetId={null} statistics={undefined} />);
     };
 
     it('hides COCO option for classification task', async () => {

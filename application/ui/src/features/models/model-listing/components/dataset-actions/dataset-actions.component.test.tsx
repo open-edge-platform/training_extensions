@@ -3,8 +3,12 @@
 
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { getMockedProject } from 'mocks/mock-project';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../../../api/utils';
+import { server } from '../../../../../msw-node-setup';
 import type { DatasetGroup } from '../../types';
 import { DatasetActions } from './dataset-actions.component';
 
@@ -23,10 +27,36 @@ const mockDataset: DatasetGroup = {
 };
 
 describe('DatasetActions', () => {
-    it('should render menu with all items', async () => {
-        render(<DatasetActions dataset={mockDataset} />);
+    const renderApp = () => {
+        server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(getMockedProject({}));
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}/items', ({ request }) => {
+                const url = new URL(request.url);
+                const annotationStatus = url.searchParams.get('annotation_status');
 
-        const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
+                if (annotationStatus === 'reviewed') {
+                    return HttpResponse.json({
+                        pagination: { total: 1, offset: 0, limit: 0, count: 0 },
+                        items: [],
+                    });
+                }
+
+                return HttpResponse.json({
+                    pagination: { total: 1, offset: 0, limit: 0, count: 0 },
+                    items: [],
+                });
+            })
+        );
+
+        render(<DatasetActions dataset={mockDataset} />);
+    };
+
+    it('should render menu with all items', async () => {
+        renderApp();
+
+        const menuButton = await screen.findByRole('button', { name: 'Dataset actions' });
         expect(menuButton).toBeInTheDocument();
 
         await userEvent.click(menuButton);
@@ -36,7 +66,7 @@ describe('DatasetActions', () => {
     });
 
     it('should open rename dialog when rename action is clicked', async () => {
-        render(<DatasetActions dataset={mockDataset} />);
+        renderApp();
 
         const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
         await userEvent.click(menuButton);
@@ -48,7 +78,7 @@ describe('DatasetActions', () => {
     });
 
     it('should open delete dialog when delete action is clicked', async () => {
-        render(<DatasetActions dataset={mockDataset} />);
+        renderApp();
 
         const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
         await userEvent.click(menuButton);
