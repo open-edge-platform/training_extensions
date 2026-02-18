@@ -15,7 +15,7 @@ from app.api.validators import MediaID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.models.media import ImageFormat, VideoFormat
-from app.services import DatasetService, MediaService, ResourceNotFoundError
+from app.services import DatasetService, MediaService
 from app.services.media_service import InvalidImageError, MediaFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
@@ -153,11 +153,8 @@ def get_media(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> MediaView:
     """Get information about a specific media"""
-    try:
-        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-        return MediaView.model_validate(media, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    return MediaView.model_validate(media, from_attributes=True)
 
 
 @router.get(
@@ -174,13 +171,10 @@ def get_media_binary(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> FileResponse:
     """Get media binary content"""
-    try:
-        binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
-        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-        filename = f"{media.name}.{media.format.value.lower()}"
-        return FileResponse(path=binary_path, filename=filename)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    filename = f"{media.name}.{media.format.value.lower()}"
+    return FileResponse(path=binary_path, filename=filename)
 
 
 @router.get(
@@ -197,21 +191,18 @@ def get_media_thumbnail(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> StreamingResponse:
     """Get media thumbnail binary content"""
-    try:
-        thumbnail = media_service.generate_media_thumbnail(project=project, media_id=media_id)
-        buffer = BytesIO()
-        thumbnail.save(buffer, format="JPEG")
-        buffer.seek(0)
-        return StreamingResponse(
-            buffer,
-            media_type="image/jpeg",
-            headers={
-                "Content-Disposition": f"inline; filename={media_id}.jpeg",
-                "Cache-Control": "public, max-age=31536000",
-            },
-        )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    thumbnail = media_service.generate_media_thumbnail(project=project, media_id=media_id)
+    buffer = BytesIO()
+    thumbnail.save(buffer, format="JPEG")
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="image/jpeg",
+        headers={
+            "Content-Disposition": f"inline; filename={media_id}.jpeg",
+            "Cache-Control": "public, max-age=31536000",
+        },
+    )
 
 
 @router.delete(
@@ -229,7 +220,4 @@ def delete_media(
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> None:
     """Delete media from the dataset"""
-    try:
-        media_service.delete_media(project=project, media_id=media_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    media_service.delete_media(project=project, media_id=media_id)

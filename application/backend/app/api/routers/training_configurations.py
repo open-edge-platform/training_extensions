@@ -10,7 +10,6 @@ from app.api.dependencies import get_training_configuration_service
 from app.api.serializers.configurable_parameters import ConfigurableParametersConverter
 from app.api.serializers.training_configuration import TrainingConfigurationConverter
 from app.api.validators import ProjectID
-from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
 
 router = APIRouter(prefix="/api/projects/{project_id}/training_configuration", tags=["Training Configuration"])
@@ -40,8 +39,6 @@ def get_training_configuration(
             model_revision_id=model_revision_id,
         )
         return TrainingConfigurationConverter().training_configuration_to_rest(training_configuration=training_config)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -69,7 +66,5 @@ def update_training_configuration(
             model_architecture_id=model_architecture_id,
         )
         return TrainingConfigurationConverter().training_configuration_to_rest(updated_config)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

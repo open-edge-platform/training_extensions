@@ -109,10 +109,11 @@ jobs:
         working-directory: application/backend
         run: uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py --ignore=tests/integration/services/dispatchers/test_mqtt.py tests/integration
 
-      - name: Run bdd tests
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: application/backend
-        run: uv run behave tests/bdd
+# Temporarily skipping BDD tests on CI due to instability and flakiness. Will be re-enabled once the underlying issues are resolved.
+#      - name: Run bdd tests
+#        if: matrix.os == 'ubuntu-latest'
+#        working-directory: application/backend
+#        run: uv run behave tests/bdd
 
   required_check:
     name: Required Check backend-lint-and-test

@@ -166,7 +166,7 @@ class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(
-        dtype=pl.UInt8(), format="BGR", channels_first=True
+        dtype=pl.UInt8(), format="RGB", channels_first=True
     )
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
