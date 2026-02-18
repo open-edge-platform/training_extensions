@@ -5,9 +5,9 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 
 import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
-import { isVideo } from '../../features/dataset/utils';
 import { isClassificationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
+import { isVideo } from '../media-item-utils';
 import type { RegionOfInterest } from '../types';
 import { useProjectLabelsWithEmptyLabel } from './labels';
 
