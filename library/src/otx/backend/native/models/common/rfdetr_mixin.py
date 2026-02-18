@@ -31,8 +31,7 @@ if TYPE_CHECKING:
 
 
 class RFDETRMixin:
-    """Mixin class providing shared RF-DETR functionality for detection and instance segmentation.
-    """
+    """Mixin class providing shared RF-DETR functionality for detection and instance segmentation."""
 
     _pretrained_weights: ClassVar[dict[str, str]]
     _model_class_mapping: ClassVar[dict[str, type]]
@@ -126,8 +125,10 @@ class RFDETRMixin:
 
         required_attrs = ("bboxes", "labels", "masks") if has_masks else ("bboxes", "labels")
         if all(getattr(entity, attr) is not None for attr in required_attrs):
-            iterables: tuple = (entity.bboxes, entity.labels, entity.masks) if has_masks else (entity.bboxes, entity.labels)  # type: ignore[assignment]
-            for i, items in enumerate(zip(*iterables)):
+            iterables: tuple = (
+                (entity.bboxes, entity.labels, entity.masks) if has_masks else (entity.bboxes, entity.labels)  # type: ignore[assignment]
+            )
+            for _i, items in enumerate(zip(*iterables)):
                 bb, ll = items[0], items[1]
                 mm = items[2] if has_masks else None
 
@@ -136,10 +137,12 @@ class RFDETRMixin:
                     boxes_cxcywh = box_convert(bb.data, in_fmt="xyxy", out_fmt="cxcywh")
                     device = boxes_cxcywh.device
                     scaled_bboxes = boxes_cxcywh / torch.tensor(
-                        [w, h, w, h], device=device, dtype=torch.float32,
+                        [w, h, w, h],
+                        device=device,
+                        dtype=torch.float32,
                     )
                 else:
-                    h, w = entity.images.shape[2:]
+                    h, w = entity.images.shape[2:]  # pyrefly: ignore[missing-attribute]
                     device = getattr(entity.images, "device", torch.device("cpu"))
                     scaled_bboxes = torch.zeros((0, 4), device=device, dtype=torch.float32)
 
@@ -299,21 +302,21 @@ class RFDETRMixin:
             export fails, we attempt to restore the original forward method
             so the model instance remains usable.
         """
-        if self.explain_mode:  # type: ignore[attr-defined]
+        if self.explain_mode:  # pyrefly: ignore[missing-attribute]
             msg = "Explain mode is not supported for RF-DETR model."
             raise ValueError(msg)
-        self.model.lwdetr.export()  # type: ignore[attr-defined]  # pyrefly: ignore[missing-attribute]
+        lwdetr = self.model.lwdetr  # pyrefly: ignore[missing-attribute]
+        lwdetr.export()  # pyrefly: ignore[missing-attribute]
         try:
             return super().export(output_dir, base_name, export_format, precision)  # type: ignore[misc]
-        except Exception as e:
+        except Exception:
             # Restore original forward methods if export fails
-            lwdetr = self.model.lwdetr  # type: ignore[attr-defined]
             if hasattr(lwdetr, "_forward_origin"):
                 lwdetr.forward = lwdetr._forward_origin  # noqa: SLF001
                 lwdetr._export = False  # noqa: SLF001
-            raise e
+            raise
         finally:
-            self.model.lwdetr._export = False  # type: ignore[attr-defined]
+            lwdetr._export = False  # noqa: SLF001
             lwdetr.forward = lwdetr._forward_origin  # noqa: SLF001
 
     @property

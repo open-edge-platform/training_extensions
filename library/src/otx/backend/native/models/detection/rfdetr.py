@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class RFDETR(RFDETRMixin, OTXDetectionModel):
+class RFDETR(RFDETRMixin, OTXDetectionModel):  # pyrefly: ignore[inconsistent-inheritance]
     """OTX Detection model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
