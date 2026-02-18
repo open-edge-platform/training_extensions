@@ -1,0 +1,7 @@
+.chevronButtonCollapsed {
+    transform: rotate(-180deg);
+}
+
+.chevronButton {
+    transition: transform 0.2s ease-in-out;
+}

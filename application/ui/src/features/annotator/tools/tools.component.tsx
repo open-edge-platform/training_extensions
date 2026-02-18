@@ -12,10 +12,11 @@ interface ToolProps {
     tool: ToolConfig;
     activeTool: ToolType | null;
     setActiveTool: (tool: ToolType) => void;
+    isDisabled?: boolean;
 }
 
-const Tool = ({ tool, activeTool, setActiveTool }: ToolProps) => {
-    useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool]);
+const Tool = ({ tool, activeTool, setActiveTool, isDisabled }: ToolProps) => {
+    useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool, isDisabled], { enabled: !isDisabled });
 
     return (
         <TooltipTrigger placement={'right'}>
@@ -24,8 +25,9 @@ const Tool = ({ tool, activeTool, setActiveTool }: ToolProps) => {
                 width={'size-400'}
                 onPress={() => setActiveTool(tool.type)}
                 aria-label={`${tool.type} tool`}
+                isDisabled={isDisabled}
             >
-                <IconWrapper isSelected={activeTool === tool.type}>
+                <IconWrapper isSelected={activeTool === tool.type} isDisabled={isDisabled}>
                     <tool.icon data-tool={tool.type} />
                 </IconWrapper>
             </ActionButton>
@@ -40,9 +42,10 @@ interface ToolsProps {
     tools: ToolConfig[];
     activeTool: ToolType | null;
     setActiveTool: (tool: ToolType) => void;
+    isDisabled?: boolean;
 }
 
-export const Tools = ({ tools, activeTool, setActiveTool }: ToolsProps) => {
+export const Tools = ({ tools, activeTool, setActiveTool, isDisabled }: ToolsProps) => {
     if (tools.length === 0) {
         return null;
     }
@@ -51,7 +54,7 @@ export const Tools = ({ tools, activeTool, setActiveTool }: ToolsProps) => {
         <>
             {tools.map((tool) => (
                 <Fragment key={tool.type}>
-                    <Tool tool={tool} activeTool={activeTool} setActiveTool={setActiveTool} />
+                    <Tool tool={tool} activeTool={activeTool} setActiveTool={setActiveTool} isDisabled={isDisabled} />
                 </Fragment>
             ))}
         </>
