@@ -17,7 +17,7 @@ import { LinkOut } from '@geti/ui/icons';
 
 import { $api } from '../../../../../api/client';
 import { ReactComponent as EmptyDataset } from '../../../../../assets/drop-files.svg';
-import { useStageDataset } from '../../../../../hooks/localStorage/use-stage-dataset.hook';
+import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
 import { ImportDatasetState } from '../util';
 import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
 
@@ -28,8 +28,9 @@ type ImportDropZoneProps = {
 };
 
 export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
-    const { addLsStagingId } = useStageDataset();
+    const { addLsPreparingImportId } = usePrepareImportDataset();
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
+    const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
 
     const handleLoadingFile = (files: File[]) => {
         const hasMultipleFiles = files.length > 1;
@@ -50,21 +51,27 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('file', files[0]);
+        handleImportPrepare(files[0]);
+    };
 
-        stagedDatasetMutation.mutate(
-            {
-                // @ts-expect-error There is an incorrect type in OpenAPI
-                body: formData,
+    const handleImportPrepare = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const stagedDataset = await stagedDatasetMutation.mutateAsync({
+            // @ts-expect-error There is an incorrect type in OpenAPI
+            body: formData,
+        });
+
+        const prepareImportJob = await prepareImportJobMutation.mutateAsync({
+            body: {
+                job_type: 'prepare_dataset_for_import',
+                staged_dataset_id: stagedDataset.id,
             },
-            {
-                onSuccess: (data) => {
-                    addLsStagingId({ name: files[0].name, id: data.id });
-                    onNextStep('process');
-                },
-            }
-        );
+        });
+
+        addLsPreparingImportId(prepareImportJob.job_id, file.name);
+        onNextStep('preparing');
     };
 
     return (

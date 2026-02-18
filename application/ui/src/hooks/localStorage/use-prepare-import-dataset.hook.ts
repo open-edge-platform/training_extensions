@@ -6,26 +6,31 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useProjectIdentifier } from '../use-project-identifier.hook';
 import { getParsedLocalStorage } from './utils';
 
+type DataValue = {
+    id: string;
+    fileName: string;
+};
+
 const PREPARING_IMPORT_DATASET_KEY = (projectId: string) => `preparing-import-dataset-${projectId}`;
 
 export const usePrepareImportDataset = () => {
     const projectId = useProjectIdentifier();
 
-    const [_lsPreparingImportProject, setLsPreparingImportId] = useLocalStorage<string[]>(
+    const [lsPreparingImportProject, setLsPreparingImportId] = useLocalStorage<DataValue | null>(
         PREPARING_IMPORT_DATASET_KEY(projectId),
-        () => getParsedLocalStorage(PREPARING_IMPORT_DATASET_KEY(projectId)) ?? []
+        () => getParsedLocalStorage<DataValue>(PREPARING_IMPORT_DATASET_KEY(projectId)) ?? null
     );
 
-    const getLsPreparingImportIds = (): string[] => {
-        return getParsedLocalStorage<string[]>(PREPARING_IMPORT_DATASET_KEY(projectId)) ?? [];
+    const getLsPreparingImportIds = (): DataValue | null => {
+        return lsPreparingImportProject;
     };
 
-    const addLsPreparingImportId = (jobId: string) => {
-        return setLsPreparingImportId((prevState) => [...(prevState ?? []), jobId]);
+    const addLsPreparingImportId = (jobId: string, fileName: string) => {
+        return setLsPreparingImportId({ id: jobId, fileName });
     };
 
-    const removeLsPreparingImportId = (jobId: string): void => {
-        return setLsPreparingImportId((prevState) => prevState.filter((id) => id !== jobId));
+    const removeLsPreparingImportId = (): void => {
+        return setLsPreparingImportId(null);
     };
 
     return {

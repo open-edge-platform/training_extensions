@@ -7,6 +7,7 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
 import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
+import { ImportJobsList } from '../../features/dataset/import-export/import-jobs-list/import-jobs-list.component';
 
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
@@ -20,6 +21,7 @@ export const Dataset = () => {
             UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
             <View gridRow='1'>
+                <ImportJobsList />
                 <ExportJobsList />
             </View>
 

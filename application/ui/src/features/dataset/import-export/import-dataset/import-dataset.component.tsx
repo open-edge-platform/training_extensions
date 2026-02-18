@@ -3,11 +3,12 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
 import { OverlayTriggerState } from '@react-stately/overlays';
-import { useStageDataset } from 'hooks/localStorage/use-stage-dataset.hook';
 import { isEmpty } from 'lodash-es';
 
+import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
+import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.componets';
 import { ImportDropZone } from './import-drop-zone/import-drop-zone.component';
 import { ImportProcess } from './import-process/import-process.component';
 import { ImportDatasetState } from './util';
@@ -17,11 +18,11 @@ type ImportDatasetProps = {
 };
 
 export const ImportDataset = ({ dialogState }: ImportDatasetProps) => {
-    const { getLsStagingIds } = useStageDataset();
+    const { getLsPreparingImportIds } = usePrepareImportDataset();
 
     const [currentState, setCurrentState] = useState<ImportDatasetState>(() => {
-        if (!isEmpty(getLsStagingIds())) {
-            return 'process';
+        if (!isEmpty(getLsPreparingImportIds())) {
+            return 'preparing';
         }
 
         return 'dropzone';
@@ -40,15 +41,11 @@ export const ImportDataset = ({ dialogState }: ImportDatasetProps) => {
                     <Content>
                         <View backgroundColor={'gray-50'}>
                             {currentState === 'dropzone' && <ImportDropZone onNextStep={handleNextStep} />}
-                            {currentState === 'process' && <ImportProcess />}
+                            {currentState === 'preparing' && <ImportProcess onNextStep={handleNextStep} />}
                         </View>
                     </Content>
 
-                    <ButtonGroup>
-                        <Button onPress={dialogState.close} variant='secondary'>
-                            Cancel
-                        </Button>
-                    </ButtonGroup>
+                    <ImportDatasetButtons currentState={currentState} onClose={dialogState.close} />
                 </Dialog>
             )}
         </DialogContainer>

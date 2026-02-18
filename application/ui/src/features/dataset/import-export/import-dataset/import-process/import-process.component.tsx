@@ -1,16 +1,37 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Text } from '@geti/ui';
+import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
-import { useStageDataset } from '../../../../../hooks/localStorage/use-stage-dataset.hook';
+import { isJobPending } from '../../export-jobs-list/util';
+import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
+import { ImportDatasetState } from '../util';
 
 import classes from './import-process.module.scss';
 
-export const ImportProcess = () => {
-    const { getLsStagingIds } = useStageDataset();
-    console.log('getLsStagingIds', getLsStagingIds());
+type ImportProcessProps = {
+    onNextStep: (step: ImportDatasetState) => void;
+};
+
+export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
+    const {
+        data: job,
+        isFetching,
+        fileName,
+    } = usePrepareImportStatus({
+        onError: () => onNextStep('dropzone'),
+    });
+
+    const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
+    const isPreparingJobLoading = isJobPending(job) && isFetching;
+    console.log('--> job', job);
+    console.log('progress', progress);
+
+    if (!isFetching && isEmpty(job)) {
+        return null;
+    }
 
     return (
         <Flex
@@ -22,21 +43,25 @@ export const ImportProcess = () => {
             justifyContent='center'
             UNSAFE_style={{ padding: dimensionValue('size-500') }}
         >
-            <CircularProgress
-                size={80}
-                percentage={10}
-                strokeWidth={8}
-                labelFontSize={12}
-                color='static-blue-200'
-                labelFontColor='gray-700'
-                backStrokeColor='gray-75'
-            />
+            {!isPreparingJobLoading && (
+                <CircularProgress
+                    size={80}
+                    percentage={progress}
+                    strokeWidth={8}
+                    labelFontSize={12}
+                    color='static-blue-200'
+                    labelFontColor='gray-700'
+                    backStrokeColor='gray-75'
+                />
+            )}
+
+            {isPreparingJobLoading && <Loading mode='inline' size='L' style={{ height: 'auto' }} />}
 
             <Flex direction='column' alignItems='center' justifyContent='center'>
-                <Text UNSAFE_className={classes.title}>Uploading</Text>
-                <Text UNSAFE_className={classes.description}>Dataset is being uploaded</Text>
+                <Text UNSAFE_className={classes.title}>Preparing</Text>
+                <Text UNSAFE_className={classes.description}>Prepare dataset import to existing project</Text>
 
-                <Text marginTop='size-100'>File name...</Text>
+                <Text marginTop='size-100'>{fileName}</Text>
             </Flex>
         </Flex>
     );
