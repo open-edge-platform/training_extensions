@@ -18,6 +18,7 @@ import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
+import { useWithCancel } from './use-with-cancel';
 
 import classes from './segment-anything.module.scss';
 
@@ -60,6 +61,7 @@ export const SegmentAnythingTool = () => {
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
+    const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
     const canvasRef = useRef<SVGRectElement>(null);
 
@@ -78,7 +80,8 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
-        throttledDecodingQueryFn([{ ...point, positive: true }])
+        cancellableThrottledDecodingQueryFn
+            .call([{ ...point, positive: true }])
             .then((shapes) => {
                 setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
             })
@@ -116,6 +119,11 @@ export const SegmentAnythingTool = () => {
         handleAddAnnotations(previewShapes, selectedLabel);
     };
 
+    const handlePointerLeave = () => {
+        cancellableThrottledDecodingQueryFn.cancel();
+        setPreviewShapes([]);
+    };
+
     const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
         return {
             shape,
@@ -136,7 +144,7 @@ export const SegmentAnythingTool = () => {
             aria-label='SAM tool canvas'
             onPointerMove={handleMouseMove}
             onPointerDown={handlePointerDown}
-            onPointerLeave={() => setPreviewShapes([])}
+            onPointerLeave={handlePointerLeave}
             style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />

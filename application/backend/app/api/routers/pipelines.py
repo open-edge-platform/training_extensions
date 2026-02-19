@@ -14,7 +14,7 @@ from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_serv
 from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, PipelineStatus
-from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
+from app.services import PipelineMetricsService, PipelineService, SystemService
 from app.services.pipeline_service import OtherProjectActiveError
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
@@ -82,11 +82,8 @@ def get_pipeline(
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> PipelineView:
     """Get info about a given pipeline"""
-    try:
-        pipeline = pipeline_service.get_pipeline_by_id(project_id)
-        return PipelineView.model_validate(pipeline, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    pipeline = pipeline_service.get_pipeline_by_id(project_id)
+    return PipelineView.model_validate(pipeline, from_attributes=True)
 
 
 @router.patch(
@@ -134,8 +131,6 @@ def update_pipeline(
         return PipelineView.model_validate(updated, from_attributes=True)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except OtherProjectActiveError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -160,8 +155,6 @@ def enable_pipeline(
     """
     try:
         pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.RUNNING})
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except OtherProjectActiveError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -180,10 +173,7 @@ def disable_pipeline(
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> None:
     """Stop a pipeline. The pipeline will become idle, and it won't process any data until re-enabled."""
-    try:
-        pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.IDLE})
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.IDLE})
 
 
 @router.get(
@@ -214,7 +204,5 @@ def get_project_metrics(
     try:
         pipeline_metrics = pipeline_metrics_service.get_pipeline_metrics(project_id, time_window)
         return PipelineMetricsView.model_validate(pipeline_metrics, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

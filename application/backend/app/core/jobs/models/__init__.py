@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .events import Cancelled, Done, ExecutionEvent, Failed, Progress, Started
-from .job import Job, JobParams, JobParamsT, JobStatus, JobType, now_utc_ts
-from .training_job import TrainingJob, TrainingJobParams
+from .job import Job, JobParams, JobParamsT, JobStatus, JobType, ProjectJob, now_utc_ts
 
 __all__ = [
     "Cancelled",
@@ -16,8 +15,7 @@ __all__ = [
     "JobStatus",
     "JobType",
     "Progress",
+    "ProjectJob",
     "Started",
-    "TrainingJob",
-    "TrainingJobParams",
     "now_utc_ts",
 ]

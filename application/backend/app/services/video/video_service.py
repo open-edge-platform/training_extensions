@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import cv2
+import numpy as np
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -48,7 +49,7 @@ def extract_video_frame(
     video_path: Path,
     video_frame_path: Path,
     time: float,
-) -> None:
+) -> np.ndarray:
     """
     Extracts a video frame and saves it to a local FS to specified file.
 
@@ -67,6 +68,7 @@ def extract_video_frame(
         if not read_success:
             raise RuntimeError(f"Cannot read frame at {time} second(s) from video: {video_path}")
         cv2.imwrite(str(video_frame_path), frame)
+        return frame
     except Exception as e:
         logger.error(f"Failed extracting video frame {time} from video {video_path}", exc_info=e)
         raise RuntimeError("Error occurred while extracting video frame")
