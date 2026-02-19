@@ -10,17 +10,16 @@ from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
 import torch
 from torch.utils.data import Dataset as TorchDataset
-
-from otx import LabelInfo, NullLabelInfo
-from otx.data.entity.sample import OTXSample
-from otx.data.transform_libs.torchvision import Compose
 from torchvision.transforms.v2 import functional as f
 
+from otx import LabelInfo, NullLabelInfo
 from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 from otx.data.entity.sample import OTXSample, OTXSampleBatch
 from otx.data.transform_libs.torchvision import Compose
 from otx.types import OTXTaskType
 
+if TYPE_CHECKING:
+    from datumaro import Dataset as DmDataset
 
 Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
@@ -75,7 +74,10 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         img = item.image
         # All images should already be tensors from the pipeline
         if not isinstance(img, torch.Tensor):
-            msg = f"Expected torch.Tensor but got {type(img)}. Images should be converted to tensors in the dataset pipeline."
+            msg = (
+            f"Expected torch.Tensor but got {type(img)}. "
+            "Images should be converted to tensors in the dataset pipeline."
+        )
             raise TypeError(msg)
         # Convert to float32 if not already.
         # For int32/int16 tensors (16-bit images) the intensity transform should
@@ -141,7 +143,7 @@ class OTXDataset(TorchDataset):
 
     def __init__(
         self,
-        dm_subset: Dataset,
+        dm_subset: DmDataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,

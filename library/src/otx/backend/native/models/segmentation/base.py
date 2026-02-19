@@ -300,4 +300,5 @@ class OTXSegmentationModel(OTXModel):
 
     @property
     def task(self) -> OTXTaskType:
+        """Return task type."""
         return OTXTaskType.SEMANTIC_SEGMENTATION

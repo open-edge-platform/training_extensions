@@ -257,10 +257,7 @@ def list_override(configs: Namespace, key: str, overrides: list, convert_dict_to
     override_cp_set = set(override_class_paths)
     ordered: list = []
     # First: base-only items, preserving base order
-    for item in base_list:
-        cp = item["class_path"]
-        if cp not in override_cp_set:
-            ordered.append(item)
+    ordered.extend(item for item in base_list if item["class_path"] not in override_cp_set)
     # Then: items in the override, in the override's order
     for cp in override_class_paths:
         if cp in item_by_cp:

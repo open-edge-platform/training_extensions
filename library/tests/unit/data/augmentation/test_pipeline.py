@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import kornia.augmentation as K
 import pytest
@@ -22,9 +22,6 @@ from otx.data.augmentation.pipeline import (
     GPUAugmentationPipeline,
     _SampleImageAdapter,
 )
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXSampleBatch
-
 
 # ---------------------------------------------------------------------------
 # Helpers

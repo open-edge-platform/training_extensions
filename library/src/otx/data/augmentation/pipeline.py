@@ -11,28 +11,27 @@ This module provides the core augmentation pipeline classes:
 from __future__ import annotations
 
 import ast
-import os
 import operator
+import os
 import typing
 from copy import copy, deepcopy
-
 from inspect import isclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
+import kornia.augmentation as K  # noqa: N812
 import torch
 import torchvision.transforms.v2 as tvt_v2
 import torchvision.utils as tv_utils
 import typeguard
+from kornia.augmentation.container import ops
 from lightning.pytorch.cli import instantiate_class
 from omegaconf import DictConfig
 from torch import nn
-import kornia.augmentation as K
-from kornia.augmentation.container import ops
 
+from otx.data.augmentation.intensity import build_intensity_transform
 from otx.data.entity.sample import OTXSample
 from otx.data.utils import import_object_from_module
-from otx.data.augmentation.intensity import build_intensity_transform
 
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
@@ -42,7 +41,7 @@ if TYPE_CHECKING:
 _original_transform_list = ops.MaskSequentialOps.transform_list
 
 @classmethod
-def _fixed_transform_list(cls, input, module, param, extra_args=None):
+def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: ANN001, ANN202, A002
     """Fixed version that slices transform_matrix for each list element."""
     if extra_args is None:
         extra_args = {}
@@ -59,9 +58,8 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):
             )
             tfm_input.append(tfm_inp)
         return tfm_input
-    else:
-        # Use original for non-geometric
-        return _original_transform_list.__func__(cls, input, module, param, extra_args)
+    # Use original for non-geometric
+    return _original_transform_list.__func__(cls, input, module, param, extra_args)
 
 ops.MaskSequentialOps.transform_list = _fixed_transform_list
 
@@ -382,44 +380,44 @@ class CPUAugmentationPipeline(nn.Module):
             inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
         return outputs
 
-    def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):
+    def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):  # noqa: ANN001, ANN202
         """Debug visualization - save annotated PNG for inspection."""
         import os
 
+        import numpy as np
         from PIL import Image
         from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-        import numpy as np
 
-        os.makedirs("debug_resize_new", exist_ok=True)
+        os.makedirs("debug_resize_new", exist_ok=True)  # noqa: PTH103
 
         # Get unique id for this sample
         sample_id = id(sample)
 
         # Debug log to file since stdout may be redirected
         log_file = "debug_resize_new/debug_log.txt"
-        with open(log_file, "a") as f:
+        with open(log_file, "a") as f:  # noqa: PTH123
             f.write(f"\n=== Sample {sample_id} ===\n")
 
         # Convert image to CHW uint8 tensor
         img = sample.image
-        with open(log_file, "a") as f:
-            f.write(f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n")
+        with open(log_file, "a") as f:  # noqa: PTH123
+            f.write(f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n")  # noqa: E501
         if isinstance(img, np.ndarray):
-            with open(log_file, "a") as f:
+            with open(log_file, "a") as f:  # noqa: PTH123
                 f.write(f"NumPy image range: min={img.min()}, max={img.max()}\n")
-            if img.ndim == 3:
+            if img.ndim == 3:  # noqa: SIM108
                 img = torch.from_numpy(img).permute(2, 0, 1)
             else:
                 img = torch.from_numpy(img)
         else:
-            with open(log_file, "a") as f:
+            with open(log_file, "a") as f:  # noqa: PTH123
                 f.write(f"Tensor image range: min={img.min().item()}, max={img.max().item()}\n")
 
         if img.dtype != torch.uint8:
             img = img.float()
-            with open(log_file, "a") as f:
+            with open(log_file, "a") as f:  # noqa: PTH123
                 f.write(f"After float conversion: min={img.min().item()}, max={img.max().item()}\n")
-            if img.max() <= 1.0:
+            if img.max() <= 1.0:  # noqa: SIM108
                 img = (img * 255.0).clamp(0, 255)
             else:
                 # Values > 1.0, clamp to 0-255 range
@@ -629,7 +627,7 @@ class GPUAugmentationPipeline(nn.Module):
                     continue
 
                 # Handle input_size placeholder
-                cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)
+                cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)  # noqa: SLF001
 
                 # Instantiate the transform
                 transform = cls._dispatch_transform(cfg)
@@ -675,7 +673,6 @@ class GPUAugmentationPipeline(nn.Module):
     ) -> dict[str, torch.Tensor | list[torch.Tensor] | None]:
         """Apply GPU augmentations to batched data using Kornia AugmentationSequential.
 
-
         Args:
             images: Batched images tensor in BCHW format, values in [0, 1].
             labels: List of labels per image (optional).
@@ -686,7 +683,8 @@ class GPUAugmentationPipeline(nn.Module):
             keypoints: List of keypoints per image (optional).
 
         Returns:
-            Dict with augmented data: {"images": tensor, "labels": list, "bboxes": list, "masks": list, "keypoints": list}
+            Dict with augmented data:
+            {"images": tensor, "labels": list, "bboxes": list, "masks": list, "keypoints": list}
         """
         if self.aug_sequential is None:
             if self._debug_dir is not None:
@@ -758,9 +756,9 @@ class GPUAugmentationPipeline(nn.Module):
             self._debug_visualize(
                 "after_gpu",
                 output["images"],
-                typing.cast(list[torch.Tensor] | None, output["bboxes"]),
-                typing.cast(list[torch.Tensor] | None, output["masks"]),
-                typing.cast(list[torch.Tensor] | None, output["keypoints"]),
+                typing.cast("list[torch.Tensor] | None", output["bboxes"]),
+                typing.cast("list[torch.Tensor] | None", output["masks"]),
+                typing.cast("list[torch.Tensor] | None", output["keypoints"]),
             )
 
         return output
@@ -817,10 +815,7 @@ class GPUAugmentationPipeline(nn.Module):
 
     def __repr__(self) -> str:
         """String representation of the pipeline."""
-        if self.aug_sequential is not None:
-            aug_str = str(self.aug_sequential)
-        else:
-            aug_str = "  (empty)"
+        aug_str = str(self.aug_sequential) if self.aug_sequential is not None else "  (empty)"
         info = f"  mean={self._mean}, std={self._std}" if self._mean or self._std else ""
         return f"GPUAugmentationPipeline(\n{aug_str}\n  data_keys={self._data_keys}{info}\n)"
 

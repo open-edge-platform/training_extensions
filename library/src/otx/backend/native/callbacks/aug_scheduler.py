@@ -244,15 +244,15 @@ class AugmentationSchedulerCallback(Callback):
 
         # Get data_keys from the existing pipeline
         data_keys = None
-        if self._gpu_aug_callback._train_pipeline is not None:
-            data_keys = self._gpu_aug_callback._train_pipeline.data_keys
+        if self._gpu_aug_callback._train_pipeline is not None:  # noqa: SLF001
+            data_keys = self._gpu_aug_callback._train_pipeline.data_keys  # noqa: SLF001
 
         new_pipeline = self.data_aug_switch.build_gpu_pipeline(policy_name, data_keys=data_keys)
 
         # Move to same device as model
         new_pipeline = new_pipeline.to(self.device)
 
-        self._gpu_aug_callback._train_pipeline = new_pipeline
+        self._gpu_aug_callback._train_pipeline = new_pipeline  # noqa: SLF001
         logger.info(f"Swapped GPU augmentation pipeline to policy '{policy_name}'")
 
     def set_data_aug_switch(self, data_aug_switch: DataAugSwitch) -> None:

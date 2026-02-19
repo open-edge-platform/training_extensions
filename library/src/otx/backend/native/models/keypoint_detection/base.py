@@ -209,8 +209,9 @@ class OTXKeypointDetectionModel(OTXModel):
     @staticmethod
     @torch.no_grad()
     def _apply_batch_augmentations(
-        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch
+        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch  # noqa: F821
     ) -> None:
+        """Apply batch augmentations to keypoint data."""
         if augmentations_pipeline is not None:
             stacked_kps = torch.stack(batch.keypoints)
             # Apply augmentations
@@ -226,7 +227,8 @@ class OTXKeypointDetectionModel(OTXModel):
             batch.keypoints = list(stacked_kps)
 
     @property
-    def _default_train_transforms(self):
+    def _default_train_transforms(self):  # noqa: ANN202, F821
+        """Return default GPU augmentations for keypoint detection."""
         return AugmentationSequential(
             kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
             data_keys=["input", "keypoints"],
@@ -239,4 +241,5 @@ class OTXKeypointDetectionModel(OTXModel):
 
     @property
     def task(self) -> OTXTaskType:
+        """Return task type."""
         return OTXTaskType.KEYPOINT_DETECTION

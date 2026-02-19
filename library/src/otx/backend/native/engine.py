@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import copy
 import csv
-import multiprocessing
 import inspect
 import logging
+import multiprocessing
 import os
 import time
 from contextlib import contextmanager

@@ -24,11 +24,11 @@ class MockDataset(DataAugSwitchMixin):
 class TestDataAugSwitchMixin:
     """Test cases for DataAugSwitchMixin with CPU/GPU pipeline."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def dataset(self):
         return MockDataset()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_switch(self):
         """A mock DataAugSwitch that returns predictable CPU pipeline."""
         s = MagicMock(spec=DataAugSwitch)

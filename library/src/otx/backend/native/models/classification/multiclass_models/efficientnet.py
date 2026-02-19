@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from torch import Tensor, nn
-import kornia
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.backbones.efficientnet import EfficientNetBackbone

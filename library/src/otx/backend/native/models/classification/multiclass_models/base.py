@@ -119,7 +119,8 @@ class OTXMulticlassClsModel(OTXModel):
         )
 
     @property
-    def _default_train_transforms(self):
+    def _default_train_transforms(self):  # noqa: ANN202, F821
+        """Return default GPU augmentations for classification."""
         return AugmentationSequential(
             kornia.augmentation.RandomHorizontalFlip(),
             kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
@@ -191,6 +192,7 @@ class OTXMulticlassClsModel(OTXModel):
 
     @property
     def task(self) -> OTXTaskType:
+        """Return task type."""
         return OTXTaskType.MULTI_CLASS_CLS
 
     @property
