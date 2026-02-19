@@ -51,9 +51,13 @@ const createTestRouter = (children: ReactNode, options: RenderOptions) => {
 };
 
 export const render = (ui: ReactNode, options: RenderOptions = {}) => {
-    const router = createTestRouter(ui, options);
+    const Wrapper = ({ children }: { children: ReactNode }) => {
+        const router = createTestRouter(children, options);
 
-    return rtlRender(<RouterProvider router={router} />);
+        return <RouterProvider router={router} />;
+    };
+
+    return rtlRender(ui, { wrapper: Wrapper, ...options });
 };
 
 export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult, options: RenderOptions = {}) => {
