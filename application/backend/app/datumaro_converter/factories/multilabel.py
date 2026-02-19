@@ -8,7 +8,7 @@ from loguru import logger
 
 from app.datumaro_converter.samples import MultilabelClassificationSample
 from app.datumaro_converter.utils import SubsetConverter, validate_confidence_consistency
-from app.models import DatasetItem, DatasetItemAnnotation, Media
+from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media
 
 from .sample_factory import SampleFactory
 
@@ -36,6 +36,9 @@ class MultilabelClassificationSampleFactory(SampleFactory):
 
         label_indices = self._extract_label_indices(dataset_item)
         if label_indices is None:
+            return None
+        # Filter out empty-labeled items in the training subset
+        if len(label_indices) == 0 and dataset_item.subset == DatasetItemSubset.TRAINING:
             return None
 
         confidences = self._extract_confidences(dataset_item.annotation_data)

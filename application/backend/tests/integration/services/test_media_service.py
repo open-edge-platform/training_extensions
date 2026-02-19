@@ -1345,7 +1345,7 @@ class TestMediaServiceIntegration:
         fxt_video_data(video_path)
 
         video_frame_media, video_frame = fxt_media_service.extract_video_frame(
-            project=project, video_id=UUID(media.id), timestamp=2
+            project=project, video_id=UUID(media.id), frame_index=50
         )
 
         video_frame_binary_path = dataset_dir / f"{video_frame_media.id}.jpg"
@@ -1357,7 +1357,7 @@ class TestMediaServiceIntegration:
             db_video_frame_media.id == str(video_frame_media.id)
             and db_video_frame_media.project_id == str(project.id)
             and db_video_frame_media.type == "video_frame"
-            and db_video_frame_media.name == "test4_frame_2.000"
+            and db_video_frame_media.name == "test4_frame_50"
             and db_video_frame_media.format == "jpg"
             and db_video_frame_media.width == 640
             and db_video_frame_media.height == 480
@@ -1368,5 +1368,5 @@ class TestMediaServiceIntegration:
         assert (
             db_video_frame.id == str(video_frame.id)
             and db_video_frame.video_id == media.id
-            and db_video_frame.timestamp == 2
+            and db_video_frame.frame_index == 50
         )

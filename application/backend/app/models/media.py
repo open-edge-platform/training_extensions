@@ -77,4 +77,4 @@ class Media(BaseEntity):
 class VideoFrame(BaseEntity):
     id: UUID
     video_id: UUID
-    timestamp: float
+    frame_index: int

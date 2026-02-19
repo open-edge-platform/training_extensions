@@ -10,7 +10,7 @@ from numpy import ndarray
 
 from app.datumaro_converter.samples import InstanceSegmentationSample
 from app.datumaro_converter.utils import ShapeConverter, SubsetConverter, validate_confidence_consistency
-from app.models import DatasetItem, DatasetItemAnnotation, Media, Polygon
+from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Polygon
 
 from .sample_factory import SampleFactory
 
@@ -41,6 +41,9 @@ class InstanceSegmentationSampleFactory(SampleFactory):
         label_indices = self._extract_label_indices(dataset_item)
 
         if label_indices is None:
+            return None
+        # Filter out empty-labeled items in the training subset
+        if len(label_indices) == 0 and dataset_item.subset == DatasetItemSubset.TRAINING:
             return None
 
         confidences = self._extract_confidences(dataset_item.annotation_data)

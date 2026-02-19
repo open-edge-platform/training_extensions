@@ -27,7 +27,6 @@ def feature_vector_fn(feature_map: FeatureMapType) -> torch.Tensor:
     if isinstance(feature_map, (list, tuple, dict)):
         if isinstance(feature_map, dict):
             feature_map = list(feature_map.values())
-
         # aggregate feature maps from Feature Pyramid Network
         feature_vector = [
             # Spatially pooling and flatten, B x C x H x W => B x C'

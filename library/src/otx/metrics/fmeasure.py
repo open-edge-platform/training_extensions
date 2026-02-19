@@ -7,13 +7,15 @@ from __future__ import annotations
 
 import inspect
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchmetrics.utilities.data import _flatten_dict
 
+from otx.metrics.mean_ap import MaskRLEMeanAveragePrecision
 from otx.types.label import LabelInfo
 
 logger = logging.getLogger()
@@ -710,12 +712,24 @@ class FMeasure(Metric):
             cross_class_nms=self.cross_class_nms,
         )
         self._f_measure_per_label = {label: result.best_f_measure_per_class[label] for label in self.classes}
-
         if best_confidence_threshold is not None:
             (index,) = np.where(
                 np.isclose(list(np.arange(*boxes_pair.confidence_range)), best_confidence_threshold),
             )
-            computed_f_measure = result.per_confidence.all_classes_f_measure_curve[int(index)]
+            if index.size == 0:
+                logger.warning(
+                    "No matching confidence threshold found for %s, using best f-measure.",
+                    best_confidence_threshold,
+                )
+                computed_f_measure = result.best_f_measure
+            elif index.size > 1:
+                logger.warning(
+                    "Multiple matching confidence thresholds found for %s, using first match.",
+                    best_confidence_threshold,
+                )
+                computed_f_measure = result.per_confidence.all_classes_f_measure_curve[int(index[0])]
+            else:
+                computed_f_measure = result.per_confidence.all_classes_f_measure_curve[index.item()]
         else:
             self._f_measure_per_confidence = {
                 "xs": list(np.arange(*boxes_pair.confidence_range)),
@@ -802,13 +816,24 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
         to correctly obtain F1 score from a test set.
     """
 
-    def __init__(self, box_format: str, iou_type: str, label_info: LabelInfo, **kwargs):
+    def __init__(
+        self,
+        box_format: Literal["xyxy", "xywh", "cxcywh"],
+        iou_type: Literal["bbox", "segm"],
+        label_info: LabelInfo,
+        **kwargs,
+    ):
         map_kwargs = self._filter_kwargs(MeanAveragePrecision, kwargs)
         fmeasure_kwargs = self._filter_kwargs(FMeasure, kwargs)
+        map_compute_class = (
+            MeanAveragePrecision(box_format, iou_type, **map_kwargs)
+            if iou_type == "bbox"
+            else MaskRLEMeanAveragePrecision(box_format, iou_type, **map_kwargs)
+        )
 
         super().__init__(
             [
-                MeanAveragePrecision(box_format, iou_type, **map_kwargs),
+                map_compute_class,
                 FMeasure(label_info, **fmeasure_kwargs),
             ],
         )
@@ -817,6 +842,42 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
         cls_params = inspect.signature(cls.__init__).parameters
         valid_keys = set(cls_params.keys()) - {"self"}
         return {k: v for k, v in kwargs.items() if k in valid_keys}
+
+    def compute(self, best_confidence_threshold: float | None = None) -> dict[str, Any]:
+        """Compute result from collection and reduce into a single dictionary.
+
+        Args:
+            best_confidence_threshold: The confidence threshold to use for filtering predictions.
+        """
+        result = {}
+        for k, m in self.items(keep_base=True, copy_state=False):
+            res = (
+                m.compute(best_confidence_threshold=best_confidence_threshold)  # pyrefly: ignore[unexpected-keyword]
+                if k == "FMeasure"
+                else m.compute()
+            )
+            result[k] = res
+
+        _, duplicates = _flatten_dict(result)
+
+        flattened_results = {}
+        for k, m in self.items(keep_base=True, copy_state=False):
+            res = result[k]
+            if isinstance(res, dict):
+                for key, v in res.items():
+                    # if duplicates of keys we need to add unique prefix to each key
+                    if duplicates:
+                        stripped_k = k.replace(getattr(m, "prefix", ""), "")
+                        stripped_k = stripped_k.replace(getattr(m, "postfix", ""), "")
+                        key = f"{stripped_k}_{key}"  # noqa: PLW2901
+                    if getattr(m, "_from_collection", None) and m.prefix is not None:
+                        key = f"{m.prefix}{key}"  # noqa: PLW2901
+                    if getattr(m, "_from_collection", None) and m.postfix is not None:
+                        key = f"{key}{m.postfix}"  # noqa: PLW2901
+                    flattened_results[key] = v
+            else:
+                flattened_results[k] = res
+        return {self._set_name(k): v for k, v in flattened_results.items()}
 
 
 def _f_measure_callable(label_info: LabelInfo) -> FMeasure:
@@ -830,6 +891,16 @@ def _mean_ap_f_measure_callable(label_info: LabelInfo) -> MeanAveragePrecisionFM
         label_info=label_info,
     )
 
+
+def _rle_mean_ap_f_measure_callable(label_info: LabelInfo) -> MeanAveragePrecisionFMeasure:
+    return MeanAveragePrecisionFMeasure(
+        box_format="xyxy",
+        iou_type="segm",
+        label_info=label_info,
+    )
+
+
+MaskRLEMeanAPFMeasureCallable = _rle_mean_ap_f_measure_callable
 
 FMeasureCallable = _f_measure_callable
 

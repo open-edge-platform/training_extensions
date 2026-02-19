@@ -38,8 +38,8 @@ dependencies = [
     "einops==0.8.1",
     "typeguard>=4.3,<4.5",
     "setuptools==78.1.1",
-    "lightning==2.4.0",
-    "torchmetrics==1.6.0",
+    "lightning==2.6.0",
+    "torchmetrics==1.8.2",
     "pytorchcv==0.0.74",
     "timm==1.0.3",
     "openvino==2025.4.1",
@@ -54,7 +54,12 @@ dependencies = [
     "pyyaml==6.0.3",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
-    "kornia"
+    "kornia",
+    # NOTE: rf-detr is consumed from a specific commit that includes export fixes
+    # for torch>=2.10 and dynamo export support. Once the upstream roboflow/rf-detr
+    # repository publishes a tagged release with these changes, migrate to the
+    # official version pin.
+    "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@bf69fe2d11ee6b7e0698e4a27af2081134f9b483",
 ]
 
 [dependency-groups]
@@ -141,6 +146,9 @@ conflicts = [
         { extra = "cuda" },
     ],
 ]
+constraint-dependencies = [
+    "opencv-python; sys_platform == 'never'"
+]
 
 [tool.uv.sources]
 torch = [
@@ -183,7 +191,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["otx*"]
-
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # COVERAGE CONFIGURATION.                                                     #

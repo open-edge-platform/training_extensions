@@ -16,6 +16,7 @@ from torch.utils._pytree import register_pytree_node
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
 
+from otx.backend.native.cli.utils import get_otx_root_path
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.tools.converter import TEMPLATE_ID_MAPPING
@@ -530,9 +531,6 @@ def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
     Returns:
         dict: A dictionary mapping task types to lists of template paths and tiling options.
     """
-
-    from otx.backend.native.cli.utils import get_otx_root_path
-
     template_dir = Path(get_otx_root_path()).parent.parent / "tests" / "assets" / "geti" / "model_configs"
     template_paths = template_dir.rglob("*.yaml")
     template_dict = defaultdict(list)
@@ -544,7 +542,10 @@ def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
         model_id = template.get("model_manifest_id")
 
         model_config_path = TEMPLATE_ID_MAPPING[model_id]["recipe_path"]
-        model_task = OTXTaskType(model_config_path.parent.name.upper())  # pyrefly: ignore
+        if not isinstance(model_config_path, Path):
+            msg = f"Expected Path for recipe_path, got {type(model_config_path)}"
+            raise TypeError(msg)
+        model_task = OTXTaskType(model_config_path.parent.name.upper())
         has_tiling = (
             template["hyperparameters"].get("dataset_preparation", {}).get("augmentation", {}).get("tiling", None)
         )

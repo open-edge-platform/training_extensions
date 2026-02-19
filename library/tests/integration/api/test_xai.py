@@ -21,6 +21,7 @@ INST_SEG_LIST = [recipe for recipe in RECIPE_LIST_ALL if "instance_segmentation"
 EXPLAIN_MODEL_LIST = MC_ML_CLS + DETECTION_LIST + INST_SEG_LIST
 
 MEAN_TORCH_OV_DIFF = 150
+UNSUPPORTED_MODEL_SUBSTRS = ("dino", "mobilenet_v4", "rtmdet_tiny", "rfdetr")
 
 
 @pytest.mark.parametrize(
@@ -48,7 +49,7 @@ def test_forward_explain(
     model_name = recipe_split[-1].split(".")[0]
     task = recipe_split[-2]
 
-    if "dino" in model_name or "mobilenet_v4" in model_name or "rtmdet_tiny" in model_name:
+    if any(sub in model_name for sub in UNSUPPORTED_MODEL_SUBSTRS):
         pytest.skip(f"{model_name} is not supported.")
 
     engine = OTXEngine.from_config(
@@ -98,7 +99,7 @@ def test_predict_with_explain(
     model_name = recipe_split[-1].split(".")[0]
     task = recipe_split[-2]
 
-    if "dino" in model_name or "mobilenet_v4" in model_name or "rtmdet_tiny" in model_name:
+    if any(sub in model_name for sub in UNSUPPORTED_MODEL_SUBSTRS):
         pytest.skip(f"{model_name} is not supported.")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"

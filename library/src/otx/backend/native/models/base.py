@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from lightning.pytorch.utilities.types import LRSchedulerTypeUnion, OptimizerLRScheduler
+    from lightning.pytorch.utilities.types import LRSchedulerTypeUnion
     from torch.optim.lr_scheduler import LRScheduler
     from torch.optim.optimizer import Optimizer, params_t
 
@@ -356,7 +356,7 @@ class OTXModel(LightningModule):
                 stacklevel=1,
             )
 
-    def configure_optimizers(self) -> OptimizerLRScheduler:
+    def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
         """Configure an optimizer and learning-rate schedulers.
 
         Configure an optimizer and learning-rate schedulers
