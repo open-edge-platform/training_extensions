@@ -25,7 +25,7 @@ export const useGetDatasetRevisionItems = ({ datasetRevisionId, subset }: UseGet
         '/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}/items',
         {
             params: {
-                query: { limit: 1, annotation_status: 'reviewed' },
+                query,
                 path: { project_id, dataset_revision_id: datasetRevisionId },
             },
         },

@@ -37,12 +37,8 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
                 {`Included images by label: ${labelsList.join(', ')}`}
             </Text>
 
-            {metadata.filters.include_unannotated === false && (
-                <>
-                    <Divider orientation='vertical' size='S' />
-                    <Text>Excluded: Unannotated</Text>
-                </>
-            )}
+            <Divider orientation='vertical' size='S' />
+            <Text>{metadata.filters.include_unannotated ? 'Include:' : 'Exclude:'} media without annotations</Text>
         </Grid>
     );
 };

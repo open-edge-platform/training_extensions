@@ -65,11 +65,11 @@ export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: Expo
                                     name='labels'
                                     items={labels}
                                     maxHeight='size-2000'
-                                    label='Choose images by label to export'
+                                    label='Filter annotations by label'
                                 />
 
                                 <Checkbox name='include_unannotated' defaultSelected={formState.include_unannotated}>
-                                    Include unannotated
+                                    Include media without annotations
                                 </Checkbox>
 
                                 <Divider size='S' />
