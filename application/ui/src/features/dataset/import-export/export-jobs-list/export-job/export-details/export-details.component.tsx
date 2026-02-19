@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Grid, Text } from '@geti/ui';
+import { dimensionValue, Divider, Grid, Text } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { ExportDatasetMetadata } from '../../../../../../constants/shared-types';
@@ -22,7 +22,11 @@ export const ExportJobDetails = ({ metadata }: ExportJobDetailsProps) => {
     const labelsList = isEmpty(selectedLabels) ? projectLabelsNames : selectedLabels;
 
     return (
-        <Grid gap='size-125' columns={['auto', '1px', '1fr', '1px', 'auto']}>
+        <Grid
+            gap='size-125'
+            columns={['auto', '1px', '1fr', '1px', 'auto']}
+            UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}
+        >
             <Text>Export dataset - {metadata.export_format} format</Text>
 
             <Divider orientation='vertical' size='S' />
