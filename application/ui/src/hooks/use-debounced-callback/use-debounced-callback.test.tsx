@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { act, renderHook } from '@testing-library/react';
 
@@ -7,9 +7,9 @@ import { useDebouncedCallback } from './use-debounced-callback.hook';
 
 describe('useDebouncedCallback', () => {
     it('executes a given callback after given delay', () => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
 
-        const mockCallback = jest.fn();
+        const mockCallback = vi.fn();
         const delay = 1000;
         const { result } = renderHook(() => useDebouncedCallback(mockCallback, delay));
 
@@ -21,10 +21,10 @@ describe('useDebouncedCallback', () => {
 
         expect(mockCallback).toHaveBeenCalledTimes(0);
 
-        jest.advanceTimersByTime(delay);
+        vi.advanceTimersByTime(delay);
 
         expect(mockCallback).toHaveBeenCalledTimes(1);
 
-        jest.clearAllTimers();
+        vi.clearAllTimers();
     });
 });
