@@ -103,7 +103,7 @@ class TestDatasetExporter:
 
         dataset_id, _ = fxt_export.prepare_dataset(fxt_export_params)
 
-        assert dataset_id == fxt_export_params.dataset_id
+        assert dataset_id != fxt_export_params.dataset_id
         fxt_dataset_revision_service.load_revision.assert_called_once_with(
             project_id=fxt_export_params.project_id,
             dataset_revision_id=fxt_export_params.dataset_id,

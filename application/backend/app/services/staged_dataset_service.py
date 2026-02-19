@@ -23,8 +23,16 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
         item = dataset[0]
         if hasattr(item, "annotation_type") and callable(getattr(item, "annotation_type")):
             annotation_type = item.annotation_type()
-        if hasattr(item, "annotations"):
             num_annotations = sum(item.annotations for item in dataset)
+        elif hasattr(item, "labels"):
+            annotation_type = AnnotationType.LABEL
+            num_annotations = len(item.labels)
+        elif hasattr(item, "bboxes"):
+            annotation_type = AnnotationType.BOUNDING_BOX
+            num_annotations = len(item.bboxes)
+        elif hasattr(item, "polygons"):
+            annotation_type = AnnotationType.POLYGON
+            num_annotations = len(item.polygons)
     return DatasetMetadata(
         num_items=len(dataset),
         annotation_type=annotation_type,

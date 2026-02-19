@@ -75,7 +75,7 @@ class ExportDataset(Execution):
                 dataset = dataset.filter_by_subset(
                     subset=[SubsetConverter.to_datumaro(subset) for subset in export_params.subsets]
                 )
-            return export_params.dataset_id or uuid4(), dataset
+            return uuid4(), dataset
 
     @step("Export dataset", 100)
     def export_dataset(self, dataset_id: UUID, dataset: Dataset, export_format: DatasetFormat) -> Path | None:
