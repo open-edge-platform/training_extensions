@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { fetchClient } from '../../../../api/client';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { type LogEntry } from '../log-types';
 import { parseLogLine } from '../log-utils';
 
@@ -31,11 +32,11 @@ export const useModelLogs = (modelId: string | undefined) => {
     const projectId = useProjectIdentifier();
 
     return useQuery({
-        queryKey: [
+        queryKey: getQueryKey([
             'get',
             '/api/projects/{project_id}/models/{model_id}/logs',
             { params: { path: { project_id: projectId, model_id: modelId! } } },
-        ],
+        ]),
         queryFn: () => fetchModelLogs(projectId, modelId!),
         enabled: !!modelId,
         staleTime: Infinity, // Completed/failed model logs don't change
