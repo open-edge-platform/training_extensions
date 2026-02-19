@@ -138,7 +138,7 @@ const test = testBase.extend<Fixtures>({
                     { type: 'xpu', name: 'XPU' },
                 ]);
             }),
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', ({ response }) => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ response }) => {
                 return response(200).json({ annotations: [], user_reviewed: false });
             }),
             http.get('/api/projects/{project_id}/dataset/media', () => {
