@@ -132,7 +132,7 @@ export const VideoFrameSegment = ({
             {/* TODO: Check if we need this overlay */}
             {/*{isActiveFrame || isFilteredFrame ? <ActiveFrameOverlay /> : <></>}*/}
 
-            {isSelectedFrame ? <SelectedFrameOverlay /> : <></>}
+            {isSelectedFrame && <SelectedFrameOverlay />}
 
             <Flex gap='size-100' direction='column' marginTop='size-100'>
                 {labels.map((label, rowIndex) => {

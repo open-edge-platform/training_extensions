@@ -67,7 +67,7 @@ export const VideoFrameSegments = ({
                 const showTicks = isFirstFrame || isHalfFrame || isLastFrame;
 
                 return (
-                    <Flex justifyContent='center' alignItems='center' width={width} key={frameNumber}>
+                    <Flex justifyContent='center' alignItems='center' width={width} key={itemFrameNumber}>
                         <VideoFrameSegment
                             colIndex={index}
                             onClick={selectFrame}
