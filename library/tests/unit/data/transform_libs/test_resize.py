@@ -1,0 +1,359 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for Resize transform with aspect ratio preservation."""
+
+from __future__ import annotations
+
+from copy import deepcopy
+
+import pytest
+import torch
+from datumaro.experimental.fields import ImageInfo as DmImageInfo
+from torch import LongTensor
+from torchvision import tv_tensors
+from torchvision.transforms.v2 import functional as F
+
+from otx.data.entity.sample import (
+    DetectionSample,
+    InstanceSegmentationSample,
+)
+from otx.data.transform_libs.torchvision import Resize
+
+
+class TestResize:
+    """Test cases for Resize transform."""
+
+    @pytest.fixture
+    def square_image_entity(self) -> InstanceSegmentationSample:
+        """Create a square image sample with bboxes and masks."""
+        img_size = (100, 100)
+        fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+        fake_bboxes = torch.tensor([[10, 10, 50, 50], [60, 20, 90, 80]], dtype=torch.float32)
+
+        # Create masks that correspond to bboxes
+        masks = torch.zeros(size=(2, *img_size), dtype=torch.uint8)
+        masks[0, 10:50, 10:50] = 1
+        masks[1, 20:80, 60:90] = 1
+
+        return InstanceSegmentationSample(
+            image=tv_tensors.Image(fake_image),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=tv_tensors.BoundingBoxes(fake_bboxes, format="XYXY", canvas_size=img_size),
+            label=LongTensor([0, 1]),
+            masks=tv_tensors.Mask(masks),
+        )
+
+    @pytest.fixture
+    def wide_image_entity(self) -> InstanceSegmentationSample:
+        """Create a wide (landscape) image sample with bboxes and masks."""
+        img_size = (100, 200)  # height, width
+        fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+        fake_bboxes = torch.tensor([[10, 10, 50, 50], [120, 20, 180, 80]], dtype=torch.float32)
+
+        masks = torch.zeros(size=(2, *img_size), dtype=torch.uint8)
+        masks[0, 10:50, 10:50] = 1
+        masks[1, 20:80, 120:180] = 1
+
+        return InstanceSegmentationSample(
+            image=tv_tensors.Image(fake_image),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=tv_tensors.BoundingBoxes(fake_bboxes, format="XYXY", canvas_size=img_size),
+            label=LongTensor([0, 1]),
+            masks=tv_tensors.Mask(masks),
+        )
+
+    @pytest.fixture
+    def tall_image_entity(self) -> InstanceSegmentationSample:
+        """Create a tall (portrait) image sample with bboxes and masks."""
+        img_size = (200, 100)  # height, width
+        fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+        fake_bboxes = torch.tensor([[10, 10, 50, 50], [60, 20, 90, 180]], dtype=torch.float32)
+
+        masks = torch.zeros(size=(2, *img_size), dtype=torch.uint8)
+        masks[0, 10:50, 10:50] = 1
+        masks[1, 20:180, 60:90] = 1
+
+        return InstanceSegmentationSample(
+            image=tv_tensors.Image(fake_image),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=tv_tensors.BoundingBoxes(fake_bboxes, format="XYXY", canvas_size=img_size),
+            label=LongTensor([0, 1]),
+            masks=tv_tensors.Mask(masks),
+        )
+
+    # ==================== Standard Resize Tests ====================
+
+    def test_resize_square_to_square(self, square_image_entity: InstanceSegmentationSample) -> None:
+        """Test resizing square image to square target without aspect ratio preservation."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=False)
+        entity = deepcopy(square_image_entity)
+        orig_bboxes = entity.bboxes.clone()
+        orig_h, orig_w = entity.image.shape[-2:]
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (64, 64)
+        assert result.masks.shape[-2:] == (64, 64)
+        # Bboxes should be scaled proportionally
+        scale_x = 64 / orig_w
+        scale_y = 64 / orig_h
+        expected_bboxes = orig_bboxes.clone()
+        expected_bboxes[:, 0::2] = orig_bboxes[:, 0::2] * scale_x
+        expected_bboxes[:, 1::2] = orig_bboxes[:, 1::2] * scale_y
+        assert torch.allclose(result.bboxes.float(), expected_bboxes.float(), atol=1.0)
+
+    def test_resize_wide_to_square(self, wide_image_entity: InstanceSegmentationSample) -> None:
+        """Test resizing wide image to square target without aspect ratio preservation."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=False)
+        entity = deepcopy(wide_image_entity)
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (64, 64)
+        assert result.masks.shape[-2:] == (64, 64)
+
+    def test_resize_targets_false(self, square_image_entity: InstanceSegmentationSample) -> None:
+        """Test that resize_targets=False only resizes image."""
+        resize = Resize(size=(64, 64), resize_targets=False, keep_aspect_ratio=False)
+        entity = deepcopy(square_image_entity)
+        original_bboxes = entity.bboxes.clone()
+        original_masks_shape = entity.masks.shape[-2:]
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (64, 64)
+        # Bboxes and masks should be unchanged
+        assert torch.equal(result.bboxes, original_bboxes)
+        assert result.masks.shape[-2:] == original_masks_shape
+
+    # ==================== Aspect Ratio Preservation Tests ====================
+
+    def test_resize_with_aspect_ratio_square_to_square(
+        self, square_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test aspect ratio resize of square image to square target (no padding needed)."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(square_image_entity)
+        orig_bboxes = entity.bboxes.clone()
+        orig_h, orig_w = entity.image.shape[-2:]
+
+        result = resize(entity)
+
+        # Square to square: no padding needed
+        assert result.image.shape[-2:] == (64, 64)
+        assert result.masks.shape[-2:] == (64, 64)
+        # Scale is uniform for square to square
+        scale = min(64 / orig_w, 64 / orig_h)
+        expected_bboxes = orig_bboxes * scale
+        assert torch.allclose(result.bboxes.float(), expected_bboxes.float(), atol=1.0)
+
+    def test_resize_with_aspect_ratio_wide_to_square(
+        self, wide_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test aspect ratio resize of wide image to square target (vertical padding)."""
+        resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(wide_image_entity)
+        orig_bboxes = entity.bboxes.clone()
+        orig_h, orig_w = entity.image.shape[-2:]  # 100, 200
+
+        result = resize(entity)
+
+        # Output should be exactly target size
+        assert result.image.shape[-2:] == (128, 128)
+        assert result.masks.shape[-2:] == (128, 128)
+
+        # Wide image (200w x 100h) -> scale by min(128/200, 128/100) = 0.64
+        # Resized: 128w x 64h, then pad vertically by (128-64)/2 = 32 on each side
+        scale = min(128 / orig_w, 128 / orig_h)
+        new_w = int(round(orig_w * scale))  # 128
+        new_h = int(round(orig_h * scale))  # 64
+        pad_top = (128 - new_h) // 2  # 32
+
+        # Check that padding info is stored
+        assert hasattr(result.img_info, "pad_offset")
+        assert result.img_info.pad_offset[1] == pad_top  # pad_top
+
+        # Verify bboxes are correctly transformed (scale + offset)
+        expected_x1 = orig_bboxes[:, 0] * scale
+        expected_y1 = orig_bboxes[:, 1] * scale + pad_top
+        assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
+        assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
+
+    def test_resize_with_aspect_ratio_tall_to_square(
+        self, tall_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test aspect ratio resize of tall image to square target (horizontal padding)."""
+        resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(tall_image_entity)
+        orig_bboxes = entity.bboxes.clone()
+        orig_h, orig_w = entity.image.shape[-2:]  # 200, 100
+
+        result = resize(entity)
+
+        # Output should be exactly target size
+        assert result.image.shape[-2:] == (128, 128)
+        assert result.masks.shape[-2:] == (128, 128)
+
+        # Tall image (100w x 200h) -> scale by min(128/100, 128/200) = 0.64
+        # Resized: 64w x 128h, then pad horizontally by (128-64)/2 = 32 on each side
+        scale = min(128 / orig_w, 128 / orig_h)
+        new_w = int(round(orig_w * scale))  # 64
+        pad_left = (128 - new_w) // 2  # 32
+
+        # Check that padding info is stored
+        assert hasattr(result.img_info, "pad_offset")
+        assert result.img_info.pad_offset[0] == pad_left  # pad_left
+
+        # Verify bboxes are correctly transformed (scale + offset)
+        expected_x1 = orig_bboxes[:, 0] * scale + pad_left
+        expected_y1 = orig_bboxes[:, 1] * scale
+        assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
+        assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
+
+    def test_resize_with_aspect_ratio_to_non_square(
+        self, wide_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test aspect ratio resize to non-square target."""
+        resize = Resize(size=(96, 128), resize_targets=True, keep_aspect_ratio=True)  # h, w
+        entity = deepcopy(wide_image_entity)
+        orig_h, orig_w = entity.image.shape[-2:]  # 100, 200
+
+        result = resize(entity)
+
+        # Output should be exactly target size
+        assert result.image.shape[-2:] == (96, 128)
+        assert result.masks.shape[-2:] == (96, 128)
+
+    def test_resize_pad_value(self, wide_image_entity: InstanceSegmentationSample) -> None:
+        """Test that pad_value is correctly applied."""
+        pad_value = 128
+        resize = Resize(size=(128, 128), keep_aspect_ratio=True, pad_value=pad_value)
+        entity = deepcopy(wide_image_entity)
+
+        result = resize(entity)
+
+        # Check that padding areas have the correct value
+        # For wide image, padding is on top and bottom
+        # The top row should be padded (if pad_top > 0)
+        pad_top = result.img_info.pad_offset[1]
+        if pad_top > 0:
+            top_row_mean = result.image[:, 0, :].float().mean()
+            assert abs(top_row_mean - pad_value) < 1.0
+
+    def test_resize_masks_binary_preserved(
+        self, square_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test that mask binary values are preserved after resize."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(square_image_entity)
+
+        result = resize(entity)
+
+        # Masks should only contain 0s and 1s (or near that for interpolation)
+        unique_values = torch.unique(result.masks)
+        assert all(v == 0 or v == 1 for v in unique_values.tolist())
+
+    # ==================== Edge Cases ====================
+
+    def test_resize_empty_bboxes(self) -> None:
+        """Test resize with no bounding boxes."""
+        img_size = (100, 100)
+        entity = DetectionSample(
+            image=tv_tensors.Image(torch.randint(0, 256, (3, *img_size), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=tv_tensors.BoundingBoxes(
+                torch.empty((0, 4), dtype=torch.float32), format="XYXY", canvas_size=img_size
+            ),
+            label=LongTensor([]),
+        )
+        resize = Resize(size=(64, 64), keep_aspect_ratio=True)
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (64, 64)
+        assert len(result.bboxes) == 0
+
+    def test_resize_empty_masks(self) -> None:
+        """Test resize with empty masks."""
+        img_size = (100, 100)
+        entity = InstanceSegmentationSample(
+            image=tv_tensors.Image(torch.randint(0, 256, (3, *img_size), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=tv_tensors.BoundingBoxes(
+                torch.tensor([[10, 10, 50, 50]], dtype=torch.float32), format="XYXY", canvas_size=img_size
+            ),
+            label=LongTensor([0]),
+            masks=tv_tensors.Mask(torch.empty((0, *img_size), dtype=torch.uint8)),
+        )
+        resize = Resize(size=(64, 64), keep_aspect_ratio=True)
+
+        result = resize(entity)
+
+        assert result.image.shape[-2:] == (64, 64)
+        assert result.masks.shape[0] == 0
+
+    def test_resize_single_int_size(self) -> None:
+        """Test that single int size is converted to tuple."""
+        resize = Resize(size=64, keep_aspect_ratio=True)
+        assert resize.size == (64, 64)
+
+    def test_resize_tensor_directly(self) -> None:
+        """Test resizing a tensor directly (fallback path)."""
+        tensor = torch.randint(0, 256, (3, 100, 100), dtype=torch.uint8)
+        resize = Resize(size=(64, 64), keep_aspect_ratio=False)
+
+        result = resize(tensor)
+
+        assert result.shape[-2:] == (64, 64)
+
+    # ==================== Consistency Tests ====================
+
+    def test_bbox_inside_image_after_resize(
+        self, square_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test that all bboxes remain inside image bounds after resize."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(square_image_entity)
+
+        result = resize(entity)
+
+        h, w = result.image.shape[-2:]
+        # All bbox coordinates should be within [0, w] for x and [0, h] for y
+        assert torch.all(result.bboxes[:, 0] >= 0)
+        assert torch.all(result.bboxes[:, 1] >= 0)
+        assert torch.all(result.bboxes[:, 2] <= w)
+        assert torch.all(result.bboxes[:, 3] <= h)
+
+    def test_mask_same_size_as_image(
+        self, square_image_entity: InstanceSegmentationSample
+    ) -> None:
+        """Test that masks have same spatial size as image after resize."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(square_image_entity)
+
+        result = resize(entity)
+
+        assert result.masks.shape[-2:] == result.image.shape[-2:]
+
+    def test_img_info_updated(self, square_image_entity: InstanceSegmentationSample) -> None:
+        """Test that img_info is correctly updated after resize."""
+        resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(square_image_entity)
+
+        result = resize(entity)
+
+        assert result.img_info.img_shape == (64, 64)
+
+    def test_scale_factor_stored(self, wide_image_entity: InstanceSegmentationSample) -> None:
+        """Test that scale factor is stored in img_info when using aspect ratio mode."""
+        resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True)
+        entity = deepcopy(wide_image_entity)
+        orig_h, orig_w = entity.image.shape[-2:]
+
+        result = resize(entity)
+
+        # Scale factor should be stored
+        assert hasattr(result.img_info, "scale_factor")
+        expected_scale = min(128 / orig_w, 128 / orig_h)
+        assert abs(result.img_info.scale_factor[0] - expected_scale) < 0.01
+        assert abs(result.img_info.scale_factor[1] - expected_scale) < 0.01

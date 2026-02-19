@@ -371,7 +371,6 @@ class CPUAugmentationPipeline(nn.Module):
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
         outputs: OTXSample | None = inputs[0]  # type: ignore[assignment]
-        # self._debug_visualize(outputs, "before", 0, 0, 0, 0, [0, 0, 0, 0])
         for transform in self.augmentations:
             if self._is_native_torchvision_transform(transform):
                 # Apply native transforms only to image-related fields
@@ -381,7 +380,6 @@ class CPUAugmentationPipeline(nn.Module):
             if outputs is None:
                 return outputs
             inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
-        # self._debug_visualize(outputs, "after_cpu", 0, 0, 0, 0, [0, 0, 0, 0])
         return outputs
 
     def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):
