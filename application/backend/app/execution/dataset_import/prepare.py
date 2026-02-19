@@ -76,14 +76,15 @@ class PrepareDataset(Execution):
                 #  https://github.com/open-edge-platform/datumaro/issues/2003
                 raise NotImplementedError("VOC import is not implemented yet")
             case DatasetFormat.GETI:
-                dataset = import_dataset(str(archive_path))
+                dataset = import_dataset(str(archive_path), extract_dir=archive_path.parent / "dataset")
             case DatasetFormat.DATUMARO_V1:
                 legacy_dataset = Dataset.import_from(str(archive_path))
                 dataset = convert_from_legacy(legacy_dataset)
             case _:
                 raise ValueError(f"Unknown dataset format: {dataset_format}")
 
-        export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
+        if dataset_format != DatasetFormat.GETI:
+            export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
 
     @step("Clean up original archive", 100)
     def cleanup(self, archive_path: Path) -> None:

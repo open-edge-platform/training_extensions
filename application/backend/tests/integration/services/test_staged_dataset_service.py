@@ -199,6 +199,21 @@ class TestStagedDatasetServiceIntegration:
             labels=["bird", "cat", "dog"],
         )
 
+    def test_find_by_id_returns_geti_dataset_without_metadata_when_archived(
+        self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
+    ):
+        dataset_id, dataset_path = _make_dataset_archive(tmp_path, "some_geti.zip", b"geti-bytes")
+
+        result = fxt_staged_dataset_service.find_by_id(dataset_id)
+
+        assert result is not None
+        assert result.id == dataset_id
+        assert result.filename == str(dataset_path)
+        assert result.size == 10
+        assert result.compressed
+        assert result.format == DatasetFormat.GETI
+        assert not result.metadata
+
     def test_find_by_id_returns_none_when_dir_missing(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):

@@ -24,13 +24,13 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
         if hasattr(item, "annotation_type") and callable(getattr(item, "annotation_type")):
             annotation_type = item.annotation_type()
             num_annotations = sum(item.annotations for item in dataset)
-        elif hasattr(item, "labels"):
+        elif hasattr(item, "labels") and item.labels is not None:
             annotation_type = AnnotationType.LABEL
             num_annotations = len(item.labels)
-        elif hasattr(item, "bboxes"):
+        elif hasattr(item, "bboxes") and item.bboxes is not None:
             annotation_type = AnnotationType.BOUNDING_BOX
             num_annotations = len(item.bboxes)
-        elif hasattr(item, "polygons"):
+        elif hasattr(item, "polygons") and item.polygons is not None:
             annotation_type = AnnotationType.POLYGON
             num_annotations = len(item.polygons)
     return DatasetMetadata(
@@ -172,13 +172,21 @@ class StagedDatasetService:
         return True
 
     @staticmethod
-    def _get_staged_dataset_from_path(dataset_id: UUID, dataset_path: Path) -> StagedDataset:
-        size = dataset_path.stat().st_size
-        if dataset_path.is_dir():
-            size = sum(item.stat().st_size for item in dataset_path.rglob("*") if item.is_file())
+    def _calculate_path_size(path: Path) -> int:
+        """Calculate total size of a file or directory in bytes."""
+        if path.is_file():
+            return path.stat().st_size
+        return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
+
+    def _get_staged_dataset_from_path(self, dataset_id: UUID, dataset_path: Path) -> StagedDataset:
+        size = self._calculate_path_size(dataset_path)
         compressed = dataset_path.is_file() and dataset_path.suffix == ".zip"
         dataset_format = _infer_format_from_filename(dataset_path.name) if compressed else DatasetFormat.GETI
-        metadata = _get_dataset_metadata(import_dataset(dataset_path)) if dataset_format == DatasetFormat.GETI else None
+
+        metadata = None
+        if not compressed and dataset_format == DatasetFormat.GETI:
+            metadata = _get_dataset_metadata(import_dataset(dataset_path))
+
         return StagedDataset(
             compressed=compressed,
             filename=str(dataset_path),

@@ -123,10 +123,8 @@ class TestPrepareDataset:
         ):
             fxt_prepare.convert_archive(archive_path)
 
-            mock_import_dataset.assert_called_once_with(str(archive_path))
-            mock_export_dataset.assert_called_once_with(
-                dataset, output_path=archive_path.parent / "dataset", as_zip=False
-            )
+            mock_import_dataset.assert_called_once_with(str(archive_path), extract_dir=archive_path.parent / "dataset")
+            mock_export_dataset.assert_not_called()
 
     def test_convert_archive_datumaro_v1(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
         archive_path = fxt_staged_datasets_dir / str(uuid4()) / "dataset-datumaro_v1.zip"
