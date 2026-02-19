@@ -145,6 +145,9 @@ conflicts = [
         { extra = "cuda" },
     ],
 ]
+constraint-dependencies = [
+    "opencv-python; sys_platform == 'never'"
+]
 
 [tool.uv.sources]
 torch = [
