@@ -426,7 +426,7 @@ class TestIntegration:
             test_preds = OTXPredictionBatch(
                 images=[torch.rand(3, 416, 416)],
                 imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
-                scores=[torch.tensor([0.9, 0.5, 0.3])],  # Only 0.9 should remain after filtering
+                scores=[torch.tensor([0.9, 0.5, 0.3])],
                 bboxes=[
                     tv_tensors.BoundingBoxes(
                         torch.tensor([[0, 0, 10, 10], [20, 20, 30, 30], [40, 40, 50, 50]]),
