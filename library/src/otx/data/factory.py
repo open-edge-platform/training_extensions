@@ -35,9 +35,6 @@ class TransformLibFactory:
     def generate(cls: type[TransformLibFactory], config: SubsetConfig) -> Transforms | CPUAugmentationPipeline:
         """Create transforms from factory.
 
-        If config.augmentations_cpu is set, uses the new CPUAugmentationPipeline.
-        Otherwise falls back to legacy TorchVisionTransformLib for backward compatibility.
-
         Args:
             config: SubsetConfig with transforms or augmentations_cpu.
 

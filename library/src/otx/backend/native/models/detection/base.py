@@ -546,8 +546,9 @@ class OTXDetectionModel(OTXModel):
     @staticmethod
     @torch.no_grad()
     def _apply_batch_augmentations(
-        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch
+        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch  # noqa: F821
     ) -> None:
+        """Apply batch augmentations to detection data."""
         if augmentations_pipeline is not None:
             # Convert bounding boxes to Kornia Boxes [N, 4, 2]
             kornia_boxes = Boxes.from_tensor(batch.bboxes, mode="xyxy")
@@ -560,4 +561,5 @@ class OTXDetectionModel(OTXModel):
 
     @property
     def task(self) -> OTXTaskType:
+        """Return task type."""
         return OTXTaskType.DETECTION

@@ -63,13 +63,14 @@ class ScaleToUnit(nn.Module):
         return torch.clamp(x.float() / self.max_value, 0.0, 1.0)
 
     def extra_repr(self) -> str:
+        """Return extra string representation."""
         return f"max_value={self.max_value}"
 
 
 class WindowLevel(nn.Module):
     """Window / level intensity mapping for CT-style medical imaging.
 
-    Maps the raw intensity window ``[center − width/2, center + width/2]``
+    Maps the raw intensity window ``[center - width/2, center + width/2]``
     linearly onto ``[0, 1]``.  Values outside the window are clamped.
 
     Args:
@@ -90,6 +91,7 @@ class WindowLevel(nn.Module):
         return torch.clamp(out, 0.0, 1.0)
 
     def extra_repr(self) -> str:
+        """Return extra string representation."""
         return f"center={self.center}, width={self.width}"
 
 
@@ -105,8 +107,8 @@ class PercentileClip(nn.Module):
     varies strongly between images.
 
     Args:
-        low: Lower percentile (0–100).  Default 1.0.
-        high: Upper percentile (0–100).  Default 99.0.
+        low: Lower percentile (0-100).  Default 1.0.
+        high: Upper percentile (0-100).  Default 99.0.
     """
 
     def __init__(self, low: float = 1.0, high: float = 99.0) -> None:
@@ -132,6 +134,7 @@ class PercentileClip(nn.Module):
         return torch.clamp(out, 0.0, 1.0)
 
     def extra_repr(self) -> str:
+        """Return extra string representation."""
         return f"low={self.low}, high={self.high}"
 
 
@@ -164,13 +167,13 @@ class RangeScale(nn.Module):
         self.max_value = max_value
 
     def forward(self, x: Tensor) -> Tensor:
-        """Apply scale → clip → normalize."""
+        """Apply scale, clip, normalize."""
         scaled = x.float() * self.scale_factor
         clipped = torch.clamp(scaled, self.min_value, self.max_value)
-        normalized = (clipped - self.min_value) / (self.max_value - self.min_value)
-        return normalized
+        return (clipped - self.min_value) / (self.max_value - self.min_value)
 
     def extra_repr(self) -> str:
+        """Return extra string representation."""
         return f"scale_factor={self.scale_factor}, min_value={self.min_value}, max_value={self.max_value}"
 
 
@@ -202,6 +205,7 @@ class RepeatChannels(nn.Module):
         return x
 
     def extra_repr(self) -> str:
+        """Return extra string representation."""
         return f"num_channels={self.num_channels}"
 
 
@@ -296,7 +300,10 @@ def build_intensity_transform(config: IntensityConfig) -> nn.Sequential:
             )
         )
     else:
-        msg = f"Unknown IntensityConfig mode: {mode!r}. Supported: 'scale_to_unit', 'window', 'percentile', 'range_scale'."
+        msg = (
+            f"Unknown IntensityConfig mode: {mode!r}. "
+            "Supported: 'scale_to_unit', 'window', 'percentile', 'range_scale'."
+        )
         raise ValueError(msg)
 
     # Optional channel repetition (e.g. grayscale → 3ch for pretrained backbones)

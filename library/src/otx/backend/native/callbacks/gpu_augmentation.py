@@ -50,7 +50,7 @@ class GPUAugmentationCallback(Callback):
 
     # Data keys for each task type. Masks for instance segmentation are handled
     # with special preprocessing (add channel dim) in GPUAugmentationPipeline.forward().
-    _DATA_KEYS_BY_TASK: dict[OTXTaskType, list[str]] = {
+    _DATA_KEYS_BY_TASK: ClassVar[dict[OTXTaskType, list[str]]] = {
         OTXTaskType.MULTI_CLASS_CLS: ["label"],
         OTXTaskType.MULTI_LABEL_CLS: ["label"],
         OTXTaskType.H_LABEL_CLS: ["label"],
@@ -164,7 +164,9 @@ class GPUAugmentationCallback(Callback):
         if result.get("bboxes") is not None:
             # Kornia may return plain tensors, wrap them back to BoundingBoxes
             batch.bboxes = [
-                tv_tensors.BoundingBoxes(b, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=batch.bboxes[i].canvas_size)
+                tv_tensors.BoundingBoxes(
+                    b, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=batch.bboxes[i].canvas_size,
+                )
                 if not isinstance(b, tv_tensors.BoundingBoxes)
                 else b
                 for i, b in enumerate(result["bboxes"])

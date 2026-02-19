@@ -98,7 +98,7 @@ class TestPercentileClip:
         x = torch.randint(0, 65536, (1, 64, 64), dtype=torch.int32).float()
         out = t(x)
         assert out.shape == (1, 64, 64)
-        assert 0.0 <= out.min()
+        assert out.min() >= 0.0
         assert out.max() <= 1.0
 
 

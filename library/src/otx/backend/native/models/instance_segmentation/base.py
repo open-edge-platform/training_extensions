@@ -613,4 +613,5 @@ class OTXInstanceSegModel(OTXModel):
 
     @property
     def task(self) -> OTXTaskType:
+        """Return task type."""
         return OTXTaskType.INSTANCE_SEGMENTATION

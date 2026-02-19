@@ -9,7 +9,7 @@ import argparse
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 from warnings import warn
 
 import yaml

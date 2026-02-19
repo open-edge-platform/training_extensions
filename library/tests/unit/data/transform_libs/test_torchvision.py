@@ -195,7 +195,7 @@ class TestResize:
 
     def test_torchvision_resize_consistency(self) -> None:
         """Test that our Resize produces same results as torchvision.transforms.v2.Resize for images."""
-        import torchvision.transforms.v2 as v2
+        from torchvision.transforms import v2
 
         img = torch.randint(0, 256, (3, 64, 64), dtype=torch.uint8)
         target_size = (128, 96)

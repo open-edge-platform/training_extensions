@@ -230,7 +230,10 @@ class OTXDataModule(LightningDataModule):
         elif isinstance(transforms_source, Compose):
             transforms_iterable = transforms_source.transforms
         else:
-            msg = f"Transforms should be given as an iterable, Compose, or CPUAugmentationPipeline, got {type(transforms_source)}"
+            msg = (
+                f"Transforms should be given as an iterable, Compose, or CPUAugmentationPipeline, "
+                f"got {type(transforms_source)}"
+            )
             raise TypeError(msg)
 
         for transform in transforms_iterable:

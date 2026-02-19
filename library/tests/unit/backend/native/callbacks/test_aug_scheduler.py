@@ -17,7 +17,6 @@ from lightning.pytorch.callbacks.callback import Callback
 from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
 from otx.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeline
 
-
 # ---------------------------------------------------------------------------
 # Helpers / fixtures shared across test classes
 # ---------------------------------------------------------------------------
@@ -71,15 +70,15 @@ class TestDataAugSwitch:
 
     # -- fixtures -------------------------------------------------------
 
-    @pytest.fixture()
+    @pytest.fixture
     def policies(self):
         return _make_minimal_policies()
 
-    @pytest.fixture()
+    @pytest.fixture
     def switch(self, policies):
         return DataAugSwitch(POLICY_EPOCHS, policies, input_size=[640, 640])
 
-    @pytest.fixture()
+    @pytest.fixture
     def switch_with_epoch(self, switch):
         """Switch with a shared epoch pre-set to 0."""
         switch.set_shared_epoch(Value("i", 0))
@@ -258,13 +257,13 @@ class TestAugmentationSchedulerCallback:
 
     # -- fixtures -------------------------------------------------------
 
-    @pytest.fixture()
+    @pytest.fixture
     def switch(self):
         s = DataAugSwitch(POLICY_EPOCHS, _make_minimal_policies(), input_size=[640, 640])
         s.set_shared_epoch(Value("i", 0))
         return s
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_gpu_callback(self):
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
@@ -274,21 +273,21 @@ class TestAugmentationSchedulerCallback:
         cb._train_pipeline = mock_pipeline
         return cb
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_trainer(self, mock_gpu_callback):
         trainer = MagicMock(spec=Trainer)
         trainer.current_epoch = 0
         trainer.callbacks = [mock_gpu_callback]
         return trainer
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_pl_module(self):
         pl = MagicMock(spec=LightningModule)
         param = torch.nn.Parameter(torch.zeros(1))
         pl.parameters.side_effect = lambda: iter([param])
         return pl
 
-    @pytest.fixture()
+    @pytest.fixture
     def callback(self, switch):
         return AugmentationSchedulerCallback(data_aug_switch=switch)
 
@@ -455,7 +454,7 @@ class TestAugmentationSchedulerCallback:
 class TestDataAugSwitchIntegration:
     """Integration tests using real CPUAugmentationPipeline and GPUAugmentationPipeline."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def switch(self):
         return DataAugSwitch(
             policy_epochs=POLICY_EPOCHS,

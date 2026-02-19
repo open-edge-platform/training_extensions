@@ -966,7 +966,10 @@ class OTXModel(LightningModule):
             data_input_params.input_size[0] % self.input_size_multiplier != 0
             or data_input_params.input_size[1] % self.input_size_multiplier != 0
         ):
-            msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {data_input_params.input_size} instead."
+            msg = (
+                f"Input size should be a multiple of {self.input_size_multiplier}, "
+                f"but got {data_input_params.input_size} instead."
+            )
             raise ValueError(msg)
 
         return data_input_params
