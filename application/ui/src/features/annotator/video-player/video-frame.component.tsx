@@ -19,7 +19,8 @@ const useRequestVideoFrameCallback = (
     videoRef: RefObject<HTMLVideoElement | null>,
     canvasRef: RefObject<HTMLCanvasElement | null>
 ) => {
-    const { isPlaying } = useVideoPlayer();
+    const { videoControls } = useVideoPlayer();
+    const { isPlaying } = videoControls;
 
     useEffect(() => {
         if (!isPlaying) {
