@@ -404,7 +404,8 @@
         <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">bb</span><span class="p">,</span> <span class="n">ll</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">labels</span><span class="p">):</span>
                 <span class="c1"># convert to cxcywh if needed</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scaled_bboxes</span> <span class="o">:=</span> <span class="n">bb</span><span class="p">):</span>
+                <span class="n">scaled_bboxes</span> <span class="o">=</span> <span class="n">bb</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bb</span><span class="p">):</span>
                     <span class="n">converted_bboxes</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">box_convert</span><span class="p">(</span><span class="n">bb</span><span class="p">,</span> <span class="n">in_fmt</span><span class="o">=</span><span class="s2">&quot;xyxy&quot;</span><span class="p">,</span> <span class="n">out_fmt</span><span class="o">=</span><span class="s2">&quot;cxcywh&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">bb</span><span class="o">.</span><span class="n">format</span> <span class="o">==</span> <span class="n">BoundingBoxFormat</span><span class="o">.</span><span class="n">XYXY</span> <span class="k">else</span> <span class="n">bb</span>
                     <span class="p">)</span>
@@ -412,7 +413,16 @@
                     <span class="n">scaled_bboxes</span> <span class="o">=</span> <span class="n">converted_bboxes</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">bb</span><span class="o">.</span><span class="n">canvas_size</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">2</span><span class="p">)[</span><span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
                         <span class="n">converted_bboxes</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                     <span class="p">)</span>
-                <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">scaled_bboxes</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">ll</span><span class="p">})</span>
+                <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">canvas_size</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="n">scaled_bboxes</span><span class="o">.</span><span class="n">device</span>
+                <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">scaled_bboxes</span><span class="p">,</span>
+                        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">ll</span><span class="p">,</span>
+                        <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span>
+                        <span class="s2">&quot;orig_size&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;entity&quot;</span><span class="p">:</span> <span class="n">entity</span><span class="p">}</span>
