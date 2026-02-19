@@ -3,17 +3,47 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { getMockedPrepareImportDatasetJob } from '../../../../../../mocks/mock-job';
+import { http } from '../../../../../api/utils';
+import { server } from '../../../../../msw-node-setup';
 import { ImportDropZone } from './import-drop-zone.component';
 
 describe('ImportDropZone', () => {
     const validFile = new File(['file content'], 'test.zip', { type: 'application/zip' });
     const inValidFiles = new File(['foo'], 'video.mov', { type: 'video/quicktime' });
 
-    it('invalid file extension', async () => {
+    const renderApp = () => {
+        server.use(
+            http.post('/api/staged_datasets', () => {
+                return HttpResponse.json(
+                    {
+                        id: 'staged-dataset-123',
+                        format: 'geti',
+                        compressed: true,
+                        ready_for_export: false,
+                        ready_for_import: true,
+                        size: 123,
+                        metadata: null,
+                    },
+                    { status: 201 }
+                );
+            }),
+            http.post('/api/jobs', () => {
+                return HttpResponse.json(getMockedPrepareImportDatasetJob({}), { status: 202 });
+            })
+        );
+
         const mockedNextStep = vi.fn();
+
         render(<ImportDropZone onNextStep={mockedNextStep} />);
+        return mockedNextStep;
+    };
+
+    it('invalid file extension', async () => {
+        const mockedNextStep = renderApp();
 
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
@@ -27,15 +57,14 @@ describe('ImportDropZone', () => {
     });
 
     it('valid file extension', async () => {
-        const mockedNextStep = vi.fn();
-        render(<ImportDropZone onNextStep={mockedNextStep} />);
+        const mockedNextStep = renderApp();
 
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
         await userEvent.upload(uploadFileElement, [validFile]);
 
         await waitFor(() => {
-            expect(mockedNextStep).toHaveBeenCalled();
+            expect(mockedNextStep).toHaveBeenCalledWith('preparing');
         });
     });
 });

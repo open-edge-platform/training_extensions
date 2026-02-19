@@ -14,7 +14,7 @@ type ImportDatasetButtonsProps = {
 
 export const ImportDatasetButtons = ({ currentState, onClose }: ImportDatasetButtonsProps) => {
     const cancelJobMutation = useCancelJob();
-    const { getLsPreparingImportIds } = usePrepareImportDataset();
+    const { getLsPreparingImportId } = usePrepareImportDataset();
 
     const handleCancelJob = (jobId: string) => {
         cancelJobMutation.mutate({ params: { path: { job_id: jobId } } }, { onSuccess: onClose });
@@ -27,7 +27,7 @@ export const ImportDatasetButtons = ({ currentState, onClose }: ImportDatasetBut
                     variant='negative'
                     isPending={cancelJobMutation.isPending}
                     isDisabled={cancelJobMutation.isPending}
-                    onPress={() => handleCancelJob(String(getLsPreparingImportIds()?.id))}
+                    onPress={() => handleCancelJob(String(getLsPreparingImportId()?.id))}
                 >
                     Cancel
                 </Button>

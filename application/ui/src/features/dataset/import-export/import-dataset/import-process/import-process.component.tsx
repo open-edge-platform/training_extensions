@@ -26,8 +26,6 @@ export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
 
     const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
     const isPreparingJobLoading = isJobPending(job) && isFetching;
-    console.log('--> job', job);
-    console.log('progress', progress);
 
     if (!isFetching && isEmpty(job)) {
         return null;

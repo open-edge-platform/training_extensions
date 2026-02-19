@@ -5,7 +5,6 @@ import { useState } from 'react';
 
 import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
 import { OverlayTriggerState } from '@react-stately/overlays';
-import { isEmpty } from 'lodash-es';
 
 import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.componets';
@@ -18,10 +17,10 @@ type ImportDatasetProps = {
 };
 
 export const ImportDataset = ({ dialogState }: ImportDatasetProps) => {
-    const { getLsPreparingImportIds } = usePrepareImportDataset();
+    const { getLsPreparingImportId } = usePrepareImportDataset();
 
     const [currentState, setCurrentState] = useState<ImportDatasetState>(() => {
-        if (!isEmpty(getLsPreparingImportIds())) {
+        if (getLsPreparingImportId() !== null) {
             return 'preparing';
         }
 

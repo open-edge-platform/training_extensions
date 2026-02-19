@@ -21,7 +21,7 @@ export const usePrepareImportDataset = () => {
         () => getParsedLocalStorage<DataValue>(PREPARING_IMPORT_DATASET_KEY(projectId)) ?? null
     );
 
-    const getLsPreparingImportIds = (): DataValue | null => {
+    const getLsPreparingImportId = (): DataValue | null => {
         return lsPreparingImportProject;
     };
 
@@ -35,7 +35,7 @@ export const usePrepareImportDataset = () => {
 
     return {
         addLsPreparingImportId,
-        getLsPreparingImportIds,
+        getLsPreparingImportId,
         removeLsPreparingImportId,
     };
 };

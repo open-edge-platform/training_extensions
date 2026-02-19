@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 
-import { isEmpty, isError } from 'lodash';
+import { isEmpty } from 'lodash';
 
 import { toast } from '../../../../../../packages/ui/src/toast/toast.component';
 import { $api } from '../../../../../api/client';
@@ -16,8 +16,8 @@ type UsePrepareImportStatusProps = {
 };
 
 export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps) => {
-    const { getLsPreparingImportIds } = usePrepareImportDataset();
-    const { id: jobId, fileName } = getLsPreparingImportIds() ?? {};
+    const { getLsPreparingImportId } = usePrepareImportDataset();
+    const { id: jobId, fileName } = getLsPreparingImportId() ?? {};
 
     const { removeLsPreparingImportId } = usePrepareImportDataset();
 

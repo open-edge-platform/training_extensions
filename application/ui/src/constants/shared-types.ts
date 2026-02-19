@@ -20,7 +20,7 @@ export type ExportDatasetJob = Job & {
 export type ExportDatasetMetadata = ExportDatasetJob['metadata'];
 
 export type PrepareImportDatasetJob = Job & {
-    type: 'export_dataset';
+    type: 'prepare_dataset_for_import';
     metadata: components['schemas']['PrepareDatasetForImportRequest'];
 };
 
