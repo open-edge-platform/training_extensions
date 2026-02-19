@@ -33,8 +33,7 @@ from otx.data.entity.tile import OTXTileBatchDataEntity
 from otx.data.entity.utils import stack_batch
 from otx.data.utils.structures.mask.mask_util import encode_rle
 from otx.metrics import MetricInput
-from otx.metrics.fmeasure import FMeasure
-from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.metrics.fmeasure import FMeasure, MaskRLEMeanAPFMeasureCallable
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
@@ -237,7 +236,7 @@ class OTXInstanceSegModel(OTXModel):
 
         return pred_entity
 
-    def forward_for_tracing(self, inputs: Tensor) -> tuple[Tensor, ...]:
+    def forward_for_tracing(self, inputs: Tensor) -> tuple[Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         shape = (int(inputs.shape[2]), int(inputs.shape[3]))
         meta_info = {
@@ -295,8 +294,11 @@ class OTXInstanceSegModel(OTXModel):
         if isinstance(preds, OTXBatchLossEntity):
             raise TypeError(preds)
 
-        # 1. Filter outputs by threshold
-        preds = self._filter_outputs_by_threshold(preds)
+        if isinstance(preds, torch.Tensor):
+            msg = "Expected OTXPredictionBatch, got Tensor"
+            raise TypeError(msg)
+
+        # 1. Convert predictions to metric input format
         metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         # 2. Update metric
@@ -361,10 +363,17 @@ class OTXInstanceSegModel(OTXModel):
         super().on_load_checkpoint(ckpt)
 
     def _log_metrics(self, meter: Metric, key: Literal["val", "test"], **compute_kwargs) -> None:
+        """This function is called every epoch.
+
+        Args:
+            meter: Metric object
+            key: "val" or "test"
+            compute_kwargs: Additional keyword arguments for the metric computation
+
+        """
         if key == "val":
             super()._log_metrics(meter, key)
 
-            # NOTE: Only update best_confidence_threshold when we achieve a NEW best F1 score
             fmeasure = None
             if isinstance(meter, MetricCollection) and (fmeasure := getattr(meter, "FMeasure", None)):
                 pass  # fmeasure is set
@@ -375,11 +384,8 @@ class OTXInstanceSegModel(OTXModel):
                 self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
         if key == "test":
-            # NOTE: Test metric logging should use `best_confidence_threshold` found previously.
-            best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
-            compute_kwargs = (
-                {"best_confidence_threshold": best_confidence_threshold} if best_confidence_threshold else {}
-            )
+            # NOTE: Test metric logging should use `best_confidence_threshold`.
+            compute_kwargs = {"best_confidence_threshold": self.best_confidence_threshold}
 
             super()._log_metrics(meter, key, **compute_kwargs)
 

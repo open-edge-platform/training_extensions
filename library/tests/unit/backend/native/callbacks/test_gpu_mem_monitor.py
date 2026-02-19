@@ -21,7 +21,8 @@ class TestGPUMemMonitor:
 
         class DebugLogger(CSVLogger):
             def log_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
-                assert "gpu_mem" in metrics
+                assert "gpu_mem_allocated_gib" in metrics
+                assert "gpu_mem_reserved_gib" in metrics
 
         trainer = Trainer(
             default_root_dir=tmpdir,

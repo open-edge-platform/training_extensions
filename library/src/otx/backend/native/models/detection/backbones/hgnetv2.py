@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """High Performance GPU Net(HGNet) Backbone from PaddlePaddle.
@@ -499,7 +499,7 @@ class HGNetv2Module(nn.Module):
 
         # stages
         self.stages = nn.ModuleList()
-        for v in stage_config.values():
+        for stage in stage_config.values():
             (
                 in_channels,
                 mid_channels,
@@ -509,7 +509,7 @@ class HGNetv2Module(nn.Module):
                 light_block,
                 kernel_size,
                 layer_num,
-            ) = v
+            ) = stage
             self.stages.append(
                 HGStage(
                     in_channels,
