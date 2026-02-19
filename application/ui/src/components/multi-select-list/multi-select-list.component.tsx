@@ -33,7 +33,7 @@ export const MultiSelectList = ({ name, label, items, ...listProps }: MultiSelec
                     setSelectedLabels(selection);
                 }}
             >
-                {(item) => <Item>{item.name}</Item>}
+                {(item) => <Item key={item.id}>{item.name}</Item>}
             </ListView>
 
             <>

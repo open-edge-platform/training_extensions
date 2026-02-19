@@ -21,8 +21,9 @@ import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 
 import { MultiSelectList } from '../../../../components/multi-select-list/multi-select-list.component';
+import { isClassificationTask } from '../../../project/task-type-guards';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
-import { useExportDatasetJobAction } from './use-export-dataset-job-action.hook';
+import { useExportDatasetJobAction } from './hooks/use-export-dataset-job-action.hook';
 
 import classes from './export-dataset.module.scss';
 
@@ -39,7 +40,13 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
         onSuccess: dialogState.close,
     });
 
-    const labels = selectedProject.task?.labels ?? [];
+    const labels = selectedProject.task?.labels?.map((label) => ({ id: label.name, name: label.name })) ?? [];
+
+    const typeItems = [
+        { label: 'GETI', value: 'geti' },
+        { label: 'YOLO', value: 'yolo' },
+        { label: 'COCO', value: 'coco' },
+    ].filter((item) => item.value !== 'coco' || !isClassificationTask(selectedProject.task.task_type));
 
     return (
         <DialogContainer onDismiss={dialogState.close}>
@@ -73,9 +80,11 @@ export const ExportDataset = ({ dialogState }: ExportDatasetProps) => {
                                     label='Select dataset export format'
                                     defaultValue={formState.export_format}
                                 >
-                                    <Radio value='geti'>GETI</Radio>
-                                    <Radio value='yolo'>YOLO</Radio>
-                                    <Radio value='coco'>COCO</Radio>
+                                    {typeItems.map((item) => (
+                                        <Radio key={item.value} value={item.value}>
+                                            {item.label}
+                                        </Radio>
+                                    ))}
                                 </RadioGroup>
                             </Form>
 

@@ -5,8 +5,14 @@ import { isObject } from 'lodash-es';
 
 import { Job } from '../../../../constants/shared-types';
 
-export const isInvalidJob = (error: unknown): boolean =>
-    isObject(error) && 'detail' in error && error.detail === 'Job not found';
+export const isInvalidJob = (error: unknown): boolean => {
+    if (isObject(error) && 'detail' in error) {
+        const detail = String(error.detail);
+        return detail.includes('Job not found') || detail.includes('Invalid job_id');
+    }
+
+    return false;
+};
 
 export const isJobDone = (job?: Job) => job?.status === 'DONE';
 export const isJobFailed = (job?: Job) => job?.status === 'FAILED';
