@@ -230,18 +230,45 @@ def list_override(configs: Namespace, key: str, overrides: list, convert_dict_to
     """
     if key not in configs or configs[key] is None:
         return
+
+    base_list = configs[key]
+    override_class_paths = []
+
     for target in overrides:
         class_path = target.get("class_path", None)
         if class_path is None:
             msg = "class_path is required in the override list."
             raise ValueError(msg)
+        override_class_paths.append(class_path)
 
-        item = next((item for item in configs[key] if item["class_path"] == class_path), None)
+        item = next((item for item in base_list if item["class_path"] == class_path), None)
         if item is not None:
             Namespace(item).update(target)
         else:
             converted_target = dict_to_namespace(target) if convert_dict_to_namespace else target
-            configs[key].append(converted_target)
+            base_list.append(converted_target)
+
+    item_by_cp: dict[str, Any] = {}
+    for item in base_list:
+        cp = item["class_path"]
+        if cp is not None:
+            item_by_cp[cp] = item
+
+    override_cp_set = set(override_class_paths)
+    ordered: list = []
+    # First: base-only items, preserving base order
+    for item in base_list:
+        cp = item["class_path"]
+        if cp not in override_cp_set:
+            ordered.append(item)
+    # Then: items in the override, in the override's order
+    for cp in override_class_paths:
+        if cp in item_by_cp:
+            ordered.append(item_by_cp[cp])
+
+    # Replace the list contents in-place so the Namespace reference stays valid
+    base_list.clear()
+    base_list.extend(ordered)
 
 
 def apply_override(cfg: Namespace, overrides: Namespace) -> None:

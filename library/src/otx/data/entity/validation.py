@@ -16,38 +16,20 @@ if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
-def validate_images(image_batch: torch.Tensor | list[torch.Tensor]) -> None:
+def validate_images(image_batch: torch.Tensor) -> None:
     """Validate the image batch."""
-    if not isinstance(image_batch, list) and not isinstance(image_batch, torch.Tensor):
-        msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
+    if not isinstance(image_batch, torch.Tensor):
+        msg = f"Image batch must be a torch.Tensor. Got {type(image_batch)}"
         raise TypeError(msg)
-    if isinstance(image_batch, torch.Tensor):
-        if image_batch.dtype not in (torch.float32, torch.uint8):
-            msg = f"Image batch must have dtype float32 or uint8. Found {image_batch.dtype}"
-            raise ValueError(msg)
-        if image_batch.ndim != 4:
-            msg = "Image batch must have 4 dimensions"
-            raise ValueError(msg)
-        if image_batch.shape[1] not in [1, 3]:
-            msg = "Image batch must have 1 or 3 channels"
-            raise ValueError(msg)
-    else:
-        if not all(isinstance(image, torch.Tensor) for image in image_batch):
-            msg = "Image batch must be a list of torch tensors"
-            raise TypeError(msg)
-        dtype = image_batch[0].dtype
-        if dtype not in (torch.float32, torch.uint8):
-            msg = "Image batch must have dtype float32 or uint8"
-            raise ValueError(msg)
-        if not all(image.dtype == dtype for image in image_batch):
-            msg = f"Not all tensors have the same dtype: expected {dtype}"
-            raise TypeError(msg)
-        if not all(image.ndim == 3 for image in image_batch):
-            msg = "Image batch must have 3 dimensions"
-            raise ValueError(msg)
-        if not all(image.shape[0] in [1, 3] for image in image_batch):
-            msg = "Image batch must have 1 or 3 channels"
-            raise ValueError(msg)
+    if image_batch.dtype != torch.float32:
+        msg = f"Image batch must have dtype float32. Found {image_batch.dtype}"
+        raise ValueError(msg)
+    if image_batch.ndim != 4:
+        msg = f"Image batch must have 4 dimensions (BCHW), got {image_batch.ndim}"
+        raise ValueError(msg)
+    if image_batch.shape[1] not in [1, 3]:
+        msg = f"Image batch must have 1 or 3 channels, got {image_batch.shape[1]}"
+        raise ValueError(msg)
 
 
 def validate_labels(label_batch: list[torch.Tensor | None]) -> None:

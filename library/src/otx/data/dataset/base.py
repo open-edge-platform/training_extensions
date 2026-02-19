@@ -96,8 +96,12 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         img = _ensure_chw_format(img)
         image_tensors.append(img)
 
-    # Try to stack images if they have the same shape
-    if len(image_tensors) > 0 and all(t.shape == image_tensors[0].shape for t in image_tensors):
+    # Always stack images into a single BCHW tensor.
+    # All images must have the same spatial dimensions at this point.
+    # If they don't, it means the resize / augmentation pipeline is misconfigured.
+    if len(image_tensors) == 0:
+        images = torch.empty(0)
+    else:
         images = torch.stack(image_tensors)
         # Safety: ensure stacked tensor is BCHW. If it's in BHWC or BHCW, fix it.
         if images.ndim == 4:
@@ -107,8 +111,6 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
             # BHCW -> BCHW (channels at dim=2)
             elif images.shape[2] in (1, 3) and images.shape[1] not in (1, 3):
                 images = images.permute(0, 2, 1, 3)
-    else:
-        images = image_tensors
 
     return OTXSampleBatch(
         images=images,

@@ -356,12 +356,7 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
     Returns:
         Batched OTXSampleBatch with stacked tensors
     """
-    # Check if all images have the same size. TODO(kprokofi): remove this check once OV IR models are moved.
-    if all(sample.image.shape == samples[0].image.shape for sample in samples):
-        images = torch.stack([sample.image for sample in samples])
-    else:
-        # we need this only in case of OV inference, where no resize
-        images = [sample.image for sample in samples]
+    images = torch.stack([sample.image for sample in samples])
 
     # Collect optional fields - use getattr to handle samples without these attributes
     labels = [sample.label for sample in samples] if hasattr(samples[0], "label") else None
@@ -384,7 +379,7 @@ class OTXSampleBatch:
     """OTX sample batch implementation.
 
     Attributes:
-        images: The batch of images as a tensor or list of tensors.
+        images: The batch of images as a BCHW tensor.
         labels: List of label tensors, optional.
         masks: List of masks, optional.
         bboxes: List of bounding boxes, optional.
@@ -392,7 +387,7 @@ class OTXSampleBatch:
         imgs_info: Sequence of image information, optional.
     """
 
-    images: torch.Tensor | list[torch.Tensor]
+    images: torch.Tensor
     labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
@@ -402,9 +397,7 @@ class OTXSampleBatch:
     @property
     def batch_size(self) -> int:
         """Get the number of samples in the batch."""
-        if isinstance(self.images, torch.Tensor):
-            return self.images.shape[0]
-        return len(self.images)
+        return self.images.shape[0]
 
     def __post_init__(self) -> None:
         """Validate the batch after initialization."""
@@ -442,10 +435,7 @@ class OTXSampleBatch:
 
         # Handle images separately because of tv_tensors wrapping
         if self.images is not None:
-            if isinstance(self.images, list):
-                kwargs["images"] = [maybe_wrap_tv(img) for img in self.images]
-            else:
-                kwargs["images"] = maybe_wrap_tv(self.images)
+            kwargs["images"] = maybe_wrap_tv(self.images)
 
         # Generic handler for all other fields
         for field in ["labels", "bboxes", "keypoints", "masks"]:
