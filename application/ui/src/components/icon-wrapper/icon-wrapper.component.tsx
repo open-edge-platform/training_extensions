@@ -11,13 +11,18 @@ export const IconWrapper = ({
     children,
     onPress,
     isSelected,
+    isDisabled,
 }: {
     children: ReactNode;
     onPress?: () => void;
     isSelected?: boolean;
+    isDisabled?: boolean;
 }) => {
     return (
-        <div className={clsx(classes.iconWrapper, { [classes.selected]: isSelected })} onClick={onPress}>
+        <div
+            className={clsx(classes.iconWrapper, { [classes.selected]: isSelected, [classes.disabled]: isDisabled })}
+            onClick={onPress}
+        >
             {children}
         </div>
     );

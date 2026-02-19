@@ -25,11 +25,11 @@ from app.services import (
     PipelineMetricsService,
     PipelineService,
     ProjectService,
-    ResourceNotFoundError,
     SinkService,
     SourceUpdateService,
     StagedDatasetService,
     SystemService,
+    VideoFrameService,
 )
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
@@ -174,12 +174,20 @@ def get_project_service(
     )
 
 
+def get_video_frame_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> VideoFrameService:
+    """Provides a VideoFrameService instance."""
+    return VideoFrameService(db_session=db)
+
+
 def get_media_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
+    video_frame_service: Annotated[VideoFrameService, Depends(get_video_frame_service)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaService:
     """Provides a MediaService instance."""
-    return MediaService(data_dir=data_dir, db_session=db)
+    return MediaService(data_dir=data_dir, video_frame_service=video_frame_service, db_session=db)
 
 
 def get_dataset_service(
@@ -204,10 +212,7 @@ def get_project(
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> Project:
     """Provides a ProjectView instance for request scoped project."""
-    try:
-        return project_service.get_project_by_id(project_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return project_service.get_project_by_id(project_id)
 
 
 def get_sink(
@@ -215,10 +220,7 @@ def get_sink(
     sink_service: Annotated[SinkService, Depends(get_sink_service)],
 ) -> Sink:
     """Provides a Sink instance for request scoped sink."""
-    try:
-        return sink_service.get_by_id(sink_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return sink_service.get_by_id(sink_id)
 
 
 def get_source(
@@ -226,10 +228,7 @@ def get_source(
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Provides a Source instance for request scoped source."""
-    try:
-        return source_update_service.get_by_id(source_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return source_update_service.get_by_id(source_id)
 
 
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
@@ -263,7 +262,4 @@ def get_dataset_revision(
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevision:
     """Provides a DatasetService instance."""
-    try:
-        return dataset_revision_service.get_dataset_revision(project_id=project_id, revision_id=dataset_revision_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return dataset_revision_service.get_dataset_revision(project_id=project_id, revision_id=dataset_revision_id)

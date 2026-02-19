@@ -6,11 +6,13 @@ import { partition } from 'lodash-es';
 
 import { useTool } from '../../../../shared/annotator/tool-provider.component';
 import { isNonEmptyArray } from '../../../../shared/util';
+import { useIsAnnotatorSceneBusy } from '../../use-is-annotator-scene-busy';
 import { Tools } from '../tools.component';
 import { useAvailableTools } from './use-available-tools';
 
 export const AnnotatorTools = () => {
     const { activeTool, setActiveTool } = useTool();
+    const isSceneBusy = useIsAnnotatorSceneBusy();
 
     const availableTools = useAvailableTools();
     const [selectionTool, otherTools] = partition(availableTools, (tool) => tool.type === 'selection');
@@ -25,7 +27,12 @@ export const AnnotatorTools = () => {
             )}
             {isNonEmptyArray(otherTools) && (
                 <>
-                    <Tools tools={otherTools} activeTool={activeTool} setActiveTool={setActiveTool} />
+                    <Tools
+                        tools={otherTools}
+                        activeTool={activeTool}
+                        setActiveTool={setActiveTool}
+                        isDisabled={isSceneBusy}
+                    />
                     <Divider size='S' />
                 </>
             )}

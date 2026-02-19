@@ -18,8 +18,8 @@ export const LabelColorPicker = ({ color, onChange }: LabelColorPickerProps) => 
             rounding={'none'}
         >
             <Flex direction='column' gap='size-300'>
-                <ColorEditor />
-                <ColorSwatchPicker width={'size-3600'}>
+                <ColorEditor hideAlphaChannel />
+                <ColorSwatchPicker width={'size-3000'}>
                     {DISTINCT_COLORS.map((presetColor) => (
                         <ColorSwatch color={presetColor} key={presetColor} />
                     ))}

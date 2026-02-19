@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import cv2
+import numpy as np
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -47,28 +48,30 @@ def get_video_metadata(video_path: Path) -> VideoMetadata:
 def extract_video_frame(
     video_path: Path,
     video_frame_path: Path,
-    time: float,
-) -> None:
+    frame_index: int,
+) -> np.ndarray:
     """
     Extracts a video frame and saves it to a local FS to specified file.
 
     Args:
         video_path: Video binary file path
         video_frame_path: Path of the file to write generated video frame to
-        time: Frame time in seconds
+        frame_index: Frame index
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
 
     try:
-        cap.set(cv2.CAP_PROP_POS_MSEC, time * 1000.0)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+        # Read the frame at the requested position
         read_success, frame = cap.read()
         if not read_success:
-            raise RuntimeError(f"Cannot read frame at {time} second(s) from video: {video_path}")
+            raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
         cv2.imwrite(str(video_frame_path), frame)
+        return frame
     except Exception as e:
-        logger.error(f"Failed extracting video frame {time} from video {video_path}", exc_info=e)
+        logger.error(f"Failed extracting video frame {frame_index} from video {video_path}", exc_info=e)
         raise RuntimeError("Error occurred while extracting video frame")
     finally:
         cap.release()

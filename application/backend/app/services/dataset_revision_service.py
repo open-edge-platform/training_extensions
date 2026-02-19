@@ -11,6 +11,7 @@ import polars as pl
 from datumaro.experimental.export_import import export_dataset, import_dataset
 from loguru import logger
 from PIL import Image, UnidentifiedImageError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetRevisionDB
@@ -19,6 +20,7 @@ from app.models.dataset_item_revision import DatasetRevisionItem
 from app.models.dataset_revision import DatasetRevision, DatasetRevisionCounts
 from app.models.media import ImageFormat
 from app.repositories import DatasetRevisionRepository
+from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.utils.images import crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
@@ -53,25 +55,37 @@ class DatasetRevisionService(BaseSessionManagedService):
         dataset_revision_id = str(uuid4())
         short_id = dataset_revision_id.split("-")[0]
         dataset_name = f"Dataset ({short_id})"
-        revision_db = revision_repo.save(
-            DatasetRevisionDB(
-                id=dataset_revision_id,
-                project_id=str(project_id),
-                name=dataset_name,
-                total_count=item_counts.total,
-                training_count=item_counts.training,
-                validation_count=item_counts.validation,
-                testing_count=item_counts.testing,
-            )
-        )
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
-        logger.info("Saving dataset revision '{}' to '{}'", revision_db.id, revision_path)
+
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / dataset_revision_id
+        logger.info("Saving dataset revision '{}' to '{}'.", dataset_revision_id, revision_path)
         export_dataset(
             dataset=dataset,
             output_path=revision_path,
             export_images=True,
             as_zip=False,  # Export as uncompressed directory, see #5070 for details
         )
+        size_in_bytes = sum(item.stat().st_size for item in revision_path.rglob("*") if item.is_file())
+
+        try:
+            revision_db = revision_repo.save(
+                DatasetRevisionDB(
+                    id=dataset_revision_id,
+                    project_id=str(project_id),
+                    name=dataset_name,
+                    total_count=item_counts.total,
+                    training_count=item_counts.training,
+                    validation_count=item_counts.validation,
+                    testing_count=item_counts.testing,
+                    size=size_in_bytes,
+                )
+            )
+        except (IntegrityError, PrimaryKeyIntegrityError, UniqueConstraintIntegrityError):
+            logger.error("Could not save dataset revision '{}' in the database.", dataset_revision_id)
+            if revision_path.exists():
+                shutil.rmtree(revision_path)
+                logger.info("Deleted dataset revision files at '{}'.", revision_path)
+            raise
+
         return UUID(revision_db.id)
 
     def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> dm.Dataset:
@@ -160,6 +174,11 @@ class DatasetRevisionService(BaseSessionManagedService):
                 project_id=str(project_id),
                 name=dataset_revision.name,
                 files_deleted=dataset_revision.files_deleted,
+                size=0 if dataset_revision.files_deleted else dataset_revision.size,
+                total_count=dataset_revision.item_counts.total,
+                training_count=dataset_revision.item_counts.training,
+                validation_count=dataset_revision.item_counts.validation,
+                testing_count=dataset_revision.item_counts.testing,
             )
         )
 

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useSSE } from '../../../../hooks/use-sse.hook';
 import { type LogEntry } from '../log-types';
 
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 type UseStreamJobLogsReturn = {
     logs: LogEntry[];
@@ -26,7 +26,7 @@ export const useStreamJobLogs = (jobId: string | undefined): UseStreamJobLogsRet
             setConnectionStatus('connected');
         },
         onError: () => {
-            setConnectionStatus('connecting');
+            setConnectionStatus('error');
         },
         onClose: () => {
             setConnectionStatus('disconnected');

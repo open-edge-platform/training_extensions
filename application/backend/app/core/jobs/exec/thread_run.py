@@ -6,6 +6,7 @@ import threading
 import warnings
 from collections.abc import Iterator
 from queue import Empty, Queue
+from typing import Any
 
 from app.core.jobs.models import Cancelled, Done, ExecutionEvent, Failed, Job, Progress, Started
 from app.core.run import ExecutionContext, RunnableFactory, Runner
@@ -101,11 +102,12 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
         class ThreadAwareExecutionContext(ExecutionContext):
             def __init__(self, runner: "ThreadRun"):
                 self.runner = runner
+                self.report = self._report_impl
 
-            def report(self, message: str = "training", progress: float = 0.0):  # pyrefly: ignore[bad-override]
+            def _report_impl(self, message: str, progress: float, metadata: dict[str, Any] | None = None) -> None:
                 if self.runner._cancel_event.is_set():
                     raise CancelledExc("Job cancelled")
-                self.runner._event_queue.put(Progress(message, progress))
+                self.runner._event_queue.put(Progress(message, progress, metadata))
 
         return ThreadAwareExecutionContext(self)
 
