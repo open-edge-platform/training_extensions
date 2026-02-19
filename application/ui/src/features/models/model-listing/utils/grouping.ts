@@ -44,7 +44,9 @@ export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDat
                 group: {
                     id: datasetId,
                     name: datasetRevision?.name ?? `Dataset #${datasetId.slice(0, 8)}`,
-                    createdAt: formatDatasetStartTime(model.training_info.start_time),
+                    createdAt: formatDatasetStartTime(
+                        datasetRevision ? datasetRevision.created_at : model.training_info.start_time
+                    ),
                     labelCount,
                     imageCount: datasetRevision?.item_counts?.total ?? 0,
                     trainingSubsets: {
@@ -58,7 +60,9 @@ export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDat
             };
         }
 
-        groups[datasetId].models.push(model);
+        if (groups[datasetId] !== undefined) {
+            groups[datasetId].models.push(model);
+        }
     });
 
     return Object.values(groups);
