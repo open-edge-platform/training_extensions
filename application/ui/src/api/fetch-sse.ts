@@ -14,11 +14,12 @@ export type SSEOptions<T> = {
     onError?: (error: Event) => void;
     onOpen?: () => void;
     onClose?: () => void;
+    onRetry?: () => void;
     retry?: boolean;
 };
 
 const INITIAL_RETRY_DELAY_MS = 1_000;
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 7;
 
 export const connectSSE = <T = unknown>(path: string, options: SSEOptions<T>): SSEConnection => {
     const url = `${API_BASE_URL}${path}`;
@@ -52,6 +53,8 @@ export const connectSSE = <T = unknown>(path: string, options: SSEOptions<T>): S
             if (!closed && options.retry && retryCount < MAX_RETRIES) {
                 eventSource.close();
                 activeSource = null;
+
+                options.onRetry?.();
 
                 retryTimeout = setTimeout(() => {
                     if (!closed) {

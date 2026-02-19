@@ -20,15 +20,6 @@ export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModel
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
 
-    // TODO: remove. temporary integration for testing
-    const { logs, isConnected, error } = useStreamJobLogs(activeTrainingJob?.job_id);
-    console.info('[TrainingLogs]', {
-        jobId: activeTrainingJob?.job_id,
-        isConnected,
-        error,
-        logCount: logs.length,
-        logs,
-    });
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelTraining = () => {

@@ -19,16 +19,6 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
     const { isPending, isError, data: model } = useGetModel(modelId);
     const { data: datasetRevisions = [] } = useGetDatasetRevisions();
 
-    // TODO: remove. temporary integration for testing
-    const modelLogs = useModelLogs(modelId);
-    console.info('[ModelLogs]', {
-        modelId,
-        status: modelLogs.status,
-        logCount: modelLogs.data?.length,
-        logs: modelLogs.data,
-        error: modelLogs.error,
-    });
-
     if (isPending) {
         return (
             <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>

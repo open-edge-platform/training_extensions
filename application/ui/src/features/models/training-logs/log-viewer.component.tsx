@@ -14,7 +14,7 @@ import classes from './log-viewer.module.scss';
 
 const LOG_LEVELS: LogLevel[] = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'];
 
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 type LogViewerProps = {
     logs: LogEntryType[];
@@ -26,6 +26,7 @@ const CONNECTION_STATUS_LABEL: Record<ConnectionStatus, string> = {
     connecting: 'Connecting...',
     connected: 'Live',
     disconnected: 'Disconnected',
+    error: 'Connection error',
 };
 
 export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogViewerProps) => {

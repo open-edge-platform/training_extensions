@@ -43,6 +43,10 @@
     background-color: var(--spectrum-global-color-gray-400);
 }
 
+.statusDot--error {
+    background-color: var(--spectrum-global-color-red-500);
+}
+
 @keyframes pulse {
     0%,
     100% {

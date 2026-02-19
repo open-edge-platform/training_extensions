@@ -25,6 +25,9 @@ export const useStreamJobLogs = (jobId: string | undefined): UseStreamJobLogsRet
         onOpen: () => {
             setConnectionStatus('connected');
         },
+        onRetry: () => {
+            setConnectionStatus('connecting');
+        },
         onError: () => {
             setConnectionStatus('error');
         },
