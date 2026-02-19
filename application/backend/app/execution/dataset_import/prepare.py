@@ -56,7 +56,10 @@ class PrepareDataset(Execution):
 
     @step("Convert dataset archive to Geti format", 90)
     def convert_archive(self, archive_path: Path) -> None:
-        _, dataset_format = archive_path.stem.split("-")
+        parts = archive_path.stem.split("-")
+        if len(parts) != 2:
+            raise ValueError(f"Cannot infer the format from the name: {archive_path.name}.")
+        _, dataset_format = parts
         match dataset_format:
             case DatasetFormat.COCO:
                 extract_dir = _extract_archive(archive_path)
