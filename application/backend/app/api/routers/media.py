@@ -303,7 +303,7 @@ def set_media_annotations(
     media_annotations: Annotated[SetMediaAnnotations, Body(openapi_examples=SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-    timestamp: Annotated[float | None, Query(description="Video frame timestamp in seconds", ge=0)] = None,
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
 ) -> MediaAnnotations:
     """Set media annotations"""
     # Dataset item has the same ID as media
@@ -311,20 +311,20 @@ def set_media_annotations(
     try:
         media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
         if media.type == MediaType.VIDEO:
-            # Video frames can be identified by video ID and frame timestamp
-            if timestamp is None:
+            # Video frames can be identified by video ID and frame index
+            if frame_index is None:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided."
                 )
-            if timestamp > media.duration:  # pyrefly: ignore[unsupported-operation]
+            if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Video frame timestamp {timestamp} exceeds video duration {media.duration}.",
+                    detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
                 )
-            video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=timestamp)
+            video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
             if video_frame is None:
                 video_frame_media, video_frame = media_service.extract_video_frame(
-                    project=project, video_id=media_id, timestamp=timestamp
+                    project=project, video_id=media_id, frame_index=frame_index
                 )
                 dataset_service.create_dataset_item(
                     project=project,
@@ -365,27 +365,25 @@ def get_media_annotations(
     media_id: MediaID,
     media_service: Annotated[MediaService, Depends(get_media_service)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-    timestamp: Annotated[float | None, Query(description="Video frame timestamp in seconds", ge=0)] = None,
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
 ) -> MediaAnnotations:
     """Get the media annotations"""
     # Dataset item has the same ID as media
     dataset_item_id = media_id
     media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
     if media.type == MediaType.VIDEO:
-        # Video frames can be identified by video ID and frame timestamp
-        if timestamp is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
-            )
-        if timestamp > media.duration:  # pyrefly: ignore[unsupported-operation]
+        # Video frames can be identified by video ID and frame index
+        if frame_index is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
+        if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Video frame timestamp {timestamp} exceeds video duration {media.duration}.",
+                detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
             )
-        video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=timestamp)
+        video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
         if video_frame is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given timestamp."
+                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index."
             )
         dataset_item_id = video_frame.id
 
@@ -413,27 +411,25 @@ def delete_media_annotation(
     media_id: MediaID,
     media_service: Annotated[MediaService, Depends(get_media_service)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-    timestamp: Annotated[float | None, Query(description="Video frame timestamp in seconds", ge=0)] = None,
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
 ) -> None:
     """Delete media annotations"""
     # Dataset item has the same ID as media
     dataset_item_id = media_id
     media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
     if media.type == MediaType.VIDEO:
-        # Video frames can be identified by video ID and frame timestamp
-        if timestamp is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame timestamp is not provided."
-            )
-        if timestamp > media.duration:  # pyrefly: ignore[unsupported-operation]
+        # Video frames can be identified by video ID and frame index
+        if frame_index is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
+        if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Video frame timestamp {timestamp} exceeds video duration {media.duration}.",
+                detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
             )
-        video_frame = media_service.get_frame_by_video_id_and_timestamp(video_id=media_id, timestamp=timestamp)
+        video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
         if video_frame is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given timestamp."
+                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index."
             )
         dataset_item_id = video_frame.id
 
