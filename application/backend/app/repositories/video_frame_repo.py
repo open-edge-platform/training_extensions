@@ -20,7 +20,7 @@ class VideoFrameRepository:
         self.db.flush()
         return video_frame_db
 
-    def get_by_video_id_and_timestamp(self, video_id: str, frame_index: int) -> VideoFrameDB | None:
+    def get_by_video_id_and_index(self, video_id: str, frame_index: int) -> VideoFrameDB | None:
         stmt = select(VideoFrameDB).where(VideoFrameDB.video_id == video_id, VideoFrameDB.frame_index == frame_index)
         return self.db.scalar(stmt)
 

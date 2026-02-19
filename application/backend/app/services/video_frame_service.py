@@ -39,14 +39,14 @@ class VideoFrameService(BaseSessionManagedService):
             Video frame data if such frame has been annotated, None otherwise.
         """
         repo = VideoFrameRepository(db=self.db_session)
-        db_video_frame = repo.get_by_video_id_and_timestamp(video_id=str(video_id), frame_index=frame_index)
+        db_video_frame = repo.get_by_video_id_and_index(video_id=str(video_id), frame_index=frame_index)
         return VideoFrame.model_validate(db_video_frame) if db_video_frame else None
 
     def get_frames_by_video_id(
         self, video_id: UUID, frame_index_from: int = 0, frame_index_to: int = 10
     ) -> list[VideoFrame]:
         """
-        Returns all annotated video frame falling into the specified timestamp range.
+        Returns all annotated video frame falling into the specified index range.
 
         Args:
             video_id: Video identifier

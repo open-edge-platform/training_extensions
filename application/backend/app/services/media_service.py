@@ -305,7 +305,7 @@ class MediaService(BaseSessionManagedService):
         return self.video_frame_service.get_frame_by_video_id_and_index(video_id=video_id, frame_index=frame_index)
 
     def extract_video_frame(self, project: Project, video_id: UUID, frame_index: int) -> tuple[Media, VideoFrame]:
-        """Extract video frame by video ID and timestamp"""
+        """Extract video frame by video ID and index"""
         video = self.get_media_by_id(project_id=project.id, media_id=video_id)
         if video.type != MediaType.VIDEO:
             raise RuntimeError(f"Media {video_id} is not a video")
