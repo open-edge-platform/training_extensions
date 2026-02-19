@@ -23,6 +23,7 @@ export const useStreamJobLogs = (jobId: string | undefined): UseStreamJobLogsRet
         },
         onOpen: () => {
             setIsConnected(true);
+            setError(null);
         },
         onError: () => {
             setIsConnected(false);

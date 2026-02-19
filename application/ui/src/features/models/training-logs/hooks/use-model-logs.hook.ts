@@ -4,18 +4,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { API_BASE_URL } from '../../../../api/client';
+import { fetchClient } from '../../../../api/client';
 import { type LogEntry } from '../log-types';
 import { parseLogLine } from '../log-utils';
 
 const fetchModelLogs = async (projectId: string, modelId: string): Promise<LogEntry[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/models/${modelId}/logs`);
+    const { data, error, response } = await fetchClient.GET('/api/projects/{project_id}/models/{model_id}/logs', {
+        params: { path: { project_id: projectId, model_id: modelId } },
+        parseAs: 'text',
+    });
 
-    if (!response.ok) {
+    if (error) {
         throw new Error(`Failed to fetch model logs: ${response.status} ${response.statusText}`);
     }
 
-    const text = await response.text();
+    const text = data ?? '';
 
     return text
         .split('\n')
