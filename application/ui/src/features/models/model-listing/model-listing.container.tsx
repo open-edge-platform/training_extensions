@@ -51,7 +51,7 @@ const ModelListingContent = () => {
             <Flex direction={'column'} flex={1} UNSAFE_style={{ overflowY: 'auto', scrollbarGutter: 'stable' }}>
                 <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
-                <ExportJobsList predicate={({ datasetId }: { datasetId: string | null }) => isString(datasetId)} />
+                <ExportJobsList predicate={({ datasetId }) => isString(datasetId)} />
 
                 <ModelListing hasNoResults={hasNoResults} groupedModels={groupedModels} />
             </Flex>

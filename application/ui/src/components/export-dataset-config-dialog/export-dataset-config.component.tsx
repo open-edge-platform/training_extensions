@@ -29,6 +29,7 @@ import { getFormatOptions } from './util';
 import classes from './export-dataset-config.module.scss';
 
 type ExportDatasetConfigProps = {
+    name?: string;
     datasetId: string | null;
     statistics: ReactNode;
     dialogState: OverlayTriggerState;
@@ -36,7 +37,12 @@ type ExportDatasetConfigProps = {
 
 const FORM_ID = 'export-dataset-form';
 
-export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: ExportDatasetConfigProps) => {
+export const ExportDatasetConfig = ({
+    name = 'dataset',
+    datasetId,
+    statistics,
+    dialogState,
+}: ExportDatasetConfigProps) => {
     const { data: selectedProject } = useProject();
 
     const [formState, submitAction, isPending] = useExportDatasetJobAction({
@@ -51,7 +57,7 @@ export const ExportDatasetConfig = ({ datasetId, statistics, dialogState }: Expo
         <DialogContainer onDismiss={dialogState.close}>
             {dialogState.isOpen && (
                 <Dialog size='L'>
-                    <Heading>Export dataset</Heading>
+                    <Heading>Export {name}</Heading>
                     <Divider />
                     <Content UNSAFE_className={classes.container}>
                         <Heading>Exported dataset statistics</Heading>

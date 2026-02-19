@@ -57,12 +57,13 @@ describe('DatasetActions', () => {
         renderApp();
 
         const menuButton = await screen.findByRole('button', { name: 'Dataset actions' });
-        expect(menuButton).toBeInTheDocument();
+        expect(menuButton).toBeVisible();
 
         await userEvent.click(menuButton);
 
-        expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
-        expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
+        expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+        expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+        expect(screen.getByRole('menuitem', { name: 'Export' })).toBeVisible();
     });
 
     it('should open rename dialog when rename action is clicked', async () => {
@@ -73,7 +74,7 @@ describe('DatasetActions', () => {
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
 
-        expect(screen.getByRole('dialog', { name: 'Rename dataset revision' })).toBeInTheDocument();
+        expect(screen.getByRole('dialog', { name: 'Rename dataset revision' })).toBeVisible();
         expect(screen.getByRole('textbox', { name: /Dataset revision name/ })).toHaveValue('Test Dataset');
     });
 
@@ -85,7 +86,18 @@ describe('DatasetActions', () => {
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
-        expect(screen.getByRole('alertdialog', { name: 'Delete dataset revision' })).toBeInTheDocument();
-        expect(screen.getByText(/Are you sure you want to delete dataset revision/)).toBeInTheDocument();
+        expect(screen.getByRole('alertdialog', { name: 'Delete dataset revision' })).toBeVisible();
+        expect(screen.getByText(/Are you sure you want to delete dataset revision/)).toBeVisible();
+    });
+
+    it('should open export dialog when export action is clicked', async () => {
+        renderApp();
+
+        const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
+        await userEvent.click(menuButton);
+
+        await userEvent.click(screen.getByRole('menuitem', { name: 'Export' }));
+
+        expect(screen.getByRole('heading', { name: 'Exported dataset statistics' })).toBeVisible();
     });
 });

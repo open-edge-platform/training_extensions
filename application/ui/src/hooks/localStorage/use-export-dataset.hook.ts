@@ -8,7 +8,7 @@ import { getParsedLocalStorage } from './utils';
 
 const EXPORT_DATASET_KEY = (projectId: string) => `export-dataset-${projectId}`;
 
-type exportDatasetData = {
+type ExportDatasetData = {
     jobId: string;
     datasetId: string | null;
 };
@@ -16,13 +16,13 @@ type exportDatasetData = {
 export const useExportDataset = () => {
     const projectId = useProjectIdentifier();
 
-    const [_lsExportProject, setLsExportId] = useLocalStorage<exportDatasetData[]>(
+    const [_lsExportProject, setLsExportId] = useLocalStorage<ExportDatasetData[]>(
         EXPORT_DATASET_KEY(projectId),
         () => getParsedLocalStorage(EXPORT_DATASET_KEY(projectId)) ?? []
     );
 
-    const getLsExportIds = (): exportDatasetData[] => {
-        return getParsedLocalStorage<exportDatasetData[]>(EXPORT_DATASET_KEY(projectId)) ?? [];
+    const getLsExportIds = (): ExportDatasetData[] => {
+        return getParsedLocalStorage<ExportDatasetData[]>(EXPORT_DATASET_KEY(projectId)) ?? [];
     };
 
     const addLsExportId = (jobId: string, datasetId: string | null) => {

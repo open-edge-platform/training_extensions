@@ -103,6 +103,7 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
             </DialogContainer>
 
             <ExportDatasetConfig
+                name={dataset.name}
                 datasetId={dataset.id}
                 dialogState={exportDialog}
                 statistics={<DatasetRevisionStatistics datasetRevisionId={dataset.id} />}
