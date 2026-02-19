@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
 import { renderHook } from 'test-utils/render';
 
@@ -86,7 +87,10 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: false,
                     searchBy: '',
-                    datasetRevisions: [],
+                    datasetRevisions: [
+                        getMockedDatasetRevision({ id: 'dataset-1' }),
+                        getMockedDatasetRevision({ id: 'dataset-2' }),
+                    ],
                     showFailedModels: true,
                 })
             );

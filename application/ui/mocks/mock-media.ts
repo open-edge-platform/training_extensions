@@ -13,6 +13,7 @@ export const mockedMedia = (props: Partial<Media> = {}): Media => ({
     size: 0,
     fps: null,
     frame_count: null,
+    duration: null,
     ...props,
 });
 

@@ -15,9 +15,9 @@ from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
 from app.api.schemas.jobs import JobRequestAdapter
 from app.core.jobs import JobQueue
 from app.core.jobs.control_plane import CancellationResult
-from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob, TrainingJobParams
+from app.core.jobs.models import Job, JobStatus, JobType
 from app.main import app
-from app.models import Project, Task, TaskType
+from app.models import Project, Task, TaskType, TrainingJob, TrainingJobParams
 from app.models.system import DeviceInfo, DeviceType
 
 
@@ -70,13 +70,14 @@ class TestJobEndpoints:
         app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
         app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
         project = Mock(spec=Project)
+        project.id = uuid4()
         project.task = Mock(spec=Task)
         project.task.task_type = TaskType.CLASSIFICATION
         project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
         job_request = JobRequestAdapter.validate_python(
             {
-                "project_id": uuid4(),
+                "project_id": project.id,
                 "job_type": JobType.TRAIN,
                 "parameters": {
                     "device": "cpu",

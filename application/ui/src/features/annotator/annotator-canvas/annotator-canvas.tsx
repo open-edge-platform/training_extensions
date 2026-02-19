@@ -9,7 +9,7 @@ import { useAnnotationActions } from '../../../shared/annotator/annotation-actio
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
-import { isVideo } from '../../dataset/utils';
+import { isVideo } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { ToolManager } from '../tools/tool-manager.component';
 import { VideoFrame } from '../video-player/video-frame.component';
