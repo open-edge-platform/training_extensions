@@ -28,6 +28,6 @@ class VideoFrameRepository:
         stmt = select(VideoFrameDB).where(
             VideoFrameDB.video_id == video_id,
             VideoFrameDB.frame_index >= frame_index_from,
-            VideoFrameDB.frame_index < frame_index_to,
+            VideoFrameDB.frame_index <= frame_index_to,
         )
         return list(self.db.scalars(stmt).all())
