@@ -374,9 +374,7 @@ def get_media_annotations(
     if media.type == MediaType.VIDEO:
         # Video frames can be identified by video ID and frame index
         if frame_index is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided."
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
         if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -422,9 +420,7 @@ def delete_media_annotation(
     if media.type == MediaType.VIDEO:
         # Video frames can be identified by video ID and frame index
         if frame_index is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided."
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
         if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
