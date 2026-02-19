@@ -9,7 +9,7 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
-import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { isVideo } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
@@ -90,7 +90,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider videoFrame={isVideoFrame(mediaItem) || isVideo(mediaItem) ? mediaItem : undefined}>
+                <VideoPlayerProvider mediaItem={mediaItem}>
                     {mode === 'prediction' ? (
                         <ReadOnlyAnnotator
                             mediaItem={mediaItem}
@@ -157,7 +157,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto auto'
-                    columns={['size-700', '1fr', SIDEBAR_WIDTH]}
+                    columns={['size-700', 'minmax(0, 1fr)', SIDEBAR_WIDTH]}
                     areas={[
                         'header header aside',
                         'toolbar canvas aside',
