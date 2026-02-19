@@ -118,8 +118,11 @@ class OTXDetectionModel(OTXModel):
         if isinstance(preds, OTXBatchLossEntity):
             raise TypeError(preds)
 
-        # 1. Filter outputs by threshold
-        preds = self._filter_outputs_by_threshold(preds)
+        if isinstance(preds, torch.Tensor):
+            msg = "Expected OTXPredictionBatch, got Tensor"
+            raise TypeError(msg)
+
+        # 1. Convert predictions to metric input format
         metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         # 2. Update metric
@@ -156,12 +159,17 @@ class OTXDetectionModel(OTXModel):
         # 1. During validation: FMeasure metric computes optimal threshold, stored in hparams via _log_metrics
         # 2. During test/predict: Uses the threshold computed during validation (from hparams)
         # 3. If no threshold available: defaults to 0.5
+        confidence_threshold = self.best_confidence_threshold
+        if confidence_threshold == 0.0:
+            return outputs
+
+        # Filter predictions
         scores = []
         bboxes = []
         labels = []
         if outputs.scores is not None and outputs.bboxes is not None and outputs.labels is not None:
             for score, bbox, label in zip(outputs.scores, outputs.bboxes, outputs.labels):
-                filtered_idx = torch.where(score > self.best_confidence_threshold)
+                filtered_idx = torch.where(score > confidence_threshold)
                 scores.append(score[filtered_idx])
                 bboxes.append(tv_tensors.wrap(bbox[filtered_idx], like=bbox))
                 labels.append(label[filtered_idx])
@@ -301,7 +309,7 @@ class OTXDetectionModel(OTXModel):
 
         return pred_entity
 
-    def forward_for_tracing(self, inputs: torch.Tensor) -> list[InstanceData]:
+    def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         shape = (int(inputs.shape[2]), int(inputs.shape[3]))
         meta_info = {
@@ -385,11 +393,8 @@ class OTXDetectionModel(OTXModel):
                 self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
         if key == "test":
-            # NOTE: Test metric logging should use `best_confidence_threshold` in the loaded checkpoint.
-            best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
-            compute_kwargs = (
-                {"best_confidence_threshold": best_confidence_threshold} if best_confidence_threshold else {}
-            )
+            # NOTE: Test metric logging should use `best_confidence_threshold`.
+            compute_kwargs = {"best_confidence_threshold": self.best_confidence_threshold}
 
             super()._log_metrics(meter, key, **compute_kwargs)
 

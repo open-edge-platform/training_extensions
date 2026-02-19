@@ -50,10 +50,10 @@ def fxt_video_media(fxt_project_id: UUID, db_session) -> MediaDB:
 @pytest.fixture
 def fxt_video_frame(
     fxt_project_id: UUID, fxt_video_media: MediaDB, db_session
-) -> Callable[[float], tuple[MediaDB, VideoFrameDB]]:
-    def _create_video_frame(timestamp: float) -> tuple[MediaDB, VideoFrameDB]:
+) -> Callable[[int], tuple[MediaDB, VideoFrameDB]]:
+    def _create_video_frame(frame_index: int) -> tuple[MediaDB, VideoFrameDB]:
         db_media = MediaDB(
-            type="video_frame", name=f"test4_frame_{timestamp:.3f}", format="jpg", size=1024, width=1024, height=768
+            type="video_frame", name=f"test4_frame_{frame_index}", format="jpg", size=1024, width=1024, height=768
         )
         db_media.project_id = str(fxt_project_id)
         db_media.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
@@ -61,7 +61,7 @@ def fxt_video_frame(
         db_session.add(db_media)
         db_session.flush()
 
-        db_video_frame = VideoFrameDB(id=db_media.id, video_id=fxt_video_media.id, timestamp=timestamp)
+        db_video_frame = VideoFrameDB(id=db_media.id, video_id=fxt_video_media.id, frame_index=frame_index)
         db_session.add(db_video_frame)
         db_session.flush()
 
@@ -97,7 +97,7 @@ class TestVideoFrameServiceIntegration:
         created_video_frame = fxt_video_frame_service.create_video_frame(
             video_frame_media=video_frame_media,
             video=video_media,
-            timestamp=10.0,
+            frame_index=250,
         )
 
         video_frame = db_session.get(VideoFrameDB, str(created_video_frame.id))
@@ -105,34 +105,34 @@ class TestVideoFrameServiceIntegration:
         assert (
             video_frame.id == str(created_video_frame.id)
             and video_frame.video_id == str(created_video_frame.video_id)
-            and video_frame.timestamp == 10.0
+            and video_frame.frame_index == 250
         )
 
-    def test_get_frame_by_video_id_and_timestamp(
+    def test_get_frame_by_video_id_and_index(
         self,
         fxt_video_frame_service: VideoFrameService,
         fxt_video_media: MediaDB,
-        fxt_video_frame: Callable[[float], tuple[MediaDB, VideoFrameDB]],
+        fxt_video_frame: Callable[[int], tuple[MediaDB, VideoFrameDB]],
     ) -> None:
-        """Test getting a video frame by video ID and timestamp."""
-        fxt_video_frame(10.0)
+        """Test getting a video frame by video ID and index."""
+        fxt_video_frame(250)
 
-        video_frame = fxt_video_frame_service.get_frame_by_video_id_and_timestamp(
-            video_id=UUID(fxt_video_media.id), timestamp=10.0
+        video_frame = fxt_video_frame_service.get_frame_by_video_id_and_index(
+            video_id=UUID(fxt_video_media.id), frame_index=250
         )
         assert video_frame is not None
 
-    def test_get_non_existing_frame_by_video_id_and_timestamp(
+    def test_get_non_existing_frame_by_video_id_and_index(
         self,
         fxt_video_frame_service: VideoFrameService,
         fxt_video_media: MediaDB,
-        fxt_video_frame: Callable[[float], tuple[MediaDB, VideoFrameDB]],
+        fxt_video_frame: Callable[[int], tuple[MediaDB, VideoFrameDB]],
     ) -> None:
-        """Test getting a non extracted video frame by video ID and timestamp."""
-        fxt_video_frame(10.0)
+        """Test getting a non extracted video frame by video ID and index."""
+        fxt_video_frame(250)
 
-        video_frame = fxt_video_frame_service.get_frame_by_video_id_and_timestamp(
-            video_id=UUID(fxt_video_media.id), timestamp=20.0
+        video_frame = fxt_video_frame_service.get_frame_by_video_id_and_index(
+            video_id=UUID(fxt_video_media.id), frame_index=500
         )
         assert video_frame is None
 

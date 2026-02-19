@@ -285,11 +285,8 @@ class TestTestStep:
 
                 # Verify call order: forward -> filter -> convert -> metric.update
                 assert mock_forward.called
-                assert mock_filter.called
+                assert not mock_filter.called
                 assert mock_convert.called
-
-                # Verify that _filter_outputs_by_threshold was called with forward output
-                mock_filter.assert_called_once_with(sample_predictions)
 
                 # Verify that _convert_pred_entity_to_compute_metric was called with filtered output
                 mock_convert.assert_called_once_with(filtered_preds, sample_batch)
@@ -297,8 +294,10 @@ class TestTestStep:
                 # Verify metric was updated
                 mock_metric.update.assert_called_once()
 
-                # Verify return value is filtered predictions
-                assert result == filtered_preds
+            result = detection_model.predict_step(sample_batch, 0)
+            assert mock_filter.called
+            mock_filter.assert_called_once_with(sample_predictions)
+            assert result == filtered_preds
 
     @patch("otx.backend.native.models.detection.base.OTXDetectionModel.forward")
     def test_test_step_with_loss_entity_raises_error(self, mock_forward, detection_model, sample_batch):
@@ -427,7 +426,7 @@ class TestIntegration:
             test_preds = OTXPredictionBatch(
                 images=[torch.rand(3, 416, 416)],
                 imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
-                scores=[torch.tensor([0.9, 0.5, 0.3])],  # Only 0.9 should remain after filtering
+                scores=[torch.tensor([0.9, 0.5, 0.3])],
                 bboxes=[
                     tv_tensors.BoundingBoxes(
                         torch.tensor([[0, 0, 10, 10], [20, 20, 30, 30], [40, 40, 50, 50]]),
@@ -453,5 +452,7 @@ class TestIntegration:
                 result = detection_model.test_step(sample_batch, 0)
 
                 # Verify that only high confidence predictions remain
-                assert len(result.scores[0]) == 1  # Only score 0.9 > 0.7
+                assert len(result.scores[0]) == 3  # No filtering applied in test_step itself
                 assert result.scores[0][0] == 0.9
+                assert result.scores[0][1] == 0.5
+                assert result.scores[0][2] == 0.3

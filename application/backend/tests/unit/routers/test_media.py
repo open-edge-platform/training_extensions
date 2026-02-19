@@ -526,7 +526,7 @@ class TestMediaEndpoints:
             user_reviewed=True,
         )
 
-    def test_set_video_annotations_missing_timestamp(
+    def test_set_video_annotations_missing_frame_index(
         self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
     ):
         label_id = uuid4()
@@ -567,14 +567,14 @@ class TestMediaEndpoints:
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
         video_frame = MagicMock(
             spec=VideoFrame,
             id=video_frame_id,
         )
-        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = video_frame
+        fxt_media_service.get_frame_by_video_id_and_index.return_value = video_frame
         dataset_item = MagicMock(
             spec=DatasetItem,
             annotation_data=annotations,
@@ -584,7 +584,7 @@ class TestMediaEndpoints:
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
         response = fxt_client.post(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?timestamp=10",
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?frame_index=10",
             json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
         )
 
@@ -601,7 +601,7 @@ class TestMediaEndpoints:
             "user_reviewed": True,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
-        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_media_service.get_frame_by_video_id_and_index.assert_called_once_with(video_id=media_id, frame_index=10)
         fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
             project=fxt_get_project,
             dataset_item_id=video_frame_id,
@@ -624,10 +624,10 @@ class TestMediaEndpoints:
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
-        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = None
+        fxt_media_service.get_frame_by_video_id_and_index.return_value = None
         video_frame_media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO_FRAME,
@@ -646,7 +646,7 @@ class TestMediaEndpoints:
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
         response = fxt_client.post(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?timestamp=10",
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?frame_index=10",
             json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
         )
 
@@ -663,9 +663,9 @@ class TestMediaEndpoints:
             "user_reviewed": True,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
-        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_media_service.get_frame_by_video_id_and_index.assert_called_once_with(video_id=media_id, frame_index=10)
         fxt_media_service.extract_video_frame.assert_called_once_with(
-            project=fxt_get_project, video_id=media_id, timestamp=10
+            project=fxt_get_project, video_id=media_id, frame_index=10
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_get_project,
@@ -789,14 +789,14 @@ class TestMediaEndpoints:
             dataset_item_id=media_id,
         )
 
-    def test_get_video_annotations_missing_timestamp(
+    def test_get_video_annotations_missing_frame_index(
         self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
     ):
         media_id = uuid4()
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
 
@@ -814,14 +814,14 @@ class TestMediaEndpoints:
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
         video_frame = MagicMock(
             spec=VideoFrame,
             id=video_frame_id,
         )
-        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = video_frame
+        fxt_media_service.get_frame_by_video_id_and_index.return_value = video_frame
         dataset_item = MagicMock(
             spec=DatasetItem,
             annotation_data=[
@@ -836,7 +836,7 @@ class TestMediaEndpoints:
         fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
         response = fxt_client.get(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?timestamp=10"
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?frame_index=10"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -852,7 +852,7 @@ class TestMediaEndpoints:
             "user_reviewed": True,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
-        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_media_service.get_frame_by_video_id_and_index.assert_called_once_with(video_id=media_id, frame_index=10)
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
             project_id=fxt_get_project.id,
             dataset_item_id=video_frame_id,
@@ -866,10 +866,10 @@ class TestMediaEndpoints:
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
-        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = None
+        fxt_media_service.get_frame_by_video_id_and_index.return_value = None
         dataset_item = MagicMock(
             spec=DatasetItem,
             annotation_data=[
@@ -884,12 +884,12 @@ class TestMediaEndpoints:
         fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
         response = fxt_client.get(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?timestamp=10"
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?frame_index=10"
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
-        fxt_media_service.get_frame_by_video_id_and_timestamp.assert_called_once_with(video_id=media_id, timestamp=10)
+        fxt_media_service.get_frame_by_video_id_and_index.assert_called_once_with(video_id=media_id, frame_index=10)
         fxt_dataset_service.get_dataset_item_by_id.assert_not_called()
 
     @pytest.mark.parametrize("media_type", [MediaType.IMAGE, MediaType.VIDEO_FRAME])
@@ -957,7 +957,7 @@ class TestMediaEndpoints:
             dataset_item_id=media_id,
         )
 
-    def test_delete_video_annotations_missing_timestamp(
+    def test_delete_video_annotations_missing_frame_index(
         self, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
     ):
         media_id = uuid4()
@@ -981,17 +981,17 @@ class TestMediaEndpoints:
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
         video_frame = MagicMock(
             spec=VideoFrame,
             id=video_frame_id,
         )
-        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = video_frame
+        fxt_media_service.get_frame_by_video_id_and_index.return_value = video_frame
 
         response = fxt_client.delete(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?timestamp=10"
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?frame_index=10"
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -1008,13 +1008,13 @@ class TestMediaEndpoints:
         media = MagicMock(
             spec=Media,
             type=MediaType.VIDEO,
-            duration=20,
+            frame_count=20,
         )
         fxt_media_service.get_media_by_id.return_value = media
-        fxt_media_service.get_frame_by_video_id_and_timestamp.return_value = None
+        fxt_media_service.get_frame_by_video_id_and_index.return_value = None
 
         response = fxt_client.delete(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?timestamp=10"
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/annotations?frame_index=10"
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND

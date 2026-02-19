@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX Engine."""
@@ -20,7 +20,7 @@ from warnings import warn
 
 import torch
 from lightning import Trainer, seed_everything
-from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, RichModelSummary, RichProgressBar
+from lightning.pytorch.callbacks import ModelCheckpoint, RichModelSummary, RichProgressBar
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
@@ -29,6 +29,7 @@ from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCall
 from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.backend.native.callbacks.iteration_timer import IterationTimer
+from otx.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.backend.native.tools import adapt_batch_size
 from otx.backend.native.utils.cache import TrainerArgumentsCache
@@ -167,7 +168,7 @@ class OTXEngine(Engine):
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = 16,
+        precision: _PRECISION_INPUT | None = "16-mixed",
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
@@ -306,7 +307,7 @@ class OTXEngine(Engine):
             best_checkpoint_symlink.unlink()
         best_checkpoint_symlink.symlink_to(self.checkpoint)
 
-        return self.trainer.callback_metrics
+        return self._build_train_metrics()
 
     def test(
         self,
@@ -875,7 +876,7 @@ class OTXEngine(Engine):
         """Instantiate the trainer based on the model parameters."""
         if self._cache.requires_update(**kwargs) or self._trainer is None:
             self._apply_param_overrides(kwargs)
-            # set up xpu device
+            # set up accelerator
             self.configure_accelerator()
             # setup default loggers
             logger = self.configure_loggers(logger)
@@ -910,7 +911,12 @@ class OTXEngine(Engine):
         if self._device.accelerator == DeviceType.xpu:
             self._cache.update(strategy="xpu_single")
             # add plugin for Automatic Mixed Precision on XPU
-            if self._cache.args.get("precision", 32) == 16:
+            precision = self._cache.args.get("precision", 32)
+            # Normalize legacy integer precision for backward compatibility
+            if precision == 16:
+                precision = "16-mixed"
+                self._cache.args["precision"] = precision
+            if precision in ["16-mixed", "bf16-mixed", "bf16"]:
                 self._cache.update(
                     plugins=[
                         MixedPrecision(
@@ -957,8 +963,8 @@ class OTXEngine(Engine):
             callbacks.append(RichModelSummary(max_depth=1))
         if not has_callback(IterationTimer):
             callbacks.append(IterationTimer(prog_bar=True, on_step=False, on_epoch=True))
-        if not has_callback(LearningRateMonitor):
-            callbacks.append(LearningRateMonitor(logging_interval="epoch", log_momentum=True))
+        if not has_callback(SimpleLearningRateMonitor):
+            callbacks.append(SimpleLearningRateMonitor(logging_interval="epoch"))
         if not has_callback(ModelCheckpoint):
             callbacks.append(
                 ModelCheckpoint(
@@ -1179,3 +1185,29 @@ class OTXEngine(Engine):
             raise RuntimeError(e) from None
 
         return ckpt
+
+    def _build_train_metrics(self) -> dict[str, Any]:
+        """Build training metrics dict including best monitor metric from checkpoint callback.
+
+        Returns:
+            Dictionary containing callback metrics and best monitor metric.
+        """
+        # Start with callback metrics (converted to Python floats)
+        metrics = {
+            key: value.item() if hasattr(value, "item") else value
+            for key, value in self.trainer.callback_metrics.items()
+        }
+
+        # Add best monitor metric from checkpoint callback
+        ckpt_callback = self.trainer.checkpoint_callback
+        if (
+            ckpt_callback is not None
+            and hasattr(ckpt_callback, "best_model_score")
+            and ckpt_callback.best_model_score is not None
+        ):
+            best_score = ckpt_callback.best_model_score
+            if hasattr(best_score, "item"):
+                best_score = best_score.item()
+            monitor_name = getattr(ckpt_callback, "monitor", "val/metric")
+            metrics["best_" + monitor_name] = best_score
+        return metrics
