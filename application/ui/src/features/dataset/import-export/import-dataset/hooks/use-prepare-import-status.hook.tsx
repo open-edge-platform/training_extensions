@@ -3,9 +3,9 @@
 
 import { useEffect } from 'react';
 
-import { isEmpty } from 'lodash';
+import { toast } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
-import { toast } from '../../../../../../packages/ui/src/toast/toast.component';
 import { $api } from '../../../../../api/client';
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
@@ -16,10 +16,8 @@ type UsePrepareImportStatusProps = {
 };
 
 export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps) => {
-    const { getLsPreparingImportId } = usePrepareImportDataset();
+    const { getLsPreparingImportId, removeLsPreparingImportId } = usePrepareImportDataset();
     const { id: jobId, fileName } = getLsPreparingImportId() ?? {};
-
-    const { removeLsPreparingImportId } = usePrepareImportDataset();
 
     const response = $api.useQuery(
         'get',

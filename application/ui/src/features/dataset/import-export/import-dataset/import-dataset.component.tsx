@@ -7,7 +7,7 @@ import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/
 import { OverlayTriggerState } from '@react-stately/overlays';
 
 import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.componets';
+import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportDropZone } from './import-drop-zone/import-drop-zone.component';
 import { ImportProcess } from './import-process/import-process.component';
 import { ImportDatasetState } from './util';

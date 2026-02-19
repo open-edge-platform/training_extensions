@@ -107,7 +107,7 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
 
                             <SpectrumLink UNSAFE_className={classes.link}>
                                 <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>
-                                    Learn more the different formats
+                                    Learn more about the different formats
                                     <LinkOut size='XS' />
                                 </a>
                             </SpectrumLink>

@@ -16,13 +16,12 @@ const PREPARING_IMPORT_DATASET_KEY = (projectId: string) => `preparing-import-da
 export const usePrepareImportDataset = () => {
     const projectId = useProjectIdentifier();
 
-    const [lsPreparingImportProject, setLsPreparingImportId] = useLocalStorage<DataValue | null>(
+    const [lsPreparingImportDataset, setLsPreparingImportId] = useLocalStorage<DataValue | null>(
         PREPARING_IMPORT_DATASET_KEY(projectId),
         () => getParsedLocalStorage<DataValue>(PREPARING_IMPORT_DATASET_KEY(projectId)) ?? null
     );
-
     const getLsPreparingImportId = (): DataValue | null => {
-        return lsPreparingImportProject;
+        return lsPreparingImportDataset;
     };
 
     const addLsPreparingImportId = (jobId: string, fileName: string) => {

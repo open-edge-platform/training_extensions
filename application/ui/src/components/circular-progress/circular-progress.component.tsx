@@ -32,7 +32,7 @@ export const CircularProgress = ({
     checkMarkOnComplete = true,
     checkMarkColor = '--energy-blue-shade',
 }: CircularProgressProps) => {
-    const progress = Math.max(0, Math.min(100, percentage)) | 0;
+    const progress = Math.floor(Math.max(0, Math.min(100, percentage)));
 
     const viewBox = useMemo<string>((): string => `0 0 ${size} ${size}`, [size]);
     const radius = useMemo<number>((): number => (size - strokeWidth) / 2, [size, strokeWidth]);

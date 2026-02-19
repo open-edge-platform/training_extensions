@@ -15,7 +15,7 @@ type ExportActiveJobProps = {
 
 export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
     const isRunning = isJobRunning(job);
-    const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
+    const progress = Math.floor(Math.max(0, Math.min(100, job?.progress ?? 0)));
 
     return (
         <BottomProgressBar progress={progress}>

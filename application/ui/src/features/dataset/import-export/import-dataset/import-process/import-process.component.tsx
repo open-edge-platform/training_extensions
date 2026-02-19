@@ -24,7 +24,7 @@ export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
         onError: () => onNextStep('dropzone'),
     });
 
-    const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
+    const progress = Math.floor(Math.max(0, Math.min(100, job?.progress ?? 0)));
     const isPreparingJobLoading = isJobPending(job) && isFetching;
 
     if (!isFetching && isEmpty(job)) {
