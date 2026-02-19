@@ -3,7 +3,7 @@
 
 from datetime import UTC, datetime
 from enum import IntEnum, StrEnum
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -67,11 +67,16 @@ class Job(BaseIDModel, Generic[JobParamsT]):
         self.started_at = now_utc_ts()
         self.updated_at = now_utc_ts()
 
-    def advance(self, percent: float | None = None, msg: str | None = None) -> None:
+    def advance(
+        self, percent: float | None = None, msg: str | None = None, metadata: dict[str, Any] | None = None
+    ) -> None:
         if percent:
             self.progress = max(0.0, min(100.0, percent))
         if msg:
             self.message = msg
+        if metadata:
+            for item in metadata.items():
+                setattr(self.params, item[0], item[1])
         self.updated_at = now_utc_ts()
 
     def finish(self) -> None:

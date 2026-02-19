@@ -43,7 +43,7 @@ test.describe('Annotator', () => {
                     headers: { 'Content-Type': 'image/png' },
                 });
             }),
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', async () => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
@@ -185,7 +185,7 @@ test.describe('Annotator', () => {
 
         test('renders "No object" when server returns empty annotations list', async ({ page, network }) => {
             network.use(
-                http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', () => {
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
                     return HttpResponse.json({
                         annotations: [],
                         user_reviewed: true,
@@ -238,7 +238,7 @@ test.describe('Annotator', () => {
         ] satisfies AnnotationDTO[];
 
         network.use(
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', async () => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                 return HttpResponse.json({
                     annotations: predictions,
                     user_reviewed: false,
@@ -329,7 +329,7 @@ test.describe('Annotator', () => {
                     },
                 });
             }),
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', () => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,

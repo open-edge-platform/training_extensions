@@ -105,6 +105,10 @@ test.describe('Model Details', () => {
                 id: 'model-1',
                 name: 'YOLOX Model v1',
                 variants: [],
+                training_info: {
+                    ...getMockedModel().training_info,
+                    dataset_revision_id: mockedDatasetRevision.id,
+                },
             });
 
             network.use(

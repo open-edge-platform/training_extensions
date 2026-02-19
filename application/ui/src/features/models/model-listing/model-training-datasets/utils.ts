@@ -28,5 +28,6 @@ export const datasetRevisionItemToMedia = (item: DatasetRevisionItem): Media => 
         source_id: null,
         fps: null,
         frame_count: null,
+        duration: null,
     };
 };

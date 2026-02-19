@@ -76,26 +76,18 @@ export const AnnotationActionsProvider = ({
     mode,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
-    const saveMutation = $api.useMutation(
-        'post',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
-        {
-            meta: {
-                invalidateQueries: [
-                    [
-                        'get',
-                        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
-                        { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
-                    ],
-                    [
-                        'get',
-                        '/api/projects/{project_id}/dataset/items',
-                        { params: { path: { project_id: projectId } } },
-                    ],
+    const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
+        meta: {
+            invalidateQueries: [
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
+                    { params: { path: { project_id: projectId, media_id: mediaItem.id } } },
                 ],
-            },
-        }
-    );
+                ['get', '/api/projects/{project_id}/dataset/items', { params: { path: { project_id: projectId } } }],
+            ],
+        },
+    });
 
     const projectLabels = useProjectLabelsWithEmptyLabel();
 
@@ -152,7 +144,7 @@ export const AnnotationActionsProvider = ({
 
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
         await saveMutation.mutateAsync({
-            params: { path: { dataset_item_id: mediaItem.id, project_id: projectId } },
+            params: { path: { media_id: mediaItem.id, project_id: projectId } },
             body: { annotations: annotationsDTO },
         });
     };

@@ -15,23 +15,23 @@ const isUnannotatedError = (error: unknown): boolean => {
     );
 };
 
-export const useAnnotationsQuery = (datasetItemId: string) => {
+export const useAnnotationsQuery = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
     return useSuspenseQuery({
         queryKey: [
             'get',
-            `/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations`,
-            { params: { path: { project_id: projectId, dataset_item_id: datasetItemId } } },
+            `/api/projects/{project_id}/dataset/media/{media_id}/annotations`,
+            { params: { path: { project_id: projectId, media_id: mediaId } } },
         ],
         queryFn: async () => {
             const { data, error } = await fetchClient.GET(
-                '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+                '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
                 {
                     params: {
                         path: {
                             project_id: projectId,
-                            dataset_item_id: datasetItemId,
+                            media_id: mediaId,
                         },
                     },
                 }

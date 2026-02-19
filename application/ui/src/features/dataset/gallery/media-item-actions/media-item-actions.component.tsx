@@ -6,6 +6,7 @@ import { Key } from 'react';
 import { ActionButton, DialogContainer, Item, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
+import { downloadFile } from '../../../../shared/util';
 import { useDeleteMediaItem } from '../../api/use-delete-media-item';
 import { AlertDialogContent } from '../delete-media-item/alert-dialog-content.component';
 
@@ -26,18 +27,9 @@ type MediaItemActionsProps = {
 export const MediaItemActions = ({ id, onDeleted, mediaUrl, mediaFileName, onAnnotate }: MediaItemActionsProps) => {
     const { closeDeleteDialog, openDeleteDialog, isDeleteDialogOpen, deleteMedia, isPending } = useDeleteMediaItem();
 
-    const handleDownload = () => {
-        const link = document.createElement('a');
-        link.href = mediaUrl;
-        // Just in case, the "Content-Disposition" header takes precedence over this filename.
-        link.download = mediaFileName;
-        link.hidden = true;
-        link.click();
-    };
-
     const handleAction = (key: Key) => {
         if (key === MEDIA_ACTIONS.DOWNLOAD) {
-            handleDownload();
+            downloadFile(mediaUrl, mediaFileName);
         } else if (key === MEDIA_ACTIONS.DELETE) {
             openDeleteDialog();
         } else if (key === MEDIA_ACTIONS.ANNOTATE) {

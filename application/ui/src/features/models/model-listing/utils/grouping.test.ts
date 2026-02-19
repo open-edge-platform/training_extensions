@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
 
 import type { DatasetRevision } from '../../../../constants/shared-types';
@@ -42,7 +43,12 @@ describe('groupModelsByDataset', () => {
             }),
         ];
 
-        const groupedModels = groupModelsByDataset(models);
+        const groupedModels = groupModelsByDataset(models, {
+            datasetRevisions: [
+                getMockedDatasetRevision({ id: 'dataset-1' }),
+                getMockedDatasetRevision({ id: 'dataset-2' }),
+            ],
+        });
 
         expect(groupedModels).toHaveLength(2);
         expect(groupedModels[0].models).toHaveLength(2);
@@ -61,8 +67,8 @@ describe('groupModelsByDataset', () => {
             }),
         ];
 
-        const datasetRevisions: DatasetRevision[] = [
-            {
+        const datasetRevisions = [
+            getMockedDatasetRevision({
                 id: 'dataset-1',
                 created_at: '2025-01-01T00:00:00.000000+00:00',
                 name: 'My Custom Dataset',
@@ -73,7 +79,7 @@ describe('groupModelsByDataset', () => {
                     validation: 20,
                     testing: 10,
                 },
-            },
+            }),
         ];
 
         const groupedModels = groupModelsByDataset(models, { datasetRevisions });
