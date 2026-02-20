@@ -38,12 +38,14 @@ export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps)
             removeLsPreparingImportId();
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.error?.detail}` });
         }
+    }, [onError, removeLsPreparingImportId, response.error, response.isError]);
 
+    useEffect(() => {
         if (isJobFailed(response.data)) {
             onError();
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.data?.message}` });
         }
-    }, [onError, removeLsPreparingImportId, response.data, response.error, response.isError]);
+    }, [onError, response.data]);
 
     return { ...response, fileName };
 };

@@ -103,7 +103,7 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
                                 </Button>
                             </FileTrigger>
 
-                            <Text UNSAFE_className={classes.formatOptions}>(Geti, COCO) .zip</Text>
+                            <Text UNSAFE_className={classes.formatOptions}>(Geti, COCO).zip</Text>
 
                             <SpectrumLink UNSAFE_className={classes.link}>
                                 <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>

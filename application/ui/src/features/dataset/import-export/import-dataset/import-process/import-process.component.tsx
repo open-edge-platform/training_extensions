@@ -6,6 +6,7 @@ import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
 import { isJobPending } from '../../export-jobs-list/util';
+import { getJobProgress } from '../../util';
 import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
 import { ImportDatasetState } from '../util';
 
@@ -24,7 +25,7 @@ export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
         onError: () => onNextStep('dropzone'),
     });
 
-    const progress = Math.floor(Math.max(0, Math.min(100, job?.progress ?? 0)));
+    const progress = getJobProgress(job?.progress);
     const isPreparingJobLoading = isJobPending(job) && isFetching;
 
     if (!isFetching && isEmpty(job)) {
