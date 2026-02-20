@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useMemo } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { v4 as uuid } from 'uuid';
@@ -98,6 +98,10 @@ export const AnnotationActionsProvider = ({
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
     });
+
+    useEffect(() => {
+        setAnnotations(mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels));
+    }, [initialAnnotationsDTO, projectLabels, setAnnotations]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {

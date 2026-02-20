@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
 import { Content, Dialog, Grid, Loading, View } from '@geti/ui';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -55,7 +55,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     const { data: annotationsData } = useAnnotationsQuery(mediaItem.id);
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
-    const annotationsDTO = annotationsData?.annotations ?? [];
     const queryClient = useQueryClient();
     const { setMediaState } = useSelectedData();
 
@@ -77,12 +76,20 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
         isLastItem && invalidateMediaItemAnnotations(queryClient);
     };
 
+    const initialAnnotations = useMemo(() => {
+        return getInitialAnnotations(mode, isUserReviewed, annotationsData?.annotations ?? []);
+    }, [mode, isUserReviewed, annotationsData?.annotations]);
+
+    const initialPredictions = useMemo(() => {
+        return getInitialPredictions(mode, isUserReviewed, annotationsData?.annotations ?? []);
+    }, [mode, isUserReviewed, annotationsData?.annotations]);
+
     return (
         <ToolProvider mode={mode}>
             <AnnotatorProviders
                 mediaItem={mediaItem}
-                initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
-                initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
+                initialAnnotationsDTO={initialAnnotations}
+                initialPredictionsDTO={initialPredictions}
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
