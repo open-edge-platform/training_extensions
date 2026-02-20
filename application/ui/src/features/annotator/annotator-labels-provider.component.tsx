@@ -25,11 +25,11 @@ const useInitialSelectedLabelId = (labels: Label[]): string | null => {
     return hasDefaultLabel && labels.length > 0 ? labels[0].id : null;
 };
 
-type LabelsProviderProps = {
+type AnnotatorLabelsProviderProps = {
     children: ReactNode;
 };
 
-export const AnnotatorLabelsProvider = ({ children }: LabelsProviderProps) => {
+export const AnnotatorLabelsProvider = ({ children }: AnnotatorLabelsProviderProps) => {
     const labels = useProjectLabelsWithEmptyLabel();
     const initialSelectedLabelId = useInitialSelectedLabelId(labels);
     const [selectedLabelId, setSelectedLabelId] = useState<string | null>(initialSelectedLabelId);
@@ -47,7 +47,7 @@ export const useAnnotatorLabels = (): AnnotatorLabelsContextProps => {
     const context = useContext(AnnotatorLabelsContext);
 
     if (context === null) {
-        throw new Error('useLabelsProvider was used outside of LabelsProvider');
+        throw new Error('useAnnotatorLabels was used outside of AnnotatorLabelsProvider');
     }
 
     return context;
