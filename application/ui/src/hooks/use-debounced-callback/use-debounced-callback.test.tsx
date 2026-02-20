@@ -25,6 +25,6 @@ describe('useDebouncedCallback', () => {
 
         expect(mockCallback).toHaveBeenCalledTimes(1);
 
-        vi.clearAllTimers();
+        vi.useRealTimers();
     });
 });
