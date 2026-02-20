@@ -461,7 +461,7 @@ class TestOTXTrainerCreateTrainingDataset:
             fxt_dataset_revision_service.load_revision.assert_called_once_with(
                 project_id=project_id, dataset_revision_id=dataset_revision_id
             )
-            assert dataset_info.revision_id == uptodate_revision.id
+            assert dataset_info.revision_id == dataset_revision_id
 
         # Verify subsets were filtered for train, val, and test
         assert mock_dm_dataset.filter_by_subset.call_count == 3
