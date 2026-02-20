@@ -6,7 +6,7 @@
 FROM python:3.13-slim@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS backend-base
 
 # uv / uvx
-COPY --from=docker.io/astral/uv:0.9.27@sha256:143b40f4ab56a780f43377604702107b5a35f83a4453daf1e4be691358718a6a /uv /uvx /bin/
+COPY --from=docker.io/astral/uv:0.9.27@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /uvx /bin/
 
 ENV UV_HTTP_TIMEOUT=300
 

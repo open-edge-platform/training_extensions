@@ -65,7 +65,7 @@ lint = [
 
 [tool.uv]
 default-groups = ["dev", "lint"]
-required-version = "~=0.9.27"
+required-version = "~=0.10.4"
 conflicts = [
     [
         { extra = "cpu" },
@@ -79,6 +79,12 @@ conflicts = [
         { package = "otx", extra = "xpu" },
         { package = "otx", extra = "cuda" },
     ],
+]
+
+exclude-dependencies = [
+    # We already depend on 'opencv-python-headless', so installing 'opencv-python' (the version with GUI dependencies)
+    # may cause conflicts and waste disk space.
+    "opencv-python",
 ]
 
 [tool.uv.build-backend]
