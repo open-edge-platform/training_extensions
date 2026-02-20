@@ -5,14 +5,18 @@
 
 from __future__ import annotations
 
+import ast
 import copy
+import operator
 import typing
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 import PIL.Image
 import torch
 import torchvision.transforms.v2 as tvt_v2
+import typeguard
+from lightning.pytorch.cli import instantiate_class
 from torchvision import tv_tensors
 from torchvision._utils import sequence_to_str
 from torchvision.transforms.v2 import functional as F  # noqa: N812
@@ -28,6 +32,328 @@ from otx.data.entity.sample import (
 from otx.data.transform_libs.utils import (
     cache_randomness,
 )
+from otx.data.utils import import_object_from_module
+
+# ---------------------------------------------------------------------------
+# Aliases for commonly used torchvision transforms
+# ---------------------------------------------------------------------------
+
+#: Alias for :class:`torchvision.transforms.v2.Compose`.
+Compose = tvt_v2.Compose
+
+#: Alias for :class:`torchvision.transforms.v2.Normalize`.
+Normalize = tvt_v2.Normalize
+
+
+# ---------------------------------------------------------------------------
+# Mixin
+# ---------------------------------------------------------------------------
+
+
+class NumpytoTVTensorMixin:
+    """Mixin that converts numpy image arrays in an OTXSample to tv_tensors.
+
+    Classes that inherit this mixin get a :meth:`convert` method that converts
+    the ``image`` field from a numpy ``HWC`` array to a ``tv_tensors.Image``
+    ``CHW`` tensor.  Other sample fields (bboxes, masks) are left unchanged.
+
+    The conversion is gated by ``self.is_numpy_to_tvtensor``.
+    """
+
+    is_numpy_to_tvtensor: bool = True
+
+    def convert(self, sample: OTXSample) -> OTXSample:
+        """Convert numpy image to tv_tensor.Image if ``is_numpy_to_tvtensor`` is True.
+
+        Args:
+            sample: Input sample that may contain a numpy image.
+
+        Returns:
+            The same sample with image converted to tv_tensor.Image (CHW float32).
+        """
+        if not self.is_numpy_to_tvtensor:
+            return sample
+
+        if isinstance(sample.image, np.ndarray):
+            img = sample.image
+            if img.ndim == 3:
+                img = torch.from_numpy(img).permute(2, 0, 1).contiguous()
+            elif img.ndim == 2:
+                img = torch.from_numpy(img).unsqueeze(0)
+            else:
+                img = torch.from_numpy(img)
+            sample.image = tv_tensors.Image(img)
+
+        return sample
+
+
+# ---------------------------------------------------------------------------
+# Simple transforms
+# ---------------------------------------------------------------------------
+
+
+class RandomFlip(tvt_v2.Transform):
+    """Random horizontal or vertical flip transform.
+
+    Args:
+        probability (float): Probability of applying the flip. Defaults to 0.5.
+        direction (str): Flip direction - ``"horizontal"`` or ``"vertical"``.
+            Defaults to ``"horizontal"``.
+    """
+
+    def __init__(self, probability: float = 0.5, direction: str = "horizontal") -> None:
+        super().__init__()
+        if direction not in ("horizontal", "vertical"):
+            msg = f"direction must be 'horizontal' or 'vertical', got {direction!r}"
+            raise ValueError(msg)
+        self.probability = probability
+        self.direction = direction
+
+    def forward(self, *inputs: Any) -> Any:  # noqa: ANN401
+        """Apply flip with the given probability."""
+        sample = inputs[0] if len(inputs) == 1 else inputs
+        if torch.rand(1).item() >= self.probability:
+            return sample
+
+        if isinstance(sample, OTXSample):
+            if self.direction == "horizontal":
+                sample.image = F.horizontal_flip(sample.image)
+                if hasattr(sample, "masks") and sample.masks is not None:
+                    sample.masks = F.horizontal_flip(sample.masks)
+                if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
+                    sample.bboxes = F.horizontal_flip(sample.bboxes)
+            else:
+                sample.image = F.vertical_flip(sample.image)
+                if hasattr(sample, "masks") and sample.masks is not None:
+                    sample.masks = F.vertical_flip(sample.masks)
+                if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
+                    sample.bboxes = F.vertical_flip(sample.bboxes)
+        else:
+            if self.direction == "horizontal":
+                sample = F.horizontal_flip(sample)
+            else:
+                sample = F.vertical_flip(sample)
+        return sample
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(probability={self.probability}, direction={self.direction!r})"
+
+
+class RandomResize(tvt_v2.Transform):
+    """Resize image to a fixed scale (height, width).
+
+    Used as a simple deterministic resize; the name ``Random`` is kept for
+    API compatibility with legacy configs that may pass a ``$(input_size)``
+    placeholder.
+
+    Args:
+        scale (tuple[int, int]): Target size ``(height, width)``.
+        interpolation: Interpolation mode. Defaults to
+            :attr:`~torchvision.transforms.v2.InterpolationMode.BILINEAR`.
+        antialias (bool): Whether to apply antialiasing. Defaults to ``True``.
+    """
+
+    def __init__(
+        self,
+        scale: tuple[int, int],
+        interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
+        antialias: bool = True,
+    ) -> None:
+        super().__init__()
+        self.scale = tuple(scale)
+        self.interpolation = interpolation
+        self.antialias = antialias
+
+    def forward(self, *inputs: Any) -> Any:  # noqa: ANN401
+        """Resize inputs to ``self.scale``."""
+        sample = inputs[0] if len(inputs) == 1 else inputs
+        return F.resize(sample, list(self.scale), interpolation=self.interpolation, antialias=self.antialias)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(scale={self.scale})"
+
+
+class RandomCrop(tvt_v2.Transform):
+    """Random crop transform.
+
+    Args:
+        crop_size (tuple[int, int]): Crop size ``(height, width)``.
+    """
+
+    def __init__(self, crop_size: tuple[int, int]) -> None:
+        super().__init__()
+        self.crop_size = tuple(crop_size)
+
+    def forward(self, *inputs: Any) -> Any:  # noqa: ANN401
+        """Apply random crop, falling back to center crop if image is too small."""
+        sample = inputs[0] if len(inputs) == 1 else inputs
+        crop_h, crop_w = self.crop_size
+
+        # Determine current image size
+        if isinstance(sample, OTXSample):
+            img_h, img_w = sample.image.shape[-2:]
+        elif isinstance(sample, torch.Tensor):
+            img_h, img_w = sample.shape[-2:]
+        else:
+            return F.center_crop(sample, [crop_h, crop_w])
+
+        # Compute random top-left corner
+        top = int(torch.randint(0, max(1, img_h - crop_h + 1), (1,)).item()) if img_h > crop_h else 0
+        left = int(torch.randint(0, max(1, img_w - crop_w + 1), (1,)).item()) if img_w > crop_w else 0
+
+        return F.crop(sample, top, left, crop_h, crop_w)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(crop_size={self.crop_size})"
+
+
+# ---------------------------------------------------------------------------
+# Legacy transform library
+# ---------------------------------------------------------------------------
+
+
+class TorchVisionTransformLib:
+    """Legacy transform library that generates a :class:`~torchvision.transforms.v2.Compose`.
+
+    This class provides backward-compatible support for the old ``transforms``
+    config field.  New code should use
+    :class:`~otx.data.augmentation.pipeline.CPUAugmentationPipeline` instead.
+    """
+
+    @classmethod
+    def generate(cls, config: Any) -> tvt_v2.Compose:  # noqa: ANN401
+        """Build a :class:`~torchvision.transforms.v2.Compose` from *config*.
+
+        Args:
+            config: A config object with a ``transforms`` list field (legacy),
+                or a :class:`~torchvision.transforms.v2.Compose` object directly.
+
+        Returns:
+            A :class:`~torchvision.transforms.v2.Compose` of the requested transforms.
+        """
+        if isinstance(config, tvt_v2.Compose):
+            return config
+
+        transforms_list = getattr(config, "transforms", None)
+        input_size = getattr(config, "input_size", None)
+
+        if not transforms_list:
+            return tvt_v2.Compose([])
+
+        from omegaconf import DictConfig
+
+        augmentations: list[Any] = []
+        for cfg in transforms_list:
+            cfg_dict: dict[str, Any] | None = None
+            if isinstance(cfg, DictConfig):
+                cfg_dict = dict(cfg)
+            elif isinstance(cfg, dict):
+                cfg_dict = cfg
+
+            if cfg_dict is not None:
+                if not cfg_dict.get("enable", True):
+                    continue
+                cfg_dict = cls._configure_input_size(cfg_dict, input_size)
+                transform = instantiate_class(args=(), init=cfg_dict)
+            else:
+                transform = cfg
+            augmentations.append(transform)
+
+        return tvt_v2.Compose(augmentations)
+
+    @classmethod
+    def _configure_input_size(
+        cls,
+        cfg: dict[str, Any],
+        input_size: int | tuple[int, int] | None,
+    ) -> dict[str, Any]:
+        """Replace ``$(input_size)`` placeholders in *cfg* with the actual value.
+
+        Mirrors :meth:`~otx.data.augmentation.pipeline.CPUAugmentationPipeline._configure_input_size`.
+        """
+        init_args = cfg.get("init_args", {})
+        if not init_args:
+            return cfg
+
+        _input_size: tuple[int, int] | None = None
+        if input_size is not None:
+            _input_size = (input_size, input_size) if isinstance(input_size, int) else tuple(input_size)  # type: ignore[assignment]
+
+        def check_type(value: Any, expected_type: Any) -> bool:  # noqa: ANN401
+            try:
+                typeguard.check_type(value, expected_type)
+            except typeguard.TypeCheckError:
+                return False
+            return True
+
+        model_cls = None
+        for key, val in init_args.items():
+            if not (isinstance(val, str) and "$(input_size)" in val):
+                continue
+
+            if input_size is None:
+                msg = (
+                    f"{cfg['class_path'].split('.')[-1]} initial argument has `$(input_size)`, "
+                    "but input_size is set to None."
+                )
+                raise RuntimeError(msg)
+
+            if model_cls is None:
+                model_cls = import_object_from_module(cfg["class_path"])
+
+            available_types = typing.get_type_hints(model_cls.__init__).get(key)
+
+            if available_types is None or check_type(_input_size, available_types):
+                init_args[key] = cls._eval_input_size_str(val.replace("$(input_size)", str(_input_size)))
+            elif check_type(_input_size[0], available_types):  # type: ignore[index]
+                init_args[key] = cls._eval_input_size_str(val.replace("$(input_size)", str(_input_size[0])))  # type: ignore[index]
+            else:
+                msg = f"{key} argument should be able to get int or tuple[int, int], but it can get {available_types}"
+                raise RuntimeError(msg)
+
+        return cfg
+
+    @classmethod
+    def _eval_input_size_str(cls, str_to_eval: str) -> tuple[int, ...] | int:
+        """Safely evaluate a simple arithmetic expression involving tuples and scalars.
+
+        Only ``*`` and ``/`` operators are supported.  The result is rounded to int.
+
+        Mirrors :meth:`~otx.data.augmentation.pipeline.CPUAugmentationPipeline._eval_input_size_str`.
+        """
+        bin_ops: dict[type, Callable[[Any, Any], Any]] = {
+            ast.Mult: operator.mul,
+            ast.Div: operator.truediv,
+        }
+        un_ops: dict[type, Callable[[Any], Any]] = {
+            ast.USub: operator.neg,
+            ast.UAdd: operator.pos,
+        }
+        available_ops = tuple(bin_ops) + tuple(un_ops) + (ast.BinOp, ast.UnaryOp)
+
+        tree = ast.parse(str_to_eval, mode="eval")
+
+        def _eval(node: Any) -> Any:  # noqa: ANN401
+            if isinstance(node, ast.Expression):
+                return _eval(node.body)
+            if isinstance(node, ast.Constant):
+                return node.value
+            if isinstance(node, ast.Tuple):
+                return torch.tensor([_eval(val) for val in node.elts])
+            if isinstance(node, ast.BinOp) and type(node.op) in bin_ops:
+                left = _eval(node.left)
+                right = _eval(node.right)
+                return bin_ops[type(node.op)](left, right)
+            if isinstance(node, ast.UnaryOp) and type(node.op) in un_ops:
+                operand = _eval(node.operand) if isinstance(node.operand, available_ops) else node.operand.value
+                return un_ops[type(node.op)](operand)
+            msg = f"Bad syntax, {type(node)}. Available operations for calculating input size are {available_ops}"
+            raise SyntaxError(msg)
+
+        ret = _eval(tree)
+        if isinstance(ret, torch.Tensor):
+            return tuple(ret.round().int().tolist())
+        return round(ret)
 
 
 def custom_query_size(flat_inputs: list[Any]) -> tuple[int, int]:  # noqa: D103

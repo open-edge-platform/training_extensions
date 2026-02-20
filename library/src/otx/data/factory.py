@@ -28,7 +28,7 @@ class TransformLibFactory:
     """Factory class for transform.
 
     This factory supports both legacy transforms and new augmentations_cpu field.
-    Priority: augmentations_cpu > transforms (legacy).
+    Priority: transform_lib_type (legacy) > augmentations_cpu (new).
     """
 
     @classmethod
@@ -41,6 +41,15 @@ class TransformLibFactory:
         Returns:
             Either CPUAugmentationPipeline (new) or Compose (legacy).
         """
+        # Legacy path: use TorchVisionTransformLib when transform_lib_type is explicitly set
+        from otx.types.transformer_libs import TransformLibType
+
+        transform_lib_type = getattr(config, "transform_lib_type", None)
+        if transform_lib_type == TransformLibType.TORCHVISION:
+            from otx.data.transform_libs.torchvision import TorchVisionTransformLib
+
+            return TorchVisionTransformLib.generate(config)
+
         # New path: use augmentations_cpu if provided
         if config.augmentations_cpu:
             # Already a pipeline object (e.g., from from_file method)
@@ -48,7 +57,7 @@ class TransformLibFactory:
                 return config.augmentations_cpu
             return CPUAugmentationPipeline.from_config(config)
 
-        raise NotImplementedError(config.transform_lib_type)
+        raise NotImplementedError(config)
 
 
 class OTXDatasetFactory:
