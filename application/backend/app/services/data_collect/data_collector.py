@@ -168,7 +168,7 @@ class DataCollector:
         if self.active_pipeline_data is None:
             return
         pipeline, project = self.active_pipeline_data
-        from app.services import DatasetService, LabelService, MediaService
+        from app.services import DatasetService, LabelService, MediaService, VideoFrameService
 
         confidence_scores = get_confidence_scores(prediction=inference_data.prediction)
         should_collect = (
@@ -183,7 +183,10 @@ class DataCollector:
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
             label_service = LabelService(db_session=session)
-            media_service = MediaService(data_dir=self.data_dir, db_session=session)
+            video_frame_service = VideoFrameService(db_session=session)
+            media_service = MediaService(
+                data_dir=self.data_dir, video_frame_service=video_frame_service, db_session=session
+            )
             dataset_service = DatasetService(
                 label_service=label_service, media_service=media_service, db_session=session
             )

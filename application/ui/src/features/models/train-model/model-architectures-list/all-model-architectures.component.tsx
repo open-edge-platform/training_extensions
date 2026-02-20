@@ -24,7 +24,7 @@ export const AllModelArchitectures = ({
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
 }: AllModelArchitecturesProps) => {
-    const [sortBy, setSortBy] = useState<SortingOptions>(SortingOptions.NAME_DESC);
+    const [sortBy, setSortBy] = useState<SortingOptions>(SortingOptions.NAME_ASC);
     const sortedModelArchitectures = SORTING_HANDLERS[sortBy](modelArchitectures);
 
     return (

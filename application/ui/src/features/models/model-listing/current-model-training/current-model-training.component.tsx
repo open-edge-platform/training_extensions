@@ -18,6 +18,7 @@ type CurrentModelTrainingProps = {
 export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModelTrainingProps) => {
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
+
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelTraining = () => {

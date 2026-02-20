@@ -100,6 +100,7 @@ class DatasetRevisionDB(BaseID):
     validation_count: Mapped[int] = mapped_column(Integer, default=0)
     testing_count: Mapped[int] = mapped_column(Integer, default=0)
     total_count: Mapped[int] = mapped_column(Integer, default=0)
+    size: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class DatasetItemDB(Base):
@@ -137,12 +138,12 @@ class VideoFrameDB(Base):
     __tablename__ = "video_frames"
     __table_args__ = (
         Index("idx_video_frames_video_id", "video_id"),
-        Index("idx_video_frames_video_id_timestamp", "video_id", "timestamp"),
+        Index("idx_video_frames_video_id_frame_index", "video_id", "frame_index"),
     )
 
     id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), primary_key=True, nullable=False)
     video_id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), nullable=False)
-    timestamp: Mapped[float] = mapped_column(Float, nullable=False)
+    frame_index: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 class LabelDB(BaseID):

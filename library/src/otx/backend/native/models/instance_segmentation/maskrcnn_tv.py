@@ -35,7 +35,7 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.utils import stack_batch
-from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

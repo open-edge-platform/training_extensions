@@ -317,7 +317,7 @@ class TestModelServiceIntegration:
         db_session.flush()
         model_id = uuid4()
         dataset_revision_id = UUID(dataset_revision_db.id)
-        architecture_id = "MODEL_ARCHITECTURE_ID"
+        architecture_id = "object-detection-atss-mobilenet-v2"
 
         fxt_model_service.create_revision(
             ModelRevisionMetadata(
@@ -337,6 +337,7 @@ class TestModelServiceIntegration:
         assert model_db.training_dataset_id == str(dataset_revision_id)
         assert model_db.architecture == architecture_id
         assert model_db.training_status == TrainingStatus.IN_PROGRESS
+        assert model_db.name == f"ATSS-MobileNet-V2 ({str(model_id).split('-')[0]})"
 
     def test_update_revision(
         self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
@@ -384,6 +385,86 @@ class TestModelServiceIntegration:
         assert metrics_dict["accuracy"] == 0.95
         assert metrics_dict["f1_score"] == 0.89
         assert metrics_dict["precision"] == 0.92
+
+    def test_get_training_metrics_success(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test retrieving training metrics from metrics.csv file."""
+        # Create a model directory with a metrics.csv file in the correct path
+        metrics_dir = (
+            tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "metrics" / "version_0"
+        )
+        metrics_dir.mkdir(parents=True)
+
+        csv_content = """epoch,step,train/total_loss,val/f1-score
+        1,1,0.1,0.95
+        2,2,0.2,0.89
+        3,3,0.3,0.92
+        """.replace(" ", "")  # Remove leading tabs for correct CSV formatting
+        (metrics_dir / "metrics.csv").write_text(csv_content)
+
+        metrics = fxt_model_service.get_model_training_metrics(project_id=fxt_project_id, model_id=fxt_model_id)
+        # epoch and step are blacklisted, so only train/total_loss and val/f1-score are returned
+        assert len(metrics) == 2
+        for metric in metrics:
+            assert metric["header"] in ["Training total loss", "Validation F1 score"]
+            assert metric["type"] == "line"
+            assert metric["key"] in ["Training total loss", "Validation F1 score"]
+            assert metric.get("value")
+            # Check that x_axis_label is set correctly (should be "Step" since steps are consecutive)
+            assert metric["value"]["x_axis_label"] == "Step"
+
+    def test_get_training_metrics_epoch_based(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test retrieving training metrics when steps are not consecutive (epoch-based)."""
+        # Create a model directory with a metrics.csv file in the correct path
+        metrics_dir = (
+            tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "metrics" / "version_0"
+        )
+        metrics_dir.mkdir(parents=True)
+
+        # Steps are not consecutive (1, 5, 9) so metric should be epoch-based
+        csv_content = """epoch,step,train/total_loss,val/f1-score
+        1,1,0.1,0.95
+        2,5,0.2,0.89
+        3,9,0.3,0.92
+        """.replace(" ", "")  # Remove leading tabs for correct CSV formatting
+        (metrics_dir / "metrics.csv").write_text(csv_content)
+
+        metrics = fxt_model_service.get_model_training_metrics(project_id=fxt_project_id, model_id=fxt_model_id)
+        # epoch and step are blacklisted, so only train/total_loss and val/f1-score are returned
+        assert len(metrics) == 2
+        for metric in metrics:
+            assert metric["header"] in ["Training total loss", "Validation F1 score"]
+            assert metric["type"] == "line"
+            # Check that x_axis_label is "Epoch" since steps are NOT consecutive
+            assert metric["value"]["x_axis_label"] == "Epoch"
+
+    def test_get_training_metrics_file_not_found(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test that ResourceNotFoundError is raised when metrics.csv doesn't exist."""
+        # Create model directory without metrics.csv (the metrics/version_0 path is expected)
+        model_dir = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_dir.mkdir(parents=True)
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            fxt_model_service.get_model_training_metrics(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        assert "metrics.csv not found" in str(exc_info.value)
 
     @pytest.mark.parametrize("training_status", [TrainingStatus.SUCCESSFUL, TrainingStatus.FAILED])
     def test_get_logs_success(

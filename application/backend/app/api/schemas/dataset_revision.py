@@ -23,6 +23,7 @@ class DatasetRevisionView(BaseIDModel):
     name: str = Field(..., description="Name of the dataset revision")
     created_at: datetime = Field(..., description="Timestamp when the dataset revision was created")
     files_deleted: bool = Field(..., description="Indicates if the dataset revision files have been deleted")
+    size: int = Field(..., description="Size in bytes of all files from this dataset revision on disk")
     item_counts: ItemCount = Field(..., description="Number of items in the dataset")
 
     model_config = {
@@ -32,6 +33,7 @@ class DatasetRevisionView(BaseIDModel):
                 "name": "Dataset (1ed5487a)",
                 "created_at": "2023-10-01T12:00:00Z",
                 "files_deleted": False,
+                "size": 456123,
                 "item_counts": {"total": 100, "training": 70, "validation": 20, "testing": 10},
             }
         }

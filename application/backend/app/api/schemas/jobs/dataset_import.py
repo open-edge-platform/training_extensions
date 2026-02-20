@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -9,10 +10,14 @@ from app.api.schemas.dataset import DatasetFilters
 from app.core.jobs.models import JobType
 from app.models import DatasetItemSubset, TaskType
 
-from .base import BaseDatasetRequest, BaseJobRequest
+from .base import BaseJobRequest
 
 
-class PrepareDatasetForImportRequest(BaseDatasetRequest):
+class BaseImportRequest(BaseModel):
+    staged_dataset_id: UUID = Field(..., description="ID of the staged dataset to import")
+
+
+class PrepareDatasetForImportRequest(BaseImportRequest):
     job_type: Literal[JobType.PREPARE_DATASET_FOR_IMPORT]
 
     model_config = {
@@ -56,7 +61,7 @@ class ImportDatasetProjectParams(BaseModel):
     }
 
 
-class ImportDatasetToProjectRequest(BaseDatasetRequest, BaseJobRequest):
+class ImportDatasetToProjectRequest(BaseImportRequest, BaseJobRequest):
     job_type: Literal[JobType.IMPORT_DATASET_TO_PROJECT]
 
     parameters: ImportDatasetProjectParams = Field(
@@ -130,7 +135,7 @@ class ImportDatasetNewParams(BaseModel):
     }
 
 
-class ImportDatasetAsNewProjectRequest(BaseDatasetRequest):
+class ImportDatasetAsNewProjectRequest(BaseImportRequest):
     job_type: Literal[JobType.IMPORT_DATASET_AS_NEW_PROJECT]
 
     parameters: ImportDatasetNewParams = Field(
@@ -162,8 +167,8 @@ class ImportDatasetAsNewProjectRequest(BaseDatasetRequest):
 
 
 class ImportDatasetMetadata(BaseModel):
-    staged_dataset_id: str = Field(..., description="Dataset ID")
-    project_id: str | None = Field(None, description="Project ID")
+    staged_dataset_id: UUID = Field(..., description="Dataset ID")
+    project_id: UUID | None = Field(None, description="Project ID")
     filters: DatasetFilters | None = Field(None, description="Filters to apply to the dataset during import")
     labels_mapping: dict[str, str] | None = Field(
         None,

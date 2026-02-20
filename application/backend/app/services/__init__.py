@@ -24,8 +24,10 @@ from .project_service import ProjectService
 from .sink_service import SinkService
 from .source_service import SourceService, SourceUpdateService
 from .staged_dataset_service import StagedDatasetService
+from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 from .system_service import SystemService
 from .training_configuration_service import TrainingConfigurationService
+from .video_frame_service import VideoFrameService
 from .video_stream_service import VideoStreamService
 
 __all__ = [
@@ -51,8 +53,12 @@ __all__ = [
     "SinkService",
     "SourceService",
     "SourceUpdateService",
+    "SplitRatios",
     "StagedDatasetService",
+    "SubsetAssigner",
+    "SubsetService",
     "SystemService",
     "TrainingConfigurationService",
+    "VideoFrameService",
     "VideoStreamService",
 ]

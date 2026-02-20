@@ -22,7 +22,7 @@ from app.models import (
     Project,
     Rectangle,
 )
-from app.services import LabelService, PipelineService, ProjectService, SystemService
+from app.services import LabelService, PipelineService, ProjectService, SystemService, VideoFrameService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import DatasetItemFilters, DatasetService, SubsetAlreadyAssignedError
 from app.services.event.event_bus import EventBus
@@ -56,12 +56,21 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
+def fxt_video_frame_service(db_session: Session) -> VideoFrameService:
+    """Fixture to create a VideoFrameService instance."""
+    return VideoFrameService(db_session=db_session)
+
+
+@pytest.fixture
 def fxt_media_service(
     fxt_projects_dir: Path,
+    fxt_video_frame_service: VideoFrameService,
     db_session: Session,
 ) -> MediaService:
     """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
+    return MediaService(
+        data_dir=fxt_projects_dir.parent, video_frame_service=fxt_video_frame_service, db_session=db_session
+    )
 
 
 @pytest.fixture

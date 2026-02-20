@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex } from '@geti/ui';
-import { useLocalStorageDataset } from 'hooks/use-local-storage-dataset.hook';
 import { isEmpty } from 'lodash-es';
 
+import { useExportDataset } from '../../../../hooks/localStorage/use-export-dataset.hook';
 import { ExportJob } from './export-job/export-job.component';
 
 export const ExportJobsList = () => {
-    const { getLsExportIds } = useLocalStorageDataset();
+    const { getLsExportIds } = useExportDataset();
 
     const exportIds = getLsExportIds() ?? [];
 
@@ -24,7 +24,7 @@ export const ExportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {exportIds.map((id) => (
+            {exportIds.toReversed().map((id) => (
                 <ExportJob key={id} jobId={id} />
             ))}
         </Flex>
