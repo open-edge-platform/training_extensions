@@ -38,6 +38,7 @@ from typing import Any
 import cv2
 import numpy as np
 import torch
+import torchvision
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision import tv_tensors
 
@@ -401,8 +402,18 @@ def apply_nms_to_raw(
     score_thr: float,
     iou_thr: float,
     max_dets: int = 100,
+    pre_top_k: int = 5000,
+    max_output_boxes_per_class: int = 200,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Apply score-threshold + per-class NMS to raw (no-NMS) outputs.
+    """Apply post-processing identical to YOLOX's multiclass_nms export path.
+
+    Mirrors the logic in multiclass_nms() exactly:
+      1. global pre_top_k filter by max-class score
+      2. per-class score threshold + NMS (max_output_boxes_per_class cap)
+      3. global keep_top_k (max_dets) by score
+
+    Parameters match the hardcoded values in export_by_feat():
+      pre_top_k=5000, max_output_boxes_per_class=200, keep_top_k=max_per_img=100
 
     Returns
     -------
@@ -410,13 +421,19 @@ def apply_nms_to_raw(
     scores : (N,)
     labels : (N,)
     """
-    import torchvision
-
     t_boxes = torch.from_numpy(bboxes).float()   # (anchors, 4)
     t_scores = torch.from_numpy(scores).float()  # (anchors, num_classes)
 
-    all_boxes, all_scores, all_labels = [], [], []
+    # Step 1: global pre_top_k — keep top-pre_top_k anchors by max class score
+    if pre_top_k > 0 and t_boxes.shape[0] > pre_top_k:
+        max_scores, _ = t_scores.max(dim=-1)
+        _, topk_inds = max_scores.topk(pre_top_k)
+        t_boxes = t_boxes[topk_inds]
+        t_scores = t_scores[topk_inds]
+
+    # Step 2: per-class score threshold + NMS
     num_classes = t_scores.shape[1]
+    all_boxes, all_scores, all_labels = [], [], []
     for cls_idx in range(num_classes):
         cls_scores = t_scores[:, cls_idx]
         mask = cls_scores > score_thr
@@ -425,6 +442,8 @@ def apply_nms_to_raw(
         cls_boxes = t_boxes[mask]
         cls_scores_f = cls_scores[mask]
         keep = torchvision.ops.nms(cls_boxes, cls_scores_f, iou_thr)
+        # cap per-class detections the same way max_output_boxes_per_class does
+        keep = keep[:max_output_boxes_per_class]
         all_boxes.append(cls_boxes[keep])
         all_scores.append(cls_scores_f[keep])
         all_labels.append(torch.full((keep.numel(),), cls_idx, dtype=torch.long))
@@ -432,16 +451,18 @@ def apply_nms_to_raw(
     if not all_boxes:
         return np.zeros((0, 4), np.float32), np.zeros(0, np.float32), np.zeros(0, np.int64)
 
-    boxes_np = torch.cat(all_boxes).numpy()
-    scores_np = torch.cat(all_scores).numpy()
-    labels_np = torch.cat(all_labels).numpy()
+    boxes_cat = torch.cat(all_boxes)
+    scores_cat = torch.cat(all_scores)
+    labels_cat = torch.cat(all_labels)
 
-    # Global top-k
-    if len(scores_np) > max_dets:
-        top_idx = np.argsort(-scores_np)[:max_dets]
-        boxes_np, scores_np, labels_np = boxes_np[top_idx], scores_np[top_idx], labels_np[top_idx]
+    # Step 3: global keep_top_k by score
+    if len(scores_cat) > max_dets:
+        _, top_idx = scores_cat.topk(max_dets)
+        boxes_cat = boxes_cat[top_idx]
+        scores_cat = scores_cat[top_idx]
+        labels_cat = labels_cat[top_idx]
 
-    return boxes_np, scores_np, labels_np
+    return boxes_cat.numpy(), scores_cat.numpy(), labels_cat.numpy()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
