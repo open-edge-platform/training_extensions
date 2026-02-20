@@ -314,7 +314,7 @@ class YOLOXHeadModule(BaseDenseHead):
         batch_img_metas: list[dict] | None = None,
         cfg: dict | None = None,
         rescale: bool = False,
-        with_nms: bool = True,
+        with_nms: bool = False,
     ) -> tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """Transform network output for a batch into bbox predictions.
 
@@ -405,7 +405,7 @@ class YOLOXHeadModule(BaseDenseHead):
         results: InstanceData,
         cfg: dict | None = None,
         rescale: bool = False,
-        with_nms: bool = True,
+        with_nms: bool = False,
         img_meta: dict | None = None,
     ) -> InstanceData:
         """Bbox post-processing method.

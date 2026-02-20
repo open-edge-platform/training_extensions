@@ -254,11 +254,13 @@ def run_torch_without_nms(
 # OpenVINO inference
 # ─────────────────────────────────────────────────────────────────────────────
 
-def load_ov_model(xml_path: str, device: str = "CPU") -> ov.CompiledModel:
+def load_ov_model(xml_path: str, device: str = "CPU", with_nms: bool = True) -> ov.CompiledModel:
     """Compile an OpenVINO IR model.
 
     Supports CPU, GPU, and NPU devices.
     For NPU, LATENCY performance hint is set automatically (required by the NPU plugin).
+    with_nms: whether the *script* is configured to use NMS outputs (i.e. --with_nms was
+    passed).  Used only to produce a contextually accurate error message on NPU.
     """
     print(f"[OV] Loading model: {xml_path}")
     core = ov.Core()
@@ -287,14 +289,35 @@ def load_ov_model(xml_path: str, device: str = "CPU") -> ov.CompiledModel:
         for out in model.outputs:
             ps = out.partial_shape
             if ps.is_dynamic:
+                if with_nms:
+                    # User asked for NMS outputs and the model has them — but NPU
+                    # can't handle dynamic shapes at all.
+                    fix_hint = (
+                        "Fix: re-export the model WITHOUT NMS, then run with\n"
+                        "  --no_nms --ov_device NPU\n"
+                        "NMS will be applied on CPU after NPU inference."
+                    )
+                else:
+                    # User passed --no_nms but the loaded XML was exported WITH
+                    # NMS — its outputs are dynamic regardless of the script flag.
+                    fix_hint = (
+                        "You passed --no_nms, but the OV model you loaded was\n"
+                        "exported WITH NMS (it has dynamic output shapes).\n"
+                        "The --no_nms script flag only controls how this script\n"
+                        "interprets results; it cannot change the model's graph.\n\n"
+                        "Options:\n"
+                        "  1. Re-export from the checkpoint WITHOUT NMS, then use\n"
+                        "       --no_nms --ov_device NPU   (recommended)\n"
+                        "  2. Use the current (NMS) model on CPU/GPU:\n"
+                        "       --with_nms --ov_device CPU"
+                    )
                 raise RuntimeError(
                     f"\n\n[NPU] Cannot compile model on NPU: output '{out.any_name}' "
                     f"has dynamic shape {ps}.\n"
-                    "NPU requires fully static shapes. Models exported WITH NMS produce\n"
-                    "variable-length outputs (number of detections is unknown at compile\n"
-                    "time), which the VPUX compiler cannot handle.\n\n"
-                    "Fix: re-export the model WITHOUT NMS and run with --no_nms.\n"
-                    "NMS will then be applied on CPU after NPU inference.\n"
+                    "NPU requires fully static shapes. Models with dynamic outputs\n"
+                    "(e.g. from NMS or strided-slice Focus ops) cannot be compiled\n"
+                    "by the VPUX compiler.\n\n"
+                    + fix_hint + "\n"
                 )
 
         config["PERFORMANCE_HINT"] = "LATENCY"
@@ -496,7 +519,7 @@ def run_comparison(args: argparse.Namespace) -> None:
           f"mean={data_params.mean}, std={data_params.std}, swap_rgb={swap_rgb}")
 
     # ── Load OV model ────────────────────────────────────────────────────────
-    ov_compiled = load_ov_model(args.ov_model, device=args.ov_device)
+    ov_compiled = load_ov_model(args.ov_model, device=args.ov_device, with_nms=args.with_nms)
 
     # ── Collect images ───────────────────────────────────────────────────────
     img_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
