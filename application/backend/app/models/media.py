@@ -40,7 +40,7 @@ class MediaType(StrEnum):
 
 class BaseMedia(BaseEntity):
     """
-    Media represents an uploaded or fetched media within a dataset.
+    Media represents an uploaded or fetched media within a dataset, it can be one of Image, Video or VideoFrame.
 
     Attributes:
         id: Unique identifier for the media.
@@ -51,8 +51,6 @@ class BaseMedia(BaseEntity):
         width: Width of the media in pixels.
         height: Height of the media in pixels.
         size: Size of the media in bytes.
-        fps: Video fps (applicable only for video media).
-        frame_count: Total number of frames (applicable only for video media).
         source_id: Identifier of the source from which the media was acquired, if applicable.
     """
 
@@ -75,6 +73,12 @@ class VideoFrame(BaseMedia):
 
 
 class Video(BaseMedia):
+    """
+    Attributes:
+        fps: Video fps
+        frame_count: Total number of frames
+    """
+
     type: Literal[MediaType.VIDEO]
     fps: float
     frame_count: int
