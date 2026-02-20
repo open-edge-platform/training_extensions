@@ -255,13 +255,42 @@ def run_torch_without_nms(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def load_ov_model(xml_path: str, device: str = "CPU") -> ov.CompiledModel:
-    """Compile an OpenVINO IR model."""
+    """Compile an OpenVINO IR model.
+
+    Supports CPU, GPU, and NPU devices.
+    For NPU, LATENCY performance hint is set automatically (required by the NPU plugin).
+    """
     print(f"[OV] Loading model: {xml_path}")
     core = ov.Core()
+
+    available = core.available_devices
+    print(f"[OV] Available devices: {available}")
+
+    device_upper = device.upper()
+    if device_upper not in available:
+        print(f"[OV] WARNING: requested device '{device_upper}' not found in {available}. "
+              f"Falling back to CPU.")
+        device_upper = "CPU"
+
     model = core.read_model(xml_path)
-    compiled = core.compile_model(model, device.upper())
-    print(f"[OV] Input(s):  {[inp.any_name for inp in compiled.inputs]}")
-    print(f"[OV] Output(s): {[out.any_name for out in compiled.outputs]}")
+
+    # NPU requires LATENCY hint and does not support dynamic shapes —
+    # reshape the model to a fixed batch=1 before compilation.
+    config: dict = {}
+    if device_upper == "NPU":
+        config["PERFORMANCE_HINT"] = "LATENCY"
+        # Ensure static input shape for NPU (batch=1 is fixed at export time anyway)
+        input_shape = model.inputs[0].partial_shape
+        if input_shape.is_dynamic:
+            static_shape = [d.get_length() if not d.is_dynamic else 1
+                            for d in input_shape]
+            model.reshape({model.inputs[0]: static_shape})
+            print(f"[OV] NPU: reshaped input to static {static_shape}")
+
+    compiled = core.compile_model(model, device_upper, config)
+    print(f"[OV] Compiled on: {device_upper}")
+    print(f"[OV] Input(s):   {[inp.any_name for inp in compiled.inputs]}")
+    print(f"[OV] Output(s):  {[out.any_name for out in compiled.outputs]}")
     return compiled
 
 
@@ -448,7 +477,7 @@ def run_comparison(args: argparse.Namespace) -> None:
           f"mean={data_params.mean}, std={data_params.std}, swap_rgb={swap_rgb}")
 
     # ── Load OV model ────────────────────────────────────────────────────────
-    ov_compiled = load_ov_model(args.ov_model, device="CPU")
+    ov_compiled = load_ov_model(args.ov_model, device=args.ov_device)
 
     # ── Collect images ───────────────────────────────────────────────────────
     img_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
@@ -583,6 +612,8 @@ def parse_args() -> argparse.Namespace:
                         help="Override input size (H W). Default: from checkpoint.")
     parser.add_argument("--device", default="cpu",
                         help="Torch device: cpu or cuda")
+    parser.add_argument("--ov_device", default="CPU",
+                        help="OpenVINO inference device: CPU, GPU, NPU (default: CPU)")
     parser.add_argument("--score_thr", type=float, default=0.01,
                         help="Score threshold (used when running without NMS)")
     parser.add_argument("--iou_thr", type=float, default=0.65,
@@ -599,6 +630,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     print(f"NMS mode: {'WITH NMS' if args.with_nms else 'WITHOUT NMS'}")
+    print(f"OV device: {args.ov_device.upper()}")
     run_comparison(args)
 
 

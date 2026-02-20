@@ -223,7 +223,7 @@ class YOLOXHeadModule(BaseDenseHead):
         batch_img_metas: list[dict] | None = None,
         cfg: dict | None = None,
         rescale: bool = False,
-        with_nms: bool = True,
+        with_nms: bool = False,
     ) -> list[InstanceData]:
         """Transform a batch of output features extracted by the head into bbox results.
 
