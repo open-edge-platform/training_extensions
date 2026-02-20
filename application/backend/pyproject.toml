@@ -86,6 +86,10 @@ exclude-dependencies = [
     # may cause conflicts and waste disk space.
     "opencv-python",
 ]
+override-dependencies = [
+    # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
+    "opencv-python-headless~=4.11",
+]
 
 [tool.uv.build-backend]
 module-root = ""
