@@ -278,6 +278,25 @@ def load_ov_model(xml_path: str, device: str = "CPU") -> ov.CompiledModel:
     # reshape the model to a fixed batch=1 before compilation.
     config: dict = {}
     if device_upper == "NPU":
+        # Check for dynamic output shapes — NMS models have variable-length outputs
+        # (the number of detections is unknown at compile time), which the VPUX
+        # compiler cannot handle.  The symptom is StridedSlice nodes with
+        # INT64_MAX upper bounds propagating into Concat, producing negative dims.
+        # Solution: export the model WITHOUT NMS (--no_nms) so outputs are fully
+        # static ([B, anchors, 4] + [B, anchors, C]), then apply NMS on CPU.
+        for out in model.outputs:
+            ps = out.partial_shape
+            if ps.is_dynamic:
+                raise RuntimeError(
+                    f"\n\n[NPU] Cannot compile model on NPU: output '{out.any_name}' "
+                    f"has dynamic shape {ps}.\n"
+                    "NPU requires fully static shapes. Models exported WITH NMS produce\n"
+                    "variable-length outputs (number of detections is unknown at compile\n"
+                    "time), which the VPUX compiler cannot handle.\n\n"
+                    "Fix: re-export the model WITHOUT NMS and run with --no_nms.\n"
+                    "NMS will then be applied on CPU after NPU inference.\n"
+                )
+
         config["PERFORMANCE_HINT"] = "LATENCY"
         # Ensure static input shape for NPU (batch=1 is fixed at export time anyway)
         input_shape = model.inputs[0].partial_shape
@@ -613,7 +632,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cpu",
                         help="Torch device: cpu or cuda")
     parser.add_argument("--ov_device", default="CPU",
-                        help="OpenVINO inference device: CPU, GPU, NPU (default: CPU)")
+                        help="OpenVINO inference device: CPU, GPU, NPU (default: CPU). "
+                             "NOTE: NPU requires a model exported WITHOUT NMS (--no_nms), "
+                             "because NMS produces dynamic-length outputs that the VPUX "
+                             "compiler cannot handle.")
     parser.add_argument("--score_thr", type=float, default=0.01,
                         help="Score threshold (used when running without NMS)")
     parser.add_argument("--iou_thr", type=float, default=0.65,

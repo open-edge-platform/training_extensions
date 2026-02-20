@@ -24,8 +24,6 @@ from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.sample import OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.types.export import OTXExportFormatType
-from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -166,33 +164,11 @@ class YOLOX(OTXDetectionModel):
             output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
-    def export(
-        self,
-        output_dir: Path,
-        base_name: str,
-        export_format: OTXExportFormatType,
-        precision: OTXPrecisionType = OTXPrecisionType.FP32,
-    ) -> Path:
-        """Export this model to the specified output directory.
-
-        This is required to patch otx.algo.detection.backbones.csp_darknet.Focus.forward to export forward.
-
-        Args:
-            output_dir (Path): directory for saving the exported model
-            base_name: (str): base name for the exported model file. Extension is defined by the target export format
-            export_format (OTXExportFormatType): format of the output model
-            precision (OTXExportPrecisionType): precision of the output model
-
-        Returns:
-            Path: path to the exported model.
-        """
-        # patch otx.algo.detection.backbones.csp_darknet.Focus.forward
-        orig_focus_forward = self.model.backbone.stem.forward
-        try:
-            self.model.backbone.stem.forward = self.model.backbone.stem.export
-            return super().export(output_dir, base_name, export_format, precision)
-        finally:
-            self.model.backbone.stem.forward = orig_focus_forward
+    # NOTE: The Focus patch (stem.forward = stem.export) is no longer needed here.
+    # Focus.forward() was updated to use the reshape+permute path directly, which is
+    # NPU-compatible and avoids aten::slice ops with INT64_MAX upper bounds that caused
+    # VPUX Concat overflow errors. The override method Focus.export() is kept for
+    # backward compatibility only and simply delegates to forward().
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

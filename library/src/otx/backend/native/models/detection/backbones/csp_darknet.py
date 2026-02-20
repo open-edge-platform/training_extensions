@@ -14,7 +14,6 @@ import math
 from functools import partial
 from typing import Any, Callable, ClassVar, Sequence
 
-import torch
 from torch import Tensor, nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
@@ -61,35 +60,23 @@ class Focus(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward."""
-        # shape of x (b,c,w,h) -> y(b,4c,w/2,h/2)
-        patch_top_left = x[..., ::2, ::2]
-        patch_top_right = x[..., ::2, 1::2]
-        patch_bot_left = x[..., 1::2, ::2]
-        patch_bot_right = x[..., 1::2, 1::2]
-        x = torch.cat(
-            (
-                patch_top_left,
-                patch_bot_left,
-                patch_top_right,
-                patch_bot_right,
-            ),
-            dim=1,
-        )
+        """Forward.
+
+        Uses reshape+permute instead of strided slicing to avoid aten::slice ops
+        with INT64_MAX upper bounds, which are incompatible with NPU/VPUX compiler.
+        Mathematically equivalent to the original slice-based implementation.
+        """
+        # shape of x (b,c,h,w) -> y(b,4c,h/2,w/2)
+        b, c, h, w = x.shape[0], x.shape[1], x.shape[2], x.shape[3]
+        x = x.reshape(b, c, h // 2, 2, w // 2, 2)
+        # gather the 4 quadrants: [TL, BL, TR, BR] via permute
+        x = x.permute(0, 1, 3, 5, 2, 4)   # (b, c, 2, 2, h/2, w/2)
+        x = x.reshape(b, c * 4, h // 2, w // 2)
         return self.conv(x)
 
     def export(self, x: Tensor) -> Tensor:
-        """Forward for export."""
-        # shape of x (b,c,w,h) -> y(b,4c,w/2,h/2)
-        b, c, h, w = x.shape
-        x = x.reshape(b, c, -1, 2, w)
-        x = x.reshape(b, c, x.shape[2], 2, -1, 2)
-        half_h = x.shape[2]
-        half_w = x.shape[4]
-        x = x.permute(0, 5, 3, 1, 2, 4)
-        x = x.reshape(b, c * 4, half_h, half_w)
-
-        return self.conv(x)
+        """Forward for export (kept for backward compatibility, identical to forward)."""
+        return self.forward(x)
 
 
 class CSPDarknetModule(BaseModule):
