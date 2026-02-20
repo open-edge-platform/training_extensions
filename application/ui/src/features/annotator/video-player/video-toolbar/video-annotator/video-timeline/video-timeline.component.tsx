@@ -22,9 +22,9 @@ const MIN_SIZE_OF_SEGMENT = 2 * 8;
 export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const size = useSizeHook(containerRef);
-    const { videoFrame, isPlaying } = useVideoPlayer();
+    const { videoFrame, videoControls } = useVideoPlayer();
+    const { isPlaying } = videoControls;
     const frameNumber = 0;
-    // TODO: fps * current time
 
     const step = 60;
     const totalFrames = Number(videoFrame.frame_count);
@@ -45,7 +45,8 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
             <div ref={outerRef} style={{ overflow: 'auto', width: size?.width }}>
                 <div style={{ width: sizePerSquare * totalSegments }} className={classes.timelineSliderWrapper}>
                     <VideoPlayerSlider
-                        media={videoFrame}
+                        ref={outerRef}
+                        mediaItem={videoFrame}
                         step={step}
                         frameNumber={frameNumber}
                         sizePerSquare={sizePerSquare}

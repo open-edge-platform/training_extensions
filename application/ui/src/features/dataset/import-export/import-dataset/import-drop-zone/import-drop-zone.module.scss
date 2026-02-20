@@ -1,0 +1,12 @@
+.formatOptions {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-size-150);
+}
+
+.link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: var(--spectrum-global-dimension-size-150);
+    gap: var(--spectrum-global-dimension-size-125);
+}

@@ -59,6 +59,8 @@ dependencies = [
     # repository publishes a tagged release with these changes, migrate to the
     # official version pin.
     "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@bf69fe2d11ee6b7e0698e4a27af2081134f9b483",
+    "certifi>=2026",
+    "roboflow~=1.2",
 ]
 
 [dependency-groups]
@@ -138,6 +140,7 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
 default-groups = ["dev", "lint"]
+required-version = "~=0.10.4"
 conflicts = [
     [
         { extra = "cpu" },
@@ -145,8 +148,14 @@ conflicts = [
         { extra = "cuda" },
     ],
 ]
-constraint-dependencies = [
-    "opencv-python; sys_platform == 'never'"
+exclude-dependencies = [
+    # We already depend on 'opencv-python-headless' through 'datumaro' and 'openvino-model-api', so installing
+    # 'opencv-python' (the version with GUI dependencies) may cause conflicts and waste disk space.
+    "opencv-python",
+]
+override-dependencies = [
+    # Bypass the unnecessarily strict version requirement of 'opencv-python-headless' set by 'roboflow'
+    "opencv-python-headless~=4.11",
 ]
 
 [tool.uv.sources]

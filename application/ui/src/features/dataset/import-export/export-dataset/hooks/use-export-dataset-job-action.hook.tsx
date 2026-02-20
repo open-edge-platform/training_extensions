@@ -3,7 +3,7 @@
 
 import { useActionState } from 'react';
 
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
 import { useExportDataset } from '../../../../../hooks/localStorage/use-export-dataset.hook';
