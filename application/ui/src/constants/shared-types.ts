@@ -19,6 +19,11 @@ export type ExportDatasetJob = Job & {
 };
 export type ExportDatasetMetadata = ExportDatasetJob['metadata'];
 
+export type PrepareImportDatasetJob = Job & {
+    type: 'prepare_dataset_for_import';
+    metadata: components['schemas']['PrepareDatasetForImportRequest'];
+};
+
 export type Media = components['schemas']['MediaView'];
 export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
