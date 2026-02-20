@@ -65,13 +65,18 @@ class Focus(nn.Module):
         Uses reshape+permute instead of strided slicing to avoid aten::slice ops
         with INT64_MAX upper bounds, which are incompatible with NPU/VPUX compiler.
         Mathematically equivalent to the original slice-based implementation.
+
+        Channel ordering matches the original torch.cat([TL, BL, TR, BR], dim=1):
+          After reshape to (b, c, h/2, j, w/2, l) where j=H-offset, l=W-offset,
+          permute(0,5,3,1,2,4) gives (b, l, j, c, h/2, w/2).
+          Flattening (l, j, c) → c*4 produces TL…TL, BL…BL, TR…TR, BR…BR per channel,
+          which is identical to the original concat order.
         """
         # shape of x (b,c,h,w) -> y(b,4c,h/2,w/2)
         b, c, h, w = x.shape[0], x.shape[1], x.shape[2], x.shape[3]
-        x = x.reshape(b, c, h // 2, 2, w // 2, 2)
-        # gather the 4 quadrants: [TL, BL, TR, BR] via permute
-        x = x.permute(0, 1, 3, 5, 2, 4)   # (b, c, 2, 2, h/2, w/2)
-        x = x.reshape(b, c * 4, h // 2, w // 2)
+        x = x.reshape(b, c, h // 2, 2, w // 2, 2)   # (b, c, h/2, j, w/2, l)
+        x = x.permute(0, 5, 3, 1, 2, 4)              # (b, l, j, c, h/2, w/2)
+        x = x.reshape(b, c * 4, h // 2, w // 2)       # flatten (l,j,c) → TL,BL,TR,BR
         return self.conv(x)
 
     def export(self, x: Tensor) -> Tensor:
