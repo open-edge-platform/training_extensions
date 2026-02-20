@@ -5,11 +5,12 @@
 
 from __future__ import annotations
 
-from typing import Any, override
+from typing import Any
 
 import torch
 from lightning.pytorch.accelerators import AcceleratorRegistry
 from lightning.pytorch.accelerators.accelerator import Accelerator
+from typing_extensions import override
 
 from otx.utils.device import is_xpu_available
 
