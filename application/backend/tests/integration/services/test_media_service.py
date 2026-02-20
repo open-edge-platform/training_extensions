@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB, VideoFrameDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
 from app.models.media import ImageFormat, MediaType, VideoFormat
-from app.services import LabelService, PipelineService, ProjectService, SystemService, VideoFrameService
+from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
 from app.services.media_service import InvalidImageError, MediaFilters, MediaService
@@ -51,12 +51,6 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
-def fxt_video_frame_service(db_session: Session) -> VideoFrameService:
-    """Fixture to create a VideoFrameService instance."""
-    return VideoFrameService(db_session=db_session)
-
-
-@pytest.fixture
 def fxt_project_service(
     fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
 ) -> ProjectService:
@@ -72,13 +66,10 @@ def fxt_project_service(
 @pytest.fixture
 def fxt_media_service(
     fxt_projects_dir: Path,
-    fxt_video_frame_service: VideoFrameService,
     db_session: Session,
 ) -> MediaService:
     """Fixture to create a MediaService instance."""
-    return MediaService(
-        data_dir=fxt_projects_dir.parent, video_frame_service=fxt_video_frame_service, db_session=db_session
-    )
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
 
 
 @pytest.fixture
@@ -154,6 +145,32 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
     db_session.add_all(db_media_list)
     db_session.flush()
     return project, db_media_list
+
+
+@pytest.fixture
+def fxt_video_frame(
+    fxt_project_with_media: tuple[Project, list[MediaDB]], db_session
+) -> Callable[[int], tuple[MediaDB, VideoFrameDB]]:
+    def _create_video_frame(frame_index: int) -> tuple[MediaDB, VideoFrameDB]:
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+
+        db_media = MediaDB(
+            type="video_frame", name=f"test4_frame_{frame_index}", format="jpg", size=1024, width=1024, height=768
+        )
+        db_media.project_id = str(project.id)
+        db_media.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+
+        db_session.add(db_media)
+        db_session.flush()
+
+        db_video_frame = VideoFrameDB(id=db_media.id, video_id=media.id, frame_index=frame_index)
+        db_session.add(db_video_frame)
+        db_session.flush()
+
+        return db_media, db_video_frame
+
+    return _create_video_frame
 
 
 @pytest.fixture
@@ -1344,17 +1361,15 @@ class TestMediaServiceIntegration:
         # Generate video
         fxt_video_data(video_path)
 
-        video_frame_media, video_frame = fxt_media_service.extract_video_frame(
-            project=project, video_id=UUID(media.id), frame_index=50
-        )
+        video_frame = fxt_media_service.extract_video_frame(project=project, video_id=UUID(media.id), frame_index=50)
 
-        video_frame_binary_path = dataset_dir / f"{video_frame_media.id}.jpg"
+        video_frame_binary_path = dataset_dir / f"{video_frame.id}.jpg"
         assert os.path.exists(video_frame_binary_path)
 
-        db_video_frame_media = db_session.get(MediaDB, str(video_frame_media.id))
+        db_video_frame_media = db_session.get(MediaDB, str(video_frame.id))
         assert db_video_frame_media is not None
         assert (
-            db_video_frame_media.id == str(video_frame_media.id)
+            db_video_frame_media.id == str(video_frame.id)
             and db_video_frame_media.project_id == str(project.id)
             and db_video_frame_media.type == "video_frame"
             and db_video_frame_media.name == "test4_frame_50"
@@ -1370,3 +1385,51 @@ class TestMediaServiceIntegration:
             and db_video_frame.video_id == media.id
             and db_video_frame.frame_index == 50
         )
+
+    def test_get_video_frame_by_video_id_and_index(
+        self,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[int], tuple[MediaDB, VideoFrameDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test getting a video frame by video ID and index."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(250)
+
+        video_frame = fxt_media_service.get_video_frame_by_video_id_and_index(
+            project=project, video_id=UUID(media.id), frame_index=250
+        )
+        assert video_frame is not None
+
+    def test_get_non_existing_video_frame_by_video_id_and_index(
+        self,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[int], tuple[MediaDB, VideoFrameDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test getting a non extracted video frame by video ID and index."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(250)
+
+        video_frame = fxt_media_service.get_video_frame_by_video_id_and_index(
+            project=project, video_id=UUID(media.id), frame_index=500
+        )
+        assert video_frame is None
+
+    def test_get_video_frames_by_video_id(
+        self,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[float], tuple[MediaDB, VideoFrameDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test getting a list of video frames by video ID."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(1.0)
+        fxt_video_frame(2.0)
+
+        video_frames = fxt_media_service.get_video_frames_by_video_id(project=project, video_id=UUID(media.id))
+        assert video_frames is not None
+        assert len(video_frames) == 2

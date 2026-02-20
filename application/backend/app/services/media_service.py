@@ -16,12 +16,11 @@ from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import MediaDB
-from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project, VideoFrame
-from app.models.media import ImageFormat, VideoFormat
-from app.repositories import MediaRepository
+from app.db.schema import MediaDB, VideoFrameDB
+from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
+from app.models.media import ImageFormat, MediaAdapter, VideoFormat
+from app.repositories import MediaRepository, VideoFrameRepository
 from app.services.video import extract_video_frame, get_video_metadata
-from app.services.video_frame_service import VideoFrameService
 from app.utils.images import crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
@@ -51,14 +50,9 @@ class MediaFilters:
 
 
 class MediaService(BaseSessionManagedService):
-    def __init__(
-        self, data_dir: Path, video_frame_service: VideoFrameService, db_session: Session | None = None
-    ) -> None:
+    def __init__(self, data_dir: Path, db_session: Session | None = None) -> None:
         super().__init__(db_session)
-        self.video_frame_service = video_frame_service
         self.projects_dir = data_dir / "projects"
-
-        self.register_managed_services(video_frame_service)
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -123,7 +117,7 @@ class MediaService(BaseSessionManagedService):
 
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
         db_media = repo.save(media)
-        return Media.model_validate(db_media)
+        return MediaAdapter.validate_python(db_media)
 
     def create_video(
         self,
@@ -167,7 +161,7 @@ class MediaService(BaseSessionManagedService):
         except Exception as e:
             binary_path.unlink(missing_ok=True)
             raise e
-        return Media.model_validate(db_media)
+        return MediaAdapter.validate_python(db_media)
 
     def count_media(
         self,
@@ -203,7 +197,7 @@ class MediaService(BaseSessionManagedService):
         repo = MediaRepository(project_id=str(project_id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
         return [
-            Media.model_validate(db)
+            MediaAdapter.validate_python(db)
             for db in repo.list_items(
                 limit=filters.limit,
                 offset=filters.offset,
@@ -222,7 +216,7 @@ class MediaService(BaseSessionManagedService):
         db_media = repo.get_by_id(str(media_id))
         if not db_media:
             raise ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
-        return Media.model_validate(db_media)
+        return MediaAdapter.validate_python(db_media)
 
     def get_media_binary_path(self, project_id: UUID, media: MediaDB | Media) -> Path:
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
@@ -301,10 +295,7 @@ class MediaService(BaseSessionManagedService):
 
         repo.delete(obj_id=str(media.id))
 
-    def get_frame_by_video_id_and_index(self, video_id: UUID, frame_index: int) -> VideoFrame | None:
-        return self.video_frame_service.get_frame_by_video_id_and_index(video_id=video_id, frame_index=frame_index)
-
-    def extract_video_frame(self, project: Project, video_id: UUID, frame_index: int) -> tuple[Media, VideoFrame]:
+    def extract_video_frame(self, project: Project, video_id: UUID, frame_index: int) -> Media:
         """Extract video frame by video ID and index"""
         video = self.get_media_by_id(project_id=project.id, media_id=video_id)
         if video.type != MediaType.VIDEO:
@@ -336,10 +327,52 @@ class MediaService(BaseSessionManagedService):
 
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
         db_video_frame = repo.save(db_video_frame)
-        video_frame_media = Media.model_validate(db_video_frame)
+        video_frame = MediaAdapter.validate_python(db_video_frame)
 
-        video_frame = self.video_frame_service.create_video_frame(
-            video_frame_media=video_frame_media, video=video, frame_index=frame_index
+        frame_repo = VideoFrameRepository(db=self.db_session)
+        frame_repo.save(
+            VideoFrameDB(
+                id=str(video_frame.id),
+                video_id=str(video.id),
+                frame_index=frame_index,
+            )
         )
 
-        return video_frame_media, video_frame
+        return video_frame
+
+    def get_video_frame_by_video_id_and_index(self, project: Project, video_id: UUID, frame_index: int) -> Media | None:
+        """
+        Returns annotated video frame by video ID and frame index.
+
+        Args:
+            project: Project
+            video_id: Video identifier
+            frame_index: Frame index
+
+        Returns:
+            Video frame data if such frame has been annotated, None otherwise.
+        """
+        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+        db_media = repo.get_video_frame_by_video_id_and_index(video_id=str(video_id), frame_index=frame_index)
+        return MediaAdapter.validate_python(db_media) if db_media else None
+
+    def get_video_frames_by_video_id(
+        self, project: Project, video_id: UUID, frame_index_from: int = 0, frame_index_to: int = 10
+    ) -> list[Media]:
+        """
+        Returns all annotated video frame falling into the specified timestamp range.
+
+        Args:
+            project: Project
+            video_id: Video identifier
+            frame_index_from: Frame index range start, default is 0
+            frame_index_to: Frame index range end, default is 10
+
+        Returns:
+            Annotated video frames list.
+        """
+        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+        db_media_list = repo.get_video_frames_by_video_id(
+            video_id=str(video_id), frame_index_from=frame_index_from, frame_index_to=frame_index_to
+        )
+        return [MediaAdapter.validate_python(db_media) for db_media in db_media_list]

@@ -1,9 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from enum import StrEnum
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import computed_field
+from pydantic import Field, TypeAdapter, computed_field
 
 from .base import BaseEntity
 
@@ -37,7 +38,7 @@ class MediaType(StrEnum):
     VIDEO_FRAME = "video_frame"
 
 
-class Media(BaseEntity):
+class BaseMedia(BaseEntity):
     """
     Media represents an uploaded or fetched media within a dataset.
 
@@ -56,25 +57,35 @@ class Media(BaseEntity):
     """
 
     id: UUID
-    type: MediaType
     project_id: UUID
     name: str
     format: MediaFormat
     width: int
     height: int
     size: int
-    fps: float | None
-    frame_count: int | None
     source_id: UUID | None
+
+
+class Image(BaseMedia):
+    type: Literal[MediaType.IMAGE]
+
+
+class VideoFrame(BaseMedia):
+    type: Literal[MediaType.VIDEO_FRAME]
+
+
+class Video(BaseMedia):
+    type: Literal[MediaType.VIDEO]
+    fps: float
+    frame_count: int
 
     @computed_field
     @property
-    def duration(self) -> float | None:
+    def duration(self) -> float:
         """Return duration in seconds"""
-        return self.frame_count / self.fps if self.frame_count is not None and self.fps is not None else None
+        return self.frame_count / self.fps
 
 
-class VideoFrame(BaseEntity):
-    id: UUID
-    video_id: UUID
-    frame_index: int
+Media = Annotated[Image | Video | VideoFrame, Field(discriminator="type")]
+
+MediaAdapter: TypeAdapter[Media] = TypeAdapter(Media)
