@@ -184,7 +184,9 @@ class ModelService(BaseSessionManagedService):
         Delete a model.
 
         Deletes a model revision from the database and deletes the folder from the filesystem
-        associated with this model.
+        associated with this model. Moreover, if no other models are linked to the linked
+        dataset revision, deletes the dataset revision from the database and deletes its
+        associated files from the filesystem.
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to delete.
@@ -215,7 +217,16 @@ class ModelService(BaseSessionManagedService):
             shutil.rmtree(path)
             logger.info("Deleted model files at '{}'", path)
 
-        self._delete_training_dataset_revision_files(deleted_model=model_to_delete)
+        if model_to_delete.training_dataset_id is not None:
+            model_list = model_rev_repo.list_all(training_dataset_id=model_to_delete.training_dataset_id)
+            if len(model_list) == 0:
+                dataset_rev_service = DatasetRevisionService(
+                    data_dir=self._projects_dir.parent, db_session=self.db_session
+                )
+                dataset_rev_service.delete_dataset_revision_files(
+                    project_id=UUID(model_to_delete.project_id),
+                    revision_id=UUID(model_to_delete.training_dataset_id),
+                )
 
     @parent_process_only
     def delete_model_files(self, project_id: UUID, model_id: UUID) -> None:
@@ -242,30 +253,6 @@ class ModelService(BaseSessionManagedService):
         if path.exists():
             shutil.rmtree(path)
             logger.info("Deleted model files at '{}'", path)
-
-        self._delete_training_dataset_revision_files(deleted_model=model_rev_db)
-
-    def _delete_training_dataset_revision_files(self, deleted_model: ModelRevisionDB) -> None:
-        """
-        Delete training dataset revision files if all model revisions linked to it have no files
-
-        Also deletes the dataset revision files if no model is linked to it.
-
-        Args:
-            deleted_model: Recently deleted model or model which has its files deleted
-        """
-        model_rev_repo = ModelRevisionRepository(project_id=deleted_model.project_id, db=self.db_session)
-        dataset_rev_service = DatasetRevisionService(data_dir=self._projects_dir.parent, db_session=self.db_session)
-
-        if deleted_model.training_dataset_id is not None:
-            model_list = model_rev_repo.list_all(training_dataset_id=deleted_model.training_dataset_id)
-            delete_dataset_revision = len(model_list) == 0
-            if all(model_db.files_deleted for model_db in model_list):
-                dataset_rev_service.delete_dataset_revision_files(
-                    project_id=UUID(deleted_model.project_id),
-                    revision_id=UUID(deleted_model.training_dataset_id),
-                    delete_revision_db=delete_dataset_revision,
-                )
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """

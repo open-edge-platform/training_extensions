@@ -183,8 +183,36 @@ class DatasetRevisionService(BaseSessionManagedService):
             )
         )
 
+    def delete_dataset_revision(
+        self,
+        project_id: UUID,
+        revision_id: UUID,
+    ) -> None:
+        """
+        Deletes a DatasetRevision from the DB and deletes its associated files from the disk.
+
+        Args:
+            project_id: The UUID of the project.
+            revision_id: The UUID of the dataset revision.
+
+        Raises:
+            ResourceNotFoundError: If the revision is not found.
+            ResourceInUseError: If the revision cannot be deleted from the DB
+        """
+        dataset_revision = self.get_dataset_revision(project_id=project_id, revision_id=revision_id)
+
+        try:
+            revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
+            revision_repo.delete(str(revision_id))
+        except IntegrityError:
+            raise ResourceInUseError(ResourceType.DATASET_REVISION, str(revision_id))
+
+        self._delete_dataset_revision_files(project_id=project_id, dataset_revision=dataset_revision)
+
     def delete_dataset_revision_files(
-        self, project_id: UUID, revision_id: UUID, delete_revision_db: bool = False
+        self,
+        project_id: UUID,
+        revision_id: UUID,
     ) -> None:
         """
         Marks the DatasetRevision files as deleted, and deletes associated files from the disk.
@@ -192,29 +220,26 @@ class DatasetRevisionService(BaseSessionManagedService):
         Args:
             project_id: The UUID of the project.
             revision_id: The UUID of the dataset revision.
-            delete_revision_db: Boolean indicating if DB entry should be removed
 
         Raises:
             ResourceNotFoundError: If the revision is not found.
         """
-        revision = self.get_dataset_revision(project_id, revision_id)
+        dataset_revision = self.get_dataset_revision(project_id=project_id, revision_id=revision_id)
 
-        if delete_revision_db:
-            try:
-                revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
-                revision_repo.delete(str(revision.id))
-            except IntegrityError:
-                raise ResourceInUseError(ResourceType.DATASET_REVISION, str(revision.id))
-        else:
-            if revision.files_deleted:
-                logger.info("Files for dataset revision '{}' are already deleted", revision_id)
-                return
-            # Mark as deleted in the database
-            revision.files_deleted = True
-            self.update_dataset_revision(project_id=project_id, dataset_revision=revision)
+        # Mark as deleted in the database
+        dataset_revision.files_deleted = True
+        self.update_dataset_revision(project_id=project_id, dataset_revision=dataset_revision)
+
+        self._delete_dataset_revision_files(project_id=project_id, dataset_revision=dataset_revision)
+
+    def _delete_dataset_revision_files(self, project_id: UUID, dataset_revision: DatasetRevision) -> None:
+        """Deletes files associated with dataset revision from hard disk"""
+        if dataset_revision.files_deleted:
+            logger.info("Files for dataset revision '{}' are already deleted", dataset_revision.id)
+            return
 
         # Delete files from filesystem
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision.id)
         if revision_path.exists():
             shutil.rmtree(revision_path)
             logger.info("Deleted dataset revision files at '{}'", revision_path)

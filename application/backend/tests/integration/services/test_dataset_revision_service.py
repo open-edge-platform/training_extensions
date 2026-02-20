@@ -520,7 +520,7 @@ class TestDatasetRevisionServiceIntegration:
         revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
         assert revision.files_deleted is True
 
-    def test_delete_dataset_revision_files_and_db_entry(
+    def test_delete_dataset_revision(
         self,
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
@@ -542,9 +542,7 @@ class TestDatasetRevisionServiceIntegration:
         assert (revision_path / "data.parquet").exists()
 
         # Delete the revision files
-        fxt_dataset_revision_service.delete_dataset_revision_files(
-            project_id=project.id, revision_id=revision_id, delete_revision_db=True
-        )
+        fxt_dataset_revision_service.delete_dataset_revision(project_id=project.id, revision_id=revision_id)
 
         # Verify the files were deleted
         assert not revision_path.exists()

@@ -358,33 +358,6 @@ class TestModelServiceIntegration:
         assert dataset_revision_db is not None
         assert dataset_revision_db.files_deleted is True
 
-    def test_delete_model_files_triggers_dataset_revision_files_deletion(
-        self,
-        db_session: Session,
-        fxt_project_id: UUID,
-        fxt_model_service: ModelService,
-        fxt_model_with_dataset_revision_db,
-    ):
-        """Test that deleting model files deletes associated dataset revision files if no models remain."""
-        dataset_revision_id = fxt_model_with_dataset_revision_db["dataset_revision_id"]
-        dataset_revision_path = fxt_model_with_dataset_revision_db["dataset_revision_path"]
-        model_id_1 = fxt_model_with_dataset_revision_db["model_id_1"]
-        model_id_2 = fxt_model_with_dataset_revision_db["model_id_2"]
-
-        fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=model_id_1)
-
-        assert dataset_revision_path.exists()
-        dataset_revision_db = db_session.get(DatasetRevisionDB, str(dataset_revision_id))
-        assert dataset_revision_db is not None
-        assert dataset_revision_db.files_deleted is False
-
-        fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=model_id_2)
-
-        assert not dataset_revision_path.exists()
-        dataset_revision_db = db_session.get(DatasetRevisionDB, str(dataset_revision_id))
-        assert dataset_revision_db is not None
-        assert dataset_revision_db.files_deleted is True
-
     @pytest.mark.parametrize(
         "model_format, expected_files",
         [
