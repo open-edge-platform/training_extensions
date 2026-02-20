@@ -232,22 +232,37 @@ class OTXTrainer(Execution):
             self._dataset_service.set_db_session(db)
             self._dataset_revision_service.set_db_session(db)
 
-            if dataset_revision_id:
+            if dataset_revision_id is not None:
                 # Load the specified dataset revision from the database
                 logger.info("Loading pre-existing dataset revision (ID={}) from the database", dataset_revision_id)
                 dm_dataset = self._dataset_revision_service.load_revision(
                     project_id=project_id, dataset_revision_id=dataset_revision_id
                 )
             else:
-                # Create a dataset revision including only the items with user-verified annotations, then save it
-                logger.info("Creating a new dataset revision with user-verified annotated items")
-                dm_dataset = self._dataset_service.get_dm_dataset(
-                    project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                latest_dataset_revision = self._dataset_revision_service.get_latest_uptodate_dataset_revision(
+                    project_id=project_id
                 )
-                dataset_revision_id = self._dataset_revision_service.save_revision(
-                    project_id=project_id, dataset=dm_dataset
-                )
-                logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
+                if latest_dataset_revision is not None:
+                    dataset_revision_id = latest_dataset_revision.id
+                    logger.info(
+                        "Loading pre-existing dataset revision (ID={}) from the database, "
+                        "as no changes have been detected since last training.",
+                        dataset_revision_id,
+                    )
+                    dm_dataset = self._dataset_revision_service.load_revision(
+                        project_id=project_id, dataset_revision_id=dataset_revision_id
+                    )
+
+                else:
+                    # Create a dataset revision including only the items with user-verified annotations, then save it
+                    logger.info("Creating a new dataset revision with user-verified annotated items")
+                    dm_dataset = self._dataset_service.get_dm_dataset(
+                        project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                    )
+                    dataset_revision_id = self._dataset_revision_service.save_revision(
+                        project_id=project_id, dataset=dm_dataset
+                    )
+                    logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
 
             # Extract the subsets (training, validation, testing)
             logger.info("Extracting training, validation, and testing subsets from the dataset")
