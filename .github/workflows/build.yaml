@@ -40,9 +40,8 @@ jobs:
         with:
           files_yaml: |
             test:
-              - application/backend/**
-              - application/docker/**
-              - application/ui/**
+              - application/**
+              - '!application/docs/**'
               - library/**
               - .github/**
 
