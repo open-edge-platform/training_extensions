@@ -74,27 +74,6 @@ wheels = [
 ]
 
 [[package]]
-name = "accelerate"
-version = "1.12.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "huggingface-hub", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "packaging", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "psutil", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "pyyaml", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "safetensors", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (sys_platform == 'linux' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (sys_platform == 'linux' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (sys_platform == 'win32' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (sys_platform == 'win32' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-3-otx-cuda' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "torch", version = "2.10.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/8e/ac2a9566747a93f8be36ee08532eb0160558b07630a081a6056a9f89bf1d/accelerate-1.12.0.tar.gz", hash = "sha256:70988c352feb481887077d2ab845125024b2a137a5090d6d7a32b57d03a45df6", size = 398399, upload-time = "2025-11-21T11:27:46.973Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/d2/c581486aa6c4fbd7394c23c47b83fa1a919d34194e16944241daf9e762dd/accelerate-1.12.0-py3-none-any.whl", hash = "sha256:3e2091cd341423207e2f084a6654b1efcd250dc326f2a37d6dde446e07cabb11", size = 380935, upload-time = "2025-11-21T11:27:44.522Z" },
-]
-
-[[package]]
 name = "aiofiles"
 version = "25.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -254,8 +233,7 @@ name = "anyio"
 version = "4.12.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "idna", version = "2.10", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "idna", version = "3.11", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "idna" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/f0/5eb65b2bb0d09ac6776f2eb54adee6abe8228ea05b20a5ad0e4945de8aac/anyio-4.12.1.tar.gz", hash = "sha256:41cfcc3a4c85d3f05c932da7c26d0201ac36f72abd4435ba90d0464a3ffed703", size = 228685, upload-time = "2026-01-06T11:45:21.246Z" }
 wheels = [
@@ -333,42 +311,8 @@ wheels = [
 
 [[package]]
 name = "certifi"
-version = "2022.12.7"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu')",
-    "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-]
-sdist = { url = "https://files.pythonhosted.org/packages/37/f7/2b1b0ec44fdc30a3d31dfebe52226be9ddc40cd6c0f34ffc8923ba423b69/certifi-2022.12.7.tar.gz", hash = "sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3", size = 156897, upload-time = "2022-12-07T20:13:22.081Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/4c/3db2b8021bd6f2f0ceb0e088d6b2d49147671f25832fb17970e9b583d742/certifi-2022.12.7-py3-none-any.whl", hash = "sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18", size = 155255, upload-time = "2022-12-07T20:13:19.428Z" },
-]
-
-[[package]]
-name = "certifi"
 version = "2026.1.4"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "(platform_machine != 'aarch64' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu') or (platform_python_implementation != 'CPython' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu') or (sys_platform != 'linux' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')",
-    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu'",
-    "sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu'",
-    "sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu'",
-    "sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "(platform_machine != 'aarch64' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (platform_python_implementation != 'CPython' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (sys_platform != 'linux' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu')",
-    "platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-    "extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu'",
-]
 sdist = { url = "https://files.pythonhosted.org/packages/e0/2d/a891ca51311197f6ad14a7ef42e2399f36cf2f9bd44752b3dc4eab60fdc5/certifi-2026.1.4.tar.gz", hash = "sha256:ac726dd470482006e014ad384921ed6438c457018f4b3d204aea4281258b2120", size = 154268, upload-time = "2026-01-04T02:42:41.825Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/ad/3cc14f097111b4de0040c83a525973216457bbeeb63739ef1ed275c1c021/certifi-2026.1.4-py3-none-any.whl", hash = "sha256:9943707519e4add1115f44c2bc244f782c0249876bf51b6599fee1ffbedd685c", size = 152900, upload-time = "2026-01-04T02:42:40.15Z" },
@@ -395,15 +339,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/eb/6d/bf9bda840d5f1dfdbf0feca87fbdb64a918a69bca42cfa0ba7b137c48cb8/cffi-2.0.0-cp313-cp313-win32.whl", hash = "sha256:74a03b9698e198d47562765773b4a8309919089150a0bb17d829ad7b44b60d27", size = 172909, upload-time = "2025-09-08T23:23:14.32Z" },
     { url = "https://files.pythonhosted.org/packages/37/18/6519e1ee6f5a1e579e04b9ddb6f1676c17368a7aba48299c3759bbc3c8b3/cffi-2.0.0-cp313-cp313-win_amd64.whl", hash = "sha256:19f705ada2530c1167abacb171925dd886168931e0a7b78f5bffcae5c6b5be75", size = 183402, upload-time = "2025-09-08T23:23:15.535Z" },
     { url = "https://files.pythonhosted.org/packages/cb/0e/02ceeec9a7d6ee63bb596121c2c8e9b3a9e150936f4fbef6ca1943e6137c/cffi-2.0.0-cp313-cp313-win_arm64.whl", hash = "sha256:256f80b80ca3853f90c21b23ee78cd008713787b1b1e93eae9f3d6a7134abd91", size = 177780, upload-time = "2025-09-08T23:23:16.761Z" },
-]
-
-[[package]]
-name = "chardet"
-version = "4.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz", hash = "sha256:0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa", size = 1907771, upload-time = "2020-12-10T19:35:33.971Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/c7/fa589626997dd07bd87d9269342ccb74b1720384a4d739a1872bd84fbe68/chardet-4.0.0-py2.py3-none-any.whl", hash = "sha256:f864054d66fd9118f2e67044ac8981a54775ec5b67aed0441892edb553d21da5", size = 178743, upload-time = "2020-12-10T19:35:32.469Z" },
 ]
 
 [[package]]
@@ -594,14 +529,11 @@ wheels = [
 
 [[package]]
 name = "cycler"
-version = "0.10.0"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c2/4b/137dea450d6e1e3d474e1d873cd1d4f7d3beed7e0dc973b06e8e10d32488/cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8", size = 16553, upload-time = "2016-02-16T05:13:07.46Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/95/a3dbbb5028f35eafb79008e7522a75244477d2838f38cbb722248dabc2a8/cycler-0.12.1.tar.gz", hash = "sha256:88bb128f02ba341da8ef447245a9e138fae777f6a23943da4540077d3601eb1c", size = 7615, upload-time = "2023-10-07T05:32:18.335Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/d2/e07d3ebb2bd7af696440ce7e754c59dd546ffe1bbe732c8ab68b9c834e61/cycler-0.10.0-py2.py3-none-any.whl", hash = "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d", size = 6547, upload-time = "2016-02-16T05:12:17.349Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/05/c19819d5e3d95294a6f5947fb9b9629efb316b96de511b418c53d245aae6/cycler-0.12.1-py3-none-any.whl", hash = "sha256:85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30", size = 8321, upload-time = "2023-10-07T05:32:16.783Z" },
 ]
 
 [[package]]
@@ -716,8 +648,7 @@ version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dnspython" },
-    { name = "idna", version = "2.10", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "idna", version = "3.11", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "idna" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
 wheels = [
@@ -1191,8 +1122,7 @@ name = "httpcore"
 version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "certifi", version = "2022.12.7", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "certifi", version = "2026.1.4", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "certifi" },
     { name = "h11" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz", hash = "sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8", size = 85484, upload-time = "2025-04-24T22:06:22.219Z" }
@@ -1221,11 +1151,9 @@ version = "0.28.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
-    { name = "certifi", version = "2022.12.7", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "certifi", version = "2026.1.4", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "certifi" },
     { name = "httpcore" },
-    { name = "idna", version = "2.10", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "idna", version = "3.11", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "idna" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
 wheels = [
@@ -1670,7 +1598,7 @@ wheels = [
 
 [[package]]
 name = "matplotlib"
-version = "3.10.6"
+version = "3.10.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "contourpy" },
@@ -1683,22 +1611,22 @@ dependencies = [
     { name = "pyparsing" },
     { name = "python-dateutil" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a0/59/c3e6453a9676ffba145309a73c462bb407f4400de7de3f2b41af70720a3c/matplotlib-3.10.6.tar.gz", hash = "sha256:ec01b645840dd1996df21ee37f208cd8ba57644779fa20464010638013d3203c", size = 34804264, upload-time = "2025-08-30T00:14:25.137Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/76/d3c6e3a13fe484ebe7718d14e269c9569c4eb0020a968a327acb3b9a8fe6/matplotlib-3.10.8.tar.gz", hash = "sha256:2299372c19d56bcd35cf05a2738308758d32b9eaed2371898d8f5bd33f084aa3", size = 34806269, upload-time = "2025-12-10T22:56:51.155Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/db/18380e788bb837e724358287b08e223b32bc8dccb3b0c12fa8ca20bc7f3b/matplotlib-3.10.6-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:819e409653c1106c8deaf62e6de6b8611449c2cd9939acb0d7d4e57a3d95cc7a", size = 8273231, upload-time = "2025-08-30T00:13:13.881Z" },
-    { url = "https://files.pythonhosted.org/packages/d3/0f/38dd49445b297e0d4f12a322c30779df0d43cb5873c7847df8a82e82ec67/matplotlib-3.10.6-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:59c8ac8382fefb9cb71308dde16a7c487432f5255d8f1fd32473523abecfecdf", size = 8128730, upload-time = "2025-08-30T00:13:15.556Z" },
-    { url = "https://files.pythonhosted.org/packages/e5/b8/9eea6630198cb303d131d95d285a024b3b8645b1763a2916fddb44ca8760/matplotlib-3.10.6-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:84e82d9e0fd70c70bc55739defbd8055c54300750cbacf4740c9673a24d6933a", size = 8698539, upload-time = "2025-08-30T00:13:17.297Z" },
-    { url = "https://files.pythonhosted.org/packages/71/34/44c7b1f075e1ea398f88aeabcc2907c01b9cc99e2afd560c1d49845a1227/matplotlib-3.10.6-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:25f7a3eb42d6c1c56e89eacd495661fc815ffc08d9da750bca766771c0fd9110", size = 9529702, upload-time = "2025-08-30T00:13:19.248Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/7f/e5c2dc9950c7facaf8b461858d1b92c09dd0cf174fe14e21953b3dda06f7/matplotlib-3.10.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f9c862d91ec0b7842920a4cfdaaec29662195301914ea54c33e01f1a28d014b2", size = 9593742, upload-time = "2025-08-30T00:13:21.181Z" },
-    { url = "https://files.pythonhosted.org/packages/ff/1d/70c28528794f6410ee2856cd729fa1f1756498b8d3126443b0a94e1a8695/matplotlib-3.10.6-cp313-cp313-win_amd64.whl", hash = "sha256:1b53bd6337eba483e2e7d29c5ab10eee644bc3a2491ec67cc55f7b44583ffb18", size = 8122753, upload-time = "2025-08-30T00:13:23.44Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/74/0e1670501fc7d02d981564caf7c4df42974464625935424ca9654040077c/matplotlib-3.10.6-cp313-cp313-win_arm64.whl", hash = "sha256:cbd5eb50b7058b2892ce45c2f4e92557f395c9991f5c886d1bb74a1582e70fd6", size = 7992973, upload-time = "2025-08-30T00:13:26.632Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/4e/60780e631d73b6b02bd7239f89c451a72970e5e7ec34f621eda55cd9a445/matplotlib-3.10.6-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:acc86dd6e0e695c095001a7fccff158c49e45e0758fdf5dcdbb0103318b59c9f", size = 8316869, upload-time = "2025-08-30T00:13:28.262Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/15/baa662374a579413210fc2115d40c503b7360a08e9cc254aa0d97d34b0c1/matplotlib-3.10.6-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:e228cd2ffb8f88b7d0b29e37f68ca9aaf83e33821f24a5ccc4f082dd8396bc27", size = 8178240, upload-time = "2025-08-30T00:13:30.007Z" },
-    { url = "https://files.pythonhosted.org/packages/c6/3f/3c38e78d2aafdb8829fcd0857d25aaf9e7dd2dfcf7ec742765b585774931/matplotlib-3.10.6-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:658bc91894adeab669cf4bb4a186d049948262987e80f0857216387d7435d833", size = 8711719, upload-time = "2025-08-30T00:13:31.72Z" },
-    { url = "https://files.pythonhosted.org/packages/96/4b/2ec2bbf8cefaa53207cc56118d1fa8a0f9b80642713ea9390235d331ede4/matplotlib-3.10.6-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8913b7474f6dd83ac444c9459c91f7f0f2859e839f41d642691b104e0af056aa", size = 9541422, upload-time = "2025-08-30T00:13:33.611Z" },
-    { url = "https://files.pythonhosted.org/packages/83/7d/40255e89b3ef11c7871020563b2dd85f6cb1b4eff17c0f62b6eb14c8fa80/matplotlib-3.10.6-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:091cea22e059b89f6d7d1a18e2c33a7376c26eee60e401d92a4d6726c4e12706", size = 9594068, upload-time = "2025-08-30T00:13:35.833Z" },
-    { url = "https://files.pythonhosted.org/packages/f0/a9/0213748d69dc842537a113493e1c27daf9f96bd7cc316f933dc8ec4de985/matplotlib-3.10.6-cp313-cp313t-win_amd64.whl", hash = "sha256:491e25e02a23d7207629d942c666924a6b61e007a48177fdd231a0097b7f507e", size = 8200100, upload-time = "2025-08-30T00:13:37.668Z" },
-    { url = "https://files.pythonhosted.org/packages/be/15/79f9988066ce40b8a6f1759a934ea0cde8dc4adc2262255ee1bc98de6ad0/matplotlib-3.10.6-cp313-cp313t-win_arm64.whl", hash = "sha256:3d80d60d4e54cda462e2cd9a086d85cd9f20943ead92f575ce86885a43a565d5", size = 8042142, upload-time = "2025-08-30T00:13:39.426Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/b9/15fd5541ef4f5b9a17eefd379356cf12175fe577424e7b1d80676516031a/matplotlib-3.10.8-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:3f2e409836d7f5ac2f1c013110a4d50b9f7edc26328c108915f9075d7d7a91b6", size = 8261076, upload-time = "2025-12-10T22:55:44.648Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/a0/2ba3473c1b66b9c74dc7107c67e9008cb1782edbe896d4c899d39ae9cf78/matplotlib-3.10.8-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:56271f3dac49a88d7fca5060f004d9d22b865f743a12a23b1e937a0be4818ee1", size = 8148794, upload-time = "2025-12-10T22:55:46.252Z" },
+    { url = "https://files.pythonhosted.org/packages/75/97/a471f1c3eb1fd6f6c24a31a5858f443891d5127e63a7788678d14e249aea/matplotlib-3.10.8-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:a0a7f52498f72f13d4a25ea70f35f4cb60642b466cbb0a9be951b5bc3f45a486", size = 8718474, upload-time = "2025-12-10T22:55:47.864Z" },
+    { url = "https://files.pythonhosted.org/packages/01/be/cd478f4b66f48256f42927d0acbcd63a26a893136456cd079c0cc24fbabf/matplotlib-3.10.8-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:646d95230efb9ca614a7a594d4fcacde0ac61d25e37dd51710b36477594963ce", size = 9549637, upload-time = "2025-12-10T22:55:50.048Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/7c/8dc289776eae5109e268c4fb92baf870678dc048a25d4ac903683b86d5bf/matplotlib-3.10.8-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f89c151aab2e2e23cb3fe0acad1e8b82841fd265379c4cecd0f3fcb34c15e0f6", size = 9613678, upload-time = "2025-12-10T22:55:52.21Z" },
+    { url = "https://files.pythonhosted.org/packages/64/40/37612487cc8a437d4dd261b32ca21fe2d79510fe74af74e1f42becb1bdb8/matplotlib-3.10.8-cp313-cp313-win_amd64.whl", hash = "sha256:e8ea3e2d4066083e264e75c829078f9e149fa119d27e19acd503de65e0b13149", size = 8142686, upload-time = "2025-12-10T22:55:54.253Z" },
+    { url = "https://files.pythonhosted.org/packages/66/52/8d8a8730e968185514680c2a6625943f70269509c3dcfc0dcf7d75928cb8/matplotlib-3.10.8-cp313-cp313-win_arm64.whl", hash = "sha256:c108a1d6fa78a50646029cb6d49808ff0fc1330fda87fa6f6250c6b5369b6645", size = 8012917, upload-time = "2025-12-10T22:55:56.268Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/27/51fe26e1062f298af5ef66343d8ef460e090a27fea73036c76c35821df04/matplotlib-3.10.8-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:ad3d9833a64cf48cc4300f2b406c3d0f4f4724a91c0bd5640678a6ba7c102077", size = 8305679, upload-time = "2025-12-10T22:55:57.856Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/1e/4de865bc591ac8e3062e835f42dd7fe7a93168d519557837f0e37513f629/matplotlib-3.10.8-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:eb3823f11823deade26ce3b9f40dcb4a213da7a670013929f31d5f5ed1055b22", size = 8198336, upload-time = "2025-12-10T22:55:59.371Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/cb/2f7b6e75fb4dce87ef91f60cac4f6e34f4c145ab036a22318ec837971300/matplotlib-3.10.8-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:d9050fee89a89ed57b4fb2c1bfac9a3d0c57a0d55aed95949eedbc42070fea39", size = 8731653, upload-time = "2025-12-10T22:56:01.032Z" },
+    { url = "https://files.pythonhosted.org/packages/46/b3/bd9c57d6ba670a37ab31fb87ec3e8691b947134b201f881665b28cc039ff/matplotlib-3.10.8-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b44d07310e404ba95f8c25aa5536f154c0a8ec473303535949e52eb71d0a1565", size = 9561356, upload-time = "2025-12-10T22:56:02.95Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/3d/8b94a481456dfc9dfe6e39e93b5ab376e50998cddfd23f4ae3b431708f16/matplotlib-3.10.8-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:0a33deb84c15ede243aead39f77e990469fff93ad1521163305095b77b72ce4a", size = 9614000, upload-time = "2025-12-10T22:56:05.411Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/cd/bc06149fe5585ba800b189a6a654a75f1f127e8aab02fd2be10df7fa500c/matplotlib-3.10.8-cp313-cp313t-win_amd64.whl", hash = "sha256:3a48a78d2786784cc2413e57397981fb45c79e968d99656706018d6e62e57958", size = 8220043, upload-time = "2025-12-10T22:56:07.551Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/de/b22cf255abec916562cc04eef457c13e58a1990048de0c0c3604d082355e/matplotlib-3.10.8-cp313-cp313t-win_arm64.whl", hash = "sha256:15d30132718972c2c074cd14638c7f4592bd98719e2308bccea40e0538bc0cb5", size = 8062075, upload-time = "2025-12-10T22:56:09.178Z" },
 ]
 
 [[package]]
@@ -2264,24 +2192,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "opencv-python"
-version = "4.13.0.92"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/6f/5a28fef4c4a382be06afe3938c64cc168223016fa520c5abaf37e8862aa5/opencv_python-4.13.0.92-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:caf60c071ec391ba51ed00a4a920f996d0b64e3e46068aac1f646b5de0326a19", size = 46247052, upload-time = "2026-02-05T07:01:25.046Z" },
-    { url = "https://files.pythonhosted.org/packages/08/ac/6c98c44c650b8114a0fb901691351cfb3956d502e8e9b5cd27f4ee7fbf2f/opencv_python-4.13.0.92-cp37-abi3-macosx_14_0_x86_64.whl", hash = "sha256:5868a8c028a0b37561579bfb8ac1875babdc69546d236249fff296a8c010ccf9", size = 32568781, upload-time = "2026-02-05T07:01:41.379Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/51/82fed528b45173bf629fa44effb76dff8bc9f4eeaee759038362dfa60237/opencv_python-4.13.0.92-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:0bc2596e68f972ca452d80f444bc404e08807d021fbba40df26b61b18e01838a", size = 47685527, upload-time = "2026-02-05T06:59:11.24Z" },
-    { url = "https://files.pythonhosted.org/packages/db/07/90b34a8e2cf9c50fe8ed25cac9011cde0676b4d9d9c973751ac7616223a2/opencv_python-4.13.0.92-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:402033cddf9d294693094de5ef532339f14ce821da3ad7df7c9f6e8316da32cf", size = 70460872, upload-time = "2026-02-05T06:59:19.162Z" },
-    { url = "https://files.pythonhosted.org/packages/02/6d/7a9cc719b3eaf4377b9c2e3edeb7ed3a81de41f96421510c0a169ca3cfd4/opencv_python-4.13.0.92-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:bccaabf9eb7f897ca61880ce2869dcd9b25b72129c28478e7f2a5e8dee945616", size = 46708208, upload-time = "2026-02-05T06:59:15.419Z" },
-    { url = "https://files.pythonhosted.org/packages/fd/55/b3b49a1b97aabcfbbd6c7326df9cb0b6fa0c0aefa8e89d500939e04aa229/opencv_python-4.13.0.92-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:620d602b8f7d8b8dab5f4b99c6eb353e78d3fb8b0f53db1bd258bb1aa001c1d5", size = 72927042, upload-time = "2026-02-05T06:59:23.389Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/17/de5458312bcb07ddf434d7bfcb24bb52c59635ad58c6e7c751b48949b009/opencv_python-4.13.0.92-cp37-abi3-win32.whl", hash = "sha256:372fe164a3148ac1ca51e5f3ad0541a4a276452273f503441d718fab9c5e5f59", size = 30932638, upload-time = "2026-02-05T07:02:14.98Z" },
-    { url = "https://files.pythonhosted.org/packages/e9/a5/1be1516390333ff9be3a9cb648c9f33df79d5096e5884b5df71a588af463/opencv_python-4.13.0.92-cp37-abi3-win_amd64.whl", hash = "sha256:423d934c9fafb91aad38edf26efb46da91ffbc05f3f59c4b0c72e699720706f5", size = 40212062, upload-time = "2026-02-05T07:02:12.724Z" },
-]
-
-[[package]]
 name = "opencv-python-headless"
 version = "4.13.0.92"
 source = { registry = "https://pypi.org/simple" }
@@ -2729,14 +2639,6 @@ wheels = [
 ]
 
 [[package]]
-name = "polygraphy"
-version = "0.49.26"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/25/e92af58cca8f8f8833d3346506a186938148b7156671c8154d94b8985d35/polygraphy-0.49.26-py2.py3-none-any.whl", hash = "sha256:5787d218a133163b42c92800134afaba6b266127646efb77416a9530137d1a45", size = 372849, upload-time = "2025-07-16T18:26:21.446Z" },
-]
-
-[[package]]
 name = "propcache"
 version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2936,14 +2838,14 @@ wheels = [
 
 [[package]]
 name = "pydot"
-version = "1.4.2"
+version = "3.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyparsing" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/13/6e/916cdf94f9b38ae0777b254c75c3bdddee49a54cc4014aac1460a7a172b3/pydot-1.4.2.tar.gz", hash = "sha256:248081a39bcb56784deb018977e428605c1c758f10897a339fce1dd728ff007d", size = 137681, upload-time = "2021-02-15T15:43:08.87Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/dd/e0e6a4fb84c22050f6a9701ad9fd6a67ef82faa7ba97b97eb6fdc6b49b34/pydot-3.0.4.tar.gz", hash = "sha256:3ce88b2558f3808b0376f22bfa6c263909e1c3981e2a7b629b65b451eee4a25d", size = 168167, upload-time = "2025-01-05T16:18:45.763Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ea/76/75b1bb82e9bad3e3d656556eaa353d8cd17c4254393b08ec9786ac8ed273/pydot-1.4.2-py2.py3-none-any.whl", hash = "sha256:66c98190c65b8d2e2382a441b4c0edfdb4f4c025ef9cb9874de478fb0793a451", size = 21868, upload-time = "2021-02-15T15:43:06.74Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/5f/1ebfd430df05c4f9e438dd3313c4456eab937d976f6ab8ce81a98f9fb381/pydot-3.0.4-py3-none-any.whl", hash = "sha256:bfa9c3fc0c44ba1d132adce131802d7df00429d1a79cc0346b0a5cd374dbe9c6", size = 35776, upload-time = "2025-01-05T16:18:42.836Z" },
 ]
 
 [[package]]
@@ -3390,11 +3292,9 @@ name = "requests"
 version = "2.32.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "certifi", version = "2022.12.7", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "certifi", version = "2026.1.4", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "certifi" },
     { name = "charset-normalizer" },
-    { name = "idna", version = "2.10", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "idna", version = "3.11", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "idna" },
     { name = "urllib3" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c9/74/b3ff8e6c8446842c3f5c837e9c3dfcfe2018ea6ecef224c710c85ef728f4/requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf", size = 134517, upload-time = "2025-08-18T20:46:02.573Z" }
@@ -3708,8 +3608,7 @@ name = "sentry-sdk"
 version = "2.53.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "certifi", version = "2022.12.7", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "certifi", version = "2026.1.4", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-xpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "certifi" },
     { name = "urllib3" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d3/06/66c8b705179bc54087845f28fd1b72f83751b6e9a195628e2e9af9926505/sentry_sdk-2.53.0.tar.gz", hash = "sha256:6520ef2c4acd823f28efc55e43eb6ce2e6d9f954a95a3aa96b6fd14871e92b77", size = 412369, upload-time = "2026-02-16T11:11:14.743Z" }
@@ -4362,27 +4261,6 @@ wheels = [
 ]
 
 [[package]]
-name = "transformers"
-version = "4.57.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "filelock", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "huggingface-hub", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "packaging", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "pyyaml", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "regex", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "requests", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "safetensors", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "tokenizers", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-    { name = "tqdm", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/35/67252acc1b929dc88b6602e8c4a982e64f31e733b804c14bc24b47da35e6/transformers-4.57.6.tar.gz", hash = "sha256:55e44126ece9dc0a291521b7e5492b572e6ef2766338a610b9ab5afbb70689d3", size = 10134912, upload-time = "2026-01-16T10:38:39.284Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/b8/e484ef633af3887baeeb4b6ad12743363af7cce68ae51e938e00aaa0529d/transformers-4.57.6-py3-none-any.whl", hash = "sha256:4c9e9de11333ddfe5114bc872c9f370509198acf0b87a832a0ab9458e2bd0550", size = 11993498, upload-time = "2026-01-16T10:38:31.289Z" },
-]
-
-[[package]]
 name = "triton"
 version = "3.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4646,12 +4524,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/61/f1/ee81806690a87dab5
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/ec/d58832f89ede95652fd01f4f24236af7d32b70cab2196dfcc2d2fd13c5c2/werkzeug-3.1.6-py3-none-any.whl", hash = "sha256:7ddf3357bb9564e407607f988f683d72038551200c704012bb9a4c523d42f131", size = 225166, upload-time = "2026-02-19T15:17:17.475Z" },
 ]
-
-[[package]]
-name = "wget"
-version = "3.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/47/6a/62e288da7bcda82b935ff0c6cfe542970f04e29c756b0e147251b2fb251f/wget-3.2.zip", hash = "sha256:35e630eca2aa50ce998b9b1a127bb26b30dfee573702782aa982f875e3f16061", size = 10857, upload-time = "2015-10-22T15:26:37.51Z" }
 
 [[package]]
 name = "win32-setctime"
