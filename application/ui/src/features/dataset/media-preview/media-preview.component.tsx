@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
-import { Content, Dialog, Grid, View } from '@geti/ui';
+import { Content, Dialog, Grid, Loading, View } from '@geti/ui';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
@@ -11,6 +11,7 @@ import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
@@ -45,6 +46,8 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
         queryKey: ['get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'],
     });
 };
+
+const CanvasAreaLoading = () => <Loading size='L' mode='inline' style={{ height: '100%' }} />;
 
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
@@ -122,7 +125,11 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
                             <View gridArea={'canvas'} overflow={'hidden'}>
                                 <AnnotatorCanvasSettings>
-                                    <AnnotatorCanvas mediaItem={mediaItem} />
+                                    <Suspense fallback={<CanvasAreaLoading />}>
+                                        <MediaItemImageLoader>
+                                            <AnnotatorCanvas mediaItem={mediaItem} />
+                                        </MediaItemImageLoader>
+                                    </Suspense>
                                 </AnnotatorCanvasSettings>
                             </View>
                         </>
