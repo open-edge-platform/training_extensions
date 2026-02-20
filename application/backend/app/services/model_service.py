@@ -203,7 +203,7 @@ class ModelService(BaseSessionManagedService):
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         model_to_delete = model_rev_repo.get_by_id(str(model_id))
         if model_to_delete is None:
-            raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
         try:
             deleted = model_rev_repo.delete(str(model_id))
@@ -223,7 +223,7 @@ class ModelService(BaseSessionManagedService):
                 dataset_rev_service = DatasetRevisionService(
                     data_dir=self._projects_dir.parent, db_session=self.db_session
                 )
-                dataset_rev_service.delete_dataset_revision_files(
+                dataset_rev_service.delete_dataset_revision(
                     project_id=UUID(model_to_delete.project_id),
                     revision_id=UUID(model_to_delete.training_dataset_id),
                 )
