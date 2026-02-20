@@ -33,7 +33,7 @@ from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.sample import OTXPredictionBatch
-from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
