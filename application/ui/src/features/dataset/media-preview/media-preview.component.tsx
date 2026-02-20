@@ -83,7 +83,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     return (
         <ToolProvider mode={mode}>
             <AnnotatorProviders
-                key={mediaItem.id}
                 mediaItem={mediaItem}
                 initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
                 initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}

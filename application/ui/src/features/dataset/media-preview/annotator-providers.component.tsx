@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
+
+import { Flex, Loading } from '@geti/ui';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import type { AnnotationDTO, Media } from '../../../constants/shared-types';
@@ -21,6 +23,12 @@ type AnnotatorProvidersProps = {
     children: ReactNode;
 };
 
+const CanvasAreaLoading = () => (
+    <Flex gridArea={'canvas'} alignContent={'center'} justifyContent={'center'}>
+        <Loading size='L' mode='inline' />
+    </Flex>
+);
+
 export const AnnotatorProviders = ({
     mediaItem,
     initialAnnotationsDTO,
@@ -31,22 +39,26 @@ export const AnnotatorProviders = ({
 }: AnnotatorProvidersProps) => {
     return (
         <ZoomProvider>
-            <AnnotationActionsProvider
-                key={mediaItem.id}
-                mediaItem={mediaItem}
-                initialAnnotationsDTO={initialAnnotationsDTO}
-                initialPredictionsDTO={initialPredictionsDTO}
-                isUserReviewed={isUserReviewed}
-                mode={mode}
-            >
-                <SelectAnnotationProvider>
-                    <AnnotationVisibilityProvider>
-                        <AnnotatorProvider key={mode} mediaItem={mediaItem}>
-                            <CanvasSettingsProvider>{children}</CanvasSettingsProvider>
-                        </AnnotatorProvider>
-                    </AnnotationVisibilityProvider>
-                </SelectAnnotationProvider>
-            </AnnotationActionsProvider>
+            <SelectAnnotationProvider>
+                <AnnotationVisibilityProvider>
+                    <CanvasSettingsProvider>
+                        <Suspense fallback={<CanvasAreaLoading />}>
+                            <AnnotatorProvider key={mode} mediaItem={mediaItem}>
+                                <AnnotationActionsProvider
+                                    key={mediaItem.id}
+                                    mediaItem={mediaItem}
+                                    initialAnnotationsDTO={initialAnnotationsDTO}
+                                    initialPredictionsDTO={initialPredictionsDTO}
+                                    isUserReviewed={isUserReviewed}
+                                    mode={mode}
+                                >
+                                    {children}
+                                </AnnotationActionsProvider>
+                            </AnnotatorProvider>
+                        </Suspense>
+                    </CanvasSettingsProvider>
+                </AnnotationVisibilityProvider>
+            </SelectAnnotationProvider>
         </ZoomProvider>
     );
 };
