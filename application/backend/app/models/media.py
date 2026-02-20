@@ -13,6 +13,10 @@ class ImageFormat(StrEnum):
 
     JPG = "jpg"
     PNG = "png"
+    JFIF = "jfif"
+    TIFF = "tiff"
+    BMP = "bmp"
+    WEBP = "webp"
 
 
 class VideoFormat(StrEnum):
