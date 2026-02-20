@@ -5,169 +5,18 @@
 
 from __future__ import annotations
 
-import copy
-import functools
-import inspect
-import typing
-import weakref
 from typing import Any
 
-import numpy as np
-import PIL.Image
 import torch
 import torchvision.transforms.v2 as tvt_v2
 from torchvision import tv_tensors
-from torchvision._utils import sequence_to_str
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.data.entity.base import (
-    Points,
+from otx.data.augmentation.kernels import (
     _resize_image_info,
     _resized_crop_image_info,
 )
 from otx.data.entity.sample import OTXSample
-
-
-class cache_randomness:  # noqa: N801
-    """Decorator that marks the method with random return value(s) in a transform class.
-
-    Reference : https://github.com/open-mmlab/mmcv/blob/v2.1.0/mmcv/transforms/utils.py#L15-L87
-
-    This decorator is usually used together with the context-manager
-    :func`:cache_random_params`. In this context, a decorated method will
-    cache its return value(s) at the first time of being invoked, and always
-    return the cached values when being invoked again.
-
-    .. note::
-        Only an instance method can be decorated with ``cache_randomness``.
-    """
-
-    def __init__(self, func):  # noqa: ANN001
-        # Check `func` is to be bound as an instance method
-        if not inspect.isfunction(func):
-            msg = "Unsupport callable to decorate with@cache_randomness."
-            raise TypeError(msg)
-        func_args = inspect.getfullargspec(func).args
-        if len(func_args) == 0 or func_args[0] != "self":
-            msg = (
-                "@cache_randomness should only be used to decorate instance methods (the first argument is ``self``).",
-            )
-            raise TypeError(msg)
-
-        functools.update_wrapper(self, func)
-        self.func = func
-        self.instance_ref = None
-
-    def __set_name__(self, owner, name):  # noqa: ANN001
-        # Maintain a record of decorated methods in the class
-        if not hasattr(owner, "_methods_with_randomness"):
-            owner._methods_with_randomness = []  # noqa: SLF001
-
-        # Here `name` equals to `self.__name__`, i.e., the name of the
-        # decorated function, due to the invocation of `update_wrapper` in
-        # `self.__init__()`
-        owner._methods_with_randomness.append(name)  # noqa: SLF001
-
-    def __call__(self, *args, **kwargs):  # noqa: D102
-        # Get the transform instance whose method is decorated
-        # by cache_randomness
-        instance = self.instance_ref()
-        name = self.__name__
-
-        # Check the flag ``self._cache_enabled``, which should be
-        # set by the contextmanagers like ``cache_random_parameters```
-        cache_enabled = getattr(instance, "_cache_enabled", False)
-
-        if cache_enabled:
-            # Initialize the cache of the transform instances. The flag
-            # ``cache_enabled``` is set by contextmanagers like
-            # ``cache_random_params```.
-            if not hasattr(instance, "_cache"):
-                instance._cache = {}  # noqa: SLF001
-
-            if name not in instance._cache:  # noqa: SLF001
-                instance._cache[name] = self.func(instance, *args, **kwargs)  # noqa: SLF001
-            # Return the cached value
-            return instance._cache[name]  # noqa: SLF001
-
-        # Clear cache
-        if hasattr(instance, "_cache"):
-            del instance._cache  # noqa: SLF001
-        # Return function output
-        return self.func(instance, *args, **kwargs)
-
-    def __get__(self, obj, cls):  # noqa: ANN001
-        self.instance_ref = weakref.ref(obj)
-        # Return a copy to avoid multiple transform instances sharing
-        # one `cache_randomness` instance, which may cause data races
-        # in multithreading cases.
-        return copy.copy(self)
-
-
-class NumpytoTVTensorMixin:
-    """Mixin that converts numpy image arrays in an OTXSample to tv_tensors.
-
-    Classes that inherit this mixin get a :meth:`convert` method that converts
-    the ``image`` field from a numpy ``HWC`` array to a ``tv_tensors.Image``
-    ``CHW`` tensor.  Other sample fields (bboxes, masks) are left unchanged.
-
-    The conversion is gated by ``self.is_numpy_to_tvtensor``.
-    """
-
-    is_numpy_to_tvtensor: bool = True
-
-    def convert(self, sample: OTXSample) -> OTXSample:
-        """Convert numpy image to tv_tensor.Image if ``is_numpy_to_tvtensor`` is True.
-
-        Args:
-            sample: Input sample that may contain a numpy image.
-
-        Returns:
-            The same sample with image converted to tv_tensor.Image (CHW float32).
-        """
-        if not self.is_numpy_to_tvtensor:
-            return sample
-
-        if isinstance(sample.image, np.ndarray):
-            img = sample.image
-            if img.ndim == 3:
-                img = torch.from_numpy(img).permute(2, 0, 1).contiguous()
-            elif img.ndim == 2:
-                img = torch.from_numpy(img).unsqueeze(0)
-            else:
-                img = torch.from_numpy(img)
-            sample.image = tv_tensors.Image(img)
-
-        return sample
-
-
-def custom_query_size(flat_inputs: list[Any]) -> tuple[int, int]:  # noqa: D103
-    sizes = {
-        tuple(F.get_size(inpt))
-        for inpt in flat_inputs
-        if tvt_v2._utils.check_type(  # noqa: SLF001
-            inpt,
-            (
-                F.is_pure_tensor,
-                tv_tensors.Image,
-                PIL.Image.Image,
-                tv_tensors.Video,
-                tv_tensors.Mask,
-                tv_tensors.BoundingBoxes,
-                Points,
-            ),
-        )
-    }
-    if not sizes:
-        raise TypeError("No image, video, mask, bounding box, or point was found in the sample")  # noqa: EM101, TRY003
-    elif len(sizes) > 1:  # noqa: RET506
-        msg = f"Found multiple HxW dimensions in the sample: {sequence_to_str(sorted(sizes))}"
-        raise ValueError(msg)
-    h, w = sizes.pop()
-    return h, w
-
-
-tvt_v2._utils.query_size = custom_query_size  # noqa: SLF001
 
 
 class Resize(tvt_v2.Transform):
@@ -359,6 +208,7 @@ class Resize(tvt_v2.Transform):
         """Debug visualization - save annotated PNG for inspection."""
         import os
 
+        import numpy as np
         from PIL import Image
         from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 
@@ -426,7 +276,7 @@ class Resize(tvt_v2.Transform):
         return sample
 
 
-class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
+class CachedMosaic(tvt_v2.Transform):
     """Mosaic augmentation with caching using pure torchvision operations.
 
     Combines four images into a single mosaic image by placing them in quadrants
@@ -448,8 +298,6 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         max_cached_images (int): Maximum number of cached images. Defaults to 40.
         random_pop (bool): If True, randomly remove cached images when full.
             If False, use FIFO. Defaults to True.
-        is_numpy_to_tvtensor (bool): Whether to convert outputs to tv_tensors.
-            Defaults to True.
     """
 
     def __init__(
@@ -461,7 +309,6 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         probability: float = 1.0,
         max_cached_images: int = 40,
         random_pop: bool = True,
-        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -476,19 +323,12 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.prob = probability
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
-        self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
         self.results_cache: list[OTXSample] = []
 
-    def _to_tensor_image(self, img: torch.Tensor | np.ndarray) -> torch.Tensor:
-        """Convert image to CHW float tensor."""
-        if isinstance(img, np.ndarray):
-            # HWC numpy -> CHW tensor
-            if img.ndim == 3:  # noqa: SIM108
-                img = torch.from_numpy(img).permute(2, 0, 1)
-            else:
-                img = torch.from_numpy(img).unsqueeze(0)
-        elif img.ndim == 3 and img.shape[-1] <= 4 and img.shape[-1] < min(img.shape[:-1]):
+    def _to_tensor_image(self, img: torch.Tensor) -> torch.Tensor:
+        """Ensure image is a CHW float tensor."""
+        if img.ndim == 3 and img.shape[-1] <= 4 and img.shape[-1] < min(img.shape[:-1]):
             # HWC tensor -> CHW tensor
             img = img.permute(2, 0, 1)
         return img.float()
@@ -652,7 +492,6 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         mosaic_w = self.img_scale[1] * 2
         return torch.zeros((n_masks, mosaic_h, mosaic_w), dtype=torch.uint8, device=device)
 
-    @cache_randomness
     def get_indexes(self, cache: list) -> list:
         """Get random indexes from cache."""
         return [int(torch.randint(0, len(cache), (1,)).item()) for _ in range(3)]
@@ -678,11 +517,11 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         # Return early if cache too small
         if len(self.results_cache) < 4:
-            return self.convert(inputs)
+            return inputs
 
         # Skip with probability
         if torch.rand(1).item() > self.prob:
-            return self.convert(inputs)
+            return inputs
 
         # Get 3 additional samples from cache
         indices = self.get_indexes(self.results_cache)
@@ -740,9 +579,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             # Transform bboxes
             bboxes_i = sample.bboxes
-            if isinstance(bboxes_i, np.ndarray):
-                bboxes_i = torch.from_numpy(bboxes_i).float()
-            elif isinstance(bboxes_i, tv_tensors.BoundingBoxes):
+            if isinstance(bboxes_i, tv_tensors.BoundingBoxes):
                 bboxes_i = bboxes_i.clone().float()
             else:
                 bboxes_i = bboxes_i.clone().float()
@@ -753,17 +590,12 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             # Collect labels
             labels_i = sample.label
-            if isinstance(labels_i, np.ndarray):
-                labels_i = torch.from_numpy(labels_i)
             all_labels.append(labels_i)
 
             # Transform masks if present
             if with_mask:
                 masks_i = sample.masks
                 if masks_i is not None and len(masks_i) > 0:
-                    if isinstance(masks_i, np.ndarray):
-                        masks_i = torch.from_numpy(masks_i)
-
                     # Resize masks
                     masks_i = self._resize_masks_keep_ratio(masks_i, target_h, target_w, orig_h, orig_w)
 
@@ -805,7 +637,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         # Debug visualization
         self._debug_visualize(inputs, center_x, center_y)
 
-        return self.convert(inputs)
+        return inputs
 
     def _debug_visualize(self, sample, center_x: int, center_y: int) -> None:  # noqa: ANN001
         """Debug visualization - save annotated PNG for inspection."""
@@ -871,8 +703,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         repr_str += f"pad_val={self.pad_val}, "
         repr_str += f"prob={self.prob}, "
         repr_str += f"max_cached_images={self.max_cached_images}, "
-        repr_str += f"random_pop={self.random_pop}, "
-        repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
+        repr_str += f"random_pop={self.random_pop})"
         return repr_str
 
 
@@ -1135,11 +966,6 @@ class CachedMixUp(tvt_v2.Transform):
         ori_img = inputs.image
         cached_img = cached.image
 
-        # Convert to CHW tensor
-        if isinstance(ori_img, np.ndarray):
-            msg = "Input image should be torch.Tensor, got numpy.ndarray."
-            raise TypeError(msg)
-
         _, target_h, target_w = ori_img.shape
         pad_val = self.pad_val / 255.0 if self.pad_val > 1.0 else self.pad_val
 
@@ -1227,12 +1053,6 @@ class CachedMixUp(tvt_v2.Transform):
         if with_mask:
             ori_masks = inputs.masks
             cached_masks = cached.masks
-
-            # Convert masks to tensor if needed
-            if isinstance(ori_masks, np.ndarray):
-                ori_masks = torch.from_numpy(ori_masks)
-            if isinstance(cached_masks, np.ndarray):
-                cached_masks = torch.from_numpy(cached_masks)
 
             # Transform cached masks
             if len(cached_masks) > 0:

@@ -9,6 +9,8 @@ This module provides a two-stage augmentation pipeline:
 - Intensity mapping: High-bit-depth (uint16) → float32 [0,1] conversion
 """
 
+# Import kernels module to ensure ImageInfo torchvision kernel registrations are active.
+from otx.data.augmentation import kernels  # noqa: F401
 from otx.data.augmentation.intensity import (
     PercentileClip,
     RangeScale,
@@ -21,24 +23,15 @@ from otx.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
 )
-from otx.data.augmentation.transforms import (
-    CachedMixUp,
-    CachedMosaic,
-    RandomIoUCrop,
-    Resize,
-)
 
 __all__ = [
     "CPUAugmentationPipeline",
-    "CachedMixUp",
-    "CachedMosaic",
     "GPUAugmentationPipeline",
     "PercentileClip",
     "RangeScale",
-    "RandomIoUCrop",
     "RepeatChannels",
-    "Resize",
     "ScaleToUnit",
     "WindowLevel",
     "build_intensity_transform",
+    "kernels",
 ]

@@ -43,7 +43,7 @@ def fxt_configs() -> Namespace:
                     },
                     {
                         "class_path": "torchvision.transforms.v2.RandomHorizontalFlip",
-                        "init_args": {"prob": 0.5, "is_numpy_to_tvtensor": True},
+                        "init_args": {"p": 0.5},
                     },
                     {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
                     {
