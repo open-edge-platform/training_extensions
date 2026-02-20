@@ -16,7 +16,7 @@ from otx.data.entity.sample import (
     DetectionSample,
     InstanceSegmentationSample,
 )
-from otx.data.transform_libs.torchvision import Resize
+from otx.data.augmentation.transforms import Resize
 
 
 class TestResize:

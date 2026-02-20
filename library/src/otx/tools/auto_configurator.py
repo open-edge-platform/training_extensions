@@ -332,14 +332,11 @@ class AutoConfigurator:
         ov_config = self._load_default_config(config_path=ov_config_path)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         subset_config.batch_size = ov_config[f"{subset}_subset"]["batch_size"]
-        subset_config.transform_lib_type = ov_config[f"{subset}_subset"]["transform_lib_type"]
-        subset_config.transforms = ov_config[f"{subset}_subset"]["transforms"]
-        subset_config.to_tv_image = ov_config[f"{subset}_subset"]["to_tv_image"]
+        subset_config.augmentations_cpu = ov_config[f"{subset}_subset"]["augmentations_cpu"]
         datamodule.tile_config.enable_tiler = False
         msg = (
             f"For OpenVINO IR models, Update the following {subset} \n"
-            f"\t transforms: {subset_config.transforms} \n"
-            f"\t transform_lib_type: {subset_config.transform_lib_type} \n"
+            f"\t augmentations_cpu: {subset_config.augmentations_cpu} \n"
             f"\t batch_size: {subset_config.batch_size} \n"
             "And the tiler is disabled."
         )

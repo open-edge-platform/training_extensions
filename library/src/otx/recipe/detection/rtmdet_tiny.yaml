@@ -78,12 +78,12 @@ overrides:
               - 0.5
               - 2.0
             antialias: true
-        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+        - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
             img_scale: $(input_size)
             max_cached_images: 20
             random_pop: false
-        - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+        - class_path: otx.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
             ratio_range:
@@ -117,7 +117,7 @@ overrides:
     val_subset:
       batch_size: 8
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
@@ -138,7 +138,7 @@ overrides:
     test_subset:
       batch_size: 8
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true

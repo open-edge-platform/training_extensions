@@ -21,13 +21,23 @@ from otx.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
 )
+from otx.data.augmentation.transforms import (
+    CachedMixUp,
+    CachedMosaic,
+    RandomIoUCrop,
+    Resize,
+)
 
 __all__ = [
     "CPUAugmentationPipeline",
+    "CachedMixUp",
+    "CachedMosaic",
     "GPUAugmentationPipeline",
     "PercentileClip",
     "RangeScale",
+    "RandomIoUCrop",
     "RepeatChannels",
+    "Resize",
     "ScaleToUnit",
     "WindowLevel",
     "build_intensity_transform",

@@ -20,7 +20,7 @@ from otx.config.data import SubsetConfig, TileConfig
 from otx.data.augmentation import CPUAugmentationPipeline
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
-from otx.data.transform_libs.torchvision import Compose
+from torchvision.transforms.v2 import Compose
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType

@@ -84,7 +84,7 @@ overrides:
           enable: true
           init_args:
             fill: 0
-        - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
+        - class_path: otx.data.augmentation.transforms.RandomIoUCrop
           enable: true
           init_args:
             probability: 1.0

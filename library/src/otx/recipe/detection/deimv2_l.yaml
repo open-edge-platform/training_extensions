@@ -61,7 +61,7 @@ callbacks:
           policies:
             no_aug:
               augmentations_cpu:
-                - class_path: otx.data.transform_libs.torchvision.Resize
+                - class_path: otx.data.augmentation.transforms.Resize
                   init_args:
                     size: [640, 640]
                     keep_aspect_ratio: false
@@ -83,7 +83,7 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1
-                - class_path: otx.data.transform_libs.torchvision.Resize
+                - class_path: otx.data.augmentation.transforms.Resize
                   init_args:
                     size: [640, 640]
                     keep_aspect_ratio: false
@@ -104,12 +104,12 @@ callbacks:
                     std: [0.229, 0.224, 0.225]
             strong_aug_1:
               augmentations_cpu:
-                - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+                - class_path: otx.data.augmentation.transforms.CachedMosaic
                   init_args:
                     random_pop: true
                     max_cached_images: 20
                     img_scale: [640, 640]
-                - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+                - class_path: otx.data.augmentation.transforms.CachedMixUp
                   init_args:
                     img_scale: [640, 640]
                     ratio_range: [1.0, 1.0]
@@ -119,7 +119,7 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1
-                - class_path: otx.data.transform_libs.torchvision.Resize
+                - class_path: otx.data.augmentation.transforms.Resize
                   init_args:
                     size: [640, 640]
                     keep_aspect_ratio: false
@@ -149,7 +149,7 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1
-                - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+                - class_path: otx.data.augmentation.transforms.CachedMixUp
                   init_args:
                     img_scale: [640, 640]
                     ratio_range: [1.0, 1.0]
@@ -159,7 +159,7 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1
-                - class_path: otx.data.transform_libs.torchvision.Resize
+                - class_path: otx.data.augmentation.transforms.Resize
                   init_args:
                     size: [640, 640]
                     keep_aspect_ratio: false
@@ -201,7 +201,7 @@ overrides:
       batch_size: 8
       num_workers: 4
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
@@ -219,7 +219,7 @@ overrides:
     val_subset:
       batch_size: 8
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
@@ -232,7 +232,7 @@ overrides:
     test_subset:
       batch_size: 8
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false

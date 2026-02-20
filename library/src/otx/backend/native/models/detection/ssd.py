@@ -210,7 +210,7 @@ class SSD(OTXDetectionModel):
         """Get new anchors for SSD from OTXDataset."""
         from torchvision.transforms.v2._container import Compose
 
-        from otx.data.transform_libs.torchvision import Resize
+        from otx.data.augmentation.transforms import Resize
 
         target_wh = None
         if isinstance(dataset.transforms, Compose):

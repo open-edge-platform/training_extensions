@@ -11,7 +11,7 @@ import torch
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.data.entity.sample import KeypointSample, with_image_dtype
-from otx.data.transform_libs.torchvision import Compose
+from torchvision.transforms.v2 import Compose
 from otx.types import OTXTaskType
 from otx.types.label import LabelInfo
 

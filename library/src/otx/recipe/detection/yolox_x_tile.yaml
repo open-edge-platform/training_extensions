@@ -61,7 +61,7 @@ overrides:
       num_workers: 4
       batch_size: 4
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
@@ -84,7 +84,7 @@ overrides:
       num_workers: 4
       batch_size: 4
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
@@ -98,7 +98,7 @@ overrides:
       num_workers: 4
       batch_size: 4
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false

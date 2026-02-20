@@ -51,16 +51,16 @@ overrides:
       - 518
     train_subset:
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
     val_subset:
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
     test_subset:
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)

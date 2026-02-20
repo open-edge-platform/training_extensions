@@ -29,7 +29,7 @@ def fxt_configs() -> Namespace:
                 num_workers=4,
                 transforms=[
                     {
-                        "class_path": "otx.data.transform_libs.torchvision.Resize",
+                        "class_path": "otx.data.augmentation.transforms.Resize",
                         "init_args": {
                             "keep_ratio": True,
                             "transform_bbox": True,
@@ -38,11 +38,11 @@ def fxt_configs() -> Namespace:
                         },
                     },
                     {
-                        "class_path": "otx.data.transform_libs.torchvision.Pad",
+                        "class_path": "torchvision.transforms.v2.Pad",
                         "init_args": {"pad_to_square": True, "transform_mask": True},
                     },
                     {
-                        "class_path": "otx.data.transform_libs.torchvision.RandomFlip",
+                        "class_path": "torchvision.transforms.v2.RandomHorizontalFlip",
                         "init_args": {"prob": 0.5, "is_numpy_to_tvtensor": True},
                     },
                     {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
@@ -171,14 +171,14 @@ def test_namespace_override(fxt_configs) -> None:
             train_subset=Namespace(
                 transforms=[
                     {
-                        "class_path": "otx.data.transform_libs.torchvision.Resize",
+                        "class_path": "otx.data.augmentation.transforms.Resize",
                         "init_args": {
                             "keep_ratio": False,  # for boolean
                             "scale": [512, 512],  # for tuple
                         },
                     },
                     {
-                        "class_path": "otx.data.transform_libs.torchvision.Pad",
+                        "class_path": "torchvision.transforms.v2.Pad",
                         "init_args": {"size_divisor": 32},  # add new key
                     },
                     {
@@ -194,7 +194,7 @@ def test_namespace_override(fxt_configs) -> None:
 
         namespace_override(configs=cfg, key="data", overrides=overrides, convert_dict_to_namespace=False)
 
-        # otx.data.transform_libs.torchvision.Resize
+        # otx.data.augmentation.transforms.Resize
         assert (
             cfg.data.train_subset.transforms[0]["init_args"]["keep_ratio"]
             == overrides.train_subset.transforms[0]["init_args"]["keep_ratio"]
@@ -203,7 +203,7 @@ def test_namespace_override(fxt_configs) -> None:
             cfg.data.train_subset.transforms[0]["init_args"]["scale"]
             == overrides.train_subset.transforms[0]["init_args"]["scale"]
         )
-        # otx.data.transform_libs.torchvision.Pad
+        # torchvision.transforms.v2.Pad
         assert "size_divisor" in cfg.data.train_subset.transforms[1]["init_args"]
         assert (
             cfg.data.train_subset.transforms[1]["init_args"]["size_divisor"]

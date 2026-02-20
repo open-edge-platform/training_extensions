@@ -25,32 +25,18 @@ __all__ = ["OTXDatasetFactory", "TransformLibFactory"]
 
 
 class TransformLibFactory:
-    """Factory class for transform.
-
-    This factory supports both legacy transforms and new augmentations_cpu field.
-    Priority: transform_lib_type (legacy) > augmentations_cpu (new).
-    """
+    """Factory class for transform."""
 
     @classmethod
     def generate(cls: type[TransformLibFactory], config: SubsetConfig) -> Transforms | CPUAugmentationPipeline:
         """Create transforms from factory.
 
         Args:
-            config: SubsetConfig with transforms or augmentations_cpu.
+            config: SubsetConfig with augmentations_cpu.
 
         Returns:
-            Either CPUAugmentationPipeline (new) or Compose (legacy).
+            CPUAugmentationPipeline built from config.
         """
-        # Legacy path: use TorchVisionTransformLib when transform_lib_type is explicitly set
-        from otx.types.transformer_libs import TransformLibType
-
-        transform_lib_type = getattr(config, "transform_lib_type", None)
-        if transform_lib_type == TransformLibType.TORCHVISION:
-            from otx.data.transform_libs.torchvision import TorchVisionTransformLib
-
-            return TorchVisionTransformLib.generate(config)
-
-        # New path: use augmentations_cpu if provided
         if config.augmentations_cpu:
             # Already a pipeline object (e.g., from from_file method)
             if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):

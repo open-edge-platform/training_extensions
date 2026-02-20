@@ -13,9 +13,9 @@ train_subset:
   batch_size: 1
   num_workers: 2
   augmentations_cpu:
-    - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
+    - class_path: torchvision.transforms.v2.RandomIoUCrop
       enable: true
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false
@@ -58,7 +58,7 @@ val_subset:
   batch_size: 1
   num_workers: 2
   augmentations_cpu:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false
@@ -83,7 +83,7 @@ test_subset:
   batch_size: 1
   num_workers: 2
   augmentations_cpu:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false
