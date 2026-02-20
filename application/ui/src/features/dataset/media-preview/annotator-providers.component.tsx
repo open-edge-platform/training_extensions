@@ -9,8 +9,12 @@ import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import type { AnnotationDTO, Media } from '../../../constants/shared-types';
 import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
-import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
+import { LabelsProvider } from '../../annotator/labels-provider.component';
+import {
+    MediaItemImageLoader,
+    SelectedMediaItemProvider,
+} from '../../annotator/selected-media-item-provider.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
 import type { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 
@@ -29,6 +33,17 @@ const CanvasAreaLoading = () => (
     </Flex>
 );
 
+/**
+ * Provider tree for the annotator.
+ *
+ * Stable providers (Zoom, SelectAnnotation, Visibility, CanvasSettings, Labels,
+ * SelectedMediaItem, AnnotationActions) are placed OUTSIDE the Suspense boundary
+ * so that toolbars and annotation state remain mounted while a new image loads.
+ *
+ * MediaItemImageLoader is the only suspending provider and lives INSIDE the
+ * Suspense boundary — meaning only the canvas area shows a loading state during
+ * image fetching.
+ */
 export const AnnotatorProviders = ({
     mediaItem,
     initialAnnotationsDTO,
@@ -42,8 +57,8 @@ export const AnnotatorProviders = ({
             <SelectAnnotationProvider>
                 <AnnotationVisibilityProvider>
                     <CanvasSettingsProvider>
-                        <Suspense fallback={<CanvasAreaLoading />}>
-                            <AnnotatorProvider key={mode} mediaItem={mediaItem}>
+                        <LabelsProvider key={mode}>
+                            <SelectedMediaItemProvider mediaItem={mediaItem}>
                                 <AnnotationActionsProvider
                                     key={mediaItem.id}
                                     mediaItem={mediaItem}
@@ -52,10 +67,12 @@ export const AnnotatorProviders = ({
                                     isUserReviewed={isUserReviewed}
                                     mode={mode}
                                 >
-                                    {children}
+                                    <Suspense fallback={<CanvasAreaLoading />}>
+                                        <MediaItemImageLoader>{children}</MediaItemImageLoader>
+                                    </Suspense>
                                 </AnnotationActionsProvider>
-                            </AnnotatorProvider>
-                        </Suspense>
+                            </SelectedMediaItemProvider>
+                        </LabelsProvider>
                     </CanvasSettingsProvider>
                 </AnnotationVisibilityProvider>
             </SelectAnnotationProvider>

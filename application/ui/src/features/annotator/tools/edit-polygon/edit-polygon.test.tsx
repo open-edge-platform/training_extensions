@@ -18,13 +18,9 @@ import { EditPolygon } from './edit-polygon.component';
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
 vi.mock('hooks/api/project.hook', () => ({ useProject: () => ({ data: getMockedProject({}) }) }));
 
-vi.mock('../../../../shared/annotator/annotator-provider.component', async (importActual) => {
-    const actual = await importActual<typeof import('../../../../shared/annotator/annotator-provider.component')>();
-    return {
-        ...actual,
-        useAnnotator: vi.fn(() => ({ roi: mockROI })),
-    };
-});
+vi.mock('../../selected-media-item-provider.component', () => ({
+    useSelectedMediaItem: vi.fn(() => ({ roi: mockROI })),
+}));
 vi.mock('../utils', async (importActual) => {
     const actual = await importActual<typeof import('../utils')>();
     return {

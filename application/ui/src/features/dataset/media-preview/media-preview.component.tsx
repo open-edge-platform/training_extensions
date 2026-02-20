@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
-import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
+import { Content, Dialog, Grid, View } from '@geti/ui';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
@@ -39,12 +39,6 @@ type MediaPreviewContentProps = {
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
 };
-
-const CanvasAreaLoading = () => (
-    <Flex gridArea={'canvas'} alignContent={'center'} justifyContent={'center'}>
-        <Loading size='L' mode='inline' />
-    </Flex>
-);
 
 const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     queryClient.invalidateQueries({
@@ -164,14 +158,12 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                         'toolbar bottom aside',
                     ]}
                 >
-                    <Suspense fallback={<CanvasAreaLoading />}>
-                        <MediaPreviewContent
-                            items={items}
-                            mediaItem={mediaItem}
-                            onClose={close}
-                            onSelectedMediaItem={onSelectedMediaItem}
-                        />
-                    </Suspense>
+                    <MediaPreviewContent
+                        items={items}
+                        mediaItem={mediaItem}
+                        onClose={close}
+                        onSelectedMediaItem={onSelectedMediaItem}
+                    />
 
                     <View gridArea={'aside'}>
                         <SidebarItems

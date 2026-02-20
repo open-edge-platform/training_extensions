@@ -7,8 +7,9 @@ import { isPointOverPoint, isPolygonValid } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { Point } from '../../../../shared/types';
+import { useLabelsProvider } from '../../labels-provider.component';
+import { useMediaItemImage } from '../../selected-media-item-provider.component';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
@@ -30,7 +31,8 @@ import classes from './polygon-tool.module.scss';
 export const PolygonTool = () => {
     const { scale: zoom } = useZoom();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { image, selectedLabel } = useAnnotator();
+    const { image } = useMediaItemImage();
+    const { selectedLabel } = useLabelsProvider();
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);
     const isPointerDown = useRef<boolean>(false);

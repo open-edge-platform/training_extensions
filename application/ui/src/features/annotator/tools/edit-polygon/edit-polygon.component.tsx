@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { isPolygonValid } from '@geti/smart-tools/utils';
 
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { Annotation, Polygon } from '../../../../shared/types';
 import { AnnotationShapeRenderer } from '../../annotations/annotation-shape-renderer.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { TranslateShape } from '../edit-bounding-box/translate-shape.component';
 import { removeOffLimitPointsPolygon } from '../utils';
 import { EditPoints } from './edit-points.component';
@@ -19,7 +19,7 @@ interface EditPolygonProps {
 }
 
 export const EditPolygon = ({ annotation, zoom }: EditPolygonProps) => {
-    const { roi } = useAnnotator();
+    const { roi } = useSelectedMediaItem();
     const isAddPoint = useRef(false);
     const [shape, setShape] = useState(annotation.shape);
     const { updateAnnotations, deleteAnnotations } = useAnnotationActions();

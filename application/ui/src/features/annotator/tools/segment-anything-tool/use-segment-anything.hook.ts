@@ -9,8 +9,8 @@ import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { isDetectionTask } from '../../../project/task-type-guards';
+import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
@@ -121,7 +121,8 @@ export const useSegmentAnythingModel = () => {
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
     const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
 
-    const { mediaItem, image } = useAnnotator();
+    const { mediaItem } = useSelectedMediaItem();
+    const { image } = useMediaItemImage();
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
