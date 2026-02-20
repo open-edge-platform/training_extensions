@@ -18,6 +18,7 @@ interface ThumbnailPreviewProps {
 }
 
 export const ThumbnailPreview = ({ mediaItem, videoFrame: frameNumber, width, height, x }: ThumbnailPreviewProps) => {
+    // TODO: Use it when video frame navigation is ready and API supports it.
     // const constructVideoFrame = useConstructVideoFrame(mediaItem);
     // const videoFrame = constructVideoFrame(frameNumber) as VideoFrame;
     const projectIdentifier = useProjectIdentifier();

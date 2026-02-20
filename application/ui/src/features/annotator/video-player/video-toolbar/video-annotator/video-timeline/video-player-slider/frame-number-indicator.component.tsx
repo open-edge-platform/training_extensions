@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useNumberFormatter, View } from '@geti/ui';
+import { dimensionValue, useNumberFormatter, View } from '@geti/ui';
 
 const useFormatFrames = (frames: number) => {
     const formatter = useNumberFormatter({
@@ -29,7 +29,7 @@ export const FrameNumberIndicator = ({ frameNumber }: FrameNumberIndicatorProps)
             borderRadius={'regular'}
             paddingX='size-75'
             paddingY='size-25'
-            UNSAFE_style={{ color: 'white', fontSize: '12px' }}
+            UNSAFE_style={{ color: 'white', fontSize: dimensionValue('size-150') }}
         >
             {formattedFrames}f
         </View>
