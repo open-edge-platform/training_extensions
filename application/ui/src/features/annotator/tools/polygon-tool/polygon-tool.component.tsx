@@ -8,7 +8,7 @@ import { isEmpty } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { Point } from '../../../../shared/types';
-import { useLabelsProvider } from '../../labels-provider.component';
+import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
 import { useMediaItemImage } from '../../selected-media-item-provider.component';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
@@ -32,7 +32,7 @@ export const PolygonTool = () => {
     const { scale: zoom } = useZoom();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { image } = useMediaItemImage();
-    const { selectedLabel } = useLabelsProvider();
+    const { selectedLabel } = useAnnotatorLabels();
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);
     const isPointerDown = useRef<boolean>(false);

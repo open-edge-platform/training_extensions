@@ -13,7 +13,7 @@ import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation } from '../../../shared/types';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
-import { useLabelsProvider } from '../labels-provider.component';
+import { useAnnotatorLabels } from '../annotator-labels-provider.component';
 import { useUpdateLabel } from './api/use-update-label.hook';
 
 type UseLabelsOptions = {
@@ -24,7 +24,7 @@ type UseLabelsOptions = {
 const filterOutEmptyLabels = (labels: Label[]): Label[] => labels.filter((label) => label.id !== EMPTY_LABEL_ID);
 
 export const useLabels = ({ isClassification = false, isMultiLabel = false }: UseLabelsOptions = {}) => {
-    const { selectedLabelId, setSelectedLabelId, labels } = useLabelsProvider();
+    const { selectedLabelId, setSelectedLabelId, labels } = useAnnotatorLabels();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, addAnnotations, updateAnnotations, deleteAnnotations, addAnnotationWithEmptyLabel } =
         useAnnotationActions();

@@ -9,14 +9,14 @@ import type { Label } from '../../constants/shared-types';
 import { useProjectLabelsWithEmptyLabel } from '../../shared/annotator/labels';
 import { isClassificationTask } from '../project/task-type-guards';
 
-type LabelsContextType = {
+type AnnotatorLabelsContextProps = {
     labels: Label[];
     selectedLabel: Label | null;
     selectedLabelId: string | null;
     setSelectedLabelId: (id: string | null) => void;
 };
 
-const LabelsContext = createContext<LabelsContextType | null>(null);
+const AnnotatorLabelsContext = createContext<AnnotatorLabelsContextProps | null>(null);
 
 const useInitialSelectedLabelId = (labels: Label[]): string | null => {
     const { data: project } = useProject();
@@ -29,7 +29,7 @@ type LabelsProviderProps = {
     children: ReactNode;
 };
 
-export const LabelsProvider = ({ children }: LabelsProviderProps) => {
+export const AnnotatorLabelsProvider = ({ children }: LabelsProviderProps) => {
     const labels = useProjectLabelsWithEmptyLabel();
     const initialSelectedLabelId = useInitialSelectedLabelId(labels);
     const [selectedLabelId, setSelectedLabelId] = useState<string | null>(initialSelectedLabelId);
@@ -37,14 +37,14 @@ export const LabelsProvider = ({ children }: LabelsProviderProps) => {
     const selectedLabel: Label | null = labels.find(({ id }) => id === selectedLabelId) ?? null;
 
     return (
-        <LabelsContext.Provider value={{ labels, selectedLabel, selectedLabelId, setSelectedLabelId }}>
+        <AnnotatorLabelsContext value={{ labels, selectedLabel, selectedLabelId, setSelectedLabelId }}>
             {children}
-        </LabelsContext.Provider>
+        </AnnotatorLabelsContext>
     );
 };
 
-export const useLabelsProvider = (): LabelsContextType => {
-    const context = useContext(LabelsContext);
+export const useAnnotatorLabels = (): AnnotatorLabelsContextProps => {
+    const context = useContext(AnnotatorLabelsContext);
 
     if (context === null) {
         throw new Error('useLabelsProvider was used outside of LabelsProvider');

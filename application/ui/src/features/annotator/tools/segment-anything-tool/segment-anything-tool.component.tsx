@@ -11,7 +11,7 @@ import type { Label } from '../../../../constants/shared-types';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
-import { useLabelsProvider } from '../../labels-provider.component';
+import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
 import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
@@ -60,7 +60,7 @@ export const SegmentAnythingTool = () => {
     const zoom = useZoom();
     const { roi } = useSelectedMediaItem();
     const { image } = useMediaItemImage();
-    const { selectedLabel } = useLabelsProvider();
+    const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);

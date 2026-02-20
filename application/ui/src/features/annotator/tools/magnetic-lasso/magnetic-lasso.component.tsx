@@ -11,7 +11,7 @@ import { isEmpty, isEqual, throttle } from 'lodash-es';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { Point } from '../../../../shared/types';
 import { isNonEmptyArray } from '../../../../shared/util';
-import { useLabelsProvider } from '../../labels-provider.component';
+import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
 import { useMediaItemImage } from '../../selected-media-item-provider.component';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { PolygonDraw } from '../polygon-tool/polygon-draw.component';
@@ -35,7 +35,7 @@ export const MagneticLasso = () => {
     const [mode, setMode] = useState<PolygonMode>(PolygonMode.MagneticLasso);
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { image } = useMediaItemImage();
-    const { selectedLabel } = useLabelsProvider();
+    const { selectedLabel } = useAnnotatorLabels();
     const [isPendingPolygonOptimization, startTransition] = useTransition();
 
     const canvasRef = useRef<SVGRectElement>({} as SVGRectElement);

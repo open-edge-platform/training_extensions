@@ -8,7 +8,7 @@ import type { AnnotationDTO, Media } from '../../../constants/shared-types';
 import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
-import { LabelsProvider } from '../../annotator/labels-provider.component';
+import { AnnotatorLabelsProvider } from '../../annotator/annotator-labels-provider.component';
 import { SelectedMediaItemProvider } from '../../annotator/selected-media-item-provider.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
 import type { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
@@ -46,7 +46,7 @@ export const AnnotatorProviders = ({
             <SelectAnnotationProvider>
                 <AnnotationVisibilityProvider>
                     <CanvasSettingsProvider>
-                        <LabelsProvider key={mode}>
+                        <AnnotatorLabelsProvider key={mode}>
                             <SelectedMediaItemProvider mediaItem={mediaItem}>
                                 <AnnotationActionsProvider
                                     key={mediaItem.id}
@@ -59,7 +59,7 @@ export const AnnotatorProviders = ({
                                     {children}
                                 </AnnotationActionsProvider>
                             </SelectedMediaItemProvider>
-                        </LabelsProvider>
+                        </AnnotatorLabelsProvider>
                     </CanvasSettingsProvider>
                 </AnnotationVisibilityProvider>
             </SelectAnnotationProvider>

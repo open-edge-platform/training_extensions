@@ -8,14 +8,14 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { HOTKEYS } from '../../../shared/hotkeys-definition';
-import { useLabelsProvider } from '../labels-provider.component';
+import { useAnnotatorLabels } from '../annotator-labels-provider.component';
 import { drawingStyles } from '../tools/polygon-tool/utils';
 import { useAnnotation } from './annotation-context';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
     const { deleteAnnotations } = useAnnotationActions();
-    const { setSelectedLabelId } = useLabelsProvider();
+    const { setSelectedLabelId } = useAnnotatorLabels();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
     const elementRef = useRef<SVGGElement>(null);
 

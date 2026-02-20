@@ -8,13 +8,13 @@ import { isVideo } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 
-type SelectedMediaItemContextType = {
+type SelectedMediaItemContextProps = {
     mediaItem: Media;
     roi: RegionOfInterest;
     setMediaItem: (item: Media) => void;
 };
 
-const SelectedMediaItemContext = createContext<SelectedMediaItemContextType | null>(null);
+const SelectedMediaItemContext = createContext<SelectedMediaItemContextProps | null>(null);
 
 type SelectedMediaItemProviderProps = {
     mediaItem: Media;
@@ -27,7 +27,6 @@ export const SelectedMediaItemProvider = ({
 }: SelectedMediaItemProviderProps) => {
     const [mediaItem, setMediaItem] = useState<Media>(initialMediaItem);
 
-    //
     /* TODO: Check if we need this */
     useEffect(() => {
         setMediaItem(initialMediaItem);
@@ -35,14 +34,10 @@ export const SelectedMediaItemProvider = ({
 
     const roi: RegionOfInterest = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
-    return (
-        <SelectedMediaItemContext.Provider value={{ mediaItem, roi, setMediaItem }}>
-            {children}
-        </SelectedMediaItemContext.Provider>
-    );
+    return <SelectedMediaItemContext value={{ mediaItem, roi, setMediaItem }}>{children}</SelectedMediaItemContext>;
 };
 
-export const useSelectedMediaItem = (): SelectedMediaItemContextType => {
+export const useSelectedMediaItem = (): SelectedMediaItemContextProps => {
     const context = useContext(SelectedMediaItemContext);
 
     if (context === null) {
@@ -81,7 +76,7 @@ export const MediaItemImageLoader = ({ children }: { children: ReactNode }) => {
 
     const { data: image } = useLoadImageQuery(mediaItemId);
 
-    return <MediaItemImageContext.Provider value={{ image }}>{children}</MediaItemImageContext.Provider>;
+    return <MediaItemImageContext value={{ image }}>{children}</MediaItemImageContext>;
 };
 
 export const useMediaItemImage = (): MediaItemImageContextType => {
