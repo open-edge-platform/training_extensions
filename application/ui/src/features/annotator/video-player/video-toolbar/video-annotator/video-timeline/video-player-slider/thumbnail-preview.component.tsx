@@ -24,7 +24,7 @@ export const ThumbnailPreview = ({ mediaItem, videoFrame: frameNumber, width, he
 
     const fps = Number(mediaItem.fps);
     // TODO: Replace it with the video frame thumbnail when the endpoint will be ready.
-    const src = getThumbnailUrl(projectIdentifier, '7301f742-fd9e-41af-8eeb-77bd9e771eec');
+    const src = getThumbnailUrl(projectIdentifier, mediaItem.id);
 
     const durationText = formatDurationText(frameNumber / fps);
 

@@ -31,6 +31,6 @@ export const getVideoFrameBinaryUrl = (projectId: string, itemId: string, frameN
     return `${getMediaBaseUrl(projectId, itemId)}/${frameNumber}/binary`;
 };
 
-export const getVideoFrameBinaryThumbnail = (projectId: string, itemId: string, frameNumber: number) => {
+export const getVideoFrameThumbnailUrl = (projectId: string, itemId: string, frameNumber: number) => {
     return `${getMediaBaseUrl(projectId, itemId)}/${frameNumber}/thumbnail`;
 };

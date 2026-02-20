@@ -82,7 +82,7 @@ const getContainerScroll = (ref?: RefObject<HTMLDivElement | null>) => {
     return 0;
 };
 
-export const blurActiveInput = (isFocused: boolean): void => {
+const blurActiveInput = (isFocused: boolean): void => {
     const element = document.activeElement;
 
     if (isFocused && element?.nodeName === 'INPUT') {
@@ -153,6 +153,7 @@ export const VideoPlayerSlider = ({
                     onShowThumbnail(true);
                 }}
                 onChangeEnd={(_newFrameNumber) => {
+                    // TODO: Implement frame selection behavior on slider change end once selectFrame is available.
                     // selectFrame(newFrameNumber);
                     blurActiveInput(true);
                 }}
