@@ -1,0 +1,110 @@
+.slider {
+    width: 100%;
+    z-index: inherit;
+    cursor: pointer;
+}
+
+.sliderWrapper {
+    z-index: 1;
+    display: flex;
+    overflow: visible;
+    position: relative;
+}
+
+.track {
+    height: var(--spectrum-global-dimension-size-400);
+    position: relative;
+
+    &::before {
+        content: attr(x);
+        top: 50%;
+        height: var(--spectrum-global-dimension-size-25);
+        width: 100%;
+        display: block;
+        position: absolute;
+        transform: translateY(-50%);
+        background-color: var(--white-down);
+    }
+}
+
+.lowerTrack {
+    top: var(--spectrum-global-dimension-size-175);
+    left: 0px;
+    height: var(--spectrum-global-dimension-size-50);
+    position: absolute;
+    background: var(--energy-blue);
+}
+
+.thumb {
+    --thumb-size: var(--spectrum-global-dimension-size-175);
+    top: 33%;
+    cursor: pointer;
+    position: relative;
+    width: var(--thumb-size);
+    height: calc((var(--thumb-size) / 2) + 1px);
+    background-color: var(--energy-blue);
+    border-radius: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-25)
+        var(--spectrum-global-dimension-size-10) var(--spectrum-global-dimension-size-10);
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: -2px;
+        right: -2px;
+        top: calc(var(--thumb-size) / 2);
+        border-left: calc(var(--thumb-size) / 2) solid transparent;
+        border-right: calc(var(--thumb-size) / 2) solid transparent;
+        border-top: calc(var(--thumb-size) / 2) solid var(--spectrum-global-color-gray-50);
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: calc(var(--thumb-size) / 2);
+        border-left: calc(var(--thumb-size) / 2) solid transparent;
+        border-right: calc(var(--thumb-size) / 2) solid transparent;
+        border-top: calc(var(--thumb-size) / 2) solid var(--energy-blue);
+    }
+}
+
+.bufferTrack {
+    top: calc(
+        var(--spectrum-global-dimension-size-175) +
+            (var(--spectrum-global-dimension-size-50) - var(--spectrum-global-dimension-size-25)) / 2
+    );
+    left: 0px;
+    height: var(--spectrum-global-dimension-size-25);
+    position: absolute;
+    background: white;
+    opacity: 60%;
+}
+
+.loadingBufferTrack {
+    opacity: 38%;
+    background:
+        linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.6) 0%,
+            rgba(255, 255, 255, 0.8) 50%,
+            rgba(255, 255, 255, 0.6) 75%
+        ),
+        rgba(255, 255, 255, 0.38);
+    background-repeat: repeat-y;
+    background-size: 50% 60%;
+    background-position: 0 0;
+    animation: shine 2s ease infinite;
+}
+
+@keyframes shine {
+    to {
+        background-position: 200% 0;
+    }
+}
+
+.highlightPosition {
+    position: absolute;
+    top: var(--spectrum-global-dimension-size-175);
+    width: var(--spectrum-global-dimension-size-25);
+    height: var(--spectrum-global-dimension-size-50);
+    box-shadow: 0px 0px var(--spectrum-global-dimension-size-75) 1px var(--spectrum-global-color-gray-100);
+}

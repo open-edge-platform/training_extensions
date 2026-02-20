@@ -10,34 +10,32 @@ import { AnnotationDTO } from '../../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 
 const isUnannotatedError = (error: unknown): boolean => {
-    return (
-        isObject(error) && 'detail' in error && /Dataset item has not been annotated yet/i.test(String(error.detail))
-    );
+    return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
 };
 
-export const useAnnotationsQuery = (datasetItemId: string) => {
+export const useAnnotationsQuery = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
     return useSuspenseQuery({
         queryKey: [
             'get',
-            `/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations`,
-            { params: { path: { project_id: projectId, dataset_item_id: datasetItemId } } },
+            `/api/projects/{project_id}/dataset/media/{media_id}/annotations`,
+            { params: { path: { project_id: projectId, media_id: mediaId } } },
         ],
         queryFn: async () => {
-            const { data, error } = await fetchClient.GET(
-                '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+            const { data, error, response } = await fetchClient.GET(
+                '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
                 {
                     params: {
                         path: {
                             project_id: projectId,
-                            dataset_item_id: datasetItemId,
+                            media_id: mediaId,
                         },
                     },
                 }
             );
 
-            if (isUnannotatedError(error)) {
+            if (isUnannotatedError(error) || response.status === 404) {
                 return { annotations: [], user_reviewed: false };
             }
 

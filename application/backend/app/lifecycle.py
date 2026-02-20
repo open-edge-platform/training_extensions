@@ -28,6 +28,7 @@ from app.services import (
     MediaService,
     ModelService,
     TrainingConfigurationService,
+    VideoFrameService,
 )
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
@@ -59,7 +60,10 @@ def setup_job_controller(
         raise ValueError("staged_datasets_dir must be provided")
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
-    dataset_service = DatasetService(label_service=LabelService(), media_service=MediaService(data_dir=data_dir))
+    dataset_service = DatasetService(
+        label_service=LabelService(),
+        media_service=MediaService(data_dir=data_dir, video_frame_service=VideoFrameService()),
+    )
     dataset_revision_service = DatasetRevisionService(data_dir=data_dir)
     job_runnable_factory.register(
         JobType.TRAIN,

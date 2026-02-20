@@ -29,6 +29,7 @@ from app.services import (
     SourceUpdateService,
     StagedDatasetService,
     SystemService,
+    VideoFrameService,
 )
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
@@ -173,12 +174,20 @@ def get_project_service(
     )
 
 
+def get_video_frame_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> VideoFrameService:
+    """Provides a VideoFrameService instance."""
+    return VideoFrameService(db_session=db)
+
+
 def get_media_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
+    video_frame_service: Annotated[VideoFrameService, Depends(get_video_frame_service)],
     db: Annotated[Session, Depends(get_db)],
 ) -> MediaService:
     """Provides a MediaService instance."""
-    return MediaService(data_dir=data_dir, db_session=db)
+    return MediaService(data_dir=data_dir, video_frame_service=video_frame_service, db_session=db)
 
 
 def get_dataset_service(

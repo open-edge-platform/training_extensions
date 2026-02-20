@@ -3,6 +3,8 @@
 from enum import StrEnum
 from uuid import UUID
 
+from pydantic import computed_field
+
 from .base import BaseEntity
 
 
@@ -64,3 +66,15 @@ class Media(BaseEntity):
     fps: float | None
     frame_count: int | None
     source_id: UUID | None
+
+    @computed_field
+    @property
+    def duration(self) -> float | None:
+        """Return duration in seconds"""
+        return self.frame_count / self.fps if self.frame_count is not None and self.fps is not None else None
+
+
+class VideoFrame(BaseEntity):
+    id: UUID
+    video_id: UUID
+    frame_index: int

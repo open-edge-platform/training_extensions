@@ -7,6 +7,7 @@ from sqlalchemy import CursorResult, Select, delete, func, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
+from app.models import MediaType
 
 from .filters import _apply_annotation_status_filter, _apply_subset_filter
 
@@ -46,6 +47,7 @@ class MediaRepository:
         annotation_status: str | None = None,
         label_ids: list[str] | None = None,
         subset: str | None = None,
+        exclude_types: list[MediaType] | None = None,
     ) -> int:
         stmt = (
             select(func.count(func.distinct(MediaDB.id)))
@@ -57,6 +59,8 @@ class MediaRepository:
             )
             .where(MediaDB.project_id == self.project_id)
         )
+        if exclude_types:
+            stmt = stmt.where(MediaDB.type.not_in(exclude_types))
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = _apply_annotation_status_filter(stmt, annotation_status)
         stmt = _apply_subset_filter(stmt, subset)
@@ -64,7 +68,7 @@ class MediaRepository:
             stmt = stmt.join(DatasetItemLabelDB, isouter=True).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
 
-    def list_items(
+    def list_items(  # noqa: PLR0913
         self,
         limit: int,
         offset: int,
@@ -73,8 +77,11 @@ class MediaRepository:
         annotation_status: str | None = None,
         label_ids: list[str] | None = None,
         subset: str | None = None,
+        exclude_types: list[MediaType] | None = None,
     ) -> list[MediaDB]:
         stmt = self._base_select().join(DatasetItemDB, DatasetItemDB.id == MediaDB.id, isouter=True)
+        if exclude_types:
+            stmt = stmt.where(MediaDB.type.not_in(exclude_types))
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = _apply_annotation_status_filter(stmt, annotation_status)
         stmt = _apply_subset_filter(stmt, subset)

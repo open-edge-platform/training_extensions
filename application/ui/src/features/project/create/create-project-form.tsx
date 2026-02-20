@@ -32,7 +32,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
     const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask);
 
-    const [classificationTaskType, setClassificationTaskType] = useState<ClassificationTaskType>('multi-label');
+    const [classificationTaskType, setClassificationTaskType] = useState<ClassificationTaskType>('single-label');
 
     const navigate = useNavigate();
     const createProjectMutation = useCreateProject();

@@ -15,7 +15,7 @@ from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
 from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from .label import Label, LabelReference
-from .media import Media, MediaFormat, MediaType
+from .media import Media, MediaFormat, MediaType, VideoFrame
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
@@ -96,5 +96,6 @@ __all__ = [
     "TrainingStatus",
     "USBCameraSourceConfig",
     "VideoFileSourceConfig",
+    "VideoFrame",
     "WebhookSinkConfig",
 ]

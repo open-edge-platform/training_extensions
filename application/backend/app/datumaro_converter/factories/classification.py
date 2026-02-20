@@ -30,6 +30,11 @@ class ClassificationSampleFactory(SampleFactory):
                 user_reviewed=False,
             )
 
+        if len(dataset_item.annotation_data) == 0:
+            raise ValueError(
+                f"Expected exactly one annotation for classification project, found empty list. "
+                f"Project ID {dataset_item.project_id}, Dataset Item ID: {dataset_item.id}"
+            )
         annotation = dataset_item.annotation_data[0]
         label_index = self._label_index.get_index(annotation.labels[0].id)
 

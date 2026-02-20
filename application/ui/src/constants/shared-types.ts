@@ -13,14 +13,15 @@ export type ModelFormat = components['schemas']['ModelFormat'];
 export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
 
 export type Job = components['schemas']['JobView'];
-/* 
-TODO: replace once https://github.com/open-edge-platform/training_extensions/pull/5443 gets merged
-export type ExportDatasetMetadata = components['schemas']['ExportDatasetMetadata']; 
-*/
-export type ExportDatasetMetadata = {
-    project_id: string;
-    export_format: string;
-    filters: { labels?: string[]; include_unannotated: boolean };
+export type ExportDatasetJob = Job & {
+    type: 'export_dataset';
+    metadata: components['schemas']['ExportDatasetMetadata'];
+};
+export type ExportDatasetMetadata = ExportDatasetJob['metadata'];
+
+export type PrepareImportDatasetJob = Job & {
+    type: 'prepare_dataset_for_import';
+    metadata: components['schemas']['PrepareDatasetForImportRequest'];
 };
 
 export type Media = components['schemas']['MediaView'];

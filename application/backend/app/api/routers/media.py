@@ -6,22 +6,85 @@ from io import BytesIO
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
-from app.api.schemas.media import MediaView, MediaWithPagination
+from app.api.schemas.media import MediaAnnotations, MediaView, MediaWithPagination, SetMediaAnnotations
 from app.api.validators import MediaID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
-from app.models.media import ImageFormat, VideoFormat
+from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import DatasetService, MediaService
+from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import InvalidImageError, MediaFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
 
 DEFAULT_MEDIA_NUMBER_RETURNED = 10
 MAX_MEDIA_NUMBER_RETURNED = 100
+
+SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES = {
+    "single_label": Example(
+        summary="Single label (multiclass classification)",
+        value={
+            "annotations": [
+                {"labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}], "shape": {"type": "full_image"}}
+            ],
+        },
+    ),
+    "multi_label": Example(
+        summary="Multiple labels (multilabel classification)",
+        value={
+            "annotations": [
+                {
+                    "labels": [
+                        {"id": "d476573e-d43c-42a6-9327-199a9aa75c33"},
+                        {"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"},
+                    ],
+                    "shape": {"type": "full_image"},
+                },
+            ],
+        },
+    ),
+    "bounding_boxes": Example(
+        summary="Bounding boxes (detection)",
+        value={
+            "annotations": [
+                {
+                    "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
+                    "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
+                },
+                {
+                    "labels": [{"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"}],
+                    "shape": {"type": "rectangle", "x": 150, "y": 250, "width": 80, "height": 120},
+                },
+            ],
+        },
+    ),
+    "polygons": Example(
+        summary="Polygons (segmentation)",
+        value={
+            "annotations": [
+                {
+                    "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
+                    "shape": {"type": "polygon", "points": [[10, 20], [20, 60], [30, 40]]},
+                },
+                {
+                    "labels": [{"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"}],
+                    "shape": {"type": "polygon", "points": [[150, 250], [180, 300], [200, 280]]},
+                },
+            ],
+        },
+    ),
+    "empty": Example(
+        summary="No objects (detection / segmentation)",
+        value={
+            "annotations": [],
+        },
+    ),
+}
 
 
 def _parse_media_format(extension: str) -> ImageFormat | VideoFormat:
@@ -115,6 +178,7 @@ def list_media(  # noqa: PLR0913
         annotation_status=annotation_status,
         label_ids=labels,
         subset=subset,
+        exclude_types=[MediaType.VIDEO_FRAME],
     )
     media_list = media_service.list_media(
         project_id=project.id,
@@ -127,6 +191,7 @@ def list_media(  # noqa: PLR0913
             label_ids=labels,
             subset=subset,
         ),
+        exclude_types=[MediaType.VIDEO_FRAME],
     )
     return MediaWithPagination(
         items=[MediaView.model_validate(media, from_attributes=True) for media in media_list],
@@ -221,3 +286,151 @@ def delete_media(
 ) -> None:
     """Delete media from the dataset"""
     media_service.delete_media(project=project, media_id=media_id)
+
+
+@router.post(
+    "/{media_id}/annotations",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_201_CREATED: {"description": "Annotation created or updated", "model": MediaAnnotations},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
+        status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+    },
+)
+def set_media_annotations(
+    project: Annotated[Project, Depends(get_project)],
+    media_id: MediaID,
+    media_annotations: Annotated[SetMediaAnnotations, Body(openapi_examples=SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES)],
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
+) -> MediaAnnotations:
+    """Set media annotations"""
+    # Dataset item has the same ID as media
+    dataset_item_id = media_id
+    try:
+        media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+        if media.type == MediaType.VIDEO:
+            # Video frames can be identified by video ID and frame index
+            if frame_index is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided."
+                )
+            if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
+                )
+            video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
+            if video_frame is None:
+                video_frame_media, video_frame = media_service.extract_video_frame(
+                    project=project, video_id=media_id, frame_index=frame_index
+                )
+                dataset_service.create_dataset_item(
+                    project=project,
+                    media=video_frame_media,
+                    user_reviewed=True,
+                )
+            dataset_item_id = video_frame.id
+
+        dataset_item = dataset_service.set_dataset_item_annotations(
+            project=project,
+            dataset_item_id=dataset_item_id,
+            annotations=media_annotations.annotations,
+            # Annotations submitted via API are considered user-reviewed, unlike auto-generated predictions
+            user_reviewed=True,
+        )
+        return MediaAnnotations(
+            annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
+            prediction_model_id=dataset_item.prediction_model_id,
+            user_reviewed=dataset_item.user_reviewed,
+        )
+    except AnnotationValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get(
+    "/{media_id}/annotations",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {"description": "Annotation found", "model": MediaAnnotations},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or project ID"},
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Media, dataset item or project not found or media is not annotated"
+        },
+    },
+)
+def get_media_annotations(
+    project: Annotated[Project, Depends(get_project)],
+    media_id: MediaID,
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
+) -> MediaAnnotations:
+    """Get the media annotations"""
+    # Dataset item has the same ID as media
+    dataset_item_id = media_id
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    if media.type == MediaType.VIDEO:
+        # Video frames can be identified by video ID and frame index
+        if frame_index is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
+        if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
+            )
+        video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
+        if video_frame is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index."
+            )
+        dataset_item_id = video_frame.id
+
+    dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
+    if dataset_item.annotation_data is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media has not been annotated yet.")
+    return MediaAnnotations(
+        annotations=dataset_item.annotation_data,
+        prediction_model_id=dataset_item.prediction_model_id,
+        user_reviewed=dataset_item.user_reviewed,
+    )
+
+
+@router.delete(
+    "/{media_id}/annotations",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Media annotations deleted"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+    },
+)
+def delete_media_annotation(
+    project: Annotated[Project, Depends(get_project)],
+    media_id: MediaID,
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
+) -> None:
+    """Delete media annotations"""
+    # Dataset item has the same ID as media
+    dataset_item_id = media_id
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    if media.type == MediaType.VIDEO:
+        # Video frames can be identified by video ID and frame index
+        if frame_index is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
+        if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
+            )
+        video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
+        if video_frame is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index."
+            )
+        dataset_item_id = video_frame.id
+
+    dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)

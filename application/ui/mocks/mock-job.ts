@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Job } from '../src/constants/shared-types';
+import { ExportDatasetJob, Job, PrepareImportDatasetJob } from '../src/constants/shared-types';
 
 export const getMockedJob = (job?: Partial<Job>): Job => {
     return {
@@ -27,3 +27,30 @@ export const getMockedJob = (job?: Partial<Job>): Job => {
         ...job,
     };
 };
+
+export const getMockedJobExportJob = (job: Partial<ExportDatasetJob>): ExportDatasetJob => ({
+    ...getMockedJob(),
+    type: 'export_dataset',
+    metadata: {
+        dataset_id: 'staged-dataset-123',
+        project_id: 'project-123',
+        filters: {
+            include_unannotated: false,
+        },
+    },
+    ...job,
+});
+
+export const getMockedPrepareImportDatasetJob = (job: Partial<PrepareImportDatasetJob>): PrepareImportDatasetJob => ({
+    ...getMockedJob(),
+    type: 'prepare_dataset_for_import',
+    metadata: {
+        staged_dataset_id: 'staged-dataset-123',
+        job_type: 'prepare_dataset_for_import',
+        project_id: 'project-123',
+        filters: {
+            include_unannotated: false,
+        },
+    },
+    ...job,
+});
