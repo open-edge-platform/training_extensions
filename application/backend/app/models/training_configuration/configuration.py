@@ -1,181 +1,142 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
-from app.models.partial import partial_model
-from app.models.training_configuration.hyperparameters import Hyperparameters
+from .dataset_preparation import AlgoLevelDatasetPreparationParameters, TaskLevelDatasetPreparationParameters
+from .evaluation import TaskLevelEvaluationParameters
+from .training import AlgoLevelTrainingParameters
+
+type Scalar = bool | bytearray | bytes | float | int | str
 
 
-class SubsetSplit(BaseModel):
+class TaskLevelParameters(BaseModel):
     """
-    Parameters for splitting a dataset into training, validation, and test subsets.
-    The sum of training, validation, and test percentages must equal 100.
-    """
-
-    training: int = Field(
-        ge=1, le=100, default=70, title="Training percentage", description="Percentage of data to use for training"
-    )
-    validation: int = Field(
-        ge=1, le=100, default=20, title="Validation percentage", description="Percentage of data to use for validation"
-    )
-    test: int = Field(
-        ge=1, le=100, default=10, title="Test percentage", description="Percentage of data to use for testing"
-    )
-    auto_selection: bool = Field(
-        default=False, title="Auto selection", description="Whether to automatically select data for each subset"
-    )
-    remixing: bool = Field(default=False, title="Remixing", description="Whether to remix data between subsets")
-    dataset_size: int | None = Field(
-        ge=0,
-        default=None,
-        title="Dataset size",
-        description="Total size of the dataset (read-only parameter, not configurable by users)",
-        exclude=True,  # exclude read-only parameter from serialization
-        json_schema_extra={"default_value": None},
-    )
-
-    @model_validator(mode="after")
-    def validate_subsets(self) -> "SubsetSplit":
-        if (self.training + self.validation + self.test) != 100:
-            raise ValueError("Sum of subsets should be equal to 100")
-        # check that all subsets can have at least one item
-        if self.dataset_size is not None and self.dataset_size < 3:
-            raise ValueError("The dataset is too small to assign at least one item to each subset")
-        return self
-
-
-class MinAnnotationPixels(BaseModel):
-    """Parameters for minimum annotation pixels."""
-
-    enable: bool = Field(
-        default=False,
-        title="Enable minimum annotation pixels filtering",
-        description="Whether to apply minimum annotation pixels filtering",
-    )
-    value: int = Field(
-        gt=0,
-        le=200000000,  # reasonable upper limit for pixel count to 200MP
-        default=1,
-        title="Minimum annotation pixels",
-        description="Minimum number of pixels in an annotation",
-    )
-
-
-class MaxAnnotationPixels(BaseModel):
-    """Parameters for maximum annotation pixels."""
-
-    enable: bool = Field(
-        default=False,
-        title="Enable maximum annotation pixels filtering",
-        description="Whether to apply maximum annotation pixels filtering",
-    )
-    value: int = Field(
-        gt=0, default=10000, title="Maximum annotation pixels", description="Maximum number of pixels in an annotation"
-    )
-
-
-class MinAnnotationObjects(BaseModel):
-    """Parameters for maximum annotation objects."""
-
-    enable: bool = Field(
-        default=False,
-        title="Enable minimum annotation objects filtering",
-        description="Whether to apply minimum annotation objects filtering",
-    )
-    value: int = Field(
-        gt=0,
-        default=1,
-        title="Minimum annotation objects",
-        description="Minimum number of objects in an annotation",
-    )
-
-
-class MaxAnnotationObjects(BaseModel):
-    """Parameters for maximum annotation objects."""
-
-    enable: bool = Field(
-        default=False,
-        title="Enable maximum annotation objects filtering",
-        description="Whether to apply maximum annotation objects filtering",
-    )
-    value: int = Field(
-        gt=0,
-        default=10000,
-        title="Maximum annotation objects",
-        description="Maximum number of objects in an annotation",
-    )
-
-
-class Filtering(BaseModel):
-    """Parameters for filtering annotations in the dataset."""
-
-    min_annotation_pixels: MinAnnotationPixels | None = Field(
-        default=None, title="Minimum annotation pixels", description="Minimum number of pixels in an annotation"
-    )
-    max_annotation_pixels: MaxAnnotationPixels | None = Field(
-        default=None, title="Maximum annotation pixels", description="Maximum number of pixels in an annotation"
-    )
-    min_annotation_objects: MinAnnotationObjects | None = Field(
-        default=None, title="Minimum annotation objects", description="Minimum number of objects in an annotation"
-    )
-    max_annotation_objects: MaxAnnotationObjects | None = Field(
-        default=None, title="Maximum annotation objects", description="Maximum number of objects in an annotation"
-    )
-
-
-class GlobalDatasetPreparationParameters(BaseModel):
-    """
-    Parameters for preparing a dataset for training within the global configuration.
-    Controls data splitting and filtering before being passed for the training.
+    Configurable parameters that apply at the task level and are relevant for all models, regardless of their specific
+    architecture.
     """
 
-    subset_split: SubsetSplit = Field(title="Subset split", description="Configuration for splitting data into subsets")
-    filtering: Filtering = Field(
-        default_factory=Filtering, title="Filtering", description="Configuration for filtering annotations"
+    dataset_preparation: TaskLevelDatasetPreparationParameters = Field(
+        default_factory=TaskLevelDatasetPreparationParameters,
+        title="Dataset preparation",
+        description="Configurable parameters related to the training data, such as augmentations and filters.",
+    )
+    evaluation: TaskLevelEvaluationParameters = Field(
+        default_factory=TaskLevelEvaluationParameters,
+        title="Evaluation parameters",
+        description="Configurable parameters related to the model evaluation.",
     )
 
 
-class GlobalParameters(BaseModel):
-    """
-    Global parameters that are used within the application but are not directly passed to the training backend.
-    These parameters still impact the final training outcome by controlling dataset preparation.
-    """
+class AlgoLevelParameters(BaseModel):
+    """Configurable parameters that are specific to a particular algorithm or model architecture."""
 
-    dataset_preparation: GlobalDatasetPreparationParameters = Field(
-        title="Dataset preparation", description="Parameters for preparing the dataset"
+    dataset_preparation: AlgoLevelDatasetPreparationParameters = Field(
+        default_factory=AlgoLevelDatasetPreparationParameters,
+        title="Dataset preparation",
+        description="Configurable parameters related to the training data, such as augmentations and filters.",
+    )
+    training: AlgoLevelTrainingParameters = Field(
+        # No default_factory here because AlgoLevelTrainingParameters has required fields without defaults
+        title="Training",
+        description="Configurable parameters related to the learning phase (hyperparameters).",
     )
 
 
 class TrainingConfiguration(BaseModel):
     """Configuration for model training"""
 
-    model_manifest_id: str | None = Field(
-        default=None,
-        title="Model manifest ID",
-        description="ID for the model manifest that defines the supported parameters and capabilities for training",
-    )
-    global_parameters: GlobalParameters = Field(
-        title="Global parameters", description="Global configuration parameters for training"
-    )
-    hyperparameters: Hyperparameters = Field(title="Hyperparameters", description="Hyperparameters for training")
+    task_level_parameters: TaskLevelParameters = Field(title="Task-level configurable parameters")
+    algo_level_parameters: AlgoLevelParameters = Field(title="Algorithm-level configurable parameters")
 
+    def _resolve_parameter_path(self, path: str) -> tuple[BaseModel, str]:
+        """
+        Resolve a dot-notation path to find the parent object and field name.
 
-@partial_model
-class PartialTrainingConfiguration(TrainingConfiguration):
-    """
-    A partial version of `TrainingConfiguration` with all fields optional.
+        Returns a tuple of (parent_object, field_name) where the field should be updated.
+        Raises ValueError if the path cannot be resolved.
+        """
+        parts = path.split(".")
+        if len(parts) < 2:
+            raise ValueError(f"Invalid path '{path}': must contain at least one dot separator")
 
-    Enables flexible updates and partial validation, making it suitable for scenarios
-    where only a subset of the configuration needs to be specified or changed.
-    """
+        # The path starts with a top-level section (e.g., "dataset_preparation", "training")
+        # We need to find which parameter level contains this section
+        top_section = parts[0]
 
+        # Determine which parameter level(s) to search
+        task_level = self.task_level_parameters
+        algo_level = self.algo_level_parameters
 
-@partial_model
-class PartialGlobalParameters(GlobalParameters):
-    """
-    A partial version of `GlobalParameters` with all fields optional.
+        # Try to find the path in task-level or model-level parameters
+        remaining_parts = parts[1:]
 
-    Enables flexible updates and partial validation, making it suitable for scenarios
-    where only a subset of the configuration needs to be specified or changed.
-    """
+        # Check if top_section exists in task_level_parameters
+        if hasattr(task_level, top_section):
+            task_section = getattr(task_level, top_section)
+            resolved = self._try_resolve_path(task_section, remaining_parts)
+            if resolved is not None:
+                return resolved
+
+        # Check if top_section exists in model_level_parameters
+        if hasattr(algo_level, top_section):
+            model_section = getattr(algo_level, top_section)
+            resolved = self._try_resolve_path(model_section, remaining_parts)
+            if resolved is not None:
+                return resolved
+
+        raise ValueError(f"Cannot resolve path '{path}': path not found in configuration")
+
+    def _try_resolve_path(self, obj: BaseModel, path_parts: list[str]) -> tuple[BaseModel, str] | None:
+        """
+        Try to resolve remaining path parts starting from obj.
+
+        Returns (parent_object, field_name) if successful, None otherwise.
+        """
+        if not path_parts:
+            return None
+
+        current = obj
+        for part in path_parts[:-1]:
+            if not hasattr(current, part):
+                return None
+            next_obj = getattr(current, part)
+            if not isinstance(next_obj, BaseModel):
+                return None
+            current = next_obj
+
+        # Check if the final field exists
+        final_field = path_parts[-1]
+        if not hasattr(current, final_field):
+            return None
+
+        # Verify the field exists in the model's fields
+        if final_field not in type(current).model_fields:
+            return None
+
+        return current, final_field
+
+    def apply_updates(self, updates: dict[str, Scalar]) -> "TrainingConfiguration":
+        """
+        Apply a dictionary of updates to this TrainingConfiguration instance.
+
+        Args:
+            updates: Dictionary with dot-notation keys and new values
+
+        Returns:
+            Self for method chaining
+
+        Raises:
+            ValueError: If any key in updates cannot be resolved
+        """
+        # First, validate all paths exist before applying any updates
+        resolved_updates: list[tuple[BaseModel, str, Scalar]] = []
+        for path, value in updates.items():
+            parent_obj, field_name = self._resolve_parameter_path(path)
+            resolved_updates.append((parent_obj, field_name, value))
+
+        # Apply all updates (modifies in place)
+        for parent_obj, field_name, value in resolved_updates:
+            setattr(parent_obj, field_name, value)
+
+        return self

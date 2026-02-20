@@ -145,7 +145,6 @@ type = "layers"
 id = "api"
 layers = [
     "app.api.routers",
-    "app.api.serializers",
     "app.api.schemas",
     "app.api.dependencies",
 ]
@@ -162,11 +161,22 @@ layers = [
 ]
 
 [[tool.importlinter.contracts]]
-name = "Service-Utils"
+name = "Models"
 type = "layers"
-id = "service_utils"
+id = "views_models"
+layers = [
+    "app.api.schemas",
+    "app.models",
+    "app.core.models",
+]
+
+[[tool.importlinter.contracts]]
+name = "Service-Models-Utils"
+type = "layers"
+id = "service_models_utils"
 layers = [
     "app.services",
+    "app.models",
     "app.utils",
 ]
 

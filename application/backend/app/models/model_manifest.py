@@ -1,27 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 from enum import Enum
-from functools import cached_property
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.models import TaskType
-from app.models.training_configuration.hyperparameters import Hyperparameters
-
-from .default_models import DefaultCategory, DefaultModels
-
-
-class GPUMaker(str, Enum):
-    """GPU maker names."""
-
-    NVIDIA = "nvidia"
-    INTEL = "intel"
-
-    def __str__(self) -> str:
-        """Returns the name of the GPU maker."""
-        return str(self.name)
+from .task import TaskType
+from .training_configuration import AlgoLevelParameters
 
 
 class ModelManifestDeprecationStatus(str, Enum):
@@ -126,30 +111,9 @@ class ModelManifest(BaseModel):
         title="Support Status",
         description="Current support level (active, deprecated, or obsolete)",
     )
-    supported_gpus: dict[GPUMaker, bool] = Field(
-        title="Supported GPUs", description="Dictionary mapping GPU types to compatibility status"
-    )
     capabilities: Capabilities = Field(
         title="Model Capabilities", description="Special capabilities supported by the model"
     )
-    hyperparameters: Hyperparameters = Field(
+    hyperparameters: AlgoLevelParameters = Field(
         title="Hyperparameters", description="Configuration parameters for model training"
     )
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def is_default_model(self) -> bool:
-        """Returns whether this model is the default one for its task type"""
-        return DefaultModels.get_default_model(self.task) == self.id
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def model_category(self) -> str | None:
-        """Returns the category for which this model is recommended (accuracy, speed, or balance)"""
-        if DefaultModels.get_accuracy_model(self.task) == self.id:
-            return DefaultCategory.ACCURACY.name.lower()
-        if DefaultModels.get_speed_model(self.task) == self.id:
-            return DefaultCategory.SPEED.name.lower()
-        if DefaultModels.get_balanced_model(self.task) == self.id:
-            return DefaultCategory.BALANCE.name.lower()
-        return None

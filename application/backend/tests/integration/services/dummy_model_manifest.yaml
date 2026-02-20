@@ -13,9 +13,6 @@ stats:
     training_time: 2
     inference_speed: 3
 
-supported_gpus:
-  intel: true
-  nvidia: true
 support_status: obsolete
 
 hyperparameters:

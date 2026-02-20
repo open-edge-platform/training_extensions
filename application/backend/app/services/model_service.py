@@ -18,9 +18,9 @@ from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
 from app.services.dataset_revision_service import DatasetRevisionService
-from app.supported_models import SupportedModels
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
+from .model_manifest_service import ModelManifestService
 from .parent_process_guard import parent_process_only
 
 # Mapping of CSV column keys to display names for series metrics.
@@ -295,7 +295,7 @@ class ModelService(BaseSessionManagedService):
         project_id = str(metadata.project_id)
         label_repo = LabelRepository(project_id=project_id, db=self.db_session)
         labels_schema_rev = {"labels": [{"name": label.name, "id": label.id} for label in label_repo.list_all()]}
-        arch_name = SupportedModels.get_model_manifest_by_id(metadata.architecture_id).name
+        arch_name = ModelManifestService.get_model_manifest_by_id(metadata.architecture_id).name
 
         model_revision_repo = ModelRevisionRepository(project_id=project_id, db=self.db_session)
         model_revision_repo.save(

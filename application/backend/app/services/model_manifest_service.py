@@ -1,23 +1,58 @@
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
+#  Copyright (C) 2026 Intel Corporation
+#  SPDX-License-Identifier: Apache-2.0
 
 import os
 from functools import cache
 from importlib import resources
 
-from . import manifests
-from .model_manifest import ModelManifest
-from .parser import parse_manifest
+import hiyapyco
+
+from app.models.model_manifest import ModelManifest
+from app.supported_models import manifests
 
 
 class ManifestNotFoundException(Exception):
     """Exception raised when a model manifest is not found."""
 
     def __init__(self, model_manifest_id: str):
-        super().__init__(f"Model manifest with ID {model_manifest_id} not found.")
+        super().__init__(f"Model architecture with ID '{model_manifest_id}' not found.")
 
 
-class SupportedModels:
+class ModelManifestService:
+    """Service for loading and managing model manifests."""
+
+    @staticmethod
+    def _parse_manifest(*manifest_sources, relative: bool = True) -> ModelManifest:
+        """
+        Parse model manifest YAML files and merge them into an Algorithm object.
+
+        This function takes multiple manifest source paths, merges them using hierarchical
+        YAML configuration, and converts the merged result into a structured Algorithm model.
+
+        Args:
+            *manifest_sources: Variable length list of YAML manifest file paths.
+                Files are merged in order, with later files overriding values from earlier files.
+            relative: If True, the paths are treated as relative to the package where the
+                manifest files are stored. If False, they are treated as absolute paths.
+
+        Returns:
+            ModelManifest: A populated Algorithm object containing the parsed manifest data.
+
+        Note:
+            Uses hiyapyco library for YAML merging with substitution method and interpolation.
+            Fails if any of the specified manifest files cannot be found.
+        """
+        if relative:
+            manifest_sources = tuple(str(resources.files(manifests).joinpath(path)) for path in manifest_sources)
+        yaml_manifest = hiyapyco.load(
+            *manifest_sources,
+            method=hiyapyco.METHOD_SUBSTITUTE,
+            interpolate=True,
+            failonmissingfiles=True,
+            none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
+        )
+        return ModelManifest(**yaml_manifest)  # pyrefly: ignore[missing-argument,bad-unpacking]
+
     @classmethod
     def get_model_manifest_by_id(cls, model_manifest_id: str) -> ModelManifest:
         """
@@ -38,9 +73,9 @@ class SupportedModels:
             raise ManifestNotFoundException(model_manifest_id=model_manifest_id)
         return model_manifests[model_manifest_id]
 
-    @staticmethod
+    @classmethod
     @cache
-    def get_model_manifests() -> dict[str, ModelManifest]:
+    def get_model_manifests(cls) -> dict[str, ModelManifest]:
         """
         Find and load all model manifest files in the manifests directory.
 
@@ -78,7 +113,7 @@ class SupportedModels:
                     dependency_chain = [root_base_yaml, task_base_yaml, model_yaml_path]
 
                     # Parse manifest with all dependencies in order
-                    manifest = parse_manifest(*dependency_chain, relative=True)
+                    manifest = cls._parse_manifest(*dependency_chain, relative=True)
                     model_manifests[manifest.id] = manifest
 
         return model_manifests

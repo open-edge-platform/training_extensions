@@ -11,12 +11,17 @@ from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView, ProjectView, TrainingMetricsView
-from app.api.schemas.model import ExtendedModelView
+from app.api.dependencies import get_model_service, get_project, get_training_configuration_service
+from app.api.schemas import ModelView, ProjectView, TrainingConfigurationView, TrainingMetricsView
 from app.api.validators import DatasetRevisionID, ModelID
 from app.models.model_revision import ModelFormat
-from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services import (
+    ModelService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceType,
+    TrainingConfigurationService,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 
@@ -49,7 +54,7 @@ def list_models(
 
 @router.get(
     "/{model_id}",
-    response_model=ExtendedModelView,
+    response_model=ModelView,
     responses={
         status.HTTP_200_OK: {"description": "Model found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
@@ -60,13 +65,13 @@ def get_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> ExtendedModelView:
+) -> ModelView:
     """Get a specific model by ID."""
     model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
     model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
     model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
     model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
-    return ExtendedModelView.model_validate(model_view, from_attributes=True)
+    return ModelView.model_validate(model_view, from_attributes=True)
 
 
 @router.get(
@@ -186,6 +191,32 @@ def delete_model(
             model_service.delete_model(project_id=project.id, model_id=model_id)
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{model_id}/training_configuration",
+    response_model=TrainingConfigurationView,
+    responses={
+        status.HTTP_200_OK: {"description": "Training configuration for the model"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
+    },
+)
+def get_model_training_configuration(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    training_configuration_service: Annotated[
+        TrainingConfigurationService, Depends(get_training_configuration_service)
+    ],
+) -> TrainingConfigurationView:
+    """
+    Get the configuration used to train a given model, including both the task-level and algorithm-level parameters.
+    """
+    training_configuration = training_configuration_service.get_by_model_revision(
+        project_id=project.id,
+        model_revision_id=model_id,
+    )
+    return TrainingConfigurationView.from_training_configuration(training_configuration)
 
 
 @router.get(

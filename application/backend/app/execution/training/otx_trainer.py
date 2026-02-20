@@ -160,7 +160,7 @@ class OTXTrainer(Execution):
             logger.info("Current subset distribution: {}", current_distribution)
 
             # Compute adjusted ratios
-            split_params = training_config.global_parameters.dataset_preparation.subset_split
+            split_params = training_config.task_level_parameters.dataset_preparation.subset_split
             target_ratios = SplitRatios(
                 train=(split_params.training / 100), val=(split_params.validation / 100), test=(split_params.test / 100)
             )
@@ -184,7 +184,7 @@ class OTXTrainer(Execution):
         with self._db_session_factory() as db:
             # Load the training configuration from the database
             self._training_configuration_service.set_db_session(db)
-            training_config = self._training_configuration_service.get_training_configuration(
+            training_config = self._training_configuration_service.get_by_model_architecture(
                 project_id=project_id,
                 model_architecture_id=training_params.model_architecture_id,
             )
@@ -193,7 +193,7 @@ class OTXTrainer(Execution):
             # NOTE: this is a temporary solution to minimize changes in OTX; in the future, after refactoring OTX,
             # we should update this code to build the configuration directly in the format consumed by OTX
             geti_training_config = training_config.model_dump(exclude_none=True)
-            geti_training_config["hyper_parameters"] = geti_training_config.pop("hyperparameters")
+            geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
             geti_training_config["sub_task_type"] = self.__get_otx_task_type_by_task(task)
             geti_config_path = self.__build_model_config_path(self._data_dir, project_id, training_params.model_id)
             geti_config_path.parent.mkdir(parents=True, exist_ok=True)

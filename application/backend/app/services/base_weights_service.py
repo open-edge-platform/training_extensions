@@ -8,9 +8,9 @@ from pathlib import Path
 import requests
 from loguru import logger
 
-from app.models import TaskType
-from app.supported_models import ModelManifest
-from app.supported_models.supported_models import SupportedModels
+from app.models import ModelManifest, TaskType
+
+from .model_manifest_service import ModelManifestService
 
 
 class BaseWeightsService:
@@ -245,7 +245,7 @@ class BaseWeightsService:
         Raises:
             ValueError: If the model manifest is not found, task type mismatch, or doesn't have pretrained weights
         """
-        manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id)
+        manifest = ModelManifestService.get_model_manifest_by_id(model_manifest_id)
         if manifest.task != task:
             raise ValueError(f"Task mismatch: expected '{task.name.lower()}', got '{manifest.task.lower()}'")
         return manifest
