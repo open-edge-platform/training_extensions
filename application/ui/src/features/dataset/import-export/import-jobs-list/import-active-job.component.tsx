@@ -1,20 +1,21 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
 
-import { ExportDatasetJob } from '../../../../../constants/shared-types';
-import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
-import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
-import { getJobProgress, isJobRunning } from '../../util';
-import { ExportJobDetails } from './export-details/export-details.component';
+import { PrepareImportDatasetJob } from '../../../../constants/shared-types';
+import { BottomProgressBar } from '../../../models/model-listing/current-model-training/bottom-progress-bar.component';
+import { CancelJobConfirmation } from '../cancel-job-confirmation/cancel-job-confirmation.component';
+import { getJobProgress, isJobRunning } from '../util';
+import { formatBytes } from './util';
 
-type ExportActiveJobProps = {
-    job: ExportDatasetJob;
-    datasetName?: string;
+type ImportActiveJobProps = {
+    size: number;
+    fileName: string;
+    job: PrepareImportDatasetJob;
 };
 
-export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
+export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
 
@@ -22,11 +23,14 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
         <BottomProgressBar progress={progress}>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                    <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
+                    <Text UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}>
+                        Import dataset - {fileName} - {formatBytes(size)}
+                    </Text>
+
                     <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 
-                <Text>Dataset is being processed in order to export it</Text>
+                <Text>{fileName} file is being processed for import</Text>
 
                 <Divider size='S' marginY='size-150' />
 

@@ -8,6 +8,7 @@ import { getParsedLocalStorage } from './utils';
 
 type DataValue = {
     id: string;
+    size: number;
     fileName: string;
 };
 
@@ -24,8 +25,8 @@ export const usePrepareImportDataset = () => {
         return lsPreparingImportDataset;
     };
 
-    const addLsPreparingImportId = (jobId: string, fileName: string) => {
-        return setLsPreparingImportId({ id: jobId, fileName });
+    const addLsPreparingImportId = (jobId: string, fileName: string, size: number) => {
+        return setLsPreparingImportId({ id: jobId, fileName, size });
     };
 
     const removeLsPreparingImportId = (): void => {

@@ -4,12 +4,12 @@
 import { useEffect } from 'react';
 
 import { toast } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isFunction } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { isInvalidJob, isJobDone, isJobFailed } from '../../export-jobs-list/util';
+import { isInvalidJob, isJobDone, isJobFailed } from '../../util';
 
 type UsePrepareImportStatusProps = {
     onError: () => void;
@@ -17,7 +17,7 @@ type UsePrepareImportStatusProps = {
 
 export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps) => {
     const { getLsPreparingImportId, removeLsPreparingImportId } = usePrepareImportDataset();
-    const { id: jobId, fileName } = getLsPreparingImportId() ?? {};
+    const { id: jobId, fileName, size } = getLsPreparingImportId() ?? {};
 
     const response = $api.useQuery(
         'get',
@@ -34,7 +34,7 @@ export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps)
 
     useEffect(() => {
         if (response.isError && isInvalidJob(response.error)) {
-            onError();
+            isFunction(onError) && onError();
             removeLsPreparingImportId();
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.error?.detail}` });
         }
@@ -42,10 +42,10 @@ export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps)
 
     useEffect(() => {
         if (isJobFailed(response.data)) {
-            onError();
+            isFunction(onError) && onError();
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.data?.message}` });
         }
     }, [onError, response.data]);
 
-    return { ...response, fileName };
+    return { ...response, fileName, size };
 };

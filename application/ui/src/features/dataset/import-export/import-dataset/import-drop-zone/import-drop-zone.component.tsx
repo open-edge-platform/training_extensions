@@ -70,7 +70,7 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
             },
         });
 
-        addLsPreparingImportId(prepareImportJob.job_id, file.name);
+        addLsPreparingImportId(prepareImportJob.job_id, file.name, file.size);
         onNextStep('preparing');
     };
 

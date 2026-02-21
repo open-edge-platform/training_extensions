@@ -5,8 +5,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../../../api/utils';
-import { server } from '../../../../../../msw-node-setup';
+import { http } from '../../../../api/utils';
+import { server } from '../../../../msw-node-setup';
 import { CancelJobConfirmation } from './cancel-job-confirmation.component';
 
 const mockRemoveLsExportId = vi.fn();
