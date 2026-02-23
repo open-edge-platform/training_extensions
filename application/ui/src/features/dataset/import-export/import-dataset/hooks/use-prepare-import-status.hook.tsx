@@ -12,7 +12,7 @@ import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-p
 import { isInvalidJob, isJobDone, isJobFailed } from '../../util';
 
 type UsePrepareImportStatusProps = {
-    onError: () => void;
+    onError?: () => void;
 };
 
 export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps) => {

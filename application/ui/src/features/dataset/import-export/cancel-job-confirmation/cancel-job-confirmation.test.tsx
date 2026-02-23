@@ -9,16 +9,6 @@ import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { CancelJobConfirmation } from './cancel-job-confirmation.component';
 
-const mockRemoveLsExportId = vi.fn();
-
-vi.mock('hooks/localStorage/use-export-dataset.hook', () => ({
-    useExportDataset: () => ({
-        removeLsExportId: mockRemoveLsExportId,
-        getLsExportIds: vi.fn(() => []),
-        addLsExportId: vi.fn(),
-    }),
-}));
-
 describe('CancelJobConfirmation', () => {
     const jobId = 'test-job-id';
 
@@ -26,12 +16,13 @@ describe('CancelJobConfirmation', () => {
         vi.clearAllMocks();
     });
 
-    const renderApp = () => {
-        render(<CancelJobConfirmation jobId={jobId} />);
+    const renderApp = (mockedOnRemove = vi.fn()) => {
+        render(<CancelJobConfirmation jobId={jobId} onRemove={mockedOnRemove} />);
     };
 
     it('calls cancel API and removes job from localStorage on successful cancel', async () => {
         const cancelSpy = vi.fn();
+        const mockedOnRemove = vi.fn();
 
         server.use(
             http.post('/api/jobs/{job_id}:cancel', () => {
@@ -40,18 +31,20 @@ describe('CancelJobConfirmation', () => {
             })
         );
 
-        renderApp();
+        renderApp(mockedOnRemove);
 
         fireEvent.click(screen.getByRole('button', { name: /cancel job dialog/i }));
         fireEvent.click(await screen.findByRole('button', { name: /cancel job/i }));
 
         await waitFor(() => {
             expect(cancelSpy).toHaveBeenCalled();
-            expect(mockRemoveLsExportId).toHaveBeenCalledWith(jobId);
+            expect(mockedOnRemove).toHaveBeenCalled();
         });
     });
 
     it('removes job from localStorage when job not found error occurs', async () => {
+        const mockedOnRemove = vi.fn();
+
         server.use(
             http.post('/api/jobs/{job_id}:cancel', () =>
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -60,13 +53,13 @@ describe('CancelJobConfirmation', () => {
             )
         );
 
-        renderApp();
+        renderApp(mockedOnRemove);
 
         fireEvent.click(screen.getByRole('button', { name: /cancel job dialog/i }));
         fireEvent.click(await screen.findByRole('button', { name: /cancel job/i }));
 
         await waitFor(() => {
-            expect(mockRemoveLsExportId).toHaveBeenCalledWith(jobId);
+            expect(mockedOnRemove).toHaveBeenCalled();
         });
     });
 });

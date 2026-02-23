@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { usePrepareImportDataset } from 'hooks/localStorage/use-prepare-import-dataset.hook';
 
-import { PrepareImportDatasetJob } from '../../../../constants/shared-types';
-import { BottomProgressBar } from '../../../models/model-listing/current-model-training/bottom-progress-bar.component';
-import { CancelJobConfirmation } from '../cancel-job-confirmation/cancel-job-confirmation.component';
-import { getJobProgress, isJobRunning } from '../util';
-import { formatBytes } from './util';
+import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
+import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
+import { getJobProgress, isJobRunning } from '../../util';
+import { formatBytes } from '../util';
 
 type ImportActiveJobProps = {
     size: number;
@@ -18,6 +19,7 @@ type ImportActiveJobProps = {
 export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
+    const { removeLsPreparingImportId } = usePrepareImportDataset();
 
     return (
         <BottomProgressBar progress={progress}>
@@ -27,7 +29,7 @@ export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) =
                         Import dataset - {fileName} - {formatBytes(size)}
                     </Text>
 
-                    <CancelJobConfirmation jobId={job.job_id} />
+                    <CancelJobConfirmation jobId={job.job_id} onRemove={removeLsPreparingImportId} />
                 </Flex>
 
                 <Text>{fileName} file is being processed for import</Text>

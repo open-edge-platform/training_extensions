@@ -3,9 +3,9 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
-import { PrepareImportDatasetJob } from '../../../../constants/shared-types';
-import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { formatBytes } from './util';
+import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
+import { formatBytes } from '../util';
 
 type ImportFailedJobProps = {
     size: number;

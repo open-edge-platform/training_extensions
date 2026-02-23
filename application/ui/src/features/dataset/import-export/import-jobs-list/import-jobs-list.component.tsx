@@ -6,9 +6,9 @@ import { isEmpty } from 'lodash-es';
 
 import { usePrepareImportStatus } from '../import-dataset/hooks/use-prepare-import-status.hook';
 import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../util';
-import { ImportActiveJob } from './import-active-job.component';
-import { ImportCompletedJob } from './import-completed-job.component';
-import { ImportFailedJob } from './import-failed-job.component';
+import { ImportActiveJob } from './import-active-job/import-active-job.component';
+import { ImportCompletedJob } from './import-completed-job/import-completed-job.component';
+import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
 
 export const ImportJobsList = () => {
     const { data: job, fileName, size } = usePrepareImportStatus({});

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { useExportDataset } from 'hooks/localStorage/use-export-dataset.hook';
 
 import { ExportDatasetJob } from '../../../../../constants/shared-types';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
@@ -17,13 +18,14 @@ type ExportActiveJobProps = {
 export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
+    const { removeLsExportId } = useExportDataset();
 
     return (
         <BottomProgressBar progress={progress}>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
-                    <CancelJobConfirmation jobId={job.job_id} />
+                    <CancelJobConfirmation jobId={job.job_id} onRemove={() => removeLsExportId(job.job_id)} />
                 </Flex>
 
                 <Text>Dataset is being processed in order to export it</Text>

@@ -4,8 +4,8 @@
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 
-import { PrepareImportDatasetJob } from '../../../../constants/shared-types';
-import { formatBytes } from './util';
+import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { formatBytes } from '../util';
 
 type ImportCompletedJobProps = {
     size: number;
@@ -15,11 +15,11 @@ type ImportCompletedJobProps = {
 
 export const ImportCompletedJob = ({ job: _job, size, fileName }: ImportCompletedJobProps) => {
     const handleDelete = () => {
-        // Todo: implement once https://github.com/open-edge-platform/training_extensions/pull/5558 get merged
+        // Todo: implement once https://github.com/open-edge-platform/training_extensions/pull/5558 gets merged
     };
 
     const handleContinue = () => {
-        // Todo: implement once https://github.com/open-edge-platform/training_extensions/pull/5558 get merged
+        // Todo: implement once https://github.com/open-edge-platform/training_extensions/pull/5558 gets merged
     };
 
     return (
@@ -35,12 +35,12 @@ export const ImportCompletedJob = ({ job: _job, size, fileName }: ImportComplete
                     <Button
                         variant='secondary'
                         style='fill'
-                        aria-label='close export dataset status'
+                        aria-label='delete import dataset status'
                         onPress={handleDelete}
                     >
                         Delete
                     </Button>
-                    <Button aria-label='download dataset' onPress={handleContinue}>
+                    <Button aria-label='continue dataset import' onPress={handleContinue}>
                         Continue
                     </Button>
                 </Flex>
