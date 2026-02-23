@@ -25,7 +25,7 @@ from app.models import (
     Video,
     VideoFrame,
 )
-from app.models.media import ImageFormat, VideoFormat, VideoFrame
+from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import MediaFilters
@@ -461,6 +461,28 @@ class TestMediaEndpoints:
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(
             project_id=fxt_get_project.id, media_id=fxt_video_media.id
+        )
+
+    def test_get_video_frame_success(self, fxt_video_frame_media, fxt_get_project, fxt_media_service, fxt_client):
+        fxt_media_service.get_media_by_id.return_value = fxt_video_frame_media
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(fxt_video_frame_media.id)}")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "type": fxt_video_frame_media.type,
+            "format": fxt_video_frame_media.format,
+            "height": fxt_video_frame_media.height,
+            "id": str(fxt_video_frame_media.id),
+            "name": fxt_video_frame_media.name,
+            "size": fxt_video_frame_media.size,
+            "source_id": str(fxt_video_frame_media.source_id),
+            "width": fxt_video_frame_media.width,
+            "video_id": str(fxt_video_frame_media.video_id),
+            "frame_index": fxt_video_frame_media.frame_index,
+        }
+        fxt_media_service.get_media_by_id.assert_called_once_with(
+            project_id=fxt_get_project.id, media_id=fxt_video_frame_media.id
         )
 
     def test_get_media_binary_not_found(self, fxt_get_project, fxt_media_service, fxt_client):

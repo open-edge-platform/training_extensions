@@ -11,7 +11,6 @@ from .pipeline_repo import PipelineRepository
 from .project_repo import ProjectRepository
 from .sink_repo import SinkRepository
 from .source_repo import SourceRepository
-from .video_frame_repo import VideoFrameRepository
 
 __all__ = [
     "DatasetItemRepository",
@@ -24,5 +23,4 @@ __all__ = [
     "ProjectRepository",
     "SinkRepository",
     "SourceRepository",
-    "VideoFrameRepository",
 ]
