@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -34,6 +35,60 @@ def setup_project_with_models(
 def fxt_model_service(tmp_path: Path, db_session: Session) -> ModelService:
     """Fixture to create a ModelService instance."""
     return ModelService(data_dir=tmp_path, db_session=db_session)
+
+
+@pytest.fixture
+def fxt_model_with_dataset_revision_db(tmp_path: Path, db_session: Session, fxt_project_id: UUID) -> dict[str, Any]:
+    """Fixture to create a dataset revision and a model linked to it."""
+    dataset_revision_id = uuid4()
+    dataset_revision_path = tmp_path / "projects" / str(fxt_project_id) / "dataset_revisions" / str(dataset_revision_id)
+    dataset_revision_path.mkdir(parents=True, exist_ok=True)
+    (dataset_revision_path / "data.parquet").touch()
+    dataset_revision_db = DatasetRevisionDB(
+        id=str(dataset_revision_id),
+        project_id=str(fxt_project_id),
+        name="Test Dataset",
+        files_deleted=False,
+    )
+    db_session.add(dataset_revision_db)
+
+    model_id_1 = uuid4()
+    model_db_1 = ModelRevisionDB(
+        id=str(model_id_1),
+        name="TestModel",
+        project_id=str(fxt_project_id),
+        architecture="TestArch",
+        training_status="not_started",
+        training_configuration={},
+        training_dataset_id=str(dataset_revision_id),
+        label_schema_revision={},
+        files_deleted=False,
+    )
+    db_session.add(model_db_1)
+
+    model_id_2 = uuid4()
+    model_db_2 = ModelRevisionDB(
+        id=str(model_id_2),
+        name="TestModel",
+        project_id=str(fxt_project_id),
+        architecture="TestArch",
+        training_status="not_started",
+        training_configuration={},
+        training_dataset_id=str(dataset_revision_id),
+        label_schema_revision={},
+        files_deleted=False,
+    )
+    db_session.add(model_db_2)
+    db_session.flush()
+    return {
+        "dataset_revision_id": dataset_revision_id,
+        "dataset_revision_path": dataset_revision_path,
+        "dataset_revision_db": dataset_revision_db,
+        "model_id_1": model_id_1,
+        "model_db_1": model_db_1,
+        "model_id_2": model_id_2,
+        "model_db_2": model_db_2,
+    }
 
 
 class TestModelServiceIntegration:
@@ -275,6 +330,32 @@ class TestModelServiceIntegration:
         finally:
             # Cleanup: restore permissions so pytest can clean up temp directory
             model_rev_path.chmod(0o755)
+
+    def test_delete_model_triggers_dataset_revision_files_deletion(
+        self,
+        db_session: Session,
+        fxt_project_id: UUID,
+        fxt_model_service: ModelService,
+        fxt_model_with_dataset_revision_db,
+    ):
+        """Test that deleting a model deletes associated dataset revision if no models remain."""
+        dataset_revision_id = fxt_model_with_dataset_revision_db["dataset_revision_id"]
+        dataset_revision_path = fxt_model_with_dataset_revision_db["dataset_revision_path"]
+        model_id_1 = fxt_model_with_dataset_revision_db["model_id_1"]
+        model_id_2 = fxt_model_with_dataset_revision_db["model_id_2"]
+
+        fxt_model_service.delete_model(project_id=fxt_project_id, model_id=model_id_1)
+
+        assert dataset_revision_path.exists()
+        dataset_revision_db = db_session.get(DatasetRevisionDB, str(dataset_revision_id))
+        assert dataset_revision_db is not None
+        assert dataset_revision_db.files_deleted is False
+
+        fxt_model_service.delete_model(project_id=fxt_project_id, model_id=model_id_2)
+
+        assert not dataset_revision_path.exists()
+        dataset_revision_db = db_session.get(DatasetRevisionDB, str(dataset_revision_id))
+        assert dataset_revision_db is None
 
     @pytest.mark.parametrize(
         "model_format, expected_files",
