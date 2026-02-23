@@ -120,7 +120,10 @@ class DatasetItemDB(Base):
 
 class MediaDB(BaseID):
     __tablename__ = "media"
-    __table_args__ = ()
+    __table_args__ = (
+        Index("idx_media_video_id", "video_id"),
+        UniqueConstraint("video_id", "frame_index", name="uq_video_id_frame_index"),
+    )
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -130,20 +133,12 @@ class MediaDB(BaseID):
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     fps: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     frame_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    video_id: Mapped[str | None] = mapped_column(
+        Text, ForeignKey("media.id", ondelete="CASCADE"), nullable=True, default=None
+    )
+    frame_index: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
-
-
-class VideoFrameDB(Base):
-    __tablename__ = "video_frames"
-    __table_args__ = (
-        Index("idx_video_frames_video_id", "video_id"),
-        Index("idx_video_frames_video_id_frame_index", "video_id", "frame_index"),
-    )
-
-    id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), primary_key=True, nullable=False)
-    video_id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), nullable=False)
-    frame_index: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 class LabelDB(BaseID):

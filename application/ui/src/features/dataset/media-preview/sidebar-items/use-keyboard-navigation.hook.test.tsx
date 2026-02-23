@@ -4,7 +4,7 @@
 import { useRef } from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
-import { getMultipleMockedMedia } from 'mocks/mock-media';
+import { getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { render } from 'test-utils/render';
 
 import { useKeyboardNavigation, type UseKeyboardNavigationProps } from './use-keyboard-navigation.hook';
@@ -17,7 +17,7 @@ const App = ({ ...options }: Omit<UseKeyboardNavigationProps, 'ref'>) => {
 };
 
 describe('useKeyboardNavigation', () => {
-    const items = getMultipleMockedMedia(3);
+    const items = getMultipleMockedMediaImage(3);
 
     it('calls onSelectedMediaItem with previous item on ArrowUp', async () => {
         const mockedOnSelectedMediaItem = vi.fn();
