@@ -26,9 +26,18 @@ export type PrepareImportDatasetJob = Job & {
 
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];
-export type MediaVideoFrame = components['schemas']['VideoFrameView'];
+export type MediaVideoFrame2 = components['schemas']['VideoFrameView'];
+export type MediaVideoFrame = MediaVideo & {
+    fps: number;
+    frame_number: number;
+    frame_count: number;
+    frame_stride: number;
+    duration: number;
+    type: 'video_frame';
+};
 
 export type Media = MediaImage | MediaVideo | MediaVideoFrame;
+
 export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
 
