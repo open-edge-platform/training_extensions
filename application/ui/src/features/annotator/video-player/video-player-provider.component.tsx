@@ -4,7 +4,6 @@
 import { createContext, ReactNode, RefObject, use, useRef, useState } from 'react';
 
 import type { MediaVideo } from '../../../constants/shared-types';
-import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
 type VideoPlayerContextProps = {

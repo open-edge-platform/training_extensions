@@ -4,14 +4,14 @@
 import { Image, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { Media } from '../../../../../../../constants/shared-types';
+import type { MediaVideo } from '../../../../../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../../../../../shared/media-url.utils';
 import { formatDurationText } from '../../../time-utils';
 import { FrameNumberIndicator } from './frame-number-indicator.component';
 
 interface ThumbnailPreviewProps {
     videoFrame: number;
-    mediaItem: Media;
+    mediaItem: MediaVideo;
     width: number;
     height: number;
     x: number;
@@ -23,7 +23,7 @@ export const ThumbnailPreview = ({ mediaItem, videoFrame: frameNumber, width, he
     // const videoFrame = constructVideoFrame(frameNumber) as VideoFrame;
     const projectIdentifier = useProjectIdentifier();
 
-    const fps = Number(mediaItem.fps);
+    const fps = mediaItem.fps;
     // TODO: Replace it with the video frame thumbnail when the endpoint will be ready.
     const src = getThumbnailUrl(projectIdentifier, mediaItem.id);
 
