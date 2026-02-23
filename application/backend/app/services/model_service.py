@@ -559,6 +559,6 @@ class ModelService(BaseSessionManagedService):
                             yield text
                     except json.JSONDecodeError as e:
                         logger.warning("Failed to parse log line: {}", e)
-                        continue
+                        yield "[MALFORMED LOG LINE]\n"
 
         return _iter_text_lines()

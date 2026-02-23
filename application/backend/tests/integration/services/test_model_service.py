@@ -578,7 +578,9 @@ class TestModelServiceIntegration:
         log_file = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "training.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
         log_content = (
-            '{ "text": "Training started\\n", "payload": "abc" }\n{ "text": "Epoch 1/10\\n", "payload": "dfe"}\n'
+            '{ "text": "Training started\\n", "payload": "abc" }\n'
+            '{ "text": "Epoch 1/10\\n", "payload": "dfe"}\n'
+            '{ "text": "Epoch 2/10\\n"\n'
         )
         log_file.write_text(log_content)
 
@@ -589,7 +591,7 @@ class TestModelServiceIntegration:
         assert result is not None
         if as_text:
             assert isinstance(result, Iterator)
-            assert list(result) == ["Training started\n", "Epoch 1/10\n"]
+            assert list(result) == ["Training started\n", "Epoch 1/10\n", "[MALFORMED LOG LINE]\n"]
         else:
             assert isinstance(result, Path)
             assert result.exists()
