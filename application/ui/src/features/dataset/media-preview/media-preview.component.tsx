@@ -50,7 +50,7 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
 
-    const { data: annotationsData } = useAnnotationsQuery(mediaItem.id);
+    const { data: annotationsData } = useAnnotationsQuery(mediaItem);
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const queryClient = useQueryClient();

@@ -6,22 +6,35 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
 import { fetchClient } from '../../../../api/client';
-import { AnnotationDTO } from '../../../../constants/shared-types';
+import type { AnnotationDTO, Media } from '../../../../constants/shared-types';
 import { getQueryKey } from '../../../../query-client/query-client';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
+import { isVideo } from '../../../../shared/media-item-utils';
 
 const isUnannotatedError = (error: unknown): boolean => {
     return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
 };
 
-export const useAnnotationsQuery = (mediaId: string) => {
+export const useAnnotationsQuery = (media: Media) => {
     const projectId = useProjectIdentifier();
+
+    // TODO: Remove this part when we have new Media types and logic inside selected media item provider
+    const queryParams = isVideo(media)
+        ? {
+              frame_index: 0,
+          }
+        : {};
 
     return useQuery({
         queryKey: getQueryKey([
             'get',
             `/api/projects/{project_id}/dataset/media/{media_id}/annotations`,
-            { params: { path: { project_id: projectId, media_id: mediaId } } },
+            {
+                params: {
+                    path: { project_id: projectId, media_id: media.id },
+                    query: queryParams,
+                },
+            },
         ]),
         queryFn: async () => {
             const { data, error, response } = await fetchClient.GET(
@@ -30,8 +43,9 @@ export const useAnnotationsQuery = (mediaId: string) => {
                     params: {
                         path: {
                             project_id: projectId,
-                            media_id: mediaId,
+                            media_id: media.id,
                         },
+                        query: queryParams,
                     },
                 }
             );
