@@ -520,6 +520,37 @@ class TestDatasetRevisionServiceIntegration:
         revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
         assert revision.files_deleted is True
 
+    def test_delete_dataset_revision(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test deleting dataset revision files."""
+        project, _ = fxt_project_with_subset_items_on_disk
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
+        assert revision_path.exists()
+        assert (revision_path / "data.parquet").exists()
+
+        # Delete the revision files
+        fxt_dataset_revision_service.delete_dataset_revision(project_id=project.id, revision_id=revision_id)
+
+        # Verify the files were deleted
+        assert not revision_path.exists()
+
+        # Verify the database record is removed
+        with pytest.raises(ResourceNotFoundError):
+            fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
+
     def test_delete_dataset_revision_files_not_found(
         self,
         fxt_dataset_revision_service: DatasetRevisionService,
