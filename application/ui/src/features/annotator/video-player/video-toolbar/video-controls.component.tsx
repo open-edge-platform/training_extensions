@@ -7,17 +7,9 @@ import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti
 import { useVideoPlayer } from '../video-player-provider.component';
 
 export const VideoControls = () => {
-    const {
-        isMuted,
-        isPlaying,
-        play,
-        pause,
-        toggleMute,
-        canSelectNextFrame,
-        canSelectPreviousFrame,
-        nextFrame,
-        previousFrame,
-    } = useVideoPlayer();
+    const { isMuted, toggleMute, videoControls } = useVideoPlayer();
+    const { isPlaying, play, pause, previousFrame, nextFrame, canSelectPreviousFrame, canSelectNextFrame } =
+        videoControls;
 
     return (
         <Flex alignItems={'center'} gap={'size-100'}>

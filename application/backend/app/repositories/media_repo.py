@@ -6,7 +6,7 @@ from typing import cast
 from sqlalchemy import CursorResult, Select, delete, func, select
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, VideoFrameDB
 from app.models import MediaType
 
 from .filters import _apply_annotation_status_filter, _apply_subset_filter

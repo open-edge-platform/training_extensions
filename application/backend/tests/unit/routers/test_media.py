@@ -25,7 +25,7 @@ from app.models import (
     Video,
     VideoFrame,
 )
-from app.models.media import ImageFormat, VideoFormat
+from app.models.media import ImageFormat, VideoFormat, VideoFrame
 from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import MediaFilters

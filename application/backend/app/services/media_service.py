@@ -16,10 +16,10 @@ from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import MediaDB
+from app.db.schema import MediaDB, VideoFrameDB
 from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
-from app.repositories import MediaRepository
+from app.repositories import MediaRepository, VideoFrameRepository
 from app.services.video import extract_video_frame, get_video_metadata
 from app.utils.images import crop_to_thumbnail
 
