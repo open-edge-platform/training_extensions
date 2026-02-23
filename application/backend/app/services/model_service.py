@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import shutil
 from dataclasses import dataclass
 from functools import lru_cache
@@ -512,16 +513,18 @@ class ModelService(BaseSessionManagedService):
         # If the number of unique steps equals the expected count, they are consecutive and hence step-based
         return len(unique_steps) == expected_count
 
-    def get_logs(self, project_id: UUID, model_id: UUID) -> Path | None:
+    def get_logs(self, project_id: UUID, model_id: UUID, as_text: bool = False) -> Path | str | None:
         """
         Get the training logs for a model revision.
 
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
+            as_text (bool): If True, parse NDJSON and return plain text. If False, return file path.
 
         Returns:
-            Path | None: Path to the training log file.
+            Path | str | None: Path to the training log file (if as_text=False),
+                           plain text logs (if as_text=True), or None if logs don't exist.
 
         Raises:
             ResourceNotFoundError: If no model with the given model_id is found.
@@ -542,4 +545,17 @@ class ModelService(BaseSessionManagedService):
         if not log_file.exists():
             return None
 
-        return log_file
+        if not as_text:
+            return log_file
+
+        text_lines = []
+        with open(log_file, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    entry = json.loads(line)
+                    text_lines.append(entry.get("text", ""))
+                except json.JSONDecodeError as e:
+                    logger.warning("Failed to parse log line: {}", e)
+                    continue
+
+        return "".join(text_lines)

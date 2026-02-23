@@ -6,9 +6,9 @@ import os
 import zipfile
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
 from fastapi.openapi.models import Example
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_model_service, get_project
@@ -211,9 +211,14 @@ def get_training_metrics(
 
 @router.get(
     "/{model_id}/logs",
+    response_model=None,
     responses={
         status.HTTP_200_OK: {
             "description": "Model configuration successfully deleted",
+            "content": {
+                "application/json": {"description": "NDJSON format (newline-delimited JSON)"},
+                "text/plain": {"description": "Plain text format (extracted from NDJSON)"},
+            },
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project, model or log file not found"},
@@ -222,18 +227,30 @@ def get_training_metrics(
         },
     },
 )
-async def get_training_logs(
+def get_training_logs(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> FileResponse:
+    accept: Annotated[str | None, Header(description="Accept header to specify the desired response format")] = None,
+) -> FileResponse | Response:
     """
     Download the training log file for a given model.
+    Supports content negotiation via Accept header (text/plain, application/json).
     """
     try:
-        log_file = model_service.get_logs(project_id=project.id, model_id=model_id)
-        if not log_file:
+        as_text = (accept and "text/plain" in accept.lower()) or False
+
+        log_content = model_service.get_logs(project_id=project.id, model_id=model_id, as_text=as_text)
+        if not log_content:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
-        return FileResponse(log_file, media_type="text/plain", filename=os.path.basename(log_file))
+
+        if as_text:
+            return Response(
+                content=log_content,
+                media_type="text/plain",
+                headers={"Content-Disposition": f'attachment; filename="training-{model_id}.log"'},
+            )
+
+        return FileResponse(log_content, media_type="application/json", filename=os.path.basename(log_content))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

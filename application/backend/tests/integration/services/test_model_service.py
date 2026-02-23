@@ -547,10 +547,19 @@ class TestModelServiceIntegration:
 
         assert "metrics.csv not found" in str(exc_info.value)
 
-    @pytest.mark.parametrize("training_status", [TrainingStatus.SUCCESSFUL, TrainingStatus.FAILED])
+    @pytest.mark.parametrize(
+        "training_status, as_text",
+        [
+            (TrainingStatus.SUCCESSFUL, True),
+            (TrainingStatus.SUCCESSFUL, False),
+            (TrainingStatus.FAILED, True),
+            (TrainingStatus.FAILED, False),
+        ],
+    )
     def test_get_logs_success(
         self,
         training_status: TrainingStatus,
+        as_text: bool,
         tmp_path: Path,
         fxt_model_id: UUID,
         fxt_project_id: UUID,
@@ -567,16 +576,23 @@ class TestModelServiceIntegration:
 
         log_file = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "training.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
-        log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"
+        log_content = (
+            '{ "text": "Training started\\n", "payload": "abc" }\n{ "text": "Epoch 1/10\\n", "payload": "dfe"}\n'
+        )
         log_file.write_text(log_content)
 
         # Act
-        result = fxt_model_service.get_logs(project_id=fxt_project_id, model_id=fxt_model_id)
+        result = fxt_model_service.get_logs(project_id=fxt_project_id, model_id=fxt_model_id, as_text=as_text)
 
         # Assert
         assert result is not None
-        assert result.exists()
-        assert result.read_text() == log_content
+        if as_text:
+            assert isinstance(result, str)
+            assert result == "Training started\nEpoch 1/10\n"
+        else:
+            assert isinstance(result, Path)
+            assert result.exists()
+            assert result.read_text() == log_content
 
     @pytest.mark.parametrize("training_status", [TrainingStatus.NOT_STARTED, TrainingStatus.IN_PROGRESS])
     def test_get_logs_in_status(
