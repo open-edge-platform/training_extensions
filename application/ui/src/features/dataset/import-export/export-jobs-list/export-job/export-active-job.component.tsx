@@ -12,9 +12,10 @@ import { ExportJobDetails } from './export-details/export-details.component';
 
 type ExportActiveJobProps = {
     job: ExportDatasetJob;
+    datasetName?: string;
 };
 
-export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
+export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
 
@@ -22,7 +23,7 @@ export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
         <BottomProgressBar progress={progress}>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                    <ExportJobDetails metadata={job.metadata} />
+                    <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
                     <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 

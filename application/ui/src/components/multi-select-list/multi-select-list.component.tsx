@@ -3,14 +3,17 @@
 
 import { ComponentProps, useState } from 'react';
 
-import { Flex, Item, ListView, Text } from '@geti/ui';
+import { Checkbox, Flex, Item, ListView, Selection, Text } from '@geti/ui';
 
 import classes from './multi-select-list.module.scss';
 
 type ListViewProps = ComponentProps<typeof ListView>;
 
 interface MultiSelectListProps
-    extends Omit<ListViewProps, 'selectionMode' | 'onSelectionChange' | 'items' | 'defaultSelectedKeys' | 'children'> {
+    extends Omit<
+        ListViewProps,
+        'selectionMode' | 'onSelectionChange' | 'items' | 'defaultSelectedKeys' | 'selectedKeys' | 'children'
+    > {
     name: string;
     label: string;
     items: { id: string; name: string }[];
@@ -19,19 +22,32 @@ interface MultiSelectListProps
 export const MultiSelectList = ({ name, label, items, ...listProps }: MultiSelectListProps) => {
     const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
 
+    const allItemSelected = selectedLabels.size === items.length && items.length > 0;
+
+    const handleSelectAllItems = (isSelected: boolean) => {
+        const selectedItems = isSelected ? new Set(items.map(({ id }) => id)) : new Set<string>();
+        setSelectedLabels(selectedItems);
+    };
+
+    const handleSelectChange = (keys: Selection) => {
+        const selection = keys === 'all' ? new Set(items.map(({ id }) => id)) : new Set(keys as Set<string>);
+        setSelectedLabels(selection);
+    };
+
     return (
         <Flex gap='size-100' direction='column'>
             <Text UNSAFE_className={classes.label}>{label}</Text>
+            <Checkbox aria-label='Select all items' onChange={handleSelectAllItems} isSelected={allItemSelected}>
+                Select all
+            </Checkbox>
 
             <ListView
                 {...listProps}
                 items={items}
-                selectionMode='multiple'
                 aria-label={label}
-                onSelectionChange={(keys) => {
-                    const selection = keys === 'all' ? new Set(items.map((l) => l.id)) : new Set(keys as Set<string>);
-                    setSelectedLabels(selection);
-                }}
+                selectionMode='multiple'
+                onSelectionChange={handleSelectChange}
+                selectedKeys={selectedLabels}
             >
                 {(item) => <Item key={item.id}>{item.name}</Item>}
             </ListView>
