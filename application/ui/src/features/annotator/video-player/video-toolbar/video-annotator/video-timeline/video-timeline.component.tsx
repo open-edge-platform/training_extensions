@@ -27,7 +27,7 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
     const frameNumber = 0;
 
     const step = 60;
-    const totalFrames = Number(videoFrame.frame_count);
+    const totalFrames = videoFrame.frame_count;
 
     const totalSegments = Math.ceil(totalFrames / step);
     const sizePerSquare = size === undefined ? 0 : Math.max(MIN_SIZE_OF_SEGMENT, size.width / totalSegments);

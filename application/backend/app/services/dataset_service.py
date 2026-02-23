@@ -25,6 +25,7 @@ from app.models import (
     Task,
     TaskType,
 )
+from app.models.media import MediaAdapter
 from app.repositories import DatasetItemRepository
 from app.services.media_service import MediaService
 
@@ -162,7 +163,7 @@ class DatasetService(BaseSessionManagedService):
         repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
         return [
-            (DatasetItem.model_validate(db_dataset_item), Media.model_validate(db_media))
+            (DatasetItem.model_validate(db_dataset_item), MediaAdapter.validate_python(db_media))
             for (db_dataset_item, db_media) in repo.list_items_with_media(
                 limit=filters.limit,
                 offset=filters.offset,

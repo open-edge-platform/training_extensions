@@ -116,3 +116,17 @@ class MediaRepository:
         )
         result = cast(CursorResult, self.db.execute(stmt))
         return result.rowcount > 0
+
+    def get_video_frame_by_video_id_and_index(self, video_id: str, frame_index: int) -> MediaDB | None:
+        stmt = self._base_select().where(MediaDB.video_id == video_id, MediaDB.frame_index == frame_index)
+        return self.db.scalar(stmt)
+
+    def get_video_frames_by_video_id(
+        self, video_id: str, frame_index_from: int = 0, frame_index_to: int = 10
+    ) -> list[MediaDB]:
+        stmt = self._base_select().where(
+            MediaDB.video_id == video_id,
+            MediaDB.frame_index >= frame_index_from,
+            MediaDB.frame_index <= frame_index_to,
+        )
+        return list(self.db.scalars(stmt).all())

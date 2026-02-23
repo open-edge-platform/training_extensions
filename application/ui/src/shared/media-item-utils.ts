@@ -1,10 +1,9 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Media } from '../constants/shared-types';
+import type { Media, MediaVideo, MediaVideoFrame } from '../constants/shared-types';
 
-export const isVideo = (
-    media: Partial<Pick<Media, 'type' | 'frame_count'>> | undefined
-): media is Pick<Media, 'type'> & { frame_count: number } => media?.type === 'video' && media.frame_count != null;
+export const isVideo = (media: Pick<Media, 'type'> | undefined): media is MediaVideo => media?.type === 'video';
 
-export const isVideoFrame = (media: Pick<Media, 'type'>): media is Pick<Media, 'type'> => media.type === 'video_frame';
+export const isVideoFrame = (media: Pick<Media, 'type'> | undefined): media is MediaVideoFrame =>
+    media?.type === 'video_frame';
