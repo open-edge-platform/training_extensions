@@ -26,3 +26,11 @@ export const getDatasetRevisionThumbnailUrl = (projectId: string, datasetRevisio
 export const getDatasetRevisionMediaBinaryUrl = (projectId: string, datasetRevisionId: string, itemId: string) => {
     return `${getDatasetRevisionItemBaseUrl(projectId, datasetRevisionId, itemId)}/binary`;
 };
+
+export const getVideoFrameBinaryUrl = (projectId: string, itemId: string, frameNumber: number) => {
+    return `${getMediaBaseUrl(projectId, itemId)}/${frameNumber}/binary`;
+};
+
+export const getVideoFrameThumbnailUrl = (projectId: string, itemId: string, frameNumber: number) => {
+    return `${getMediaBaseUrl(projectId, itemId)}/${frameNumber}/thumbnail`;
+};
