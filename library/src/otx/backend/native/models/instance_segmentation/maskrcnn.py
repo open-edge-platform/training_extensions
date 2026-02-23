@@ -391,16 +391,16 @@ class MaskRCNN(OTXInstanceSegModel):
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
         return {
             "maskrcnn_resnet_50": DataInputParams(
-                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+                input_size=(1024, 1024), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
             ),
             # TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b
             # differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.
             # issue: https://github.com/open-edge-platform/training_extensions/issues/5023
             "maskrcnn_efficientnet_b2b": DataInputParams(
-                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(1.0, 1.0, 1.0)
+                input_size=(1024, 1024), mean=(0.485, 0.456, 0.406), std=(1.0, 1.0, 1.0)
             ),
             "maskrcnn_swin_tiny": DataInputParams(
-                input_size=(1344, 1344), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+                input_size=(1344, 1344), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
             ),
         }
 
