@@ -198,10 +198,8 @@ class YOLOX(OTXDetectionModel):
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
         return {
             "yolox_tiny": DataInputParams(
-                input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+                input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
             ),
-            # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
-            # issue: https://github.com/open-edge-platform/training_extensions/issues/5023
             "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),

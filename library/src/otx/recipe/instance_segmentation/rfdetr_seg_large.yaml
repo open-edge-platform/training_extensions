@@ -64,10 +64,6 @@ callbacks:
 overrides:
   max_epochs: 100
   gradient_clip_val: 0.1
-  reset:
-    - data.train_subset.transforms
-    - data.val_subset.transforms
-    - data.test_subset.transforms
   data:
     task: INSTANCE_SEGMENTATION
     data_format: coco_instances
@@ -76,70 +72,36 @@ overrides:
       - 504
     train_subset:
       batch_size: 4
-      num_workers: 4
-      subset_name: train
-      to_tv_image: true
-      transforms:
+      augmentations_cpu:
         - class_path: torchvision.transforms.v2.RandomZoomOut
-          enable: true
           init_args:
             fill: 0
-        - class_path: otx.data.augmentation.transforms.RandomIoUCrop
-          enable: true
-          init_args:
-            probability: 1.0
+            p: 0.5
+        - class_path: torchvision.transforms.v2.RandomIoUCrop
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
             min_size: 1
-        - class_path: torchvision.transforms.v2.RandomHorizontalFlip
-          enable: true
-          init_args:
-            p: 0.5
-        - class_path: torchvision.transforms.v2.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
-        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+            keep_aspect_ratio: false
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 4
-      num_workers: 4
-      to_tv_image: true
-      transforms:
-        - class_path: torchvision.transforms.v2.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            keep_aspect_ratio: false
+            resize_targets: false
 
     test_subset:
       batch_size: 4
-      num_workers: 4
-      to_tv_image: true
-      transforms:
-        - class_path: torchvision.transforms.v2.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            keep_aspect_ratio: false
+            resize_targets: false

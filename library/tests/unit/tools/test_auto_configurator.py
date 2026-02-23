@@ -5,7 +5,6 @@
 from pathlib import Path
 
 import pytest
-import torch
 
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.data.module import OTXDataModule

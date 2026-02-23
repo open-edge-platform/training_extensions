@@ -227,7 +227,7 @@ class OTXKeypointDetectionModel(OTXModel):
             batch.keypoints = list(stacked_kps)
 
     @property
-    def _default_train_transforms(self):  # noqa: ANN202, F821
+    def _default_train_transforms(self):  # noqa: ANN202
         """Return default GPU augmentations for keypoint detection."""
         return AugmentationSequential(
             kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),

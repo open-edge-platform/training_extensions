@@ -156,8 +156,8 @@ class RFDETRInst(RFDETRMixin, OTXInstanceSegModel):  # pyrefly: ignore[inconsist
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]
         """Default preprocessing parameters for RF-DETR segmentation models."""
-        imagenet_mean = (123.675, 116.28, 103.53)
-        imagenet_std = (58.395, 57.12, 57.375)
+        imagenet_mean = (0.485, 0.456, 0.406)
+        imagenet_std = (0.229, 0.224, 0.225)
 
         return {
             "rfdetr_seg_n": DataInputParams(

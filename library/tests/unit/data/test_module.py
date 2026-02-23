@@ -11,7 +11,7 @@ import pytest
 from importlib_resources import files
 from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
-from torchvision.transforms.v2 import Normalize
+from torchvision.transforms.v2 import Compose, Normalize
 
 from otx.config.data import (
     SubsetConfig,
@@ -23,7 +23,6 @@ from otx.data.module import (
     OTXDataModule,
     OTXTaskType,
 )
-from torchvision.transforms.v2 import Compose, Normalize
 
 if TYPE_CHECKING:
     from datumaro.components.dataset import Dataset as DmDataset

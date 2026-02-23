@@ -157,4 +157,4 @@ class DEIMV2(DEIMDFine):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(640, 640), mean=(123.675, 116.280, 103.530), std=(58.395, 57.120, 57.375))
+        return DataInputParams(input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
