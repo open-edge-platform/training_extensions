@@ -16,7 +16,7 @@ from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import MediaDB, VideoFrameDB
+from app.db.schema import MediaDB
 from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
 from app.repositories import MediaRepository
@@ -321,23 +321,15 @@ class MediaService(BaseSessionManagedService):
             format=str(format),
             width=image.width,
             height=image.height,
+            video_id=str(video.id),
+            frame_index=frame_index,
             size=os.path.getsize(video_frame_path),
             source_id=None,
         )
 
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
         db_video_frame = repo.save(db_video_frame)
-        video_frame = MediaAdapter.validate_python(db_video_frame)
-
-        repo.save_video_frame(
-            VideoFrameDB(
-                id=str(video_frame.id),
-                video_id=str(video.id),
-                frame_index=frame_index,
-            )
-        )
-
-        return video_frame
+        return MediaAdapter.validate_python(db_video_frame)
 
     def get_video_frame_by_video_id_and_index(self, project: Project, video_id: UUID, frame_index: int) -> Media | None:
         """

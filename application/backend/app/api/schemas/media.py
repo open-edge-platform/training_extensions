@@ -47,6 +47,8 @@ class VideoFrameView(BaseRequiredIDNameModel):
     width: int
     height: int
     size: int
+    video_id: UUID
+    frame_index: int
     source_id: UUID | None = None
 
     model_config = {
@@ -59,6 +61,8 @@ class VideoFrameView(BaseRequiredIDNameModel):
                 "width": 1280,
                 "height": 720,
                 "size": 2211840,
+                "video_id": "7b073838-99d3-42ff-9018-4e901eb047fd",
+                "frame_index": 4,
                 "source_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
             }
         }

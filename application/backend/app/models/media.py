@@ -69,7 +69,15 @@ class Image(BaseMedia):
 
 
 class VideoFrame(BaseMedia):
+    """
+    Attributes:
+        video_id: Video identifier
+        frame_index: Frame index
+    """
+
     type: Literal[MediaType.VIDEO_FRAME]
+    video_id: UUID
+    frame_index: int
 
 
 class Video(BaseMedia):

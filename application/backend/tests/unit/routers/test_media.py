@@ -12,7 +12,7 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_dataset_service, get_media_service
-from app.api.schemas.media import ImageView, MediaViewAdapter, SetMediaAnnotations, VideoView
+from app.api.schemas.media import ImageView, MediaViewAdapter, SetMediaAnnotations, VideoFrameView, VideoView
 from app.main import app
 from app.models import (
     DatasetItem,
@@ -23,8 +23,9 @@ from app.models import (
     MediaType,
     Rectangle,
     Video,
+    VideoFrame,
 )
-from app.models.media import ImageFormat, VideoFormat, VideoFrame
+from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import MediaFilters
@@ -58,6 +59,23 @@ def fxt_video_media():
         size=2048,
         fps=25,
         frame_count=1000,
+        source_id=uuid4(),
+    )
+
+
+@pytest.fixture
+def fxt_video_frame_media():
+    return VideoFrame(
+        id=uuid4(),
+        type=MediaType.VIDEO_FRAME,
+        project_id=uuid4(),
+        name="test_video_frame_3",
+        format=VideoFormat.MP4,
+        width=1024,
+        height=768,
+        size=2048,
+        frame_index=3,
+        video_id=uuid4(),
         source_id=uuid4(),
     )
 
@@ -104,6 +122,22 @@ def test_convert_video_to_view(fxt_video_media) -> None:
         frame_count=fxt_video_media.frame_count,
         source_id=fxt_video_media.source_id,
         duration=fxt_video_media.duration,
+    )
+
+
+def test_convert_video_frame_to_view(fxt_video_frame_media) -> None:
+    view = MediaViewAdapter.validate_python(fxt_video_frame_media, from_attributes=True)
+    assert view == VideoFrameView(
+        id=fxt_video_frame_media.id,
+        name=fxt_video_frame_media.name,
+        type=fxt_video_frame_media.type,
+        format=fxt_video_frame_media.format,
+        width=fxt_video_frame_media.width,
+        height=fxt_video_frame_media.height,
+        size=fxt_video_frame_media.size,
+        frame_index=fxt_video_frame_media.frame_index,
+        video_id=fxt_video_frame_media.video_id,
+        source_id=fxt_video_frame_media.source_id,
     )
 
 

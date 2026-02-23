@@ -15,7 +15,7 @@ import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB, VideoFrameDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
 from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import LabelService, PipelineService, ProjectService, SystemService
@@ -116,25 +116,26 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         {"type": "image", "name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
         {"type": "image", "name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
         {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
-        {
-            "type": "video",
-            "name": "test4",
-            "format": "avi",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-            "fps": 25.0,
-            "frame_count": 100,
-        },
-        {
-            "type": "video_frame",
-            "name": "test4_10",
-            "format": "jpg",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-        },
     ]
+    video_config = {
+        "type": "video",
+        "name": "test4",
+        "format": "avi",
+        "size": 1024,
+        "width": 1024,
+        "height": 768,
+        "fps": 25.0,
+        "frame_count": 100,
+    }
+    video_frame_config = {
+        "type": "video_frame",
+        "name": "test4_10",
+        "format": "jpg",
+        "size": 1024,
+        "width": 1024,
+        "height": 768,
+        "frame_index": 20,
+    }
 
     db_media_list = []
     for config in configs:
@@ -142,21 +143,42 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         db_media.project_id = str(project.id)
         db_media.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
         db_media_list.append(db_media)
+
+    db_video = MediaDB(**video_config)
+    db_video.project_id = str(project.id)
+    db_video.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+    db_media_list.append(db_video)
+
     db_session.add_all(db_media_list)
     db_session.flush()
+
+    db_video_frame = MediaDB(**video_frame_config)
+    db_video_frame.project_id = str(project.id)
+    db_video_frame.video_id = str(db_video.id)
+    db_video_frame.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+    db_media_list.append(db_video_frame)
+
+    db_session.add(db_video_frame)
+    db_session.flush()
+
     return project, db_media_list
 
 
 @pytest.fixture
-def fxt_video_frame(
-    fxt_project_with_media: tuple[Project, list[MediaDB]], db_session
-) -> Callable[[int], tuple[MediaDB, VideoFrameDB]]:
-    def _create_video_frame(frame_index: int) -> tuple[MediaDB, VideoFrameDB]:
+def fxt_video_frame(fxt_project_with_media: tuple[Project, list[MediaDB]], db_session) -> Callable[[int], MediaDB]:
+    def _create_video_frame(frame_index: int) -> MediaDB:
         project, db_media_list = fxt_project_with_media
         media = db_media_list[3]
 
         db_media = MediaDB(
-            type="video_frame", name=f"test4_frame_{frame_index}", format="jpg", size=1024, width=1024, height=768
+            type="video_frame",
+            name=f"test4_frame_{frame_index}",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            video_id=media.id,
+            frame_index=frame_index,
         )
         db_media.project_id = str(project.id)
         db_media.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
@@ -164,11 +186,7 @@ def fxt_video_frame(
         db_session.add(db_media)
         db_session.flush()
 
-        db_video_frame = VideoFrameDB(id=db_media.id, video_id=media.id, frame_index=frame_index)
-        db_session.add(db_video_frame)
-        db_session.flush()
-
-        return db_media, db_video_frame
+        return db_media
 
     return _create_video_frame
 
@@ -1366,22 +1384,16 @@ class TestMediaServiceIntegration:
         video_frame_binary_path = dataset_dir / f"{video_frame.id}.jpg"
         assert os.path.exists(video_frame_binary_path)
 
-        db_video_frame_media = db_session.get(MediaDB, str(video_frame.id))
-        assert db_video_frame_media is not None
-        assert (
-            db_video_frame_media.id == str(video_frame.id)
-            and db_video_frame_media.project_id == str(project.id)
-            and db_video_frame_media.type == "video_frame"
-            and db_video_frame_media.name == "test4_frame_50"
-            and db_video_frame_media.format == "jpg"
-            and db_video_frame_media.width == 640
-            and db_video_frame_media.height == 480
-        )
-
-        db_video_frame = db_session.get(VideoFrameDB, str(video_frame.id))
+        db_video_frame = db_session.get(MediaDB, str(video_frame.id))
         assert db_video_frame is not None
         assert (
             db_video_frame.id == str(video_frame.id)
+            and db_video_frame.project_id == str(project.id)
+            and db_video_frame.type == "video_frame"
+            and db_video_frame.name == "test4_frame_50"
+            and db_video_frame.format == "jpg"
+            and db_video_frame.width == 640
+            and db_video_frame.height == 480
             and db_video_frame.video_id == media.id
             and db_video_frame.frame_index == 50
         )
@@ -1389,7 +1401,7 @@ class TestMediaServiceIntegration:
     def test_get_video_frame_by_video_id_and_index(
         self,
         fxt_media_service: MediaService,
-        fxt_video_frame: Callable[[int], tuple[MediaDB, VideoFrameDB]],
+        fxt_video_frame: Callable[[int], MediaDB],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
         """Test getting a video frame by video ID and index."""
@@ -1405,7 +1417,7 @@ class TestMediaServiceIntegration:
     def test_get_non_existing_video_frame_by_video_id_and_index(
         self,
         fxt_media_service: MediaService,
-        fxt_video_frame: Callable[[int], tuple[MediaDB, VideoFrameDB]],
+        fxt_video_frame: Callable[[int], MediaDB],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
         """Test getting a non extracted video frame by video ID and index."""
@@ -1421,7 +1433,7 @@ class TestMediaServiceIntegration:
     def test_get_video_frames_by_video_id(
         self,
         fxt_media_service: MediaService,
-        fxt_video_frame: Callable[[float], tuple[MediaDB, VideoFrameDB]],
+        fxt_video_frame: Callable[[float], MediaDB],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
         """Test getting a list of video frames by video ID."""
