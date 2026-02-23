@@ -9,9 +9,10 @@ import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportFailedJobProps = {
     job: ExportDatasetJob;
+    datasetName?: string;
 };
 
-export const ExportFailedJob = ({ job }: ExportFailedJobProps) => {
+export const ExportFailedJob = ({ job, datasetName }: ExportFailedJobProps) => {
     const { removeLsExportId } = useExportDataset();
 
     const handleClose = () => {
@@ -21,7 +22,7 @@ export const ExportFailedJob = ({ job }: ExportFailedJobProps) => {
     return (
         <View padding='size-150'>
             <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                <ExportJobDetails metadata={job.metadata} />
+                <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
 
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <Button
@@ -37,7 +38,7 @@ export const ExportFailedJob = ({ job }: ExportFailedJobProps) => {
 
             <Text>{job.message}</Text>
             <Divider size='S' marginY='size-150' />
-            <Text>{job.error}</Text>
+            <Text>Error: {job.error}</Text>
         </View>
     );
 };

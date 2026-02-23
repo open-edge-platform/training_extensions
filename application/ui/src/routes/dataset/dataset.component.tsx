@@ -20,7 +20,7 @@ export const Dataset = () => {
             UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
             <View gridRow='1'>
-                <ExportJobsList />
+                <ExportJobsList predicate={({ datasetId }) => datasetId === null} />
             </View>
 
             <View gridRow='2'>
