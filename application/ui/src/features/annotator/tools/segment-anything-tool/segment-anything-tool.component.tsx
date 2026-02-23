@@ -8,10 +8,11 @@ import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
+import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
+import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
@@ -57,7 +58,9 @@ export const SegmentAnythingTool = () => {
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
-    const { roi, image, selectedLabel } = useAnnotator();
+    const { roi } = useSelectedMediaItem();
+    const { image } = useMediaItemImage();
+    const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
