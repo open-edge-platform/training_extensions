@@ -97,6 +97,11 @@ class Video(BaseMedia):
         """Return duration in seconds"""
         return self.frame_count / self.fps
 
+    @computed_field
+    @property
+    def stride(self) -> int:
+        return int(self.fps)
+
 
 Media = Annotated[Image | Video | VideoFrame, Field(discriminator="type")]
 

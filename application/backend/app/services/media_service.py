@@ -17,7 +17,7 @@ from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
 from app.db.schema import MediaDB
-from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
+from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project, VideoFrame
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
 from app.repositories import MediaRepository
 from app.services.video import extract_video_frame, get_video_metadata
@@ -331,7 +331,9 @@ class MediaService(BaseSessionManagedService):
         db_video_frame = repo.save(db_video_frame)
         return MediaAdapter.validate_python(db_video_frame)
 
-    def get_video_frame_by_video_id_and_index(self, project: Project, video_id: UUID, frame_index: int) -> Media | None:
+    def get_video_frame_by_video_id_and_index(
+        self, project: Project, video_id: UUID, frame_index: int
+    ) -> VideoFrame | None:
         """
         Returns annotated video frame by video ID and frame index.
 
@@ -345,11 +347,11 @@ class MediaService(BaseSessionManagedService):
         """
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
         db_media = repo.get_video_frame_by_video_id_and_index(video_id=str(video_id), frame_index=frame_index)
-        return MediaAdapter.validate_python(db_media) if db_media else None
+        return VideoFrame.model_validate(db_media, from_attributes=True) if db_media else None
 
     def get_video_frames_by_video_id(
         self, project: Project, video_id: UUID, frame_index_from: int = 0, frame_index_to: int = 10
-    ) -> list[Media]:
+    ) -> list[VideoFrame]:
         """
         Returns all annotated video frames falling into the specified frame index range.
 
@@ -366,4 +368,4 @@ class MediaService(BaseSessionManagedService):
         db_media_list = repo.get_video_frames_by_video_id(
             video_id=str(video_id), frame_index_from=frame_index_from, frame_index_to=frame_index_to
         )
-        return [MediaAdapter.validate_python(db_media) for db_media in db_media_list]
+        return [VideoFrame.model_validate(db_media, from_attributes=True) for db_media in db_media_list]

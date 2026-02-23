@@ -83,6 +83,7 @@ class VideoView(BaseRequiredIDNameModel):
     frame_count: int
     source_id: UUID | None = None
     duration: float
+    stride: int
 
     model_config = {
         "json_schema_extra": {
@@ -97,6 +98,7 @@ class VideoView(BaseRequiredIDNameModel):
                 "frame_count": 100,
                 "duration": 4.0,
                 "size": 2211840,
+                "stride": 25,
                 "source_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
             }
         }

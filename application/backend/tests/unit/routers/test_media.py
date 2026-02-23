@@ -122,6 +122,7 @@ def test_convert_video_to_view(fxt_video_media) -> None:
         frame_count=fxt_video_media.frame_count,
         source_id=fxt_video_media.source_id,
         duration=fxt_video_media.duration,
+        stride=fxt_video_media.stride,
     )
 
 
@@ -208,6 +209,7 @@ class TestMediaEndpoints:
             "fps": 25.0,
             "frame_count": 1000,
             "duration": 40,
+            "stride": 25,
         }
         fxt_media_service.create_video.assert_called_once_with(
             project=fxt_get_project,
@@ -458,6 +460,7 @@ class TestMediaEndpoints:
             "fps": fxt_video_media.fps,
             "frame_count": fxt_video_media.frame_count,
             "duration": fxt_video_media.duration,
+            "stride": fxt_video_media.stride,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(
             project_id=fxt_get_project.id, media_id=fxt_video_media.id
