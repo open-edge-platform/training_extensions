@@ -104,6 +104,24 @@ class DatasetRevisionService(BaseSessionManagedService):
         parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
         return import_dataset(input_path=parquet_path.parent)
 
+    def get_latest_uptodate_dataset_revision(self, project_id: UUID) -> DatasetRevision | None:
+        """
+        Get latest up to date created dataset revision in a project, if it exists.
+
+        Up to date means the dataset revision was created after the last update on any dataset item in the project.
+
+        Args:
+            project_id (UUID): The UUID of the project
+
+        Returns:
+            DatasetRevision: The latest created dataset revision in a project or None if none exists
+        """
+        dataset_revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
+        dataset_revision_db = dataset_revision_repo.get_latest_uptodate_dataset_revision()
+        if dataset_revision_db is None:
+            return None
+        return DatasetRevision.model_validate(dataset_revision_db)
+
     def list_dataset_revisions(self, project_id: UUID) -> list[DatasetRevision]:
         """
         Get information about all available dataset revisions in a project.
