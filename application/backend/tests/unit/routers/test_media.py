@@ -406,7 +406,7 @@ class TestMediaEndpoints:
             project_id=fxt_get_project.id, media_id=fxt_image_media.id
         )
 
-    def test_get_video_success(self, request, fxt_video_media, fxt_get_project, fxt_media_service, fxt_client):
+    def test_get_video_success(self, fxt_video_media, fxt_get_project, fxt_media_service, fxt_client):
         fxt_media_service.get_media_by_id.return_value = fxt_video_media
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(fxt_video_media.id)}")

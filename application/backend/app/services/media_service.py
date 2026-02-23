@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.db.schema import MediaDB, VideoFrameDB
 from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
-from app.repositories import MediaRepository, VideoFrameRepository
+from app.repositories import MediaRepository
 from app.services.video import extract_video_frame, get_video_metadata
 from app.utils.images import crop_to_thumbnail
 
@@ -329,8 +329,7 @@ class MediaService(BaseSessionManagedService):
         db_video_frame = repo.save(db_video_frame)
         video_frame = MediaAdapter.validate_python(db_video_frame)
 
-        frame_repo = VideoFrameRepository(db=self.db_session)
-        frame_repo.save(
+        repo.save_video_frame(
             VideoFrameDB(
                 id=str(video_frame.id),
                 video_id=str(video.id),
@@ -360,7 +359,7 @@ class MediaService(BaseSessionManagedService):
         self, project: Project, video_id: UUID, frame_index_from: int = 0, frame_index_to: int = 10
     ) -> list[Media]:
         """
-        Returns all annotated video frame falling into the specified timestamp range.
+        Returns all annotated video frames falling into the specified frame index range.
 
         Args:
             project: Project

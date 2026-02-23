@@ -1431,5 +1431,6 @@ class TestMediaServiceIntegration:
         fxt_video_frame(2.0)
 
         video_frames = fxt_media_service.get_video_frames_by_video_id(project=project, video_id=UUID(media.id))
+        print(video_frames)
         assert video_frames is not None
         assert len(video_frames) == 2
