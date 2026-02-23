@@ -72,9 +72,8 @@ const getMediaItem = (mediaItem: Media) => {
 export const MediaItemImageLoader = ({ children }: { children: ReactNode }) => {
     const { mediaItem } = useSelectedMediaItem();
 
-    const mediaItemId = isVideo(mediaItem) ? undefined : mediaItem.id;
-
-    const { data: image } = useLoadImageQuery(mediaItemId);
+    // TODO: Use getMediaItem when API supports video frames
+    const { data: image } = useLoadImageQuery(mediaItem.id);
 
     return <MediaItemImageContext value={{ image }}>{children}</MediaItemImageContext>;
 };
