@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, RefObject, use, useRef, useState } from 'react';
 
-import { type Media } from '../../../constants/shared-types';
+import type { MediaVideo } from '../../../constants/shared-types';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
@@ -13,7 +13,7 @@ type VideoPlayerContextProps = {
     isMuted: boolean;
     toggleMute: () => void;
 
-    videoFrame: Media;
+    videoFrame: MediaVideo;
 
     playbackRate: number;
     changePlaybackRate: (rate: number) => void;
@@ -25,7 +25,7 @@ const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    mediaItem: Media;
+    mediaItem: MediaVideo | undefined;
 };
 
 export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProviderProps) => {
@@ -64,7 +64,7 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
     };
 
     const value =
-        isVideoFrame(mediaItem) || isVideo(mediaItem)
+        mediaItem !== undefined
             ? {
                   videoFrame: mediaItem,
                   videoRef,

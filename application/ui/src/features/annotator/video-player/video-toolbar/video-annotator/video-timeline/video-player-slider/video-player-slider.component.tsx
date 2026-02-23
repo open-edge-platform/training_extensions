@@ -7,14 +7,14 @@ import { useDebouncedCallback } from 'hooks/use-debounced-callback/use-debounced
 import { defer } from 'lodash-es';
 import { useHover } from 'react-aria';
 
-import { Media } from '../../../../../../../constants/shared-types';
+import { MediaVideo } from '../../../../../../../constants/shared-types';
 import { ThumbnailPreview } from './thumbnail-preview.component';
 import { VideoSlider } from './video-slider.component';
 
 import classes from './video-slider.module.scss';
 
 type VideoPlayerSliderProps = {
-    mediaItem: Media;
+    mediaItem: MediaVideo;
     step: number;
     frameNumber: number;
     sizePerSquare: number;
@@ -110,7 +110,7 @@ export const VideoPlayerSlider = ({
         thumbnailPosition,
     } = useShowThumbnail();
 
-    const framesCount = Number(mediaItem.frame_count);
+    const framesCount = mediaItem.frame_count;
     const minValue = 0;
     const maxValue = framesCount - 1;
     const lastFrame = framesCount - step;

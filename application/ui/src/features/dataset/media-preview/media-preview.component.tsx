@@ -90,7 +90,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider mediaItem={mediaItem}>
+                <VideoPlayerProvider mediaItem={isVideo(mediaItem) ? mediaItem : undefined}>
                     {mode === 'prediction' ? (
                         <ReadOnlyAnnotator
                             mediaItem={mediaItem}
