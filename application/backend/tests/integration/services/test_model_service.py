@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -587,15 +588,15 @@ class TestModelServiceIntegration:
         # Assert
         assert result is not None
         if as_text:
-            assert isinstance(result, str)
-            assert result == "Training started\nEpoch 1/10\n"
+            assert isinstance(result, Iterator)
+            assert list(result) == ["Training started\n", "Epoch 1/10\n"]
         else:
             assert isinstance(result, Path)
             assert result.exists()
             assert result.read_text() == log_content
 
     @pytest.mark.parametrize("training_status", [TrainingStatus.NOT_STARTED, TrainingStatus.IN_PROGRESS])
-    def test_get_logs_in_status(
+    def test_get_logs_not_supported_status(
         self,
         training_status: TrainingStatus,
         fxt_project_id: UUID,

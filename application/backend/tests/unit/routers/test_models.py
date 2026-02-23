@@ -361,12 +361,13 @@ class TestModelEndpoints:
     @pytest.mark.parametrize(
         "accept_header, expected_content_type",
         [
-            ("application/json", "application/json"),
+            ("application/json", "application/x-ndjson"),
+            ("application/x-ndjson", "application/x-ndjson"),
             ("text/plain", "text/plain; charset=utf-8"),
-            (None, "application/json"),  # Default to JSON if no Accept header is provided
+            (None, "application/x-ndjson"),  # Default to JSON if no Accept header is provided
         ],
     )
-    def test_get_training_logs_as_json_success(
+    def test_get_training_logs_success(
         self, accept_header, expected_content_type, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path
     ):
         log_file = tmp_path / "training.log"
