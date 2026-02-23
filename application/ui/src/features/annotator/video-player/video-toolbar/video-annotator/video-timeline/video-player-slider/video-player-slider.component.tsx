@@ -20,6 +20,7 @@ type VideoPlayerSliderProps = {
     sizePerSquare: number;
     frameOffset?: number;
     ref?: RefObject<HTMLDivElement | null>;
+    selectFrame: (frameNumber: number) => void;
 };
 
 const THUMBNAIL_DELAY = 1000;
@@ -96,9 +97,12 @@ export const VideoPlayerSlider = ({
     step,
     frameNumber,
     sizePerSquare,
+    selectFrame,
     frameOffset = 0,
 }: VideoPlayerSliderProps) => {
     const [sliderValue, setSliderValue] = useState<number>(frameNumber);
+
+    useEffect(() => setSliderValue(frameNumber), [frameNumber]);
 
     const {
         hoverProps,
@@ -152,9 +156,8 @@ export const VideoPlayerSlider = ({
                     setSliderValue(newFrameNumber);
                     onShowThumbnail(true);
                 }}
-                onChangeEnd={(_newFrameNumber) => {
-                    // TODO: Implement frame selection behavior on slider change end once selectFrame is available.
-                    // selectFrame(newFrameNumber);
+                onChangeEnd={(newFrameNumber) => {
+                    selectFrame(newFrameNumber);
                     blurActiveInput(true);
                 }}
                 step={step}
