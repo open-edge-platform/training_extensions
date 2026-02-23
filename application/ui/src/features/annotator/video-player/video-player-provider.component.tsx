@@ -3,66 +3,36 @@
 
 import { createContext, ReactNode, RefObject, use, useRef, useState } from 'react';
 
-import { type Media } from '../../../constants/shared-types';
-import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import type { MediaVideo } from '../../../constants/shared-types';
+import { useVideoControls, VideoControls } from './use-video-controls';
 
 type VideoPlayerContextProps = {
     videoRef: RefObject<HTMLVideoElement | null>;
 
-    play: () => Promise<void>;
-    pause: () => void;
-    isPlaying: boolean;
-
     isMuted: boolean;
     toggleMute: () => void;
 
-    nextFrame: () => void;
-    canSelectNextFrame: boolean;
-
-    previousFrame: () => void;
-    canSelectPreviousFrame: boolean;
-
-    videoFrame: Media;
+    videoFrame: MediaVideo;
 
     playbackRate: number;
     changePlaybackRate: (rate: number) => void;
+
+    videoControls: VideoControls;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    mediaItem: Media;
+    mediaItem: MediaVideo | undefined;
 };
 
 export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProviderProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
 
-    const play = async () => {
-        if (videoRef.current === null) {
-            return;
-        }
-        try {
-            setIsPlaying(true);
-            await videoRef.current.play();
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Unknown error';
-
-            setIsPlaying(false);
-            console.error(`Error while playing video: ${message}`);
-        }
-    };
-
-    const pause = () => {
-        if (videoRef.current === null) {
-            return;
-        }
-        setIsPlaying(false);
-        videoRef.current.pause();
-    };
+    const videoControls = useVideoControls(videoRef, mediaItem);
 
     const toggleMute = () => {
         setIsMuted((prevIsMuted) => {
@@ -76,31 +46,6 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
 
             return nextIsMuted;
         });
-    };
-
-    const frames = mediaItem?.frame_count ?? 1;
-    const fps = mediaItem?.fps || 1;
-    const step = 1 / fps;
-    const currentTime = videoRef.current?.currentTime ?? 0;
-
-    // TODO: These will change once API for video frames is supported
-    const canSelectPreviousFrame = currentTime - step >= 0;
-    const canSelectNextFrame = currentTime + step <= frames / fps;
-
-    const nextFrame = () => {
-        if (!canSelectNextFrame || videoRef.current === null) {
-            return;
-        }
-
-        videoRef.current.currentTime = videoRef.current.currentTime + step;
-    };
-
-    const previousFrame = () => {
-        if (!canSelectPreviousFrame || videoRef.current === null) {
-            return;
-        }
-
-        videoRef.current.currentTime = videoRef.current.currentTime - step;
     };
 
     const changePlaybackRate = (rate: number) => {
@@ -118,19 +63,14 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
     };
 
     const value =
-        isVideoFrame(mediaItem) || isVideo(mediaItem)
+        mediaItem !== undefined
             ? {
                   videoFrame: mediaItem,
                   videoRef,
-                  isPlaying,
-                  play,
-                  pause,
+                  videoControls,
+
                   toggleMute,
                   isMuted,
-                  nextFrame,
-                  previousFrame,
-                  canSelectNextFrame,
-                  canSelectPreviousFrame,
 
                   playbackRate,
                   changePlaybackRate,
