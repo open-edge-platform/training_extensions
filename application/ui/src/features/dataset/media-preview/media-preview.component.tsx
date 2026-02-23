@@ -47,8 +47,6 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     });
 };
 
-const CanvasAreaLoading = () => <Loading size='L' mode='inline' style={{ height: '100%' }} />;
-
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
 
@@ -77,12 +75,12 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     };
 
     const initialAnnotations = useMemo(() => {
-        return getInitialAnnotations(mode, isUserReviewed, annotationsData?.annotations ?? []);
-    }, [mode, isUserReviewed, annotationsData?.annotations]);
+        return getInitialAnnotations(isUserReviewed, annotationsData?.annotations ?? []);
+    }, [isUserReviewed, annotationsData?.annotations]);
 
     const initialPredictions = useMemo(() => {
-        return getInitialPredictions(mode, isUserReviewed, annotationsData?.annotations ?? []);
-    }, [mode, isUserReviewed, annotationsData?.annotations]);
+        return getInitialPredictions(isUserReviewed, annotationsData?.annotations ?? []);
+    }, [isUserReviewed, annotationsData?.annotations]);
 
     return (
         <ToolProvider mode={mode}>
@@ -132,7 +130,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
                             <View gridArea={'canvas'} overflow={'hidden'}>
                                 <AnnotatorCanvasSettings>
-                                    <Suspense fallback={<CanvasAreaLoading />}>
+                                    <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
                                         <MediaItemImageLoader>
                                             <AnnotatorCanvas mediaItem={mediaItem} />
                                         </MediaItemImageLoader>
