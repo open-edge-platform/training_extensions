@@ -17,24 +17,7 @@ from otx.data.dataset.detection import OTXDetectionDataset
 from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.dataset.segmentation import OTXSegmentationDataset
 from otx.data.factory import OTXDatasetFactory, TransformLibFactory
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.types.task import OTXTaskType
-from otx.types.transformer_libs import TransformLibType
-
-lib_type_parameters = [(TransformLibType.TORCHVISION, TorchVisionTransformLib)]
-
-
-class TestTransformLibFactory:
-    @pytest.mark.parametrize(
-        ("lib_type", "lib"),
-        lib_type_parameters,
-    )
-    def test_generate(self, lib_type, lib, mocker) -> None:
-        mock_generate = mocker.patch.object(lib, "generate")
-        config = mocker.MagicMock(spec=SubsetConfig)
-        config.transform_lib_type = lib_type
-        _ = TransformLibFactory.generate(config)
-        mock_generate.assert_called_once_with(config)
 
 
 class TestOTXDatasetFactory:

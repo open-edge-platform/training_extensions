@@ -47,13 +47,13 @@ class TestGetiConfigConverter:
 
     def test_classification_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
-            "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+            "otx.data.augmentation.transforms.EfficientNetRandomCrop",
             "torchvision.transforms.v2.RandomPhotometricDistort",
-            "otx.data.transform_libs.torchvision.RandomAffine",
-            "otx.data.transform_libs.torchvision.RandomFlip",
+            "otx.data.augmentation.transforms.RandomAffine",
+            "otx.data.augmentation.transforms.RandomFlip",
             "torchvision.transforms.v2.RandomVerticalFlip",
-            "otx.data.transform_libs.torchvision.RandomGaussianBlur",
-            "otx.data.transform_libs.torchvision.RandomGaussianNoise",
+            "otx.data.augmentation.transforms.RandomGaussianBlur",
+            "otx.data.augmentation.transforms.RandomGaussianNoise",
         ]
         cfg_path = "tests/assets/geti/model_configs/classification.yaml"
         otx_config = OTXConfig.from_yaml_file(cfg_path)
@@ -63,8 +63,8 @@ class TestGetiConfigConverter:
         list_of_all_augs = []
         for aug in default_config["data"]["train_subset"]["transforms"]:
             if aug["class_path"] in [
-                "otx.data.transform_libs.torchvision.RandomFlip",
-                "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+                "otx.data.augmentation.transforms.RandomFlip",
+                "otx.data.augmentation.transforms.EfficientNetRandomCrop",
             ]:
                 assert aug["enable"]
             list_of_all_augs.append(aug["class_path"])
@@ -94,7 +94,7 @@ class TestGetiConfigConverter:
         found = False
         for aug in default_config["data"]["train_subset"]["transforms"]:
             assert aug["class_path"] != supported_augs_list_for_configuration[0]
-            if aug["class_path"] == "otx.data.transform_libs.torchvision.Resize":
+            if aug["class_path"] == "otx.data.augmentation.transforms.Resize":
                 found = True
             if aug["class_path"] == "torchvision.transforms.v2.RandomPhotometricDistort":
                 assert aug["init_args"]["contrast"] == [0.0, 3.0]
@@ -114,13 +114,13 @@ class TestGetiConfigConverter:
 
     def test_detection_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
-            "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+            "torchvision.transforms.v2.RandomIoUCrop",
             "torchvision.transforms.v2.RandomPhotometricDistort",
-            "otx.data.transform_libs.torchvision.RandomAffine",
-            "otx.data.transform_libs.torchvision.RandomFlip",
+            "otx.data.augmentation.transforms.RandomAffine",
+            "otx.data.augmentation.transforms.RandomFlip",
             "torchvision.transforms.v2.RandomVerticalFlip",
-            "otx.data.transform_libs.torchvision.RandomGaussianBlur",
-            "otx.data.transform_libs.torchvision.RandomGaussianNoise",
+            "otx.data.augmentation.transforms.RandomGaussianBlur",
+            "otx.data.augmentation.transforms.RandomGaussianNoise",
         ]
         cfg_path = "tests/assets/geti/model_configs/detection.yaml"
         otx_config = OTXConfig.from_yaml_file(cfg_path)
@@ -130,8 +130,8 @@ class TestGetiConfigConverter:
         list_of_all_augs = []
         for aug in default_config["data"]["train_subset"]["transforms"]:
             if aug["class_path"] in [
-                "otx.data.transform_libs.torchvision.RandomFlip",
-                "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+                "otx.data.augmentation.transforms.RandomFlip",
+                "torchvision.transforms.v2.RandomIoUCrop",
             ]:
                 assert aug["enable"]
             list_of_all_augs.append(aug["class_path"])

@@ -21,7 +21,7 @@ class TestTransformsUpdater:
                 "train_subset": {
                     "augmentations_cpu": [
                         {
-                            "class_path": "otx.data.transform_libs.torchvision.Resize",
+                            "class_path": "otx.data.augmentation.transforms.Resize",
                             "init_args": {"size": "$(input_size)"},
                         }
                     ],
@@ -243,7 +243,7 @@ class TestTransformsUpdater:
 
         cpu_augs = base_config["data"]["train_subset"]["augmentations_cpu"]
         resize_aug = next(
-            (a for a in cpu_augs if a["class_path"] == "otx.data.transform_libs.torchvision.Resize"),
+            (a for a in cpu_augs if a["class_path"] == "otx.data.augmentation.transforms.Resize"),
             None,
         )
         assert resize_aug is not None

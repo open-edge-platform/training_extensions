@@ -69,7 +69,7 @@ overrides:
       num_workers: 4
       augmentations_cpu:
         # Resize with aspect ratio preservation (pure torch)
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
@@ -95,7 +95,7 @@ overrides:
       num_workers: 4
       augmentations_cpu:
         # Resize with aspect ratio preservation (pure torch)
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
@@ -118,7 +118,7 @@ overrides:
       num_workers: 4
       augmentations_cpu:
         # Resize with aspect ratio preservation (pure torch)
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true

@@ -95,7 +95,7 @@ class TestOTXDataset:
 
     def test_apply_transforms_with_compose(self):
         """Test _apply_transforms with Compose transforms."""
-        from otx.data.transform_libs.torchvision import Compose
+        from torchvision.transforms.v2 import Compose
 
         mock_compose = Mock(spec=Compose)
         mock_entity = Mock(spec=OTXSample)

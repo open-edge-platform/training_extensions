@@ -3,7 +3,7 @@
 
 """Module for OTX data entities."""
 
-from .base import ImageInfo, ImageType, Points
+from .base import ImageInfo, ImageType
 from .sample import (
     OTXPrediction,
     OTXPredictionBatch,
@@ -26,7 +26,6 @@ __all__ = [
     "OTXPredictionBatch",
     "OTXSample",
     "OTXSampleBatch",
-    "Points",
     "TileBatchDetDataEntity",
     "TileBatchInstSegDataEntity",
     "TileBatchInstSegDataEntity",

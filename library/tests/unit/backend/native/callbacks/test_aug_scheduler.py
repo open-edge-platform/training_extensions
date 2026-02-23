@@ -23,7 +23,7 @@ from otx.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeli
 
 def _make_minimal_policies(
     *,
-    cpu_class: str = "otx.data.transform_libs.torchvision.Resize",
+    cpu_class: str = "otx.data.augmentation.transforms.Resize",
     gpu_class: str = "kornia.augmentation.Normalize",
 ) -> dict:
     """Return a 4-policy dict with simple Resize (CPU) + Normalize (GPU)."""
@@ -115,7 +115,7 @@ class TestDataAugSwitch:
         policies = {
             name: {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.transform_libs.torchvision.Resize",
+                    {"class_path": "otx.data.augmentation.transforms.Resize",
                      "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
                 ],
             }
@@ -238,7 +238,7 @@ class TestDataAugSwitch:
         policies = {
             name: {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.transform_libs.torchvision.Resize",
+                    {"class_path": "otx.data.augmentation.transforms.Resize",
                      "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
                 ],
             }
@@ -399,7 +399,7 @@ class TestAugmentationSchedulerCallback:
         policies = {
             name: {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.transform_libs.torchvision.Resize",
+                    {"class_path": "otx.data.augmentation.transforms.Resize",
                      "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
                 ],
             }

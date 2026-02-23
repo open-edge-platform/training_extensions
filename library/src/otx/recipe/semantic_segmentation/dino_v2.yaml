@@ -55,7 +55,7 @@ overrides:
       - 518
     train_subset:
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.RandomResizedCrop
+        - class_path: otx.data.augmentation.transforms.RandomResizedCrop
           init_args:
             scale: $(input_size)
             crop_ratio_range:
@@ -66,12 +66,12 @@ overrides:
               - 1.34
     val_subset:
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
     test_subset:
       augmentations_cpu:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
   callbacks:

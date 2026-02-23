@@ -208,11 +208,11 @@ class TransformsUpdater:
             "stage": "cpu",
         },
         "mixup": {
-            "class_paths": ["otx.data.transform_libs.torchvision.CachedMixUp"],
+            "class_paths": ["otx.data.augmentation.transforms.CachedMixUp"],
             "stage": "cpu",
         },
         "mosaic": {
-            "class_paths": ["otx.data.transform_libs.torchvision.CachedMosaic"],
+            "class_paths": ["otx.data.augmentation.transforms.CachedMosaic"],
             "stage": "cpu",
         },
     }
@@ -291,7 +291,7 @@ class TransformsUpdater:
                 if aug_name == "random_resize_crop":
                     # Replace crop with simple Resize to keep the pipeline valid
                     aug_list[existing_idx] = {
-                        "class_path": "otx.data.transform_libs.torchvision.Resize",
+                        "class_path": "otx.data.augmentation.transforms.Resize",
                         "init_args": {"size": "$(input_size)"},
                     }
                 else:

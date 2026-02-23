@@ -14,7 +14,7 @@ train_subset:
     - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
       init_args:
         min_size: 1
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false
@@ -41,7 +41,7 @@ val_subset:
   batch_size: 8
   num_workers: 4
   augmentations_cpu:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false
@@ -66,7 +66,7 @@ test_subset:
   batch_size: 8
   num_workers: 4
   augmentations_cpu:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false

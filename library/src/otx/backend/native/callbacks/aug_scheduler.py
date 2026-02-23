@@ -57,7 +57,7 @@ class DataAugSwitch:
         policies = {
             "no_aug": {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.transform_libs.torchvision.Resize", ...},
+                    {"class_path": "otx.data.augmentation.transforms.Resize", ...},
                 ],
                 "augmentations_gpu": [
                     {"class_path": "kornia.augmentation.Normalize", ...},

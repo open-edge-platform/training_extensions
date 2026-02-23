@@ -12,11 +12,11 @@ from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torch import LongTensor
 from torchvision import tv_tensors
 
+from otx.data.augmentation.transforms import Resize
 from otx.data.entity.sample import (
     DetectionSample,
     InstanceSegmentationSample,
 )
-from otx.data.transform_libs.torchvision import Resize
 
 
 class TestResize:
@@ -164,8 +164,7 @@ class TestResize:
         # Wide image (200w x 100h) -> scale by min(128/200, 128/100) = 0.64
         # Resized: 128w x 64h, then pad vertically by (128-64)/2 = 32 on each side
         scale = min(128 / orig_w, 128 / orig_h)
-        new_w = int(round(orig_w * scale))  # 128
-        new_h = int(round(orig_h * scale))  # 64
+        new_h = round(orig_h * scale)  # 64
         pad_top = (128 - new_h) // 2  # 32
 
         # Check that padding info is stored
@@ -196,7 +195,7 @@ class TestResize:
         # Tall image (100w x 200h) -> scale by min(128/100, 128/200) = 0.64
         # Resized: 64w x 128h, then pad horizontally by (128-64)/2 = 32 on each side
         scale = min(128 / orig_w, 128 / orig_h)
-        new_w = int(round(orig_w * scale))  # 64
+        new_w = round(orig_w * scale)  # 64
         pad_left = (128 - new_w) // 2  # 32
 
         # Check that padding info is stored
@@ -250,7 +249,7 @@ class TestResize:
 
         # Masks should only contain 0s and 1s (or near that for interpolation)
         unique_values = torch.unique(result.masks)
-        assert all(v == 0 or v == 1 for v in unique_values.tolist())
+        assert all(v in {0, 1} for v in unique_values.tolist())
 
     # ==================== Edge Cases ====================
 

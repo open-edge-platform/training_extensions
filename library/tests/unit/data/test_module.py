@@ -23,7 +23,7 @@ from otx.data.module import (
     OTXDataModule,
     OTXTaskType,
 )
-from otx.data.transform_libs.torchvision import Compose, RandomFlip
+from torchvision.transforms.v2 import Compose, Normalize
 
 if TYPE_CHECKING:
     from datumaro.components.dataset import Dataset as DmDataset
@@ -436,37 +436,44 @@ class TestOTXDataModule:
         assert module.device == DeviceType.auto  # Default value
 
     @pytest.mark.parametrize(
-        "transforms_source",
+        ("transforms_source", "expected"),
         [
-            None,
-            [
-                {"class_path": "otx.data.transform_libs.torchvision.RandomFlip", "init_args": {"probability": 0.5}},
-                {
-                    "class_path": "otx.data.transform_libs.torchvision.Normalize",
-                    "init_args": {"mean": [123.675, 116.28, 103.53], "std": [58.395, 57.12, 57.375]},
-                },
-            ],
-            [
-                RandomFlip(probability=0.5),
-                Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-            ],
-            Compose(
+            (None, None),
+            (
                 [
-                    RandomFlip(probability=0.5),
+                    {
+                        "class_path": "torchvision.transforms.v2.Normalize",
+                        "init_args": {"mean": [123.675, 116.28, 103.53], "std": [58.395, 57.12, 57.375]},
+                    },
+                ],
+                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
+            ),
+            (
+                [
                     Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-                ]
+                ],
+                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
+            ),
+            (
+                Compose(
+                    [
+                        Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
+                    ]
+                ),
+                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
             ),
         ],
         ids=["from None", "from list of configs", "from list of objects", "from compose"],
     )
-    def test_extract_normalization_params(self, transforms_source) -> None:
+    def test_extract_normalization_params(self, transforms_source, expected) -> None:
         """Test _extract_normalization_params with various transform sources."""
-        mean, std = OTXDataModule.extract_normalization_params(transforms_source)
+        result = OTXDataModule.extract_normalization_params(transforms_source)
 
-        # Assertions based on expected values
-        if transforms_source is None:
-            assert mean == (0.0, 0.0, 0.0)
-            assert std == (1.0, 1.0, 1.0)
+        if expected is None:
+            assert result is None
         else:
-            assert mean == (123.675, 116.28, 103.53)
-            assert std == (58.395, 57.12, 57.375)
+            assert result is not None
+            mean, std = result
+            expected_mean, expected_std = expected
+            assert mean == expected_mean
+            assert std == expected_std

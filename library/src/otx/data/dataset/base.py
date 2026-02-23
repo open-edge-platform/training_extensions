@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
 import torch
 from torch.utils.data import Dataset as TorchDataset
+from torchvision.transforms.v2 import Compose
 from torchvision.transforms.v2 import functional as f
 
 from otx import LabelInfo, NullLabelInfo
 from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 from otx.data.entity.sample import OTXSample, OTXSampleBatch
-from otx.data.transform_libs.torchvision import Compose
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:

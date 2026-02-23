@@ -25,30 +25,25 @@ __all__ = ["OTXDatasetFactory", "TransformLibFactory"]
 
 
 class TransformLibFactory:
-    """Factory class for transform.
-
-    This factory supports both legacy transforms and new augmentations_cpu field.
-    Priority: augmentations_cpu > transforms (legacy).
-    """
+    """Factory class for transform."""
 
     @classmethod
     def generate(cls: type[TransformLibFactory], config: SubsetConfig) -> Transforms | CPUAugmentationPipeline:
         """Create transforms from factory.
 
         Args:
-            config: SubsetConfig with transforms or augmentations_cpu.
+            config: SubsetConfig with augmentations_cpu.
 
         Returns:
-            Either CPUAugmentationPipeline (new) or Compose (legacy).
+            CPUAugmentationPipeline built from config.
         """
-        # New path: use augmentations_cpu if provided
         if config.augmentations_cpu:
             # Already a pipeline object (e.g., from from_file method)
             if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):
                 return config.augmentations_cpu
             return CPUAugmentationPipeline.from_config(config)
 
-        raise NotImplementedError(config.transform_lib_type)
+        raise NotImplementedError(config)
 
 
 class OTXDatasetFactory:

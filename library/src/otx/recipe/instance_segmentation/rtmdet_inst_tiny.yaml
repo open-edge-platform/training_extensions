@@ -75,7 +75,7 @@ overrides:
       # Size-dependent ops that need to run before collate for stacking
       augmentations_cpu:
         # Mosaic: combines 4 images (pure torch, no numpy)
-        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+        - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
             img_scale: $(input_size)
             max_cached_images: 20
@@ -92,7 +92,7 @@ overrides:
               - 2.0
             antialias: true
         # MixUp: blends two images (pure torch)
-        - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+        - class_path: otx.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
             ratio_range:
@@ -132,7 +132,7 @@ overrides:
       num_workers: 4
       augmentations_cpu:
         # Resize with aspect ratio preservation (pure torch)
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
@@ -155,7 +155,7 @@ overrides:
       num_workers: 4
       augmentations_cpu:
         # Resize with aspect ratio preservation (pure torch)
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: true
