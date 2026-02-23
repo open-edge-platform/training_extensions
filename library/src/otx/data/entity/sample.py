@@ -309,17 +309,11 @@ class InstanceSegmentationSample(OTXSample):
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-<<<<<<< HEAD
 
         # Ensure bboxes are tv_tensors.BoundingBoxes
         if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
             # If it's a plain tensor, wrap it
             self.bboxes = tv_tensors.BoundingBoxes(
-=======
-        # Convert bboxes to tv_tensors format
-        if isinstance(self.bboxes, np.ndarray):
-            self.bboxes = tv_tensors.BoundingBoxes(  # pyrefly: ignore[no-matching-overload]
->>>>>>> develop
                 self.bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=shape,

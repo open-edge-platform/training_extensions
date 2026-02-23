@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict
 
-import torch
 from torch import Tensor
 from torch.utils._pytree import tree_flatten
 from torchvision import tv_tensors

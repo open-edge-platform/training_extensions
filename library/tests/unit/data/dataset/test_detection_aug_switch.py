@@ -4,7 +4,7 @@
 """Integration tests for OTXDetectionDataset with DataAugSwitchMixin."""
 
 from multiprocessing import Value
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
