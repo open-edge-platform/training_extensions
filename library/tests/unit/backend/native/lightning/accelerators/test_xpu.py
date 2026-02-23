@@ -3,8 +3,6 @@
 
 """Test for otx.algo.accelerators.xpu"""
 
-from unittest import mock
-
 import pytest
 import torch
 
@@ -14,15 +12,9 @@ from otx.utils.device import is_xpu_available
 
 class TestXPUAccelerator:
     @pytest.fixture
-    def accelerator(self):
-        patcher = mock.patch("otx.backend.native.lightning.accelerators.xpu.torch")
-        mock_torch = patcher.start()
-        try:
-            # XPUAccelerator is abstract in Lightning (requires 'name'), create a test subclass
-            xpu_for_test = type("XPUForTest", (XPUAccelerator,), {"name": "xpu"})
-            yield xpu_for_test(), mock_torch
-        finally:
-            patcher.stop()
+    def accelerator(self, mocker):
+        mock_torch = mocker.patch("otx.backend.native.lightning.accelerators.xpu.torch")
+        return XPUAccelerator(), mock_torch
 
     def test_setup_device(self, accelerator):
         accelerator, mock_torch = accelerator
@@ -58,6 +50,11 @@ class TestXPUAccelerator:
         available = accelerator.is_available()
         assert isinstance(available, bool)
         assert available == is_xpu_available()
+
+    def test_name(self, accelerator):
+        accelerator, _ = accelerator
+        name = accelerator.name()
+        assert name == "xpu"
 
     def test_get_device_stats(self, accelerator):
         accelerator, _ = accelerator
