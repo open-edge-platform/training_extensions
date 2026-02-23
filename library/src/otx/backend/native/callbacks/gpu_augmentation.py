@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from lightning import Callback
 
@@ -78,7 +78,6 @@ class GPUAugmentationCallback(Callback):
         self._train_pipeline: GPUAugmentationPipeline | None = None
         self._val_pipeline: GPUAugmentationPipeline | None = None
         self._test_pipeline: GPUAugmentationPipeline | None = None
-
 
     def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> None:
         """Setup the GPU augmentation pipelines.
@@ -165,7 +164,9 @@ class GPUAugmentationCallback(Callback):
             # Kornia may return plain tensors, wrap them back to BoundingBoxes
             batch.bboxes = [
                 tv_tensors.BoundingBoxes(
-                    b, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=batch.bboxes[i].canvas_size,
+                    b,
+                    format=tv_tensors.BoundingBoxFormat.XYXY,
+                    canvas_size=batch.bboxes[i].canvas_size,
                 )
                 if not isinstance(b, tv_tensors.BoundingBoxes)
                 else b
@@ -173,10 +174,7 @@ class GPUAugmentationCallback(Callback):
             ]
         if result.get("masks") is not None:
             # Kornia may return plain tensors, wrap them back to Mask
-            batch.masks = [
-                tv_tensors.Mask(m) if not isinstance(m, tv_tensors.Mask) else m
-                for m in result["masks"]
-            ]
+            batch.masks = [tv_tensors.Mask(m) if not isinstance(m, tv_tensors.Mask) else m for m in result["masks"]]
         if result.get("keypoints") is not None:
             batch.keypoints = result["keypoints"]
 

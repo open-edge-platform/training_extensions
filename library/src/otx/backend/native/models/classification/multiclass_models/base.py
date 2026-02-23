@@ -7,7 +7,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Sequence
 
+import kornia
 import torch
+from kornia.augmentation import AugmentationSequential, Normalize
 from torch import Tensor
 
 from otx.backend.native.exporter.base import OTXModelExporter

@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 # Monkey-patch to fix transform_matrix slicing for list masks
 _original_transform_list = ops.MaskSequentialOps.transform_list
 
+
 @classmethod
 def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: ANN001, ANN202, A002
     """Fixed version that slices transform_matrix for each list element."""
@@ -50,9 +51,9 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: 
         params = cls.get_instance_module_param(param)
         params_i = deepcopy(params)
         for i, inp in enumerate(input):
-            params_i["batch_prob"] = params["batch_prob"][i:i+1]  # Keep tensor shape
+            params_i["batch_prob"] = params["batch_prob"][i : i + 1]  # Keep tensor shape
             # FIX: Slice transform_matrix for index i
-            transform_i = module.transform_matrix[i:i+1] if module.transform_matrix is not None else None
+            transform_i = module.transform_matrix[i : i + 1] if module.transform_matrix is not None else None
             tfm_inp = module.transform_masks(
                 inp, params=params_i, flags=module.flags, transform=transform_i, **extra_args
             )
@@ -61,7 +62,9 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: 
     # Use original for non-geometric
     return _original_transform_list.__func__(cls, input, module, param, extra_args)
 
+
 ops.MaskSequentialOps.transform_list = _fixed_transform_list
+
 
 class _SampleImageAdapter(nn.Module):
     """Wrap a tensor→tensor transform to operate on the ``.image`` field of a sample.
@@ -401,7 +404,10 @@ class CPUAugmentationPipeline(nn.Module):
         # Convert image to CHW uint8 tensor
         img = sample.image
         with open(log_file, "a") as f:  # noqa: PTH123
-            f.write(f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n")  # noqa: E501
+            f.write(
+                f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, "
+                f"dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n"
+            )
         if isinstance(img, np.ndarray):
             with open(log_file, "a") as f:  # noqa: PTH123
                 f.write(f"NumPy image range: min={img.min()}, max={img.max()}\n")
@@ -447,7 +453,6 @@ class CPUAugmentationPipeline(nn.Module):
         # Save annotated image
         img_path = f"debug_resize_new/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
         Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
-
 
         return sample
 
@@ -818,4 +823,3 @@ class GPUAugmentationPipeline(nn.Module):
         aug_str = str(self.aug_sequential) if self.aug_sequential is not None else "  (empty)"
         info = f"  mean={self._mean}, std={self._std}" if self._mean or self._std else ""
         return f"GPUAugmentationPipeline(\n{aug_str}\n  data_keys={self._data_keys}{info}\n)"
-

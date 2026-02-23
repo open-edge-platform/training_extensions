@@ -286,8 +286,7 @@ class TestTransformsUpdater:
             (
                 i
                 for i, a in enumerate(cpu_augs)
-                if "Resize" in a.get("class_path", "")
-                and "RandomResizedCrop" not in a.get("class_path", "")
+                if "Resize" in a.get("class_path", "") and "RandomResizedCrop" not in a.get("class_path", "")
             ),
             None,
         )
@@ -295,8 +294,7 @@ class TestTransformsUpdater:
             (
                 i
                 for i, a in enumerate(cpu_augs)
-                if "MinIoURandomCrop" in a.get("class_path", "")
-                or "RandomIoUCrop" in a.get("class_path", "")
+                if "MinIoURandomCrop" in a.get("class_path", "") or "RandomIoUCrop" in a.get("class_path", "")
             ),
             None,
         )
@@ -473,10 +471,7 @@ class TestHyperparametersUpdater:
         )
 
         # Callback should be removed
-        assert not any(
-            "EarlyStoppingWithWarmup" in cb.get("class_path", "")
-            for cb in base_config["callbacks"]
-        )
+        assert not any("EarlyStoppingWithWarmup" in cb.get("class_path", "") for cb in base_config["callbacks"])
 
     def test_update_early_stopping_enable(self, base_config):
         """Test updating early stopping patience."""
@@ -486,11 +481,7 @@ class TestHyperparametersUpdater:
         )
 
         callback = next(
-            (
-                cb
-                for cb in base_config["callbacks"]
-                if "EarlyStoppingWithWarmup" in cb.get("class_path", "")
-            ),
+            (cb for cb in base_config["callbacks"] if "EarlyStoppingWithWarmup" in cb.get("class_path", "")),
             None,
         )
         assert callback is not None
@@ -528,6 +519,11 @@ class TestHyperparametersUpdater:
         )
 
         # Config should remain unchanged
-        assert base_config["model"]["init_args"]["optimizer"]["init_args"]["lr"] == original_config["model"]["init_args"]["optimizer"]["init_args"]["lr"]
-        assert base_config["data"]["train_subset"]["batch_size"] == original_config["data"]["train_subset"]["batch_size"]
+        assert (
+            base_config["model"]["init_args"]["optimizer"]["init_args"]["lr"]
+            == original_config["model"]["init_args"]["optimizer"]["init_args"]["lr"]
+        )
+        assert (
+            base_config["data"]["train_subset"]["batch_size"] == original_config["data"]["train_subset"]["batch_size"]
+        )
         assert base_config["data"]["input_size"] == original_config["data"]["input_size"]

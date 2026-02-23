@@ -35,7 +35,9 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo
+    from kornia.augmentation import AugmentationSequential
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torchvision.transforms.v2 import Compose
 
     from otx.backend.native.models.detection.detectors import SingleStageDetector
 
@@ -416,16 +418,9 @@ class OTXDetectionModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""
-        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
-        infos = []
-        for i, img in enumerate(images):
-            infos.append(
-                ImageInfo(
-                    img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
-                ),
-            )
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
+        img_shape = tuple(images.shape[2:])
+        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def forward_explain(self, inputs: OTXSampleBatch | OTXTileBatchDataEntity) -> OTXPredictionBatch:
@@ -551,7 +546,8 @@ class OTXDetectionModel(OTXModel):
     @staticmethod
     @torch.no_grad()
     def _apply_batch_augmentations(
-        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch  # noqa: F821
+        augmentations_pipeline: AugmentationSequential | Compose | None,
+        batch: OTXDataBatch,  # noqa: F821
     ) -> None:
         """Apply batch augmentations to detection data."""
         if augmentations_pipeline is not None:

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import MagicMock
 
-import kornia.augmentation as K
+import kornia.augmentation as kornia_aug
 import pytest
 import torch
 import torchvision.transforms.v2 as tvt_v2
@@ -26,6 +26,7 @@ from otx.data.augmentation.pipeline import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_image(h: int = 64, w: int = 64, c: int = 3, dtype: torch.dtype = torch.uint8) -> torch.Tensor:
     """Create a random image tensor (C, H, W)."""
@@ -46,6 +47,7 @@ def _make_batched_images(batch_size: int = 2, c: int = 3, h: int = 32, w: int = 
 @dataclass
 class _SimpleSample:
     """Minimal sample for testing CPU pipeline forward."""
+
     image: torch.Tensor
     bboxes: tv_tensors.BoundingBoxes | None = None
     masks: torch.Tensor | None = None
@@ -54,7 +56,10 @@ class _SimpleSample:
 
 
 def _make_sample(
-    h: int = 64, w: int = 64, dtype: torch.dtype = torch.uint8, with_bboxes: bool = False,
+    h: int = 64,
+    w: int = 64,
+    dtype: torch.dtype = torch.uint8,
+    with_bboxes: bool = False,
 ) -> _SimpleSample:
     """Build a minimal sample for CPU pipeline tests."""
     image = _make_image(h, w, dtype=dtype)
@@ -217,6 +222,7 @@ class TestCPUAugmentationPipelineFromConfig:
         assert len(pipeline.augmentations) == 2
         # First transform should be a _SampleImageAdapter wrapping ScaleToUnit
         from otx.data.augmentation.intensity import ScaleToUnit
+
         assert isinstance(pipeline.augmentations[0], _SampleImageAdapter)
         # The inner nn.Sequential should contain ScaleToUnit
         inner = pipeline.augmentations[0].transform
@@ -253,6 +259,7 @@ class TestCPUAugmentationPipelineFromConfig:
         )
         pipeline = CPUAugmentationPipeline.from_config(config)
         from otx.data.augmentation.intensity import RangeScale
+
         assert len(pipeline.augmentations) == 1
         assert isinstance(pipeline.augmentations[0], _SampleImageAdapter)
         assert isinstance(pipeline.augmentations[0].transform[0], RangeScale)
@@ -308,30 +315,6 @@ class TestCPUAugmentationPipelineInputSize:
         assert result == cfg
 
 
-class TestCPUAugmentationPipelineResolveDtypes:
-    """Tests for _resolve_torch_dtypes."""
-
-    def test_resolve_float32(self):
-        cfg = {"init_args": {"dtype": "torch.float32"}}
-        result = CPUAugmentationPipeline._resolve_torch_dtypes(cfg)
-        assert result["init_args"]["dtype"] is torch.float32
-
-    def test_resolve_uint8(self):
-        cfg = {"init_args": {"dtype": "torch.uint8"}}
-        result = CPUAugmentationPipeline._resolve_torch_dtypes(cfg)
-        assert result["init_args"]["dtype"] is torch.uint8
-
-    def test_no_init_args(self):
-        cfg = {"class_path": "Foo"}
-        result = CPUAugmentationPipeline._resolve_torch_dtypes(cfg)
-        assert result == cfg
-
-    def test_non_dtype_string_untouched(self):
-        cfg = {"init_args": {"name": "some_string"}}
-        result = CPUAugmentationPipeline._resolve_torch_dtypes(cfg)
-        assert result["init_args"]["name"] == "some_string"
-
-
 class TestCPUAugmentationPipelineForward:
     """Tests for forward pass."""
 
@@ -351,8 +334,9 @@ class TestCPUAugmentationPipelineForward:
 
     def test_custom_transform_called(self):
         """OTX-style transform (non-torchvision) should be called with sample."""
+
         class _IdentityTransform(nn.Module):
-            def forward(self, sample):
+            def forward(self, sample):  # noqa: ANN202
                 sample.image = sample.image.float() / 255.0
                 return sample
 
@@ -363,8 +347,9 @@ class TestCPUAugmentationPipelineForward:
 
     def test_none_return_propagates(self):
         """If a transform returns None, forward should return None."""
+
         class _NoneTransform(nn.Module):
-            def forward(self, sample):
+            def forward(self, sample) -> None:
                 return None
 
         pipeline = CPUAugmentationPipeline([_NoneTransform()])
@@ -502,7 +487,7 @@ class TestGPUAugmentationPipelineInit:
         assert pipeline.std is None
 
     def test_pipeline_with_augmentations(self):
-        augs = [K.RandomHorizontalFlip(p=0.5)]
+        augs = [kornia_aug.RandomHorizontalFlip(p=0.5)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.aug_sequential is not None
 
@@ -525,7 +510,7 @@ class TestGPUAugmentationPipelineNormalization:
     def test_extract_norm_from_kornia_normalize(self):
         mean = torch.tensor([0.485, 0.456, 0.406])
         std = torch.tensor([0.229, 0.224, 0.225])
-        augs = [K.Normalize(mean=mean, std=std)]
+        augs = [kornia_aug.Normalize(mean=mean, std=std)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.mean is not None
         assert pipeline.std is not None
@@ -534,7 +519,7 @@ class TestGPUAugmentationPipelineNormalization:
         assert abs(pipeline.mean[0] - 0.485) < 1e-4
 
     def test_no_normalize_returns_none(self):
-        augs = [K.RandomHorizontalFlip(p=0.5)]
+        augs = [kornia_aug.RandomHorizontalFlip(p=0.5)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.mean is None
         assert pipeline.std is None
@@ -543,7 +528,7 @@ class TestGPUAugmentationPipelineNormalization:
         """Normalization params found even when mixed with other augs."""
         mean = torch.tensor([0.5, 0.5, 0.5])
         std = torch.tensor([0.25, 0.25, 0.25])
-        augs = [K.RandomHorizontalFlip(p=0.5), K.Normalize(mean=mean, std=std)]
+        augs = [kornia_aug.RandomHorizontalFlip(p=0.5), kornia_aug.Normalize(mean=mean, std=std)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.mean is not None
         assert abs(pipeline.mean[0] - 0.5) < 1e-4
@@ -567,10 +552,10 @@ class TestGPUAugmentationPipelineDispatchTransform:
             "init_args": {"p": 0.5},
         }
         result = GPUAugmentationPipeline._dispatch_transform(cfg)
-        assert isinstance(result, K.RandomHorizontalFlip)
+        assert isinstance(result, kornia_aug.RandomHorizontalFlip)
 
     def test_already_instantiated(self):
-        aug = K.RandomHorizontalFlip(p=0.5)
+        aug = kornia_aug.RandomHorizontalFlip(p=0.5)
         result = GPUAugmentationPipeline._dispatch_transform(aug)
         assert result is aug
 
@@ -616,7 +601,7 @@ class TestGPUAugmentationPipelineFromConfig:
         assert pipeline.aug_sequential is None
 
     def test_nn_module_passthrough(self):
-        aug = K.RandomHorizontalFlip(p=1.0)
+        aug = kornia_aug.RandomHorizontalFlip(p=1.0)
         config = SubsetConfig(augmentations_gpu=[aug], input_size=None)
         pipeline = GPUAugmentationPipeline.from_config(config)
         assert pipeline.aug_sequential is not None
@@ -655,7 +640,7 @@ class TestGPUAugmentationPipelineForward:
     def test_image_only_augmentation(self):
         """Single-key augmentation modifying only images."""
         pipeline = GPUAugmentationPipeline(
-            [K.RandomHorizontalFlip(p=1.0)],
+            [kornia_aug.RandomHorizontalFlip(p=1.0)],
             data_keys=["input"],
         )
         images = _make_batched_images(2, h=32, w=32)
@@ -669,7 +654,7 @@ class TestGPUAugmentationPipelineForward:
         mean = torch.tensor([0.5, 0.5, 0.5])
         std = torch.tensor([0.25, 0.25, 0.25])
         pipeline = GPUAugmentationPipeline(
-            [K.Normalize(mean=mean, std=std)],
+            [kornia_aug.Normalize(mean=mean, std=std)],
             data_keys=["input"],
         )
         images = torch.full((2, 3, 8, 8), 0.5)  # All pixels = 0.5
@@ -680,7 +665,7 @@ class TestGPUAugmentationPipelineForward:
     def test_forward_with_masks(self):
         """Forward with mask data key."""
         pipeline = GPUAugmentationPipeline(
-            [K.RandomHorizontalFlip(p=1.0)],
+            [kornia_aug.RandomHorizontalFlip(p=1.0)],
             data_keys=["input", "mask"],
         )
         images = _make_batched_images(2, h=16, w=16)
@@ -691,7 +676,7 @@ class TestGPUAugmentationPipelineForward:
 
     def test_forward_preserves_batch_size(self):
         pipeline = GPUAugmentationPipeline(
-            [K.RandomHorizontalFlip(p=0.5)],
+            [kornia_aug.RandomHorizontalFlip(p=0.5)],
             data_keys=["input"],
         )
         images = _make_batched_images(4, h=16, w=16)
@@ -705,13 +690,13 @@ class TestGPUAugmentationPipelineForward:
         assert "empty" in r
 
     def test_repr_with_augs(self):
-        pipeline = GPUAugmentationPipeline([K.RandomHorizontalFlip(p=0.5)])
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)])
         r = repr(pipeline)
         assert "GPUAugmentationPipeline" in r
 
     def test_repr_with_normalization(self):
         pipeline = GPUAugmentationPipeline(
-            [K.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5]))]
+            [kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5]))]
         )
         r = repr(pipeline)
         assert "mean=" in r
@@ -794,7 +779,7 @@ class TestHybridCPUGPUPipeline:
         cpu_pipeline = CPUAugmentationPipeline.from_config(cpu_config)
         gpu_pipeline = GPUAugmentationPipeline.from_config(gpu_config)
 
-        # Simulate thermal sensor data (raw uint16 range ~738–900)
+        # Simulate thermal sensor data (raw uint16 range ~738-900)
         raw_data = torch.randint(738, 901, (1, 32, 32), dtype=torch.int32)
 
         sample = _SimpleSample(image=raw_data)
@@ -953,7 +938,7 @@ class TestHybridCPUGPUPipeline:
 class TestGPUAugmentationCallback:
     """Tests for the Lightning Callback that orchestrates GPU augmentations."""
 
-    def _make_callback(self, train_augs=None, val_augs=None, test_augs=None):
+    def _make_callback(self, train_augs=None, val_augs=None, test_augs=None):  # noqa: ANN202
         """Create a GPUAugmentationCallback with optional configs."""
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
@@ -968,6 +953,7 @@ class TestGPUAugmentationCallback:
 
     def test_init_defaults(self):
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+
         callback = GPUAugmentationCallback()
         assert callback.apply_on_val is True
         assert callback.apply_on_test is True

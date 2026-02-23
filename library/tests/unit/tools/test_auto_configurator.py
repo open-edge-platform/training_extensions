@@ -164,10 +164,7 @@ class TestAutoConfigurator:
 
         datamodule = auto_configurator.get_datamodule()
         # The detection base config has augmentations_cpu with Resize
-        assert any(
-            "Resize" in aug.get("class_path", "")
-            for aug in datamodule.test_subset.augmentations_cpu
-        )
+        assert any("Resize" in aug.get("class_path", "") for aug in datamodule.test_subset.augmentations_cpu)
 
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(datamodule, subset="test")
         assert updated_datamodule.test_subset.augmentations_cpu == [{"class_path": "torchvision.transforms.v2.ToImage"}]

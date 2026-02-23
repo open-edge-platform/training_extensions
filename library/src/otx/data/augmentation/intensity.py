@@ -157,7 +157,6 @@ class RangeScale(nn.Module):
     """
 
     def __init__(self, scale_factor: float = 1.0, min_value: float = 0.0, max_value: float = 1.0) -> None:
-
         super().__init__()
         if max_value <= min_value:
             msg = f"max_value must be > min_value, got min_value={min_value}, max_value={max_value}"

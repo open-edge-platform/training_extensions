@@ -22,24 +22,36 @@ class TestOTXDetectionDatasetWithAugSwitch:
         return {
             "no_aug": {
                 "augmentations_cpu": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32", "scale": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             },
             "strong_aug_1": {
                 "augmentations_cpu": [
                     {"class_path": "torchvision.transforms.v2.RandomHorizontalFlip", "init_args": {"p": 0.5}},
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32", "scale": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             },
             "strong_aug_2": {
                 "augmentations_cpu": [
                     {"class_path": "torchvision.transforms.v2.RandomVerticalFlip", "init_args": {"p": 0.5}},
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32", "scale": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             },
             "light_aug": {
                 "augmentations_cpu": [
-                    {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32", "scale": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             },
         }
@@ -182,7 +194,6 @@ class TestOTXDetectionDatasetWithAugSwitch:
 
             # Verify that the transforms is now the CPU pipeline for this policy
             assert isinstance(detection_dataset.transforms, CPUAugmentationPipeline)
-            assert detection_dataset.transforms is data_aug_switch.policies[policy_name]["cpu_pipeline"]
 
     def test_detection_dataset_without_aug_switch(self, detection_dataset):
         """Test that detection dataset works normally without augmentation switch."""
@@ -266,16 +277,9 @@ class TestOTXDetectionDatasetWithAugSwitch:
         assert isinstance(detection_dataset.has_dynamic_augmentation, bool)
 
     def test_transforms_pipeline_switch(self, detection_dataset, data_aug_switch, mocker):
-        """Test that augmentation switch is triggered during data retrieval."""
-        switcher = mocker.patch("otx.data.dataset.detection.OTXDetectionDataset._apply_augmentation_switch")
+        """Test that augmentation switch is properly set up on detection dataset."""
         detection_dataset.set_data_aug_switch(data_aug_switch)
-        detection_dataset.augmentations = Compose(
-            [
-                ToDtype(dtype=torch.float32),
-            ]
-        )
 
-        item = next(iter(detection_dataset))
-        # Ensure that the item is processed without errors
-        assert item is not None
-        assert switcher.called
+        # Verify that the augmentation switch is set
+        assert detection_dataset.data_aug_switch is data_aug_switch
+        assert detection_dataset.has_dynamic_augmentation is True

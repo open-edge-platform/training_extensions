@@ -25,6 +25,7 @@ Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
 ]
 
+
 def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     """Ensure image tensor is in CHW format with 3 channels.
 
@@ -75,9 +76,9 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         # All images should already be tensors from the pipeline
         if not isinstance(img, torch.Tensor):
             msg = (
-            f"Expected torch.Tensor but got {type(img)}. "
-            "Images should be converted to tensors in the dataset pipeline."
-        )
+                f"Expected torch.Tensor but got {type(img)}. "
+                "Images should be converted to tensors in the dataset pipeline."
+            )
             raise TypeError(msg)
         # Convert to float32 if not already.
         # For int32/int16 tensors (16-bit images) the intensity transform should

@@ -190,30 +190,38 @@ def test_namespace_override(fxt_configs) -> None:
         )
 
         # to check before adding key
-        assert "size_divisor" not in cfg.data.train_subset.transforms[1]["init_args"]
+        pad_transform = next(
+            t for t in cfg.data.train_subset.transforms if t["class_path"] == "torchvision.transforms.v2.Pad"
+        )
+        assert "size_divisor" not in pad_transform["init_args"]
 
         namespace_override(configs=cfg, key="data", overrides=overrides, convert_dict_to_namespace=False)
 
+        # Find transforms by class_path since order may change
+        resize_transform = next(
+            t for t in cfg.data.train_subset.transforms if t["class_path"] == "otx.data.augmentation.transforms.Resize"
+        )
+        pad_transform = next(
+            t for t in cfg.data.train_subset.transforms if t["class_path"] == "torchvision.transforms.v2.Pad"
+        )
+        normalize_transform = next(
+            t for t in cfg.data.train_subset.transforms if t["class_path"] == "torchvision.transforms.v2.Normalize"
+        )
+
         # otx.data.augmentation.transforms.Resize
         assert (
-            cfg.data.train_subset.transforms[0]["init_args"]["keep_ratio"]
+            resize_transform["init_args"]["keep_ratio"]
             == overrides.train_subset.transforms[0]["init_args"]["keep_ratio"]
         )
-        assert (
-            cfg.data.train_subset.transforms[0]["init_args"]["scale"]
-            == overrides.train_subset.transforms[0]["init_args"]["scale"]
-        )
+        assert resize_transform["init_args"]["scale"] == overrides.train_subset.transforms[0]["init_args"]["scale"]
         # torchvision.transforms.v2.Pad
-        assert "size_divisor" in cfg.data.train_subset.transforms[1]["init_args"]
+        assert "size_divisor" in pad_transform["init_args"]
         assert (
-            cfg.data.train_subset.transforms[1]["init_args"]["size_divisor"]
+            pad_transform["init_args"]["size_divisor"]
             == overrides.train_subset.transforms[1]["init_args"]["size_divisor"]
         )
         # torchvision.transforms.v2.Normalize
-        assert (
-            cfg.data.train_subset.transforms[-1]["init_args"]["std"]
-            == overrides.train_subset.transforms[-1]["init_args"]["std"]
-        )
+        assert normalize_transform["init_args"]["std"] == overrides.train_subset.transforms[-1]["init_args"]["std"]
 
         # test for appending new transform
         overrides = Namespace(
@@ -265,9 +273,21 @@ def test_namespace_override(fxt_configs) -> None:
 def test_list_override(fxt_configs) -> None:
     with patch_update_configs():
         list_override(fxt_configs, "callbacks", [])
-        assert fxt_configs.callbacks[0].init_args.prog_bar
-        assert fxt_configs.callbacks[1].init_args.patience == 10
-        assert fxt_configs.callbacks[2].init_args.max_depth == 1
+        # Find callbacks by class_path since order may change with the new list_override behavior
+        iter_timer = next(
+            c
+            for c in fxt_configs.callbacks
+            if c.class_path == "otx.backend.native.callbacks.iteration_timer.IterationTimer"
+        )
+        early_stop = next(
+            c for c in fxt_configs.callbacks if c.class_path == "lightning.pytorch.callbacks.EarlyStopping"
+        )
+        model_summary = next(
+            c for c in fxt_configs.callbacks if c.class_path == "lightning.pytorch.callbacks.RichModelSummary"
+        )
+        assert iter_timer.init_args.prog_bar
+        assert early_stop.init_args.patience == 10
+        assert model_summary.init_args.max_depth == 1
 
         # Wrong Config overriding
         wrong_override = [
@@ -285,7 +305,10 @@ def test_list_override(fxt_configs) -> None:
             },
         ]
         list_override(fxt_configs, "callbacks", callbacks_override)
-        assert fxt_configs.callbacks[1].init_args.patience == 3
+        early_stop = next(
+            c for c in fxt_configs.callbacks if c.class_path == "lightning.pytorch.callbacks.EarlyStopping"
+        )
+        assert early_stop.init_args.patience == 3
 
         logger_override = [
             {
@@ -294,7 +317,12 @@ def test_list_override(fxt_configs) -> None:
             },
         ]
         list_override(fxt_configs, "logger", logger_override)
-        assert fxt_configs.logger[1].init_args.name == "workspace/"
+        tb_logger = next(
+            lg
+            for lg in fxt_configs.logger
+            if lg.class_path == "lightning.pytorch.loggers.tensorboard.TensorBoardLogger"
+        )
+        assert tb_logger.init_args.name == "workspace/"
 
         new_callbacks_override = [
             {

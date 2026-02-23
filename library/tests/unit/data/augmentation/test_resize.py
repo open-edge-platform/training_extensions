@@ -127,9 +127,7 @@ class TestResize:
 
     # ==================== Aspect Ratio Preservation Tests ====================
 
-    def test_resize_with_aspect_ratio_square_to_square(
-        self, square_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_resize_with_aspect_ratio_square_to_square(self, square_image_entity: InstanceSegmentationSample) -> None:
         """Test aspect ratio resize of square image to square target (no padding needed)."""
         resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
         entity = deepcopy(square_image_entity)
@@ -146,9 +144,7 @@ class TestResize:
         expected_bboxes = orig_bboxes * scale
         assert torch.allclose(result.bboxes.float(), expected_bboxes.float(), atol=1.0)
 
-    def test_resize_with_aspect_ratio_wide_to_square(
-        self, wide_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_resize_with_aspect_ratio_wide_to_square(self, wide_image_entity: InstanceSegmentationSample) -> None:
         """Test aspect ratio resize of wide image to square target (vertical padding)."""
         resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True)
         entity = deepcopy(wide_image_entity)
@@ -177,9 +173,7 @@ class TestResize:
         assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
         assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
 
-    def test_resize_with_aspect_ratio_tall_to_square(
-        self, tall_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_resize_with_aspect_ratio_tall_to_square(self, tall_image_entity: InstanceSegmentationSample) -> None:
         """Test aspect ratio resize of tall image to square target (horizontal padding)."""
         resize = Resize(size=(128, 128), resize_targets=True, keep_aspect_ratio=True)
         entity = deepcopy(tall_image_entity)
@@ -208,9 +202,7 @@ class TestResize:
         assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
         assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
 
-    def test_resize_with_aspect_ratio_to_non_square(
-        self, wide_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_resize_with_aspect_ratio_to_non_square(self, wide_image_entity: InstanceSegmentationSample) -> None:
         """Test aspect ratio resize to non-square target."""
         resize = Resize(size=(96, 128), resize_targets=True, keep_aspect_ratio=True)  # h, w
         entity = deepcopy(wide_image_entity)
@@ -238,9 +230,7 @@ class TestResize:
             top_row_mean = result.image[:, 0, :].float().mean()
             assert abs(top_row_mean - pad_value) < 1.0
 
-    def test_resize_masks_binary_preserved(
-        self, square_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_resize_masks_binary_preserved(self, square_image_entity: InstanceSegmentationSample) -> None:
         """Test that mask binary values are preserved after resize."""
         resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
         entity = deepcopy(square_image_entity)
@@ -306,9 +296,7 @@ class TestResize:
 
     # ==================== Consistency Tests ====================
 
-    def test_bbox_inside_image_after_resize(
-        self, square_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_bbox_inside_image_after_resize(self, square_image_entity: InstanceSegmentationSample) -> None:
         """Test that all bboxes remain inside image bounds after resize."""
         resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
         entity = deepcopy(square_image_entity)
@@ -322,9 +310,7 @@ class TestResize:
         assert torch.all(result.bboxes[:, 2] <= w)
         assert torch.all(result.bboxes[:, 3] <= h)
 
-    def test_mask_same_size_as_image(
-        self, square_image_entity: InstanceSegmentationSample
-    ) -> None:
+    def test_mask_same_size_as_image(self, square_image_entity: InstanceSegmentationSample) -> None:
         """Test that masks have same spatial size as image after resize."""
         resize = Resize(size=(64, 64), resize_targets=True, keep_aspect_ratio=True)
         entity = deepcopy(square_image_entity)

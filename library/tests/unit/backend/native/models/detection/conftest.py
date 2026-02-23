@@ -13,7 +13,7 @@ from otx.data.entity.sample import OTXSampleBatch
 @pytest.fixture
 def fxt_detection_batch(batch_size: int = 2) -> OTXSampleBatch:
     """Create a mock detection batch for testing."""
-    images = [torch.randn(3, 640, 640), torch.randn(3, 640, 640)]
+    images = torch.stack([torch.randn(3, 640, 640), torch.randn(3, 640, 640)])
 
     # Create bounding boxes and labels for each image
     bboxes = [

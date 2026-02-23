@@ -227,7 +227,10 @@ class Resize(tvt_v2.Transform):
         # Convert image to CHW uint8 tensor
         img = sample.image
         with open(log_file, "a") as f:  # noqa: PTH123
-            f.write(f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n")  # noqa: E501
+            f.write(
+                f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, "
+                f"dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n"
+            )
         if isinstance(img, np.ndarray):
             with open(log_file, "a") as f:  # noqa: PTH123
                 f.write(f"NumPy image range: min={img.min()}, max={img.max()}\n")
@@ -273,7 +276,6 @@ class Resize(tvt_v2.Transform):
         # Save annotated image
         img_path = f"debug_resize_new/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
         Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
-
 
         return sample
 
@@ -1010,7 +1012,7 @@ class CachedMixUp(tvt_v2.Transform):
         y_offset = int(torch.randint(0, max(1, pad_h - target_h + 1), (1,)).item()) if pad_h > target_h else 0
         x_offset = int(torch.randint(0, max(1, pad_w - target_w + 1), (1,)).item()) if pad_w > target_w else 0
 
-        cropped = padded[:, y_offset:y_offset + target_h, x_offset:x_offset + target_w]
+        cropped = padded[:, y_offset : y_offset + target_h, x_offset : x_offset + target_w]
 
         # Step 6: Transform bboxes
         cached_bboxes = cached.bboxes.clone().float()

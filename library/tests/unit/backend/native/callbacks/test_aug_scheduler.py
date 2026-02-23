@@ -21,6 +21,7 @@ from otx.data.augmentation import CPUAugmentationPipeline, GPUAugmentationPipeli
 # Helpers / fixtures shared across test classes
 # ---------------------------------------------------------------------------
 
+
 def _make_minimal_policies(
     *,
     cpu_class: str = "otx.data.augmentation.transforms.Resize",
@@ -115,8 +116,10 @@ class TestDataAugSwitch:
         policies = {
             name: {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.augmentation.transforms.Resize",
-                     "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             }
             for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug")
@@ -172,28 +175,6 @@ class TestDataAugSwitch:
         switch_with_epoch.epoch = 23
         assert switch_with_epoch.current_policy_name == "light_aug"
 
-    # -- current_phase (deterministic) -----------------------------------
-
-    def test_phase_no_aug(self, switch_with_epoch):
-        switch_with_epoch.epoch = 0
-        assert switch_with_epoch.current_phase == "no_aug"
-
-    def test_phase_strong_aug(self, switch_with_epoch):
-        for e in (4, 10, 22):
-            switch_with_epoch.epoch = e
-            assert switch_with_epoch.current_phase == "strong_aug"
-
-    def test_phase_light_aug(self, switch_with_epoch):
-        for e in (23, 40, 100):
-            switch_with_epoch.epoch = e
-            assert switch_with_epoch.current_phase == "light_aug"
-
-    def test_phase_is_deterministic(self, switch_with_epoch):
-        """current_phase must always return the same value for the same epoch."""
-        switch_with_epoch.epoch = 10
-        results = {switch_with_epoch.current_phase for _ in range(50)}
-        assert results == {"strong_aug"}
-
     # -- current_cpu_pipeline -------------------------------------------
 
     def test_current_cpu_pipeline_returns_correct_type(self, switch_with_epoch):
@@ -238,8 +219,10 @@ class TestDataAugSwitch:
         policies = {
             name: {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.augmentation.transforms.Resize",
-                     "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             }
             for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug")
@@ -285,6 +268,7 @@ class TestAugmentationSchedulerCallback:
         pl = MagicMock(spec=LightningModule)
         param = torch.nn.Parameter(torch.zeros(1))
         pl.parameters.side_effect = lambda: iter([param])
+        pl.device = torch.device("cpu")
         return pl
 
     @pytest.fixture
@@ -364,7 +348,7 @@ class TestAugmentationSchedulerCallback:
 
         mock_trainer.current_epoch = 4
         callback.on_train_epoch_start(mock_trainer, mock_pl_module)
-        assert callback._last_gpu_policy == "strong_aug"
+        assert callback._last_gpu_policy in ("strong_aug_1", "strong_aug_2")
 
         mock_trainer.current_epoch = 23
         callback.on_train_epoch_start(mock_trainer, mock_pl_module)
@@ -399,8 +383,10 @@ class TestAugmentationSchedulerCallback:
         policies = {
             name: {
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.augmentation.transforms.Resize",
-                     "init_args": {"size": [640, 640], "keep_aspect_ratio": False}},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": [640, 640], "keep_aspect_ratio": False},
+                    },
                 ],
             }
             for name in ("no_aug", "strong_aug_1", "strong_aug_2", "light_aug")
@@ -432,7 +418,7 @@ class TestAugmentationSchedulerCallback:
             phase_history.append(callback._last_gpu_policy)
 
         assert all(p == "no_aug" for p in phase_history[:4])
-        assert all(p == "strong_aug" for p in phase_history[4:23])
+        assert all(p in ("strong_aug_1", "strong_aug_2") for p in phase_history[4:23])
         assert all(p == "light_aug" for p in phase_history[23:])
 
     def test_error_without_shared_epoch(self):
@@ -489,15 +475,19 @@ class TestDataAugSwitchIntegration:
         expected_phases = {
             0: "no_aug",
             3: "no_aug",
-            4: "strong_aug",
-            22: "strong_aug",
+            4: ("strong_aug_1", "strong_aug_2"),
+            22: ("strong_aug_1", "strong_aug_2"),
             23: "light_aug",
             40: "light_aug",
         }
 
         for epoch, expected in expected_phases.items():
             switch.epoch = epoch
-            assert switch.current_phase == expected, f"Epoch {epoch}: expected {expected}, got {switch.current_phase}"
+            policy = switch.current_policy_name
+            if isinstance(expected, tuple):
+                assert policy in expected, f"Epoch {epoch}: expected one of {expected}, got {policy}"
+            else:
+                assert policy == expected, f"Epoch {epoch}: expected {expected}, got {policy}"
 
     def test_concurrent_access_simulation(self):
         """Shared epoch is mp.Value, safe for concurrent read/write."""

@@ -84,10 +84,7 @@ def with_image_dtype(
 
     pl_dtype = STORAGE_DTYPE_MAP.get(storage_dtype)
     if pl_dtype is None:
-        msg = (
-            f"Unsupported storage_dtype={storage_dtype!r}. "
-            f"Supported values: {list(STORAGE_DTYPE_MAP)}"
-        )
+        msg = f"Unsupported storage_dtype={storage_dtype!r}. Supported values: {list(STORAGE_DTYPE_MAP)}"
         raise ValueError(msg)
 
     cache_key = (sample_cls, storage_dtype)
@@ -109,10 +106,14 @@ def with_image_dtype(
 
     # We use dataclass inheritance: the new class just overrides the image field
     new_cls = dataclass(
-        type(new_cls_name, (sample_cls,), {
-            "__annotations__": {"image": tv_tensors.Image | torch.Tensor},
-            "image": new_image_default,
-        })
+        type(
+            new_cls_name,
+            (sample_cls,),
+            {
+                "__annotations__": {"image": tv_tensors.Image | torch.Tensor},
+                "image": new_image_default,
+            },
+        )
     )
 
     # Register with pytree so torchvision v2 transforms work
@@ -248,9 +249,7 @@ class ClassificationHierarchicalSample(OTXSample):
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
-    image: tv_tensors.Image | torch.Tensor = image_field(
-        dtype=pl.UInt8(), format="RGB", channels_first=True
-    )
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="RGB", channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
     # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
     # conversion is not supported in Datumaro), then convert in __post_init__

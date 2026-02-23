@@ -55,7 +55,6 @@ class TestScaleToUnit:
 class TestWindowLevel:
     def test_basic_window(self):
         t = WindowLevel(center=100.0, width=200.0)
-        # Window: [0, 200]
         x = torch.tensor([0.0, 100.0, 200.0, -50.0, 300.0])
         out = t(x)
         assert torch.isclose(out[0], torch.tensor(0.0))
@@ -271,6 +270,7 @@ class TestBuildIntensityTransform:
 
         # Old behavior: to_dtype divides by 255
         import torchvision.transforms.v2.functional as f
+
         old_result = f.to_dtype(x, dtype=torch.float32, scale=True)
 
         assert torch.allclose(new_result, old_result, atol=1e-6)

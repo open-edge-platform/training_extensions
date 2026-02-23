@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Sequence
 
+import kornia
 import torch
+from kornia.augmentation import AugmentationSequential
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
@@ -23,6 +25,7 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torchvision.transforms.v2 import Compose
 
 
 class OTXKeypointDetectionModel(OTXModel):
@@ -209,7 +212,8 @@ class OTXKeypointDetectionModel(OTXModel):
     @staticmethod
     @torch.no_grad()
     def _apply_batch_augmentations(
-        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch  # noqa: F821
+        augmentations_pipeline: AugmentationSequential | Compose | None,
+        batch: OTXDataBatch,  # noqa: F821
     ) -> None:
         """Apply batch augmentations to keypoint data."""
         if augmentations_pipeline is not None:

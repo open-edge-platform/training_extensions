@@ -307,8 +307,8 @@ class TestDEIMV2:
         default_params = model._default_preprocessing_params
         assert isinstance(default_params, DataInputParams)
         assert default_params.input_size == (640, 640)
-        assert default_params.mean == (123.675, 116.280, 103.530)
-        assert default_params.std == (58.395, 57.120, 57.375)
+        assert default_params.mean == (0.485, 0.456, 0.406)
+        assert default_params.std == (0.229, 0.224, 0.225)
 
     def test_inheritance_from_deim_dfine(self) -> None:
         """Test that DEIMV2 properly inherits from DEIMDFine."""

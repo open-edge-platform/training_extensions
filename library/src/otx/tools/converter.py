@@ -9,7 +9,7 @@ import argparse
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from warnings import warn
 
 import yaml
@@ -166,7 +166,7 @@ class TransformsUpdater:
 
     # Geti name -> (class_path, stage)
     # class_paths is a list to match multiple possible implementations in configs
-    AUGMENTATION_REGISTRY: dict[str, dict] = {
+    AUGMENTATION_REGISTRY: ClassVar[dict[str, dict]] = {
         "random_resize_crop": {
             "class_paths": [
                 "torchvision.transforms.v2.RandomResizedCrop",
@@ -218,7 +218,7 @@ class TransformsUpdater:
     }
 
     # Geti param name -> kornia/torchvision param name
-    PARAM_RENAME: dict[str, str] = {
+    PARAM_RENAME: ClassVar[dict[str, str]] = {
         "probability": "p",
         "sigma": "std",
         "max_rotate_degree": "degrees",
@@ -309,7 +309,7 @@ class TransformsUpdater:
         for key, value in params.items():
             if value is None:
                 continue
-            init_args[cls.PARAM_RENAME[key] if key in cls.PARAM_RENAME else key] = value
+            init_args[cls.PARAM_RENAME.get(key, key)] = value
 
         # Step 2: adjust values to match kornia expected formats
         if "translate" in init_args and not isinstance(init_args["translate"], list):

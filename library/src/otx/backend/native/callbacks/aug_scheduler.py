@@ -76,7 +76,6 @@ class DataAugSwitch:
         policies: dict[str, dict[str, Any]],
         input_size: tuple[int, int] | list[int] | None = None,
     ) -> None:
-
         if len(policy_epochs) != 3:
             msg = "Expected 3 policy epochs for 4-stage scheduler (e.g., [4, 29, 50])"
             raise ValueError(msg)
