@@ -4,7 +4,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import type { Media } from '../../constants/shared-types';
-import { isVideo } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 
