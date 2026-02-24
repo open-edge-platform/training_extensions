@@ -240,7 +240,7 @@ def get_training_logs(
     Supports content negotiation via Accept header (text/plain, application/x-ndjson).
     """
     try:
-        as_text: bool = accept and "text/plain" in accept.lower()  # pyrefly: ignore
+        as_text = accept is not None and "text/plain" in accept.lower()
 
         training_log = model_service.get_logs(project_id=project.id, model_id=model_id, as_text=as_text)
         if training_log is None:
