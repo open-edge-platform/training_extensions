@@ -18,9 +18,9 @@ from app.models import (
     DatasetItemAnnotation,
     DatasetItemSubset,
     FullImage,
+    Image,
     Label,
     LabelReference,
-    Media,
     MediaType,
     Point,
     Polygon,
@@ -125,7 +125,7 @@ def fxt_instance_segmentation_dataset_item(fxt_dataset_item, fxt_dataset_item_an
 
 def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_item) -> None:
     project_id = uuid4()
-    media = Media(
+    media = Image(
         id=uuid4(),
         project_id=project_id,
         type=MediaType.IMAGE,
@@ -135,8 +135,6 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
         format=ImageFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item_1 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[0].id), 4, 5, 10, 10)
     dataset_item_2 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[1].id), 14, 35, 10, 10)
@@ -176,7 +174,7 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
 
 def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_classification_dataset_item) -> None:
     project_id = uuid4()
-    media = Media(
+    media = Image(
         id=uuid4(),
         project_id=project_id,
         type=MediaType.IMAGE,
@@ -186,8 +184,6 @@ def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_class
         format=ImageFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item_1 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[0].id))
     dataset_item_2 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[1].id))
@@ -229,7 +225,7 @@ def test_convert_multilabel_classification_dataset_item(
     fxt_project_labels, fxt_multilabel_classification_dataset_item
 ) -> None:
     project_id = uuid4()
-    media = Media(
+    media = Image(
         id=uuid4(),
         project_id=project_id,
         type=MediaType.IMAGE,
@@ -239,8 +235,6 @@ def test_convert_multilabel_classification_dataset_item(
         format=ImageFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item = fxt_multilabel_classification_dataset_item(
         project_id, [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
@@ -288,7 +282,7 @@ def test_convert_multilabel_classification_dataset_item(
 
 def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_segmentation_dataset_item) -> None:
     project_id = uuid4()
-    media = Media(
+    media = Image(
         id=uuid4(),
         project_id=project_id,
         type=MediaType.IMAGE,
@@ -298,8 +292,6 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
         format=ImageFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item_1 = fxt_instance_segmentation_dataset_item(
         project_id,

@@ -3,7 +3,7 @@
 
 import { RefObject, useState } from 'react';
 
-import type { Media } from '../../../constants/shared-types';
+import type { MediaVideo } from '../../../constants/shared-types';
 
 export type VideoControls = {
     canSelectPreviousFrame: boolean;
@@ -17,7 +17,10 @@ export type VideoControls = {
     canPlay?: boolean;
 };
 
-export const useVideoControls = (videoRef: RefObject<HTMLVideoElement | null>, mediaItem: Media): VideoControls => {
+export const useVideoControls = (
+    videoRef: RefObject<HTMLVideoElement | null>,
+    mediaItem: MediaVideo | undefined
+): VideoControls => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
     const play = async () => {

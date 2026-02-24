@@ -1,16 +1,17 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { ActionButton, AlertDialog, DialogContainer, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
+import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
+import { ExportDatasetConfig } from '../../../../../components/export-dataset-config-dialog/export-dataset-config.component';
 import { useDeleteDatasetRevision } from '../../hooks/use-delete-dataset-revision.hook';
 import { useRenameDatasetRevision } from '../../hooks/use-rename-dataset-revision.hook';
 import type { DatasetGroup } from '../../types';
 import { RenameDatasetRevisionDialog } from '../group-headers/rename-dataset-revision-dialog.component';
+import { DatasetRevisionStatistics } from './dataset-revision-statistics/dataset-revision-statistics.component';
 
 type DatasetActionsProps = {
     dataset: DatasetGroup;
@@ -21,16 +22,20 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
     const renameDatasetRevisionMutation = useRenameDatasetRevision();
     const deleteDatasetRevisionMutation = useDeleteDatasetRevision();
 
-    const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const renameDialog = useOverlayTriggerState({});
+    const deleteDialog = useOverlayTriggerState({});
+    const exportDialog = useOverlayTriggerState({});
 
     const handleDatasetMenuAction = (key: Key) => {
         switch (key) {
             case 'rename':
-                setIsRenameDialogOpen(true);
+                renameDialog.open();
                 break;
             case 'delete':
-                setIsDeleteDialogOpen(true);
+                deleteDialog.open();
+                break;
+            case 'export':
+                exportDialog.open();
                 break;
             default:
                 break;
@@ -45,7 +50,7 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
             },
             {
                 onSuccess: () => {
-                    setIsRenameDialogOpen(false);
+                    renameDialog.close();
                 },
             }
         );
@@ -66,22 +71,23 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
                 <Menu onAction={handleDatasetMenuAction} aria-label={'Dataset actions menu'}>
                     <Item key={'rename'}>Rename</Item>
                     <Item key={'delete'}>Delete</Item>
+                    <Item key={'export'}>Export</Item>
                 </Menu>
             </MenuTrigger>
 
-            <DialogContainer onDismiss={() => setIsRenameDialogOpen(false)}>
-                {isRenameDialogOpen && (
+            <DialogContainer onDismiss={renameDialog.close}>
+                {renameDialog.isOpen && (
                     <RenameDatasetRevisionDialog
                         currentName={dataset.name}
                         onRename={handleRename}
                         isPending={renameDatasetRevisionMutation.isPending}
-                        onClose={() => setIsRenameDialogOpen(false)}
+                        onClose={renameDialog.close}
                     />
                 )}
             </DialogContainer>
 
-            <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
-                {isDeleteDialogOpen && (
+            <DialogContainer onDismiss={deleteDialog.close}>
+                {deleteDialog.isOpen && (
                     <AlertDialog
                         title='Delete dataset revision'
                         variant='destructive'
@@ -95,6 +101,13 @@ export const DatasetActions = ({ dataset }: DatasetActionsProps) => {
                     </AlertDialog>
                 )}
             </DialogContainer>
+
+            <ExportDatasetConfig
+                name={dataset.name}
+                datasetId={dataset.id}
+                dialogState={exportDialog}
+                statistics={<DatasetRevisionStatistics datasetRevisionId={dataset.id} />}
+            />
         </>
     );
 };

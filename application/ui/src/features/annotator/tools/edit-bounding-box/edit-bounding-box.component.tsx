@@ -4,10 +4,10 @@
 import { useState } from 'react';
 
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { ANCHOR_SIZE, ResizeAnchor } from '../../../../shared/annotator/resize-anchor.component';
 import type { Annotation, Point } from '../../../../shared/types';
 import { AnnotationShapeRenderer } from '../../annotations/annotation-shape-renderer.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from '../utils';
 import { TranslateShape } from './translate-shape.component';
 
@@ -18,10 +18,8 @@ interface EditBoundingBoxProps {
 
 export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
-    const { mediaItem } = useAnnotator();
+    const { roi } = useSelectedMediaItem();
     const { updateAnnotations } = useAnnotationActions();
-
-    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     const onComplete = () => {
         updateAnnotations([{ ...annotation, shape }]);

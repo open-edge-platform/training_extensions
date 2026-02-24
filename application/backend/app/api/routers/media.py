@@ -11,7 +11,13 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
-from app.api.schemas.media import MediaAnnotations, MediaView, MediaWithPagination, SetMediaAnnotations
+from app.api.schemas.media import (
+    MediaAnnotations,
+    MediaView,
+    MediaViewAdapter,
+    MediaWithPagination,
+    SetMediaAnnotations,
+)
 from app.api.validators import MediaID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
@@ -141,7 +147,7 @@ def add_media(
                 name=name,
                 format=format,
             )
-        return MediaView.model_validate(media, from_attributes=True)
+        return MediaViewAdapter.validate_python(media, from_attributes=True)
     except InvalidImageError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid image has been uploaded."
@@ -194,7 +200,7 @@ def list_media(  # noqa: PLR0913
         exclude_types=[MediaType.VIDEO_FRAME],
     )
     return MediaWithPagination(
-        items=[MediaView.model_validate(media, from_attributes=True) for media in media_list],
+        items=[MediaViewAdapter.validate_python(media, from_attributes=True) for media in media_list],
         pagination=Pagination(
             limit=limit,
             offset=offset,
@@ -219,7 +225,7 @@ def get_media(
 ) -> MediaView:
     """Get information about a specific media"""
     media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
-    return MediaView.model_validate(media, from_attributes=True)
+    return MediaViewAdapter.validate_python(media, from_attributes=True)
 
 
 @router.get(
@@ -321,14 +327,16 @@ def set_media_annotations(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
                 )
-            video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
+            video_frame = media_service.get_video_frame_by_video_id_and_index(
+                project=project, video_id=media_id, frame_index=frame_index
+            )
             if video_frame is None:
-                video_frame_media, video_frame = media_service.extract_video_frame(
+                video_frame = media_service.extract_video_frame(
                     project=project, video_id=media_id, frame_index=frame_index
                 )
                 dataset_service.create_dataset_item(
                     project=project,
-                    media=video_frame_media,
+                    media=video_frame,
                     user_reviewed=True,
                 )
             dataset_item_id = video_frame.id
@@ -380,7 +388,9 @@ def get_media_annotations(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
             )
-        video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
+        video_frame = media_service.get_video_frame_by_video_id_and_index(
+            project=project, video_id=media_id, frame_index=frame_index
+        )
         if video_frame is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index."
@@ -426,7 +436,9 @@ def delete_media_annotation(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
             )
-        video_frame = media_service.get_frame_by_video_id_and_index(video_id=media_id, frame_index=frame_index)
+        video_frame = media_service.get_video_frame_by_video_id_and_index(
+            project=project, video_id=media_id, frame_index=frame_index
+        )
         if video_frame is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index."

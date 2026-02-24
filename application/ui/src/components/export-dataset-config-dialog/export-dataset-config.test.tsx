@@ -5,13 +5,14 @@ import { screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { getMockedProject } from '../../../../../mocks/mock-project';
-import { SchemaProjectView } from '../../../../api/openapi-spec';
-import { http } from '../../../../api/utils';
-import { server } from '../../../../msw-node-setup';
-import { ExportDataset } from './export-dataset.component';
+import { getMockedProject } from '../../../mocks/mock-project';
+import { SchemaProjectView } from '../../api/openapi-spec';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
+import { queryClient } from '../../query-client/query-client';
+import { ExportDatasetConfig } from './export-dataset-config.component';
 
-describe('ExportDataset', () => {
+describe('ExportDatasetConfig', () => {
     const mockDialogState = {
         isOpen: true,
         open: vi.fn(),
@@ -19,6 +20,10 @@ describe('ExportDataset', () => {
         toggle: vi.fn(),
         setOpen: vi.fn(),
     };
+
+    beforeEach(() => {
+        queryClient.clear();
+    });
 
     const renderApp = (project: SchemaProjectView) => {
         server.use(
@@ -33,13 +38,26 @@ describe('ExportDataset', () => {
             })
         );
 
-        render(<ExportDataset dialogState={mockDialogState} />);
+        render(<ExportDatasetConfig dialogState={mockDialogState} datasetId={null} statistics={undefined} />);
     };
 
-    it('hides COCO option for classification task', async () => {
+    it('shows only GETI export option for classification task', async () => {
         renderApp(
             getMockedProject({
                 task: { exclusive_labels: true, task_type: 'classification' },
+            })
+        );
+
+        expect(await screen.findByText('Export dataset')).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
+        expect(screen.queryByRole('radio', { name: 'YOLO' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
+    });
+
+    it('shows GETI and YOLO export option for instance_segmentation task', async () => {
+        renderApp(
+            getMockedProject({
+                task: { exclusive_labels: true, task_type: 'instance_segmentation' },
             })
         );
 

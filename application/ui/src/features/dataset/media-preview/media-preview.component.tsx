@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
-import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
+import { Content, Dialog, Grid, Loading, View } from '@geti/ui';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
@@ -11,6 +11,7 @@ import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
@@ -40,12 +41,6 @@ type MediaPreviewContentProps = {
     onSelectedMediaItem: (item: Media) => void;
 };
 
-const CanvasAreaLoading = () => (
-    <Flex gridArea={'canvas'} alignContent={'center'} justifyContent={'center'}>
-        <Loading size='L' mode='inline' />
-    </Flex>
-);
-
 const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     queryClient.invalidateQueries({
         queryKey: ['get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'],
@@ -58,7 +53,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     const { data: annotationsData } = useAnnotationsQuery(mediaItem.id);
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
-    const annotationsDTO = annotationsData?.annotations ?? [];
     const queryClient = useQueryClient();
     const { setMediaState } = useSelectedData();
 
@@ -80,17 +74,24 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
         isLastItem && invalidateMediaItemAnnotations(queryClient);
     };
 
+    const initialAnnotations = useMemo(() => {
+        return getInitialAnnotations(isUserReviewed, annotationsData?.annotations ?? []);
+    }, [isUserReviewed, annotationsData?.annotations]);
+
+    const initialPredictions = useMemo(() => {
+        return getInitialPredictions(isUserReviewed, annotationsData?.annotations ?? []);
+    }, [isUserReviewed, annotationsData?.annotations]);
+
     return (
         <ToolProvider mode={mode}>
             <AnnotatorProviders
-                key={mediaItem.id}
                 mediaItem={mediaItem}
-                initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
-                initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
+                initialAnnotationsDTO={initialAnnotations}
+                initialPredictionsDTO={initialPredictions}
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider mediaItem={mediaItem}>
+                <VideoPlayerProvider mediaItem={isVideo(mediaItem) ? mediaItem : undefined}>
                     {mode === 'prediction' ? (
                         <ReadOnlyAnnotator
                             mediaItem={mediaItem}
@@ -129,7 +130,11 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
                             <View gridArea={'canvas'} overflow={'hidden'}>
                                 <AnnotatorCanvasSettings>
-                                    <AnnotatorCanvas mediaItem={mediaItem} />
+                                    <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
+                                        <MediaItemImageLoader>
+                                            <AnnotatorCanvas mediaItem={mediaItem} />
+                                        </MediaItemImageLoader>
+                                    </Suspense>
                                 </AnnotatorCanvasSettings>
                             </View>
                         </>
@@ -165,14 +170,12 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                         'toolbar bottom aside',
                     ]}
                 >
-                    <Suspense fallback={<CanvasAreaLoading />}>
-                        <MediaPreviewContent
-                            items={items}
-                            mediaItem={mediaItem}
-                            onClose={close}
-                            onSelectedMediaItem={onSelectedMediaItem}
-                        />
-                    </Suspense>
+                    <MediaPreviewContent
+                        items={items}
+                        mediaItem={mediaItem}
+                        onClose={close}
+                        onSelectedMediaItem={onSelectedMediaItem}
+                    />
 
                     <View gridArea={'aside'}>
                         <SidebarItems

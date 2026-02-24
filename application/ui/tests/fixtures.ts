@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
-import { mockedMedia } from 'mocks/mock-media';
+import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
@@ -143,7 +143,7 @@ const test = testBase.extend<Fixtures>({
             }),
             http.get('/api/projects/{project_id}/dataset/media', () => {
                 return HttpResponse.json({
-                    items: [mockedMedia({ width: 1000, height: 750 })],
+                    items: [getMockedMediaImage({ width: 1000, height: 750 })],
                     pagination: { offset: 0, limit: 20, count: 1, total: 1 },
                 });
             }),

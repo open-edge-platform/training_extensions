@@ -14,17 +14,26 @@ export const useRenameDatasetRevision = () => {
             _,
             {
                 params: {
-                    path: { project_id },
+                    path: { project_id, dataset_revision_id },
                 },
             }
         ) => {
-            return queryClient.invalidateQueries({
-                queryKey: getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/dataset_revisions',
-                    { params: { path: { project_id } } },
-                ]),
-            });
+            return Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey([
+                        'get',
+                        '/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}',
+                        { params: { path: { project_id, dataset_revision_id } } },
+                    ]),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: getQueryKey([
+                        'get',
+                        '/api/projects/{project_id}/dataset_revisions',
+                        { params: { path: { project_id } } },
+                    ]),
+                }),
+            ]);
         },
     });
 };
