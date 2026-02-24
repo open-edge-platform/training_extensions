@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import dayjs from 'dayjs';
+
 import { LOG_LEVEL_COLORS, type LogEntry as LogEntryType } from './log-types';
 
 import classes from './log-entry.module.scss';
@@ -14,9 +16,7 @@ const formatTimestamp = (timestamp: number): string => {
         return '';
     }
 
-    const date = new Date(timestamp * 1000);
-
-    return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return dayjs.unix(timestamp).format('HH:mm:ss');
 };
 
 const formatSource = (name: string, func: string, line: number): string => {
