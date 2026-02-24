@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
+from pathlib import Path
 import tempfile
 from datetime import datetime
 from io import BytesIO
@@ -8,6 +9,7 @@ from unittest.mock import ANY, MagicMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from PIL import Image as PILImage
 import pytest
 from fastapi import status
 
@@ -518,29 +520,42 @@ class TestMediaEndpoints:
 
     def test_get_media_thumbnail_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()
-        fxt_media_service.generate_media_thumbnail.side_effect = ResourceNotFoundError(
+        fxt_media_service.get_media_thumbnail_path_by_id.side_effect = ResourceNotFoundError(
             ResourceType.MEDIA, str(media_id)
         )
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/thumbnail")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_media_service.generate_media_thumbnail.assert_called_once_with(project=fxt_get_project, media_id=media_id)
+        fxt_media_service.get_media_thumbnail_path_by_id.assert_called_once_with(
+            project=fxt_get_project, media_id=media_id
+        )
 
     def test_get_media_thumbnail_success(self, fxt_get_project, fxt_media_service, fxt_client):
-        from PIL import Image
-
+        project_id = uuid4()
         media_id = uuid4()
 
-        # Create a test PIL Image to return from the mock
-        test_image = Image.new("RGB", (64, 64), color="blue")
-        fxt_media_service.generate_media_thumbnail.return_value = test_image
+        # Create a temporary JPEG file to act as the thumbnail
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+            thumbnail_path = Path(tmp_file.name)
+            img = PILImage.new("RGB", (64, 64), color="red")
+            img.save(tmp_file, format="JPEG")
 
-        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/thumbnail")
+        try:
+            fxt_media_service.get_media_thumbnail_path_by_id.return_value = thumbnail_path
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.headers["content-type"] == "image/jpeg"
-        fxt_media_service.generate_media_thumbnail.assert_called_once_with(project=fxt_get_project, media_id=media_id)
+            response = fxt_client.get(f"/api/projects/{project_id}/dataset/media/{str(media_id)}/thumbnail")
+
+            assert response.status_code == status.HTTP_200_OK
+            assert response.headers["content-type"] == "image/jpeg"
+            with open(thumbnail_path, "rb") as f:
+                assert response.content == f.read()
+            fxt_media_service.get_media_thumbnail_path_by_id.assert_called_once_with(
+                project=fxt_get_project, media_id=media_id
+            )
+        finally:
+            if thumbnail_path.exists():
+                os.unlink(thumbnail_path)
 
     def test_delete_media_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()

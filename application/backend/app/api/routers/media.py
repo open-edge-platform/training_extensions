@@ -260,20 +260,10 @@ def get_media_thumbnail(
     project: Annotated[Project, Depends(get_project)],
     media_id: MediaID,
     media_service: Annotated[MediaService, Depends(get_media_service)],
-) -> StreamingResponse:
+) -> FileResponse:
     """Get media thumbnail binary content"""
-    thumbnail = media_service.generate_media_thumbnail(project=project, media_id=media_id)
-    buffer = BytesIO()
-    thumbnail.save(buffer, format="JPEG")
-    buffer.seek(0)
-    return StreamingResponse(
-        buffer,
-        media_type="image/jpeg",
-        headers={
-            "Content-Disposition": f"inline; filename={media_id}.jpeg",
-            "Cache-Control": "public, max-age=31536000",
-        },
-    )
+    thumbnail_path = media_service.get_media_thumbnail_path_by_id(project=project, media_id=media_id)
+    return FileResponse(path=thumbnail_path)
 
 
 @router.delete(
