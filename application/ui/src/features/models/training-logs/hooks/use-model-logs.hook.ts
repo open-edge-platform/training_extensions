@@ -10,12 +10,12 @@ import { type LogEntry } from '../log-types';
 import { parseLogLine } from '../log-utils';
 
 const fetchModelLogs = async (projectId: string, modelId: string): Promise<LogEntry[]> => {
-    const { data, error, response } = await fetchClient.GET('/api/projects/{project_id}/models/{model_id}/logs', {
+    const { data, response } = await fetchClient.GET('/api/projects/{project_id}/models/{model_id}/logs', {
         params: { path: { project_id: projectId, model_id: modelId } },
         parseAs: 'text',
     });
 
-    if (error) {
+    if (!response.ok) {
         throw new Error(`Failed to fetch model logs: ${response.status} ${response.statusText}`);
     }
 
