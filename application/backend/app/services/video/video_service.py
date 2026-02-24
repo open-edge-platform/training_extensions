@@ -64,6 +64,7 @@ def extract_video_frame(
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
         # Read the frame at the requested position
         read_success, frame = cap.read()
+        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         if not read_success:
             raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
         return frame
