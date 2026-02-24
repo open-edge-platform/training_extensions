@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { Flex, Item, Picker, SearchField, Switch, Text, View } from '@geti/ui';
+import { Content, ContextualHelp, Flex, Heading, Item, Picker, SearchField, Switch, Text, View } from '@geti/ui';
 
 import { useAutoScroll } from './hooks/use-auto-scroll.hook';
 import { LogEntry } from './log-entry.component';
@@ -51,6 +51,17 @@ export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogVi
                     width={'size-2000'}
                     aria-label={'Minimum log level'}
                     isQuiet
+                    contextualHelp={
+                        <ContextualHelp variant={'info'}>
+                            <Heading>Minimum log level</Heading>
+                            <Content>
+                                <Text>
+                                    Shows log entries at the selected level and above. For example, selecting WARNING
+                                    shows WARNING, ERROR, and CRITICAL entries, hiding DEBUG and INFO.
+                                </Text>
+                            </Content>
+                        </ContextualHelp>
+                    }
                 >
                     {LOG_LEVELS.map((level) => (
                         <Item key={level}>{level}</Item>
