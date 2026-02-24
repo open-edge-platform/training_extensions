@@ -26,7 +26,8 @@ const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    mediaItem: MediaVideo | undefined;
+    // TODO: Narrow the type to be MediaVideoFrame | undefined
+    mediaItem: MediaVideo | MediaVideoFrame | undefined;
     changeSelectedMediaItem: (media: MediaVideoFrame) => void;
 };
 

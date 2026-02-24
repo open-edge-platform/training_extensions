@@ -9,7 +9,7 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
-import { isVideo } from '../../../shared/media-item-utils';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { MediaItemImageLoader, useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
@@ -70,7 +70,7 @@ const Annotator = ({
 
     return (
         <VideoPlayerProvider
-            mediaItem={isVideo(mediaItem) ? mediaItem : undefined}
+            mediaItem={isVideo(mediaItem) || isVideoFrame(mediaItem) ? mediaItem : undefined}
             changeSelectedMediaItem={setMediaItem}
         >
             {mode === 'prediction' ? (
@@ -99,7 +99,7 @@ const Annotator = ({
                         <PrimaryToolbar />
                     </View>
 
-                    {isVideo(mediaItem) && (
+                    {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                         <View gridArea={'video-toolbar'}>
                             <VideoToolbar />
                         </View>
