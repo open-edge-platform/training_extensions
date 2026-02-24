@@ -6,5 +6,5 @@ import { useVideoPlayerContext } from './video-player/video-player-provider.comp
 export const useIsAnnotatorSceneBusy = () => {
     const context = useVideoPlayerContext();
 
-    return context?.isPlaying ?? false;
+    return context?.videoControls.isPlaying ?? false;
 };

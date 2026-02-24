@@ -1,11 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, Flex, Text, View } from '@geti/ui';
+import { Suspense } from 'react';
+
+import { ActionButton, Button, Flex, Loading, Text, View } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
@@ -79,7 +82,11 @@ export const ReadOnlyAnnotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'} UNSAFE_className={classes.readOnlyCanvas}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} />
+                    <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
+                        <MediaItemImageLoader>
+                            <AnnotatorCanvas mediaItem={mediaItem} />
+                        </MediaItemImageLoader>
+                    </Suspense>
                 </AnnotatorCanvasSettings>
             </View>
 

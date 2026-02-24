@@ -96,7 +96,7 @@ function useUndoRedoState<State>(initialState: State | (() => State)): UseUndoRe
 
     const undoRedoActions = { canUndo, canRedo, undo, redo, reset };
 
-    const setStateWrapper: SetStateWrapper<State> = (newState, skipHistory = false) => {
+    const setStateWrapper: SetStateWrapper<State> = useCallback((newState, skipHistory = false) => {
         setState(({ state: oldState, history, index }) => {
             const actualNewState = getNewValue(newState, oldState);
 
@@ -112,7 +112,7 @@ function useUndoRedoState<State>(initialState: State | (() => State)): UseUndoRe
                 index: newIndex,
             };
         });
-    };
+    }, []);
 
     return [state.state, setStateWrapper, undoRedoActions];
 }

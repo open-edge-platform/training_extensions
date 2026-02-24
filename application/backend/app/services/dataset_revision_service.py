@@ -104,6 +104,24 @@ class DatasetRevisionService(BaseSessionManagedService):
         parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
         return import_dataset(input_path=parquet_path.parent)
 
+    def get_latest_uptodate_dataset_revision(self, project_id: UUID) -> DatasetRevision | None:
+        """
+        Get latest up to date created dataset revision in a project, if it exists.
+
+        Up to date means the dataset revision was created after the last update on any dataset item in the project.
+
+        Args:
+            project_id (UUID): The UUID of the project
+
+        Returns:
+            DatasetRevision: The latest created dataset revision in a project or None if none exists
+        """
+        dataset_revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
+        dataset_revision_db = dataset_revision_repo.get_latest_uptodate_dataset_revision()
+        if dataset_revision_db is None:
+            return None
+        return DatasetRevision.model_validate(dataset_revision_db)
+
     def list_dataset_revisions(self, project_id: UUID) -> list[DatasetRevision]:
         """
         Get information about all available dataset revisions in a project.
@@ -182,7 +200,34 @@ class DatasetRevisionService(BaseSessionManagedService):
             )
         )
 
-    def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
+    def delete_dataset_revision(
+        self,
+        project_id: UUID,
+        revision_id: UUID,
+    ) -> None:
+        """
+        Deletes a DatasetRevision from the DB and deletes its associated files from the disk.
+
+        Args:
+            project_id: The UUID of the project.
+            revision_id: The UUID of the dataset revision.
+
+        Raises:
+            ResourceNotFoundError: If the revision is not found.
+        """
+        try:
+            revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
+            revision_repo.delete(str(revision_id))
+        except IntegrityError:
+            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
+
+        self._delete_dataset_revision_files(project_id=project_id, dataset_revision_id=revision_id)
+
+    def delete_dataset_revision_files(
+        self,
+        project_id: UUID,
+        revision_id: UUID,
+    ) -> None:
         """
         Marks the DatasetRevision files as deleted, and deletes associated files from the disk.
 
@@ -193,20 +238,22 @@ class DatasetRevisionService(BaseSessionManagedService):
         Raises:
             ResourceNotFoundError: If the revision is not found.
         """
-        revision = self.get_dataset_revision(project_id, revision_id)
-        if revision.files_deleted:
-            logger.info("Files for dataset revision '{}' are already deleted", revision_id)
-            return
+        dataset_revision = self.get_dataset_revision(project_id=project_id, revision_id=revision_id)
 
-        # Mark as deleted in the database
-        revision.files_deleted = True
-        self.update_dataset_revision(project_id=project_id, dataset_revision=revision)
+        if not dataset_revision.files_deleted:
+            dataset_revision.files_deleted = True
+            self.update_dataset_revision(project_id=project_id, dataset_revision=dataset_revision)
 
-        # Delete files from filesystem
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
+        self._delete_dataset_revision_files(project_id=project_id, dataset_revision_id=revision_id)
+
+    def _delete_dataset_revision_files(self, project_id: UUID, dataset_revision_id: UUID) -> None:
+        """Deletes files associated with dataset revision from hard disk"""
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision_id)
         if revision_path.exists():
             shutil.rmtree(revision_path)
             logger.info("Deleted dataset revision files at '{}'", revision_path)
+        else:
+            logger.info("Files for dataset revision '{}' are already deleted", dataset_revision_id)
 
     def _get_revision_parquet_path(self, project_id: UUID, revision_id: UUID) -> Path:
         """

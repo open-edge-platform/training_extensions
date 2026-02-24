@@ -57,12 +57,11 @@ const HistoricalModelLogs = ({ modelId }: { modelId: string }) => {
 };
 
 export const TrainingLogsDialog = ({ jobId, modelId }: TrainingLogsDialogProps) => {
-    const title = jobId ? 'Training Logs' : 'Training Logs';
     const dialogContainer = useDialogContainer();
 
     return (
         <Dialog aria-label={'Training logs'} UNSAFE_className={classes.dialog}>
-            <Heading>{title}</Heading>
+            <Heading>Training Logs</Heading>
             <Header>
                 <ActionButton
                     isQuiet

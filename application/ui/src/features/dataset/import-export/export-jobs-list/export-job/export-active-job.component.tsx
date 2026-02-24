@@ -5,23 +5,25 @@ import { Divider, Flex, Loading, Text, View } from '@geti/ui';
 
 import { ExportDatasetJob } from '../../../../../constants/shared-types';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
+import { getJobProgress } from '../../util';
 import { isJobRunning } from '../util';
 import { CancelJobConfirmation } from './cancel-job-confirmation/cancel-job-confirmation.component';
 import { ExportJobDetails } from './export-details/export-details.component';
 
 type ExportActiveJobProps = {
     job: ExportDatasetJob;
+    datasetName?: string;
 };
 
-export const ExportActiveJob = ({ job }: ExportActiveJobProps) => {
+export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
     const isRunning = isJobRunning(job);
-    const progress = Math.max(0, Math.min(100, job?.progress ?? 0)) | 0;
+    const progress = getJobProgress(job?.progress);
 
     return (
         <BottomProgressBar progress={progress}>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                    <ExportJobDetails metadata={job.metadata} />
+                    <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
                     <CancelJobConfirmation jobId={job.job_id} />
                 </Flex>
 

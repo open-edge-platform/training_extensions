@@ -41,6 +41,8 @@ jobs:
           files_yaml: |
             test:
               - application/**
+              - '!application/docs/**'
+              - library/**
               - .github/**
 
   build:

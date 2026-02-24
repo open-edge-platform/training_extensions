@@ -3,27 +3,22 @@
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import type { Rect } from '../../../../shared/types';
+import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
+import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 
 export const BoundingBoxTool = () => {
     const { scale: zoom } = useZoom();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { mediaItem, image, selectedLabel } = useAnnotator();
+    const { roi } = useSelectedMediaItem();
+    const { image } = useMediaItemImage();
+    const { selectedLabel } = useAnnotatorLabels();
 
     const handleComplete = (shapes: Rect[], labels: Label[]): string[] => {
         return addAndSelectAnnotations(shapes, labels);
     };
 
-    return (
-        <DrawingBox
-            roi={{ x: 0, y: 0, width: mediaItem.width, height: mediaItem.height }}
-            image={image}
-            zoom={zoom}
-            selectedLabel={selectedLabel}
-            onComplete={handleComplete}
-        />
-    );
+    return <DrawingBox roi={roi} image={image} zoom={zoom} selectedLabel={selectedLabel} onComplete={handleComplete} />;
 };

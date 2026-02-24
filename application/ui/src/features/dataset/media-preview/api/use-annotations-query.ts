@@ -1,31 +1,30 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
 import { fetchClient } from '../../../../api/client';
 import { AnnotationDTO } from '../../../../constants/shared-types';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 
 const isUnannotatedError = (error: unknown): boolean => {
-    return (
-        isObject(error) && 'detail' in error && /Dataset item has not been annotated yet/i.test(String(error.detail))
-    );
+    return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
 };
 
 export const useAnnotationsQuery = (mediaId: string) => {
     const projectId = useProjectIdentifier();
 
-    return useSuspenseQuery({
-        queryKey: [
+    return useQuery({
+        queryKey: getQueryKey([
             'get',
             `/api/projects/{project_id}/dataset/media/{media_id}/annotations`,
             { params: { path: { project_id: projectId, media_id: mediaId } } },
-        ],
+        ]),
         queryFn: async () => {
-            const { data, error } = await fetchClient.GET(
+            const { data, error, response } = await fetchClient.GET(
                 '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
                 {
                     params: {
@@ -37,7 +36,7 @@ export const useAnnotationsQuery = (mediaId: string) => {
                 }
             );
 
-            if (isUnannotatedError(error)) {
+            if (isUnannotatedError(error) || response.status === 404) {
                 return { annotations: [], user_reviewed: false };
             }
 

@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useMemo } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useRef } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isEqual } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
@@ -98,6 +99,13 @@ export const AnnotationActionsProvider = ({
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
     });
+
+    const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
+
+    if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
+        setAnnotations(mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels), true);
+        prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
+    }
 
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {

@@ -16,13 +16,16 @@ from app.models import (
     DatasetItemAnnotation,
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
+    Image,
     LabelReference,
-    Media,
     Pipeline,
     Project,
     Rectangle,
+    Video,
+    VideoFrame,
 )
-from app.services import LabelService, PipelineService, ProjectService, SystemService, VideoFrameService
+from app.models.media import MediaAdapter
+from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import DatasetItemFilters, DatasetService, SubsetAlreadyAssignedError
 from app.services.event.event_bus import EventBus
@@ -56,21 +59,12 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
-def fxt_video_frame_service(db_session: Session) -> VideoFrameService:
-    """Fixture to create a VideoFrameService instance."""
-    return VideoFrameService(db_session=db_session)
-
-
-@pytest.fixture
 def fxt_media_service(
     fxt_projects_dir: Path,
-    fxt_video_frame_service: VideoFrameService,
     db_session: Session,
 ) -> MediaService:
     """Fixture to create a MediaService instance."""
-    return MediaService(
-        data_dir=fxt_projects_dir.parent, video_frame_service=fxt_video_frame_service, db_session=db_session
-    )
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
 
 
 @pytest.fixture
@@ -512,7 +506,7 @@ class TestDatasetServiceIntegration:
         )
         db_session.add(db_media)
         db_session.flush()
-        media = Media.model_validate(db_media, from_attributes=True)
+        media = MediaAdapter.validate_python(db_media, from_attributes=True)
 
         created_dataset_item = fxt_dataset_service.create_dataset_item(
             project=project,
@@ -681,7 +675,7 @@ class TestDatasetServiceIntegration:
             else len(db_dataset_items)
         )
         for dataset_item, media in list:
-            assert isinstance(dataset_item, DatasetItem) and isinstance(media, Media)
+            assert isinstance(dataset_item, DatasetItem) and isinstance(media, Image | Video | VideoFrame)
 
     def test_get_dataset_item_by_id(
         self,
