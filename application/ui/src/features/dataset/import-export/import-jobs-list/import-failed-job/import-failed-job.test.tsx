@@ -13,13 +13,13 @@ import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { server } from '../../../../../msw-node-setup';
 import { ImportFailedJob } from './import-failed-job.component';
 
-const mockedRemoveLsPreparingImportId = vi.fn();
+const mockedRemoveLsPreparingImport = vi.fn();
 
 vi.mock('../../../../../hooks/localStorage/use-prepare-import-dataset.hook', () => ({
     usePrepareImportDataset: () => ({
-        removeLsPreparingImportId: mockedRemoveLsPreparingImportId,
-        getLsPreparingImportId: vi.fn(() => null),
-        addLsPreparingImportId: vi.fn(),
+        removeLsPreparingImport: mockedRemoveLsPreparingImport,
+        getLsPreparingImport: vi.fn(() => null),
+        addLsPreparingImport: vi.fn(),
     }),
 }));
 
@@ -44,7 +44,7 @@ describe('ImportFailedJob', () => {
         const closeButton = await screen.findByRole('button', { name: 'close import dataset status' });
         await userEvent.click(closeButton);
 
-        expect(mockedRemoveLsPreparingImportId).toHaveBeenCalledTimes(1);
+        expect(mockedRemoveLsPreparingImport).toHaveBeenCalledTimes(1);
     });
 
     it('displays job message and job error', async () => {

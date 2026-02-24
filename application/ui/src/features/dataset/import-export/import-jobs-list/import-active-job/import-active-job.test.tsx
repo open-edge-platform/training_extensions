@@ -13,13 +13,13 @@ import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { server } from '../../../../../msw-node-setup';
 import { ImportActiveJob } from './import-active-job.component';
 
-const mockedRemoveLsPreparingImportId = vi.fn();
+const mockedRemoveLsPreparingImport = vi.fn();
 
 vi.mock('hooks/localStorage/use-prepare-import-dataset.hook', () => ({
     usePrepareImportDataset: () => ({
-        removeLsPreparingImportId: mockedRemoveLsPreparingImportId,
-        getLsPreparingImportId: vi.fn(() => null),
-        addLsPreparingImportId: vi.fn(),
+        removeLsPreparingImport: mockedRemoveLsPreparingImport,
+        getLsPreparingImport: vi.fn(() => null),
+        addLsPreparingImport: vi.fn(),
     }),
 }));
 
@@ -48,7 +48,7 @@ describe('ImportActiveJob', () => {
         );
 
         expect(await screen.findByText('Preparing dataset for import')).toBeVisible();
-        expect(await screen.findByText('55%')).toBeVisible();
+        expect(await screen.findByText('56%')).toBeVisible();
     });
 
     it('does not show progress for pending jobs and falls back to status text when message is missing', async () => {
@@ -71,7 +71,7 @@ describe('ImportActiveJob', () => {
         await userEvent.click(await screen.findByRole('button', { name: /cancel job/i }));
 
         await waitFor(() => {
-            expect(mockedRemoveLsPreparingImportId).toHaveBeenCalledTimes(1);
+            expect(mockedRemoveLsPreparingImport).toHaveBeenCalledTimes(1);
         });
     });
 });

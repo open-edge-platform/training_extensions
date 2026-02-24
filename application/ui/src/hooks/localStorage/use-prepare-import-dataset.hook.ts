@@ -17,25 +17,25 @@ const PREPARING_IMPORT_DATASET_KEY = (projectId: string) => `preparing-import-da
 export const usePrepareImportDataset = () => {
     const projectId = useProjectIdentifier();
 
-    const [lsPreparingImportDataset, setLsPreparingImportId] = useLocalStorage<DataValue | null>(
+    const [lsPreparingImportDataset, setLsPreparingImport] = useLocalStorage<DataValue | null>(
         PREPARING_IMPORT_DATASET_KEY(projectId),
         () => getParsedLocalStorage<DataValue>(PREPARING_IMPORT_DATASET_KEY(projectId)) ?? null
     );
-    const getLsPreparingImportId = (): DataValue | null => {
+    const getLsPreparingImport = (): DataValue | null => {
         return lsPreparingImportDataset;
     };
 
-    const addLsPreparingImportId = (jobId: string, fileName: string, size: number) => {
-        return setLsPreparingImportId({ id: jobId, fileName, size });
+    const addLsPreparingImport = (jobId: string, fileName: string, size: number) => {
+        return setLsPreparingImport({ id: jobId, fileName, size });
     };
 
-    const removeLsPreparingImportId = (): void => {
-        return setLsPreparingImportId(null);
+    const removeLsPreparingImport = (): void => {
+        return setLsPreparingImport(null);
     };
 
     return {
-        addLsPreparingImportId,
-        getLsPreparingImportId,
-        removeLsPreparingImportId,
+        addLsPreparingImport,
+        getLsPreparingImport,
+        removeLsPreparingImport,
     };
 };

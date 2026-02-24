@@ -16,8 +16,8 @@ type UsePrepareImportStatusProps = {
 };
 
 export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps) => {
-    const { getLsPreparingImportId, removeLsPreparingImportId } = usePrepareImportDataset();
-    const { id: jobId, fileName, size } = getLsPreparingImportId() ?? {};
+    const { getLsPreparingImport, removeLsPreparingImport } = usePrepareImportDataset();
+    const { id: jobId, fileName, size } = getLsPreparingImport() ?? {};
 
     const response = $api.useQuery(
         'get',
@@ -35,10 +35,10 @@ export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps)
     useEffect(() => {
         if (response.isError && isInvalidJob(response.error)) {
             isFunction(onError) && onError();
-            removeLsPreparingImportId();
+            removeLsPreparingImport();
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.error?.detail}` });
         }
-    }, [onError, removeLsPreparingImportId, response.error, response.isError]);
+    }, [onError, removeLsPreparingImport, response.error, response.isError]);
 
     useEffect(() => {
         if (isJobFailed(response.data)) {

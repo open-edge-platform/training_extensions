@@ -5,7 +5,7 @@ import { isObject } from 'lodash-es';
 
 import { Job } from '../../../constants/shared-types';
 
-export const getJobProgress = (progress?: number) => Math.floor(Math.max(0, Math.min(100, progress ?? 0)));
+export const getJobProgress = (progress?: number) => Math.round(Math.max(0, Math.min(100, progress ?? 0)));
 
 export const isInvalidJob = (error: unknown): boolean => {
     if (isObject(error) && 'detail' in error) {

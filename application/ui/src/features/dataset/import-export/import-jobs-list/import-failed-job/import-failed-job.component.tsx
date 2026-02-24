@@ -5,7 +5,7 @@ import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { formatBytes } from '../util';
+import { formatBytes } from '../../../../../shared/util';
 
 type ImportFailedJobProps = {
     size: number;
@@ -14,10 +14,10 @@ type ImportFailedJobProps = {
 };
 
 export const ImportFailedJob = ({ job, fileName, size }: ImportFailedJobProps) => {
-    const { removeLsPreparingImportId } = usePrepareImportDataset();
+    const { removeLsPreparingImport } = usePrepareImportDataset();
 
     const handleClose = () => {
-        removeLsPreparingImportId();
+        removeLsPreparingImport();
     };
 
     return (

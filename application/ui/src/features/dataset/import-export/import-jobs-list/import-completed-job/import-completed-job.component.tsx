@@ -5,7 +5,7 @@ import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
-import { formatBytes } from '../util';
+import { formatBytes } from '../../../../../shared/util';
 
 type ImportCompletedJobProps = {
     size: number;
