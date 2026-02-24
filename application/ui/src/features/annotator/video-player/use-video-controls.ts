@@ -19,15 +19,15 @@ export type VideoControls = {
 
 export const useVideoControls = (
     videoRef: RefObject<HTMLVideoElement | null>,
-    mediaItem: MediaVideoFrame | undefined,
+    videoFrame: MediaVideoFrame | undefined,
     selectVideoFrame: (media: MediaVideoFrame) => void,
     changeCurrentFrameIndex: (index: number) => void
 ): VideoControls => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-    const totalFrames = mediaItem?.frame_count ?? 1;
-    const step = mediaItem?.frame_stride;
-    const currentFrameNumber = mediaItem.frame_number;
+    const totalFrames = videoFrame?.frame_count ?? 1;
+    const step = videoFrame?.frame_stride ?? 1;
+    const currentFrameNumber = videoFrame?.frame_number ?? 0;
 
     const round = (x: number) => Math.round(x / step) * step;
     const previousVideoFrameNumber = round(currentFrameNumber - step);
@@ -37,14 +37,13 @@ export const useVideoControls = (
     const canSelectNextFrame = nextVideoFrameNumber < totalFrames;
 
     const selectFrame = (frameNumber: number) => {
-        if (videoRef.current === null) {
+        if (videoRef.current === null || videoFrame === undefined) {
             return;
         }
-        // TODO: Update selected video frame in selected media item provider
-        selectVideoFrame({ ...mediaItem, frame_number: frameNumber });
+        selectVideoFrame({ ...videoFrame, frame_number: frameNumber });
         changeCurrentFrameIndex(frameNumber);
 
-        videoRef.current.currentTime = (frameNumber + 1) / mediaItem.fps;
+        videoRef.current.currentTime = (frameNumber + 1) / videoFrame.fps;
     };
 
     const play = async () => {
@@ -63,14 +62,14 @@ export const useVideoControls = (
     };
 
     const pause = () => {
-        if (videoRef.current === null) {
+        if (videoRef.current === null || videoFrame === undefined) {
             return;
         }
 
         setIsPlaying(false);
         videoRef.current.pause();
 
-        const maxNearestFrame = Math.floor((mediaItem.frame_count - 1) / step) * step;
+        const maxNearestFrame = Math.floor((videoFrame.frame_count - 1) / step) * step;
         const nearestFrame = Math.min(maxNearestFrame, Math.round(currentFrameNumber / step) * step);
 
         goto(nearestFrame);
@@ -101,7 +100,7 @@ export const useVideoControls = (
     };
 
     const goto = (frameNumber: number) => {
-        if (videoRef.current === null) {
+        if (videoRef.current === null || videoFrame === undefined) {
             return;
         }
 
@@ -114,7 +113,7 @@ export const useVideoControls = (
             setIsPlaying(false);
         }
 
-        videoRef.current.currentTime = (frameNumber + 1) / mediaItem.fps;
+        videoRef.current.currentTime = (frameNumber + 1) / videoFrame.fps;
         const nearest = Math.min(Math.round(frameNumber / step) * step, totalFrames - 1);
 
         selectFrame(nearest);

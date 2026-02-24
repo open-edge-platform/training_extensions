@@ -51,16 +51,25 @@ type PathParamsFor<Paths extends paths, P extends keyof Paths, Method extends Ht
  * block as either required (`query:`) or optional (`query?:`), so both forms
  * are handled here.
  *
+ * When the spec writes `query?: never` (explicitly no query params), TypeScript
+ * infers `QP` as `never | undefined` = `undefined` in the optional branch.
+ * `Exclude<QP, undefined>` strips that back to `never` so those endpoints are
+ * treated as having no query params at all.
+ *
  * @example
- * // Optional query block (query?:) → resolves to the inner type:
+ * // Optional query block (query?:) → resolves to the inner object type (undefined stripped):
  * type QP = QueryParamsFor<paths, '/api/projects/{project_id}/dataset/media/{media_id}/annotations', 'get'>
- * // => { frame_index?: number | null } | undefined
+ * // => { frame_index?: number | null }
  *
  * // Required query block (query:) → resolves to the inner type directly:
  * type QP = QueryParamsFor<paths, '/api/model_architectures', 'get'>
  * // => { task: TaskType }
  *
- * // No query params at all → resolves to never:
+ * // Explicitly no query params (query?: never) → resolves to never:
+ * type QP = QueryParamsFor<paths, '/api/sinks', 'get'>
+ * // => never
+ *
+ * // No query field at all → resolves to never:
  * type QP = QueryParamsFor<paths, '/api/staged_datasets', 'get'>
  * // => never
  */
@@ -68,7 +77,7 @@ type QueryParamsFor<Paths extends paths, P extends keyof Paths, Method extends H
     OperationFor<Paths, P, Method> extends { parameters: { query: infer QP } }
         ? QP
         : OperationFor<Paths, P, Method> extends { parameters: { query?: infer QP } }
-          ? QP
+          ? Exclude<QP, undefined>
           : never;
 
 /** Returns all HTTP methods that are actually defined (not `never`) for a given path. */

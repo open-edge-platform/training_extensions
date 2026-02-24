@@ -26,15 +26,14 @@ export type PrepareImportDatasetJob = Job & {
 
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];
-export type MediaVideoFrame2 = components['schemas']['VideoFrameView'];
-export type MediaVideoFrame = MediaVideo & {
-    fps: number;
+export type MediaVideoFrameDTO = components['schemas']['VideoFrameView'];
+export type MediaVideoFrame = Omit<MediaVideo, 'type'> & {
     frame_number: number;
-    frame_count: number;
     frame_stride: number;
-    duration: number;
     type: 'video_frame';
 };
+
+export type MediaDTO = MediaImage | MediaVideo | MediaVideoFrameDTO;
 
 export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 

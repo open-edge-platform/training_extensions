@@ -3,8 +3,7 @@
 
 import { createContext, ReactNode, RefObject, use, useMemo, useRef, useState } from 'react';
 
-import type { MediaVideoFrame, Media } from '../../../constants/shared-types';
-import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
 import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
@@ -39,16 +38,20 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
     const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
     const { setMediaItem } = useSelectedMediaItem();
 
-    const playingVideoFrame: MediaVideoFrame = useMemo(() => {
+    const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
+        if (mediaItem === undefined) {
+            return undefined;
+        }
+
         return {
             ...mediaItem,
             frame_number: currentFrameIndex,
 
             // TODO: This logic should be moved to selected media item provider
             type: 'video_frame',
-            frame_count: Number(mediaItem.frame_count),
-            fps: Number(mediaItem.fps),
-            duration: Number(mediaItem.duration),
+            frame_count: mediaItem.frame_count,
+            fps: mediaItem.fps,
+            duration: mediaItem.duration,
             // TODO: This should be returned by the backend, atm it's mocked to be 60 fps
             frame_stride: 60,
         };
@@ -85,7 +88,7 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
     };
 
     const value =
-        mediaItem !== undefined
+        playingVideoFrame !== undefined
             ? {
                   videoFrame: playingVideoFrame,
                   videoRef,

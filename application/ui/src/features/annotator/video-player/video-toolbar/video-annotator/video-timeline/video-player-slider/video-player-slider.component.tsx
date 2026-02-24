@@ -7,14 +7,14 @@ import { useDebouncedCallback } from 'hooks/use-debounced-callback/use-debounced
 import { defer } from 'lodash-es';
 import { useHover } from 'react-aria';
 
-import { MediaVideo } from '../../../../../../../constants/shared-types';
+import type { MediaVideoFrame } from '../../../../../../../constants/shared-types';
 import { ThumbnailPreview } from './thumbnail-preview.component';
 import { VideoSlider } from './video-slider.component';
 
 import classes from './video-slider.module.scss';
 
 type VideoPlayerSliderProps = {
-    mediaItem: MediaVideo;
+    videoFrame: MediaVideoFrame;
     step: number;
     frameNumber: number;
     sizePerSquare: number;
@@ -93,7 +93,7 @@ const blurActiveInput = (isFocused: boolean): void => {
 
 export const VideoPlayerSlider = ({
     ref,
-    mediaItem,
+    videoFrame,
     step,
     frameNumber,
     sizePerSquare,
@@ -114,7 +114,7 @@ export const VideoPlayerSlider = ({
         thumbnailPosition,
     } = useShowThumbnail();
 
-    const framesCount = mediaItem.frame_count;
+    const framesCount = videoFrame.frame_count;
     const minValue = 0;
     const maxValue = framesCount - 1;
     const lastFrame = framesCount - step;
@@ -172,8 +172,8 @@ export const VideoPlayerSlider = ({
                     x={thumbnailPosition}
                     width={100}
                     height={100}
-                    videoFrame={thumbnailVideoFrame}
-                    mediaItem={mediaItem}
+                    frameNumber={thumbnailVideoFrame}
+                    videoFrame={videoFrame}
                 />
             )}
         </div>

@@ -50,7 +50,7 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                 <div style={{ width: sizePerSquare * totalSegments }} className={classes.timelineSliderWrapper}>
                     <VideoPlayerSlider
                         ref={outerRef}
-                        mediaItem={videoFrame}
+                        videoFrame={videoFrame}
                         step={step}
                         frameNumber={frameNumber}
                         sizePerSquare={sizePerSquare}
