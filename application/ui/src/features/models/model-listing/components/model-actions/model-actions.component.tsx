@@ -115,7 +115,13 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                 )}
             </DialogContainer>
             <DialogContainer type={'fullscreen'} onDismiss={() => setIsDialogOpen(null)}>
-                {isDialogOpen === DIALOG_TYPES.LOGS && <TrainingLogsDialog modelId={model.id} />}
+                {isDialogOpen === DIALOG_TYPES.LOGS && (
+                    <TrainingLogsDialog
+                        modelId={model.id}
+                        modelName={model.architecture}
+                        trainingDate={model.training_info?.start_time ?? undefined}
+                    />
+                )}
             </DialogContainer>
         </>
     );

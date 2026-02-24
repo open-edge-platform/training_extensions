@@ -15,6 +15,7 @@ import {
 } from '@geti/ui';
 import { CloseSemiBold } from '@geti/ui/icons';
 
+import { useDownloadLogs } from './hooks/use-download-logs.hook';
 import { useModelLogs } from './hooks/use-model-logs.hook';
 import { useStreamJobLogs } from './hooks/use-stream-job-logs.hook';
 import { LogViewer } from './log-viewer.component';
@@ -24,6 +25,8 @@ import classes from './training-logs-dialog.module.scss';
 type TrainingLogsDialogProps = {
     jobId?: string;
     modelId?: string;
+    modelName?: string;
+    trainingDate?: string;
 };
 
 const ActiveJobLogs = ({ jobId }: { jobId: string }) => {
@@ -32,8 +35,15 @@ const ActiveJobLogs = ({ jobId }: { jobId: string }) => {
     return <LogViewer logs={logs} isStreaming connectionStatus={connectionStatus} />;
 };
 
-const HistoricalModelLogs = ({ modelId }: { modelId: string }) => {
+type HistoricalModelLogsProps = {
+    modelId: string;
+    modelName?: string;
+    trainingDate?: string;
+};
+
+const HistoricalModelLogs = ({ modelId, modelName, trainingDate }: HistoricalModelLogsProps) => {
     const { data: logs, isPending, isError, error } = useModelLogs(modelId);
+    const { downloadLogs } = useDownloadLogs({ modelId, modelName, trainingDate });
 
     if (isPending) {
         return (
@@ -53,10 +63,10 @@ const HistoricalModelLogs = ({ modelId }: { modelId: string }) => {
         );
     }
 
-    return <LogViewer logs={logs ?? []} />;
+    return <LogViewer logs={logs ?? []} onDownload={downloadLogs} />;
 };
 
-export const TrainingLogsDialog = ({ jobId, modelId }: TrainingLogsDialogProps) => {
+export const TrainingLogsDialog = ({ jobId, modelId, modelName, trainingDate }: TrainingLogsDialogProps) => {
     const dialogContainer = useDialogContainer();
 
     return (
@@ -75,7 +85,9 @@ export const TrainingLogsDialog = ({ jobId, modelId }: TrainingLogsDialogProps) 
             <Divider />
             <Content UNSAFE_className={classes.contentArea}>
                 {jobId && <ActiveJobLogs jobId={jobId} />}
-                {!jobId && modelId && <HistoricalModelLogs modelId={modelId} />}
+                {!jobId && modelId && (
+                    <HistoricalModelLogs modelId={modelId} modelName={modelName} trainingDate={trainingDate} />
+                )}
                 {!jobId && !modelId && (
                     <Flex alignItems={'center'} justifyContent={'center'} height={'100%'}>
                         <Text UNSAFE_className={classes.errorText}>No job or model specified</Text>

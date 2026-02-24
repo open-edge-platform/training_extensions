@@ -3,7 +3,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { Flex, Item, Picker, SearchField, Switch, Text, View } from '@geti/ui';
+import { ActionButton, Flex, Item, Picker, SearchField, Switch, Text, View } from '@geti/ui';
+import { DownloadIcon } from '@geti/ui/icons';
 
 import { useAutoScroll } from './hooks/use-auto-scroll.hook';
 import { LogEntry } from './log-entry.component';
@@ -20,6 +21,7 @@ type LogViewerProps = {
     logs: LogEntryType[];
     isStreaming?: boolean;
     connectionStatus?: ConnectionStatus;
+    onDownload?: () => void;
 };
 
 const CONNECTION_STATUS_LABEL: Record<ConnectionStatus, string> = {
@@ -29,7 +31,7 @@ const CONNECTION_STATUS_LABEL: Record<ConnectionStatus, string> = {
     error: 'Connection error',
 };
 
-export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogViewerProps) => {
+export const LogViewer = ({ logs, isStreaming = false, connectionStatus, onDownload }: LogViewerProps) => {
     const [minLevel, setMinLevel] = useState<LogLevel>('INFO');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -86,6 +88,16 @@ export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogVi
                     <Text UNSAFE_className={classes.logCount}>
                         {filteredLogs.length} / {logs.length} entries
                     </Text>
+                    {onDownload !== undefined ? (
+                        <ActionButton
+                            isQuiet
+                            onPress={onDownload}
+                            aria-label={'Download logs'}
+                            isDisabled={logs.length === 0}
+                        >
+                            <DownloadIcon />
+                        </ActionButton>
+                    ) : null}
                 </Flex>
             </Flex>
 

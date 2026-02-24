@@ -120,4 +120,36 @@ describe('LogViewer', () => {
         const listItems = screen.getAllByRole('listitem');
         expect(listItems).toHaveLength(4);
     });
+
+    it('shows download button when onDownload is provided and calls it on press', async () => {
+        const logs = createMockLogs();
+        const onDownload = vi.fn();
+
+        render(<LogViewer logs={logs} onDownload={onDownload} />);
+
+        const downloadButton = screen.getByRole('button', { name: 'Download logs' });
+        expect(downloadButton).toBeInTheDocument();
+        expect(downloadButton).toBeEnabled();
+
+        await userEvent.click(downloadButton);
+
+        expect(onDownload).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not show download button when onDownload is not provided', () => {
+        const logs = createMockLogs();
+
+        render(<LogViewer logs={logs} />);
+
+        expect(screen.queryByRole('button', { name: 'Download logs' })).not.toBeInTheDocument();
+    });
+
+    it('disables download button when logs are empty', () => {
+        const onDownload = vi.fn();
+
+        render(<LogViewer logs={[]} onDownload={onDownload} />);
+
+        const downloadButton = screen.getByRole('button', { name: 'Download logs' });
+        expect(downloadButton).toBeDisabled();
+    });
 });
