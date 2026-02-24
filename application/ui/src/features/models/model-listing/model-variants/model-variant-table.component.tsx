@@ -4,12 +4,12 @@
 import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 
-import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
+import type { Model, ModelFormat } from '../../../../constants/shared-types';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
 import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
-    model: ExtendedModel;
+    model: Model;
     format: ModelFormat;
 }
 

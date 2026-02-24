@@ -6,7 +6,6 @@ import type { components } from '../api/openapi-spec';
 export type Label = components['schemas']['LabelView'];
 
 export type Model = components['schemas']['ModelView'];
-export type ExtendedModel = components['schemas']['ExtendedModelView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
 export type ModelFormat = components['schemas']['ModelFormat'];
