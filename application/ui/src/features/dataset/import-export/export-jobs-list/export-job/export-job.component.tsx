@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
-import { isNil } from 'lodash-es';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isNil, isString } from 'lodash-es';
 
+import { $api } from '../../../../../api/client';
 import { useExportStatus } from '../hooks/use-export-status.hook';
 import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../util';
 import { ExportActiveJob } from './export-active-job.component';
@@ -12,12 +14,25 @@ import { ExportFailedJob } from './export-failed-job/export-failed-job.component
 
 type ExportJobProps = {
     jobId: string;
+    datasetId: string | null;
 };
 
-export const ExportJob = ({ jobId }: ExportJobProps) => {
+export const ExportJob = ({ jobId, datasetId }: ExportJobProps) => {
+    const projectId = useProjectIdentifier();
     const { data: job } = useExportStatus(jobId);
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
+
+    const { data: datasetDetails } = $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}',
+        {
+            params: { path: { project_id: projectId, dataset_revision_id: datasetId } },
+        },
+        {
+            enabled: isString(datasetId),
+        }
+    );
 
     if (isNil(job)) {
         return null;
@@ -31,9 +46,9 @@ export const ExportJob = ({ jobId }: ExportJobProps) => {
             backgroundColor='gray-75'
             borderWidth='thin'
         >
-            {isJobDone(job) && <ExportCompletedJob job={job} />}
-            {isJobFailed(job) && <ExportFailedJob job={job} />}
-            {isRunningOrPending && <ExportActiveJob job={job} />}
+            {isJobDone(job) && <ExportCompletedJob job={job} datasetName={datasetDetails?.name} />}
+            {isJobFailed(job) && <ExportFailedJob job={job} datasetName={datasetDetails?.name} />}
+            {isRunningOrPending && <ExportActiveJob job={job} datasetName={datasetDetails?.name} />}
         </View>
     );
 };

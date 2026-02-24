@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Text, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { Pie, PieChart, Sector } from 'recharts';
-
-import { $api } from '../../../../../api/client';
 
 import classes from './dataset-statistics.module.scss';
 
@@ -14,22 +11,12 @@ const COLORS: Record<string, string> = {
     totalUnannotated: '#c55400',
 };
 
-export const DatasetStatistics = () => {
-    const projectId = useProjectIdentifier();
+type DatasetStatisticsProps = {
+    totalMediaItems: number;
+    totalAnnotatedItems: number;
+};
 
-    const { data: annotatedItems } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
-        params: {
-            path: { project_id: projectId },
-            query: { limit: 1, annotation_status: 'reviewed' },
-        },
-    });
-
-    const { data: mediaItems } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
-        params: { path: { project_id: projectId } },
-    });
-
-    const totalMediaItems = mediaItems?.pagination.total ?? 0;
-    const totalAnnotatedItems = annotatedItems?.pagination.total ?? 0;
+export const DatasetStatistics = ({ totalMediaItems, totalAnnotatedItems }: DatasetStatisticsProps) => {
     const totalUnannotatedItems = totalMediaItems - totalAnnotatedItems;
     const percentageAnnotated = totalMediaItems > 0 ? Math.round((totalAnnotatedItems / totalMediaItems) * 100) : 0;
     const percentageUnannotated = totalMediaItems > 0 ? Math.round((totalUnannotatedItems / totalMediaItems) * 100) : 0;

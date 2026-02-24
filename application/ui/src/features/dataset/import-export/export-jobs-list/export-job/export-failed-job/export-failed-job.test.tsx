@@ -56,7 +56,8 @@ describe('ExportFailedJob', () => {
         });
         renderApp(mockExportJob);
 
-        expect(screen.getByText('Export failed due to validation error')).toBeInTheDocument();
-        expect(screen.getByText('Dataset validation failed: missing required fields')).toBeInTheDocument();
+        expect(await screen.findByText('Export failed due to validation error')).toBeVisible();
+
+        expect(await screen.findByText('Error: Dataset validation failed: missing required fields')).toBeVisible();
     });
 });

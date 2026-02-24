@@ -5,14 +5,14 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { getMultipleMockedMedia } from 'mocks/mock-media';
+import { getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
 
-const mockedItems = getMultipleMockedMedia(20, '1');
-const mockedItems2 = getMultipleMockedMedia(20, '2');
-const mockedItems3 = getMultipleMockedMedia(20, '3');
+const mockedItems = getMultipleMockedMediaImage(20, '1');
+const mockedItems2 = getMultipleMockedMediaImage(20, '2');
+const mockedItems3 = getMultipleMockedMediaImage(20, '3');
 const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.length;
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));

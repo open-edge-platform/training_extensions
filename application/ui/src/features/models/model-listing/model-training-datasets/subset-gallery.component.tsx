@@ -60,7 +60,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                     <AnnotatorProviders
                         key={mediaItem.id}
                         mediaItem={mediaItem}
-                        initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
+                        initialAnnotationsDTO={getInitialAnnotations(isUserReviewed, annotationsDTO)}
                         initialPredictionsDTO={[]}
                         isUserReviewed={isUserReviewed}
                         mode={mode}
