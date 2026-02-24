@@ -121,12 +121,23 @@ class MediaRepository:
         stmt = self._base_select().where(MediaDB.video_id == video_id, MediaDB.frame_index == frame_index)
         return self.db.scalar(stmt)
 
-    def get_video_frames_by_video_id(
-        self, video_id: str, frame_index_from: int = 0, frame_index_to: int = 10
-    ) -> list[MediaDB]:
-        stmt = self._base_select().where(
-            MediaDB.video_id == video_id,
-            MediaDB.frame_index >= frame_index_from,
-            MediaDB.frame_index <= frame_index_to,
+    def list_annotated_video_frames_by_video_id(
+        self,
+        video_id: str,
+        frame_index_from: int = 0,
+        frame_index_to: int = 10,
+    ) -> list[tuple[DatasetItemDB, MediaDB]]:
+        stmt = (
+            select(DatasetItemDB, MediaDB)
+            .where(DatasetItemDB.project_id == self.project_id)
+            .join(MediaDB)
+            .order_by(MediaDB.frame_index.asc())
+            .where(
+                MediaDB.id == DatasetItemDB.id,
+                MediaDB.project_id == DatasetItemDB.project_id,
+                MediaDB.video_id == video_id,
+                MediaDB.frame_index >= frame_index_from,
+                MediaDB.frame_index <= frame_index_to,
+            )
         )
-        return list(self.db.scalars(stmt).all())
+        return [(dataset_item, media) for (dataset_item, media) in self.db.execute(stmt).all()]

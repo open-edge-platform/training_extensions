@@ -8,10 +8,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.openapi.models import Example
+from PIL.Image import Image
 from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
 from app.api.schemas.media import (
+    AnnotatedVideoFrame,
     MediaAnnotations,
     MediaView,
     MediaViewAdapter,
@@ -30,6 +32,9 @@ router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Med
 
 DEFAULT_MEDIA_NUMBER_RETURNED = 10
 MAX_MEDIA_NUMBER_RETURNED = 100
+
+DEFAULT_FRAME_INDEX_FROM = 0
+DEFAULT_FRAME_INDEX_TO = 50
 
 SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES = {
     "single_label": Example(
@@ -104,6 +109,16 @@ def _parse_media_format(extension: str) -> ImageFormat | VideoFormat:
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Unsupported media extension: {extension}",
             )
+
+
+def _write_image_to_response(image: Image, filename: str, cache_control: str | None = None) -> StreamingResponse:
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG")
+    buffer.seek(0)
+    headers = {"Content-Disposition": f"inline; filename={filename}"}
+    if cache_control:
+        headers["Cache-Control"] = cache_control
+    return StreamingResponse(buffer, media_type="image/jpeg", headers=headers)
 
 
 @router.post(
@@ -229,7 +244,46 @@ def get_media(
 
 
 @router.get(
+    "/{media_id}/frames",
+    responses={
+        status.HTTP_200_OK: {"description": "List of annotated video frames", "model": list[AnnotatedVideoFrame]},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or video not found"},
+    },
+)
+def list_video_frames(
+    project: Annotated[Project, Depends(get_project)],
+    media_id: MediaID,
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+    frame_index_from: Annotated[int, Query(ge=0)] = DEFAULT_FRAME_INDEX_FROM,
+    frame_index_to: Annotated[int, Query(ge=0)] = DEFAULT_FRAME_INDEX_TO,
+) -> list[AnnotatedVideoFrame]:
+    """Lists annotated video frames with frame index range"""
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    if media.type != MediaType.VIDEO:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Requested media is not video.")
+    annotated_video_frames = media_service.list_annotated_video_frames_by_video_id(
+        project=project,
+        video_id=media_id,
+        frame_index_from=frame_index_from,
+        frame_index_to=frame_index_to,
+    )
+    return [
+        AnnotatedVideoFrame(
+            media_id=video_frame.id,
+            frame_index=video_frame.frame_index,
+            dataset=MediaAnnotations(
+                annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
+                prediction_model_id=dataset_item.prediction_model_id,
+                user_reviewed=dataset_item.user_reviewed,
+            ),
+        )
+        for (dataset_item, video_frame) in annotated_video_frames
+    ]
+
+
+@router.get(
     "/{media_id}/binary",
+    response_model=None,
     responses={
         status.HTTP_200_OK: {"description": "Media binary found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or project ID"},
@@ -240,10 +294,27 @@ def get_media_binary(
     project: Annotated[Project, Depends(get_project)],
     media_id: MediaID,
     media_service: Annotated[MediaService, Depends(get_media_service)],
-) -> FileResponse:
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
+) -> FileResponse | StreamingResponse:
     """Get media binary content"""
-    binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media_id)
     media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    print(media)
+    if media.type == MediaType.VIDEO and frame_index is not None:
+        # Video frames can be identified by video ID and frame index
+        if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
+            )
+        video_frame = media_service.get_video_frame_by_video_id_and_index(
+            project=project, video_id=media_id, frame_index=frame_index
+        )
+        if video_frame is None:
+            frame_binary = media_service.get_frame_binary(project=project, video=media, frame_index=frame_index)
+            return _write_image_to_response(image=frame_binary, filename=f"{media.name}_frame_{frame_index}.jpeg")
+        media = video_frame
+
+    binary_path = media_service.get_media_binary_path_by_id(project_id=project.id, media_id=media.id)
     filename = f"{media.name}.{media.format.value.lower()}"
     return FileResponse(path=binary_path, filename=filename)
 
@@ -260,19 +331,28 @@ def get_media_thumbnail(
     project: Annotated[Project, Depends(get_project)],
     media_id: MediaID,
     media_service: Annotated[MediaService, Depends(get_media_service)],
+    frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
 ) -> StreamingResponse:
     """Get media thumbnail binary content"""
-    thumbnail = media_service.generate_media_thumbnail(project=project, media_id=media_id)
-    buffer = BytesIO()
-    thumbnail.save(buffer, format="JPEG")
-    buffer.seek(0)
-    return StreamingResponse(
-        buffer,
-        media_type="image/jpeg",
-        headers={
-            "Content-Disposition": f"inline; filename={media_id}.jpeg",
-            "Cache-Control": "public, max-age=31536000",
-        },
+    media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
+    if media.type == MediaType.VIDEO and frame_index is not None:
+        # Video frames can be identified by video ID and frame index
+        if frame_index >= media.frame_count:  # pyrefly: ignore[unsupported-operation]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Video frame index {frame_index} exceeds video frames count {media.frame_count}.",
+            )
+        video_frame = media_service.get_video_frame_by_video_id_and_index(
+            project=project, video_id=media_id, frame_index=frame_index
+        )
+        if video_frame is None:
+            frame_binary = media_service.get_frame_thumbnail(project=project, video=media, frame_index=frame_index)
+            return _write_image_to_response(image=frame_binary, filename=f"{media.name}_frame_{frame_index}_thumb.jpeg")
+        media = video_frame
+
+    thumbnail = media_service.generate_media_thumbnail(project=project, media=media)
+    return _write_image_to_response(
+        image=thumbnail, filename=f"{media_id}_thumb.jpeg", cache_control="public, max-age=31536000"
     )
 
 
@@ -331,9 +411,7 @@ def set_media_annotations(
                 project=project, video_id=media_id, frame_index=frame_index
             )
             if video_frame is None:
-                video_frame = media_service.extract_video_frame(
-                    project=project, video_id=media_id, frame_index=frame_index
-                )
+                video_frame = media_service.extract_video_frame(project=project, video=media, frame_index=frame_index)
                 dataset_service.create_dataset_item(
                     project=project,
                     media=video_frame,
