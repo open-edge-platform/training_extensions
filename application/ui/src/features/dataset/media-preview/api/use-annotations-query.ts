@@ -9,7 +9,7 @@ import { fetchClient } from '../../../../api/client';
 import type { AnnotationDTO, Media } from '../../../../constants/shared-types';
 import { getQueryKey } from '../../../../query-client/query-client';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
-import { isVideo } from '../../../../shared/media-item-utils';
+import { isVideo, isVideoFrame } from '../../../../shared/media-item-utils';
 
 const isUnannotatedError = (error: unknown): boolean => {
     return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
@@ -19,11 +19,12 @@ export const useAnnotationsQuery = (media: Media) => {
     const projectId = useProjectIdentifier();
 
     // TODO: Remove this part when we have new Media types and logic inside selected media item provider
-    const queryParams = isVideo(media)
-        ? {
-              frame_index: 0,
-          }
-        : {};
+    const queryParams =
+        isVideo(media) || isVideoFrame(media)
+            ? {
+                  frame_index: 0,
+              }
+            : undefined;
 
     return useQuery({
         queryKey: getQueryKey([

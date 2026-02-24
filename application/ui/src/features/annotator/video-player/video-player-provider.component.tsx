@@ -4,7 +4,6 @@
 import { createContext, ReactNode, RefObject, use, useMemo, useRef, useState } from 'react';
 
 import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
-import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
 type VideoPlayerContextProps = {
@@ -28,15 +27,15 @@ const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 type VideoPlayerProviderProps = {
     children: ReactNode;
     mediaItem: MediaVideo | undefined;
+    changeSelectedMediaItem: (media: MediaVideoFrame) => void;
 };
 
-export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProviderProps) => {
+export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
     // TODO: Update default to be media item frame index
     const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
-    const { setMediaItem } = useSelectedMediaItem();
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
         if (mediaItem === undefined) {
@@ -57,7 +56,7 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
         };
     }, [currentFrameIndex, mediaItem]);
 
-    const videoControls = useVideoControls(videoRef, playingVideoFrame, setMediaItem, setCurrentFrameIndex);
+    const videoControls = useVideoControls(videoRef, playingVideoFrame, changeSelectedMediaItem, setCurrentFrameIndex);
 
     const toggleMute = () => {
         setIsMuted((prevIsMuted) => {

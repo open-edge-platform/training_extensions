@@ -83,6 +83,7 @@ export const useVideoControls = (
         if (!isPlaying) {
             selectFrame(nextVideoFrameNumber);
         } else {
+            changeCurrentFrameIndex(nextVideoFrameNumber);
             videoRef.current.currentTime += 1;
         }
     };
@@ -95,6 +96,7 @@ export const useVideoControls = (
         if (!isPlaying) {
             selectFrame(previousVideoFrameNumber);
         } else {
+            changeCurrentFrameIndex(previousVideoFrameNumber);
             videoRef.current.currentTime -= 1;
         }
     };

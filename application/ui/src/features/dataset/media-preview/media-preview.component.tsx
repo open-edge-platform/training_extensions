@@ -11,7 +11,7 @@ import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
+import { MediaItemImageLoader, useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
@@ -55,6 +55,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const queryClient = useQueryClient();
     const { setMediaState } = useSelectedData();
+    const { setMediaItem } = useSelectedMediaItem();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -91,7 +92,10 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider mediaItem={isVideo(mediaItem) ? mediaItem : undefined}>
+                <VideoPlayerProvider
+                    mediaItem={isVideo(mediaItem) ? mediaItem : undefined}
+                    changeSelectedMediaItem={setMediaItem}
+                >
                     {mode === 'prediction' ? (
                         <ReadOnlyAnnotator
                             mediaItem={mediaItem}
