@@ -6,7 +6,7 @@ import { isEmpty } from 'lodash-es';
 import type { components } from '../api/openapi-spec';
 
 type Pipeline = components['schemas']['PipelineView'];
-export const useIsPipelineConfigured = (pipeline: Pipeline) => {
+export const useIsPipelineConfigured = (pipeline?: Pipeline) => {
     if (!pipeline) return false;
 
     const { model, source, sink } = pipeline;

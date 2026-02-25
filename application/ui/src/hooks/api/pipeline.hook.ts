@@ -15,6 +15,19 @@ export const usePipeline = () => {
     });
 };
 
+export const useProjectPipeline = (projectId: string) => {
+    return $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/pipeline',
+        {
+            params: { path: { project_id: projectId } },
+        },
+        {
+            retry: false,
+        }
+    );
+};
+
 const POLLING_INTERVAL = 5000;
 export const usePipelineMetrics = () => {
     const projectId = useProjectIdentifier();
