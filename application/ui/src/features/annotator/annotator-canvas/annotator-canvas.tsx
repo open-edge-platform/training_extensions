@@ -10,9 +10,9 @@ import { useAnnotationVisibility } from '../../../shared/annotator/annotation-vi
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
+import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
 import { useMediaItemImage } from '../selected-media-item-provider.component';
 import { ToolManager } from '../tools/tool-manager.component';
-import { useIsAnnotatorSceneBusy } from '../use-is-annotator-scene-busy';
 import { VideoFrame } from '../video-player/video-frame.component';
 
 import classes from './annotator-canvas.module.scss';
