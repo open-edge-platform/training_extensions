@@ -204,14 +204,15 @@ class DataCollector:
             annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
 
             media = media_service.create_image(
-                project=project,
+                project_id=project.id,
                 data=frame_data,
                 name=f"{timestamp:.4f}".replace(".", "_"),
                 format=ImageFormat.JPG,
                 source_id=pipeline.source_id,
             )
             dataset_service.create_dataset_item(
-                project=project,
+                project_id=project.id,
+                task=project.task,
                 media=media,
                 user_reviewed=False,
                 prediction_model_id=inference_data.model_id,

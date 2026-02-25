@@ -12,11 +12,16 @@ class LabelIndex:
 
     def __init__(self, labels: Sequence[Label]) -> None:
         self._id_to_index = {label.id: idx for idx, label in enumerate(labels)}
+        self._name_to_id = {label.name: label.id for label in labels}
         self._labels = labels
 
     def get_index(self, label_id: UUID) -> int | None:
         """Returns the index for a label ID, or None if not found."""
         return self._id_to_index.get(label_id)
+
+    def get_id_by_name(self, label_name: str) -> UUID | None:
+        """Returns the label ID for a label name, or None if not found."""
+        return self._name_to_id.get(label_name)
 
     def get_indices(self, label_ids: list[UUID]) -> list[int] | None:
         """Returns indices for multiple label IDs, or None if any not found."""

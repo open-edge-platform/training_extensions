@@ -9,10 +9,10 @@ from uuid import uuid4
 import pytest
 from datumaro.experimental import Dataset
 from datumaro.experimental.data_formats.base import DataFormat
+from datumaro.experimental.fields import Subset
 from loguru import logger
 
 from app.core.run import ExecutionContext
-from app.datumaro_converter.utils import SubsetConverter
 from app.execution import ExportDataset
 from app.models import (
     DatasetFormat,
@@ -82,9 +82,7 @@ class TestDatasetExporter:
             label_names=fxt_export_params.labels,
         )
         if subsets:
-            dataset.filter_by_subset.assert_called_once_with(
-                subset=[SubsetConverter.to_datumaro(subset) for subset in subsets]
-            )
+            dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])
 
     @pytest.mark.parametrize(
         "subsets", [[DatasetItemSubset.TESTING], [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], None]
@@ -109,9 +107,7 @@ class TestDatasetExporter:
             dataset_revision_id=fxt_export_params.dataset_id,
         )
         if subsets:
-            dataset.filter_by_subset.assert_called_once_with(
-                subset=[SubsetConverter.to_datumaro(subset) for subset in subsets]
-            )
+            dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])
 
     @pytest.mark.parametrize(
         "export_format, data_format",
@@ -157,21 +153,19 @@ class TestDatasetExporter:
                 dataset=dataset, output_path=str(target_dir / f"dataset-{DatasetFormat.GETI}.zip"), as_zip=True
             )
 
-    def test_run(self, fxt_export: ExportDataset, fxt_export_params: ExportDatasetJobParams):
+    def test_execute(self, fxt_export: ExportDataset, fxt_export_params: ExportDatasetJobParams):
         dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
-        execution_context = Mock(spec=ExecutionContext)
-        execution_context.payload = fxt_export_params.model_dump_json()
 
         with (
             patch.object(fxt_export, "prepare_dataset", return_value=(dataset_id, dataset)) as mock_prepare,
             patch.object(fxt_export, "export_dataset") as mock_export,
-            patch.object(fxt_export, "report_progress") as mock_report_progress,
+            patch.object(fxt_export, "update_metadata") as mock_update_metadata,
         ):
-            fxt_export.run(execution_context)
+            fxt_export.execute(fxt_export_params)
 
             mock_prepare.assert_called_once_with(fxt_export_params)
-            mock_report_progress.assert_called_once_with(metadata={"dataset_id": dataset_id})
+            mock_update_metadata.assert_called_once_with({"dataset_id": dataset_id})
             mock_export.assert_called_once_with(dataset_id, dataset, fxt_export_params.export_format)
 
     def test_run_empty_dataset(self, fxt_export: ExportDataset, fxt_export_params: ExportDatasetJobParams):

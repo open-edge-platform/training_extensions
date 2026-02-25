@@ -26,13 +26,13 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
             num_annotations = sum(item.annotations for item in dataset)
         elif hasattr(item, "labels") and item.labels is not None:
             annotation_type = AnnotationType.LABEL
-            num_annotations = len(item.labels)
+            num_annotations = sum(len(item.labels) for item in dataset)
         elif hasattr(item, "bboxes") and item.bboxes is not None:
             annotation_type = AnnotationType.BOUNDING_BOX
-            num_annotations = len(item.bboxes)
+            num_annotations = sum(len(item.bboxes) for item in dataset)
         elif hasattr(item, "polygons") and item.polygons is not None:
             annotation_type = AnnotationType.POLYGON
-            num_annotations = len(item.polygons)
+            num_annotations = sum(len(item.polygons) for item in dataset)
     return DatasetMetadata(
         num_items=len(dataset),
         annotation_type=annotation_type,

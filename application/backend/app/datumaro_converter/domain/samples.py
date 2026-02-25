@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import polars as pl
-from datumaro.experimental import Sample, register_sample
+from datumaro.experimental import LazyImage, Sample, register_sample
 from datumaro.experimental.fields import (
     ImageInfo,
     Subset,
@@ -33,11 +33,11 @@ class BaseSample(Sample):
         user_reviewed: Whether the sample is annotated (True) or unannotated (False)
     """
 
-    id: str = string_field(semantic="id")
-    image: str = image_path_field()
+    id: str | None = string_field(semantic="id")  # todo: make required for training
+    image: LazyImage = image_path_field()
     image_info: ImageInfo = image_info_field()
     subset: Subset = subset_field()
-    user_reviewed: bool = bool_field(semantic="user_reviewed")
+    user_reviewed: bool | None = bool_field(semantic="user_reviewed")  # todo: keep only for import/export
 
 
 @register_sample

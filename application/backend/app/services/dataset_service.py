@@ -76,31 +76,33 @@ class DatasetService(BaseSessionManagedService):
 
     def create_dataset_item(
         self,
-        project: Project,
+        project_id: UUID,
+        task: Task,
         media: Media,
         user_reviewed: bool,
         prediction_model_id: UUID | None = None,
         annotations: list[DatasetItemAnnotation] | None = None,
+        subset: DatasetItemSubset = DatasetItemSubset.UNASSIGNED,
     ) -> DatasetItem:
         """Creates a new dataset item"""
 
         dataset_item = DatasetItemDB(
             id=str(media.id),
-            project_id=str(project.id),
-            subset=DatasetItemSubset.UNASSIGNED,
+            project_id=str(project_id),
+            subset=subset,
             user_reviewed=user_reviewed,
             prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
         )
 
         if annotations is not None:
-            labels = self._label_service.list_all(project_id=project.id)
+            labels = self._label_service.list_all(project_id=project_id)
             DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
-            DatasetService._validate_annotations(annotations=annotations, task=project.task)
+            DatasetService._validate_annotations(annotations=annotations, task=task)
             DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
             dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
 
-        repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         db_dataset_item = repo.save(dataset_item)
         if annotations is not None:
             repo.set_labels(

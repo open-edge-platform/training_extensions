@@ -509,7 +509,8 @@ class TestDatasetServiceIntegration:
         media = MediaAdapter.validate_python(db_media, from_attributes=True)
 
         created_dataset_item = fxt_dataset_service.create_dataset_item(
-            project=project,
+            project_id=project.id,
+            task=project.task,
             media=media,
             user_reviewed=user_reviewed,
             prediction_model_id=pipeline.model_id if use_pipeline_model else None,

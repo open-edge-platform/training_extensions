@@ -11,7 +11,7 @@ from datumaro.experimental.export_import import export_dataset, import_dataset
 from datumaro.experimental.legacy import convert_from_legacy
 from loguru import logger
 
-from app.execution.base import Execution, ExecutionContext, step
+from app.execution.base import Execution, step
 from app.models import DatasetFormat
 from app.models.jobs import PrepareDatasetForImportJobParams
 
@@ -36,7 +36,39 @@ def _extract_archive(archive_path: Path) -> Path:
         raise ValueError(f"Failed to extract archive {archive_path}: {e}")
 
 
-class PrepareDataset(Execution):
+class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
+    """
+    Execution implementation for preparing dataset archives for import into Geti format.
+
+    This class handles the conversion of various dataset formats (COCO, YOLO, VOC, Datumaro V1)
+    into the Geti format. It extracts archived datasets, converts them to the standardized format,
+    and cleans up temporary files.
+
+    The execution follows these steps:
+    1. Validate and locate the dataset archive in the staged directory
+    2. Convert the dataset to Geti format based on the detected format
+    3. Clean up the original archive and extracted files
+
+    Supported formats:
+    - COCO: Images and annotations in COCO JSON format
+    - YOLO: YOLO format with root directory structure
+    - VOC: Pascal VOC format (not yet implemented)
+    - GETI: Native Geti format (pass-through)
+    - DATUMARO_V1: Legacy Datumaro v1 format
+
+    Attributes:
+        params_type: The parameter type for this execution (PrepareDatasetForImportJobParams).
+
+    Args:
+        staged_datasets_dir: Path to the directory containing staged dataset archives.
+
+    Raises:
+        ValueError: If the dataset archive is not found, cannot be extracted, or has an invalid format.
+        NotImplementedError: If attempting to import VOC format (not yet supported).
+    """
+
+    params_type = PrepareDatasetForImportJobParams
+
     def __init__(self, staged_datasets_dir: Path) -> None:
         super().__init__()
         self._staged_datasets_dir = staged_datasets_dir
@@ -95,9 +127,7 @@ class PrepareDataset(Execution):
             shutil.rmtree(archive_path.with_suffix(""))
         archive_path.unlink()
 
-    def run(self, ctx: ExecutionContext) -> None:
-        self._ctx = ctx
-        params = PrepareDatasetForImportJobParams.model_validate_json(ctx.payload)
+    def execute(self, params: PrepareDatasetForImportJobParams) -> None:
         archive_path = self.check_archive(params.staged_dataset_id)
         self.convert_archive(archive_path)
         self.cleanup(archive_path)

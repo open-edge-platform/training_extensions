@@ -6,7 +6,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from datumaro.experimental import Dataset, export_dataset
+from datumaro.experimental import Dataset, LazyImage, export_dataset
 from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 
@@ -34,7 +34,7 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
     dataset.append(
         ClassificationSample(
             id=str(uuid4()),
-            image=str(ds_dir / "images/image1.jpg"),
+            image=LazyImage(ds_dir / "images/image1.jpg"),
             image_info=ImageInfo(width=200, height=200),
             label=0,
             subset=Subset.TRAINING,
@@ -45,7 +45,7 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
     dataset.append(
         ClassificationSample(
             id=str(uuid4()),
-            image=str(ds_dir / "images/image2.jpg"),
+            image=LazyImage(ds_dir / "images/image2.jpg"),
             image_info=ImageInfo(width=200, height=200),
             label=1,
             subset=Subset.TRAINING,

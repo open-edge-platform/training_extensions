@@ -35,7 +35,6 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
-from app.core.run import ExecutionContext
 from app.execution.base import Execution, step
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -100,8 +99,10 @@ class ExportedModels:
     onnx_model_path: Path
 
 
-class OTXTrainer(Execution):
+class OTXTrainer(Execution[TrainingJobParams]):
     """OTX-specific trainer implementation."""
+
+    params_type = TrainingJobParams
 
     def __init__(
         self,
@@ -146,14 +147,14 @@ class OTXTrainer(Execution):
         """Assigning subsets to all unassigned dataset items in the project dataset."""
         with self._db_session_factory() as db:
             self._subset_service.set_db_session(db)
-            self.report_progress("Retrieving unassigned items")
+            self.update_message("Retrieving unassigned items")
             unassigned_items = self._subset_service.get_unassigned_items_with_labels(project_id)
 
             if not unassigned_items:
-                self.report_progress("No unassigned items found")
+                self.update_message("No unassigned items found")
                 return
 
-            self.report_progress(f"Found {len(unassigned_items)} unassigned items")
+            self.update_message(f"Found {len(unassigned_items)} unassigned items")
 
             # Get current distribution
             current_distribution = self._subset_service.get_subset_distribution(project_id)
@@ -167,14 +168,14 @@ class OTXTrainer(Execution):
             adjusted_ratios = current_distribution.compute_adjusted_ratios(target_ratios, len(unassigned_items))
             logger.info("Adjusted subset ratios for unassigned items: {}", adjusted_ratios)
 
-            self.report_progress("Computing optimal subset assignments")
+            self.update_message("Computing optimal subset assignments")
             assignments = self._subset_assigner.assign(unassigned_items, adjusted_ratios)
 
             # Persist assignments
-            self.report_progress("Persisting subset assignments")
+            self.update_message("Persisting subset assignments")
             self._subset_service.update_subset_assignments(project_id, assignments)
 
-        self.report_progress(f"Successfully assigned {len(assignments)} items to subsets")
+        self.update_message(f"Successfully assigned {len(assignments)} items to subsets")
 
     @step("Prepare Training Configuration")
     def prepare_training_configuration(
@@ -388,7 +389,7 @@ class OTXTrainer(Execution):
         parser.add_argument("--callbacks", type=list[Callback])
         parsed_callbacks_cfg = parser.parse_object({"callbacks": callbacks_cfg})
         callbacks_list = parser.instantiate_classes(parsed_callbacks_cfg).get("callbacks", [])
-        callbacks_list.append(TrainingProgressCallback(self.report_progress, min_p=10, max_p=80))
+        callbacks_list.append(TrainingProgressCallback(self.update_progress, min_p=10, max_p=80))
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
@@ -481,48 +482,44 @@ class OTXTrainer(Execution):
         shutil.rmtree(otx_work_dir)
         logger.info("Cleaned up OTX work directory at {}", otx_work_dir)
 
-    def run(self, ctx: ExecutionContext) -> None:
-        self._ctx = ctx
-        training_params = TrainingJobParams.model_validate_json(ctx.payload)
-        project_id = training_params.project_id
-        task = training_params.task
+    def execute(self, params: TrainingJobParams) -> None:
+        project_id = params.project_id
+        task = params.task
         model_dir = self.__base_model_path(
             data_dir=self._data_dir,
             project_id=project_id,
-            model_id=training_params.model_id,
+            model_id=params.model_id,
         )
 
-        weights_path = self.prepare_weights(training_params=training_params)
-        training_config, otx_training_config = self.prepare_training_configuration(
-            training_params=training_params, task=task
-        )
+        weights_path = self.prepare_weights(training_params=params)
+        training_config, otx_training_config = self.prepare_training_configuration(training_params=params, task=task)
         self.assign_subsets(training_config=training_config, project_id=project_id)
         dataset_info = self.prepare_training_dataset(
             project_id=project_id,
             task=task,
             training_config=otx_training_config,
-            dataset_revision_id=training_params.dataset_revision_id,
+            dataset_revision_id=params.dataset_revision_id,
         )
         self.prepare_model(
-            training_params=training_params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
+            training_params=params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
         )
         try:
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.IN_PROGRESS
+                project_id=project_id, model_id=params.model_id, status=TrainingStatus.IN_PROGRESS
             )
             trained_model_path, otx_engine = self.train_model(
                 training_config=otx_training_config,
                 dataset_info=dataset_info,
                 weights_path=weights_path,
-                model_id=training_params.model_id,
-                device=training_params.device,
-                has_parent_revision=training_params.parent_model_revision_id is not None,
+                model_id=params.model_id,
+                device=params.device,
+                has_parent_revision=params.parent_model_revision_id is not None,
             )
             self.evaluate_model(
                 otx_engine=otx_engine,
                 model_checkpoint_path=trained_model_path,
                 task=task,
-                model_revision_id=training_params.model_id,
+                model_revision_id=params.model_id,
                 dataset_revision_id=dataset_info.revision_id,
             )
             exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
@@ -533,11 +530,11 @@ class OTXTrainer(Execution):
                 exported_model_paths=exported_model_paths,
             )
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.SUCCESSFUL
+                project_id=project_id, model_id=params.model_id, status=TrainingStatus.SUCCESSFUL
             )
         except Exception:
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.FAILED
+                project_id=project_id, model_id=params.model_id, status=TrainingStatus.FAILED
             )
             raise
 
