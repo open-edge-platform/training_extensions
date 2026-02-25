@@ -274,7 +274,7 @@ def list_video_frames(
     frame_index_from: Annotated[int, Query(ge=0)] = DEFAULT_FRAME_INDEX_FROM,
     frame_index_to: Annotated[int, Query(ge=0)] = DEFAULT_FRAME_INDEX_TO,
 ) -> list[AnnotatedVideoFrame]:
-    """Lists annotated video frames with frame index range"""
+    """List annotated video frames with frame index range"""
     media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
     if media.type != MediaType.VIDEO:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Requested media is not video.")

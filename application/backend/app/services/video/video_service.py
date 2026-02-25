@@ -69,8 +69,7 @@ def extract_video_frame(
         read_success, frame = cap.read()
         if not read_success:
             raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
-        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return frame
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     except Exception as e:
         logger.error(f"Failed extracting video frame {frame_index} from video {video_path}", exc_info=e)
         raise RuntimeError("Error occurred while extracting video frame")
