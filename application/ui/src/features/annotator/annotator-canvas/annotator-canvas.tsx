@@ -52,9 +52,10 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
 
 type AnnotatorCanvasProps = {
     mediaItem: Media;
+    isReadOnly?: boolean;
 };
 
-export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
+export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanvasProps) => {
     const { annotations } = useAnnotationActions();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { isFocussed } = useAnnotationVisibility();
@@ -82,7 +83,7 @@ export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
                     isFocussed={isFocussed}
                     annotations={orderedAnnotations}
                 />
-                <ToolManager />
+                {!isReadOnly && <ToolManager />}
             </div>
         </ZoomTransform>
     );
