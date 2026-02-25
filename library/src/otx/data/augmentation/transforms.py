@@ -45,7 +45,7 @@ class Resize(tvt_v2.Transform):
         size: int | tuple[int, int],
         resize_targets: bool = True,
         keep_aspect_ratio: bool = False,
-        pad_value: int | tuple[int, int, int] = 0,
+        pad_value: int = 0,
         interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
         antialias: bool = True,
     ) -> None:
@@ -92,11 +92,14 @@ class Resize(tvt_v2.Transform):
 
     def forward(self, *inputs: OTXSample) -> OTXSample:  # type: ignore[override]
         """Resize image and optionally targets, with optional aspect ratio preservation."""
-        sample = inputs[0] if len(inputs) == 1 else inputs
+        if len(inputs) > 1:
+            msg = "Resize expects a single OTXSample input"
+            raise ValueError(msg)
+        sample: OTXSample = inputs[0]
 
         if not hasattr(sample, "image"):
             # Fallback: just resize the tensor directly
-            return F.resize(
+            return F.resize(  # type: ignore[return-value]
                 sample,
                 size=list(self.size),
                 interpolation=self.interpolation,
@@ -903,6 +906,7 @@ class CachedMixUp(tvt_v2.Transform):
 
     def _get_cached_index(self) -> int:
         """Get index of cached sample with non-empty bboxes."""
+        index = 0
         for _ in range(self.max_iters):
             index = int(torch.randint(0, len(self.results_cache), (1,)).item())
             if len(self.results_cache[index].bboxes) > 0:

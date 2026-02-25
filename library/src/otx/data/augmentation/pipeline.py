@@ -41,8 +41,7 @@ if TYPE_CHECKING:
 _original_transform_list = ops.MaskSequentialOps.transform_list
 
 
-@classmethod
-def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: ANN001, ANN202, A002
+def _fixed_transform_list(cls, input, module, param, extra_args=None):  # type: ignore[no-untyped-def]  # noqa: ANN001, ANN202, A002
     """Fixed version that slices transform_matrix for each list element."""
     if extra_args is None:
         extra_args = {}
@@ -60,10 +59,10 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: 
             tfm_input.append(tfm_inp)
         return tfm_input
     # Use original for non-geometric
-    return _original_transform_list.__func__(cls, input, module, param, extra_args)
+    return _original_transform_list.__func__(cls, input, module, param, extra_args)  # type: ignore[attr-defined]
 
 
-ops.MaskSequentialOps.transform_list = _fixed_transform_list
+ops.MaskSequentialOps.transform_list = classmethod(_fixed_transform_list)  # type: ignore[assignment]
 
 
 class _SampleImageAdapter(nn.Module):
@@ -181,7 +180,7 @@ class CPUAugmentationPipeline(nn.Module):
         return cls(augmentations)
 
     @classmethod
-    def _dispatch_transform(cls, cfg_transform: DictConfig | dict | tvt_v2.Transform) -> tvt_v2.Transform:
+    def _dispatch_transform(cls, cfg_transform: DictConfig | dict | nn.Module) -> nn.Module:
         """Dispatch and instantiate a transform from config or return as-is.
 
         Args:
@@ -191,14 +190,7 @@ class CPUAugmentationPipeline(nn.Module):
             Instantiated transform.
         """
         if isinstance(cfg_transform, (DictConfig, dict)):
-            return instantiate_class(args=(), init=cfg_transform)
-
-        if isinstance(cfg_transform, tvt_v2.Transform):
-            return cfg_transform
-
-        msg = (
-            "CPUAugmentationPipeline accepts only three types "
-            "for config.transforms: DictConfig | dict | tvt_v2.Transform. "
+            return instantiate_class(args=(), init=dict(cfg_transform))
             f"However, its type is {type(cfg_transform)}."
         )
         raise TypeError(msg)
@@ -320,12 +312,12 @@ class CPUAugmentationPipeline(nn.Module):
             return tuple(ret.round().int().tolist())
         return round(ret)
 
-    def _is_native_torchvision_transform(self, transform: tvt_v2.Transform) -> bool:
+    def _is_native_torchvision_transform(self, transform: nn.Module) -> bool:
         """Check if the transform is a native torchvision transform."""
         module = type(transform).__module__
         return module.startswith("torchvision.")
 
-    def _apply_native_transform(self, transform: tvt_v2.Transform, inputs: OTXSample) -> OTXSample:
+    def _apply_native_transform(self, transform: nn.Module, inputs: OTXSample) -> OTXSample:  # type: ignore[return-value]
         """Apply native torchvision transform only to image-related fields.
 
         TorchVision v2 expects standard field names like `boxes`/`labels`; we
@@ -510,14 +502,13 @@ class GPUAugmentationPipeline(nn.Module):
         self._debug_counter = 0
 
         # Build Kornia AugmentationSequential for efficient batch processing
+        self.aug_sequential: K.AugmentationSequential | None = None
         if self._augmentations_list:
             self.aug_sequential = K.AugmentationSequential(
                 *self._augmentations_list,
                 data_keys=self._data_keys,
                 same_on_batch=False,
             )
-        else:
-            self.aug_sequential = None
 
     @staticmethod
     def _extract_normalization_params(
@@ -549,19 +540,23 @@ class GPUAugmentationPipeline(nn.Module):
             if aug_mean is not None and aug_std is not None:
                 # Extract mean value
                 if hasattr(aug_mean, "tolist"):
-                    mean = tuple(aug_mean.tolist())
+                    _mean_list = aug_mean.tolist()
+                    mean = (_mean_list[0], _mean_list[1], _mean_list[2]) if len(_mean_list) >= 3 else (float(_mean_list[0]),) * 3
                 elif hasattr(aug_mean, "__iter__"):
-                    mean = tuple(aug_mean)
+                    _mean_list = list(aug_mean)
+                    mean = (_mean_list[0], _mean_list[1], _mean_list[2]) if len(_mean_list) >= 3 else (float(_mean_list[0]),) * 3
                 else:
-                    mean = (float(aug_mean),) * 3
+                    mean = (float(aug_mean), float(aug_mean), float(aug_mean))
 
                 # Extract std value
                 if hasattr(aug_std, "tolist"):
-                    std = tuple(aug_std.tolist())
+                    _std_list = aug_std.tolist()
+                    std = (_std_list[0], _std_list[1], _std_list[2]) if len(_std_list) >= 3 else (float(_std_list[0]),) * 3
                 elif hasattr(aug_std, "__iter__"):
-                    std = tuple(aug_std)
+                    _std_list = list(aug_std)
+                    std = (_std_list[0], _std_list[1], _std_list[2]) if len(_std_list) >= 3 else (float(_std_list[0]),) * 3
                 else:
-                    std = (float(aug_std),) * 3
+                    std = (float(aug_std), float(aug_std), float(aug_std))
 
                 # Stop after finding the first Normalize
                 break
@@ -657,13 +652,7 @@ class GPUAugmentationPipeline(nn.Module):
             Instantiated transform.
         """
         if isinstance(cfg_transform, (DictConfig, dict)):
-            return instantiate_class(args=(), init=cfg_transform)
-
-        if isinstance(cfg_transform, nn.Module):
-            return cfg_transform
-
-        msg = (
-            "GPUAugmentationPipeline accepts only three types: "
+            return instantiate_class(args=(), init=dict(cfg_transform))
             f"DictConfig | dict | nn.Module. However, its type is {type(cfg_transform)}."
         )
         raise TypeError(msg)
@@ -675,7 +664,7 @@ class GPUAugmentationPipeline(nn.Module):
         bboxes: list[torch.Tensor] | None = None,
         masks: list[torch.Tensor] | None = None,
         keypoints: list[torch.Tensor] | None = None,
-    ) -> dict[str, torch.Tensor | list[torch.Tensor] | None]:
+    ) -> dict[str, Any]:
         """Apply GPU augmentations to batched data using Kornia AugmentationSequential.
 
         Args:
@@ -760,7 +749,7 @@ class GPUAugmentationPipeline(nn.Module):
         if self._debug_dir is not None:
             self._debug_visualize(
                 "after_gpu",
-                output["images"],
+                typing.cast("torch.Tensor", output["images"]),
                 typing.cast("list[torch.Tensor] | None", output["bboxes"]),
                 typing.cast("list[torch.Tensor] | None", output["masks"]),
                 typing.cast("list[torch.Tensor] | None", output["keypoints"]),
@@ -797,8 +786,10 @@ class GPUAugmentationPipeline(nn.Module):
                 if mask.ndim == 3:
                     mask_bool = mask > 0
                     num_masks = mask_bool.shape[0]
-                    colors = [(int(c[0]), int(c[1]), int(c[2])) for c in torch.randint(0, 255, (num_masks, 3))]
-                    img = tv_utils.draw_segmentation_masks(img, mask_bool, colors=colors, alpha=0.35)
+                    colors_list: list[str | tuple[int, int, int]] = [
+                        (int(c[0]), int(c[1]), int(c[2])) for c in torch.randint(0, 255, (num_masks, 3))
+                    ]
+                    img = tv_utils.draw_segmentation_masks(img, mask_bool, colors=colors_list, alpha=0.35)
 
             if bboxes is not None and idx < len(bboxes):
                 boxes = bboxes[idx]

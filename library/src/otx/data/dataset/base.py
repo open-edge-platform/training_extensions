@@ -20,6 +20,7 @@ from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro import Dataset as DmDataset
+    from datumaro.experimental import Dataset as ExpDataset
 
 Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
@@ -144,13 +145,13 @@ class OTXDataset(TorchDataset):
 
     def __init__(
         self,
-        dm_subset: DmDataset,
+        dm_subset: DmDataset | ExpDataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
-        sample_type: type[OTXSample] = OTXSample,
+        sample_type: type = OTXSample,
         storage_dtype: str = "uint8",
     ) -> None:
         self.transforms = transforms
@@ -226,7 +227,7 @@ class OTXDataset(TorchDataset):
 
     def _get_item_impl(self, index: int) -> OTXSample | None:
         dm_item = self.dm_subset[index]
-        return self._apply_transforms(dm_item)
+        return self._apply_transforms(dm_item)  # type: ignore[arg-type]
 
     @property
     def collate_fn(self) -> Callable:

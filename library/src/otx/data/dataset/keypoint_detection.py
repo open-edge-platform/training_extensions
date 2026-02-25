@@ -62,7 +62,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
     ) -> None:
         sample_type = with_image_dtype(KeypointSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(
+        super().__init__(  # type: ignore[arg-type]
             dm_subset=dm_subset,
             sample_type=sample_type,
             transforms=transforms,
@@ -72,7 +72,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             data_format=data_format,
             storage_dtype=storage_dtype,
         )
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = dm_subset.schema.attributes["label"].categories.labels  # type: ignore[attr-defined]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[],
@@ -81,15 +81,15 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
     def _get_item_impl(self, index: int) -> KeypointSample | None:
         item = self.dm_subset[index]
-        keypoints = item.keypoints
+        keypoints = item.keypoints  # type: ignore[attr-defined]
         keypoints[:, 2] = torch.clamp(keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
-        item.keypoints = keypoints
+        item.keypoints = keypoints  # type: ignore[attr-defined]
         # Handle image conversion - to_image only permutes numpy arrays, not tensors
-        image = item.image
+        image = item.image  # type: ignore[attr-defined]
         if isinstance(image, torch.Tensor) and image.ndim == 3 and image.shape[-1] in (1, 3):
             # Image is in HWC format, convert to CHW
             image = image.permute(2, 0, 1)
-        item.image = to_dtype(to_image(image), torch.float32)
+        item.image = to_dtype(to_image(image), torch.float32)  # type: ignore[attr-defined]
         return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property

@@ -84,7 +84,7 @@ class GPUAugmentationCallback(Callback):
 
         This is called once when the trainer is setup.
         """
-        data_keys = ["input", *self._DATA_KEYS_BY_TASK.get(pl_module.task, [])]
+        data_keys = ["input", *self._DATA_KEYS_BY_TASK.get(pl_module.task, [])]  # type: ignore[arg-type]
         if self.train_config is not None:
             self._train_pipeline = GPUAugmentationPipeline.from_config(self.train_config, data_keys=data_keys)
             log.info(f"GPU train augmentation pipeline:\n{self._train_pipeline}")
@@ -109,21 +109,22 @@ class GPUAugmentationCallback(Callback):
         """
         # Since we use mean, std values for model export
         # We derive mean, std from test pipeline as priority
-        pipeline = self._test_pipeline or self._train_pipeline
+        pipeline = self._test_pipeline if self._test_pipeline is not None else self._train_pipeline
 
-        pipeline_mean = pipeline.mean if pipeline else None
-        pipeline_std = pipeline.std if pipeline else None
-        model_mean = getattr(pl_module.data_input_params, "mean", None)
-        model_std = getattr(pl_module.data_input_params, "std", None)
+        pipeline_mean = pipeline.mean if pipeline is not None else None
+        pipeline_std = pipeline.std if pipeline is not None else None
+        model_mean = getattr(pl_module.data_input_params, "mean", None)  # type: ignore[union-attr]
+        model_std = getattr(pl_module.data_input_params, "std", None)  # type: ignore[union-attr]
 
         # pipeline > model > default
-        pl_module.data_input_params.mean = pipeline_mean or model_mean or (0, 0, 0)
-        pl_module.data_input_params.std = pipeline_std or model_std or (1, 1, 1)
+        data_input_params = pl_module.data_input_params  # type: ignore[union-attr]
+        data_input_params.mean = pipeline_mean or model_mean or (0, 0, 0)  # type: ignore[union-attr]
+        data_input_params.std = pipeline_std or model_std or (1, 1, 1)  # type: ignore[union-attr]
 
         # log update
-        if any([model_mean != pl_module.data_input_params.mean, model_std != pl_module.data_input_params.std]):
-            log.info(f"Updated model mean: {model_mean} -> {pl_module.data_input_params.mean}")
-            log.info(f"Updated model std: {model_std} -> {pl_module.data_input_params.std}")
+        if any([model_mean != data_input_params.mean, model_std != data_input_params.std]):
+            log.info(f"Updated model mean: {model_mean} -> {data_input_params.mean}")
+            log.info(f"Updated model std: {model_std} -> {data_input_params.std}")
 
     def _apply_pipeline(
         self,

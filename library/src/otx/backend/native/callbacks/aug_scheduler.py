@@ -96,7 +96,7 @@ class DataAugSwitch:
                 augmentations_cpu=cpu_aug_configs,
                 batch_size=1,
                 subset_name=name,
-                input_size=self.input_size,
+                input_size=self.input_size,  # type: ignore[arg-type]
             )
             cpu_pipeline = CPUAugmentationPipeline.from_config(cpu_subset)
 
@@ -178,7 +178,7 @@ class DataAugSwitch:
             augmentations_gpu=gpu_configs,
             batch_size=1,
             subset_name=policy_name,
-            input_size=self.input_size,
+            input_size=self.input_size,  # type: ignore[arg-type]
         )
         pipeline = GPUAugmentationPipeline.from_config(gpu_subset, data_keys=data_keys)
         self._gpu_pipeline_cache[cache_key] = pipeline
@@ -212,7 +212,7 @@ class AugmentationSchedulerCallback(Callback):
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         self.device = pl_module.device
-        for callback in trainer.callbacks:
+        for callback in trainer.callbacks:  # type: ignore[union-attr]
             if isinstance(callback, GPUAugmentationCallback):
                 self._gpu_aug_callback = callback
                 break

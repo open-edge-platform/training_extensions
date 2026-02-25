@@ -129,9 +129,9 @@ class OTXDataModule(LightningDataModule):
             self.train_subset, "transforms", None
         )
         norm_params = self.extract_normalization_params(transforms_source)
-        if norm_params is None:
-            self.input_mean, self.input_std = None, (1.0, 1.0, 1.0)
-        else:
+        self.input_mean: tuple[float, float, float] | None = None
+        self.input_std: tuple[float, float, float] = (1.0, 1.0, 1.0)
+        if norm_params is not None:
             self.input_mean, self.input_std = norm_params
         self.input_size = input_size
 
@@ -244,8 +244,8 @@ class OTXDataModule(LightningDataModule):
 
             if isinstance(transform, Normalize):
                 # torchvision.transforms case
-                mean = transform.mean
-                std = transform.std
+                mean = tuple(transform.mean) if transform.mean is not None else None  # type: ignore[assignment]
+                std = tuple(transform.std) if transform.std is not None else None  # type: ignore[assignment]
                 break
 
         if mean is None or std is None:
@@ -367,9 +367,9 @@ class OTXDataModule(LightningDataModule):
             if subset is not None:
                 # Use provided subset config
                 subset_to_assign = subset
-                if subset.transforms:
+                if getattr(subset, "augmentations_cpu", None):
                     logger.warning(
-                        f"The provided {name} SubsetConfig contains transforms which will be overridden "
+                        f"The provided {name} SubsetConfig contains augmentations_cpu which will be overridden "
                         "by the transforms of the provided OTXDataset. When building OTXDataModule from "
                         "pre-constructed datasets, developers should set up the transforms when creating the datasets.",
                     )
@@ -379,16 +379,18 @@ class OTXDataModule(LightningDataModule):
                     default_subset_configs = instance.get_default_subset_configs(instance.input_size)
                 subset_to_assign = default_subset_configs[f"{name}_subset"]
 
-            # Override transforms with the ones from the pre-constructed dataset
-            subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
+            # The pre-constructed datasets already have their transforms configured.
+            # No need to override - just set the subset config.
 
             # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
 
         # Extract normalization parameters from train dataset transforms if available
-        instance.input_mean, instance.input_std = instance.extract_normalization_params(
+        _norm = instance.extract_normalization_params(
             getattr(instance.train_subset, "transforms", None)
-        ) or (None, (1.0, 1.0, 1.0))
+        )
+        instance.input_mean: tuple[float, float, float] | None = _norm[0] if _norm else None  # type: ignore[no-redef]
+        instance.input_std: tuple[float, float, float] = _norm[1] if _norm else (1.0, 1.0, 1.0)  # type: ignore[no-redef]
 
         # Save hyperparameters
         instance.save_hyperparameters(
@@ -455,7 +457,8 @@ class OTXDataModule(LightningDataModule):
                 msg = "input size is not specified in both the config file and the DataModule constructor."
                 raise ValueError(msg)
             subset_config_dict = SubsetConfig(**subset_config_dict)
-            subset_config_dict.augmentations_cpu = CPUAugmentationPipeline.from_config(subset_config_dict)
+            cpu_pipeline = CPUAugmentationPipeline.from_config(subset_config_dict)
+            subset_config_dict._cpu_pipeline = cpu_pipeline  # type: ignore[attr-defined]
             subset_dicts[subset_key] = subset_config_dict
         return subset_dicts
 

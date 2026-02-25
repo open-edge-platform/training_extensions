@@ -117,14 +117,14 @@ def with_image_dtype(
     )
 
     # Register with pytree so torchvision v2 transforms work
-    register_pytree_node(new_cls)
+    register_pytree_node(new_cls)  # type: ignore[arg-type]
 
-    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls
-    return new_cls
+    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls  # type: ignore[assignment]
+    return new_cls  # type: ignore[return-value]
 
 
 #: Cache for dynamically created sample classes to avoid re-creation
-_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}
+_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}  # type: ignore[type-arg]
 
 
 def register_pytree_node(cls: type[Sample]) -> type[Sample]:
@@ -358,10 +358,10 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
     images = torch.stack([sample.image for sample in samples])
 
     # Collect optional fields - use getattr to handle samples without these attributes
-    labels = [sample.label for sample in samples] if hasattr(samples[0], "label") else None
-    bboxes = [sample.bboxes for sample in samples] if hasattr(samples[0], "bboxes") else None
-    keypoints = [sample.keypoints for sample in samples] if hasattr(samples[0], "keypoints") else None
-    masks = [sample.masks for sample in samples] if hasattr(samples[0], "masks") else None
+    labels = [getattr(s, "label", None) for s in samples] if hasattr(samples[0], "label") else None
+    bboxes = [getattr(s, "bboxes", None) for s in samples] if hasattr(samples[0], "bboxes") else None
+    keypoints = [getattr(s, "keypoints", None) for s in samples] if hasattr(samples[0], "keypoints") else None
+    masks = [getattr(s, "masks", None) for s in samples] if hasattr(samples[0], "masks") else None
 
     return OTXSampleBatch(
         images=images,
