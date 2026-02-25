@@ -143,7 +143,7 @@ class TestMediaEndpoints:
             project=fxt_get_project,
             data=ANY,
             name="test_file",
-            format=image_format,
+            format=ImageFormat(image_format),
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_get_project,
