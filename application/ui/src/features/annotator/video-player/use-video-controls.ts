@@ -3,7 +3,7 @@
 
 import { RefObject, useState } from 'react';
 
-import type { MediaVideo } from '../../../constants/shared-types';
+import type { MediaVideoFrame } from '../../../constants/shared-types';
 
 export type VideoControls = {
     canSelectPreviousFrame: boolean;
@@ -19,9 +19,32 @@ export type VideoControls = {
 
 export const useVideoControls = (
     videoRef: RefObject<HTMLVideoElement | null>,
-    mediaItem: MediaVideo | undefined
+    videoFrame: MediaVideoFrame | undefined,
+    selectVideoFrame: (media: MediaVideoFrame) => void,
+    changeCurrentFrameIndex: (index: number) => void
 ): VideoControls => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+    const totalFrames = videoFrame?.frame_count ?? 1;
+    const step = videoFrame?.frame_stride ?? 1;
+    const currentFrameNumber = videoFrame?.frame_number ?? 0;
+
+    const round = (x: number) => Math.round(x / step) * step;
+    const previousVideoFrameNumber = round(currentFrameNumber - step);
+    const canSelectPreviousFrame = previousVideoFrameNumber >= 0;
+
+    const nextVideoFrameNumber = round(currentFrameNumber + step);
+    const canSelectNextFrame = nextVideoFrameNumber < totalFrames;
+
+    const selectFrame = (frameNumber: number) => {
+        if (videoRef.current === null || videoFrame === undefined) {
+            return;
+        }
+        selectVideoFrame({ ...videoFrame, frame_number: frameNumber });
+        changeCurrentFrameIndex(frameNumber);
+
+        videoRef.current.currentTime = (frameNumber + 1) / videoFrame.fps;
+    };
 
     const play = async () => {
         if (videoRef.current === null) {
@@ -39,28 +62,30 @@ export const useVideoControls = (
     };
 
     const pause = () => {
-        if (videoRef.current === null) {
+        if (videoRef.current === null || videoFrame === undefined) {
             return;
         }
+
         setIsPlaying(false);
         videoRef.current.pause();
+
+        const maxNearestFrame = Math.floor((videoFrame.frame_count - 1) / step) * step;
+        const nearestFrame = Math.min(maxNearestFrame, Math.round(currentFrameNumber / step) * step);
+
+        goto(nearestFrame);
     };
-
-    const frames = mediaItem?.frame_count ?? 1;
-    const fps = mediaItem?.fps || 1;
-    const step = 1 / fps;
-    const currentTime = videoRef.current?.currentTime ?? 0;
-
-    // TODO: These will change once API for video frames is supported
-    const canSelectPreviousFrame = currentTime - step >= 0;
-    const canSelectNextFrame = currentTime + step <= frames / fps;
 
     const nextFrame = () => {
         if (!canSelectNextFrame || videoRef.current === null) {
             return;
         }
 
-        videoRef.current.currentTime = videoRef.current.currentTime + step;
+        if (!isPlaying) {
+            selectFrame(nextVideoFrameNumber);
+        } else {
+            changeCurrentFrameIndex(nextVideoFrameNumber);
+            videoRef.current.currentTime += 1;
+        }
     };
 
     const previousFrame = () => {
@@ -68,11 +93,32 @@ export const useVideoControls = (
             return;
         }
 
-        videoRef.current.currentTime = videoRef.current.currentTime - step;
+        if (!isPlaying) {
+            selectFrame(previousVideoFrameNumber);
+        } else {
+            changeCurrentFrameIndex(previousVideoFrameNumber);
+            videoRef.current.currentTime -= 1;
+        }
     };
 
-    const goto = (_frameNumber: number) => {
-        //
+    const goto = (frameNumber: number) => {
+        if (videoRef.current === null || videoFrame === undefined) {
+            return;
+        }
+
+        if (frameNumber >= totalFrames || frameNumber < 0) {
+            return;
+        }
+
+        if (isPlaying) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+        }
+
+        videoRef.current.currentTime = (frameNumber + 1) / videoFrame.fps;
+        const nearest = Math.min(Math.round(frameNumber / step) * step, totalFrames - 1);
+
+        selectFrame(nearest);
     };
 
     return {

@@ -28,7 +28,7 @@ type ImportDropZoneProps = {
 };
 
 export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
-    const { addLsPreparingImportId } = usePrepareImportDataset();
+    const { addLsPreparingImport } = usePrepareImportDataset();
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
     const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
 
@@ -70,7 +70,7 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
             },
         });
 
-        addLsPreparingImportId(prepareImportJob.job_id, file.name);
+        addLsPreparingImport(prepareImportJob.job_id, file.name, file.size);
         onNextStep('preparing');
     };
 

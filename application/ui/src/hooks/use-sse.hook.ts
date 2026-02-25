@@ -25,6 +25,8 @@ export const useSSE = <T>(url: string | undefined, options: SSEOptions<T>): SSEC
             onError: (error) => optionsRef.current.onError?.(error),
             onOpen: () => optionsRef.current.onOpen?.(),
             onClose: () => optionsRef.current.onClose?.(),
+            onRetry: () => optionsRef.current.onRetry?.(),
+            retry: optionsRef.current.retry,
         });
 
         connectionRef.current = connection;

@@ -4,28 +4,25 @@
 import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
-import { $api } from '../../../../../../api/client';
-import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
-import { isInvalidJob } from '../../util';
+import { $api } from '../../../../api/client';
+import { isInvalidJob } from '../util';
 
 type CancelJobConfirmationProps = {
     jobId: string;
+    onRemove: () => void;
 };
 
-export const CancelJobConfirmation = ({ jobId }: CancelJobConfirmationProps) => {
+export const CancelJobConfirmation = ({ jobId, onRemove }: CancelJobConfirmationProps) => {
     const dialogState = useOverlayTriggerState({});
-    const { removeLsExportId } = useExportDataset();
     const cancelMutation = $api.useMutation('post', `/api/jobs/{job_id}:cancel`);
 
     const handleCancel = () => {
         cancelMutation.mutate(
             { params: { path: { job_id: jobId } } },
             {
-                onSuccess: () => {
-                    removeLsExportId(jobId);
-                },
+                onSuccess: () => onRemove(),
                 onError: (error) => {
-                    isInvalidJob(error) && removeLsExportId(jobId);
+                    isInvalidJob(error) && onRemove();
                 },
                 onSettled: () => {
                     dialogState.close();
