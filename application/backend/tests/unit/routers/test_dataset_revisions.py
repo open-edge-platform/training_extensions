@@ -3,6 +3,7 @@
 import os
 import tempfile
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -376,7 +377,7 @@ class TestDatasetRevisionItemEndpoints:
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
             tmp_file.write(b"test image data")
             tmp_file.flush()
-            tmp_file_path = tmp_file.name
+            tmp_file_path = Path(tmp_file.name)
 
         try:
             fxt_dataset_revision_service.get_dataset_revision_item.return_value = MagicMock(image_path=tmp_file_path)

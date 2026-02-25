@@ -226,26 +226,9 @@ class MediaService(BaseSessionManagedService):
         media = self.get_media_by_id(project_id=project_id, media_id=media_id)
         return self.get_media_binary_path(project_id=project_id, media=media)
 
-    def get_media_thumbnail_path_by_id(self, project: Project, media_id: UUID) -> Path:
-        """Get a media thumbnail binary content by its ID"""
-        media = self.get_media_by_id(project_id=project.id, media_id=media_id)
+    def get_media_thumbnail_path(self, project: Project, media: MediaDB | Media) -> Path:
+        """Get a media thumbnail binary content"""
         return self.projects_dir / f"{project.id}/dataset/{media.id}-thumb.jpg"
-
-    def generate_media_thumbnail(self, project: Project, media: Media) -> Image.Image:
-        """Regenerate a media thumbnail by its ID"""
-        binary_path = self.get_media_binary_path(project_id=project.id, media=media)
-
-        if media.type == MediaType.VIDEO:
-            video_frame = MediaService._get_frame_binary_from_video_file(
-                video_path=binary_path, frame_index=media.frame_count // 2
-            )
-            return MediaService._crop_image_to_thumbnail(video_frame)
-        try:
-            with Image.open(binary_path) as image:
-                return MediaService._crop_image_to_thumbnail(image)
-        except UnidentifiedImageError:
-            logger.error("Failed to open image {} for thumbnail generation", binary_path)
-            raise InvalidImageError("Failed to open image for thumbnail generation.")
 
     @staticmethod
     def _crop_image_to_thumbnail(image: Image.Image) -> Image.Image:
@@ -267,7 +250,7 @@ class MediaService(BaseSessionManagedService):
             os.remove(binary_path)
         except FileNotFoundError:
             logger.warning("Media {} binary was not found during deletion", media_id)
-        thumbnail_path = self.get_media_thumbnail_path_by_id(project=project, media_id=media.id)
+        thumbnail_path = self.get_media_thumbnail_path(project=project, media=media)
         try:
             os.remove(thumbnail_path)
         except FileNotFoundError:

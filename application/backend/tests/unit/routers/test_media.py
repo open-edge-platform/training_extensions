@@ -1,7 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
-from pathlib import Path
 import tempfile
 from datetime import datetime
 from io import BytesIO
@@ -10,9 +9,9 @@ from unittest.mock import ANY, MagicMock, PropertyMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from PIL import Image as PILImage
 import pytest
 from fastapi import status
+from PIL import Image as PILImage
 
 from app.api.dependencies import get_dataset_service, get_media_service
 from app.api.schemas.media import ImageView, MediaViewAdapter, SetMediaAnnotations, VideoFrameView, VideoView
@@ -388,7 +387,7 @@ class TestMediaEndpoints:
                 "get",
                 f"/api/projects/{uuid4()}/dataset/media/invalid-id/thumbnail",
                 "fxt_media_service",
-                "generate_media_thumbnail",
+                "get_media_thumbnail_path",
             ),
             ("delete", f"/api/projects/{uuid4()}/dataset/media/invalid-id", "fxt_media_service", "delete_media"),
             (
@@ -602,27 +601,28 @@ class TestMediaEndpoints:
 
     def test_get_media_thumbnail_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()
-        fxt_media_service.get_media_thumbnail_path_by_id.side_effect = ResourceNotFoundError(
-            ResourceType.MEDIA, str(media_id)
-        )
+        fxt_media_service.get_media_by_id.side_effect = ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/thumbnail")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_media_service.get_media_thumbnail_path_by_id.assert_called_once_with(
-            project=fxt_get_project, media_id=media_id
-        )
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
 
     @pytest.mark.parametrize(
-        "spec, media_type, format, suffix",
+        "media, suffix, mime_type",
         [
-            (Image, MediaType.IMAGE, ImageFormat.JPG, ".jpg"),
-            (Video, MediaType.VIDEO, VideoFormat.MP4, ".mp4"),
-            (VideoFrame, MediaType.VIDEO_FRAME, ImageFormat.JPG, ".jpg"),
+            (MagicMock(spec=Image, id=uuid4(), format=ImageFormat.JPG, type=MediaType.IMAGE), ".jpg", "image/jpeg"),
+            (MagicMock(spec=Video, id=uuid4(), format=VideoFormat.MP4, type=MediaType.VIDEO), ".mp4", "video/mp4"),
+            (
+                MagicMock(spec=VideoFrame, id=uuid4(), format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME),
+                ".jpg",
+                "image/jpeg",
+            ),
         ],
     )
-    def test_get_media_thumbnail_success(self, fxt_get_project, fxt_media_service, fxt_client, spec, media_type, format, suffix):
-        media = MagicMock(spec=spec, id=uuid4(), format=format, type=media_type)
+    def test_get_media_thumbnail_success(
+        self, fxt_get_project, fxt_media_service, fxt_client, media, suffix, mime_type
+    ):
         # Create a temporary JPEG file to act as the thumbnail
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
             thumbnail_path = Path(tmp_file.name)
@@ -630,52 +630,58 @@ class TestMediaEndpoints:
             img.save(tmp_file, format="JPEG")
 
         try:
-            fxt_media_service.get_media_thumbnail_path_by_id.return_value = thumbnail_path
+            fxt_media_service.get_media_by_id.return_value = media
+            fxt_media_service.get_media_thumbnail_path.return_value = thumbnail_path
 
             response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/media/{str(media.id)}/thumbnail")
 
             assert response.status_code == status.HTTP_200_OK
-            assert response.headers["content-type"] == "image/jpeg"
+            assert response.headers["content-type"] == mime_type
             with open(thumbnail_path, "rb") as f:
                 assert response.content == f.read()
-            fxt_media_service.get_media_thumbnail_path_by_id.assert_called_once_with(
-                project=fxt_get_project, media_id=media.id
-            )
+            fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
+            fxt_media_service.get_media_thumbnail_path.assert_called_once_with(project=fxt_get_project, media=media)
         finally:
             if thumbnail_path.exists():
                 os.unlink(thumbnail_path)
 
     def test_get_video_frame_thumbnail_on_the_fly_annotated(self, fxt_get_project, fxt_media_service, fxt_client):
-        from PIL import Image
+        # Create a temporary JPEG file to act as the thumbnail
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+            thumbnail_path = Path(tmp_file.name)
+            img = PILImage.new("RGB", (64, 64), color="red")
+            img.save(tmp_file, format="JPEG")
 
-        video_id = uuid4()
-        video_frame_id = uuid4()
+        try:
+            video_id = uuid4()
+            video_frame_id = uuid4()
 
-        media = MagicMock(spec=Video, id=video_id, format=VideoFormat.MP4, type=MediaType.VIDEO, frame_count=100)
-        fxt_media_service.get_media_by_id.return_value = media
+            media = MagicMock(spec=Video, id=video_id, format=VideoFormat.MP4, type=MediaType.VIDEO, frame_count=100)
+            fxt_media_service.get_media_by_id.return_value = media
 
-        video_frame = MagicMock(spec=VideoFrame, id=video_frame_id, format=ImageFormat.JPG)
-        type(video_frame).name = PropertyMock(return_value="test_10")
-        fxt_media_service.get_video_frame_by_video_id_and_index.return_value = video_frame
+            fxt_media_service.get_media_thumbnail_path.return_value = thumbnail_path
 
-        # Create a test PIL Image to return from the mock
-        test_image = Image.new("RGB", (64, 64), color="blue")
-        fxt_media_service.generate_media_thumbnail.return_value = test_image
+            video_frame = MagicMock(spec=VideoFrame, id=video_frame_id, format=ImageFormat.JPG)
+            type(video_frame).name = PropertyMock(return_value="test_10")
+            fxt_media_service.get_video_frame_by_video_id_and_index.return_value = video_frame
 
-        response = fxt_client.get(
-            f"/api/projects/{str(uuid4())}/dataset/media/{str(video_id)}/thumbnail?frame_index=10"
-        )
-        assert response.status_code == status.HTTP_200_OK
+            response = fxt_client.get(
+                f"/api/projects/{str(uuid4())}/dataset/media/{str(video_id)}/thumbnail?frame_index=10"
+            )
+            assert response.status_code == status.HTTP_200_OK
 
-        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=video_id)
-        fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
-            project=fxt_get_project, video_id=video_id, frame_index=10
-        )
-        fxt_media_service.generate_media_thumbnail.assert_called_once_with(project=fxt_get_project, media=video_frame)
+            fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=video_id)
+            fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
+                project=fxt_get_project, video_id=video_id, frame_index=10
+            )
+            fxt_media_service.get_media_thumbnail_path.assert_called_once_with(
+                project=fxt_get_project, media=video_frame
+            )
+        finally:
+            if thumbnail_path.exists():
+                os.unlink(thumbnail_path)
 
     def test_get_video_frame_thumbnail_on_the_fly_not_annotated(self, fxt_get_project, fxt_media_service, fxt_client):
-        from PIL import Image
-
         video_id = uuid4()
 
         media = MagicMock(spec=Video, id=video_id, format=VideoFormat.MP4, type=MediaType.VIDEO, frame_count=100)
@@ -683,7 +689,7 @@ class TestMediaEndpoints:
         fxt_media_service.get_media_by_id.return_value = media
 
         fxt_media_service.get_video_frame_by_video_id_and_index.return_value = None
-        test_image = Image.new("RGB", (64, 64), color="blue")
+        test_image = PILImage.new("RGB", (64, 64), color="blue")
         fxt_media_service.get_frame_thumbnail.return_value = test_image
 
         response = fxt_client.get(
@@ -698,7 +704,6 @@ class TestMediaEndpoints:
         fxt_media_service.get_frame_thumbnail.assert_called_once_with(
             project=fxt_get_project, video=media, frame_index=10
         )
-        fxt_media_service.generate_media_thumbnail.assert_not_called()
 
     def test_get_video_frame_thumbnail_on_the_fly_index_exceeds(self, fxt_get_project, fxt_media_service, fxt_client):
         video_id = uuid4()
@@ -715,8 +720,6 @@ class TestMediaEndpoints:
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=video_id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_not_called()
         fxt_media_service.get_frame_thumbnail.assert_not_called()
-        fxt_media_service.generate_media_thumbnail.assert_not_called()
-
 
     def test_delete_media_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()

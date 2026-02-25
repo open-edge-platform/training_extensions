@@ -16,7 +16,7 @@ from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Image, Pipeline, Project, Video, VideoFrame
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project, Video
 from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
@@ -810,7 +810,7 @@ class TestMediaServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    def test_get_media_thumbnail_path_by_id(
+    def test_get_media_thumbnail_path(
         self,
         tmp_path: Path,
         fxt_media_service: MediaService,
@@ -819,100 +819,9 @@ class TestMediaServiceIntegration:
         """Test retrieving a media thumbnail path by ID."""
         project, db_media_list = fxt_project_with_media
 
-        media_binary_path = fxt_media_service.get_media_thumbnail_path_by_id(
-            project=project, media_id=UUID(db_media_list[0].id)
-        )
+        media_binary_path = fxt_media_service.get_media_thumbnail_path(project=project, media=db_media_list[0])
 
         assert media_binary_path == tmp_path / f"projects/{str(project.id)}/dataset/{db_media_list[0].id}-thumb.jpg"
-
-    def test_get_media_thumbnail_path_by_id_not_found(
-        self,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test retrieving a non-existent media thumbnail path raises error."""
-        project, db_media_list = fxt_project_with_media
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_media_service.get_media_thumbnail_path_by_id(project=project, media_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.MEDIA
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_generate_image_thumbnail(
-        self,
-        tmp_path: Path,
-        fxt_projects_dir: Path,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test generating an image thumbnail returns a PIL Image."""
-        project, db_media_list = fxt_project_with_media
-        media = Image.model_validate(db_media_list[0], from_attributes=True)
-
-        # Create the dataset directory and a test image file
-        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-        image_path = dataset_dir / f"{media.id}.{media.format}"
-        test_image = PILImage.new("RGB", (1024, 768), color="red")
-        test_image.save(image_path)
-
-        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media=media)
-
-        assert isinstance(thumbnail, PILImage.Image)
-        assert thumbnail.width == 256
-        assert thumbnail.height == 256
-
-    def test_generate_video_frame_thumbnail(
-        self,
-        tmp_path: Path,
-        fxt_projects_dir: Path,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test generating an image thumbnail returns a PIL Image."""
-        project, db_media_list = fxt_project_with_media
-        media = VideoFrame.model_validate(db_media_list[4], from_attributes=True)
-
-        # Create the dataset directory and a test image file
-        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-        image_path = dataset_dir / f"{media.id}.{media.format}"
-        test_image = PILImage.new("RGB", (1024, 768), color="red")
-        test_image.save(image_path)
-
-        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media=media)
-
-        assert isinstance(thumbnail, PILImage.Image)
-        assert thumbnail.width == 256
-        assert thumbnail.height == 256
-
-    def test_generate_video_thumbnail(
-        self,
-        tmp_path: Path,
-        fxt_video_data: Callable[[Path], None],
-        fxt_projects_dir: Path,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test generating a video thumbnail returns a PIL Image."""
-        project, db_media_list = fxt_project_with_media
-        media = Video.model_validate(db_media_list[3], from_attributes=True)
-
-        # Create the dataset directory and a test video file
-        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-        video_path = dataset_dir / f"{media.id}.{media.format}"
-
-        # Generate video
-        fxt_video_data(video_path)
-
-        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media=media)
-
-        assert isinstance(thumbnail, PILImage.Image)
-        assert thumbnail.width == 256
-        assert thumbnail.height == 256
 
     def test_delete_media(
         self,
