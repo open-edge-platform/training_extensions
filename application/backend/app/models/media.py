@@ -1,9 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from enum import StrEnum
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import computed_field
+from pydantic import Field, TypeAdapter, computed_field
 
 from .base import BaseEntity
 
@@ -37,9 +38,9 @@ class MediaType(StrEnum):
     VIDEO_FRAME = "video_frame"
 
 
-class Media(BaseEntity):
+class BaseMedia(BaseEntity):
     """
-    Media represents an uploaded or fetched media within a dataset.
+    Media represents an uploaded or fetched media within a dataset, it can be one of Image, Video or VideoFrame.
 
     Attributes:
         id: Unique identifier for the media.
@@ -50,31 +51,53 @@ class Media(BaseEntity):
         width: Width of the media in pixels.
         height: Height of the media in pixels.
         size: Size of the media in bytes.
-        fps: Video fps (applicable only for video media).
-        frame_count: Total number of frames (applicable only for video media).
         source_id: Identifier of the source from which the media was acquired, if applicable.
     """
 
     id: UUID
-    type: MediaType
     project_id: UUID
     name: str
     format: MediaFormat
     width: int
     height: int
     size: int
-    fps: float | None
-    frame_count: int | None
     source_id: UUID | None
+
+
+class Image(BaseMedia):
+    type: Literal[MediaType.IMAGE]
+
+
+class VideoFrame(BaseMedia):
+    """
+    Attributes:
+        video_id: Video identifier
+        frame_index: Frame index
+    """
+
+    type: Literal[MediaType.VIDEO_FRAME]
+    video_id: UUID
+    frame_index: int
+
+
+class Video(BaseMedia):
+    """
+    Attributes:
+        fps: Video fps
+        frame_count: Total number of frames
+    """
+
+    type: Literal[MediaType.VIDEO]
+    fps: float
+    frame_count: int
 
     @computed_field
     @property
-    def duration(self) -> float | None:
+    def duration(self) -> float:
         """Return duration in seconds"""
-        return self.frame_count / self.fps if self.frame_count is not None and self.fps is not None else None
+        return self.frame_count / self.fps
 
 
-class VideoFrame(BaseEntity):
-    id: UUID
-    video_id: UUID
-    frame_index: int
+Media = Annotated[Image | Video | VideoFrame, Field(discriminator="type")]
+
+MediaAdapter: TypeAdapter[Media] = TypeAdapter(Media)

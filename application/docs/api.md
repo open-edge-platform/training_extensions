@@ -104,13 +104,15 @@
 
 ### Models
 
-| Method   | Path                                          | Payload | Return         | Description                                            |
-| -------- | --------------------------------------------- | ------- | -------------- | ------------------------------------------------------ |
-| `GET`    | `/api/projects/<id>/models`                   | -       | list of models | List all the models in a project                       |
-| `GET`    | `/api/projects/<id>/models/<model_id>`        | -       | model info     | Get info about a specific model (incl. quantized info) |
-| `GET`    | `/api/projects/<id>/models/<model_id>/labels` | -       | labels         | Get the labels used to train the model                 |
-| `GET`    | `/api/projects/<id>/models/<model_id>/binary` | format  | zip            | Download model binary (option 'format=quantized')      |
-| `DELETE` | `/api/projects/<id>/models/<model_id>`        | -       | -              | Delete a model (options 'weights_only', 'variant')     |
+| Method   | Path                                                    | Payload | Return           | Description                                                             |
+| -------- | ------------------------------------------------------- | ------- | ---------------- | ----------------------------------------------------------------------- |
+| `GET`    | `/api/projects/<id>/models`                             | -       | list of models   | List all the models in a project                                        |
+| `GET`    | `/api/projects/<id>/models/<model_id>`                  | -       | model info       | Get info about a specific model                                         |
+| `GET`    | `/api/projects/<id>/models/<model_id>/labels`           | -       | labels           | Get the labels used to train the model                                  |
+| `GET`    | `/api/projects/<id>/models/<model_id>/binary`           | format  | zip              | Download model binary in requested format                               |
+| `DELETE` | `/api/projects/<id>/models/<model_id>`                  | -       | -                | Delete a model (option 'weights_only')                                  |
+| `GET`    | `/api/projects/<id>/models/<model_id>/training_metrics` | -       | training metrics | Get training metrics                                                    |
+| `GET`    | `/api/projects/<id>/models/<model_id>/logs`             | -       | training log     | Get training logs (supports Accept: text/plain or application/x-ndjson) |
 
 ### Dataset revisions (training datasets, etc...)
 

@@ -89,14 +89,12 @@ describe('ExportJobDetails', () => {
             dataset_id: 'dataset-123',
             project_id: 'project-123',
             export_format: 'COCO',
-            filters: {
-                include_unannotated: false,
-            },
+            filters: { include_unannotated: false },
         };
 
         renderApp(metadata);
 
-        expect(await screen.findByText('Excluded: Unannotated')).toBeVisible();
+        expect(await screen.findByText('Exclude: media without annotations')).toBeVisible();
     });
 
     it('does not display "Excluded: Unannotated" when include_unannotated is true', async () => {
@@ -104,15 +102,13 @@ describe('ExportJobDetails', () => {
             dataset_id: 'dataset-123',
             project_id: 'project-123',
             export_format: 'COCO',
-            filters: {
-                include_unannotated: true,
-            },
+            filters: { include_unannotated: true },
         };
 
         renderApp(metadata);
 
         await screen.findByText(/Export dataset - COCO format/);
 
-        expect(screen.queryByText('Excluded: Unannotated')).not.toBeInTheDocument();
+        expect(await screen.findByText('Include: media without annotations')).toBeVisible();
     });
 });

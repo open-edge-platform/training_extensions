@@ -11,9 +11,10 @@ import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportCompletedJobProps = {
     job: ExportDatasetJob;
+    datasetName?: string;
 };
 
-export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
+export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps) => {
     const { removeLsExportId } = useExportDataset();
     const stageDatasetResponse = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
         params: { path: { staged_dataset_id: job.metadata.dataset_id } },
@@ -24,7 +25,9 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
     const handleClose = () => {
         removeStagedDatasetMutation.mutate(
             { params: { path: { staged_dataset_id: job.metadata.dataset_id } } },
-            { onSuccess: () => removeLsExportId(job.job_id) }
+            {
+                onSuccess: () => removeLsExportId(job.job_id),
+            }
         );
     };
 
@@ -37,7 +40,7 @@ export const ExportCompletedJob = ({ job }: ExportCompletedJobProps) => {
     return (
         <View padding='size-150'>
             <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                <ExportJobDetails metadata={job.metadata} />
+                <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
 
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <Button

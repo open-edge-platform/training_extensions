@@ -33,7 +33,9 @@ export const VideoToolbar = () => {
                         </Flex>
 
                         <Flex alignItems={'center'} gap={'size-100'}>
-                            <Text>Current frame: 0 / Total frames: {videoFrame?.frame_count}</Text>
+                            <Text>
+                                Current frame: {videoFrame.frame_number} / Total frames: {videoFrame.frame_count}
+                            </Text>
                             <ActionButton
                                 isQuiet
                                 onPress={() => setIsExpanded((prev) => !prev)}

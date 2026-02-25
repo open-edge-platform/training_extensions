@@ -4,28 +4,28 @@
 import { Image, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { Media } from '../../../../../../../constants/shared-types';
+import type { MediaVideoFrame } from '../../../../../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../../../../../shared/media-url.utils';
 import { formatDurationText } from '../../../time-utils';
 import { FrameNumberIndicator } from './frame-number-indicator.component';
 
 interface ThumbnailPreviewProps {
-    videoFrame: number;
-    mediaItem: Media;
+    frameNumber: number;
+    videoFrame: MediaVideoFrame;
     width: number;
     height: number;
     x: number;
 }
 
-export const ThumbnailPreview = ({ mediaItem, videoFrame: frameNumber, width, height, x }: ThumbnailPreviewProps) => {
+export const ThumbnailPreview = ({ videoFrame, frameNumber, width, height, x }: ThumbnailPreviewProps) => {
     // TODO: Use it when video frame navigation is ready and API supports it.
     // const constructVideoFrame = useConstructVideoFrame(mediaItem);
     // const videoFrame = constructVideoFrame(frameNumber) as VideoFrame;
     const projectIdentifier = useProjectIdentifier();
 
-    const fps = Number(mediaItem.fps);
+    const fps = videoFrame.fps;
     // TODO: Replace it with the video frame thumbnail when the endpoint will be ready.
-    const src = getThumbnailUrl(projectIdentifier, mediaItem.id);
+    const src = getThumbnailUrl(projectIdentifier, videoFrame.id);
 
     const durationText = formatDurationText(frameNumber / fps);
 

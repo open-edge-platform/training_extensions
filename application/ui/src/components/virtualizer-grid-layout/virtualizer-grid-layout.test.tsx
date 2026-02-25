@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react';
-import { getMultipleMockedMedia } from 'mocks/mock-media';
+import { getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { Size } from 'react-aria-components';
 import { render } from 'test-utils/render';
 
@@ -17,7 +17,7 @@ const mockedLayoutOptions = {
 };
 
 describe('VirtualizerGridLayout', () => {
-    const mockedItems = getMultipleMockedMedia(2, 'test');
+    const mockedItems = getMultipleMockedMediaImage(2, 'test');
 
     it('renders all items as visible options', () => {
         const mockedLoadingMore = vi.fn();

@@ -26,28 +26,14 @@ describe('getInitialAnnotations', () => {
         },
     ];
 
-    describe('annotation mode', () => {
-        it('returns annotations when mode is annotation and user has reviewed', () => {
-            const result = getInitialAnnotations('annotation', true, mockAnnotations);
-            expect(result).toEqual(mockAnnotations);
-        });
-
-        it('returns empty array when mode is annotation and user has not reviewed', () => {
-            const result = getInitialAnnotations('annotation', false, mockAnnotations);
-            expect(result).toEqual([]);
-        });
+    it('returns annotations when user has reviewed', () => {
+        const result = getInitialAnnotations(true, mockAnnotations);
+        expect(result).toEqual(mockAnnotations);
     });
 
-    describe('prediction mode', () => {
-        it('returns empty array when mode is prediction and user has reviewed', () => {
-            const result = getInitialAnnotations('prediction', true, mockAnnotations);
-            expect(result).toEqual([]);
-        });
-
-        it('returns empty array when mode is prediction and user has not reviewed', () => {
-            const result = getInitialAnnotations('prediction', false, mockAnnotations);
-            expect(result).toEqual([]);
-        });
+    it('returns empty array when user has not reviewed', () => {
+        const result = getInitialAnnotations(false, mockAnnotations);
+        expect(result).toEqual([]);
     });
 });
 
@@ -73,27 +59,13 @@ describe('getInitialPredictions', () => {
         },
     ];
 
-    describe('annotation mode', () => {
-        it('returns empty array when mode is annotation and user has reviewed', () => {
-            const result = getInitialPredictions('annotation', true, mockAnnotations);
-            expect(result).toEqual([]);
-        });
-
-        it('returns empty array when mode is annotation and user has not reviewed', () => {
-            const result = getInitialPredictions('annotation', false, mockAnnotations);
-            expect(result).toEqual([]);
-        });
+    it('returns empty array when user has reviewed', () => {
+        const result = getInitialPredictions(true, mockAnnotations);
+        expect(result).toEqual([]);
     });
 
-    describe('prediction mode', () => {
-        it('returns empty array when mode is prediction and user has reviewed', () => {
-            const result = getInitialPredictions('prediction', true, mockAnnotations);
-            expect(result).toEqual([]);
-        });
-
-        it('returns annotations when mode is prediction and user has not reviewed', () => {
-            const result = getInitialPredictions('prediction', false, mockAnnotations);
-            expect(result).toEqual(mockAnnotations);
-        });
+    it('returns annotations when user has not reviewed', () => {
+        const result = getInitialPredictions(false, mockAnnotations);
+        expect(result).toEqual(mockAnnotations);
     });
 });

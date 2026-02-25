@@ -7,10 +7,10 @@ import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
-import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
-import { isVideo } from '../../../shared/media-item-utils';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
+import { useMediaItemImage } from '../selected-media-item-provider.component';
 import { ToolManager } from '../tools/tool-manager.component';
 import { VideoFrame } from '../video-player/video-frame.component';
 
@@ -43,20 +43,23 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
     return (
         <>
             <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {isVideo(mediaItem) && <VideoFrame canvasRef={canvasRef} mediaItem={mediaItem} />}
+            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
+                <VideoFrame canvasRef={canvasRef} mediaItem={mediaItem} />
+            )}
         </>
     );
 };
 
 type AnnotatorCanvasProps = {
     mediaItem: Media;
+    isReadOnly?: boolean;
 };
 
-export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
+export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanvasProps) => {
     const { annotations } = useAnnotationActions();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { isFocussed } = useAnnotationVisibility();
-    const { image } = useAnnotator();
+    const { image } = useMediaItemImage();
 
     // Order annotations by selection. Selected annotation should always be on top.
     const orderedAnnotations = [
@@ -80,7 +83,7 @@ export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
                     isFocussed={isFocussed}
                     annotations={orderedAnnotations}
                 />
-                <ToolManager />
+                {!isReadOnly && <ToolManager />}
             </div>
         </ZoomTransform>
     );

@@ -3,7 +3,7 @@
 
 import { View } from '@geti/ui';
 
-import type { Media } from '../../constants/shared-types';
+import type { Media, MediaVideo } from '../../constants/shared-types';
 import { isVideo } from '../../shared/media-item-utils';
 
 import classes from './media-thumbnail.module.scss';
@@ -13,7 +13,7 @@ type MediaThumbnailProps = {
     onDoubleClick?: () => void;
     url: string;
     alt: string;
-    item: Partial<Pick<Media, 'type' | 'frame_count'>>;
+    item: Pick<Media, 'type'> | Pick<MediaVideo, 'type' | 'frame_count'>;
 };
 
 type VideoIndicatorProps = {

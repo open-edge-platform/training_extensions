@@ -3,7 +3,7 @@
 
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getMockedDatasetItem } from 'mocks/mock-dataset-item';
-import { mockedMedia } from 'mocks/mock-media';
+import { getMockedMediaImage } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -16,7 +16,7 @@ import { BottomToolbar } from './bottom-toolbar.component';
 
 type BottomToolbarProps = {
     isUserReviewed: boolean;
-    mediaItem: ReturnType<typeof mockedMedia>;
+    mediaItem: ReturnType<typeof getMockedMediaImage>;
 };
 
 const renderBottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps) => {
@@ -32,7 +32,7 @@ const renderBottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps) 
 };
 
 describe('BottomToolbar', () => {
-    const mockMediaItem = mockedMedia({
+    const mockMediaItem = getMockedMediaImage({
         id: 'media-123',
         name: 'test-image',
         format: 'jpg',
