@@ -91,7 +91,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                             <Heading>Why can I not start training?</Heading>
                             <Content>
                                 In order to train a model, you need to annotate at least 3 items in your dataset,
-                                although we recommend annotating at least 10 for better results.
+                                although we recommend annotating several more for better results.
                             </Content>
                         </InlineAlert>
                     ) : null}
