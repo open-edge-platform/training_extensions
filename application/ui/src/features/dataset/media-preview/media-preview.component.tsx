@@ -9,9 +9,9 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
-import { isVideo } from '../../../shared/media-item-utils';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
+import { MediaItemImageLoader, useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
@@ -47,10 +47,87 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     });
 };
 
+type AnnotatorProps = {
+    isUserReviewed: boolean;
+    mode: AnnotatorMode;
+    changeAnnotatorMode: (mode: AnnotatorMode) => void;
+    onClose: () => void;
+    onSubmitAnnotations: () => void;
+    items: Media[];
+    onSelectedMediaItem: (item: Media) => void;
+};
+
+const Annotator = ({
+    isUserReviewed,
+    mode,
+    changeAnnotatorMode,
+    onClose,
+    onSubmitAnnotations,
+    items,
+    onSelectedMediaItem,
+}: AnnotatorProps) => {
+    const { mediaItem, setMediaItem } = useSelectedMediaItem();
+
+    return (
+        <VideoPlayerProvider
+            mediaItem={isVideo(mediaItem) || isVideoFrame(mediaItem) ? mediaItem : undefined}
+            changeSelectedMediaItem={setMediaItem}
+        >
+            {mode === 'prediction' ? (
+                <ReadOnlyAnnotator
+                    mediaItem={mediaItem}
+                    isUserReviewed={isUserReviewed}
+                    onModeChange={changeAnnotatorMode}
+                    onClose={onClose}
+                    onAcceptPrediction={onSubmitAnnotations}
+                />
+            ) : (
+                <>
+                    <View gridArea={'header'}>
+                        <SecondaryToolbar
+                            mode={mode}
+                            items={items}
+                            onClose={onClose}
+                            mediaItem={mediaItem}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                            onModeChange={changeAnnotatorMode}
+                            onAcceptPrediction={onSubmitAnnotations}
+                        />
+                    </View>
+
+                    <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
+                        <PrimaryToolbar />
+                    </View>
+
+                    {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
+                        <View gridArea={'video-toolbar'}>
+                            <VideoToolbar />
+                        </View>
+                    )}
+
+                    <View gridArea={'bottom'}>
+                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                    </View>
+
+                    <View gridArea={'canvas'} overflow={'hidden'}>
+                        <AnnotatorCanvasSettings>
+                            <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
+                                <MediaItemImageLoader>
+                                    <AnnotatorCanvas mediaItem={mediaItem} />
+                                </MediaItemImageLoader>
+                            </Suspense>
+                        </AnnotatorCanvasSettings>
+                    </View>
+                </>
+            )}
+        </VideoPlayerProvider>
+    );
+};
+
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
 
-    const { data: annotationsData } = useAnnotationsQuery(mediaItem.id);
+    const { data: annotationsData } = useAnnotationsQuery(mediaItem);
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const queryClient = useQueryClient();
@@ -91,55 +168,15 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <VideoPlayerProvider mediaItem={isVideo(mediaItem) ? mediaItem : undefined}>
-                    {mode === 'prediction' ? (
-                        <ReadOnlyAnnotator
-                            mediaItem={mediaItem}
-                            isUserReviewed={isUserReviewed}
-                            onModeChange={setMode}
-                            onClose={onClose}
-                            onAcceptPrediction={handleSubmitAnnotations}
-                        />
-                    ) : (
-                        <>
-                            <View gridArea={'header'}>
-                                <SecondaryToolbar
-                                    mode={mode}
-                                    items={items}
-                                    onClose={onClose}
-                                    mediaItem={mediaItem}
-                                    onSelectedMediaItem={onSelectedMediaItem}
-                                    onModeChange={setMode}
-                                    onAcceptPrediction={handleSubmitAnnotations}
-                                />
-                            </View>
-
-                            <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
-                                <PrimaryToolbar />
-                            </View>
-
-                            {isVideo(mediaItem) && (
-                                <View gridArea={'video-toolbar'}>
-                                    <VideoToolbar />
-                                </View>
-                            )}
-
-                            <View gridArea={'bottom'}>
-                                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
-                            </View>
-
-                            <View gridArea={'canvas'} overflow={'hidden'}>
-                                <AnnotatorCanvasSettings>
-                                    <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
-                                        <MediaItemImageLoader>
-                                            <AnnotatorCanvas mediaItem={mediaItem} />
-                                        </MediaItemImageLoader>
-                                    </Suspense>
-                                </AnnotatorCanvasSettings>
-                            </View>
-                        </>
-                    )}
-                </VideoPlayerProvider>
+                <Annotator
+                    mode={mode}
+                    items={items}
+                    onClose={onClose}
+                    changeAnnotatorMode={setMode}
+                    isUserReviewed={isUserReviewed}
+                    onSelectedMediaItem={onSelectedMediaItem}
+                    onSubmitAnnotations={handleSubmitAnnotations}
+                />
             </AnnotatorProviders>
         </ToolProvider>
     );
