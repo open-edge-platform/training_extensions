@@ -71,7 +71,7 @@ test.describe('TrainingLogsDialog - Active Job (SSE streaming)', () => {
         await expect(dialog.getByRole('heading', { name: 'Training Logs' })).toBeVisible();
         await expect(dialog.getByRole('button', { name: /minimum log level/i })).toBeVisible();
         await expect(dialog.getByLabel('Search logs')).toBeVisible();
-        await expect(dialog.getByRole('switch', { name: 'Auto-scroll' })).toBeVisible();
+        await expect(dialog.getByRole('button', { name: 'Scroll to bottom' })).toBeHidden();
 
         await jobsPage.closeLogsDialog();
         await expect(dialog).toBeHidden();
