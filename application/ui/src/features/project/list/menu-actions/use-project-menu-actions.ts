@@ -14,11 +14,6 @@ type ProjectMenuCallbacks = {
     onEnableBlocked: () => void;
 };
 
-type PipelineState = {
-    isRunning: boolean;
-    isConfigured?: boolean;
-};
-
 type MenuAction = {
     key: string;
     label: string;
@@ -27,15 +22,13 @@ type MenuAction = {
 export const useProjectMenuActions = (
     projectId: string,
     callbacks: ProjectMenuCallbacks,
-    pipelineState?: PipelineState
+    isPipelineRunning?: boolean
 ) => {
     const enablePipelineMutation = useEnablePipeline();
     const disablePipelineMutation = useDisablePipeline();
     const projectPipelineQuery = useProjectPipeline(projectId);
 
-    const isPipelineRunning = pipelineState?.isRunning ?? false;
     const isPipelineConfigured = useIsPipelineConfigured(projectPipelineQuery.data);
-    const canEnablePipeline = pipelineState?.isConfigured ?? isPipelineConfigured;
 
     const menuActions: MenuAction[] = [
         ...(isPipelineRunning
@@ -49,7 +42,7 @@ export const useProjectMenuActions = (
 
         switch (key) {
             case 'enable-pipeline':
-                if (!canEnablePipeline) {
+                if (!isPipelineConfigured) {
                     callbacks.onEnableBlocked();
                     return;
                 }

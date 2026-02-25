@@ -54,7 +54,7 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
                 <MenuActions
                     projectId={project.id}
                     projectName={project.name}
-                    pipelineState={{ isRunning: project.active_pipeline }}
+                    isPipelineRunning={project.active_pipeline}
                     onDeleted={handleDeleted}
                 />
             </Flex>

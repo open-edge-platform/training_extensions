@@ -3,10 +3,12 @@
 
 import { useState } from 'react';
 
-import { AlertDialog, Button, DialogContainer, toast } from '@geti/ui';
+import { Button, toast } from '@geti/ui';
 import { useDisablePipeline, useEnablePipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
+import { EnablePipelineBlockedDialog } from '../../../components/enable-pipeline-blocked-dialog/enable-pipeline-blocked-dialog.component';
 
 export const TogglePipelineButton = () => {
     const projectId = useProjectIdentifier();
@@ -52,18 +54,10 @@ export const TogglePipelineButton = () => {
                 {isPipelineEnabled ? 'Disable' : 'Enable'} Pipeline
             </Button>
 
-            <DialogContainer onDismiss={() => setIsEnableBlockedDialogOpen(false)}>
-                {isEnableBlockedDialogOpen && (
-                    <AlertDialog
-                        title={'Cannot enable pipeline'}
-                        variant={'warning'}
-                        primaryActionLabel={'Close'}
-                        onPrimaryAction={() => setIsEnableBlockedDialogOpen(false)}
-                    >
-                        Make sure you selected a model, source, and sink before enabling the pipeline.
-                    </AlertDialog>
-                )}
-            </DialogContainer>
+            <EnablePipelineBlockedDialog
+                isOpen={isEnableBlockedDialogOpen}
+                onClose={() => setIsEnableBlockedDialogOpen(false)}
+            />
         </>
     );
 };

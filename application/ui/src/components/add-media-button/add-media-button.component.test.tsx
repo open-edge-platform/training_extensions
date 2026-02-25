@@ -4,7 +4,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { render } from 'test-utils/render';
 
-import { AddMediaButton } from './add-media-button.component';
+import { acceptedExtensions, AddMediaButton } from './add-media-button.component';
 
 describe('AddMediaButton', () => {
     it('calls onFilesSelected correctly', () => {
@@ -27,9 +27,6 @@ describe('AddMediaButton', () => {
 
         const input = screen.getByLabelText(/Upload media files/);
 
-        expect(input).toHaveAttribute(
-            'accept',
-            '.mp4,.avi,.mkv,.mov,.webm,.m4v,.jpg,.jpeg,.png,.jfif,.tif,.tiff,.webp,.bmp'
-        );
+        expect(input).toHaveAttribute('accept', acceptedExtensions);
     });
 });

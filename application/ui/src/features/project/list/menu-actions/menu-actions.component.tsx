@@ -3,10 +3,11 @@
 
 import { useState, type CSSProperties } from 'react';
 
-import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger } from '@geti/ui';
+import { ActionButton, Item, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { useOverlayTriggerState } from 'react-stately';
 
+import { EnablePipelineBlockedDialog } from '../../../../components/enable-pipeline-blocked-dialog/enable-pipeline-blocked-dialog.component';
 import { DeleteProjectDialog } from '../../../../components/project-dialogs/delete-project-dialog.component';
 import { EditProjectNameDialog } from '../../../../components/project-dialogs/edit-project-name-dialog.component';
 import { useProjectMenuActions } from './use-project-menu-actions';
@@ -16,10 +17,7 @@ import classes from './menu-actions.module.scss';
 type MenuActionsProps = {
     projectId: string;
     projectName: string;
-    pipelineState?: {
-        isRunning: boolean;
-        isConfigured?: boolean;
-    };
+    isPipelineRunning?: boolean;
     actionButtonStyle?: CSSProperties;
     onDeleted?: () => void;
 };
@@ -27,7 +25,7 @@ type MenuActionsProps = {
 export const MenuActions = ({
     projectId,
     projectName,
-    pipelineState,
+    isPipelineRunning,
     actionButtonStyle,
     onDeleted,
 }: MenuActionsProps) => {
@@ -42,7 +40,7 @@ export const MenuActions = ({
             onDelete: deleteProjectDialogState.open,
             onEnableBlocked: () => setIsEnableBlockedDialogOpen(true),
         },
-        pipelineState
+        isPipelineRunning
     );
 
     return (
@@ -66,18 +64,10 @@ export const MenuActions = ({
                 </Menu>
             </MenuTrigger>
 
-            <DialogContainer onDismiss={() => setIsEnableBlockedDialogOpen(false)}>
-                {isEnableBlockedDialogOpen && (
-                    <AlertDialog
-                        title={'Cannot enable pipeline'}
-                        primaryActionLabel={'Close'}
-                        variant={'warning'}
-                        onPrimaryAction={() => setIsEnableBlockedDialogOpen(false)}
-                    >
-                        Make sure you selected a model, source, and sink before enabling the pipeline.
-                    </AlertDialog>
-                )}
-            </DialogContainer>
+            <EnablePipelineBlockedDialog
+                isOpen={isEnableBlockedDialogOpen}
+                onClose={() => setIsEnableBlockedDialogOpen(false)}
+            />
 
             <EditProjectNameDialog
                 projectId={projectId}

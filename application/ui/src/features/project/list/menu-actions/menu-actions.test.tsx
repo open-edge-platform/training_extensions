@@ -37,7 +37,7 @@ describe('MenuActions', () => {
                 projectId={projectId}
                 projectName={projectName}
                 actionButtonStyle={actionButtonStyle}
-                pipelineState={{ isRunning: false, isConfigured: false }}
+                isPipelineRunning={false}
             />
         );
 

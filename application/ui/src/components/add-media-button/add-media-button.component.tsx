@@ -14,7 +14,7 @@ const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
 const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'jfif', 'tif', 'tiff', 'webp', 'bmp'];
 const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
 
-const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
+export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 
 export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);

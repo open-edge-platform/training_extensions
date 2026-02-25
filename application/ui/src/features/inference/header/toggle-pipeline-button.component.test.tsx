@@ -17,18 +17,14 @@ describe('TogglePipelineButton', () => {
     });
 
     it('enables pipeline when currently idle', async () => {
-        let currentStatus: 'idle' | 'running' = 'idle';
-
         server.use(
             http.get('/api/projects/{project_id}/pipeline', () => {
-                return HttpResponse.json(getMockedPipeline({ status: currentStatus }));
+                return HttpResponse.json(getMockedPipeline({ status: 'idle' }));
             }),
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
-                currentStatus = 'running';
                 return HttpResponse.json(null, { status: 204 });
             }),
             http.post('/api/projects/{project_id}/pipeline:disable', () => {
-                currentStatus = 'idle';
                 return HttpResponse.json(null, { status: 204 });
             })
         );
@@ -41,18 +37,14 @@ describe('TogglePipelineButton', () => {
     });
 
     it('disables pipeline when currently running', async () => {
-        let currentStatus: 'idle' | 'running' = 'running';
-
         server.use(
             http.get('/api/projects/{project_id}/pipeline', () => {
-                return HttpResponse.json(getMockedPipeline({ status: currentStatus }));
+                return HttpResponse.json(getMockedPipeline({ status: 'running' }));
             }),
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
-                currentStatus = 'running';
                 return HttpResponse.json(null, { status: 204 });
             }),
             http.post('/api/projects/{project_id}/pipeline:disable', () => {
-                currentStatus = 'idle';
                 return HttpResponse.json(null, { status: 204 });
             })
         );
