@@ -64,7 +64,9 @@ class TestEngineAPI:
         otx_config = OTXConfig.from_yaml_file(self.geti_template_path)
 
         if self.tiling:
-            otx_config.hyper_parameters["dataset_preparation"]["augmentation"]["tiling"]["enable"] = True
+            otx_config.hyper_parameters["dataset_preparation"]["augmentation"]["tiling"][  # pyrefly: ignore
+                "enable"
+            ] = True
 
         sub_task_type = (
             self.task_type

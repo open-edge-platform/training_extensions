@@ -64,7 +64,6 @@ class DatasetRevisionService(BaseSessionManagedService):
         export_dataset(
             dataset=dataset,
             output_path=revision_path,
-            export_images=True,
             as_zip=False,  # Export as uncompressed directory, see #5070 for details
         )
         size_in_bytes = sum(item.stat().st_size for item in revision_path.rglob("*") if item.is_file())

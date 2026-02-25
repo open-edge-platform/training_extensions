@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 import pytest
 from datumaro.experimental import Dataset, LazyImage, export_dataset
 from datumaro.experimental.categories import Categories, LabelCategories
+from datumaro.experimental.export_import import ExportMode
 from datumaro.experimental.fields import ImageInfo, Subset
 
 from app.datumaro_converter import ClassificationSample
@@ -53,7 +54,7 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
             user_reviewed=True,
         )
     )
-    export_dataset(dataset, ds_dir, export_images=False)
+    export_dataset(dataset, ds_dir, export_images=ExportMode.SKIP)
     return dataset_id, ds_dir
 
 
