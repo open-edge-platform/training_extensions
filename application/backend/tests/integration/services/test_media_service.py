@@ -608,7 +608,7 @@ class TestMediaServiceIntegration:
         assert os.path.exists(binary_file_path)
         assert created_media.size == os.path.getsize(binary_file_path)
 
-        # Do not generate thumbnail on video upload
+        # Generate thumbnail on video upload
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
 
