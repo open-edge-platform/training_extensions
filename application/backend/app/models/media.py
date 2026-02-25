@@ -12,8 +12,10 @@ class ImageFormat(StrEnum):
     """Format of the image."""
 
     JPG = "jpg"
+    JPEG = "jpeg"
     PNG = "png"
     JFIF = "jfif"
+    TIF = "tif"
     TIFF = "tiff"
     BMP = "bmp"
     WEBP = "webp"

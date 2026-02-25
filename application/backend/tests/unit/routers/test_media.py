@@ -108,14 +108,21 @@ class TestMediaEndpoints:
         fxt_media_service.create_video.assert_not_called()
         fxt_dataset_service.create_dataset_item.assert_not_called()
 
+    @pytest.mark.parametrize("image_format", ["jpg", "jpeg", "bmp", "png", "tiff", "tif", "webp", "jfif"])
     def test_create_image_success(
-        self, fxt_get_project, fxt_image_media, fxt_media_service, fxt_dataset_service, fxt_client
+        self,
+        fxt_get_project,
+        fxt_image_media,
+        fxt_media_service,
+        fxt_dataset_service,
+        fxt_client,
+        image_format,
     ):
         fxt_media_service.create_image.return_value = fxt_image_media
 
         response = fxt_client.post(
             f"/api/projects/{str(uuid4())}/dataset/media",
-            files={"file": ("test_file.jpg", BytesIO(b"123"), "image/jpeg")},
+            files={"file": (f"test_file.{image_format}", BytesIO(b"123"), "image/jpeg")},
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -136,13 +143,30 @@ class TestMediaEndpoints:
             project=fxt_get_project,
             data=ANY,
             name="test_file",
-            format="jpg",
+            format=image_format,
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_get_project,
             media=fxt_image_media,
             user_reviewed=False,
         )
+
+    @pytest.mark.parametrize("image_format", ["svg"])
+    def test_create_image_unsupported_image_format(
+        self,
+        fxt_get_project,
+        fxt_media_service,
+        fxt_dataset_service,
+        fxt_client,
+        image_format,
+    ):
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media",
+            files={"file": (f"test_file.{image_format}", BytesIO(b"123"), "image/jpeg")},
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        fxt_media_service.create_image.assert_not_called()
+        fxt_dataset_service.create_dataset_item.assert_not_called()
 
     def test_create_video_success(
         self, fxt_get_project, fxt_video_media, fxt_media_service, fxt_dataset_service, fxt_client
