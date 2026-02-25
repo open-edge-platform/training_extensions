@@ -21,4 +21,15 @@ describe('AddMediaButton', () => {
 
         expect(mockOnFilesSelected).toHaveBeenCalledWith([mockFile]);
     });
+
+    it('sets the expected accepted file extensions', () => {
+        render(<AddMediaButton onFilesSelected={vi.fn()} />);
+
+        const input = screen.getByLabelText(/Upload media files/);
+
+        expect(input).toHaveAttribute(
+            'accept',
+            '.mp4,.avi,.mkv,.mov,.webm,.m4v,.jpg,.jpeg,.png,.jfif,.tif,.tiff,.webp,.bmp'
+        );
+    });
 });
