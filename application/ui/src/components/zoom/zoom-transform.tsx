@@ -111,7 +111,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
             onPointerUp={onPointerUp}
             onMouseLeave={onMouseLeave}
         >
-            <div data-testid='zoom-transform' className={classes.wrapperInternal}>
+            <div data-testid='zoom-transform' data-zoom-value={zoom.scale} className={classes.wrapperInternal}>
                 {children}
             </div>
         </div>

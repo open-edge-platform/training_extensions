@@ -16,7 +16,7 @@ describe('Zoom', () => {
     it('Scales and translates content so that it fits the screen', () => {
         const screenSize = { width: 500, height: 500 };
         const contentSize = { width: 500, height: 500 };
-        const expectedZoom = { translate: { x: 25, y: 25 }, scale: 0.9 };
+        const expectedZoom = 0.9;
 
         vi.mocked(useContainerSize).mockImplementation(() => screenSize);
 
@@ -28,8 +28,6 @@ describe('Zoom', () => {
 
         const transform = screen.getByTestId('zoom-transform');
 
-        expect(transform).toHaveStyle({
-            transform: `translate(${expectedZoom.translate.x}px, ${expectedZoom.translate.y}px) scale(${expectedZoom.scale})`,
-        });
+        expect(transform).toHaveAttribute('data-zoom-value', expectedZoom.toString());
     });
 });
