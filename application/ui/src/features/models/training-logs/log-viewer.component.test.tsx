@@ -89,9 +89,7 @@ describe('LogViewer', () => {
         await userEvent.click(helpButton);
 
         expect(await screen.findByText('Minimum log level')).toBeInTheDocument();
-        expect(
-            await screen.findByText(/shows log entries at the selected level and above/i)
-        ).toBeInTheDocument();
+        expect(await screen.findByText(/shows log entries at the selected level and above/i)).toBeInTheDocument();
     });
 
     it('displays connection status indicator when connectionStatus is provided', () => {
