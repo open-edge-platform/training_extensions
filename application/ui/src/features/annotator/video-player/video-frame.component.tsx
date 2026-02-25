@@ -35,14 +35,10 @@ const useRequestVideoFrameCallback = (
 
         let callbackId: number | null = null;
 
-        const updateCanvas: VideoFrameRequestCallback = (_now, metadata) => {
-            if (videoRef.current === null) {
-                return;
-            }
-
+        const updateCanvas: VideoFrameRequestCallback = () => {
             const ctx = canvasRef.current?.getContext('2d');
 
-            if (ctx == null) {
+            if (videoRef.current === null || ctx == null) {
                 return;
             }
 
@@ -50,7 +46,7 @@ const useRequestVideoFrameCallback = (
 
             callbackId = video.requestVideoFrameCallback(updateCanvas);
 
-            const nextFrameIndex = Math.ceil(metadata.mediaTime * videoFrame.fps);
+            const nextFrameIndex = Math.ceil(videoRef.current.currentTime * videoFrame.fps);
             changeCurrentFrameIndex(nextFrameIndex);
         };
 

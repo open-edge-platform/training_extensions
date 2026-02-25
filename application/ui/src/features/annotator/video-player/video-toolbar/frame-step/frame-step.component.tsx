@@ -1,0 +1,61 @@
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { Dispatch, SetStateAction } from 'react';
+
+import { ActionButton, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { Fps } from '@geti/ui/icons';
+
+import { FRAME_STEP_TO_DISPLAY_ALL_FRAMES } from './utils';
+
+import classes from './frame-step.module.scss';
+
+type FrameStepProps = {
+    step: number;
+    onChangeStep: Dispatch<SetStateAction<number>>;
+    isDisabled: boolean;
+    defaultFps: number;
+};
+
+enum FrameMode {
+    // Note: All mode means we display all the frames, so the frame skip is equal to 1
+    // One frame means we display one frame per second, so the frame skip is 60
+    ALL_FRAMES = 'ALL',
+    ONE_FRAME = '1/1',
+}
+
+export const FrameStep = ({ isDisabled, step, onChangeStep, defaultFps }: FrameStepProps) => {
+    const isAllMode = step === FRAME_STEP_TO_DISPLAY_ALL_FRAMES;
+
+    const handleFpsToggle = () => {
+        onChangeStep((prevStep) => (prevStep === defaultFps ? FRAME_STEP_TO_DISPLAY_ALL_FRAMES : defaultFps));
+    };
+
+    return (
+        <TooltipTrigger placement={'top'}>
+            <ActionButton
+                isQuiet
+                isDisabled={isDisabled}
+                onPress={handleFpsToggle}
+                position={'relative'}
+                aria-label={'Toggle frame mode'}
+                id={`toggle-frame-mode-id-${step}`}
+            >
+                <Fps />
+                <View
+                    position={'absolute'}
+                    top={0}
+                    right={-5}
+                    paddingY={'size-25'}
+                    paddingX={'size-50'}
+                    UNSAFE_className={classes.frameStepBadge}
+                    data-testid={'frame-mode-indicator-id'}
+                    id={'frame-mode-indicator-id'}
+                >
+                    {isAllMode ? FrameMode.ALL_FRAMES : FrameMode.ONE_FRAME}
+                </View>
+            </ActionButton>
+            <Tooltip>{isAllMode ? 'Show 1 frame per second' : 'Show all frames'}</Tooltip>
+        </TooltipTrigger>
+    );
+};

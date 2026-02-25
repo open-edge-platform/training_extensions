@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, RefObject, use, useMemo, useRef, useState } from 'react';
+import { createContext, Dispatch, ReactNode, RefObject, SetStateAction, use, useMemo, useRef, useState } from 'react';
 
 import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
 import { useVideoControls, VideoControls } from './use-video-controls';
@@ -20,6 +20,9 @@ type VideoPlayerContextProps = {
     videoControls: VideoControls;
 
     changeCurrentFrameIndex: (index: number) => void;
+
+    step: number;
+    changeStep: Dispatch<SetStateAction<number>>;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
@@ -27,11 +30,11 @@ const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 type VideoPlayerProviderProps = {
     children: ReactNode;
     // TODO: Narrow the type to be MediaVideoFrame | undefined
-    mediaItem: MediaVideo | MediaVideoFrame | undefined;
+    videoFrame: MediaVideo | MediaVideoFrame | undefined;
     changeSelectedMediaItem: (media: MediaVideoFrame) => void;
 };
 
-export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
+export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
@@ -39,25 +42,33 @@ export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaIt
     const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
-        if (mediaItem === undefined) {
+        if (videoFrame === undefined) {
             return undefined;
         }
 
         return {
-            ...mediaItem,
+            ...videoFrame,
             frame_number: currentFrameIndex,
 
             // TODO: This logic should be moved to selected media item provider
             type: 'video_frame',
-            frame_count: mediaItem.frame_count,
-            fps: mediaItem.fps,
-            duration: mediaItem.duration,
+            frame_count: videoFrame.frame_count,
+            fps: videoFrame.fps,
+            duration: videoFrame.duration,
             // TODO: This should be returned by the backend, atm it's mocked to be 60 fps
             frame_stride: 60,
         };
-    }, [currentFrameIndex, mediaItem]);
+    }, [currentFrameIndex, videoFrame]);
 
-    const videoControls = useVideoControls(videoRef, playingVideoFrame, changeSelectedMediaItem, setCurrentFrameIndex);
+    const [step, setStep] = useState<number>(playingVideoFrame?.frame_stride ?? 1);
+
+    const videoControls = useVideoControls({
+        step,
+        videoRef,
+        videoFrame: playingVideoFrame,
+        selectVideoFrame: changeSelectedMediaItem,
+        changeCurrentFrameIndex: setCurrentFrameIndex,
+    });
 
     const toggleMute = () => {
         setIsMuted((prevIsMuted) => {
@@ -101,6 +112,9 @@ export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaIt
                   changePlaybackRate,
 
                   changeCurrentFrameIndex: setCurrentFrameIndex,
+
+                  step,
+                  changeStep: setStep,
               }
             : null;
 
