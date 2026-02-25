@@ -9,6 +9,7 @@ import logging as log
 from typing import TYPE_CHECKING, ClassVar
 
 from lightning import Callback
+import torch
 
 from otx.data.augmentation import GPUAugmentationPipeline
 from otx.data.entity.sample import OTXSampleBatch
@@ -147,6 +148,22 @@ class GPUAugmentationCallback(Callback):
         if device is not None:
             pipeline = pipeline.to(device)
 
+        keypoints_xy: list[torch.Tensor] | None = None
+        keypoints_visibility: list[torch.Tensor | None] | None = None
+        if batch.keypoints is not None:
+            keypoints_xy = []
+            keypoints_visibility = []
+            for kps in batch.keypoints:
+                if kps is None:
+                    keypoints_xy.append(torch.empty((0, 2), device=batch.images.device, dtype=batch.images.dtype))
+                    keypoints_visibility.append(None)
+                    continue
+                keypoints_xy.append(kps[:, :2])
+                if kps.shape[-1] >= 3:
+                    keypoints_visibility.append(kps[:, 2])
+                else:
+                    keypoints_visibility.append(torch.ones(kps.shape[0], device=kps.device, dtype=kps.dtype))
+
         # Apply pipeline - returns dict with augmented data
         # Labels are included in data_keys, so Kornia will process them if applicable
         result = pipeline(
@@ -154,7 +171,7 @@ class GPUAugmentationCallback(Callback):
             labels=batch.labels,
             bboxes=batch.bboxes,
             masks=batch.masks,
-            keypoints=batch.keypoints,
+            keypoints=keypoints_xy,
         )
 
         # Update batch in-place with augmented data
@@ -163,6 +180,7 @@ class GPUAugmentationCallback(Callback):
             batch.labels = result["labels"]
         if result.get("bboxes") is not None:
             # Kornia may return plain tensors, wrap them back to BoundingBoxes
+            # Use original canvas_size from batch.bboxes since Kornia does not modify the shape.
             batch.bboxes = [
                 tv_tensors.BoundingBoxes(
                     b,
@@ -177,7 +195,27 @@ class GPUAugmentationCallback(Callback):
             # Kornia may return plain tensors, wrap them back to Mask
             batch.masks = [tv_tensors.Mask(m) if not isinstance(m, tv_tensors.Mask) else m for m in result["masks"]]
         if result.get("keypoints") is not None:
-            batch.keypoints = result["keypoints"]
+            if keypoints_visibility is None:
+                batch.keypoints = result["keypoints"]
+            else:
+                # update keypoints visibility based on whether they are in bounds after augmentation
+                height, width = batch.images.shape[-2], batch.images.shape[-1]
+                restored_keypoints: list[torch.Tensor | None] = []
+                for aug_xy, vis in zip(result["keypoints"], keypoints_visibility):
+                    if vis is None:
+                        restored_keypoints.append(None)
+                        continue
+
+                    in_bounds = (
+                        (aug_xy[:, 0] >= 0)
+                        & (aug_xy[:, 0] < width)
+                        & (aug_xy[:, 1] >= 0)
+                        & (aug_xy[:, 1] < height)
+                    )
+                    vis = vis.to(dtype=aug_xy.dtype) * in_bounds.to(dtype=aug_xy.dtype)
+                    restored_keypoints.append(torch.cat([aug_xy, vis.unsqueeze(-1)], dim=-1))
+
+                batch.keypoints = restored_keypoints
 
     def on_train_batch_start(
         self,

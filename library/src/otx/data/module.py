@@ -8,14 +8,12 @@ from __future__ import annotations
 import logging
 import multiprocessing
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
-from torchvision.transforms.v2 import Compose, Normalize
-
 from otx.config.data import SubsetConfig, TileConfig
 from otx.data.augmentation import CPUAugmentationPipeline
 from otx.data.dataset.tile import OTXTileDatasetFactory
@@ -123,16 +121,13 @@ class OTXDataModule(LightningDataModule):
                 if subset_cfg.input_size is None:
                     subset_cfg.input_size = input_size  # type: ignore[assignment]
 
-        # Extract mean and std from Normalize transform
-        # Check augmentations_cpu first (new design), then fall back to transforms (legacy)
-        transforms_source = getattr(self.train_subset, "augmentations_cpu", None) or getattr(
-            self.train_subset, "transforms", None
-        )
-        norm_params = self.extract_normalization_params(transforms_source)
-        self.input_mean: tuple[float, float, float] | None = None
-        self.input_std: tuple[float, float, float] = (1.0, 1.0, 1.0)
-        if norm_params is not None:
-            self.input_mean, self.input_std = norm_params
+        # Derive mean/std from the CPU pipeline's Normalize transform.
+        # If no Normalize is present, leave as None so models fall back to their own defaults.
+        cpu_pipeline: CPUAugmentationPipeline | None = getattr(self.train_subset, "_cpu_pipeline", None)
+        if cpu_pipeline is None and getattr(self.train_subset, "augmentations_cpu", None):
+            cpu_pipeline = CPUAugmentationPipeline.from_config(self.train_subset)
+        self.input_mean: tuple[float, float, float] | None = cpu_pipeline.mean if cpu_pipeline is not None else None
+        self.input_std: tuple[float, float, float] | None = cpu_pipeline.std if cpu_pipeline is not None else None
         self.input_size = input_size
 
         if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:
@@ -196,66 +191,7 @@ class OTXDataModule(LightningDataModule):
 
         self.label_info = next(iter(label_infos))
 
-    @classmethod
-    def extract_normalization_params(
-        cls,
-        transforms_source: Sequence[dict[str, Any]] | Compose | CPUAugmentationPipeline | None,
-    ) -> tuple[tuple[float, float, float], tuple[float, float, float]] | None:
-        """Extract mean and std from the dataset transforms.
 
-        Specifically, this method looks for a Normalize transform in the provided transforms, and extracts
-        the mean and std values used for normalization.
-        If not found, it returns None.
-
-        Args:
-            transforms_source: Transforms applied to the dataset.
-                Should be specified as an iterable of transform descriptors (jsonargparse-like),
-                a Compose object, or a CPUAugmentationPipeline.
-
-        Returns:
-            Tuple of (mean, std) tuples, or None if no Normalize transform is found.
-        """
-        mean: tuple[float, float, float] | None = None
-        std: tuple[float, float, float] | None = None
-
-        if transforms_source is None:
-            return None
-
-        # Handle CPUAugmentationPipeline
-        if isinstance(transforms_source, CPUAugmentationPipeline):
-            transforms_iterable = transforms_source.augmentations
-        elif hasattr(transforms_source, "__iter__"):
-            transforms_iterable = transforms_source
-        elif isinstance(transforms_source, Compose):
-            transforms_iterable = transforms_source.transforms
-        else:
-            msg = (
-                f"Transforms should be given as an iterable, Compose, or CPUAugmentationPipeline, "
-                f"got {type(transforms_source)}"
-            )
-            raise TypeError(msg)
-
-        for transform in transforms_iterable:
-            if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
-                # CLI case with jsonargparse
-                mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
-                std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
-                break
-
-            if isinstance(transform, Normalize):
-                # torchvision.transforms case
-                mean = tuple(transform.mean) if transform.mean is not None else None  # type: ignore[assignment]
-                std = tuple(transform.std) if transform.std is not None else None  # type: ignore[assignment]
-                break
-
-        if mean is None or std is None:
-            return None
-
-        if len(mean) != 3 or len(std) != 3:
-            msg = f"Expected mean and std to have length 3, got mean={mean}, std={std}"
-            raise ValueError(msg)
-
-        return tuple(mean), tuple(std)  # type: ignore[return-value]
 
     @classmethod
     def from_otx_datasets(
@@ -385,12 +321,10 @@ class OTXDataModule(LightningDataModule):
             # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
 
-        # Extract normalization parameters from train dataset transforms if available
-        _norm = instance.extract_normalization_params(
-            getattr(instance.train_subset, "transforms", None)
-        )
-        instance.input_mean: tuple[float, float, float] | None = _norm[0] if _norm else None  # type: ignore[no-redef]
-        instance.input_std: tuple[float, float, float] = _norm[1] if _norm else (1.0, 1.0, 1.0)  # type: ignore[no-redef]
+        # Derive normalization params from the CPU pipeline's Normalize transform if available.
+        _cpu_pipeline: CPUAugmentationPipeline | None = getattr(instance.train_subset, "_cpu_pipeline", None)
+        instance.input_mean: tuple[float, float, float] | None = _cpu_pipeline.mean if _cpu_pipeline is not None else None  # type: ignore[no-redef]
+        instance.input_std: tuple[float, float, float] | None = _cpu_pipeline.std if _cpu_pipeline is not None else None  # type: ignore[no-redef]
 
         # Save hyperparameters
         instance.save_hyperparameters(

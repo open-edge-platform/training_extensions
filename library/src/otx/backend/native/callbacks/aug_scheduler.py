@@ -142,6 +142,21 @@ class DataAugSwitch:
         return "light_aug"
 
     @property
+    def current_gpu_policy_name(self) -> str:
+        """Get deterministic policy name used for GPU pipeline selection."""
+        e = self.epoch
+        p0, p1, _ = self.policy_epochs
+        if e < p0:
+            return "no_aug"
+        if p0 <= e < p1:
+            if "strong_aug_1" in self.policies:
+                return "strong_aug_1"
+            if "strong_aug_2" in self.policies:
+                return "strong_aug_2"
+            return "no_aug"
+        return "light_aug"
+
+    @property
     def current_cpu_pipeline(self) -> CPUAugmentationPipeline:
         """Get the CPU augmentation pipeline for the current policy."""
         name = self.current_policy_name
@@ -224,12 +239,11 @@ class AugmentationSchedulerCallback(Callback):
 
         self.data_aug_switch.epoch = trainer.current_epoch
 
-        # Swap GPU pipeline if phase changed (use deterministic phase, not
-        # the random per-sample policy_name, to avoid spurious swaps).
-        phase = self.data_aug_switch.current_policy_name
-        if phase != self._last_gpu_policy:
-            self._swap_gpu_pipeline(phase, pl_module)
-            self._last_gpu_policy = phase
+        # Swap GPU pipeline if deterministic GPU phase changed.
+        gpu_policy = self.data_aug_switch.current_gpu_policy_name
+        if gpu_policy != self._last_gpu_policy:
+            self._swap_gpu_pipeline(gpu_policy, pl_module)
+            self._last_gpu_policy = gpu_policy
 
     def _swap_gpu_pipeline(self, policy_name: str, pl_module: LightningModule) -> None:
         """Rebuild and assign the GPU pipeline for the new policy."""

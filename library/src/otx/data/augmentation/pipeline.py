@@ -41,7 +41,8 @@ if TYPE_CHECKING:
 _original_transform_list = ops.MaskSequentialOps.transform_list
 
 
-def _fixed_transform_list(cls, input, module, param, extra_args=None):  # type: ignore[no-untyped-def]  # noqa: ANN001, ANN202, A002
+@classmethod
+def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: ANN001, ANN202, A002
     """Fixed version that slices transform_matrix for each list element."""
     if extra_args is None:
         extra_args = {}
@@ -114,6 +115,36 @@ class CPUAugmentationPipeline(nn.Module):
     def __init__(self, augmentations: list[nn.Module] | None = None) -> None:
         super().__init__()
         self.augmentations = nn.ModuleList(augmentations or [])
+        self._mean, self._std = self._extract_normalization_params(list(self.augmentations))
+
+    @staticmethod
+    def _extract_normalization_params(
+        augmentations: list[nn.Module],
+    ) -> tuple[tuple[float, float, float] | None, tuple[float, float, float] | None]:
+        """Extract mean and std from the first torchvision Normalize transform found.
+
+        Args:
+            augmentations: List of augmentation modules.
+
+        Returns:
+            Tuple of (mean, std) extracted from first Normalize found, or (None, None).
+        """
+        for transform in augmentations:
+            if isinstance(transform, tvt_v2.Normalize):
+                mean: tuple[float, float, float] = tuple(float(v) for v in transform.mean)  # type: ignore[assignment]
+                std: tuple[float, float, float] = tuple(float(v) for v in transform.std)  # type: ignore[assignment]
+                return mean, std
+        return None, None
+
+    @property
+    def mean(self) -> tuple[float, float, float] | None:
+        """Get normalization mean."""
+        return self._mean
+
+    @property
+    def std(self) -> tuple[float, float, float] | None:
+        """Get normalization std."""
+        return self._std
 
     @classmethod
     def list_available_transforms(cls) -> list[type[tvt_v2.Transform]]:
@@ -191,8 +222,11 @@ class CPUAugmentationPipeline(nn.Module):
         """
         if isinstance(cfg_transform, (DictConfig, dict)):
             return instantiate_class(args=(), init=dict(cfg_transform))
-            f"However, its type is {type(cfg_transform)}."
-        )
+        elif isinstance(cfg_transform, nn.Module):
+            # Already instantiated transform, return as-is
+            return cfg_transform
+
+        msg = f"cfg_transform should be DictConfig | dict | nn.Module. However, its type is {type(cfg_transform)}."
         raise TypeError(msg)
 
     @classmethod
@@ -496,6 +530,7 @@ class GPUAugmentationPipeline(nn.Module):
         self._data_keys = data_keys or ["input"]
         self._mean, self._std = self._extract_normalization_params(self._augmentations_list)
 
+        # DEBUG, DELETE
         debug_dir = os.getenv("OTX_GPU_AUG_DEBUG_DIR")
         self._debug_dir = Path(debug_dir) if debug_dir else None
         self._debug_max = int(os.getenv("OTX_GPU_AUG_DEBUG_MAX", "50"))
@@ -527,37 +562,10 @@ class GPUAugmentationPipeline(nn.Module):
 
         for aug in augmentations:
             # Check if this is a Normalize augmentation (Kornia stores in flags dict)
-            flags = getattr(aug, "flags", {})
-            aug_mean = flags.get("mean") if isinstance(flags, dict) else None
-            aug_std = flags.get("std") if isinstance(flags, dict) else None
-
-            # Fallback to direct attributes if flags not present
-            if aug_mean is None:
-                aug_mean = getattr(aug, "mean", None)
-            if aug_std is None:
-                aug_std = getattr(aug, "std", None)
-
-            if aug_mean is not None and aug_std is not None:
-                # Extract mean value
-                if hasattr(aug_mean, "tolist"):
-                    _mean_list = aug_mean.tolist()
-                    mean = (_mean_list[0], _mean_list[1], _mean_list[2]) if len(_mean_list) >= 3 else (float(_mean_list[0]),) * 3
-                elif hasattr(aug_mean, "__iter__"):
-                    _mean_list = list(aug_mean)
-                    mean = (_mean_list[0], _mean_list[1], _mean_list[2]) if len(_mean_list) >= 3 else (float(_mean_list[0]),) * 3
-                else:
-                    mean = (float(aug_mean), float(aug_mean), float(aug_mean))
-
-                # Extract std value
-                if hasattr(aug_std, "tolist"):
-                    _std_list = aug_std.tolist()
-                    std = (_std_list[0], _std_list[1], _std_list[2]) if len(_std_list) >= 3 else (float(_std_list[0]),) * 3
-                elif hasattr(aug_std, "__iter__"):
-                    _std_list = list(aug_std)
-                    std = (_std_list[0], _std_list[1], _std_list[2]) if len(_std_list) >= 3 else (float(_std_list[0]),) * 3
-                else:
-                    std = (float(aug_std), float(aug_std), float(aug_std))
-
+            if isinstance(aug, K.Normalize):
+                flags = aug.flags
+                mean = tuple(aug.flags["mean"].tolist())
+                std = tuple(aug.flags["std"].tolist())
                 # Stop after finding the first Normalize
                 break
 
@@ -653,8 +661,10 @@ class GPUAugmentationPipeline(nn.Module):
         """
         if isinstance(cfg_transform, (DictConfig, dict)):
             return instantiate_class(args=(), init=dict(cfg_transform))
-            f"DictConfig | dict | nn.Module. However, its type is {type(cfg_transform)}."
-        )
+        elif isinstance(cfg_transform, nn.Module):
+            # Already instantiated transform, return as-is
+            return cfg_transform
+        msg = f"cfg_transform should be DictConfig | dict | nn.Module. However, its type is {type(cfg_transform)}."
         raise TypeError(msg)
 
     def forward(
@@ -688,18 +698,15 @@ class GPUAugmentationPipeline(nn.Module):
         # Handle instance segmentation masks: Kornia expects (N, C, H, W) but instance
         # masks are (N_instances, H, W). We add a channel dim before and squeeze after.
         # This allows Kornia to properly transform instance masks along with images.
-        masks_need_squeeze = False
         original_masks = masks
         original_bboxes = bboxes
         original_keypoints = keypoints
         if self._debug_dir is not None:
             self._debug_visualize("before", images, original_bboxes, original_masks, original_keypoints)
         if masks is not None and "mask" in self._data_keys:
-            # Check if masks need channel dimension added (instance seg format)
             # Instance seg masks: (N_instances, H, W) - 3D per sample
             # Semantic seg masks: (C, H, W) where C is often 1 or num_classes
             # We add channel dim to all masks for consistency with Kornia
-            masks_need_squeeze = True
             masks = [m.unsqueeze(0) for m in masks]  # (N, H, W) -> (N, 1, H, W)
 
         # Map data key names to actual data
@@ -726,25 +733,20 @@ class GPUAugmentationPipeline(nn.Module):
 
         # Parse results back
         output = {"images": None, "labels": labels, "bboxes": bboxes, "masks": masks, "keypoints": keypoints}
-        if isinstance(results, (tuple, list)):
-            for i, key in enumerate(provided_keys):
-                if key == "input":
-                    output["images"] = results[i]
-                elif key == "label":
-                    output["labels"] = results[i]
-                elif key == "bbox_xyxy":
-                    output["bboxes"] = results[i]
-                elif key == "mask":
-                    # Remove channel dim if we added it
-                    mask_results = results[i]
-                    if masks_need_squeeze:
-                        mask_results = [m.squeeze(0) for m in mask_results]  # (1, N, H, W) -> (N, H, W)
-                    output["masks"] = mask_results
-                elif key == "keypoints":
-                    output["keypoints"] = results[i]
-        else:
-            # Single output (images only)
-            output["images"] = results
+        for i, key in enumerate(provided_keys):
+            if key == "input":
+                output["images"] = results[i]
+            elif key == "label":
+                output["labels"] = results[i]
+            elif key == "bbox_xyxy":
+                output["bboxes"] = results[i]
+            elif key == "mask":
+                # Remove channel
+                mask_results = results[i]
+                mask_results = [m.squeeze(0) for m in mask_results]  # (1, N, H, W) -> (N, H, W)
+                output["masks"] = mask_results
+            elif key == "keypoints":
+                output["keypoints"] = results[i]
 
         if self._debug_dir is not None:
             self._debug_visualize(
