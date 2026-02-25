@@ -119,7 +119,7 @@ export const VideoPlayerSlider = ({
     const minValue = 0;
     const maxValue = framesCount - 1;
     const isDisplayingAllFrames = FRAME_STEP_TO_DISPLAY_ALL_FRAMES === step;
-    const lastFrame = isDisplayingAllFrames ? framesCount : framesCount - step;
+    const lastFrame = isDisplayingAllFrames ? maxValue : framesCount - step;
     const isLastFrame = sliderValue >= lastFrame;
     const containerScrollLeft = getContainerScroll(ref);
 

@@ -19,7 +19,7 @@ type FrameStepProps = {
 
 enum FrameMode {
     // Note: All mode means we display all the frames, so the frame skip is equal to 1
-    // One frame means we display one frame per second, so the frame skip is 60
+    // One frame means we display one frame per second, so the frame skip is equals the video's FPS (defaultFps)
     ALL_FRAMES = 'ALL',
     ONE_FRAME = '1/1',
 }
