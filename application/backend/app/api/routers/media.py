@@ -7,7 +7,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.openapi.models import Example
-from pydantic import BaseModel
 from starlette.responses import StreamingResponse
 
 from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
@@ -18,6 +17,7 @@ from app.api.schemas.media import (
     MediaView,
     MediaViewAdapter,
     MediaWithPagination,
+    NotAnnotatedFrame,
     SetMediaAnnotations,
 )
 from app.api.validators import MediaID
@@ -109,11 +109,6 @@ def _parse_media_format(extension: str) -> ImageFormat | VideoFormat:
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Unsupported media extension: {extension}",
             )
-
-
-class NotAnnotatedFrame(BaseModel):
-    video: Video
-    frame_index: int
 
 
 def _get_request_media(
