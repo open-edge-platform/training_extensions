@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import os.path
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -348,6 +348,8 @@ def get_media_thumbnail(
         )
 
     thumbnail_path = media_service.get_media_thumbnail_path(project=project, media=media)
+    if not os.path.exists(thumbnail_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media thumbnail file is not found.")
     return write_file_to_response(
         path=thumbnail_path, filename=f"{media.id}-thumb.jpeg", cache_control="public, max-age=31536000"
     )
