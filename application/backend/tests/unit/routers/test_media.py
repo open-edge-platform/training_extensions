@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
+from pathlib import Path
 import tempfile
 from datetime import datetime
 from io import BytesIO
@@ -9,6 +10,7 @@ from unittest.mock import ANY, MagicMock, PropertyMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from PIL import Image as PILImage
 import pytest
 from fastapi import status
 
@@ -600,12 +602,16 @@ class TestMediaEndpoints:
 
     def test_get_media_thumbnail_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()
-        fxt_media_service.get_media_by_id.side_effect = ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
+        fxt_media_service.get_media_thumbnail_path_by_id.side_effect = ResourceNotFoundError(
+            ResourceType.MEDIA, str(media_id)
+        )
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media_id)}/thumbnail")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
+        fxt_media_service.get_media_thumbnail_path_by_id.assert_called_once_with(
+            project=fxt_get_project, media_id=media_id
+        )
 
     @pytest.mark.parametrize(
         "spec, media_type, format, suffix",
@@ -615,24 +621,29 @@ class TestMediaEndpoints:
             (VideoFrame, MediaType.VIDEO_FRAME, ImageFormat.JPG, ".jpg"),
         ],
     )
-    def test_get_media_thumbnail_success(
-        self, fxt_get_project, fxt_media_service, fxt_client, spec, media_type, format, suffix
-    ):
-        from PIL import Image
-
+    def test_get_media_thumbnail_success(self, fxt_get_project, fxt_media_service, fxt_client, spec, media_type, format, suffix):
         media = MagicMock(spec=spec, id=uuid4(), format=format, type=media_type)
-        type(media).name = PropertyMock(return_value="test")
-        fxt_media_service.get_media_by_id.return_value = media
+        # Create a temporary JPEG file to act as the thumbnail
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
+            thumbnail_path = Path(tmp_file.name)
+            img = PILImage.new("RGB", (64, 64), color="red")
+            img.save(tmp_file, format="JPEG")
 
-        # Create a test PIL Image to return from the mock
-        test_image = Image.new("RGB", (64, 64), color="blue")
-        fxt_media_service.generate_media_thumbnail.return_value = test_image
+        try:
+            fxt_media_service.get_media_thumbnail_path_by_id.return_value = thumbnail_path
 
-        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/thumbnail")
+            response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/media/{str(media.id)}/thumbnail")
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.headers["content-type"] == "image/jpeg"
-        fxt_media_service.generate_media_thumbnail.assert_called_once_with(project=fxt_get_project, media=media)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.headers["content-type"] == "image/jpeg"
+            with open(thumbnail_path, "rb") as f:
+                assert response.content == f.read()
+            fxt_media_service.get_media_thumbnail_path_by_id.assert_called_once_with(
+                project=fxt_get_project, media_id=media.id
+            )
+        finally:
+            if thumbnail_path.exists():
+                os.unlink(thumbnail_path)
 
     def test_get_video_frame_thumbnail_on_the_fly_annotated(self, fxt_get_project, fxt_media_service, fxt_client):
         from PIL import Image
@@ -705,6 +716,7 @@ class TestMediaEndpoints:
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_not_called()
         fxt_media_service.get_frame_thumbnail.assert_not_called()
         fxt_media_service.generate_media_thumbnail.assert_not_called()
+
 
     def test_delete_media_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()

@@ -347,9 +347,9 @@ def get_media_thumbnail(
             image=frame_thumbnail, filename=f"{media.video.name}_frame_{media.frame_index}.jpeg"
         )
 
-    thumbnail = media_service.generate_media_thumbnail(project=project, media=media)
-    return write_image_to_response(
-        image=thumbnail, filename=f"{media.id}_thumb.jpeg", cache_control="public, max-age=31536000"
+    thumbnail_path = media_service.get_media_thumbnail_path_by_id(project=project, media_id=media.id)
+    return write_file_to_response(
+        path=thumbnail_path, filename=f"{media.id}_thumb.jpeg", cache_control="public, max-age=31536000"
     )
 
 
