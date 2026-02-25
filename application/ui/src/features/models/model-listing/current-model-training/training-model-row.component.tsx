@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AlertDialog, Button, DialogContainer, Divider, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
 import dayjs from 'dayjs';
@@ -93,6 +93,18 @@ export const TrainingModelRow = ({
     groupBy,
     modelArchitectures,
 }: TrainingModelRowProps) => {
+    const [, setTick] = useState(0);
+
+    useEffect(() => {
+        if (!job.started_at || job.status !== 'RUNNING') {
+            return;
+        }
+
+        const timeoutId = setInterval(() => setTick((v) => v + 1), 1000);
+
+        return () => clearInterval(timeoutId);
+    }, [job.started_at, job.status]);
+
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
     const modelArchitectureId = 'model' in job.metadata && job.metadata.model?.architecture;
@@ -111,7 +123,7 @@ export const TrainingModelRow = ({
         ? dayjs(job.started_at).format('DD MMM YYYY, hh:mm A')
         : 'Waiting to start...';
     const formattedElapsed = job.started_at
-        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H:mm:ss')
+        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H[hours], m[m] [and] s[seconds]')
         : '';
 
     const statusMessage = job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...');
