@@ -5,10 +5,9 @@ import { useVideoPlayer } from '../video-player-provider.component';
 import { formatDurationText } from './time-utils';
 
 export const VideoDuration = () => {
-    const { videoRef } = useVideoPlayer();
-    // TODO: use video player state
-    const currentTime = videoRef.current?.currentTime ?? 0;
-    const endTime = videoRef.current?.duration ?? 0;
+    const { videoFrame } = useVideoPlayer();
+    const currentTime = videoFrame.frame_number / videoFrame.fps;
+    const endTime = videoFrame.duration;
 
     const currentFormattedTime = formatDurationText(currentTime);
     const endFormattedTime = formatDurationText(endTime);
