@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen } from '@testing-library/react';
+import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
 import { API_BASE_URL } from '../../../api/client';
+import { http } from '../../../api/utils';
+import { server } from '../../../msw-node-setup';
 import { ProjectCard } from './project-card.component';
 
 describe('ProjectCard', () => {
@@ -20,6 +24,14 @@ describe('ProjectCard', () => {
                 { id: 'label-2', name: 'Dog', color: '#00FF00' },
             ],
         },
+    });
+
+    beforeEach(() => {
+        server.use(
+            http.get('/api/projects/{project_id}/pipeline', () => {
+                return HttpResponse.json(getMockedPipeline({ status: 'idle' }));
+            })
+        );
     });
 
     it('renders all elements correctly', async () => {
