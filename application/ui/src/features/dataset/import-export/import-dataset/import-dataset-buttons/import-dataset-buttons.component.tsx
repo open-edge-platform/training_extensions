@@ -14,8 +14,8 @@ type ImportDatasetButtonsProps = {
 
 export const ImportDatasetButtons = ({ currentState, onClose }: ImportDatasetButtonsProps) => {
     const cancelJobMutation = useCancelJob();
-    const { getLsPreparingImportId } = usePrepareImportDataset();
-    const preparingImportId = getLsPreparingImportId();
+    const { getLsPreparingImport } = usePrepareImportDataset();
+    const preparingImportId = getLsPreparingImport();
 
     const handleCancelJob = (jobId: string) => {
         cancelJobMutation.mutate({ params: { path: { job_id: jobId } } }, { onSuccess: onClose });

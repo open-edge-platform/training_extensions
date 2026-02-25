@@ -21,8 +21,8 @@ const mockDeleteAnnotations = vi.fn();
 const mockSelectedAnnotations = { current: new Set<string>() };
 const mockAnnotations = { current: [] as { id: string; labels: Label[]; shape: { type: string } }[] };
 
-vi.mock('../../../shared/annotator/annotator-provider.component', () => ({
-    useAnnotator: () => ({
+vi.mock('../annotator-labels-provider.component', () => ({
+    useAnnotatorLabels: () => ({
         labels: mockLabels,
         selectedLabelId: 'label-1',
         setSelectedLabelId: mockSetSelectedLabelId,

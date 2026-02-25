@@ -1,0 +1,23 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.dialog {
+    > div {
+        height: 100%;
+    }
+}
+
+.contentArea {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.errorText {
+    color: var(--spectrum-global-color-red-600);
+}
+
+.closeButton {
+    align-self: center;
+}

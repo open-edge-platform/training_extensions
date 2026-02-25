@@ -6,7 +6,7 @@ import { partition } from 'lodash-es';
 
 import { useTool } from '../../../../shared/annotator/tool-provider.component';
 import { isNonEmptyArray } from '../../../../shared/util';
-import { useIsAnnotatorSceneBusy } from '../../use-is-annotator-scene-busy';
+import { useIsAnnotatorSceneBusy } from '../../hooks/use-is-annotator-scene-busy';
 import { Tools } from '../tools.component';
 import { useAvailableTools } from './use-available-tools';
 

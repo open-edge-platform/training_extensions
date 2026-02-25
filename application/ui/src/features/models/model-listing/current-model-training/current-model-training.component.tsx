@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
@@ -6,7 +6,6 @@ import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
-import { useStreamJobLogs } from '../../training-logs/hooks/use-stream-job-logs.hook';
 import { ModelsTableHeader } from '../components/models-table-header.component';
 import { GroupByMode } from '../types';
 import { TrainingModelRow } from './training-model-row.component';
@@ -20,15 +19,6 @@ export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModel
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
 
-    // TODO: remove. temporary integration for testing
-    const { logs, isConnected, error } = useStreamJobLogs(activeTrainingJob?.job_id);
-    console.info('[TrainingLogs]', {
-        jobId: activeTrainingJob?.job_id,
-        isConnected,
-        error,
-        logCount: logs.length,
-        logs,
-    });
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelTraining = () => {

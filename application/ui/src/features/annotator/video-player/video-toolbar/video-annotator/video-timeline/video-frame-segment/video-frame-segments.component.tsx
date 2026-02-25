@@ -23,6 +23,7 @@ type VideoFrameSegmentsProps = {
     ref: MutableRefObject<HTMLDivElement | null>;
     items: Item[];
     frameNumber: number;
+    selectFrame: (frameNumber: number) => void;
 };
 
 export const VideoFrameSegments = ({
@@ -35,11 +36,8 @@ export const VideoFrameSegments = ({
     ref,
     items,
     frameNumber,
+    selectFrame,
 }: VideoFrameSegmentsProps) => {
-    const selectFrame = (_frameNumber: number) => {
-        // TODO: implement this properly
-    };
-
     return (
         <div
             ref={ref}

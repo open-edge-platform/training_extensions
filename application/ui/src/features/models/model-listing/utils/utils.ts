@@ -6,6 +6,7 @@ import { Model } from '../../../../constants/shared-types';
 const TRAINING_STATUS = {
     Failed: 'failed',
     InProgress: 'in_progress',
+    Successful: 'successful',
 } as const;
 
 export const isFailedModel = (model: Pick<Model, 'training_info'>): boolean =>

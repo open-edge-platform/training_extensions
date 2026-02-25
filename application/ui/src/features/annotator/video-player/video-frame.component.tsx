@@ -19,7 +19,7 @@ const useRequestVideoFrameCallback = (
     videoRef: RefObject<HTMLVideoElement | null>,
     canvasRef: RefObject<HTMLCanvasElement | null>
 ) => {
-    const { videoControls } = useVideoPlayer();
+    const { videoControls, changeCurrentFrameIndex, videoFrame } = useVideoPlayer();
     const { isPlaying } = videoControls;
 
     useEffect(() => {
@@ -35,7 +35,7 @@ const useRequestVideoFrameCallback = (
 
         let callbackId: number | null = null;
 
-        const updateCanvas: VideoFrameRequestCallback = () => {
+        const updateCanvas: VideoFrameRequestCallback = (_now, metadata) => {
             if (videoRef.current === null) {
                 return;
             }
@@ -49,6 +49,9 @@ const useRequestVideoFrameCallback = (
             ctx.drawImage(video, 0, 0);
 
             callbackId = video.requestVideoFrameCallback(updateCanvas);
+
+            const nextFrameIndex = Math.ceil(metadata.mediaTime * videoFrame.fps);
+            changeCurrentFrameIndex(nextFrameIndex);
         };
 
         callbackId = video.requestVideoFrameCallback(updateCanvas);
@@ -58,16 +61,24 @@ const useRequestVideoFrameCallback = (
                 video.cancelVideoFrameCallback(callbackId);
             }
         };
-    }, [videoRef, canvasRef, isPlaying]);
+    }, [videoRef, canvasRef, isPlaying, videoFrame.fps, changeCurrentFrameIndex]);
 
     return videoRef;
 };
 
 export const VideoFrame = ({ canvasRef, mediaItem }: VideoFrameProps) => {
     const projectId = useProjectIdentifier();
-    const { videoRef } = useVideoPlayer();
+    const { videoRef, videoControls } = useVideoPlayer();
 
     useRequestVideoFrameCallback(videoRef, canvasRef);
+
+    const handleEnded = () => {
+        if (videoRef.current === null) {
+            return;
+        }
+        videoControls.pause();
+        videoRef.current.currentTime = 0;
+    };
 
     return (
         <VisuallyHidden>
@@ -77,6 +88,7 @@ export const VideoFrame = ({ canvasRef, mediaItem }: VideoFrameProps) => {
                 width={mediaItem.width}
                 height={mediaItem.height}
                 preload={'auto'}
+                onEnded={handleEnded}
                 muted
             />
         </VisuallyHidden>
