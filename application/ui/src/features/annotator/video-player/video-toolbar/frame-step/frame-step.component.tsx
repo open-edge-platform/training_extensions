@@ -17,12 +17,12 @@ type FrameStepProps = {
     defaultFps: number;
 };
 
-enum FrameMode {
+const FRAME_MODE = {
     // Note: All mode means we display all the frames, so the frame skip is equal to 1
     // One frame means we display one frame per second, so the frame skip is equals the video's FPS (defaultFps)
-    ALL_FRAMES = 'ALL',
-    ONE_FRAME = '1/1',
-}
+    ALL_FRAMES: 'ALL',
+    ONE_FRAME: '1/1',
+} as const;
 
 export const FrameStep = ({ isDisabled, step, onChangeStep, defaultFps }: FrameStepProps) => {
     const isAllMode = step === FRAME_STEP_TO_DISPLAY_ALL_FRAMES;
@@ -52,7 +52,7 @@ export const FrameStep = ({ isDisabled, step, onChangeStep, defaultFps }: FrameS
                     data-testid={'frame-mode-indicator-id'}
                     id={'frame-mode-indicator-id'}
                 >
-                    {isAllMode ? FrameMode.ALL_FRAMES : FrameMode.ONE_FRAME}
+                    {isAllMode ? FRAME_MODE.ALL_FRAMES : FRAME_MODE.ONE_FRAME}
                 </View>
             </ActionButton>
             <Tooltip>{isAllMode ? 'Show 1 frame per second' : 'Show all frames'}</Tooltip>
