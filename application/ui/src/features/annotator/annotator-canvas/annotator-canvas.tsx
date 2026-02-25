@@ -12,6 +12,7 @@ import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { useMediaItemImage } from '../selected-media-item-provider.component';
 import { ToolManager } from '../tools/tool-manager.component';
+import { useIsAnnotatorSceneBusy } from '../use-is-annotator-scene-busy';
 import { VideoFrame } from '../video-player/video-frame.component';
 
 import classes from './annotator-canvas.module.scss';
@@ -60,6 +61,9 @@ export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanv
     const { selectedAnnotations } = useSelectedAnnotations();
     const { isFocussed } = useAnnotationVisibility();
     const { image } = useMediaItemImage();
+    const isSceneBusy = useIsAnnotatorSceneBusy();
+
+    const areToolsDisabled = isSceneBusy || isReadOnly;
 
     // Order annotations by selection. Selected annotation should always be on top.
     const orderedAnnotations = [
@@ -83,7 +87,7 @@ export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanv
                     isFocussed={isFocussed}
                     annotations={orderedAnnotations}
                 />
-                {!isReadOnly && <ToolManager />}
+                {!areToolsDisabled && <ToolManager />}
             </div>
         </ZoomTransform>
     );
