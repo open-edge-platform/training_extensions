@@ -30,6 +30,9 @@ class ImageInfo(tv_tensors.TVTensor):
             it will lose the scaling information and be `None`.
         ignored_labels: Label that should be ignored in this image. Default to None.
         keep_ratio: If true, the image is resized while keeping the aspect ratio. Default to False.
+        bit_depth: Bits per channel of the *original* image before intensity mapping
+            (8 for uint8, 16 for uint16, etc.).  Set automatically by the intensity
+            transform in the CPU pipeline.  Default 8.
     """
 
     img_idx: int
@@ -39,6 +42,7 @@ class ImageInfo(tv_tensors.TVTensor):
     scale_factor: tuple[float, float] | None = (1.0, 1.0)
     ignored_labels: list[int]
     keep_ratio: bool = False
+    bit_depth: int = 8  # bits per channel of the original image (8 for uint8, 16 for uint16, etc.)
 
     @classmethod
     def _wrap(
@@ -52,6 +56,7 @@ class ImageInfo(tv_tensors.TVTensor):
         scale_factor: tuple[float, float] | None = (1.0, 1.0),
         ignored_labels: list[int] | None = None,
         keep_ratio: bool = False,
+        bit_depth: int = 8,
     ) -> ImageInfo:
         image_info = dummy_tensor.as_subclass(cls)
         image_info.img_idx = img_idx
@@ -61,6 +66,7 @@ class ImageInfo(tv_tensors.TVTensor):
         image_info.scale_factor = scale_factor
         image_info.ignored_labels = ignored_labels if ignored_labels else []
         image_info.keep_ratio = keep_ratio
+        image_info.bit_depth = bit_depth
         return image_info
 
     def __new__(  # noqa: D102
@@ -72,6 +78,7 @@ class ImageInfo(tv_tensors.TVTensor):
         scale_factor: tuple[float, float] | None = (1.0, 1.0),
         ignored_labels: list[int] | None = None,
         keep_ratio: bool = False,
+        bit_depth: int = 8,
     ) -> ImageInfo:
         return cls._wrap(
             dummy_tensor=Tensor(),
@@ -82,6 +89,7 @@ class ImageInfo(tv_tensors.TVTensor):
             scale_factor=scale_factor,
             ignored_labels=ignored_labels,
             keep_ratio=keep_ratio,
+            bit_depth=bit_depth,
         )
 
     @classmethod
@@ -112,6 +120,7 @@ class ImageInfo(tv_tensors.TVTensor):
                 scale_factor=image_info.scale_factor,
                 ignored_labels=image_info.ignored_labels,
                 keep_ratio=image_info.keep_ratio,
+                bit_depth=image_info.bit_depth,
             )
         elif isinstance(output, (tuple, list)):
             image_infos = [x for x in flat_params if isinstance(x, ImageInfo)]
@@ -125,6 +134,7 @@ class ImageInfo(tv_tensors.TVTensor):
                     scale_factor=image_info.scale_factor,
                     ignored_labels=image_info.ignored_labels,
                     keep_ratio=image_info.keep_ratio,
+                    bit_depth=image_info.bit_depth,
                 )
                 for dummy_tensor, image_info in zip(output, image_infos)
             )
@@ -139,7 +149,8 @@ class ImageInfo(tv_tensors.TVTensor):
             f"padding={self.padding}, "
             f"scale_factor={self.scale_factor}, "
             f"ignored_labels={self.ignored_labels}, "
-            f"keep_ratio={self.keep_ratio})"
+            f"keep_ratio={self.keep_ratio}, "
+            f"bit_depth={self.bit_depth})"
         )
 
 

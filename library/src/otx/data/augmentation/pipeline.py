@@ -63,24 +63,37 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: 
     return _original_transform_list.__func__(cls, input, module, param, extra_args)  # type: ignore[attr-defined]
 
 
-ops.MaskSequentialOps.transform_list = classmethod(_fixed_transform_list)  # type: ignore[assignment]
+ops.MaskSequentialOps.transform_list = _fixed_transform_list  # type: ignore[assignment]
 
 
-class _SampleImageAdapter(nn.Module):
-    """Wrap a tensor→tensor transform to operate on the ``.image`` field of a sample.
+# Mapping from storage_dtype string to bit depth.
+_DTYPE_TO_BIT_DEPTH: dict[str, int] = {
+    "uint8": 8,
+    "uint16": 16,
+    "int16": 16,
+    "float32": 32,
+}
 
-    This allows raw tensor transforms (e.g. intensity mapping) to be used
-    inside ``CPUAugmentationPipeline`` whose ``forward()`` passes full
-    :class:`OTXSample` objects through non-native transforms.
+
+class _IntensityAdapter(nn.Module):
+    """Wrap an intensity transform and stamp ``img_info.bit_depth``.
+
+    Unlike :class:`_SampleImageAdapter`, this also records the original
+    bit-depth of the image (derived from ``storage_dtype``) on the sample's
+    :class:`~otx.data.entity.base.ImageInfo`.  Downstream code (e.g. YOLOX)
+    can use ``img_info.bit_depth`` to reject unsupported high-bit-depth inputs.
     """
 
-    def __init__(self, transform: nn.Module) -> None:
+    def __init__(self, transform: nn.Module, storage_dtype: str = "uint8") -> None:
         super().__init__()
         self.transform = transform
+        self.bit_depth = _DTYPE_TO_BIT_DEPTH.get(storage_dtype, 8)
 
     def forward(self, sample: OTXSample) -> OTXSample:
-        """Apply wrapped transform to ``sample.image`` in-place and return sample."""
+        """Apply intensity transform and set ``img_info.bit_depth``."""
         sample.image = self.transform(sample.image)
+        if hasattr(sample, "img_info") and sample.img_info is not None:
+            sample.img_info.bit_depth = self.bit_depth
         return sample
 
 
@@ -184,7 +197,7 @@ class CPUAugmentationPipeline(nn.Module):
         # --- 1. Prepend intensity mapping transform ---------------------------
         if intensity_config is not None:
             intensity_transform = build_intensity_transform(intensity_config)
-            augmentations.append(_SampleImageAdapter(intensity_transform))
+            augmentations.append(_IntensityAdapter(intensity_transform, intensity_config.storage_dtype))
 
         # --- 2. User-configured augmentations ---------------------------------
         if aug_configs:
@@ -347,9 +360,24 @@ class CPUAugmentationPipeline(nn.Module):
         return round(ret)
 
     def _is_native_torchvision_transform(self, transform: nn.Module) -> bool:
-        """Check if the transform is a native torchvision transform."""
+        """Return True if the transform should be applied via ``_apply_native_transform``.
+
+        Rules:
+        - Pure torchvision transforms (module starts with ``torchvision.``) → native.
+        - OTX subclasses of ``tvt_v2.Transform`` that define their own ``forward()``
+          (e.g. ``Resize``, ``CachedMosaic``) handle ``OTXSample`` themselves → NOT native.
+        - OTX wrappers that only add ``__call__`` probability gating without a custom
+          ``forward()`` (e.g. ``RandomIoUCrop``) delegate to the parent torchvision
+          ``forward()`` and must go through ``_apply_native_transform`` → native.
+        """
         module = type(transform).__module__
-        return module.startswith("torchvision.")
+        if module.startswith("torchvision."):
+            return True
+        # OTX class that is a tvt_v2.Transform subclass: treat as native only when it
+        # does NOT define its own forward() (i.e. it relies on the parent's forward).
+        if isinstance(transform, tvt_v2.Transform):
+            return "forward" not in type(transform).__dict__
+        return False
 
     def _apply_native_transform(self, transform: nn.Module, inputs: OTXSample) -> OTXSample:  # type: ignore[return-value]
         """Apply native torchvision transform only to image-related fields.
@@ -818,11 +846,19 @@ class GPUAugmentationPipeline(nn.Module):
             return
 
         assert torch.isfinite(images).all(), "GPU pipeline debug: images contain NaN/Inf"
-        img_min = float(images.min().item())
-        img_max = float(images.max().item())
+
+        # Denormalize images if mean/std were applied (they can have negative values after normalization)
+        images_viz = images.clone()
+        if self._mean is not None and self._std is not None:
+            mean = torch.tensor(self._mean, device=images.device, dtype=images.dtype).view(1, 3, 1, 1)
+            std = torch.tensor(self._std, device=images.device, dtype=images.dtype).view(1, 3, 1, 1)
+            images_viz = images_viz * std + mean
+
+        img_min = float(images_viz.min().item())
+        img_max = float(images_viz.max().item())
         eps = 1e-4
         assert img_min >= -eps and img_max <= 1.0 + eps, (
-            f"GPU pipeline debug: image range is out of [0,1], min={img_min:.6f}, max={img_max:.6f}"
+            f"GPU pipeline debug: image range is out of [0,1] (after denorm), min={img_min:.6f}, max={img_max:.6f}"
         )
 
         if bboxes is not None:
@@ -883,8 +919,8 @@ class GPUAugmentationPipeline(nn.Module):
                     )
 
         self._debug_dir.mkdir(parents=True, exist_ok=True)
-        images = images.detach().cpu().clamp(0, 1)
-        images_uint8 = (images * 255).to(torch.uint8)
+        images_viz = images_viz.detach().cpu().clamp(0, 1)
+        images_uint8 = (images_viz * 255).to(torch.uint8)
         batch_box_count = (
             int(sum(int(boxes.shape[0]) for boxes in bboxes))
             if bboxes is not None

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from torch.export import Dim
@@ -36,6 +37,12 @@ if TYPE_CHECKING:
     from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
 
+
+# YOLOX-S/L/X pretrained weights (MMDet) were trained on raw [0, 255] BGR images —
+# no ImageNet normalization was applied during pretraining.
+# These models are NOT compatible with 16-bit images because the uint8 pixel range
+# assumption is baked into the weights.
+_RAW_UINT8_MODELS: ClassVar[frozenset[str]] = frozenset({"yolox_s", "yolox_l", "yolox_x"})
 
 class YOLOX(OTXDetectionModel):
     """OTX Detection model class for YOLOX.
@@ -196,3 +203,26 @@ class YOLOX(OTXDetectionModel):
             "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
         }
+
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
+        if self.model_name in self._RAW_UINT8_MODELS:
+            if entity.imgs_info is not None:
+                for info in entity.imgs_info:
+                    if info is not None and getattr(info, "bit_depth", 8) > 8:
+                        msg = (
+                            f"YOLOX ({self.model_name}) does not support images with bit_depth > 8. "
+                            f"Got bit_depth={info.bit_depth}. "
+                            "Pretrained weights require [0, 255] uint8-range inputs. "
+                            "Use yolox_tiny or a model with normalization for 16-bit images."
+                        )
+                        raise RuntimeError(msg)
+
+
+            inputs = super()._customize_inputs(entity)
+            # The CPU pipeline always scales images to [0, 1] float.
+            # YOLOX-S/L/X pretrained weights expect [0, 255] float, so rescale here.
+            # We create a new entity so the original (with [0, 1] images) remains intact
+            inputs["entity"] = dataclasses.replace(inputs["entity"], images=entity.images.mul(255.0))
+            return inputs
+
+        return super()._customize_inputs(entity)

@@ -69,7 +69,7 @@ overrides:
         - class_path: torchvision.transforms.v2.RandomZoomOut
           init_args:
             fill: 0
-        - class_path: torchvision.transforms.v2.RandomIoUCrop
+        - class_path: otx.data.augmentation.transforms.RandomIoUCrop
           init_args:
             trials: 50
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
