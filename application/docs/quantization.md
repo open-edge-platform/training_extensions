@@ -47,15 +47,16 @@ Standard post-training quantization that applies INT8 quantization to weights an
 quantized_model = nncf.quantize(
     model,
     calibration_dataset,
-    subset_size=300,
+    subset_size=100,
     preset=nncf.QuantizationPreset.MIXED,
 )
 ```
 
 **Parameters:**
+
 - `model`: OpenVINO IR model to quantize
 - `calibration_dataset`: Representative dataset for calibration
-- `subset_size`: Number of samples to use for calibration (default: 300)
+- `subset_size`: Number of samples to use for calibration (default: 100)
 - `preset`: Quantization preset (`PERFORMANCE` or `MIXED`)
 
 #### `nncf.quantize_with_accuracy_control()`
@@ -71,19 +72,21 @@ quantized_model = nncf.quantize_with_accuracy_control(
     validation_fn,
     max_drop=0.01,      # Maximum allowed accuracy drop (1%)
     drop_type=nncf.DropType.ABSOLUTE,
-    subset_size=300,
+    subset_size=100,
 )
 ```
 
 **Additional Parameters:**
+
 - `validation_dataset`: Dataset for accuracy validation
 - `validation_fn`: Function that computes accuracy metric (returns `(metric_value, per_sample_metrics)`)
 - `max_drop`: Maximum acceptable accuracy drop (e.g., 0.01 for 1%)
 - `drop_type`: How to measure accuracy drop (`ABSOLUTE` or `RELATIVE`)
 
 **Trade-offs:**
+
 - `nncf.quantize()`: Faster, but may have larger accuracy drop
-- `nncf.quantize_with_accuracy_control()`: Slower (2-3x overhead), but maintains accuracy within specified threshold
+- `nncf.quantize_with_accuracy_control()`: Very small overhead, but maintains accuracy within specified threshold
 
 #### Method selection logic
 
@@ -112,7 +115,7 @@ There are three possible approaches to implementing the quantization feature:
 Quantization is performed automatically after training and model export.
 
 | Pros                                                 | Cons                                      |
-|------------------------------------------------------|-------------------------------------------|
+| ---------------------------------------------------- | ----------------------------------------- |
 | Easiest to implement                                 | Increased duration of the training job    |
 | Model and calibration data are immediately available | Increased size of training artifacts      |
 | No additional user interaction required              | Quantization performed even if not needed |
@@ -123,7 +126,7 @@ Quantization is performed automatically after training and model export.
 Quantization is submitted as a separate, on-demand job.
 
 | Pros                                       | Cons                                             |
-|--------------------------------------------|--------------------------------------------------|
+| ------------------------------------------ | ------------------------------------------------ |
 | Optimization performed only when requested | More development effort to implement another job |
 | User has control over when to quantize     | Need to reload calibration data                  |
 | Can re-quantize with different parameters  | Additional job management complexity             |
@@ -134,7 +137,7 @@ Quantization is submitted as a separate, on-demand job.
 Quantization is performed synchronously during an API request.
 
 | Pros                                       | Cons                                          |
-|--------------------------------------------|-----------------------------------------------|
+| ------------------------------------------ | --------------------------------------------- |
 | Optimization performed only when requested | May be unfeasible if operation takes too long |
 | Simpler implementation than a job          | No progress reporting                         |
 | Immediate result                           | Risk of HTTP timeouts                         |
@@ -146,6 +149,7 @@ To determine the best approach, a benchmark script was used to measure quantizat
 model architectures, calibration dataset sizes, and quantization methods:
 
 The benchmark tests both NNCF quantization methods:
+
 - `nncf.quantize()`: Standard PTQ
 - `nncf.quantize_with_accuracy_control()`: PTQ with accuracy recovery
 
@@ -154,7 +158,7 @@ The benchmark tests both NNCF quantization methods:
 The following benchmark was performed on a CPU-only system with the available trained models:
 
 | Architecture                         | Task                  | Method      | Input Size | Samples | Time (s) | Original (MB) | Quantized (MB) | Reduction | Status  |
-|--------------------------------------|-----------------------|-------------|------------|---------|----------|---------------|----------------|-----------|---------|
+| ------------------------------------ | --------------------- | ----------- | ---------- | ------- | -------- | ------------- | -------------- | --------- | ------- |
 | instance-segmentation-rtmdet-tiny    | INSTANCE_SEGMENTATION | quantize    | 640x640    | 50      | 26.95    | 12.98         | 7.26           | 44.0%     | success |
 | instance-segmentation-rtmdet-tiny    | INSTANCE_SEGMENTATION | quantize    | 640x640    | 100     | 52.21    | 12.98         | 7.26           | 44.0%     | success |
 | instance-segmentation-rtmdet-tiny    | INSTANCE_SEGMENTATION | quantize    | 640x640    | 200     | 116.46   | 12.98         | 7.26           | 44.0%     | success |
@@ -180,12 +184,12 @@ The following benchmark was performed on a CPU-only system with the available tr
 | object-detection-atss-mobilenet-v2   | DETECTION             | acc_control | 800x992    | 200     | 117.47   | 5.29          | 3.64           | 31.2%     | success |
 | object-detection-atss-mobilenet-v2   | DETECTION             | acc_control | 800x992    | 300     | 207.48   | 5.29          | 3.64           | 31.2%     | success |
 
-
 **Summary statistics:**
+
 #### Method: `nncf.quantize`
 
 | Calibration Samples | Min Time (s) | Max Time (s) | Avg Time (s) |
-|---------------------|--------------|--------------|--------------|
+| ------------------- | ------------ | ------------ | ------------ |
 | 50                  | 5.99         | 32.79        | 21.91        |
 | 100                 | 8.45         | 62.47        | 41.04        |
 | 200                 | 13.51        | 123.34       | 84.44        |
@@ -194,7 +198,7 @@ The following benchmark was performed on a CPU-only system with the available tr
 #### Method: `nncf.quantize_with_accuracy_control`
 
 | Calibration Samples | Min Time (s) | Max Time (s) | Avg Time (s) |
-|---------------------|--------------|--------------|--------------|
+| ------------------- | ------------ | ------------ | ------------ |
 | 50                  | 7.03         | 34.10        | 24.25        |
 | 100                 | 9.52         | 69.66        | 45.16        |
 | 200                 | 14.02        | 117.47       | 81.58        |
@@ -256,7 +260,7 @@ Quantization is submitted as a job, similar to training jobs. This allows the op
 while providing progress updates and logs.
 
 | Method | Path        | Payload               | Return | Description                         |
-|--------|-------------|-----------------------|--------|-------------------------------------|
+| ------ | ----------- | --------------------- | ------ | ----------------------------------- |
 | `POST` | `/api/jobs` | quantization job spec | job id | Submit a new model quantization job |
 
 #### Request body
@@ -268,7 +272,7 @@ while providing progress updates and logs.
   "parameters": {
     "model_id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
     "device": "cpu",
-    "calibration_subset_size": 300,
+    "max_calibration_subset_size": 100,
     "max_drop": 0.01
   }
 }
@@ -276,12 +280,12 @@ while providing progress updates and logs.
 
 #### Parameters
 
-| Parameter                 | Type   | Required | Default | Description                                                                                                                  |
-|---------------------------|--------|----------|---------|------------------------------------------------------------------------------------------------------------------------------|
-| `model_id`                | UUID   | Yes      | -       | ID of the model revision to quantize                                                                                         |
-| `device`                  | string | Yes      | -       | Device to use for calibration (e.g., 'cpu', 'xpu-0')                                                                         |
-| `calibration_subset_size` | int    | No       | 300     | Maximum number of samples from training set used for calibration                                                             |
-| `max_drop`                | float  | No       | -       | Maximum allowed accuracy drop. If provided, uses `nncf.quantize_with_accuracy_control()`; if omitted, uses `nncf.quantize()` |
+| Parameter                     | Type   | Required | Default | Description                                                                                                                  |
+| ----------------------------- | ------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `model_id`                    | UUID   | Yes      | -       | ID of the model revision to quantize                                                                                         |
+| `device`                      | string | Yes      | -       | Device to use for calibration (e.g., 'cpu', 'xpu-0')                                                                         |
+| `max_calibration_subset_size` | int    | No       | 100     | Maximum number of samples from training set used for calibration                                                             |
+| `max_drop`                    | float  | No       | -       | Maximum allowed accuracy drop. If provided, uses `nncf.quantize_with_accuracy_control()`; if omitted, uses `nncf.quantize()` |
 
 #### Response
 
@@ -298,45 +302,68 @@ while providing progress updates and logs.
     },
     "model": {
       "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b"
-    }
+    },
+    "device": "cpu",
+    "max_calibration_subset_size": 100,
+    "max_drop": 0.01
   }
 }
 ```
 
 ### Retrieve quantized model details
 
-The existing model endpoints are extended to include information about quantized variants.
+The existing model endpoints are extended to include information about quantized variants. The `quantization_info`
+field is only returned for quantized models (null for non-quantized models). The id for model variants is also introduced.
 
 | Method | Path                                   | Payload | Return     | Description                                |
-|--------|----------------------------------------|---------|------------|--------------------------------------------|
+| ------ | -------------------------------------- | ------- | ---------- | ------------------------------------------ |
 | `GET`  | `/api/projects/<id>/models/<model_id>` | -       | model info | Get model info including quantized variant |
 
 #### Response (extended model view)
 
 ```json
 {
-  "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
-  "name": "My Detection Model",
-  "architecture": "object-detection-yolox-s",
-  "training_info": { ... },
-  "variants": {
-    "openvino": { "available": true, "precision": "fp16" },
-    "onnx": { "available": true, "precision": "fp16" },
-    "pytorch": { "available": true, "precision": "fp32" }
-  },
-  "quantized": {
-    "available": true,
-    "precision": "int8",
-    "max_drop": 0.01,
-    "created_at": "2026-02-17T12:00:00Z",
-    "calibration_subset_size": 300,
-    "evaluations": [
+    "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
+    "name": "My Detection Model",
+    "architecture": "object-detection-yolox-s",
+    "training_info": {...},
+    "variants": [
       {
-        "subset": "testing",
-        "metrics": { "mAP@0.5": 0.78, "mAP@0.5-0.95": 0.62 }
+        "id": "4c576bce-5e97-408d-a0ea-cc3801e4c453",
+        "format": "openvino",
+        "precision": "fp16",
+        "weights_size": 123456
+      },
+      {
+        "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
+        "format": "openvino",
+        "precision": "int8",
+        "weights_size": 12345,
+        "evaluations": [
+          {
+            "subset": "testing",
+            "metrics": { "mAP@0.5": 0.78, "mAP@0.5-0.95": 0.62 }
+          }
+        ],
+        "quantization_info": {
+            "type": "ptq",
+            "max_drop": 0.01,
+            "max_calibration_dataset_size": 100
+        }
+      },
+      {
+        "id": "d01945ae-1578-41f9-a2b3-11865032981c",
+        "format": "onnx",
+        "precision": "fp16",
+        "weights_size": 123456
+      },
+      {
+        "id": "0e432cc0-d30a-4e76-9da9-896147a271c0",
+        "format": "pytorch",
+        "precision": "fp32",
+        "weights_size": 123456
       }
     ]
-  }
 }
 ```
 
@@ -345,7 +372,7 @@ The existing model endpoints are extended to include information about quantized
 The existing model binary download endpoint supports downloading the quantized model variant.
 
 | Method | Path                                          | Query params       | Return | Description                    |
-|--------|-----------------------------------------------|--------------------|--------|--------------------------------|
+| ------ | --------------------------------------------- | ------------------ | ------ | ------------------------------ |
 | `GET`  | `/api/projects/<id>/models/<model_id>/binary` | `format=quantized` | zip    | Download quantized model files |
 
 The `format` query parameter now accepts an additional value:
@@ -360,24 +387,20 @@ The `format` query parameter now accepts an additional value:
 The existing pipeline update endpoint is used to enable the quantized model variant for inference.
 
 | Method  | Path                          | Payload         | Return        | Description                   |
-|---------|-------------------------------|-----------------|---------------|-------------------------------|
+| ------- | ----------------------------- | --------------- | ------------- | ----------------------------- |
 | `PATCH` | `/api/projects/<id>/pipeline` | pipeline config | pipeline info | Update pipeline configuration |
 
 #### Request body to enable quantized model
 
 ```json
 {
-  "model_id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
-  "model_variant": "quantized"
+  "model_id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b"
 }
 ```
 
 #### Model variant options
 
-| Variant     | Description                                       |
-|-------------|---------------------------------------------------|
-| `default`   | Use the FP16 OpenVINO IR model (current behavior) |
-| `quantized` | Use the INT8 quantized OpenVINO IR model          |
+The choice of the model variant is determined by its model id. See the `model_variants` DB schema later for more details.
 
 The pipeline response includes the active model variant:
 
@@ -386,17 +409,17 @@ The pipeline response includes the active model variant:
   "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
   "status": "idle",
   "model_id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
-  "model_variant": "quantized",
+  "precision": "int8",
   ...
 }
 ```
 
 ### Delete quantized model
 
-Quantized model variants can be deleted independently of the parent model.
+Quantized model variants can be deleted independently of the parent model. See the folder structure in the Storage section for more details.
 
 | Method   | Path                                   | Query params        | Return | Description                       |
-|----------|----------------------------------------|---------------------|--------|-----------------------------------|
+| -------- | -------------------------------------- | ------------------- | ------ | --------------------------------- |
 | `DELETE` | `/api/projects/<id>/models/<model_id>` | `variant=quantized` | -      | Delete only the quantized variant |
 
 ## Quantization job structure
@@ -412,7 +435,7 @@ class QuantizationJobParams(JobParams):
     project_id: UUID
     source_model_id: UUID                   # Source model revision to quantize
     device: DeviceInfo
-    calibration_subset_size: int = 300      # Max samples for calibration
+    calibration_subset_size: int = 100      # Max samples for calibration
     max_drop: float | None = None           # If provided, uses nncf.quantize_with_accuracy_control()
                                             # If None, uses nncf.quantize()
 ```
@@ -430,8 +453,8 @@ The quantization job consists of the following steps:
 2. **Prepare Calibration Dataset** (5-20%)
 
    - Load the dataset revision used for training the source model
-   - Extract the training subset
-   - Limit to `calibration_subset_size` samples if necessary
+   - Extract the validation subset
+   - Limit to `max_calibration_subset_size` samples if necessary
 
 3. **Initialize OV Engine** (20-25%)
 
@@ -485,13 +508,13 @@ class OTXQuantizer(Execution):
 
     @step("Run Quantization", 80)
     def run_quantization(
-        self, 
-        engine: OVEngine, 
+        self,
+        engine: OVEngine,
         subset_size: int,
         max_drop: float | None,
     ) -> Path:
         """Execute the quantization process.
-        
+
         If max_drop is provided, uses nncf.quantize_with_accuracy_control()
         to ensure accuracy stays within the specified threshold.
         If max_drop is None, uses nncf.quantize() for standard PTQ.
@@ -517,20 +540,18 @@ class OTXQuantizer(Execution):
 
 ### Database
 
-The quantization metadata is stored in a new `quantized_models` table:
+The quantization metadata is stored in a new `model_variants` table:
 
-| Column                     | Type     | Description                                                          |
-|----------------------------|----------|----------------------------------------------------------------------|
-| `id`                       | UUID     | Primary key                                                          |
-| `source_model_revision_id` | UUID     | Foreign key to `model_revisions` (parent model)                      |
-| `precision`                | VARCHAR  | Precision type (e.g., 'int8')                                        |
-| `max_drop`                 | FLOAT    | Max accuracy drop threshold; NULL if standard `nncf.quantize()` used |
-| `calibration_subset_size`  | INTEGER  | Number of samples used for calibration                               |
-| `created_at`               | DATETIME | Timestamp when quantization completed                                |
-| `files_deleted`            | BOOLEAN  | Whether quantized model files have been deleted                      |
+| Column                     | Type    | Description                                               |
+| -------------------------- | ------- | --------------------------------------------------------- |
+| `id`                       | UUID    | Primary key                                               |
+| `source_model_revision_id` | UUID    | Foreign key to `model_revisions` (parent model)           |
+| `precision`                | VARCHAR | Precision type (e.g., 'int8')                             |
+| `quantization_info`        | JSON    | Info such as `max_drop` and `max_calibration_subset_size` |
+| `files_deleted`            | BOOLEAN | Whether quantized model files have been deleted           |
 
-Evaluation results for quantized models are stored in the existing `evaluations` table with a reference
-to the quantized model ID.
+Quantization info is `None` for model variants which are not quantized.
+Evaluation results for quantized models are stored in the existing `evaluations` table with a reference to the quantized model ID.
 
 ### Filesystem
 
@@ -557,7 +578,7 @@ BASE_DATA_DIR/
 The quantization job handles the following error conditions:
 
 | Error condition              | Behavior                                |
-|------------------------------|-----------------------------------------|
+| ---------------------------- | --------------------------------------- |
 | Model not found              | Job fails with 404 error                |
 | Model training not completed | Job fails with 409 error                |
 | Model already quantized      | Job fails with 409 error                |
