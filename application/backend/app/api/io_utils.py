@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Generator
 from io import BytesIO
+from mimetypes import guess_file_type
 from pathlib import Path
 
 from PIL.Image import Image
@@ -87,4 +88,7 @@ def write_file_to_response(path: Path, filename: str, cache_control: str | None 
     Returns:
         FastAPI StreamingResponse.
     """
-    return write_bytes_to_response(bytes=file_iterator(filepath=path), filename=filename, cache_control=cache_control)
+    media_type, _ = guess_file_type(path)
+    return write_bytes_to_response(
+        bytes=file_iterator(filepath=path), filename=filename, media_type=media_type, cache_control=cache_control
+    )
