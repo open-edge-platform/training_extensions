@@ -164,4 +164,4 @@ class MediaAnnotations(BaseModel):
 class AnnotatedVideoFrame(BaseModel):
     media_id: UUID
     frame_index: int
-    dataset: MediaAnnotations
+    annotation_data: MediaAnnotations

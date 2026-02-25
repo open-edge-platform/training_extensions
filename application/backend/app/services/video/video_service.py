@@ -55,6 +55,9 @@ def extract_video_frame(
     Args:
         video_path: Video binary file path
         frame_index: Frame index
+
+    Returns:
+        Extracted video frame as numpy array (RGB format)
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -64,9 +67,9 @@ def extract_video_frame(
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
         # Read the frame at the requested position
         read_success, frame = cap.read()
-        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         if not read_success:
             raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
+        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame
     except Exception as e:
         logger.error(f"Failed extracting video frame {frame_index} from video {video_path}", exc_info=e)

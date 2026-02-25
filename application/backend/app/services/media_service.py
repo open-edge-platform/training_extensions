@@ -221,20 +221,19 @@ class MediaService(BaseSessionManagedService):
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         return dataset_dir / f"{media.id}.{media.format}"
 
-    def get_media_binary_path_by_id(self, project_id: UUID, media_id: UUID) -> Path | str:
+    def get_media_binary_path_by_id(self, project_id: UUID, media_id: UUID) -> Path:
         """Get a media binary content by its ID"""
         media = self.get_media_by_id(project_id=project_id, media_id=media_id)
         return self.get_media_binary_path(project_id=project_id, media=media)
 
-    def get_media_thumbnail_path_by_id(self, project: Project, media_id: UUID) -> Path | str:
+    def get_media_thumbnail_path_by_id(self, project: Project, media_id: UUID) -> Path:
         """Get a media thumbnail binary content by its ID"""
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
         return self.projects_dir / f"{project.id}/dataset/{media.id}-thumb.jpg"
 
     def generate_media_thumbnail(self, project: Project, media: Media) -> Image.Image:
         """Regenerate a media thumbnail by its ID"""
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
-        binary_path = dataset_dir / f"{media.id}.{media.format}"
+        binary_path = self.get_media_binary_path(project_id=project.id, media=media)
 
         if media.type == MediaType.VIDEO:
             video_frame = MediaService._get_frame_binary_from_video_file(
@@ -263,13 +262,14 @@ class MediaService(BaseSessionManagedService):
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
 
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        binary_path = self.get_media_binary_path(project_id=project.id, media=media)
         try:
-            os.remove(dataset_dir / f"{media.id}.{media.format}")
+            os.remove(binary_path)
         except FileNotFoundError:
             logger.warning("Media {} binary was not found during deletion", media_id)
+        thumbnail_path = self.get_media_thumbnail_path_by_id(project=project, media_id=media.id)
         try:
-            os.remove(dataset_dir / f"{media_id}-thumb.jpg")
+            os.remove(thumbnail_path)
         except FileNotFoundError:
             logger.warning("Media {} thumbnail was not found during deletion", media_id)
 
