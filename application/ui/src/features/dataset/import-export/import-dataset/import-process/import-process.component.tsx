@@ -5,8 +5,7 @@ import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
-import { isJobPending } from '../../export-jobs-list/util';
-import { getJobProgress } from '../../util';
+import { getJobProgress, isJobPending } from '../../util';
 import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
 import { ImportDatasetState } from '../util';
 

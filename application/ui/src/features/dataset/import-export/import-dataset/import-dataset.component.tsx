@@ -17,10 +17,10 @@ type ImportDatasetProps = {
 };
 
 export const ImportDataset = ({ dialogState }: ImportDatasetProps) => {
-    const { getLsPreparingImportId } = usePrepareImportDataset();
+    const { getLsPreparingImport } = usePrepareImportDataset();
 
     const [currentState, setCurrentState] = useState<ImportDatasetState>(() => {
-        if (getLsPreparingImportId() !== null) {
+        if (getLsPreparingImport() !== null) {
             return 'preparing';
         }
 

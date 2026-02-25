@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isEmpty } from 'lodash-es';
+import prettyBytes from 'pretty-bytes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
@@ -20,3 +21,5 @@ export const downloadFile = (url: string, name: string) => {
 
     URL.revokeObjectURL(url);
 };
+
+export const formatBytes = (bytes: number): string => prettyBytes(bytes);

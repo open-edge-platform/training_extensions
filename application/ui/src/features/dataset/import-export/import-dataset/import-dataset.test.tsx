@@ -20,9 +20,9 @@ const mockDialogState = {
 describe('ImportDataset', () => {
     const renderApp = (data: null | { id: string; fileName: string }) => {
         vi.mocked(usePrepareImportDataset).mockReturnValue({
-            getLsPreparingImportId: vi.fn().mockReturnValue(data),
-            addLsPreparingImportId: vi.fn(),
-            removeLsPreparingImportId: vi.fn(),
+            getLsPreparingImport: vi.fn().mockReturnValue(data),
+            addLsPreparingImport: vi.fn(),
+            removeLsPreparingImport: vi.fn(),
         });
 
         render(<ImportDataset dialogState={{ ...mockDialogState, isOpen: true }} />);
