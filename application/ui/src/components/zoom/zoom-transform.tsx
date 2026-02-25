@@ -111,15 +111,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
             onPointerUp={onPointerUp}
             onMouseLeave={onMouseLeave}
         >
-            <div
-                data-testid='zoom-transform'
-                className={classes.wrapperInternal}
-                style={{
-                    transformOrigin: '0 0',
-                    transition: zoom.hasAnimation ? 'transform 0.2s ease' : 'none',
-                    transform: `translate(${zoom.translate.x}px, ${zoom.translate.y}px) scale(${zoom.scale})`,
-                }}
-            >
+            <div data-testid='zoom-transform' className={classes.wrapperInternal}>
                 {children}
             </div>
         </div>

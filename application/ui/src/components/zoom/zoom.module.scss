@@ -6,6 +6,9 @@
     width: 100%;
     height: 100%;
     user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .wrapperInternal {
@@ -13,4 +16,5 @@
     flex-wrap: wrap;
     width: fit-content;
     height: fit-content;
+    zoom: var(--zoom-scale);
 }
