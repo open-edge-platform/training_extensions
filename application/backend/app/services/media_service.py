@@ -100,22 +100,26 @@ class MediaService(BaseSessionManagedService):
         binary_path = dataset_dir / f"{media_id}.{format}"
         image.save(binary_path)
 
-        MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
+        try:
+            MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
 
-        media = MediaDB(
-            id=str(media_id),
-            project_id=str(project.id),
-            type=MediaType.IMAGE,
-            name=name,
-            format=str(format),
-            width=image.width,
-            height=image.height,
-            size=os.path.getsize(binary_path),
-            source_id=str(source_id) if source_id is not None else None,
-        )
+            media = MediaDB(
+                id=str(media_id),
+                project_id=str(project.id),
+                type=MediaType.IMAGE,
+                name=name,
+                format=str(format),
+                width=image.width,
+                height=image.height,
+                size=os.path.getsize(binary_path),
+                source_id=str(source_id) if source_id is not None else None,
+            )
 
-        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_media = repo.save(media)
+            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            db_media = repo.save(media)
+        except Exception as e:
+            binary_path.unlink(missing_ok=True)
+            raise e
         return MediaAdapter.validate_python(db_media)
 
     def create_video(
@@ -154,6 +158,11 @@ class MediaService(BaseSessionManagedService):
                 size=os.path.getsize(binary_path),
                 source_id=str(source_id) if source_id is not None else None,
             )
+
+            video_frame = MediaService._get_frame_binary_from_video_file(
+                video_path=binary_path, frame_index=video_metadata.frame_count // 2
+            )
+            MediaService._generate_and_save_thumbnail(image=video_frame, path=dataset_dir / f"{media_id}-thumb.jpg")
 
             repo = MediaRepository(project_id=str(project.id), db=self.db_session)
             db_media = repo.save(media)
@@ -282,22 +291,28 @@ class MediaService(BaseSessionManagedService):
         video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)
         video_frame.save(video_frame_path)
 
-        db_video_frame = MediaDB(
-            id=str(media_id),
-            project_id=str(project.id),
-            type=MediaType.VIDEO_FRAME,
-            name=f"{video.name}_frame_{frame_index}",
-            format=str(format),
-            width=video_frame.width,
-            height=video_frame.height,
-            video_id=str(video.id),
-            frame_index=frame_index,
-            size=os.path.getsize(video_frame_path),
-            source_id=None,
-        )
+        try:
+            MediaService._generate_and_save_thumbnail(image=video_frame, path=dataset_dir / f"{media_id}-thumb.jpg")
 
-        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_video_frame = repo.save(db_video_frame)
+            db_video_frame = MediaDB(
+                id=str(media_id),
+                project_id=str(project.id),
+                type=MediaType.VIDEO_FRAME,
+                name=f"{video.name}_frame_{frame_index}",
+                format=str(format),
+                width=video_frame.width,
+                height=video_frame.height,
+                video_id=str(video.id),
+                frame_index=frame_index,
+                size=os.path.getsize(video_frame_path),
+                source_id=None,
+            )
+
+            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            db_video_frame = repo.save(db_video_frame)
+        except Exception as e:
+            video_frame_path.unlink(missing_ok=True)
+            raise e
         return VideoFrame.model_validate(db_video_frame, from_attributes=True)
 
     def get_video_frame_by_video_id_and_index(self, project: Project, video_id: UUID, frame_index: int) -> Media | None:

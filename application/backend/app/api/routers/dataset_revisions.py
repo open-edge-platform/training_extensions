@@ -216,7 +216,7 @@ def get_dataset_revision_item_thumbnail(
         item_id=str(dataset_item_id),
     )
     return write_image_to_response(
-        image=thumbnail, filename=f"{dataset_item_id}_thumb.jpeg", cache_control="public, max-age=31536000"
+        image=thumbnail, filename=f"{dataset_item_id}-thumb.jpeg", cache_control="public, max-age=31536000"
     )
 
 

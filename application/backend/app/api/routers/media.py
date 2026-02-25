@@ -349,7 +349,7 @@ def get_media_thumbnail(
 
     thumbnail_path = media_service.get_media_thumbnail_path(project=project, media=media)
     return write_file_to_response(
-        path=thumbnail_path, filename=f"{media.id}_thumb.jpeg", cache_control="public, max-age=31536000"
+        path=thumbnail_path, filename=f"{media.id}-thumb.jpeg", cache_control="public, max-age=31536000"
     )
 
 

@@ -610,7 +610,7 @@ class TestMediaServiceIntegration:
 
         # Do not generate thumbnail on video upload
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
-        assert not os.path.exists(thumbnail_file_path)
+        assert os.path.exists(thumbnail_file_path)
 
     def test_create_media_invalid_image(
         self,
@@ -1308,6 +1308,9 @@ class TestMediaServiceIntegration:
 
         video_frame_binary_path = dataset_dir / f"{video_frame.id}.jpg"
         assert os.path.exists(video_frame_binary_path)
+
+        video_frame_thumbnail_path = dataset_dir / f"{video_frame.id}-thumb.jpg"
+        assert os.path.exists(video_frame_thumbnail_path)
 
         db_video_frame = db_session.get(MediaDB, str(video_frame.id))
         assert db_video_frame is not None
