@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 
-import { ActionButton, Item, Menu, MenuTrigger } from '@geti/ui';
+import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { useOverlayTriggerState } from 'react-stately';
 
@@ -16,7 +16,10 @@ import classes from './menu-actions.module.scss';
 type MenuActionsProps = {
     projectId: string;
     projectName: string;
-    activePipeline?: boolean;
+    pipelineState?: {
+        isRunning: boolean;
+        isConfigured?: boolean;
+    };
     actionButtonStyle?: CSSProperties;
     onDeleted?: () => void;
 };
@@ -24,10 +27,11 @@ type MenuActionsProps = {
 export const MenuActions = ({
     projectId,
     projectName,
-    activePipeline,
+    pipelineState,
     actionButtonStyle,
     onDeleted,
 }: MenuActionsProps) => {
+    const [isEnableBlockedDialogOpen, setIsEnableBlockedDialogOpen] = useState(false);
     const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
 
@@ -36,8 +40,9 @@ export const MenuActions = ({
         {
             onRename: editProjectNameDialogState.open,
             onDelete: deleteProjectDialogState.open,
+            onEnableBlocked: () => setIsEnableBlockedDialogOpen(true),
         },
-        activePipeline
+        pipelineState
     );
 
     return (
@@ -55,11 +60,24 @@ export const MenuActions = ({
                     <MoreMenu />
                 </ActionButton>
                 <Menu onAction={handleAction} UNSAFE_className={classes.actionMenu}>
-                    {Object.entries(menuActions).map(([key, label]) => (
+                    {menuActions.map(({ key, label }) => (
                         <Item key={key}>{label}</Item>
                     ))}
                 </Menu>
             </MenuTrigger>
+
+            <DialogContainer onDismiss={() => setIsEnableBlockedDialogOpen(false)}>
+                {isEnableBlockedDialogOpen && (
+                    <AlertDialog
+                        title={'Cannot enable pipeline'}
+                        primaryActionLabel={'Close'}
+                        variant={'warning'}
+                        onPrimaryAction={() => setIsEnableBlockedDialogOpen(false)}
+                    >
+                        Make sure you selected a model, source, and sink before enabling the pipeline.
+                    </AlertDialog>
+                )}
+            </DialogContainer>
 
             <EditProjectNameDialog
                 projectId={projectId}
