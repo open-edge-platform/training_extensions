@@ -510,7 +510,7 @@ class TestMediaEndpoints:
         type(media).name = PropertyMock(return_value="test")
         fxt_media_service.get_media_by_id.return_value = media
 
-        tmp_file_path = None
+        temp_file_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
                 temp_file_path = Path(tmp_file.name)
@@ -518,8 +518,8 @@ class TestMediaEndpoints:
                 response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/binary")
 
         finally:
-            if tmp_file_path and os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
         assert response.status_code == status.HTTP_200_OK
 
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
@@ -538,7 +538,7 @@ class TestMediaEndpoints:
         type(video_frame).name = PropertyMock(return_value="test_10")
         fxt_media_service.get_video_frame_by_video_id_and_index.return_value = video_frame
 
-        tmp_file_path = None
+        temp_file_path = None
         try:
             with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
                 temp_file_path = Path(tmp_file.name)
@@ -548,8 +548,8 @@ class TestMediaEndpoints:
                 )
 
         finally:
-            if tmp_file_path and os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
         assert response.status_code == status.HTTP_200_OK
 
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=video_id)
