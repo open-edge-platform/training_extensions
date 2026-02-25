@@ -44,7 +44,7 @@ class OTXInstanceSegDataset(OTXDataset):
     ) -> None:
         sample_type = with_image_dtype(InstanceSegmentationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(  # type: ignore[arg-type]
+        super().__init__(
             dm_subset=dm_subset,
             sample_type=sample_type,
             transforms=transforms,
@@ -55,7 +55,7 @@ class OTXInstanceSegDataset(OTXDataset):
             storage_dtype=storage_dtype,
         )
 
-        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[attr-defined]
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -73,7 +73,7 @@ class OTXInstanceSegDataset(OTXDataset):
         idx_list_per_classes: dict[int | str, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
-            labels = item.label.tolist()  # type: ignore[attr-defined]
+            labels = item.label.tolist()
             if use_string_label:
                 labels = [self.label_info.label_names[label] for label in labels]
             for label in labels:

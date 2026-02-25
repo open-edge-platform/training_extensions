@@ -86,9 +86,6 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
-        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-          init_args:
-            min_size: 1
       augmentations_gpu:
         - class_path: kornia.augmentation.RandomAffine
           init_args:

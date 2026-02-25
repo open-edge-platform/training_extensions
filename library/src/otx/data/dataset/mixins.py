@@ -55,7 +55,7 @@ class DataAugSwitchMixin:
         if self.data_aug_switch is None:
             return None
         policy_name = self.data_aug_switch.current_policy_name
-        self.transforms = self.data_aug_switch.current_cpu_pipeline  # type: ignore[assignment]
+        self.transforms = self.data_aug_switch.current_cpu_pipeline
         return policy_name
 
     @property

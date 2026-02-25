@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import time
 import abc
 from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
@@ -20,7 +21,6 @@ from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro import Dataset as DmDataset
-    from datumaro.experimental import Dataset as ExpDataset
 
 Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
@@ -145,7 +145,7 @@ class OTXDataset(TorchDataset):
 
     def __init__(
         self,
-        dm_subset: DmDataset | ExpDataset,
+        dm_subset: DmDataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
@@ -184,7 +184,8 @@ class OTXDataset(TorchDataset):
             return entity
 
         if isinstance(self.transforms, CPUAugmentationPipeline):
-            return self.transforms(entity)
+            augmentations = self.transforms(entity)
+            return augmentations
 
         # Legacy path: Compose
         if isinstance(self.transforms, Compose):
@@ -206,8 +207,6 @@ class OTXDataset(TorchDataset):
         results = item
         for transform in self.transforms:
             results = transform(results)
-            # MMCV transform can produce None. Please see
-            # https://github.com/open-mmlab/mmengine/blob/26f22ed283ae4ac3a24b756809e5961efe6f9da8/mmengine/dataset/base_dataset.py#L59-L66
             if results is None:
                 return None
 
@@ -221,13 +220,12 @@ class OTXDataset(TorchDataset):
                 return results
 
             index = torch.randint(0, len(self), (1,)).item()
-
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
     def _get_item_impl(self, index: int) -> OTXSample | None:
         dm_item = self.dm_subset[index]
-        return self._apply_transforms(dm_item)  # type: ignore[arg-type]
+        return self._apply_transforms(dm_item)
 
     @property
     def collate_fn(self) -> Callable:

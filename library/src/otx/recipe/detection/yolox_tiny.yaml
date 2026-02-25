@@ -59,10 +59,6 @@ overrides:
     train_subset:
       batch_size: 8
       augmentations_cpu:
-        - class_path: otx.data.augmentation.transforms.Resize
-          init_args:
-            size: $(input_size) * 1.538
-            keep_aspect_ratio: true
         - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
             random_pop: false
@@ -72,9 +68,6 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
-        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-          init_args:
-            min_size: 1
       augmentations_gpu:
         - class_path: kornia.augmentation.RandomAffine
           init_args:

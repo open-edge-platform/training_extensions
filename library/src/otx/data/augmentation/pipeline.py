@@ -409,79 +409,6 @@ class CPUAugmentationPipeline(nn.Module):
             inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
         return outputs
 
-    def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):  # noqa: ANN001, ANN202
-        """Debug visualization - save annotated PNG for inspection."""
-        import os
-
-        import numpy as np
-        from PIL import Image
-        from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-
-        os.makedirs("debug_resize_new", exist_ok=True)  # noqa: PTH103
-
-        # Get unique id for this sample
-        sample_id = id(sample)
-
-        # Debug log to file since stdout may be redirected
-        log_file = "debug_resize_new/debug_log.txt"
-        with open(log_file, "a") as f:  # noqa: PTH123
-            f.write(f"\n=== Sample {sample_id} ===\n")
-
-        # Convert image to CHW uint8 tensor
-        img = sample.image
-        with open(log_file, "a") as f:  # noqa: PTH123
-            f.write(
-                f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, "
-                f"dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n"
-            )
-        if isinstance(img, np.ndarray):
-            with open(log_file, "a") as f:  # noqa: PTH123
-                f.write(f"NumPy image range: min={img.min()}, max={img.max()}\n")
-            if img.ndim == 3:  # noqa: SIM108
-                img = torch.from_numpy(img).permute(2, 0, 1)
-            else:
-                img = torch.from_numpy(img)
-        else:
-            with open(log_file, "a") as f:  # noqa: PTH123
-                f.write(f"Tensor image range: min={img.min().item()}, max={img.max().item()}\n")
-
-        if img.dtype != torch.uint8:
-            img = img.float()
-            with open(log_file, "a") as f:  # noqa: PTH123
-                f.write(f"After float conversion: min={img.min().item()}, max={img.max().item()}\n")
-            if img.max() <= 1.0:  # noqa: SIM108
-                img = (img * 255.0).clamp(0, 255)
-            else:
-                # Values > 1.0, clamp to 0-255 range
-                img = img.clamp(0, 255)
-            img = img.to(torch.uint8)
-
-        annotated = img
-        # Draw masks if available
-        if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
-            masks = sample.masks
-            if isinstance(masks, np.ndarray):
-                masks = torch.from_numpy(masks)
-            if masks.dtype != torch.bool:
-                masks = masks > 0
-            if masks.ndim == 2:
-                masks = masks.unsqueeze(0)
-            annotated = draw_segmentation_masks(annotated, masks, alpha=0.5)
-
-        # Draw bboxes if available
-        if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
-            bboxes = sample.bboxes
-            if isinstance(bboxes, np.ndarray):
-                bboxes = torch.from_numpy(bboxes)
-            bboxes = bboxes.to(torch.int64)
-            annotated = draw_bounding_boxes(annotated, bboxes, colors="red", width=2)
-
-        # Save annotated image
-        img_path = f"debug_resize_new/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
-        Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
-
-        return sample
-
     def __repr__(self) -> str:
         """String representation of the pipeline."""
         aug_strs = [f"  {aug}" for aug in self.augmentations]
@@ -535,6 +462,8 @@ class GPUAugmentationPipeline(nn.Module):
         self._debug_dir = Path(debug_dir) if debug_dir else None
         self._debug_max = int(os.getenv("OTX_GPU_AUG_DEBUG_MAX", "50"))
         self._debug_counter = 0
+        self._bbox_min_size = float(os.getenv("OTX_GPU_AUG_BBOX_MIN_SIZE", "1.0"))
+        self._bbox_min_area = float(os.getenv("OTX_GPU_AUG_BBOX_MIN_AREA", "1.0"))
 
         # Build Kornia AugmentationSequential for efficient batch processing
         self.aug_sequential: K.AugmentationSequential | None = None
@@ -691,8 +620,6 @@ class GPUAugmentationPipeline(nn.Module):
             {"images": tensor, "labels": list, "bboxes": list, "masks": list, "keypoints": list}
         """
         if self.aug_sequential is None:
-            if self._debug_dir is not None:
-                self._debug_visualize("no_aug", images, bboxes, masks, keypoints)
             return {"images": images, "labels": labels, "bboxes": bboxes, "masks": masks, "keypoints": keypoints}
 
         # Handle instance segmentation masks: Kornia expects (N, C, H, W) but instance
@@ -708,7 +635,6 @@ class GPUAugmentationPipeline(nn.Module):
             # Semantic seg masks: (C, H, W) where C is often 1 or num_classes
             # We add channel dim to all masks for consistency with Kornia
             masks = [m.unsqueeze(0) for m in masks]  # (N, H, W) -> (N, 1, H, W)
-
         # Map data key names to actual data
         data_map = {
             "input": images,
@@ -748,6 +674,22 @@ class GPUAugmentationPipeline(nn.Module):
             elif key == "keypoints":
                 output["keypoints"] = results[i]
 
+        # Sanitize geometric annotations after Kornia transforms.
+        if output["images"] is not None:
+            s_bboxes, s_labels, s_masks, s_keypoints = self._sanitize_annotations(
+                typing.cast("torch.Tensor", output["images"]),
+                typing.cast("list[torch.Tensor] | None", output["bboxes"]),
+                typing.cast("list[torch.Tensor] | None", output["labels"]),
+                typing.cast("list[torch.Tensor] | None", output["masks"]),
+                typing.cast("list[torch.Tensor] | None", output["keypoints"]),
+                min_size=self._bbox_min_size,
+                min_area=self._bbox_min_area,
+            )
+            output["bboxes"] = s_bboxes
+            output["labels"] = s_labels
+            output["masks"] = s_masks
+            output["keypoints"] = s_keypoints
+
         if self._debug_dir is not None:
             self._debug_visualize(
                 "after_gpu",
@@ -758,6 +700,109 @@ class GPUAugmentationPipeline(nn.Module):
             )
 
         return output
+
+    def _sanitize_annotations(
+        self,
+        images: torch.Tensor,
+        bboxes: list[torch.Tensor] | None,
+        labels: list[torch.Tensor] | None,
+        masks: list[torch.Tensor] | None,
+        keypoints: list[torch.Tensor] | None,
+        min_size: float = 4.0,
+        min_area: float = 16.0,
+    ) -> tuple[
+        list[torch.Tensor] | None,
+        list[torch.Tensor] | None,
+        list[torch.Tensor] | None,
+        list[torch.Tensor] | None,
+    ]:
+        """Sanitize transformed annotations.
+
+        - Clip bboxes to image bounds
+        - Remove invalid bboxes (non-finite, x2<=x1, y2<=y1, too small)
+        - Filter aligned labels/masks/keypoints using the same valid indices
+        """
+        if bboxes is None:
+            return bboxes, labels, masks, keypoints
+
+        batch_size, _, h, w = images.shape
+        if len(bboxes) != batch_size:
+            msg = f"GPU sanitize: bboxes batch mismatch, got {len(bboxes)} vs {batch_size}"
+            raise RuntimeError(msg)
+
+        if labels is not None:
+            if len(labels) != batch_size:
+                msg = f"GPU sanitize: labels batch mismatch, got {len(labels)} vs {batch_size}"
+                raise RuntimeError(msg)
+        if masks is not None:
+            if len(masks) != batch_size:
+                msg = f"GPU sanitize: masks batch mismatch, got {len(masks)} vs {batch_size}"
+                raise RuntimeError(msg)
+        if keypoints is not None:
+            if len(keypoints) != batch_size:
+                msg = f"GPU sanitize: keypoints batch mismatch, got {len(keypoints)} vs {batch_size}"
+                raise RuntimeError(msg)
+
+        out_bboxes: list[torch.Tensor] = []
+        out_labels: list[torch.Tensor] | None = [] if labels is not None else None
+        out_masks: list[torch.Tensor] | None = [] if masks is not None else None
+        out_keypoints: list[torch.Tensor] | None = [] if keypoints is not None else None
+
+        for i in range(batch_size):
+            boxes = bboxes[i]
+            if not (boxes.ndim == 2 and boxes.shape[-1] == 4):
+                msg = f"GPU sanitize: bboxes[{i}] must be [N,4], got {tuple(boxes.shape)}"
+                raise RuntimeError(msg)
+
+            if boxes.numel() == 0:
+                clipped = boxes
+                valid = torch.zeros((0,), dtype=torch.bool, device=boxes.device)
+            else:
+                clipped = boxes
+                clipped[:, 0::2].clamp_(0, w)
+                clipped[:, 1::2].clamp_(0, h)
+
+                x1, y1, x2, y2 = clipped[:, 0], clipped[:, 1], clipped[:, 2], clipped[:, 3]
+                widths = x2 - x1
+                heights = y2 - y1
+                areas = widths * heights
+                valid = (
+                    torch.isfinite(clipped).all(dim=1)
+                    & (widths > min_size)
+                    & (heights > min_size)
+                    & (areas >= min_area)
+                )
+
+            out_bboxes.append(clipped[valid])
+
+            if out_labels is not None and labels is not None:
+                lbl = labels[i]
+                if not (lbl.ndim >= 1 and lbl.shape[0] == valid.shape[0]):
+                    msg = f"GPU sanitize: labels[{i}] size mismatch with bboxes ({lbl.shape[0]} vs {valid.shape[0]})"
+                    raise RuntimeError(msg)
+                out_labels.append(lbl[valid])
+
+            if out_masks is not None and masks is not None:
+                m = masks[i]
+                # For instance masks, first dimension corresponds to object index.
+                if m.ndim >= 3 and m.shape[0] == valid.shape[0]:
+                    out_masks.append(m[valid])
+                elif m.ndim == 2 and valid.shape[0] == 1:
+                    out_masks.append(m.unsqueeze(0)[valid])
+                else:
+                    out_masks.append(m)
+
+            if out_keypoints is not None and keypoints is not None:
+                kp = keypoints[i]
+                if kp.numel() > 0:
+                    kp[..., 0].clamp_(0, w)
+                    kp[..., 1].clamp_(0, h)
+                if kp.ndim >= 2 and kp.shape[0] == valid.shape[0]:
+                    out_keypoints.append(kp[valid])
+                else:
+                    out_keypoints.append(kp)
+
+        return out_bboxes, out_labels, out_masks, out_keypoints
 
     def _debug_visualize(
         self,
@@ -772,9 +817,79 @@ class GPUAugmentationPipeline(nn.Module):
         if self._debug_counter >= self._debug_max:
             return
 
+        assert torch.isfinite(images).all(), "GPU pipeline debug: images contain NaN/Inf"
+        img_min = float(images.min().item())
+        img_max = float(images.max().item())
+        eps = 1e-4
+        assert img_min >= -eps and img_max <= 1.0 + eps, (
+            f"GPU pipeline debug: image range is out of [0,1], min={img_min:.6f}, max={img_max:.6f}"
+        )
+
+        if bboxes is not None:
+            assert len(bboxes) == images.shape[0], (
+                f"GPU pipeline debug: bboxes batch size mismatch, got {len(bboxes)} vs {images.shape[0]}"
+            )
+            dup_eps = 1e-3
+            for idx, boxes in enumerate(bboxes):
+                assert boxes.ndim == 2 and boxes.shape[-1] == 4, (
+                    f"GPU pipeline debug: bboxes[{idx}] must be [N,4], got shape={tuple(boxes.shape)}"
+                )
+                if boxes.numel() == 0:
+                    continue
+
+                assert torch.isfinite(boxes).all(), f"GPU pipeline debug: bboxes[{idx}] contain NaN/Inf"
+
+                h, w = images.shape[-2:]
+                x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
+                assert (x2 > x1).all() and (y2 > y1).all(), (
+                    f"GPU pipeline debug: invalid bbox extents at batch index {idx}"
+                )
+                assert (x1 >= -eps).all() and (y1 >= -eps).all() and (x2 <= w + eps).all() and (y2 <= h + eps).all(), (
+                    f"GPU pipeline debug: bboxes[{idx}] are outside image bounds {h}x{w}"
+                )
+
+                # Duplicate-box check (within epsilon): fail fast with counts.
+                boxes_fp = boxes.to(torch.float32)
+                diffs = (boxes_fp[:, None, :] - boxes_fp[None, :, :]).abs().amax(dim=-1)
+                duplicate_matrix = diffs <= dup_eps
+                duplicate_pairs = torch.triu(duplicate_matrix, diagonal=1)
+                dup_pair_count = int(duplicate_pairs.sum().item())
+                if dup_pair_count > 0:
+                    dup_box_count = int((duplicate_pairs.any(dim=0) | duplicate_pairs.any(dim=1)).sum().item())
+                    raise AssertionError(
+                        "GPU pipeline debug: duplicate bboxes detected "
+                        f"at batch index {idx} (eps={dup_eps}), "
+                        f"duplicate_pairs={dup_pair_count}, duplicate_boxes={dup_box_count}, "
+                        f"total_boxes={boxes.shape[0]}"
+                    )
+
+        if masks is not None:
+            assert len(masks) == images.shape[0], (
+                f"GPU pipeline debug: masks batch size mismatch, got {len(masks)} vs {images.shape[0]}"
+            )
+            for idx, mask in enumerate(masks):
+                assert torch.isfinite(mask).all(), f"GPU pipeline debug: masks[{idx}] contain NaN/Inf"
+                assert mask.ndim in (2, 3), (
+                    f"GPU pipeline debug: masks[{idx}] must be 2D or 3D, got shape={tuple(mask.shape)}"
+                )
+                mh, mw = (mask.shape[-2], mask.shape[-1])
+                h, w = images.shape[-2:]
+                assert int(mh) == int(h) and int(mw) == int(w), (
+                    f"GPU pipeline debug: masks[{idx}] shape ({mh},{mw}) does not match image ({h},{w})"
+                )
+                if bboxes is not None and mask.ndim == 3:
+                    assert mask.shape[0] == bboxes[idx].shape[0], (
+                        f"GPU pipeline debug: masks[{idx}] count {mask.shape[0]} != bboxes[{idx}] count {bboxes[idx].shape[0]}"
+                    )
+
         self._debug_dir.mkdir(parents=True, exist_ok=True)
         images = images.detach().cpu().clamp(0, 1)
         images_uint8 = (images * 255).to(torch.uint8)
+        batch_box_count = (
+            int(sum(int(boxes.shape[0]) for boxes in bboxes))
+            if bboxes is not None
+            else 0
+        )
 
         batch_size = images_uint8.shape[0]
         for idx in range(batch_size):
@@ -805,6 +920,28 @@ class GPUAugmentationPipeline(nn.Module):
                         kps = kps.unsqueeze(0)
                     if kps.ndim == 3 and kps.shape[-1] == 2:
                         img = tv_utils.draw_keypoints(img, kps, colors="red", radius=2)
+
+            # Overlay bbox counters for quick visual sanity checks.
+            from PIL import ImageDraw
+            from torchvision.transforms.v2.functional import pil_to_tensor, to_pil_image
+
+            img_box_count = int(bboxes[idx].shape[0]) if bboxes is not None and idx < len(bboxes) else 0
+            dup_box_count = 0
+            if bboxes is not None and idx < len(bboxes) and bboxes[idx].numel() > 0:
+                boxes_fp = bboxes[idx].to(torch.float32)
+                diffs = (boxes_fp[:, None, :] - boxes_fp[None, :, :]).abs().amax(dim=-1)
+                duplicate_matrix = diffs <= 1e-3
+                duplicate_pairs = torch.triu(duplicate_matrix, diagonal=1)
+                dup_box_count = int((duplicate_pairs.any(dim=0) | duplicate_pairs.any(dim=1)).sum().item())
+
+            overlay_text = f"batch_boxes={batch_box_count} img_boxes={img_box_count} dup_boxes={dup_box_count}"
+
+            img_pil = to_pil_image(img)
+            draw = ImageDraw.Draw(img_pil)
+            text_w = max(120, 7 * len(overlay_text) + 8)
+            draw.rectangle((4, 4, text_w, 22), fill=(0, 0, 0))
+            draw.text((8, 7), overlay_text, fill=(255, 255, 255))
+            img = pil_to_tensor(img_pil)
 
             save_path = self._debug_dir / f"{self._debug_counter:06d}_{tag}_b{idx}.png"
             tv_utils.save_image(img.float() / 255.0, save_path)

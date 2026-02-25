@@ -117,14 +117,14 @@ def with_image_dtype(
     )
 
     # Register with pytree so torchvision v2 transforms work
-    register_pytree_node(new_cls)  # type: ignore[arg-type]
+    register_pytree_node(new_cls)
 
-    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls  # type: ignore[assignment]
-    return new_cls  # type: ignore[return-value]
+    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls
+    return new_cls
 
 
 #: Cache for dynamically created sample classes to avoid re-creation
-_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}  # type: ignore[type-arg]
+_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}
 
 
 def register_pytree_node(cls: type[Sample]) -> type[Sample]:

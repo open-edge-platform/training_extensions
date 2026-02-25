@@ -130,14 +130,6 @@ class YOLOX(OTXDetectionModel):
 
         return model
 
-    def _customize_inputs(
-        self,
-        entity: OTXSampleBatch,
-        pad_size_divisor: int = 32,
-        pad_value: int = 114,  # YOLOX uses 114 as pad_value
-    ) -> dict[str, Any]:
-        return super()._customize_inputs(entity=entity, pad_size_divisor=pad_size_divisor, pad_value=pad_value)
-
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""

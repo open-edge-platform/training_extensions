@@ -64,7 +64,7 @@ class OTXMulticlassClsDataset(OTXDataset):
     ) -> None:
         sample_type = with_image_dtype(ClassificationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(  # type: ignore[arg-type]
+        super().__init__(
             dm_subset=dm_subset,
             sample_type=sample_type,
             transforms=transforms,
@@ -75,7 +75,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             storage_dtype=storage_dtype,
         )
 
-        labels = dm_subset.schema.attributes["label"].categories.labels  # type: ignore[attr-defined]
+        labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -92,7 +92,7 @@ class OTXMulticlassClsDataset(OTXDataset):
         idx_list_per_classes: dict[int | str, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
-            label_id = item.label.item()  # type: ignore[attr-defined]
+            label_id = item.label.item()
             if use_string_label:
                 label_id = self.label_info.label_names[label_id]
             if label_id not in idx_list_per_classes:
@@ -149,7 +149,7 @@ class OTXMultilabelClsDataset(OTXDataset):
     ) -> None:
         sample_type = with_image_dtype(ClassificationMultiLabelSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(  # type: ignore[arg-type]
+        super().__init__(
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
@@ -159,7 +159,7 @@ class OTXMultilabelClsDataset(OTXDataset):
             storage_dtype=storage_dtype,
         )
 
-        labels = dm_subset.schema.attributes["label"].categories.labels  # type: ignore[attr-defined]
+        labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -169,9 +169,9 @@ class OTXMultilabelClsDataset(OTXDataset):
 
     def _get_item_impl(self, index: int) -> ClassificationMultiLabelSample | None:
         item = self.dm_subset[index]
-        item.image = to_dtype(to_image(item.image), dtype=torch.float32)  # type: ignore[attr-defined]
-        item.label = self._convert_to_onehot(torch.as_tensor(list(item.label)), ignored_labels=[])  # type: ignore[attr-defined]
-        return self._apply_transforms(item)  # type: ignore[arg-type]
+        item.image = to_dtype(to_image(item.image), dtype=torch.float32)
+        item.label = self._convert_to_onehot(torch.as_tensor(list(item.label)), ignored_labels=[])
+        return self._apply_transforms(item)
 
     def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
         """Convert label to one-hot vector format.
@@ -201,7 +201,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         idx_list_per_classes: dict[int | str, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
-            labels = item.label.tolist()  # type: ignore[attr-defined]
+            labels = item.label.tolist()
             if use_string_label:
                 labels = [self.label_info.label_names[label] for label in labels]
             for label in labels:
@@ -268,7 +268,7 @@ class OTXHlabelClsDataset(OTXDataset):
     ) -> None:
         sample_type = with_image_dtype(ClassificationHierarchicalSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(  # type: ignore[arg-type]
+        super().__init__(
             dm_subset=dm_subset,
             sample_type=sample_type,
             transforms=transforms,
@@ -278,7 +278,7 @@ class OTXHlabelClsDataset(OTXDataset):
             data_format=data_format,
             storage_dtype=storage_dtype,
         )
-        self.dm_categories = dm_subset.schema.attributes["label"].categories  # type: ignore[attr-defined]
+        self.dm_categories = dm_subset.schema.attributes["label"].categories
         self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
 
         self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
@@ -290,9 +290,9 @@ class OTXHlabelClsDataset(OTXDataset):
 
     def _get_item_impl(self, index: int) -> ClassificationHierarchicalSample | None:
         item = self.dm_subset[index]
-        item.image = to_dtype(to_image(item.image), dtype=torch.float32)  # type: ignore[attr-defined]
-        item.label = torch.as_tensor(self._convert_label_to_hlabel_format(list(item.label), []))  # type: ignore[attr-defined]
-        return self._apply_transforms(item)  # type: ignore[arg-type]
+        item.image = to_dtype(to_image(item.image), dtype=torch.float32)
+        item.label = torch.as_tensor(self._convert_label_to_hlabel_format(list(item.label), []))
+        return self._apply_transforms(item)
 
     def _convert_label_to_hlabel_format(self, label_anns: list[int], ignored_labels: list[int]) -> list[int]:
         """Convert format of the label to the h-label.
@@ -366,7 +366,7 @@ class OTXHlabelClsDataset(OTXDataset):
         idx_list_per_classes: dict[int | str, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
-            labels = item.label.tolist()  # type: ignore[attr-defined]
+            labels = item.label.tolist()
             if use_string_label:
                 labels = [self.label_info.label_names[label] for label in labels]
             for label in labels:

@@ -58,7 +58,7 @@ class OTXSegmentationDataset(OTXDataset):
     ) -> None:
         sample_type = with_image_dtype(SegmentationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(  # type: ignore[arg-type]
+        super().__init__(
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
@@ -68,7 +68,7 @@ class OTXSegmentationDataset(OTXDataset):
             storage_dtype=storage_dtype,
         )
 
-        labels = list(dm_subset.schema.attributes["masks"].categories.labels)  # type: ignore[attr-defined]
+        labels = list(dm_subset.schema.attributes["masks"].categories.labels)
         self.label_info = SegLabelInfo(
             label_names=labels,
             label_groups=[labels],

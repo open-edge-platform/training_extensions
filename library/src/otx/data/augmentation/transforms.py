@@ -45,7 +45,7 @@ class Resize(tvt_v2.Transform):
         size: int | tuple[int, int],
         resize_targets: bool = True,
         keep_aspect_ratio: bool = False,
-        pad_value: int = 0,
+        pad_value: int | tuple[int, int, int] = 0,
         interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
         antialias: bool = True,
     ) -> None:
@@ -99,7 +99,7 @@ class Resize(tvt_v2.Transform):
 
         if not hasattr(sample, "image"):
             # Fallback: just resize the tensor directly
-            return F.resize(  # type: ignore[return-value]
+            return F.resize(
                 sample,
                 size=list(self.size),
                 interpolation=self.interpolation,
@@ -205,81 +205,6 @@ class Resize(tvt_v2.Transform):
                 sample.img_info.scale_factor = (scale_y, scale_x)
                 sample.img_info.keep_ratio = True
 
-        # Debug: self._debug_visualize(sample, "Resize", orig_h, orig_w, ...)
-
-        return sample
-
-    def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):  # noqa: ANN001, ANN202
-        """Debug visualization - save annotated PNG for inspection."""
-        import os
-
-        import numpy as np
-        from PIL import Image
-        from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-
-        os.makedirs("debug_resize_new", exist_ok=True)  # noqa: PTH103
-
-        # Get unique id for this sample
-        sample_id = id(sample)
-
-        # Debug log to file since stdout may be redirected
-        log_file = "debug_resize_new/debug_log.txt"
-        with open(log_file, "a") as f:  # noqa: PTH123
-            f.write(f"\n=== Sample {sample_id} ===\n")
-
-        # Convert image to CHW uint8 tensor
-        img = sample.image
-        with open(log_file, "a") as f:  # noqa: PTH123
-            f.write(
-                f"Image type: {type(img)}, shape: {img.shape if hasattr(img, 'shape') else 'N/A'}, "
-                f"dtype: {img.dtype if hasattr(img, 'dtype') else 'N/A'}\n"
-            )
-        if isinstance(img, np.ndarray):
-            with open(log_file, "a") as f:  # noqa: PTH123
-                f.write(f"NumPy image range: min={img.min()}, max={img.max()}\n")
-            if img.ndim == 3:  # noqa: SIM108
-                img = torch.from_numpy(img).permute(2, 0, 1)
-            else:
-                img = torch.from_numpy(img)
-        else:
-            with open(log_file, "a") as f:  # noqa: PTH123
-                f.write(f"Tensor image range: min={img.min().item()}, max={img.max().item()}\n")
-
-        if img.dtype != torch.uint8:
-            img = img.float()
-            with open(log_file, "a") as f:  # noqa: PTH123
-                f.write(f"After float conversion: min={img.min().item()}, max={img.max().item()}\n")
-            if img.max() <= 1.0:  # noqa: SIM108
-                img = (img * 255.0).clamp(0, 255)
-            else:
-                # Values > 1.0, clamp to 0-255 range
-                img = img.clamp(0, 255)
-            img = img.to(torch.uint8)
-
-        annotated = img
-        # Draw masks if available
-        if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
-            masks = sample.masks
-            if isinstance(masks, np.ndarray):
-                masks = torch.from_numpy(masks)
-            if masks.dtype != torch.bool:
-                masks = masks > 0
-            if masks.ndim == 2:
-                masks = masks.unsqueeze(0)
-            annotated = draw_segmentation_masks(annotated, masks, alpha=0.5)
-
-        # Draw bboxes if available
-        if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
-            bboxes = sample.bboxes
-            if isinstance(bboxes, np.ndarray):
-                bboxes = torch.from_numpy(bboxes)
-            bboxes = bboxes.to(torch.int64)
-            annotated = draw_bounding_boxes(annotated, bboxes, colors="red", width=2)
-
-        # Save annotated image
-        img_path = f"debug_resize_new/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
-        Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
-
         return sample
 
 
@@ -332,13 +257,6 @@ class CachedMosaic(tvt_v2.Transform):
         self.random_pop = random_pop
 
         self.results_cache: list[OTXSample] = []
-
-    def _to_tensor_image(self, img: torch.Tensor) -> torch.Tensor:
-        """Ensure image is a CHW float tensor."""
-        if img.ndim == 3 and img.shape[-1] <= 4 and img.shape[-1] < min(img.shape[:-1]):
-            # HWC tensor -> CHW tensor
-            img = img.permute(2, 0, 1)
-        return img.float()
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> torch.Tensor:
         """Resize image keeping aspect ratio using torchvision.
@@ -475,15 +393,19 @@ class CachedMosaic(tvt_v2.Transform):
         return bboxes
 
     def _filter_valid_bboxes(self, bboxes: torch.Tensor, h: int, w: int) -> torch.Tensor:
-        """Get mask for valid bboxes (inside image with positive area)."""
+        """Get mask for valid bboxes."""
         if bboxes.numel() == 0:
-            return torch.ones(0, dtype=torch.bool, device=bboxes.device)
-        # Check if bbox has positive area and is at least partially inside
+            return torch.zeros(0, dtype=torch.bool, device=bboxes.device)
+
         x1, y1, x2, y2 = bboxes[:, 0], bboxes[:, 1], bboxes[:, 2], bboxes[:, 3]
-        valid_w = (x2 - x1) > 1
-        valid_h = (y2 - y1) > 1
-        inside = (x2 > 0) & (y2 > 0) & (x1 < w) & (y1 < h)
-        return valid_w & valid_h & inside
+        valid = (x2 > x1) & (y2 > y1)
+
+        # If clipping is disabled, still ensure boxes overlap image at least partially.
+        if not self.bbox_clip_border:
+            inside = (x2 > 0) & (y2 > 0) & (x1 < w) & (y1 < h)
+            valid = valid & inside
+
+        return valid
 
     def _create_mosaic_canvas(self, dtype: torch.dtype, device: torch.device) -> torch.Tensor:
         """Create empty mosaic canvas filled with pad_val."""
@@ -491,6 +413,8 @@ class CachedMosaic(tvt_v2.Transform):
         mosaic_w = self.img_scale[1] * 2
 
         fill_val = self.pad_val if isinstance(self.pad_val, (int, float)) else self.pad_val[0]
+        if fill_val > 1.0:
+            fill_val = fill_val / 255.0
         return torch.full((3, mosaic_h, mosaic_w), fill_val, dtype=dtype, device=device)
 
     def _create_mask_canvas(self, n_masks: int, device: torch.device) -> torch.Tensor:
@@ -532,7 +456,7 @@ class CachedMosaic(tvt_v2.Transform):
 
         # Get 3 additional samples from cache
         indices = self.get_indexes(self.results_cache)
-        mix_results = [copy.deepcopy(self.results_cache[i]) for i in indices]
+        mix_results = [self.results_cache[i] for i in indices]
 
         # Prepare mosaic
         target_h, target_w = self.img_scale
@@ -543,7 +467,7 @@ class CachedMosaic(tvt_v2.Transform):
         center_y = int(torch.empty(1).uniform_(*self.center_ratio_range).item() * target_h)
 
         # Convert input image to tensor
-        img_tensor = self._to_tensor_image(inputs.image)
+        img_tensor = inputs.image
         device = img_tensor.device
 
         # Create mosaic canvas
@@ -557,12 +481,15 @@ class CachedMosaic(tvt_v2.Transform):
 
         loc_strs = ("top_left", "top_right", "bottom_left", "bottom_right")
         samples = [inputs, *mix_results]
+        # random tile order assignment.
+        order = torch.randperm(len(samples)).tolist()
+        samples = [samples[idx] for idx in order]
 
         for i, loc in enumerate(loc_strs):
-            sample = copy.deepcopy(samples[i])
+            sample = samples[i]
 
             # Convert image to tensor
-            img_i = self._to_tensor_image(sample.image)
+            img_i = sample.image
             _, orig_h, orig_w = img_i.shape
 
             # Resize keeping aspect ratio
@@ -585,11 +512,7 @@ class CachedMosaic(tvt_v2.Transform):
             mosaic_img[:, y1_p:y2_p, x1_p:x2_p] = img_i[:, y1_c:y2_c, x1_c:x2_c]
 
             # Transform bboxes
-            bboxes_i = sample.bboxes
-            if isinstance(bboxes_i, tv_tensors.BoundingBoxes):
-                bboxes_i = bboxes_i.clone().float()
-            else:
-                bboxes_i = bboxes_i.clone().float()
+            bboxes_i = sample.bboxes.float()
 
             bboxes_i = self._scale_bboxes(bboxes_i, scale)
             bboxes_i = self._translate_bboxes(bboxes_i, pad_w, pad_h)
@@ -641,67 +564,7 @@ class CachedMosaic(tvt_v2.Transform):
             mosaic_masks = mosaic_masks[valid_mask]
             inputs.masks = tv_tensors.Mask(mosaic_masks)
 
-        # Debug visualization
-        self._debug_visualize(inputs, center_x, center_y)
-
         return inputs
-
-    def _debug_visualize(self, sample, center_x: int, center_y: int) -> None:  # noqa: ANN001
-        """Debug visualization - save annotated PNG for inspection."""
-        import os
-
-        from PIL import Image
-        from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-
-        os.makedirs("debug_mosaic", exist_ok=True)  # noqa: PTH103
-
-        # Get unique id for this sample
-        sample_id = id(sample)
-
-        # Convert image to CHW uint8 tensor
-        img = sample.image
-        if img.dtype != torch.uint8:
-            img = img.float()
-            if img.max() <= 1.0:  # noqa: SIM108
-                img = (img * 255.0).clamp(0, 255)
-            else:
-                img = img.clamp(0, 255)
-            img = img.to(torch.uint8)
-
-        annotated = img.clone()
-
-        # Draw masks if available
-        if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
-            masks = sample.masks
-            if masks.dtype != torch.bool:
-                masks = masks > 0
-            if masks.ndim == 2:
-                masks = masks.unsqueeze(0)
-            annotated = draw_segmentation_masks(annotated, masks, alpha=0.4)
-
-        # Draw bboxes if available
-        if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
-            bboxes = sample.bboxes
-            bboxes = bboxes.to(torch.int64)
-            annotated = draw_bounding_boxes(annotated, bboxes, colors="red", width=2)
-
-        # Draw center cross
-        h, w = annotated.shape[1:]
-        # Vertical line at center_x
-        annotated[:, max(0, center_y - 5) : min(h, center_y + 5), center_x] = torch.tensor(
-            [0, 255, 0],
-            dtype=torch.uint8,
-        ).view(3, 1)
-        # Horizontal line at center_y
-        annotated[:, center_y, max(0, center_x - 5) : min(w, center_x + 5)] = torch.tensor(
-            [0, 255, 0],
-            dtype=torch.uint8,
-        ).view(3, 1)
-
-        # Save annotated image
-        mosaic_h, mosaic_w = self.img_scale[0] * 2, self.img_scale[1] * 2
-        img_path = f"debug_mosaic/Mosaic_{sample_id}_size{mosaic_h}x{mosaic_w}_center{center_x}x{center_y}.png"
-        Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
 
     def __repr__(self) -> str:
         repr_str = self.__class__.__name__
@@ -710,7 +573,7 @@ class CachedMosaic(tvt_v2.Transform):
         repr_str += f"pad_val={self.pad_val}, "
         repr_str += f"prob={self.prob}, "
         repr_str += f"max_cached_images={self.max_cached_images}, "
-        repr_str += f"random_pop={self.random_pop})"
+        repr_str += f"random_pop={self.random_pop}, "
         return repr_str
 
 
@@ -731,7 +594,6 @@ class CachedMixUp(tvt_v2.Transform):
         random_pop (bool): Random vs FIFO cache eviction. Defaults to True.
         probability (float): Probability of applying mixup. Defaults to 1.0.
         mix_ratio (float): Blending ratio (0.5 = equal mix). Defaults to 0.5.
-        debug (bool): Whether to save debug visualizations. Defaults to False.
     """
 
     def __init__(
@@ -746,7 +608,6 @@ class CachedMixUp(tvt_v2.Transform):
         random_pop: bool = True,
         probability: float = 1.0,
         mix_ratio: float = 0.5,
-        debug: bool = False,
     ) -> None:
         super().__init__()
 
@@ -764,7 +625,6 @@ class CachedMixUp(tvt_v2.Transform):
         self.random_pop = random_pop
         self.prob = probability
         self.mix_ratio = mix_ratio
-        self.debug = debug
 
         self.results_cache: list[OTXSample] = []
 
@@ -798,7 +658,6 @@ class CachedMixUp(tvt_v2.Transform):
         """Translate bboxes by offset."""
         if bboxes.numel() == 0:
             return bboxes
-        bboxes = bboxes.clone()
         bboxes[:, 0] += offset_x
         bboxes[:, 1] += offset_y
         bboxes[:, 2] += offset_x
@@ -809,18 +668,16 @@ class CachedMixUp(tvt_v2.Transform):
         """Clip bboxes to image boundaries."""
         if bboxes.numel() == 0:
             return bboxes
-        bboxes = bboxes.clone()
-        bboxes[:, 0] = bboxes[:, 0].clamp(0, img_w)
-        bboxes[:, 1] = bboxes[:, 1].clamp(0, img_h)
-        bboxes[:, 2] = bboxes[:, 2].clamp(0, img_w)
-        bboxes[:, 3] = bboxes[:, 3].clamp(0, img_h)
+        bboxes[:, 0].clamp_(0, img_w)
+        bboxes[:, 1].clamp_(0, img_h)
+        bboxes[:, 2].clamp_(0, img_w)
+        bboxes[:, 3].clamp_(0, img_h)
         return bboxes
 
     def _flip_bboxes_horizontal(self, bboxes: torch.Tensor, img_w: int) -> torch.Tensor:
         """Flip bboxes horizontally."""
         if bboxes.numel() == 0:
             return bboxes
-        bboxes = bboxes.clone()
         x1 = img_w - bboxes[:, 2]
         x2 = img_w - bboxes[:, 0]
         bboxes[:, 0] = x1
@@ -856,54 +713,6 @@ class CachedMixUp(tvt_v2.Transform):
         valid = inside & valid_area
         return bboxes[valid], labels[valid], valid
 
-    def _resize_mask(self, mask: torch.Tensor, target_size: tuple[int, int]) -> torch.Tensor:
-        """Resize a single mask to target size. Returns 2D HxW mask."""
-        # Ensure mask is 2D
-        if mask.ndim == 3:
-            mask = mask.squeeze(0)
-
-        mask_4d = mask.unsqueeze(0).unsqueeze(0).float()  # 1x1xHxW
-        resized = torch.nn.functional.interpolate(mask_4d, size=target_size, mode="nearest")
-        return (resized.squeeze(0).squeeze(0) > 0.5).to(torch.uint8)  # Return 2D HxW
-
-    def _flip_mask_horizontal(self, mask: torch.Tensor) -> torch.Tensor:
-        """Flip mask horizontally."""
-        return mask.flip(-1)
-
-    def _translate_mask(
-        self,
-        mask: torch.Tensor,
-        target_h: int,
-        target_w: int,
-        offset_x: int,
-        offset_y: int,
-    ) -> torch.Tensor:
-        """Translate and crop mask. Returns 2D HxW mask."""
-        # Ensure mask is 2D
-        if mask.ndim == 3:
-            mask = mask.squeeze(0)
-
-        h, w = mask.shape
-
-        # Create output mask (2D)
-        out_mask = torch.zeros((target_h, target_w), dtype=mask.dtype, device=mask.device)
-
-        # Calculate source and destination regions
-        src_y1 = max(0, offset_y)
-        src_y2 = min(h, offset_y + target_h)
-        src_x1 = max(0, offset_x)
-        src_x2 = min(w, offset_x + target_w)
-
-        dst_y1 = max(0, -offset_y)
-        dst_y2 = dst_y1 + (src_y2 - src_y1)
-        dst_x1 = max(0, -offset_x)
-        dst_x2 = dst_x1 + (src_x2 - src_x1)
-
-        if src_y2 > src_y1 and src_x2 > src_x1:
-            out_mask[dst_y1:dst_y2, dst_x1:dst_x2] = mask[src_y1:src_y2, src_x1:src_x2]
-
-        return out_mask
-
     def _get_cached_index(self) -> int:
         """Get index of cached sample with non-empty bboxes."""
         index = 0
@@ -912,38 +721,6 @@ class CachedMixUp(tvt_v2.Transform):
             if len(self.results_cache[index].bboxes) > 0:
                 return index
         return index
-
-    def _debug_visualize(
-        self,
-        img: torch.Tensor,
-        bboxes: torch.Tensor,
-        filename: str = "mixup_debug.png",
-    ) -> None:
-        """Save debug visualization of mixup result."""
-        import os
-
-        from PIL import Image, ImageDraw
-
-        # Convert CHW [0,1] to HWC [0,255] uint8
-        if img.shape[0] in (1, 3, 4):
-            img_np = (img.permute(1, 2, 0) * 255).clamp(0, 255).to(torch.uint8).cpu().numpy()
-        else:
-            img_np = (img * 255).clamp(0, 255).to(torch.uint8).cpu().numpy()
-
-        if img_np.shape[-1] == 1:
-            img_np = img_np.repeat(3, axis=-1)
-
-        pil_img = Image.fromarray(img_np)
-        draw = ImageDraw.Draw(pil_img)
-
-        # Draw bboxes
-        for i, bbox in enumerate(bboxes):
-            x1, y1, x2, y2 = bbox.tolist()
-            color = (255, 0, 0) if i < len(bboxes) // 2 else (0, 255, 0)
-            draw.rectangle([x1, y1, x2, y2], outline=color, width=2)
-
-        os.makedirs("debug_images", exist_ok=True)  # noqa: PTH103
-        pil_img.save(os.path.join("debug_images", filename))  # noqa: PTH118
 
     @typing.no_type_check
     def forward(self, *_inputs: OTXSample) -> OTXSample:
@@ -1019,7 +796,7 @@ class CachedMixUp(tvt_v2.Transform):
         cropped = padded[:, y_offset : y_offset + target_h, x_offset : x_offset + target_w]
 
         # Step 6: Transform bboxes
-        cached_bboxes = cached.bboxes.clone().float()
+        cached_bboxes = cached.bboxes.float()
 
         # Scale bboxes
         cached_bboxes = self._scale_bboxes(cached_bboxes, combined_scale)
@@ -1044,10 +821,9 @@ class CachedMixUp(tvt_v2.Transform):
         mixup_img = beta * ori_img + (1.0 - beta) * cropped
 
         # Step 8: Combine bboxes and labels
-        ori_bboxes = inputs.bboxes.clone().float()
-        ori_labels = inputs.label.clone()
-        cached_labels = cached.label.clone()
-
+        ori_bboxes = inputs.bboxes.float()
+        ori_labels = inputs.label
+        cached_labels = cached.label
         # Filter valid cached bboxes
         cached_bboxes, cached_labels, valid_mask = self._filter_valid_bboxes(
             cached_bboxes, cached_labels, target_h, target_w
@@ -1062,30 +838,43 @@ class CachedMixUp(tvt_v2.Transform):
             ori_masks = inputs.masks
             cached_masks = cached.masks
 
-            # Transform cached masks
+            # Transform cached masks - fully vectorized (one interpolate call for all instances)
             if len(cached_masks) > 0:
-                transformed_masks = []
-                for mask in cached_masks:
-                    # Resize
-                    new_h = int(mask.shape[-2] * combined_scale)
-                    new_w = int(mask.shape[-1] * combined_scale)
-                    if new_h > 0 and new_w > 0:
-                        resized_mask = self._resize_mask(mask, (new_h, new_w))
+                n_m = cached_masks.shape[0]
+                mh, mw = cached_masks.shape[-2], cached_masks.shape[-1]
+                new_h = int(mh * combined_scale)
+                new_w = int(mw * combined_scale)
+                if new_h > 0 and new_w > 0:
+                    # Batch resize: (N, H, W) -> (N, 1, H, W) -> interpolate -> (N, new_h, new_w)
+                    resized_batch = torch.nn.functional.interpolate(
+                        cached_masks.unsqueeze(1).float(),
+                        size=(new_h, new_w),
+                        mode="nearest",
+                    ).squeeze(1).to(torch.uint8)
 
-                        # Flip
-                        if do_flip:
-                            resized_mask = self._flip_mask_horizontal(resized_mask)
+                    # Batch flip
+                    if do_flip:
+                        resized_batch = resized_batch.flip(-1)
 
-                        # Translate (crop)
-                        translated_mask = self._translate_mask(resized_mask, target_h, target_w, -x_offset, -y_offset)
-                        transformed_masks.append(translated_mask)
+                    # Batch translate/crop - same src/dst region for all N masks
+                    out_batch = torch.zeros(
+                        (n_m, target_h, target_w), dtype=torch.uint8, device=resized_batch.device
+                    )
+                    oy, ox = -y_offset, -x_offset
+                    rh, rw = resized_batch.shape[-2], resized_batch.shape[-1]
+                    src_y1 = max(0, oy)
+                    src_y2 = min(rh, oy + target_h)
+                    src_x1 = max(0, ox)
+                    src_x2 = min(rw, ox + target_w)
+                    dst_y1 = max(0, -oy)
+                    dst_y2 = dst_y1 + (src_y2 - src_y1)
+                    dst_x1 = max(0, -ox)
+                    dst_x2 = dst_x1 + (src_x2 - src_x1)
+                    if src_y2 > src_y1 and src_x2 > src_x1:
+                        out_batch[:, dst_y1:dst_y2, dst_x1:dst_x2] = resized_batch[:, src_y1:src_y2, src_x1:src_x2]
 
-                if transformed_masks:
-                    cached_masks_transformed = torch.stack(transformed_masks)
-                    # Filter by valid_mask
-                    cached_masks_transformed = cached_masks_transformed[valid_mask.cpu()]
-
-                    # Concatenate masks
+                    # Filter by valid_mask and concatenate
+                    cached_masks_transformed = out_batch[valid_mask.cpu()]
                     if len(cached_masks_transformed) > 0:
                         mixup_masks = torch.cat([ori_masks, cached_masks_transformed], dim=0)
                     else:
@@ -1102,9 +891,6 @@ class CachedMixUp(tvt_v2.Transform):
         inputs.bboxes = tv_tensors.BoundingBoxes(mixup_bboxes, format="XYXY", canvas_size=(target_h, target_w))
         inputs.label = mixup_labels
         inputs.img_info = _resized_crop_image_info(inputs.img_info, (target_h, target_w))
-
-        if self.debug:
-            self._debug_visualize(mixup_img, mixup_bboxes, f"mixup_{id(inputs)}.png")
 
         return inputs
 
