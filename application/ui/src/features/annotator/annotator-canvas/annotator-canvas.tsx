@@ -43,9 +43,7 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
     return (
         <>
             <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
-                <VideoFrame canvasRef={canvasRef} mediaItem={mediaItem} />
-            )}
+            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && <VideoFrame canvasRef={canvasRef} />}
         </>
     );
 };

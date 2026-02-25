@@ -3,7 +3,11 @@
 
 import { createContext, Dispatch, ReactNode, RefObject, SetStateAction, use, useMemo, useRef, useState } from 'react';
 
+import { VisuallyHidden } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
 import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
+import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
 type VideoPlayerContextProps = {
@@ -35,6 +39,7 @@ type VideoPlayerProviderProps = {
 };
 
 export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
+    const projectId = useProjectIdentifier();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
@@ -98,6 +103,14 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
         }
     };
 
+    const handleEnded = () => {
+        if (videoRef.current === null) {
+            return;
+        }
+        videoControls.pause();
+        videoRef.current.currentTime = 0;
+    };
+
     const value =
         playingVideoFrame !== undefined
             ? {
@@ -118,7 +131,24 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
               }
             : null;
 
-    return <VideoPlayerContext value={value}>{children}</VideoPlayerContext>;
+    return (
+        <VideoPlayerContext value={value}>
+            {children}
+            {playingVideoFrame !== undefined && (
+                <VisuallyHidden>
+                    <video
+                        ref={videoRef}
+                        src={getMediaBinaryUrl(projectId, playingVideoFrame.id)}
+                        width={playingVideoFrame.width}
+                        height={playingVideoFrame.height}
+                        preload={'auto'}
+                        onEnded={handleEnded}
+                        muted
+                    />
+                </VisuallyHidden>
+            )}
+        </VideoPlayerContext>
+    );
 };
 
 export const useVideoPlayer = () => {

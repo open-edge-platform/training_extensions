@@ -40,7 +40,9 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
     });
 
     useEffect(() => {
-        scrollToItem({ index: Math.round(frameNumber / step), align: 'center', smooth: true });
+        const segmentIndex = Math.ceil(frameNumber / step);
+
+        scrollToItem({ index: segmentIndex, align: 'center' });
     }, [scrollToItem, frameNumber, step]);
 
     return (

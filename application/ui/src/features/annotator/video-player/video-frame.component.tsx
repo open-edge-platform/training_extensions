@@ -3,16 +3,10 @@
 
 import { RefObject, useEffect } from 'react';
 
-import { VisuallyHidden } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-
-import { type Media } from '../../../constants/shared-types';
-import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoPlayer } from './video-player-provider.component';
 
 type VideoFrameProps = {
     canvasRef: RefObject<HTMLCanvasElement | null>;
-    mediaItem: Media;
 };
 
 const useRequestVideoFrameCallback = (
@@ -46,7 +40,8 @@ const useRequestVideoFrameCallback = (
 
             callbackId = video.requestVideoFrameCallback(updateCanvas);
 
-            const nextFrameIndex = Math.ceil(videoRef.current.currentTime * videoFrame.fps);
+            const nextFrameIndex = Math.ceil(video.currentTime * videoFrame.fps);
+
             changeCurrentFrameIndex(nextFrameIndex);
         };
 
@@ -62,31 +57,10 @@ const useRequestVideoFrameCallback = (
     return videoRef;
 };
 
-export const VideoFrame = ({ canvasRef, mediaItem }: VideoFrameProps) => {
-    const projectId = useProjectIdentifier();
-    const { videoRef, videoControls } = useVideoPlayer();
+export const VideoFrame = ({ canvasRef }: VideoFrameProps) => {
+    const { videoRef } = useVideoPlayer();
 
     useRequestVideoFrameCallback(videoRef, canvasRef);
 
-    const handleEnded = () => {
-        if (videoRef.current === null) {
-            return;
-        }
-        videoControls.pause();
-        videoRef.current.currentTime = 0;
-    };
-
-    return (
-        <VisuallyHidden>
-            <video
-                ref={videoRef}
-                src={getMediaBinaryUrl(projectId, mediaItem.id)}
-                width={mediaItem.width}
-                height={mediaItem.height}
-                preload={'auto'}
-                onEnded={handleEnded}
-                muted
-            />
-        </VisuallyHidden>
-    );
+    return <></>;
 };
