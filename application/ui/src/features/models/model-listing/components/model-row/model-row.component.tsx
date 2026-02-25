@@ -8,11 +8,11 @@ import type {
     Model,
     ModelArchitectureWithPerformanceCategory,
 } from '../../../../../constants/shared-types';
+import { formatBytes } from '../../../../../shared/util';
 import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
 import { type GroupByMode } from '../../types';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
-import { formatModelSize } from '../../utils/format-model-size';
 import { isFailedModel } from '../../utils/utils';
 import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
@@ -92,7 +92,7 @@ export const ModelRow = ({
             )}
 
             <Text UNSAFE_className={styles.smallText} data-testid={'model size'}>
-                {totalSize > 0 ? formatModelSize(totalSize) : '-'}
+                {totalSize > 0 ? formatBytes(totalSize) : '-'}
             </Text>
 
             {metricValue === undefined ? <Text>-</Text> : <AccuracyIndicator accuracy={metricValue} />}

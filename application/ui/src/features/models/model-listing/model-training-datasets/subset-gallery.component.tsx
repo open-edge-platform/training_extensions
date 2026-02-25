@@ -39,11 +39,11 @@ type SubsetMediaDialogProps = {
 };
 
 const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
-    const { data: annotationsData } = useAnnotationsQuery(item.id);
+    const mediaItem = datasetRevisionItemToMedia(item);
+    const { data: annotationsData } = useAnnotationsQuery(mediaItem);
 
     const annotationsDTO = annotationsData?.annotations ?? [];
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
-    const mediaItem = datasetRevisionItemToMedia(item);
     const mode = 'annotation';
 
     return (

@@ -3,9 +3,10 @@
 
 import { useMemo, useState } from 'react';
 
-import { Flex, Item, Picker, SearchField, Switch, Text, View } from '@geti/ui';
+import { ActionButton, Content, ContextualHelp, Flex, Heading, Item, Picker, SearchField, Text, View } from '@geti/ui';
+import { ChevronDownLight } from '@geti/ui/icons';
 
-import { useAutoScroll } from './hooks/use-auto-scroll.hook';
+import { useScrollAnchor } from './hooks/use-scroll-anchor.hook';
 import { LogEntry } from './log-entry.component';
 import { type LogEntry as LogEntryType, type LogLevel } from './log-types';
 import { filterLogs } from './log-utils';
@@ -35,10 +36,7 @@ export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogVi
 
     const filteredLogs = useMemo(() => filterLogs(logs, minLevel, searchQuery), [logs, minLevel, searchQuery]);
 
-    const { scrollRef, autoScroll, setAutoScroll, handleScroll } = useAutoScroll({
-        itemCount: filteredLogs.length,
-        isDisabled: !isStreaming,
-    });
+    const { anchorRef, isAtBottom, scrollToBottom } = useScrollAnchor();
 
     return (
         <Flex direction={'column'} height={'100%'} UNSAFE_style={{ overflow: 'hidden' }}>
@@ -51,6 +49,17 @@ export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogVi
                     width={'size-2000'}
                     aria-label={'Minimum log level'}
                     isQuiet
+                    contextualHelp={
+                        <ContextualHelp variant={'info'}>
+                            <Heading>Minimum log level</Heading>
+                            <Content>
+                                <Text>
+                                    Shows log entries at the selected level and above. For example, selecting WARNING
+                                    shows WARNING, ERROR, and CRITICAL entries, hiding DEBUG and INFO.
+                                </Text>
+                            </Content>
+                        </ContextualHelp>
+                    }
                 >
                     {LOG_LEVELS.map((level) => (
                         <Item key={level}>{level}</Item>
@@ -65,12 +74,6 @@ export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogVi
                     width={'size-3000'}
                     isQuiet
                 />
-
-                {isStreaming ? (
-                    <Switch isSelected={autoScroll} onChange={setAutoScroll} aria-label={'Auto-scroll'}>
-                        Auto-scroll
-                    </Switch>
-                ) : null}
 
                 <Flex alignItems={'center'} gap={'size-100'} marginStart={'auto'}>
                     {connectionStatus !== undefined ? (
@@ -89,16 +92,30 @@ export const LogViewer = ({ logs, isStreaming = false, connectionStatus }: LogVi
                 </Flex>
             </Flex>
 
-            <div className={classes.logList} ref={scrollRef} onScroll={handleScroll} role={'list'}>
-                {filteredLogs.length > 0 ? (
-                    filteredLogs.map((entry, index) => <LogEntry key={index} entry={entry} />)
-                ) : (
-                    <Flex alignItems={'center'} justifyContent={'center'} height={'100%'}>
-                        <Text UNSAFE_className={classes.emptyState}>
-                            {logs.length === 0 ? 'No log entries' : 'No matching log entries'}
-                        </Text>
-                    </Flex>
-                )}
+            <div className={classes.logListContainer}>
+                <div className={classes.logList} role={'list'}>
+                    {filteredLogs.length > 0 ? (
+                        filteredLogs.map((entry, index) => <LogEntry key={index} entry={entry} />)
+                    ) : (
+                        <Flex alignItems={'center'} justifyContent={'center'} height={'100%'}>
+                            <Text UNSAFE_className={classes.emptyState}>
+                                {logs.length === 0 ? 'No log entries' : 'No matching log entries'}
+                            </Text>
+                        </Flex>
+                    )}
+                    <div ref={anchorRef} className={classes.scrollAnchor} />
+                </div>
+
+                {isStreaming && !isAtBottom ? (
+                    <ActionButton
+                        onPress={scrollToBottom}
+                        UNSAFE_className={classes.scrollToBottom}
+                        aria-label={'Scroll to bottom'}
+                    >
+                        <ChevronDownLight />
+                        <Text>Scroll to bottom</Text>
+                    </ActionButton>
+                ) : null}
             </div>
         </Flex>
     );

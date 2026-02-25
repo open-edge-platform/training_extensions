@@ -80,14 +80,18 @@ describe('LogViewer', () => {
         expect(screen.getByText('0 / 5 entries')).toBeInTheDocument();
     });
 
-    it('shows auto-scroll toggle when isStreaming is true', () => {
+    it('shows contextual help tooltip for the level picker', async () => {
         const logs = createMockLogs();
 
-        const { rerender } = render(<LogViewer logs={logs} isStreaming />);
-        expect(screen.getByRole('switch', { name: 'Auto-scroll' })).toBeInTheDocument();
+        render(<LogViewer logs={logs} />);
 
-        rerender(<LogViewer logs={logs} />);
-        expect(screen.queryByRole('switch', { name: 'Auto-scroll' })).not.toBeInTheDocument();
+        const helpButton = screen.getByRole('button', { name: /level information/i });
+        await userEvent.click(helpButton);
+
+        expect(await screen.findByText('Minimum log level')).toBeInTheDocument();
+        expect(
+            await screen.findByText(/shows log entries at the selected level and above/i)
+        ).toBeInTheDocument();
     });
 
     it('displays connection status indicator when connectionStatus is provided', () => {

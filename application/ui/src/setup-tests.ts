@@ -46,6 +46,16 @@ class ResizeObserverMock {
 
 global.ResizeObserver = ResizeObserverMock;
 
+// Mock IntersectionObserver which is not available in jsdom
+class IntersectionObserverMock {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+    constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+}
+
+global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
+
 const createLocalStorageMock = () => {
     let store: Record<string, string> = {};
 

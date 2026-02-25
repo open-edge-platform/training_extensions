@@ -84,7 +84,7 @@ export const ReadOnlyAnnotator = ({
                 <AnnotatorCanvasSettings>
                     <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
                         <MediaItemImageLoader>
-                            <AnnotatorCanvas mediaItem={mediaItem} />
+                            <AnnotatorCanvas isReadOnly mediaItem={mediaItem} />
                         </MediaItemImageLoader>
                     </Suspense>
                 </AnnotatorCanvasSettings>

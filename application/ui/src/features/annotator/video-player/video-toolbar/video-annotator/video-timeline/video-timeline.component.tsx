@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useSizeHook } from 'hooks/use-size.hook';
 import useVirtual from 'react-cool-virtual';
@@ -24,21 +24,25 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
     const size = useSizeHook(containerRef);
     const { videoFrame, videoControls } = useVideoPlayer();
     const { isPlaying } = videoControls;
-    const frameNumber = 0;
 
-    const step = 60;
+    const frameNumber = videoFrame.frame_number;
+    const step = videoFrame.frame_stride;
     const totalFrames = videoFrame.frame_count;
 
     const totalSegments = Math.ceil(totalFrames / step);
     const sizePerSquare = size === undefined ? 0 : Math.max(MIN_SIZE_OF_SEGMENT, size.width / totalSegments);
     const frameOffset = Math.round(sizePerSquare / 2);
 
-    const { outerRef, innerRef, items } = useVirtual<HTMLDivElement, HTMLDivElement>({
+    const { outerRef, innerRef, items, scrollToItem } = useVirtual<HTMLDivElement, HTMLDivElement>({
         horizontal: true,
         itemCount: totalSegments,
         itemSize: sizePerSquare,
         overscanCount: 5,
     });
+
+    useEffect(() => {
+        scrollToItem({ index: Math.round(frameNumber / step), align: 'center', smooth: true });
+    }, [scrollToItem, frameNumber, step]);
 
     return (
         <div ref={containerRef}>
@@ -46,11 +50,12 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                 <div style={{ width: sizePerSquare * totalSegments }} className={classes.timelineSliderWrapper}>
                     <VideoPlayerSlider
                         ref={outerRef}
-                        mediaItem={videoFrame}
+                        videoFrame={videoFrame}
                         step={step}
                         frameNumber={frameNumber}
                         sizePerSquare={sizePerSquare}
                         frameOffset={frameOffset}
+                        selectFrame={videoControls.goto}
                     />
                 </div>
                 <VideoFrameSegments
@@ -63,6 +68,7 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                     totalSegments={totalSegments}
                     minSizeOfSegment={MIN_SIZE_OF_SEGMENT}
                     isPlaying={isPlaying}
+                    selectFrame={videoControls.goto}
                 />
             </div>
         </div>

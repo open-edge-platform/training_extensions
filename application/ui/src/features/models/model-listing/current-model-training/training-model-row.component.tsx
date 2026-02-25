@@ -71,6 +71,21 @@ const CancelTraining = ({ job, onCancel }: CancelTrainingProps) => {
     );
 };
 
+const ViewLogsButton = ({ jobId }: { jobId: string }) => {
+    const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
+
+    return (
+        <>
+            <Button variant={'secondary'} onPress={() => setIsLogsDialogOpen(true)} aria-label={'View logs'}>
+                Logs
+            </Button>
+            <DialogContainer type={'fullscreen'} onDismiss={() => setIsLogsDialogOpen(false)}>
+                {isLogsDialogOpen && <TrainingLogsDialog jobId={jobId} />}
+            </DialogContainer>
+        </>
+    );
+};
+
 export const TrainingModelRow = ({
     job,
     onCancel,
@@ -78,7 +93,6 @@ export const TrainingModelRow = ({
     groupBy,
     modelArchitectures,
 }: TrainingModelRowProps) => {
-    const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
     const modelArchitectureId = 'model' in job.metadata && job.metadata.model?.architecture;
@@ -147,16 +161,10 @@ export const TrainingModelRow = ({
                 <Text UNSAFE_className={classes.smallText}>...</Text>
 
                 <Flex gap={'size-100'} direction={'column'} alignItems={'center'}>
-                    <Button variant={'secondary'} onPress={() => setIsLogsDialogOpen(true)} aria-label={'View logs'}>
-                        Logs
-                    </Button>
+                    <ViewLogsButton jobId={job.job_id} />
                     {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : null}
                 </Flex>
             </Grid>
-
-            <DialogContainer type={'fullscreen'} onDismiss={() => setIsLogsDialogOpen(false)}>
-                {isLogsDialogOpen && <TrainingLogsDialog jobId={job.job_id} />}
-            </DialogContainer>
         </BottomProgressBar>
     );
 };
