@@ -12,17 +12,14 @@ from __future__ import annotations
 
 import ast
 import operator
-import os
 import typing
 from copy import copy, deepcopy
 from inspect import isclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 import kornia.augmentation as K  # noqa: N812
 import torch
 import torchvision.transforms.v2 as tvt_v2
-import torchvision.utils as tv_utils
 import typeguard
 from kornia.augmentation.container import ops
 from lightning.pytorch.cli import instantiate_class
@@ -485,14 +482,6 @@ class GPUAugmentationPipeline(nn.Module):
         self._data_keys = data_keys or ["input"]
         self._mean, self._std = self._extract_normalization_params(self._augmentations_list)
 
-        # DEBUG, DELETE
-        debug_dir = os.getenv("OTX_GPU_AUG_DEBUG_DIR")
-        self._debug_dir = Path(debug_dir) if debug_dir else None
-        self._debug_max = int(os.getenv("OTX_GPU_AUG_DEBUG_MAX", "50"))
-        self._debug_counter = 0
-        self._bbox_min_size = float(os.getenv("OTX_GPU_AUG_BBOX_MIN_SIZE", "1.0"))
-        self._bbox_min_area = float(os.getenv("OTX_GPU_AUG_BBOX_MIN_AREA", "1.0"))
-
         # Build Kornia AugmentationSequential for efficient batch processing
         self.aug_sequential: K.AugmentationSequential | None = None
         if self._augmentations_list:
@@ -653,11 +642,6 @@ class GPUAugmentationPipeline(nn.Module):
         # Handle instance segmentation masks: Kornia expects (N, C, H, W) but instance
         # masks are (N_instances, H, W). We add a channel dim before and squeeze after.
         # This allows Kornia to properly transform instance masks along with images.
-        original_masks = masks
-        original_bboxes = bboxes
-        original_keypoints = keypoints
-        if self._debug_dir is not None:
-            self._debug_visualize("before", images, original_bboxes, original_masks, original_keypoints)
         if masks is not None and "mask" in self._data_keys:
             # Instance seg masks: (N_instances, H, W) - 3D per sample
             # Semantic seg masks: (C, H, W) where C is often 1 or num_classes
@@ -710,22 +694,11 @@ class GPUAugmentationPipeline(nn.Module):
                 typing.cast("list[torch.Tensor] | None", output["labels"]),
                 typing.cast("list[torch.Tensor] | None", output["masks"]),
                 typing.cast("list[torch.Tensor] | None", output["keypoints"]),
-                min_size=self._bbox_min_size,
-                min_area=self._bbox_min_area,
             )
             output["bboxes"] = s_bboxes
             output["labels"] = s_labels
             output["masks"] = s_masks
             output["keypoints"] = s_keypoints
-
-        if self._debug_dir is not None:
-            self._debug_visualize(
-                "after_gpu",
-                typing.cast("torch.Tensor", output["images"]),
-                typing.cast("list[torch.Tensor] | None", output["bboxes"]),
-                typing.cast("list[torch.Tensor] | None", output["masks"]),
-                typing.cast("list[torch.Tensor] | None", output["keypoints"]),
-            )
 
         return output
 
@@ -831,158 +804,6 @@ class GPUAugmentationPipeline(nn.Module):
                     out_keypoints.append(kp)
 
         return out_bboxes, out_labels, out_masks, out_keypoints
-
-    def _debug_visualize(
-        self,
-        tag: str,
-        images: torch.Tensor,
-        bboxes: list[torch.Tensor] | None,
-        masks: list[torch.Tensor] | None,
-        keypoints: list[torch.Tensor] | None,
-    ) -> None:
-        if self._debug_dir is None:
-            return
-        if self._debug_counter >= self._debug_max:
-            return
-
-        assert torch.isfinite(images).all(), "GPU pipeline debug: images contain NaN/Inf"
-
-        # Denormalize images if mean/std were applied (they can have negative values after normalization)
-        images_viz = images.clone()
-        if self._mean is not None and self._std is not None:
-            mean = torch.tensor(self._mean, device=images.device, dtype=images.dtype).view(1, 3, 1, 1)
-            std = torch.tensor(self._std, device=images.device, dtype=images.dtype).view(1, 3, 1, 1)
-            images_viz = images_viz * std + mean
-
-        img_min = float(images_viz.min().item())
-        img_max = float(images_viz.max().item())
-        eps = 1e-4
-        assert img_min >= -eps and img_max <= 1.0 + eps, (
-            f"GPU pipeline debug: image range is out of [0,1] (after denorm), min={img_min:.6f}, max={img_max:.6f}"
-        )
-
-        if bboxes is not None:
-            assert len(bboxes) == images.shape[0], (
-                f"GPU pipeline debug: bboxes batch size mismatch, got {len(bboxes)} vs {images.shape[0]}"
-            )
-            dup_eps = 1e-3
-            for idx, boxes in enumerate(bboxes):
-                assert boxes.ndim == 2 and boxes.shape[-1] == 4, (
-                    f"GPU pipeline debug: bboxes[{idx}] must be [N,4], got shape={tuple(boxes.shape)}"
-                )
-                if boxes.numel() == 0:
-                    continue
-
-                assert torch.isfinite(boxes).all(), f"GPU pipeline debug: bboxes[{idx}] contain NaN/Inf"
-
-                h, w = images.shape[-2:]
-                x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
-                assert (x2 > x1).all() and (y2 > y1).all(), (
-                    f"GPU pipeline debug: invalid bbox extents at batch index {idx}"
-                )
-                assert (x1 >= -eps).all() and (y1 >= -eps).all() and (x2 <= w + eps).all() and (y2 <= h + eps).all(), (
-                    f"GPU pipeline debug: bboxes[{idx}] are outside image bounds {h}x{w}"
-                )
-
-                # Duplicate-box check (within epsilon): fail fast with counts.
-                boxes_fp = boxes.to(torch.float32)
-                diffs = (boxes_fp[:, None, :] - boxes_fp[None, :, :]).abs().amax(dim=-1)
-                duplicate_matrix = diffs <= dup_eps
-                duplicate_pairs = torch.triu(duplicate_matrix, diagonal=1)
-                dup_pair_count = int(duplicate_pairs.sum().item())
-                if dup_pair_count > 0:
-                    dup_box_count = int((duplicate_pairs.any(dim=0) | duplicate_pairs.any(dim=1)).sum().item())
-                    raise AssertionError(
-                        "GPU pipeline debug: duplicate bboxes detected "
-                        f"at batch index {idx} (eps={dup_eps}), "
-                        f"duplicate_pairs={dup_pair_count}, duplicate_boxes={dup_box_count}, "
-                        f"total_boxes={boxes.shape[0]}"
-                    )
-
-        if masks is not None:
-            assert len(masks) == images.shape[0], (
-                f"GPU pipeline debug: masks batch size mismatch, got {len(masks)} vs {images.shape[0]}"
-            )
-            for idx, mask in enumerate(masks):
-                assert torch.isfinite(mask).all(), f"GPU pipeline debug: masks[{idx}] contain NaN/Inf"
-                assert mask.ndim in (2, 3), (
-                    f"GPU pipeline debug: masks[{idx}] must be 2D or 3D, got shape={tuple(mask.shape)}"
-                )
-                mh, mw = (mask.shape[-2], mask.shape[-1])
-                h, w = images.shape[-2:]
-                assert int(mh) == int(h) and int(mw) == int(w), (
-                    f"GPU pipeline debug: masks[{idx}] shape ({mh},{mw}) does not match image ({h},{w})"
-                )
-                if bboxes is not None and mask.ndim == 3:
-                    assert mask.shape[0] == bboxes[idx].shape[0], (
-                        f"GPU pipeline debug: masks[{idx}] count {mask.shape[0]} != bboxes[{idx}] count {bboxes[idx].shape[0]}"
-                    )
-
-        self._debug_dir.mkdir(parents=True, exist_ok=True)
-        images_viz = images_viz.detach().cpu().clamp(0, 1)
-        images_uint8 = (images_viz * 255).to(torch.uint8)
-        batch_box_count = (
-            int(sum(int(boxes.shape[0]) for boxes in bboxes))
-            if bboxes is not None
-            else 0
-        )
-
-        batch_size = images_uint8.shape[0]
-        for idx in range(batch_size):
-            img = images_uint8[idx]
-
-            if masks is not None and idx < len(masks):
-                mask = masks[idx]
-                mask = mask.detach().cpu()
-                if mask.ndim == 2:
-                    mask = mask.unsqueeze(0)
-                if mask.ndim == 3:
-                    mask_bool = mask > 0
-                    num_masks = mask_bool.shape[0]
-                    colors_list: list[str | tuple[int, int, int]] = [
-                        (int(c[0]), int(c[1]), int(c[2])) for c in torch.randint(0, 255, (num_masks, 3))
-                    ]
-                    img = tv_utils.draw_segmentation_masks(img, mask_bool, colors=colors_list, alpha=0.35)
-
-            if bboxes is not None and idx < len(bboxes):
-                boxes = bboxes[idx]
-                if boxes.numel() > 0 and boxes.shape[-1] == 4:
-                    img = tv_utils.draw_bounding_boxes(img, boxes, colors="yellow", width=2)
-
-            if keypoints is not None and idx < len(keypoints):
-                kps = keypoints[idx]
-                if kps.numel() > 0:
-                    if kps.ndim == 2 and kps.shape[-1] == 2:
-                        kps = kps.unsqueeze(0)
-                    if kps.ndim == 3 and kps.shape[-1] == 2:
-                        img = tv_utils.draw_keypoints(img, kps, colors="red", radius=2)
-
-            # Overlay bbox counters for quick visual sanity checks.
-            from PIL import ImageDraw
-            from torchvision.transforms.v2.functional import pil_to_tensor, to_pil_image
-
-            img_box_count = int(bboxes[idx].shape[0]) if bboxes is not None and idx < len(bboxes) else 0
-            dup_box_count = 0
-            if bboxes is not None and idx < len(bboxes) and bboxes[idx].numel() > 0:
-                boxes_fp = bboxes[idx].to(torch.float32)
-                diffs = (boxes_fp[:, None, :] - boxes_fp[None, :, :]).abs().amax(dim=-1)
-                duplicate_matrix = diffs <= 1e-3
-                duplicate_pairs = torch.triu(duplicate_matrix, diagonal=1)
-                dup_box_count = int((duplicate_pairs.any(dim=0) | duplicate_pairs.any(dim=1)).sum().item())
-
-            overlay_text = f"batch_boxes={batch_box_count} img_boxes={img_box_count} dup_boxes={dup_box_count}"
-
-            img_pil = to_pil_image(img)
-            draw = ImageDraw.Draw(img_pil)
-            text_w = max(120, 7 * len(overlay_text) + 8)
-            draw.rectangle((4, 4, text_w, 22), fill=(0, 0, 0))
-            draw.text((8, 7), overlay_text, fill=(255, 255, 255))
-            img = pil_to_tensor(img_pil)
-
-            save_path = self._debug_dir / f"{self._debug_counter:06d}_{tag}_b{idx}.png"
-            tv_utils.save_image(img.float() / 255.0, save_path)
-
-        self._debug_counter += 1
 
     def __repr__(self) -> str:
         """String representation of the pipeline."""

@@ -181,87 +181,10 @@ class OTXDetectionModel(OTXModel):
         outputs.labels = labels
         return outputs
 
-    @staticmethod
-    def _assert_images_in_unit_range(images: torch.Tensor, where: str) -> None:
-        assert torch.isfinite(images).all(), f"{where}: images contain NaN/Inf"
-        eps = 1e-4
-        img_min = float(images.min().item())
-        img_max = float(images.max().item())
-        assert img_min >= -eps and img_max <= 1.0 + eps, (
-            f"{where}: image range must be [0,1], got min={img_min:.6f}, max={img_max:.6f}"
-        )
-
-    @staticmethod
-    def _bbox_tensor_from_any(bboxes: tv_tensors.BoundingBoxes | torch.Tensor) -> torch.Tensor:
-        if isinstance(bboxes, tv_tensors.BoundingBoxes):
-            return torch.as_tensor(bboxes)
-        return bboxes
-
-    @staticmethod
-    def _assert_bboxes_visible(
-        bboxes: tv_tensors.BoundingBoxes | torch.Tensor,
-        h: int,
-        w: int,
-        where: str,
-        check_canvas: bool = True,
-        check_bounds: bool = True,
-    ) -> None:
-        """Assert bboxes are valid.
-
-        Args:
-            check_canvas: verify canvas_size matches (h, w) for BoundingBoxes tensors.
-            check_bounds: verify all coordinates are within [0, h] x [0, w].
-                Should be False for raw model *predictions*, which are allowed to be
-                out-of-bounds (YOLOX/DETR decoders do not clip outputs).
-                Should be True for ground-truth targets.
-        """
-        boxes_t = OTXDetectionModel._bbox_tensor_from_any(bboxes)
-        assert boxes_t.ndim == 2 and boxes_t.shape[-1] == 4, f"{where}: bboxes must have shape [N, 4]"
-        if boxes_t.numel() == 0:
-            return
-
-        eps = 1e-4
-        assert torch.isfinite(boxes_t).all(), f"{where}: bboxes contain NaN/Inf"
-
-        if check_canvas and isinstance(bboxes, tv_tensors.BoundingBoxes):
-            canvas_h, canvas_w = bboxes.canvas_size
-            assert int(canvas_h) == int(h) and int(canvas_w) == int(w), (
-                f"{where}: bbox canvas_size {bboxes.canvas_size} != expected {(h, w)}"
-            )
-
-        x1, y1, x2, y2 = boxes_t[:, 0], boxes_t[:, 1], boxes_t[:, 2], boxes_t[:, 3]
-        assert (x2 > x1).all() and (y2 > y1).all(), f"{where}: invalid bbox extents"
-
-        if check_bounds:
-            assert (x1 >= -eps).all() and (y1 >= -eps).all() and (x2 <= w + eps).all() and (y2 <= h + eps).all(), (
-                f"{where}: bboxes are outside image bounds {(h, w)}, {(x1, y1, x2, y2)}"
-            )
-
-    def _assert_input_batch_valid(self, entity: OTXSampleBatch, where: str) -> None:
-        self._assert_images_in_unit_range(entity.images, where)
-
-        assert entity.bboxes is not None, f"{where}: missing target bboxes"
-        assert len(entity.bboxes) == len(entity.images), (
-            f"{where}: bboxes batch mismatch, got {len(entity.bboxes)} vs {len(entity.images)}"
-        )
-
-        for i, (img, bboxes) in enumerate(zip(entity.images, entity.bboxes)):
-            if self.training:
-                h, w = int(img.shape[-2]), int(img.shape[-1])
-            else:
-                # In eval mode, we allow bboxes to be in original image space (before resizing/padding),
-                # so we get original image size from imgs_info.
-                assert entity.imgs_info is not None, f"{where}: missing imgs_info for bbox validation"
-                img_info = entity.imgs_info[i]
-                h, w = int(img_info.ori_shape[0]), int(img_info.ori_shape[1])
-            self._assert_bboxes_visible(bboxes, h, w, f"{where}[{i}]")
-
     def _customize_inputs(
         self,
         entity: OTXSampleBatch,
     ) -> dict[str, Any]:
-        self._assert_input_batch_valid(entity, "_customize_inputs")
-
         inputs: dict[str, Any] = {}
 
         inputs["entity"] = entity
@@ -276,21 +199,6 @@ class OTXDetectionModel(OTXModel):
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
-
-            # Training-time sanity checks for target geometry / range.
-            self._assert_input_batch_valid(inputs, "_customize_outputs[train_targets]")
-
-            # Optional training predictions consistency check if model returns them.
-            maybe_predictions = outputs.get("predictions", None)
-            if isinstance(maybe_predictions, list):
-                assert len(maybe_predictions) == len(inputs.images), (
-                    "_customize_outputs[train_preds]: predictions batch size mismatch"
-                )
-                for i, pred in enumerate(maybe_predictions):
-                    if not isinstance(pred, InstanceData) or not hasattr(pred, "bboxes"):
-                        continue
-                    h, w = int(inputs.images[i].shape[-2]), int(inputs.images[i].shape[-1])
-                    self._assert_bboxes_visible(pred.bboxes, h, w, f"_customize_outputs[train_preds][{i}]", check_canvas=False)
 
             losses = OTXBatchLossEntity()
             for k, v in outputs.items():
@@ -320,25 +228,6 @@ class OTXDetectionModel(OTXModel):
                 ),
             )
             labels.append(prediction.labels)  # type: ignore[attr-defined]
-
-        # Validation/test-time e2e consistency checks:
-        # 1) input images are normalized, 2) target bboxes valid,
-        # 3) prediction bboxes valid and all on original image,
-        # 4) target/prediction canvas sizes agree (original-image space).
-        self._assert_images_in_unit_range(inputs.images, "_customize_outputs[eval_inputs]")
-        for i, (img_info, tgt_boxes, pred_boxes) in enumerate(zip(inputs.imgs_info, inputs.bboxes, bboxes)):  # type: ignore[arg-type]
-            exp_h, exp_w = int(img_info.ori_shape[0]), int(img_info.ori_shape[1])
-            # Predictions are NOT checked for bounds: detector decoders (YOLOX, DETR, …)
-            # produce raw unclipped boxes that may legally extend outside the image.
-            # Only shape, finiteness and valid extents (x2>x1, y2>y1) are asserted.
-            self._assert_bboxes_visible(pred_boxes, exp_h, exp_w, f"_customize_outputs[preds][{i}]", check_bounds=False)
-            # Ground-truth targets are always in image space — full check applies.
-            self._assert_bboxes_visible(tgt_boxes, exp_h, exp_w, f"_customize_outputs[targets][{i}]")
-
-            if isinstance(tgt_boxes, tv_tensors.BoundingBoxes):
-                assert tuple(map(int, tgt_boxes.canvas_size)) == tuple(map(int, pred_boxes.canvas_size)), (
-                    f"_customize_outputs[{i}]: target canvas {tgt_boxes.canvas_size} != pred canvas {pred_boxes.canvas_size}"
-                )
 
         if self.explain_mode:
             if not isinstance(outputs, dict):
