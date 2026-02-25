@@ -17,16 +17,22 @@ export const SAMLoading = ({ isLoading }: { isLoading: boolean }) => {
             }}
         >
             <Flex direction={'column'} alignItems={'center'} justifyContent={'center'} height='100%' gap='size-100'>
-                <IntelBrandedLoading height={'auto'} />
-                <Heading
-                    level={1}
+                <View
                     UNSAFE_style={{
-                        fontSize: 'calc(var(--spectrum-global-dimension-size-200) / var(--zoom-scale, 1))',
-                        textShadow: '1px 1px 2px black, 1px 1px 2px white',
+                        transform: 'scale(calc(1 / var(--zoom-scale, 1)))',
+                        transformOrigin: 'center',
                     }}
                 >
-                    {isLoading && 'Processing image, please wait...'}
-                </Heading>
+                    <IntelBrandedLoading height={'auto'} />
+                    <Heading
+                        level={3}
+                        UNSAFE_style={{
+                            textShadow: '1px 1px 2px black, 1px 1px 2px white',
+                        }}
+                    >
+                        {isLoading && 'Processing image, please wait...'}
+                    </Heading>
+                </View>
             </Flex>
         </View>
     );
