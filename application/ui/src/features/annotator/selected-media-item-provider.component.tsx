@@ -10,6 +10,7 @@ import type { Media } from '../../constants/shared-types';
 import { isVideo } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
+import { getImageData } from './tools/utils';
 
 type SelectedMediaItemContextProps = {
     mediaItem: Media;
@@ -103,8 +104,7 @@ const getMediaItem = (mediaItem: Media) => {
 export const MediaItemImageLoader = ({ children }: { children: ReactNode }) => {
     const { mediaItem } = useSelectedMediaItem();
 
-    // TODO: Use getMediaItem when API supports video frames
-    const { data: image } = useLoadImageQuery(mediaItem.id);
+    const { data: image = getImageData(new Image()) } = useLoadImageQuery(mediaItem);
 
     return <MediaItemImageContext value={{ image }}>{children}</MediaItemImageContext>;
 };
