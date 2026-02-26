@@ -100,8 +100,46 @@ test.describe('Models', () => {
                         accuracy: mockedModelArchitectures[2].id,
                     },
                 });
+            }),
+            http.get('/api/system/devices/training', () => {
+                return HttpResponse.json([{ type: 'cpu', name: 'CPU' }]);
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    items: [],
+                    pagination: {
+                        total: 3,
+                        count: 0,
+                        limit: 5,
+                        offset: 0,
+                    },
+                });
             })
         );
+    });
+
+    test('opens train model dialog with preselected dataset when clicked from dataset group header', async ({
+        modelsPage,
+        page,
+    }) => {
+        await modelsPage.goto();
+
+        await page.getByRole('button', { name: 'Train model' }).first().click();
+
+        await expect(page.getByRole('heading', { name: 'Select a model to train' })).toBeVisible();
+        await expect(page.getByRole('button', { name: /Dataset Revision 1.*Select/ })).toBeVisible();
+    });
+
+    test(`opens train model dialog with preselected architecture and 
+        latest model revision when clicked from architecture group header`, async ({ modelsPage, page }) => {
+        await modelsPage.goto();
+
+        await modelsPage.selectGroupBy('architecture');
+        await page.getByRole('button', { name: 'Train model' }).first().click();
+
+        await expect(page.getByRole('heading', { name: 'Select a model to train' })).toBeVisible();
+        await expect(page.getByRole('button', { name: /YOLOX Model v2.*Select model/ })).toBeVisible();
+        await expect(page.getByRole('radio', { name: 'Object_Detection_YOLOX_X', exact: true })).toBeChecked();
     });
 
     test('displays models list', async ({ modelsPage }) => {
