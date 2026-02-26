@@ -37,7 +37,7 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
             path: {
                 project_id,
             },
-            ...query,
+            query,
         },
     });
 };
