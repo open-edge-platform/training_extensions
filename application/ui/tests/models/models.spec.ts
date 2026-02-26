@@ -140,6 +140,9 @@ test.describe('Models', () => {
         await expect(page.getByRole('heading', { name: 'Select a model to train' })).toBeVisible();
         await expect(page.getByRole('button', { name: /YOLOX Model v2.*Select model/ })).toBeVisible();
         await expect(page.getByRole('radio', { name: 'Object_Detection_YOLOX_X', exact: true })).toBeChecked();
+
+        await page.getByRole('radio', { name: 'Object_Detection_SSD', exact: true }).click();
+        await expect(page.getByRole('button', { name: /SSD Model.*Select model/ })).toBeVisible();
     });
 
     test('displays models list', async ({ modelsPage }) => {

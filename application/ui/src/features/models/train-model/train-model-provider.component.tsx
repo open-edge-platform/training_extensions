@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, use, useState } from 'react';
+import { createContext, ReactNode, use, useMemo, useState } from 'react';
 
 import {
     DatasetRevision,
@@ -70,6 +70,29 @@ const useModelRevisions = () => {
     };
 };
 
+const getModelRevisionsForArchitecture = (
+    modelRevisions: ModelRevisionWithValue[],
+    architectureId: string | null
+): ModelRevisionWithValue[] => {
+    return modelRevisions.filter((modelRevision) => {
+        if (modelRevision.id === 'train-from-scratch') {
+            return true;
+        }
+
+        return modelRevision.architecture === architectureId;
+    });
+};
+
+const getDefaultModelRevisionIdForArchitecture = (
+    modelRevisions: ModelRevisionWithValue[],
+    architectureId: string | null
+): string | null => {
+    const revisionsForArchitecture = getModelRevisionsForArchitecture(modelRevisions, architectureId);
+    const firstRevision = revisionsForArchitecture.find(({ id }) => id !== 'train-from-scratch');
+
+    return firstRevision?.id ?? revisionsForArchitecture.at(0)?.id ?? null;
+};
+
 export const TrainModelProvider = ({
     children,
     preSelectedDatasetRevisionId,
@@ -78,9 +101,9 @@ export const TrainModelProvider = ({
     const { modelArchitectures } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { datasetRevisions } = useDatasetRevisions();
-    const { modelRevisions } = useModelRevisions();
+    const { modelRevisions: allModelRevisions } = useModelRevisions();
     const activeModel = useGetActiveModel();
-    const preSelectedModelRevision = modelRevisions.find(({ id }) => id === preSelectedModelRevisionId);
+    const preSelectedModelRevision = allModelRevisions.find(({ id }) => id === preSelectedModelRevisionId);
 
     const activeModelArchitecture = modelArchitectures.find(
         (modelArchitecture) => modelArchitecture.id === activeModel?.architecture
@@ -97,8 +120,21 @@ export const TrainModelProvider = ({
         preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
     );
     const [selectedModelRevisionId, setSelectedModelRevisionId] = useState<string | null>(
-        preSelectedModelRevisionId ?? modelRevisions?.at(0)?.id ?? null
+        preSelectedModelRevisionId ??
+            getDefaultModelRevisionIdForArchitecture(
+                allModelRevisions,
+                preSelectedModelRevision?.architecture ?? activeModelArchitecture?.id ?? null
+            )
     );
+
+    const modelRevisions = useMemo(() => {
+        return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
+    }, [allModelRevisions, selectedModelArchitectureId]);
+
+    const onSelectModelArchitectureId = (modelArchitectureId: string | null) => {
+        setSelectedModelArchitectureId(modelArchitectureId);
+        setSelectedModelRevisionId(getDefaultModelRevisionIdForArchitecture(allModelRevisions, modelArchitectureId));
+    };
 
     return (
         <TrainModelContext
@@ -108,7 +144,7 @@ export const TrainModelProvider = ({
                 activeModelArchitectureId: activeModel?.architecture,
 
                 selectedModelArchitectureId,
-                onSelectModelArchitectureId: setSelectedModelArchitectureId,
+                onSelectModelArchitectureId,
 
                 trainingDevices,
                 selectedTrainingDevice,
