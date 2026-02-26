@@ -124,6 +124,8 @@ test.describe('Models', () => {
     }) => {
         await modelsPage.goto();
 
+        await modelsPage.selectGroupBy('dataset');
+
         await page.getByRole('button', { name: 'Train model' }).first().click();
 
         await expect(page.getByRole('heading', { name: 'Select a model to train' })).toBeVisible();
@@ -135,6 +137,7 @@ test.describe('Models', () => {
         await modelsPage.goto();
 
         await modelsPage.selectGroupBy('architecture');
+
         await page.getByRole('button', { name: 'Train model' }).first().click();
 
         await expect(page.getByRole('heading', { name: 'Select a model to train' })).toBeVisible();
