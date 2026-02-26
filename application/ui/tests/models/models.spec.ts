@@ -108,7 +108,7 @@ test.describe('Models', () => {
                 return HttpResponse.json({
                     items: [],
                     pagination: {
-                        total: 3,
+                        total: 0,
                         count: 0,
                         limit: 5,
                         offset: 0,

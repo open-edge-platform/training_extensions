@@ -63,12 +63,7 @@ export const DataCollection = () => {
     };
 
     return (
-        <Flex
-            key={`${maxDatasetSize}-${serverRate}-${serverConfidenceThreshold}`}
-            direction={'column'}
-            minHeight={0}
-            height={'100%'}
-        >
+        <Flex direction={'column'} minHeight={0} height={'100%'}>
             <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
                 <Heading level={4}>Data collection</Heading>
             </Flex>

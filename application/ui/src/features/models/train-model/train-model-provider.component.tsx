@@ -121,10 +121,7 @@ export const TrainModelProvider = ({
     );
     const [selectedModelRevisionId, setSelectedModelRevisionId] = useState<string | null>(
         preSelectedModelRevisionId ??
-            getDefaultModelRevisionIdForArchitecture(
-                allModelRevisions,
-                preSelectedModelRevision?.architecture ?? activeModelArchitecture?.id ?? null
-            )
+            getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
     );
 
     const modelRevisions = useMemo(() => {
