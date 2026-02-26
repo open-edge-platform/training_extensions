@@ -1419,7 +1419,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.11' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
 wheels = [
@@ -2964,8 +2964,8 @@ wheels = [
 
 [[package]]
 name = "onnxscript"
-version = "0.6.0.dev20260123"
-source = { git = "https://github.com/microsoft/onnxscript.git?rev=519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e#519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e" }
+version = "0.6.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ml-dtypes" },
     { name = "numpy" },
@@ -2973,6 +2973,10 @@ dependencies = [
     { name = "onnx-ir" },
     { name = "packaging" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e7/2b/538fdeb0e25bed5d7e0f954af5710543e2629499fb74381afc3333f8a8ae/onnxscript-0.6.2.tar.gz", hash = "sha256:abb2e6f464db40c9b8c7fbb3e64cca04cf3f4495e67c4eda5eac17b784191ce3", size = 590865, upload-time = "2026-02-10T22:53:39.638Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/66/56/e6b179397497ab93266b6eb00743403a6a699a29063a423c4a14595d3db9/onnxscript-0.6.2-py3-none-any.whl", hash = "sha256:20e3c3fd1da19b3655549d5455a2df719db47374fe430e01e865ae69127c37b9", size = 689064, upload-time = "2026-02-10T22:53:41.663Z" },
 ]
 
 [[package]]
@@ -3254,7 +3258,7 @@ requires-dist = [
     { name = "omegaconf", specifier = "==2.3.0" },
     { name = "onnx", specifier = "==1.20.1" },
     { name = "onnxconverter-common", specifier = "==1.16.0" },
-    { name = "onnxscript", git = "https://github.com/microsoft/onnxscript.git?rev=519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e" },
+    { name = "onnxscript", specifier = "==0.6.2" },
     { name = "openvino", specifier = "==2025.4.1" },
     { name = "openvino-model-api", git = "https://github.com/open-edge-platform/model_api.git" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },

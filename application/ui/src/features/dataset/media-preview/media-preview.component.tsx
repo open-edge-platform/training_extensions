@@ -70,7 +70,7 @@ const Annotator = ({
 
     return (
         <VideoPlayerProvider
-            mediaItem={isVideo(mediaItem) || isVideoFrame(mediaItem) ? mediaItem : undefined}
+            videoFrame={isVideo(mediaItem) || isVideoFrame(mediaItem) ? mediaItem : undefined}
             changeSelectedMediaItem={setMediaItem}
         >
             {mode === 'prediction' ? (

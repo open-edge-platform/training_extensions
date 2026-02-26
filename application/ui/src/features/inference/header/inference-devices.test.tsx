@@ -9,7 +9,6 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
-import { queryClient } from '../../../query-client/query-client';
 import { InferenceDevices } from './inference-devices.component';
 
 const mockPipeline = getMockedPipeline({
@@ -41,7 +40,6 @@ describe('InferenceDevices', () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
-        queryClient.removeQueries();
     });
 
     it('displays current device selection', async () => {

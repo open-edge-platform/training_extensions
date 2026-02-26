@@ -3,42 +3,44 @@
 
 import { useState } from 'react';
 
-import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
+import { Divider, Flex, Heading, NumberField, Slider, Switch, Text } from '@geti/ui';
 import { usePatchPipeline, usePipeline } from 'hooks/api/pipeline.hook';
-import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 const DEFAULTS = {
     RATE: 12,
     CONFIDENCE_THRESHOLD: 0.5,
     MIN_SAMPLING_INTERVAL: 2.5,
+    MAX_DATASET_SIZE: 500,
 } as const;
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
     const pipelineQuery = usePipeline();
-    const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
     const patchPipelineMutation = usePatchPipeline();
 
     const policies = pipelineQuery.data?.data_collection?.policies ?? [];
-    const maxDatasetSize = pipelineQuery.data?.data_collection?.max_dataset_size ?? 500;
     const ratePolicy = policies.find((policy) => policy.type === 'fixed_rate');
     const confidencePolicy = policies.find((policy) => policy.type === 'confidence_threshold');
 
+    const maxDatasetSize = pipelineQuery.data?.data_collection?.max_dataset_size ?? DEFAULTS.MAX_DATASET_SIZE;
     const serverRate = ratePolicy?.rate ?? DEFAULTS.RATE;
     const serverConfidenceThreshold = confidencePolicy?.confidence_threshold ?? DEFAULTS.CONFIDENCE_THRESHOLD;
 
     const [localRate, setLocalRate] = useState(serverRate);
     const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(serverConfidenceThreshold);
 
+    const isUpdating = patchPipelineMutation.isPending;
+
     const updatePolicies = (updates: {
+        maxDatasetSize?: number;
         rateEnabled?: boolean;
         rate?: number;
         confidenceEnabled?: boolean;
         confidenceThreshold?: number;
     }) => {
         const newDataCollectionPolicies = {
-            max_dataset_size: maxDatasetSize,
+            max_dataset_size: updates.maxDatasetSize ?? maxDatasetSize,
             policies: [
                 {
                     type: 'fixed_rate' as const,
@@ -60,14 +62,37 @@ export const DataCollection = () => {
         });
     };
 
-    const isDisabled = patchPipelineMutation.isPending || !canEditPipeline;
-
     return (
-        <Flex key={`${serverRate}-${serverConfidenceThreshold}`} direction={'column'} minHeight={0} height={'100%'}>
+        <Flex
+            key={`${maxDatasetSize}-${serverRate}-${serverConfidenceThreshold}`}
+            direction={'column'}
+            minHeight={0}
+            height={'100%'}
+        >
             <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
                 <Heading level={4}>Data collection</Heading>
             </Flex>
             <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
+                <Heading level={3} margin={0}>
+                    Max dataset size
+                </Heading>
+
+                <Text marginY={'size-100'}>Maximum number of items to collect</Text>
+
+                <NumberField
+                    label={'Size'}
+                    width={'100%'}
+                    minValue={1}
+                    step={1}
+                    value={maxDatasetSize}
+                    onChange={(nextMaxDatasetSize) => {
+                        updatePolicies({ maxDatasetSize: nextMaxDatasetSize });
+                    }}
+                    isDisabled={isUpdating}
+                />
+
+                <Divider marginY={'size-400'} size={'S'} />
+
                 <Heading level={3} margin={0}>
                     Capture rate
                 </Heading>
@@ -77,8 +102,8 @@ export const DataCollection = () => {
                 <Switch
                     isSelected={ratePolicy?.enabled ?? false}
                     onChange={(enabled) => updatePolicies({ rateEnabled: enabled })}
-                    isDisabled={isDisabled}
                     marginBottom={'size-200'}
+                    isDisabled={isUpdating}
                 >
                     Toggle auto capturing
                 </Switch>
@@ -91,7 +116,7 @@ export const DataCollection = () => {
                     onChange={setLocalRate}
                     onChangeEnd={(rate) => updatePolicies({ rate })}
                     label='Rate'
-                    isDisabled={isDisabled || !ratePolicy?.enabled}
+                    isDisabled={!ratePolicy?.enabled || isUpdating}
                 />
 
                 <Divider marginY={'size-400'} size={'S'} />
@@ -105,7 +130,7 @@ export const DataCollection = () => {
                 <Switch
                     isSelected={confidencePolicy?.enabled ?? false}
                     onChange={(enabled) => updatePolicies({ confidenceEnabled: enabled })}
-                    isDisabled={isDisabled}
+                    isDisabled={isUpdating}
                 >
                     Confidence threshold
                 </Switch>
@@ -119,7 +144,7 @@ export const DataCollection = () => {
                     onChangeEnd={(confidenceThreshold) => updatePolicies({ confidenceThreshold })}
                     marginY={'size-200'}
                     label='Threshold'
-                    isDisabled={isDisabled || !confidencePolicy?.enabled}
+                    isDisabled={!confidencePolicy?.enabled || isUpdating}
                 />
             </Flex>
         </Flex>

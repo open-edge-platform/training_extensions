@@ -17,16 +17,22 @@ export type VideoControls = {
     canPlay?: boolean;
 };
 
-export const useVideoControls = (
-    videoRef: RefObject<HTMLVideoElement | null>,
-    videoFrame: MediaVideoFrame | undefined,
-    selectVideoFrame: (media: MediaVideoFrame) => void,
-    changeCurrentFrameIndex: (index: number) => void
-): VideoControls => {
+export const useVideoControls = ({
+    step,
+    videoRef,
+    videoFrame,
+    selectVideoFrame,
+    changeCurrentFrameIndex,
+}: {
+    step: number;
+    videoRef: RefObject<HTMLVideoElement | null>;
+    videoFrame: MediaVideoFrame | undefined;
+    selectVideoFrame: (media: MediaVideoFrame) => void;
+    changeCurrentFrameIndex: (index: number) => void;
+}): VideoControls => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
     const totalFrames = videoFrame?.frame_count ?? 1;
-    const step = videoFrame?.frame_stride ?? 1;
     const currentFrameNumber = videoFrame?.frame_number ?? 0;
 
     const round = (x: number) => Math.round(x / step) * step;
