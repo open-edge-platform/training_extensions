@@ -28,9 +28,17 @@ export const getDatasetRevisionMediaBinaryUrl = (projectId: string, datasetRevis
 };
 
 export const getVideoFrameBinaryUrl = (projectId: string, itemId: string, frameNumber: number) => {
-    return `${getMediaBaseUrl(projectId, itemId)}/${frameNumber}/binary`;
+    const url = new URL(`${getMediaBaseUrl(projectId, itemId)}/binary`);
+
+    url.searchParams.set('frame_index', frameNumber.toString());
+
+    return url.toString();
 };
 
 export const getVideoFrameThumbnailUrl = (projectId: string, itemId: string, frameNumber: number) => {
-    return `${getMediaBaseUrl(projectId, itemId)}/${frameNumber}/thumbnail`;
+    const url = new URL(`${getMediaBaseUrl(projectId, itemId)}/thumbnail`);
+
+    url.searchParams.set('frame_index', frameNumber.toString());
+
+    return url.toString();
 };
