@@ -38,39 +38,45 @@ const getErrorMessage = (error: unknown): string => {
     return 'An unexpected error occurred. Please try again.';
 };
 
-export const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            retry: false,
+export const createQueryClient = () => {
+    const client = new QueryClient({
+        defaultOptions: {
+            queries: {
+                retry: false,
+            },
+            mutations: {
+                retry: false,
+            },
         },
-        mutations: {
-            retry: false,
-        },
-    },
-    mutationCache: new MutationCache({
-        onSuccess: (_data, _variables, _context, mutation) => {
-            const meta = mutation.meta;
-            const invalidateQueries = meta?.invalidateQueries;
+        mutationCache: new MutationCache({
+            onSuccess: (_data, _variables, _context, mutation) => {
+                const meta = mutation.meta;
+                const invalidateQueries = meta?.invalidateQueries;
 
-            if (invalidateQueries) {
-                queryClient.invalidateQueries({
-                    predicate: (query) => {
-                        return invalidateQueries.some((queryKey) => {
-                            return matchQuery({ queryKey }, query);
-                        });
-                    },
+                if (invalidateQueries) {
+                    client.invalidateQueries({
+                        predicate: (query) => {
+                            return invalidateQueries.some((queryKey) => {
+                                return matchQuery({ queryKey }, query);
+                            });
+                        },
+                    });
+                }
+            },
+            onError: (error) => {
+                toast({
+                    type: 'error',
+                    message: getErrorMessage(error),
+                    duration: TOAST_DURATION,
                 });
-            }
-        },
-        onError: (error) => {
-            toast({
-                type: 'error',
-                message: getErrorMessage(error),
-                duration: TOAST_DURATION,
-            });
-        },
-    }),
-});
+            },
+        }),
+    });
+
+    return client;
+};
+
+export const queryClient = createQueryClient();
 
 /**
  * Returns the provided query key.

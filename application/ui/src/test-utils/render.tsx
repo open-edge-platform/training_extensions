@@ -5,7 +5,7 @@ import { Suspense, type ReactNode } from 'react';
 
 import { IntelBrandedLoading, Toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
     render as rtlRender,
     renderHook as rtlRenderHook,
@@ -14,14 +14,15 @@ import {
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
 import { paths } from '../constants/paths';
-import { queryClient } from '../query-client/query-client';
+import { createQueryClient } from '../query-client/query-client';
 
 export interface RenderOptions extends RTLRenderOptions {
     route?: string;
     path?: string;
+    queryClient?: QueryClient;
 }
 
-export const TestProviders = ({ children }: { children: ReactNode }) => {
+export const TestProviders = ({ children, queryClient }: { children: ReactNode; queryClient: QueryClient }) => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
@@ -32,7 +33,7 @@ export const TestProviders = ({ children }: { children: ReactNode }) => {
     );
 };
 
-const createTestRouter = (children: ReactNode, options: RenderOptions) => {
+const createTestRouter = (children: ReactNode, options: RenderOptions, queryClient: QueryClient) => {
     const route = options.route ?? paths.project.details({ projectId: '123' });
     const path = options.path ?? paths.project.details.pattern;
 
@@ -40,7 +41,7 @@ const createTestRouter = (children: ReactNode, options: RenderOptions) => {
         [
             {
                 path,
-                element: <TestProviders>{children}</TestProviders>,
+                element: <TestProviders queryClient={queryClient}>{children}</TestProviders>,
             },
         ],
         {
@@ -51,14 +52,17 @@ const createTestRouter = (children: ReactNode, options: RenderOptions) => {
 };
 
 export const render = (ui: ReactNode, options: RenderOptions = {}) => {
-    const router = createTestRouter(ui, options);
+    const testQueryClient = options.queryClient ?? createQueryClient();
+    const router = createTestRouter(ui, options, testQueryClient);
 
     return rtlRender(<RouterProvider router={router} />);
 };
 
 export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult, options: RenderOptions = {}) => {
+    const testQueryClient = options.queryClient ?? createQueryClient();
+
     const Wrapper = ({ children }: { children: ReactNode }) => {
-        const router = createTestRouter(children, options);
+        const router = createTestRouter(children, options, testQueryClient);
 
         return <RouterProvider router={router} />;
     };
