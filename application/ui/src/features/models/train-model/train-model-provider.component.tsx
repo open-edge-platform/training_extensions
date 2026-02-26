@@ -120,7 +120,8 @@ export const TrainModelProvider = ({
         preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
     );
     const [selectedModelRevisionId, setSelectedModelRevisionId] = useState<string | null>(
-        preSelectedModelRevisionId ??
+        () =>
+            preSelectedModelRevisionId ??
             getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
     );
 
