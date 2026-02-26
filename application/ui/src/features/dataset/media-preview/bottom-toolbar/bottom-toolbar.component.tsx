@@ -3,11 +3,13 @@
 
 import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -23,35 +25,46 @@ type BottomToolbarProps = {
     hideHotkeys?: boolean;
 };
 
+const DATASET_ITEM_OPERATION = 'get';
+const DATASET_ITEM_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}';
+const UPDATE_SUBSET_OPERATION = 'patch';
+const UPDATE_SUBSET_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset';
+
+type AssignableSubset = Exclude<DatasetSubset, 'unassigned'>;
+
+const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !== null && key !== 'unassigned';
+
 const useSubsets = (mediaItemId: string) => {
     const projectId = useProjectIdentifier();
+    const queryClient = useQueryClient();
 
-    const { data } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}', {
-        params: {
-            path: {
-                project_id: projectId,
-                dataset_item_id: mediaItemId,
-            },
+    const datasetItemPath = {
+        project_id: projectId,
+        dataset_item_id: mediaItemId,
+    };
+    const datasetItemParams = { params: { path: datasetItemPath } };
+    const datasetItemQueryKey = getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]);
+
+    const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
+
+    const updateSubsetMutation = $api.useMutation(UPDATE_SUBSET_OPERATION, UPDATE_SUBSET_URL, {
+        meta: {
+            invalidateQueries: [datasetItemQueryKey],
+        },
+        onSuccess: (updatedItem) => {
+            queryClient.setQueryData(datasetItemQueryKey, updatedItem);
         },
     });
 
-    const updateSubsetMutation = $api.useMutation(
-        'patch',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset'
-    );
-
-    const handleSubsetChange = (key: Key | null, mediaItem: Media) => {
-        if (key === null || key === 'unassigned') return;
+    const handleSubsetChange = (key: Key | null) => {
+        if (!isAssignableSubset(key)) return;
 
         updateSubsetMutation.mutate({
             params: {
-                path: {
-                    project_id: projectId,
-                    dataset_item_id: mediaItem.id,
-                },
+                path: datasetItemPath,
             },
             body: {
-                subset: key as Exclude<DatasetSubset, 'unassigned'>,
+                subset: key,
             },
         });
     };
@@ -90,7 +103,7 @@ export const BottomToolbar = ({ isUserReviewed, mediaItem, hideHotkeys }: Bottom
                                 selectedKey={currentSubset === 'unassigned' ? null : currentSubset}
                                 placeholder={'Select subset'}
                                 aria-label={'Select subset'}
-                                onSelectionChange={(key) => handleSubsetChange(key, mediaItem)}
+                                onSelectionChange={handleSubsetChange}
                             >
                                 <Item key={'validation'}>Validation</Item>
                                 <Item key={'testing'}>Testing</Item>
