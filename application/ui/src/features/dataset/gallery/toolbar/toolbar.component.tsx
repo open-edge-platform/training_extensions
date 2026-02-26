@@ -57,11 +57,6 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
-    const acceptMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations');
-    const declineMutation = $api.useMutation(
-        'delete',
-        '/api/projects/{project_id}/dataset/media/{media_id}/annotations'
-    );
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -70,57 +65,6 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const handleToggleManyItemSelection = () => {
         const images = items.map((item) => String(item.id));
         setSelectedKeys(toggleMultipleSelection(images));
-    };
-
-    const syncReviewStatus = async (action: 'accept' | 'decline') => {
-        if (selectedKeys === 'all') {
-            return;
-        }
-
-        const selectedMediaIds = Array.from(selectedKeys).map(String);
-
-        const requests = selectedMediaIds.map((mediaId) => {
-            const payload = {
-                params: {
-                    path: {
-                        project_id: projectId,
-                        media_id: mediaId,
-                    },
-                },
-            };
-
-            return action === 'accept'
-                ? acceptMutation.mutateAsync({ ...payload, body: { annotations: [] } })
-                : declineMutation.mutateAsync(payload);
-        });
-
-        await Promise.allSettled(requests);
-
-        await Promise.all([
-            queryClient.invalidateQueries({
-                queryKey: getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/dataset/items',
-                    { params: { path: { project_id: projectId } } },
-                ]),
-            }),
-            queryClient.invalidateQueries({
-                queryKey: ['get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}'],
-            }),
-            queryClient.invalidateQueries({
-                queryKey: ['get', '/api/projects/{project_id}/dataset/media/{media_id}/annotations'],
-            }),
-        ]);
-    };
-
-    const handleAccept = async () => {
-        await syncReviewStatus('accept');
-        setSelectedKeys(new Set());
-    };
-
-    const handleReject = async () => {
-        await syncReviewStatus('decline');
-        setSelectedKeys(new Set());
     };
 
     const handleAddMediaItem = async (files: File[]) => {
@@ -203,12 +147,17 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
                                 onDeleted={toggleSelectedKeys}
                             />
 
-                            <Button variant={'accent'} onPress={handleAccept}>
+                            {/* 
+                                TODO: In the future we will have a single endpoint to accept/decline
+                                    multiple media items at once instead of sending multiple requests in a loop.
+                                    Once we have that, we can reenable these buttons.
+                            */}
+                            {/* <Button variant={'accent'} onPress={handleAccept}>
                                 Accept
                             </Button>
                             <Button variant={'secondary'} onPress={handleReject}>
                                 Decline
-                            </Button>
+                            </Button> */}
                         </>
                     )}
                 </Flex>
