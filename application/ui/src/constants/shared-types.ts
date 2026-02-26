@@ -71,3 +71,5 @@ export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig
 
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
 export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
+
+export type LineMetric = components['schemas']['LineMetric'];
