@@ -52,8 +52,9 @@ const createTestRouter = (children: ReactNode, options: RenderOptions, queryClie
 };
 
 export const render = (ui: ReactNode, options: RenderOptions = {}) => {
+    const testQueryClient = options.queryClient ?? createQueryClient();
+
     const Wrapper = ({ children }: { children: ReactNode }) => {
-        const testQueryClient = options.queryClient ?? createQueryClient();
         const router = createTestRouter(children, options, testQueryClient);
 
         return <RouterProvider router={router} />;
