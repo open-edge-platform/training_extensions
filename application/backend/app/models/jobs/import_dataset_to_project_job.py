@@ -11,7 +11,7 @@ class ImportDatasetToProjectJobParams(JobParams):
     staged_dataset_id: UUID
     project_id: UUID
     task: Task
-    labels_mapping: dict[str, str] | None = None
+    labels_mapping: dict[str, str | None] | None = None
 
 
 class ImportDatasetToProjectJob(ProjectJob[ImportDatasetToProjectJobParams]):

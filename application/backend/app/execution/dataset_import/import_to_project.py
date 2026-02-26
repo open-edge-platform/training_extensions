@@ -81,13 +81,16 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
         self._db_session_factory = db_session_factory
 
     @step("Prepare dataset", 10)
-    def prepare_dataset(self, staged_dataset_id: UUID) -> Dataset:
+    def prepare_dataset(self, staged_dataset_id: UUID, task: Task) -> Dataset:
         staged_dataset_path = self._staged_datasets_dir / str(staged_dataset_id) / "dataset"
         if not staged_dataset_path.exists() or not staged_dataset_path.is_dir():
             raise ValueError(f"Staged dataset directory does not exist: {staged_dataset_path}")
         dataset = import_dataset(str(staged_dataset_path))
         if not dataset:
             raise ValueError(f"Failed to import dataset from {staged_dataset_path}")
+        target_type = self.__get_sample_by_task(task=task)
+        if target_type and target_type != dataset.dtype:
+            dataset = dataset.convert_to_schema(target_type)
         return dataset
 
     @step("Import items from dataset to project")
@@ -97,10 +100,6 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
             self._label_service.set_db_session(session)
             self._media_service.set_db_session(session)
             labels = self._label_service.list_all(params.project_id)
-            target_type = self.__get_sample_by_task(task=params.task)
-            if target_type and target_type != dataset.dtype:
-                dataset = dataset.convert_to_schema(target_type)
-
             label_attr_name = "label" if "label" in dataset.schema.attributes else "labels"
             label_attr = dataset.schema.attributes[label_attr_name]
             converter = DatumaroSampleToGetiAnnotationConverter(
@@ -112,7 +111,7 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
             size, min_p, max_p = len(dataset), 10, 100
             progress_interval = max(1, size // self.BATCH_PROGRESS_INTERVAL)
             for idx, item in enumerate(dataset):
-                if idx % progress_interval == 0 or idx == size - 1:
+                if (idx > 0 and idx % progress_interval == 0) or idx == size - 1:
                     self.update_progress(min_p + (idx / size) * (max_p - min_p))
                 media = self._media_service.create_image(
                     project_id=params.project_id,

@@ -32,7 +32,7 @@ class PrepareDatasetForImportRequest(BaseImportRequest):
 
 
 class ImportDatasetProjectParams(BaseModel):
-    labels_mapping: dict[str, str] | None = Field(
+    labels_mapping: dict[str, str | None] | None = Field(
         None,
         description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
         "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",

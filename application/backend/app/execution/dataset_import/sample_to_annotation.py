@@ -1,8 +1,8 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import numpy as np
 from datumaro.experimental.categories import LabelCategories
-from loguru import logger
 
 from app.datumaro_converter import (
     ClassificationSample,
@@ -25,6 +25,20 @@ class DatumaroSampleToGetiAnnotationConverter:
     (such as labels, bounding boxes, polygons, etc.) into the format expected
     by Geti datasets.
 
+    Label Mapping Behavior:
+        The converter supports label mapping during import to existing projects:
+
+        - **Mapped labels**: Labels can be mapped to existing project labels.
+          These annotations are converted normally with the mapped label name.
+
+        - **Unmapped labels**: Labels that are not present in the mapping dictionary
+          and in project labels will raise a validation error during import.
+
+        - **Explicitly mapped to None**: Labels explicitly mapped to None (e.g.,
+          `{"label_name": None}`) are filtered out during import. Annotations using
+          these labels are stripped, which may result in some images becoming
+          unannotated if all their annotations are removed.
+
     Methods:
         convert_sample: Convert a complete Datumaro sample to Geti annotation.
 
@@ -34,12 +48,39 @@ class DatumaroSampleToGetiAnnotationConverter:
     """
 
     def __init__(
-        self, project_labels: list[Label], label_categories: LabelCategories, label_mapping: dict[str, str] | None
+        self,
+        project_labels: list[Label],
+        label_categories: LabelCategories,
+        label_mapping: dict[str, str | None] | None,
     ) -> None:
         """Initialize the Datumaro to Geti converter."""
         self._label_categories = label_categories
         self._project_labels = LabelIndex(project_labels)
         self._label_mapping = label_mapping or {}
+        self.__validate_labels(self._label_categories.labels, self._project_labels.label_names, self._label_mapping)
+
+    @staticmethod
+    def __validate_labels(imported: tuple[str, ...], existing: tuple[str, ...], mapping: dict[str, str | None]) -> None:
+        existing_set = set(existing)
+
+        # Find imported labels that are neither mapped nor present in the project
+        # Example: imported=("car", "person"), existing=("car",), mapping={}
+        # Result: bad=["person"] (not in project and not mapped)
+        bad = [x for x in imported if x not in mapping and x not in existing_set]
+
+        # Find mapping entries where the target label doesn't exist in the project
+        # Example: mapping={"vehicle": "car", "human": "invalid_label"}, existing=("car",)
+        # Result: bad_targets=[("human", "invalid_label")] (target doesn't exist)
+        # Note: None values are allowed for filtering (e.g., {"background": None})
+        bad_targets = [(k, v) for k, v in mapping.items() if v is not None and v not in existing_set]
+
+        if bad or bad_targets:
+            msg = "Label validation error during import:\n"
+            if bad:
+                msg += f" - Unmapped labels not in project: {bad}\n"
+            if bad_targets:
+                msg += f" - Mapped labels with invalid targets: {bad_targets}\n"
+            raise ValueError(msg)
 
     def convert_sample(self, sample: SampleType) -> list[DatasetItemAnnotation] | None:
         """
@@ -131,7 +172,7 @@ class DatumaroSampleToGetiAnnotationConverter:
             label_ref = self.__get_label_ref_by_dm_index(label_idx)
             if label_ref is not None:
                 label_refs.append(label_ref)
-        elif isinstance(label_idx, NDArrayInt):
+        elif isinstance(label_idx, np.ndarray):
             label_refs = []
             for idx in label_idx:
                 label_ref = self.__get_label_ref_by_dm_index(idx)
@@ -143,8 +184,8 @@ class DatumaroSampleToGetiAnnotationConverter:
         """Get a Geti label reference by the index of a Datumaro label."""
         label_name = str(self._label_categories[dm_label_idx])
         mapped_name = self._label_mapping.get(label_name, label_name)
-        label_id = self._project_labels.get_id_by_name(mapped_name)
-        if label_id is None:
-            logger.warning("Label {} not found in project labels", label_name)
-            return None
-        return LabelReference(id=label_id)
+        if mapped_name is not None:
+            label_id = self._project_labels.get_id_by_name(mapped_name)
+            if label_id is not None:
+                return LabelReference(id=label_id)
+        return None
