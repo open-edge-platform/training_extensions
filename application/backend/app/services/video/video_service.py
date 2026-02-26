@@ -47,16 +47,17 @@ def get_video_metadata(video_path: Path) -> VideoMetadata:
 
 def extract_video_frame(
     video_path: Path,
-    video_frame_path: Path,
     frame_index: int,
 ) -> np.ndarray:
     """
-    Extracts a video frame and saves it to a local FS to specified file.
+    Extracts a video frame.
 
     Args:
         video_path: Video binary file path
-        video_frame_path: Path of the file to write generated video frame to
         frame_index: Frame index
+
+    Returns:
+        Extracted video frame as numpy array (RGB format)
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -68,8 +69,7 @@ def extract_video_frame(
         read_success, frame = cap.read()
         if not read_success:
             raise RuntimeError(f"Cannot read frame at {frame_index} index from video: {video_path}")
-        cv2.imwrite(str(video_frame_path), frame)
-        return frame
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     except Exception as e:
         logger.error(f"Failed extracting video frame {frame_index} from video {video_path}", exc_info=e)
         raise RuntimeError("Error occurred while extracting video frame")
