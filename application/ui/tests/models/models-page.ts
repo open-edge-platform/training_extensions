@@ -67,6 +67,14 @@ export class ModelsPage {
         await this.page.getByLabel('Model actions').first().click();
     }
 
+    async openModelMenuForModel(name: string) {
+        await this.page
+            .locator('[data-testid^="model-disclosure-"]')
+            .filter({ has: this.page.getByTestId('model-name').filter({ hasText: name }) })
+            .getByLabel('Model actions')
+            .click();
+    }
+
     async clickRenameAction() {
         await this.page.getByRole('menuitem', { name: 'Rename' }).click();
     }

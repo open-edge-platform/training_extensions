@@ -29,23 +29,20 @@ describe('LogEntry', () => {
         expect(screen.getByText('otx_trainer:train_model:42')).toBeInTheDocument();
     });
 
-    it('applies the correct color for each log level', () => {
-        const levels: LogLevel[] = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'SUCCESS', 'CRITICAL'];
-
-        levels.forEach((level) => {
+    it.each(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'SUCCESS', 'CRITICAL'] as LogLevel[])(
+        'applies the correct color for the %s level',
+        (level) => {
             const entry = getMockedLogEntry({
                 level: { icon: '', name: level, no: 0 },
                 message: `${level} message`,
             });
 
-            const { unmount } = render(<LogEntry entry={entry} />);
+            render(<LogEntry entry={entry} />);
 
             const levelElement = screen.getByText(level);
             expect(levelElement).toHaveStyle({ color: LOG_LEVEL_COLORS[level] });
-
-            unmount();
-        });
-    });
+        }
+    );
 
     it('omits the timestamp, source when both are empty', () => {
         const entry = getMockedLogEntry({
@@ -58,21 +55,22 @@ describe('LogEntry', () => {
         render(<LogEntry entry={entry} />);
 
         expect(screen.getByText('No timestamp message')).toBeInTheDocument();
-        // No timestamp, no source → only level + message should be rendered
-        expect(screen.getByRole('listitem').children).toHaveLength(2);
+        // No timestamp or source → neither a HH:MM:SS pattern nor a source should appear
+        expect(screen.queryByText(/^\d{2}:\d{2}:\d{2}$/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/\w+:\w+/)).not.toBeInTheDocument();
     });
 
     it('renders source without line number when line is 0', () => {
         const entry = getMockedLogEntry({
             message: 'Test message',
-            name: 'test_module',
+            name: 'unique_logger_name',
             function: 'test_func',
             line: 0,
         });
 
         render(<LogEntry entry={entry} />);
 
-        expect(screen.getByText('test_module:test_func')).toBeInTheDocument();
+        expect(screen.getByText('unique_logger_name:test_func')).toBeInTheDocument();
         expect(screen.queryByText(/:0$/)).not.toBeInTheDocument();
     });
 

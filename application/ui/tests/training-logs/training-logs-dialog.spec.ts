@@ -212,6 +212,7 @@ test.describe('TrainingLogsDialog - Historical Model Logs (REST fetch)', () => {
         await expect(dialog.getByRole('progressbar')).toBeVisible();
 
         resolveResponse?.(new Response());
+        await expect(dialog.getByRole('progressbar')).toBeHidden();
     });
 
     test('filters log entries by level inside the dialog', async ({ modelsPage, network, page }) => {

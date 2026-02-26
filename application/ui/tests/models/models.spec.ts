@@ -398,7 +398,6 @@ test.describe('Models - Training Logs', () => {
 
     test('opens and closes training logs dialog, available for both successful and failed models', async ({
         modelsPage,
-        page,
     }) => {
         await modelsPage.goto();
 
@@ -414,7 +413,7 @@ test.describe('Models - Training Logs', () => {
         });
 
         await test.step('opens logs dialog for a failed model', async () => {
-            await page.getByLabel('Model actions').nth(1).click();
+            await modelsPage.openModelMenuForModel('Failed Model');
             await modelsPage.clickViewTrainingLogsAction();
 
             await expect(modelsPage.getLogsDialog()).toBeVisible();
