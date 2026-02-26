@@ -1,12 +1,22 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, Dispatch, ReactNode, RefObject, SetStateAction, use, useMemo, useRef, useState } from 'react';
+import {
+    createContext,
+    Dispatch,
+    ReactNode,
+    RefObject,
+    SetStateAction,
+    use,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
 import { VisuallyHidden } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
+import type { MediaVideoFrame } from '../../../constants/shared-types';
 import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
@@ -33,8 +43,7 @@ const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    // TODO: Narrow the type to be MediaVideoFrame | undefined
-    videoFrame: MediaVideo | MediaVideoFrame | undefined;
+    videoFrame: MediaVideoFrame | undefined;
     changeSelectedMediaItem: (media: MediaVideoFrame) => void;
 };
 
@@ -43,8 +52,7 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
-    // TODO: Update default to be media item frame index
-    const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
+    const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(videoFrame?.frame_number ?? 0);
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
         if (videoFrame === undefined) {
@@ -54,13 +62,6 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
         return {
             ...videoFrame,
             frame_number: currentFrameIndex,
-
-            // TODO: This logic should be moved to selected media item provider
-            type: 'video_frame',
-            frame_count: videoFrame.frame_count,
-            fps: videoFrame.fps,
-            duration: videoFrame.duration,
-            frame_stride: videoFrame.fps,
         };
     }, [currentFrameIndex, videoFrame]);
 

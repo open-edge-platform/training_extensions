@@ -68,10 +68,15 @@ const Annotator = ({
 }: AnnotatorProps) => {
     const { mediaItem, setMediaItem } = useSelectedMediaItem();
 
+    const selectMediaItem = (item: Media) => {
+        setMediaItem(item);
+        onSelectedMediaItem(item);
+    };
+
     return (
         <VideoPlayerProvider
-            videoFrame={isVideo(mediaItem) || isVideoFrame(mediaItem) ? mediaItem : undefined}
-            changeSelectedMediaItem={setMediaItem}
+            videoFrame={isVideoFrame(mediaItem) ? mediaItem : undefined}
+            changeSelectedMediaItem={selectMediaItem}
         >
             {mode === 'prediction' ? (
                 <ReadOnlyAnnotator

@@ -1,9 +1,13 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useRef, useState } from 'react';
+
+import { isEqual } from 'lodash-es';
+import { useParams } from 'react-router';
 
 import type { Media } from '../../constants/shared-types';
+import { isVideo } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 
@@ -20,16 +24,44 @@ type SelectedMediaItemProviderProps = {
     children: ReactNode;
 };
 
+const useVideoFrameNumberQueryParam = () => {
+    const { frameNumber } = useParams<{ frameNumber?: string }>();
+
+    return frameNumber ? parseInt(frameNumber) : 0;
+};
+
+const getMediaItem = (mediaItem: Media, frameNumber: number): Media => {
+    if (isVideo(mediaItem)) {
+        return {
+            ...mediaItem,
+            type: 'video_frame',
+            frame_stride: mediaItem.fps,
+            frame_number: frameNumber,
+        };
+    }
+
+    return mediaItem;
+};
+
+const useMediaItem = (initialMediaItem: Media) => {
+    const frameNumber = useVideoFrameNumberQueryParam();
+
+    const [mediaItem, setMediaItem] = useState<Media>(() => getMediaItem(initialMediaItem, frameNumber));
+    const prevInitialMediaItem = useRef(initialMediaItem);
+
+    if (!isEqual(initialMediaItem, prevInitialMediaItem.current)) {
+        prevInitialMediaItem.current = initialMediaItem;
+        setMediaItem(getMediaItem(initialMediaItem, frameNumber));
+    }
+
+    return [mediaItem, setMediaItem] as const;
+};
+
 export const SelectedMediaItemProvider = ({
     mediaItem: initialMediaItem,
     children,
 }: SelectedMediaItemProviderProps) => {
-    const [mediaItem, setMediaItem] = useState<Media>(initialMediaItem);
-
-    /* TODO: Check if we need this */
-    useEffect(() => {
-        setMediaItem(initialMediaItem);
-    }, [initialMediaItem]);
+    const [mediaItem, setMediaItem] = useMediaItem(initialMediaItem);
 
     const roi: RegionOfInterest = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
