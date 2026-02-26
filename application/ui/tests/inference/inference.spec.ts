@@ -136,6 +136,36 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
+        network.use(
+            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                return response(200).json(
+                    getMockedPipeline({
+                        data_collection: {
+                            max_dataset_size: 700,
+                            policies: [
+                                {
+                                    type: 'fixed_rate',
+                                    enabled: true,
+                                    rate: 12,
+                                },
+                                {
+                                    type: 'confidence_threshold',
+                                    enabled: false,
+                                    confidence_threshold: 0.5,
+                                    min_sampling_interval: 2.5,
+                                },
+                            ],
+                        },
+                    })
+                );
+            })
+        );
+
+        const maxDatasetSizeField = page.getByRole('textbox', { name: 'Size' });
+
+        await maxDatasetSizeField.fill('700');
+        await expect(maxDatasetSizeField).toHaveValue('700');
+
         await page.getByRole('switch', { name: 'Toggle auto capturing' }).click();
         await expect(page.getByRole('switch', { name: 'Toggle auto capturing' })).toBeChecked();
 
