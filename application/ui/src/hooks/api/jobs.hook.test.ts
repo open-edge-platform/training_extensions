@@ -8,7 +8,6 @@ import { renderHook } from 'test-utils/render';
 import { getMockedJob } from '../../../mocks/mock-job';
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
-import { queryClient } from '../../query-client/query-client';
 import {
     getLastEventSource,
     MockEventSourceConstructor,
@@ -35,7 +34,6 @@ const createMockJobForProject = (overrides: Partial<ReturnType<typeof getMockedJ
 describe('useStreamJobStatus', () => {
     beforeEach(() => {
         resetMockEventSource();
-        queryClient.clear();
     });
 
     it('updates the React Query cache when an SSE message arrives', async () => {
@@ -85,7 +83,6 @@ describe('useStreamJobStatus', () => {
 describe('useGetCurrentTrainingJob', () => {
     beforeEach(() => {
         resetMockEventSource();
-        queryClient.clear();
     });
 
     it('returns undefined when there are no active training jobs', async () => {

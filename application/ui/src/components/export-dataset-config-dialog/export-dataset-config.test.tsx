@@ -9,7 +9,6 @@ import { getMockedProject } from '../../../mocks/mock-project';
 import { SchemaProjectView } from '../../api/openapi-spec';
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
-import { queryClient } from '../../query-client/query-client';
 import { ExportDatasetConfig } from './export-dataset-config.component';
 
 describe('ExportDatasetConfig', () => {
@@ -20,10 +19,6 @@ describe('ExportDatasetConfig', () => {
         toggle: vi.fn(),
         setOpen: vi.fn(),
     };
-
-    beforeEach(() => {
-        queryClient.clear();
-    });
 
     const renderApp = (project: SchemaProjectView) => {
         server.use(
