@@ -3,7 +3,6 @@
 
 import os
 import os.path
-import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
@@ -17,7 +16,7 @@ from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
 from app.db.schema import MediaDB
-from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
+from app.models import DatasetItem, DatasetItemAnnotationStatus, Media, MediaType, Project, Video, VideoFrame
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
 from app.repositories import MediaRepository
 from app.services.video import extract_video_frame, get_video_metadata
@@ -101,22 +100,26 @@ class MediaService(BaseSessionManagedService):
         binary_path = dataset_dir / f"{media_id}.{format}"
         image.save(binary_path)
 
-        MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
+        try:
+            MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
 
-        media = MediaDB(
-            id=str(media_id),
-            project_id=str(project.id),
-            type=MediaType.IMAGE,
-            name=name,
-            format=str(format),
-            width=image.width,
-            height=image.height,
-            size=os.path.getsize(binary_path),
-            source_id=str(source_id) if source_id is not None else None,
-        )
+            media = MediaDB(
+                id=str(media_id),
+                project_id=str(project.id),
+                type=MediaType.IMAGE,
+                name=name,
+                format=str(format),
+                width=image.width,
+                height=image.height,
+                size=os.path.getsize(binary_path),
+                source_id=str(source_id) if source_id is not None else None,
+            )
 
-        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_media = repo.save(media)
+            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            db_media = repo.save(media)
+        except Exception as e:
+            binary_path.unlink(missing_ok=True)
+            raise e
         return MediaAdapter.validate_python(db_media)
 
     def create_video(
@@ -155,6 +158,11 @@ class MediaService(BaseSessionManagedService):
                 size=os.path.getsize(binary_path),
                 source_id=str(source_id) if source_id is not None else None,
             )
+
+            video_frame = MediaService._get_frame_binary_from_video_file(
+                video_path=binary_path, frame_index=video_metadata.frame_count // 2
+            )
+            MediaService._generate_and_save_thumbnail(image=video_frame, path=dataset_dir / f"{media_id}-thumb.jpg")
 
             repo = MediaRepository(project_id=str(project.id), db=self.db_session)
             db_media = repo.save(media)
@@ -222,114 +230,90 @@ class MediaService(BaseSessionManagedService):
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         return dataset_dir / f"{media.id}.{media.format}"
 
-    def get_media_binary_path_by_id(self, project_id: UUID, media_id: UUID) -> Path | str:
+    def get_media_binary_path_by_id(self, project_id: UUID, media_id: UUID) -> Path:
         """Get a media binary content by its ID"""
         media = self.get_media_by_id(project_id=project_id, media_id=media_id)
         return self.get_media_binary_path(project_id=project_id, media=media)
 
-    def get_media_thumbnail_path_by_id(self, project: Project, media_id: UUID) -> Path | str:
-        """Get a media thumbnail binary content by its ID"""
-        media = self.get_media_by_id(project_id=project.id, media_id=media_id)
+    def get_media_thumbnail_path(self, project: Project, media: MediaDB | Media) -> Path:
+        """Get a media thumbnail binary content"""
         return self.projects_dir / f"{project.id}/dataset/{media.id}-thumb.jpg"
 
-    def generate_media_thumbnail(self, project: Project, media_id: UUID) -> Image.Image:
-        """Regenerate a media thumbnail by its ID"""
-        media = self.get_media_by_id(project_id=project.id, media_id=media_id)
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
-        binary_path = dataset_dir / f"{media.id}.{media.format}"
-
-        if media.type == MediaType.IMAGE:
-            return MediaService.generate_image_thumbnail(binary_path)
-        if media.type == MediaType.VIDEO:
-            return MediaService.generate_video_thumbnail(
-                binary_path=binary_path,
-                frame_index=media.frame_count // 2,  # pyrefly: ignore
-            )
-        raise RuntimeError(f"Unknown media type: {media.type}")
-
     @staticmethod
-    def generate_image_thumbnail(binary_path: Path) -> Image.Image:
+    def _crop_image_to_thumbnail(image: Image.Image) -> Image.Image:
         """Regenerate an image thumbnail by its path"""
-        try:
-            with Image.open(binary_path) as image:
-                thumbnail = crop_to_thumbnail(
-                    image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
-                )
-                if thumbnail.mode not in ("RGB", "L", "CMYK"):
-                    thumbnail = thumbnail.convert("RGB")
-        except UnidentifiedImageError:
-            logger.error("Failed to open image {} for thumbnail generation", binary_path)
-            raise InvalidImageError("Failed to open image for thumbnail generation.")
+        thumbnail = crop_to_thumbnail(
+            image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
+        )
+        if thumbnail.mode not in ("RGB", "L", "CMYK"):
+            thumbnail = thumbnail.convert("RGB")
         return thumbnail
-
-    @staticmethod
-    def generate_video_thumbnail(binary_path: Path, frame_index: int) -> Image.Image:
-        """Regenerate a video thumbnail by its path"""
-        fd, temp_path = tempfile.mkstemp(suffix=".jpg")
-        os.close(fd)
-
-        frame_file_path = Path(temp_path)
-        try:
-            extract_video_frame(video_path=binary_path, video_frame_path=frame_file_path, frame_index=frame_index)
-            return MediaService.generate_image_thumbnail(frame_file_path)
-        finally:
-            try:
-                os.remove(temp_path)
-            except FileNotFoundError:
-                pass
 
     def delete_media(self, project: Project, media_id: UUID) -> None:
         """Delete a media by its ID"""
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
 
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        binary_path = self.get_media_binary_path(project_id=project.id, media=media)
         try:
-            os.remove(dataset_dir / f"{media.id}.{media.format}")
+            os.remove(binary_path)
         except FileNotFoundError:
             logger.warning("Media {} binary was not found during deletion", media_id)
+        thumbnail_path = self.get_media_thumbnail_path(project=project, media=media)
         try:
-            os.remove(dataset_dir / f"{media_id}-thumb.jpg")
+            os.remove(thumbnail_path)
         except FileNotFoundError:
             logger.warning("Media {} thumbnail was not found during deletion", media_id)
 
         repo.delete(obj_id=str(media.id))
 
-    def extract_video_frame(self, project: Project, video_id: UUID, frame_index: int) -> Media:
-        """Extract video frame by video ID and index"""
-        video = self.get_media_by_id(project_id=project.id, media_id=video_id)
-        if video.type != MediaType.VIDEO:
-            raise RuntimeError(f"Media {video_id} is not a video")
+    def get_frame_binary(self, project: Project, video: Video, frame_index: int) -> Image.Image:
+        video_path = self.get_media_binary_path(project_id=project.id, media=video)
+        return self._get_frame_binary_from_video_file(video_path=video_path, frame_index=frame_index)
 
+    def get_frame_thumbnail(self, project: Project, video: Video, frame_index: int) -> Image.Image:
+        video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)
+        return MediaService._crop_image_to_thumbnail(video_frame)
+
+    @staticmethod
+    def _get_frame_binary_from_video_file(video_path: Path, frame_index: int) -> Image.Image:
+        video_frame_numpy = extract_video_frame(video_path=video_path, frame_index=frame_index)
+        return MediaService._read_image_from_ndarray(video_frame_numpy)
+
+    def extract_video_frame(self, project: Project, video: Video, frame_index: int) -> VideoFrame:
+        """Extract video frame by video ID and frame_index"""
         media_id = uuid4()
         format = ImageFormat.JPG
 
         dataset_dir = self.projects_dir / f"{project.id}/dataset"
-        video_path = self.get_media_binary_path(project_id=project.id, media=video)
         video_frame_path = dataset_dir / f"{media_id}.{format}"
 
-        video_frame_numpy = extract_video_frame(
-            video_path=video_path, video_frame_path=video_frame_path, frame_index=frame_index
-        )
-        image = self._read_image_from_ndarray(video_frame_numpy)
+        video_frame = self.get_frame_binary(project=project, video=video, frame_index=frame_index)
+        video_frame.save(video_frame_path)
 
-        db_video_frame = MediaDB(
-            id=str(media_id),
-            project_id=str(project.id),
-            type=MediaType.VIDEO_FRAME,
-            name=f"{video.name}_frame_{frame_index}",
-            format=str(format),
-            width=image.width,
-            height=image.height,
-            video_id=str(video.id),
-            frame_index=frame_index,
-            size=os.path.getsize(video_frame_path),
-            source_id=None,
-        )
+        try:
+            MediaService._generate_and_save_thumbnail(image=video_frame, path=dataset_dir / f"{media_id}-thumb.jpg")
 
-        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_video_frame = repo.save(db_video_frame)
-        return MediaAdapter.validate_python(db_video_frame)
+            db_video_frame = MediaDB(
+                id=str(media_id),
+                project_id=str(project.id),
+                type=MediaType.VIDEO_FRAME,
+                name=f"{video.name}_frame_{frame_index}",
+                format=str(format),
+                width=video_frame.width,
+                height=video_frame.height,
+                video_id=str(video.id),
+                frame_index=frame_index,
+                size=os.path.getsize(video_frame_path),
+                source_id=None,
+            )
+
+            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            db_video_frame = repo.save(db_video_frame)
+        except Exception as e:
+            video_frame_path.unlink(missing_ok=True)
+            raise e
+        return VideoFrame.model_validate(db_video_frame, from_attributes=True)
 
     def get_video_frame_by_video_id_and_index(self, project: Project, video_id: UUID, frame_index: int) -> Media | None:
         """
@@ -347,9 +331,9 @@ class MediaService(BaseSessionManagedService):
         db_media = repo.get_video_frame_by_video_id_and_index(video_id=str(video_id), frame_index=frame_index)
         return MediaAdapter.validate_python(db_media) if db_media else None
 
-    def get_video_frames_by_video_id(
+    def list_annotated_video_frames_by_video_id(
         self, project: Project, video_id: UUID, frame_index_from: int = 0, frame_index_to: int = 10
-    ) -> list[Media]:
+    ) -> list[tuple[DatasetItem, VideoFrame]]:
         """
         Returns all annotated video frames falling into the specified frame index range.
 
@@ -360,10 +344,13 @@ class MediaService(BaseSessionManagedService):
             frame_index_to: Frame index range end, default is 10
 
         Returns:
-            Annotated video frames list.
+            Annotated video frames list with corresponding dataset items.
         """
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_media_list = repo.get_video_frames_by_video_id(
+        db_media_list = repo.list_annotated_video_frames_by_video_id(
             video_id=str(video_id), frame_index_from=frame_index_from, frame_index_to=frame_index_to
         )
-        return [MediaAdapter.validate_python(db_media) for db_media in db_media_list]
+        return [
+            (DatasetItem.model_validate(db_dataset_item), VideoFrame.model_validate(db_media, from_attributes=True))
+            for (db_dataset_item, db_media) in db_media_list
+        ]

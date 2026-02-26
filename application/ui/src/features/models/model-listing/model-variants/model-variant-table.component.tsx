@@ -5,8 +5,8 @@ import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableVie
 import { DownloadIcon } from '@geti/ui/icons';
 
 import type { Model, ModelFormat } from '../../../../constants/shared-types';
+import { formatBytes } from '../../../../shared/util';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
-import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
     model: Model;
@@ -30,7 +30,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                 {(variant) => (
                     <Row key={`${variant.format}-${variant.precision}`}>
                         <Cell>{variant.precision.toUpperCase()}</Cell>
-                        <Cell>{formatModelSize(variant.weights_size)}</Cell>
+                        <Cell>{formatBytes(variant.weights_size)}</Cell>
                         <Cell>
                             <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
                                 <ActionButton

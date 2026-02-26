@@ -59,7 +59,7 @@ const getTrackWidthWhileIsLastFrame = (trackRef: RefObject<HTMLDivElement | null
         return `0px`;
     }
 
-    const THUMB_OFFSET = 8.51;
+    const THUMB_OFFSET = 8;
 
     const width = trackRef.current.getBoundingClientRect().width - THUMB_OFFSET - leftOffset;
 

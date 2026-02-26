@@ -14,28 +14,29 @@ export type SSEOptions<T> = {
     onError?: (error: Event) => void;
     onOpen?: () => void;
     onClose?: () => void;
+    onRetry?: () => void;
+    retry?: boolean;
 };
+
+const INITIAL_RETRY_DELAY_MS = 1_000;
+const MAX_RETRIES = 7;
 
 export const connectSSE = <T = unknown>(path: string, options: SSEOptions<T>): SSEConnection => {
     const url = `${API_BASE_URL}${path}`;
-    const eventSource = new EventSource(url);
 
     let closed = false;
+    let retryDelay = INITIAL_RETRY_DELAY_MS;
+    let retryCount = 0;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
     let resolveDone: (() => void) | null = null;
+    let activeSource: EventSource | null = null;
 
-    const close = () => {
-        if (!closed) {
-            closed = true;
-            eventSource.close();
-            options.onClose?.();
-            resolveDone?.();
-        }
-    };
-
-    const done = new Promise<void>((resolve) => {
-        resolveDone = resolve;
+    const createEventSource = (): EventSource => {
+        const eventSource = new EventSource(url);
+        activeSource = eventSource;
 
         eventSource.onopen = () => {
+            retryDelay = INITIAL_RETRY_DELAY_MS;
             options.onOpen?.();
         };
 
@@ -49,9 +50,48 @@ export const connectSSE = <T = unknown>(path: string, options: SSEOptions<T>): S
         };
 
         eventSource.onerror = (event: Event) => {
-            options.onError?.(event);
-            close();
+            if (!closed && options.retry && retryCount < MAX_RETRIES) {
+                eventSource.close();
+                activeSource = null;
+
+                options.onRetry?.();
+
+                retryTimeout = setTimeout(() => {
+                    if (!closed) {
+                        createEventSource();
+                    }
+                }, retryDelay);
+
+                retryDelay = retryDelay * 2;
+                retryCount += 1;
+            } else {
+                options.onError?.(event);
+                close();
+            }
         };
+
+        return eventSource;
+    };
+
+    const close = () => {
+        if (!closed) {
+            closed = true;
+
+            if (retryTimeout !== null) {
+                clearTimeout(retryTimeout);
+            }
+
+            activeSource?.close();
+            activeSource = null;
+            options.onClose?.();
+            resolveDone?.();
+        }
+    };
+
+    const eventSource = createEventSource();
+
+    const done = new Promise<void>((resolve) => {
+        resolveDone = resolve;
     });
 
     return { close, done, eventSource };

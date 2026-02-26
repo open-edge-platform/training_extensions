@@ -1,9 +1,13 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, RefObject, use, useRef, useState } from 'react';
+import { createContext, Dispatch, ReactNode, RefObject, SetStateAction, use, useMemo, useRef, useState } from 'react';
 
-import type { MediaVideo } from '../../../constants/shared-types';
+import { VisuallyHidden } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
+import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
+import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
 type VideoPlayerContextProps = {
@@ -12,27 +16,63 @@ type VideoPlayerContextProps = {
     isMuted: boolean;
     toggleMute: () => void;
 
-    videoFrame: MediaVideo;
+    videoFrame: MediaVideoFrame;
 
     playbackRate: number;
     changePlaybackRate: (rate: number) => void;
 
     videoControls: VideoControls;
+
+    changeCurrentFrameIndex: (index: number) => void;
+
+    step: number;
+    changeStep: Dispatch<SetStateAction<number>>;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    mediaItem: MediaVideo | undefined;
+    // TODO: Narrow the type to be MediaVideoFrame | undefined
+    videoFrame: MediaVideo | MediaVideoFrame | undefined;
+    changeSelectedMediaItem: (media: MediaVideoFrame) => void;
 };
 
-export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProviderProps) => {
+export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
+    const projectId = useProjectIdentifier();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
+    // TODO: Update default to be media item frame index
+    const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
 
-    const videoControls = useVideoControls(videoRef, mediaItem);
+    const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
+        if (videoFrame === undefined) {
+            return undefined;
+        }
+
+        return {
+            ...videoFrame,
+            frame_number: currentFrameIndex,
+
+            // TODO: This logic should be moved to selected media item provider
+            type: 'video_frame',
+            frame_count: videoFrame.frame_count,
+            fps: videoFrame.fps,
+            duration: videoFrame.duration,
+            frame_stride: videoFrame.fps,
+        };
+    }, [currentFrameIndex, videoFrame]);
+
+    const [step, setStep] = useState<number>(playingVideoFrame?.frame_stride ?? 1);
+
+    const videoControls = useVideoControls({
+        step,
+        videoRef,
+        videoFrame: playingVideoFrame,
+        selectVideoFrame: changeSelectedMediaItem,
+        changeCurrentFrameIndex: setCurrentFrameIndex,
+    });
 
     const toggleMute = () => {
         setIsMuted((prevIsMuted) => {
@@ -62,10 +102,18 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
         }
     };
 
+    const handleEnded = () => {
+        if (videoRef.current === null) {
+            return;
+        }
+        videoControls.pause();
+        videoRef.current.currentTime = 0;
+    };
+
     const value =
-        mediaItem !== undefined
+        playingVideoFrame !== undefined
             ? {
-                  videoFrame: mediaItem,
+                  videoFrame: playingVideoFrame,
                   videoRef,
                   videoControls,
 
@@ -74,10 +122,32 @@ export const VideoPlayerProvider = ({ children, mediaItem }: VideoPlayerProvider
 
                   playbackRate,
                   changePlaybackRate,
+
+                  changeCurrentFrameIndex: setCurrentFrameIndex,
+
+                  step,
+                  changeStep: setStep,
               }
             : null;
 
-    return <VideoPlayerContext value={value}>{children}</VideoPlayerContext>;
+    return (
+        <VideoPlayerContext value={value}>
+            {children}
+            {playingVideoFrame !== undefined && (
+                <VisuallyHidden>
+                    <video
+                        ref={videoRef}
+                        src={getMediaBinaryUrl(projectId, playingVideoFrame.id)}
+                        width={playingVideoFrame.width}
+                        height={playingVideoFrame.height}
+                        preload={'auto'}
+                        onEnded={handleEnded}
+                        muted
+                    />
+                </VisuallyHidden>
+            )}
+        </VideoPlayerContext>
+    );
 };
 
 export const useVideoPlayer = () => {

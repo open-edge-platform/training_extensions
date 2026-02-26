@@ -3,23 +3,17 @@
 
 import { RefObject, useEffect } from 'react';
 
-import { VisuallyHidden } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-
-import { type Media } from '../../../constants/shared-types';
-import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoPlayer } from './video-player-provider.component';
 
 type VideoFrameProps = {
     canvasRef: RefObject<HTMLCanvasElement | null>;
-    mediaItem: Media;
 };
 
 const useRequestVideoFrameCallback = (
     videoRef: RefObject<HTMLVideoElement | null>,
     canvasRef: RefObject<HTMLCanvasElement | null>
 ) => {
-    const { videoControls } = useVideoPlayer();
+    const { videoControls, changeCurrentFrameIndex, videoFrame } = useVideoPlayer();
     const { isPlaying } = videoControls;
 
     useEffect(() => {
@@ -36,19 +30,19 @@ const useRequestVideoFrameCallback = (
         let callbackId: number | null = null;
 
         const updateCanvas: VideoFrameRequestCallback = () => {
-            if (videoRef.current === null) {
-                return;
-            }
-
             const ctx = canvasRef.current?.getContext('2d');
 
-            if (ctx == null) {
+            if (videoRef.current === null || ctx == null) {
                 return;
             }
 
             ctx.drawImage(video, 0, 0);
 
             callbackId = video.requestVideoFrameCallback(updateCanvas);
+
+            const nextFrameIndex = Math.ceil(video.currentTime * videoFrame.fps);
+
+            changeCurrentFrameIndex(nextFrameIndex);
         };
 
         callbackId = video.requestVideoFrameCallback(updateCanvas);
@@ -58,27 +52,15 @@ const useRequestVideoFrameCallback = (
                 video.cancelVideoFrameCallback(callbackId);
             }
         };
-    }, [videoRef, canvasRef, isPlaying]);
+    }, [videoRef, canvasRef, isPlaying, videoFrame.fps, changeCurrentFrameIndex]);
 
     return videoRef;
 };
 
-export const VideoFrame = ({ canvasRef, mediaItem }: VideoFrameProps) => {
-    const projectId = useProjectIdentifier();
+export const VideoFrame = ({ canvasRef }: VideoFrameProps) => {
     const { videoRef } = useVideoPlayer();
 
     useRequestVideoFrameCallback(videoRef, canvasRef);
 
-    return (
-        <VisuallyHidden>
-            <video
-                ref={videoRef}
-                src={getMediaBinaryUrl(projectId, mediaItem.id)}
-                width={mediaItem.width}
-                height={mediaItem.height}
-                preload={'auto'}
-                muted
-            />
-        </VisuallyHidden>
-    );
+    return <></>;
 };

@@ -1,14 +1,15 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
 
-import { AlertDialog, Button, DialogContainer, Divider, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
+import { AlertDialog, Button, DialogContainer, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
 import { DatasetRevision, Job, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
+import { TrainingLogsDialog } from '../../training-logs/training-logs-dialog.component';
 import { ArchitectureColumn } from '../components/model-row/architecture-column.component';
 import { DatasetColumn } from '../components/model-row/dataset-revision-column.component';
 import { GRID_COLUMNS } from '../constants';
@@ -70,6 +71,21 @@ const CancelTraining = ({ job, onCancel }: CancelTrainingProps) => {
     );
 };
 
+const ViewLogsButton = ({ jobId }: { jobId: string }) => {
+    const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
+
+    return (
+        <>
+            <Button variant={'secondary'} onPress={() => setIsLogsDialogOpen(true)} aria-label={'View logs'}>
+                Logs
+            </Button>
+            <DialogContainer type={'fullscreen'} onDismiss={() => setIsLogsDialogOpen(false)}>
+                {isLogsDialogOpen && <TrainingLogsDialog jobId={jobId} />}
+            </DialogContainer>
+        </>
+    );
+};
+
 export const TrainingModelRow = ({
     job,
     onCancel,
@@ -94,9 +110,6 @@ export const TrainingModelRow = ({
     const formattedStartedAt = job.started_at
         ? dayjs(job.started_at).format('DD MMM YYYY, hh:mm A')
         : 'Waiting to start...';
-    const formattedElapsed = job.started_at
-        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H:mm:ss')
-        : '';
 
     const statusMessage = job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...');
 
@@ -119,15 +132,7 @@ export const TrainingModelRow = ({
                         <StatusTag status={statusMessage} />
                     </Flex>
 
-                    <Text UNSAFE_className={classes.metaText}>
-                        {`Started: ${formattedStartedAt}`}
-                        {formattedElapsed && (
-                            <>
-                                <Divider orientation={'vertical'} />
-                                {`Elapsed: ${formattedElapsed}`}
-                            </>
-                        )}
-                    </Text>
+                    <Text UNSAFE_className={classes.metaText}>{`Started: ${formattedStartedAt}`}</Text>
                 </Flex>
 
                 <Text UNSAFE_className={classes.smallText}>...</Text>
@@ -144,7 +149,10 @@ export const TrainingModelRow = ({
 
                 <Text UNSAFE_className={classes.smallText}>...</Text>
 
-                {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : <div />}
+                <Flex gap={'size-100'} direction={'column'} alignItems={'center'}>
+                    <ViewLogsButton jobId={job.job_id} />
+                    {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : null}
+                </Flex>
             </Grid>
         </BottomProgressBar>
     );

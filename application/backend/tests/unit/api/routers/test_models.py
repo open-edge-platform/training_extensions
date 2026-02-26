@@ -365,19 +365,36 @@ class TestModelEndpoints:
             project_id=fxt_get_project.id, model_id=model_id
         )
 
-    def test_get_training_logs_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
+    @pytest.mark.parametrize(
+        "accept_header, expected_content_type",
+        [
+            ("application/json", "application/x-ndjson"),
+            ("application/x-ndjson", "application/x-ndjson"),
+            ("text/plain", "text/plain; charset=utf-8"),
+            (None, "application/x-ndjson"),  # Default to JSON if no Accept header is provided
+        ],
+    )
+    def test_get_training_logs_success(
+        self, accept_header, expected_content_type, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path
+    ):
         log_file = tmp_path / "training.log"
         log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"
         log_file.write_text(log_content, newline="\n")
 
-        fxt_model_service.get_logs.return_value = log_file
+        if accept_header == "text/plain":
+            fxt_model_service.get_logs.return_value = log_content
+        else:
+            fxt_model_service.get_logs.return_value = log_file
 
-        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+        headers = {"Accept": accept_header} if accept_header is not None else {}
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs", headers=headers)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.headers["content-type"] == "text/plain; charset=utf-8"
+        assert response.headers["content-type"] == expected_content_type
         assert response.text == log_content
-        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+        fxt_model_service.get_logs.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id, as_text="text/plain" in expected_content_type
+        )
 
     def test_get_training_logs_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
         model_id = uuid4()
@@ -386,7 +403,9 @@ class TestModelEndpoints:
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/logs")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+        fxt_model_service.get_logs.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=model_id, as_text=False
+        )
 
     def test_get_training_logs_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/logs")
@@ -402,7 +421,9 @@ class TestModelEndpoints:
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+        fxt_model_service.get_logs.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id, as_text=False
+        )
 
     def test_get_training_logs_file_not_exists(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client):
         fxt_model_service.get_logs.return_value = None
@@ -411,7 +432,9 @@ class TestModelEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response.json() == {"detail": "Log file not found"}
-        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+        fxt_model_service.get_logs.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id, as_text=False
+        )
 
     def test_get_model_training_configuration_success(
         self, fxt_model, fxt_get_project, fxt_model_service, fxt_training_configuration_service, fxt_client

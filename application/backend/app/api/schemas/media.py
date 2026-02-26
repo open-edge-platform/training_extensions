@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, TypeAdapter
 
 from app.core.models import BaseRequiredIDNameModel, Pagination
-from app.models import DatasetItemAnnotation, MediaFormat, MediaType
+from app.models import DatasetItemAnnotation, MediaFormat, MediaType, Video
 
 
 class ImageView(BaseRequiredIDNameModel):
@@ -159,3 +159,14 @@ class MediaAnnotations(BaseModel):
             }
         }
     }
+
+
+class AnnotatedVideoFrame(BaseModel):
+    media_id: UUID
+    frame_index: int
+    annotation_data: MediaAnnotations
+
+
+class NotAnnotatedFrame(BaseModel):
+    video: Video
+    frame_index: int

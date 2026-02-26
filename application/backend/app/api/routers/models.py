@@ -4,9 +4,11 @@
 import io
 import os
 import zipfile
-from typing import Annotated
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Annotated, cast
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
 from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 from starlette.responses import FileResponse
@@ -242,9 +244,14 @@ def get_training_metrics(
 
 @router.get(
     "/{model_id}/logs",
+    response_model=None,
     responses={
         status.HTTP_200_OK: {
-            "description": "Model configuration successfully deleted",
+            "description": "Training logs for the model",
+            "content": {
+                "application/x-ndjson": {"description": "NDJSON format (newline-delimited JSON)"},
+                "text/plain": {"description": "Plain text format (extracted from NDJSON)"},
+            },
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project, model or log file not found"},
@@ -253,18 +260,31 @@ def get_training_metrics(
         },
     },
 )
-async def get_training_logs(
+def get_training_logs(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> FileResponse:
+    accept: Annotated[str | None, Header(description="Accept header to specify the desired response format")] = None,
+) -> FileResponse | StreamingResponse:
     """
     Download the training log file for a given model.
+    Supports content negotiation via Accept header (text/plain, application/x-ndjson).
     """
     try:
-        log_file = model_service.get_logs(project_id=project.id, model_id=model_id)
-        if not log_file:
+        as_text = accept is not None and "text/plain" in accept.lower()
+
+        training_log = model_service.get_logs(project_id=project.id, model_id=model_id, as_text=as_text)
+        if training_log is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
-        return FileResponse(log_file, media_type="text/plain", filename=os.path.basename(log_file))
+
+        if as_text:
+            return StreamingResponse(
+                content=cast(Iterable, training_log),
+                media_type="text/plain",
+                headers={"Content-Disposition": f'attachment; filename="training-{model_id}.log"'},
+            )
+
+        log_file = cast(Path, training_log)
+        return FileResponse(log_file, media_type="application/x-ndjson", filename=os.path.basename(log_file))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

@@ -69,7 +69,7 @@ describe('DatasetActions', () => {
     it('should open rename dialog when rename action is clicked', async () => {
         renderApp();
 
-        const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
+        const menuButton = await screen.findByRole('button', { name: 'Dataset actions' });
         await userEvent.click(menuButton);
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
@@ -81,7 +81,7 @@ describe('DatasetActions', () => {
     it('should open delete dialog when delete action is clicked', async () => {
         renderApp();
 
-        const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
+        const menuButton = await screen.findByRole('button', { name: 'Dataset actions' });
         await userEvent.click(menuButton);
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
@@ -93,7 +93,7 @@ describe('DatasetActions', () => {
     it('should open export dialog when export action is clicked', async () => {
         renderApp();
 
-        const menuButton = screen.getByRole('button', { name: 'Dataset actions' });
+        const menuButton = await screen.findByRole('button', { name: 'Dataset actions' });
         await userEvent.click(menuButton);
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Export' }));

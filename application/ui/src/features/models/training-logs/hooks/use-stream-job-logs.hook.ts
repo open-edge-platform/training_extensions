@@ -6,33 +6,35 @@ import { useState } from 'react';
 import { useSSE } from '../../../../hooks/use-sse.hook';
 import { type LogEntry } from '../log-types';
 
+type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+
 type UseStreamJobLogsReturn = {
     logs: LogEntry[];
-    isConnected: boolean;
-    error: Error | null;
+    connectionStatus: ConnectionStatus;
 };
 
 export const useStreamJobLogs = (jobId: string | undefined): UseStreamJobLogsReturn => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
-    const [isConnected, setIsConnected] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
 
     useSSE<LogEntry>(jobId ? `/api/jobs/${jobId}/logs` : undefined, {
+        retry: true,
         onMessage: (entry) => {
             setLogs((prev) => [...prev, entry]);
         },
         onOpen: () => {
-            setIsConnected(true);
-            setError(null);
+            setConnectionStatus('connected');
+        },
+        onRetry: () => {
+            setConnectionStatus('connecting');
         },
         onError: () => {
-            setIsConnected(false);
-            setError(new Error('SSE connection lost'));
+            setConnectionStatus('error');
         },
         onClose: () => {
-            setIsConnected(false);
+            setConnectionStatus('disconnected');
         },
     });
 
-    return { logs, isConnected, error };
+    return { logs, connectionStatus };
 };
