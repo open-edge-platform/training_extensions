@@ -1,22 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { Flex } from '@geti/ui';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { partition } from 'lodash-es';
 
-import { usePrepareImportStatus } from '../import-dataset/hooks/use-prepare-import-status.hook';
-import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../util';
-import { ImportActiveJob } from './import-active-job/import-active-job.component';
-import { ImportCompletedJob } from './import-completed-job/import-completed-job.component';
-import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
+import { isNonEmptyString } from '../../../../shared/util';
+import { PrepareImportDataset } from './prepare-import-dataset.component';
+import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
 
 export const ImportJobsList = () => {
-    const { data: job, fileName, size } = usePrepareImportStatus({});
-    const isRunningOrPending = isJobRunning(job) || isJobPending(job);
+    const { getAllImportEntries } = useImportDatasetToProject();
+    const importEntries = getAllImportEntries();
 
-    if (isEmpty(job)) {
-        return null;
-    }
+    const [preparingImports, otherItems] = partition(importEntries, (item) => isNonEmptyString(item.prepareJobId));
+    const stagedImports = otherItems.filter((item) => isNonEmptyString(item.stagedDatasetId));
 
     return (
         <Flex
@@ -26,17 +24,17 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            <View
-                position='relative'
-                borderColor='gray-200'
-                borderRadius='regular'
-                backgroundColor='gray-75'
-                borderWidth='thin'
-            >
-                {isJobDone(job) && <ImportCompletedJob job={job} fileName={String(fileName)} size={Number(size)} />}
-                {isJobFailed(job) && <ImportFailedJob job={job} fileName={String(fileName)} size={Number(size)} />}
-                {isRunningOrPending && <ImportActiveJob job={job} fileName={String(fileName)} size={Number(size)} />}
-            </View>
+            {preparingImports.map(({ prepareJobId }) => (
+                <PrepareImportDataset key={prepareJobId} prepareJobId={String(prepareJobId)} />
+            ))}
+
+            {stagedImports.map(({ fileName, stagedDatasetId }) => (
+                <StagedImportDataset
+                    key={stagedDatasetId}
+                    fileName={String(fileName)}
+                    stagedDatasetId={String(stagedDatasetId)}
+                />
+            ))}
         </Flex>
     );
 };

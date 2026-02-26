@@ -1,24 +1,26 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
-import { useLabelMappingImportDataset } from 'hooks/localStorage/use-label-mapping-import-dataset.hook';
+import { Fragment, useActionState } from 'react';
+
+import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
 
 import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
 import { useProject } from '../../../../../hooks/api/project.hook';
 import { isNonEmptyString } from '../../../../../shared/util';
 import { ImportDatasetState } from '../util';
+import { IMPORT_DATASET_FORM_ID } from './util';
 
 type LabelMappingProps = {
+    stagedDatasetId: string;
     onNextStep: (step: ImportDatasetState) => void;
 };
 
-export const LabelMapping = ({ onNextStep: _onNextStep }: LabelMappingProps) => {
-    const { data: selectedProject } = useProject();
-    const { getLsLabelMappingImport } = useLabelMappingImportDataset();
+type LabelsMapping = Record<string, string>;
 
-    const { stagedDatasetId } = getLsLabelMappingImport() ?? {};
+export const LabelMapping = ({ onNextStep: _onNextStep, stagedDatasetId }: LabelMappingProps) => {
+    const { data: selectedProject } = useProject();
 
     const { data } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
         params: { path: { staged_dataset_id: String(stagedDatasetId) } },
@@ -26,9 +28,35 @@ export const LabelMapping = ({ onNextStep: _onNextStep }: LabelMappingProps) => 
     });
 
     const datasetLabels = data?.metadata?.labels ?? [];
+    const projectLabels = selectedProject?.task?.labels ?? [];
     const totalDatasetItems = data?.metadata?.num_items ?? 0;
     const totalAnnotatedItems = data?.metadata?.num_annotations ?? 0;
-    const projectLabels = selectedProject.task.labels ?? [];
+
+    const [_labelsMapping, submitAction] = useActionState<unknown, FormData>(async (_prevState, formData) => {
+        const mapping = datasetLabels.reduce<LabelsMapping>((acc, sourceLabel, index) => {
+            const targetLabel = formData.get(`targetLabel-${index}`);
+
+            if (isNonEmptyString(targetLabel)) {
+                acc[sourceLabel] = targetLabel;
+            }
+            return acc;
+        }, {});
+        //Todo: implemente once the backend support "import_dataset_to_project" jobs
+
+        /*  const response = await importDatasetJobMutation.mutateAsync({
+            body: {
+                job_type: 'import_dataset_to_project',
+                project_id: String(selectedProject?.id),
+                staged_dataset_id: String(stagedDatasetId),
+                parameters: {
+                    filters: { include_unannotated: formData.get('include_unannotated') === 'on' },
+                    labels_mapping: mapping,
+                },
+            },
+        }); */
+
+        return mapping;
+    }, {});
 
     return (
         <Flex direction={'column'} gap={'size-200'} UNSAFE_style={{ padding: dimensionValue('size-275') }}>
@@ -40,28 +68,36 @@ export const LabelMapping = ({ onNextStep: _onNextStep }: LabelMappingProps) => 
 
             <Heading marginTop={'size-200'}>Label mapping</Heading>
             <View backgroundColor={'gray-75'} padding={'size-200'} borderRadius={'regular'}>
-                <Grid
-                    gap={'size-150'}
-                    width={'100%'}
-                    alignItems={'center'}
-                    columns={[`1fr ${dimensionValue('size-400')} 1fr`]}
-                >
-                    <View>Existing labels</View>
-                    <View />
-                    <View>Target labels</View>
+                <Form id={IMPORT_DATASET_FORM_ID} validationBehavior='native' action={submitAction}>
+                    <Grid
+                        gap={'size-150'}
+                        width={'100%'}
+                        alignItems={'center'}
+                        columns={[`1fr ${dimensionValue('size-400')} 1fr`]}
+                    >
+                        <View>Existing labels</View>
+                        <View />
+                        <View>Target labels</View>
 
-                    {datasetLabels.map((label) => (
-                        <>
-                            <Text>{label}</Text>
-                            <View>→</View>
-                            <View>
-                                <Picker name='targetLabel' items={projectLabels} aria-label='project labels list'>
-                                    {(item) => <Item key={item.id}>{item.name}</Item>}
-                                </Picker>
-                            </View>
-                        </>
-                    ))}
-                </Grid>
+                        {datasetLabels.map((label, index) => (
+                            <Fragment key={label}>
+                                <Text>{label}</Text>
+                                <View>→</View>
+                                <View>
+                                    <Picker
+                                        name={`targetLabel-${index}`}
+                                        items={projectLabels}
+                                        aria-label={`Target label for ${label}`}
+                                    >
+                                        {(item) => <Item key={item.name}>{item.name}</Item>}
+                                    </Picker>
+                                </View>
+                            </Fragment>
+                        ))}
+                    </Grid>
+
+                    <Checkbox name='include_unannotated'>Include media without annotations</Checkbox>
+                </Form>
             </View>
         </Flex>
     );

@@ -17,7 +17,7 @@ import { LinkOut } from '@geti/ui/icons';
 
 import { $api } from '../../../../../api/client';
 import { ReactComponent as EmptyDataset } from '../../../../../assets/drop-files.svg';
-import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { ImportDatasetState } from '../util';
 import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
 
@@ -28,7 +28,8 @@ type ImportDropZoneProps = {
 };
 
 export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
-    const { addLsPreparingImport } = usePrepareImportDataset();
+    const { appendImportEntry } = useImportDatasetToProject();
+
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
     const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
 
@@ -70,7 +71,12 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
             },
         });
 
-        addLsPreparingImport(prepareImportJob.job_id, file.name, file.size);
+        appendImportEntry({
+            size: file.size,
+            fileName: file.name,
+            stagedDatasetId: null,
+            prepareJobId: prepareImportJob.job_id,
+        });
         onNextStep('preparing');
     };
 

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
-import { usePrepareImportDataset } from 'hooks/localStorage/use-prepare-import-dataset.hook';
 
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
@@ -19,7 +19,7 @@ type ImportActiveJobProps = {
 export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
-    const { removeLsPreparingImport } = usePrepareImportDataset();
+    const { deleteImportEntry } = useImportDatasetToProject();
 
     return (
         <BottomProgressBar progress={progress}>
@@ -29,7 +29,10 @@ export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) =
                         Import dataset - {fileName} - {formatBytes(size)}
                     </Text>
 
-                    <CancelJobConfirmation jobId={job.job_id} onRemove={removeLsPreparingImport} />
+                    <CancelJobConfirmation
+                        jobId={job.job_id}
+                        onRemove={() => deleteImportEntry({ prepareJobId: job.job_id })}
+                    />
                 </Flex>
 
                 <Text>{fileName} file is being processed for import</Text>

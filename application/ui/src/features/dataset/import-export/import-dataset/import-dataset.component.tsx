@@ -6,8 +6,6 @@ import { useState } from 'react';
 import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
 import { OverlayTriggerState } from '@react-stately/overlays';
 
-import { useLabelMappingImportDataset } from '../../../../hooks/localStorage/use-label-mapping-import-dataset.hook';
-import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportDropZone } from './import-drop-zone/import-drop-zone.component';
 import { ImportProcess } from './import-process/import-process.component';
@@ -19,20 +17,7 @@ type ImportDatasetProps = {
 };
 
 export const ImportDataset = ({ dialogState }: ImportDatasetProps) => {
-    const { getLsPreparingImport } = usePrepareImportDataset();
-    const { getLsLabelMappingImport } = useLabelMappingImportDataset();
-
-    const [currentState, setCurrentState] = useState<ImportDatasetState>(() => {
-        if (getLsLabelMappingImport() !== null) {
-            return 'labelMapping';
-        }
-
-        if (getLsPreparingImport() !== null) {
-            return 'preparing';
-        }
-
-        return 'dropzone';
-    });
+    const [currentState, setCurrentState] = useState<ImportDatasetState>('dropzone');
 
     const handleNextStep = (step: ImportDatasetState) => {
         setCurrentState(step);

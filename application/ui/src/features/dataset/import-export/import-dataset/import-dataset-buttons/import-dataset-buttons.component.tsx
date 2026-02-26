@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
-import { useCancelJob } from 'hooks/api/jobs.hook';
-import { usePrepareImportDataset } from 'hooks/localStorage/use-prepare-import-dataset.hook';
 
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { ImportProcessButtons } from '../import-process/import-process-buttons.component';
+import { LabelMappingButtons } from '../label-mapping/label-mapping-buttons.component';
 import { ImportDatasetState } from '../util';
 
 type ImportDatasetButtonsProps = {
@@ -13,35 +14,15 @@ type ImportDatasetButtonsProps = {
 };
 
 export const ImportDatasetButtons = ({ currentState, onClose }: ImportDatasetButtonsProps) => {
-    const cancelJobMutation = useCancelJob();
-    const { getLsPreparingImport } = usePrepareImportDataset();
-    const preparingImportId = getLsPreparingImport();
+    const { getLastImportEntry } = useImportDatasetToProject();
+    const prepareJobId = getLastImportEntry()?.prepareJobId ?? null;
 
-    const handleCancelJob = (jobId: string) => {
-        cancelJobMutation.mutate({ params: { path: { job_id: jobId } } }, { onSuccess: onClose });
-    };
+    if (currentState === 'preparing' && prepareJobId !== null) {
+        return <ImportProcessButtons prepareJobId={prepareJobId} onClose={onClose} />;
+    }
 
-    if (currentState === 'preparing' && preparingImportId !== null) {
-        return (
-            <ButtonGroup>
-                <Button
-                    variant='negative'
-                    isPending={cancelJobMutation.isPending}
-                    isDisabled={cancelJobMutation.isPending}
-                    onPress={() => handleCancelJob(preparingImportId.id)}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    onPress={onClose}
-                    variant='secondary'
-                    isPending={cancelJobMutation.isPending}
-                    isDisabled={cancelJobMutation.isPending}
-                >
-                    Hide
-                </Button>
-            </ButtonGroup>
-        );
+    if (currentState === 'labelMapping') {
+        return <LabelMappingButtons onClose={onClose} />;
     }
 
     return (

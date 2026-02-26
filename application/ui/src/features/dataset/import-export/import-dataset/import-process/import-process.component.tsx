@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
@@ -16,17 +17,20 @@ type ImportProcessProps = {
 };
 
 export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
+    const { getLastImportEntry } = useImportDatasetToProject();
     const {
         data: job,
         isFetching,
+        isPending,
         fileName,
     } = usePrepareImportStatus({
+        prepareJobId: getLastImportEntry()?.prepareJobId ?? '',
         onError: () => onNextStep('dropzone'),
         onSuccess: () => onNextStep('labelMapping'),
     });
 
     const progress = getJobProgress(job?.progress);
-    const isPreparingJobLoading = isJobPending(job) && isFetching;
+    const isPreparingJobLoading = isJobPending(job) && isPending;
 
     if (!isFetching && isEmpty(job)) {
         return null;
