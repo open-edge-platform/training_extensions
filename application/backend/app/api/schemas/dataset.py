@@ -1,6 +1,8 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from uuid import UUID
+
 from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import BaseRequiredIDModel
@@ -73,3 +75,72 @@ class StagedDatasetView(BaseRequiredIDModel):
                 "metadata": data.metadata,
             }
         return data
+
+
+class MediaCounts(BaseModel):
+    """Media counts"""
+
+    images: int
+    videos: int
+    video_frames: int
+
+    model_config = {"json_schema_extra": {"example": {"images": 10, "videos": 3, "video_frames": 312}}}
+
+
+class InstancesPerLabel(BaseModel):
+    label_id: UUID
+    instances: int
+
+    model_config = {
+        "json_schema_extra": {"example": {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24}}
+    }
+
+
+class AnnotationCounts(BaseModel):
+    annotated_images: int
+    annotated_videos: int
+    annotated_video_frames: int
+    instances: int
+    instances_per_label: list[InstancesPerLabel]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "annotated_images": 8,
+                "annotated_videos": 2,
+                "annotated_video_frames": 29,
+                "instances": 56,
+                "instances_per_label": [
+                    {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24},
+                    {"label_id": "20f1defc-8d40-47ff-9f9d-8e82f0ef224d", "instances": 32},
+                ],
+            }
+        }
+    }
+
+
+class DatasetStatisticsView(BaseModel):
+    """
+    Dataset statistics
+    """
+
+    media_counts: MediaCounts
+    annotations_counts: AnnotationCounts
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "media_counts": {"images": 10, "videos": 3, "video_frames": 312},
+                "annotations_counts": {
+                    "annotated_images": 8,
+                    "annotated_videos": 2,
+                    "annotated_video_frames": 29,
+                    "instances": 56,
+                    "instances_per_label": [
+                        {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24},
+                        {"label_id": "20f1defc-8d40-47ff-9f9d-8e82f0ef224d", "instances": 32},
+                    ],
+                },
+            }
+        }
+    }

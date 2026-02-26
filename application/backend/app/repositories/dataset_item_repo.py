@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import UTC, datetime
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 from sqlalchemy import CursorResult, Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
@@ -219,3 +219,48 @@ class DatasetItemRepository:
         )
         result = self.db.execute(stmt)
         return {row.subset: row.count for row in result}  # type: ignore[misc]
+
+    def get_statistics(self) -> dict[str, Any]:
+        # Media Counts (images, videos, video frames):
+        stmt = (
+            select(
+                MediaDB.type, func.count(MediaDB.id).label("count"), func.sum(MediaDB.frame_count).label("frame_count")
+            )
+            .where(MediaDB.project_id == self.project_id)
+            .group_by(MediaDB.type)
+        )
+        result = self.db.execute(stmt)
+        media_counts: dict[str, int] = {f"{row.type}s": cast(int, row.count) for row in result}
+        media_counts["video_frames"] = int(sum(row.frame_count for row in result))
+
+        # Annotation Counts (annotated images, videos, video frames):
+        stmt = (
+            select(MediaDB.type, func.count(DatasetItemDB.id).label("count"))
+            .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
+            .where(DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None))
+            .group_by(MediaDB.type)
+        )
+        result = self.db.execute(stmt)
+        annotated_counts: dict[str, Any] = {f"annotated_{row.type}s": row.count for row in result}
+
+        # Instances per label:
+        stmt = (
+            select(DatasetItemLabelDB.label_id, func.count(DatasetItemLabelDB.dataset_item_id).label("instances"))
+            .join(DatasetItemDB, DatasetItemLabelDB.dataset_item_id == DatasetItemDB.id)
+            .where(DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None))
+            .group_by(DatasetItemLabelDB.label_id)
+        )
+        result = self.db.execute(stmt)
+        annotated_counts["instances_per_label"] = [
+            {"label_id": row.label_id, "instances": row.instances} for row in result
+        ]
+
+        # Total instances:
+        # We need to sum the number of instances in annotation_data for all annotated items.
+        stmt = select(DatasetItemDB.annotation_data).where(
+            DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
+        )
+        result = self.db.execute(stmt)
+        annotated_counts["instances"] = sum(len(item.annotation_data) for item in result)
+
+        return {"media_counts": media_counts, "annotated_counts": annotated_counts}

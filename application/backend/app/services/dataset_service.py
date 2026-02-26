@@ -4,6 +4,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 import datumaro.experimental as dm
@@ -130,6 +131,11 @@ class DatasetService(BaseSessionManagedService):
             label_ids=label_ids_str,
             subset=subset,
         )
+
+    def get_dataset_statistics(self, project_id: UUID) -> dict[str, Any]:
+        """Get dataset statistics"""
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
+        return repo.get_statistics()
 
     def list_dataset_items(
         self,

@@ -7,21 +7,22 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from app.api.dependencies import get_dataset_service, get_project
+from app.api.schemas.dataset import DatasetStatisticsView
 from app.api.schemas.dataset_item import DatasetItemAssignSubset, DatasetItemsWithPagination, DatasetItemView
-from app.api.validators import DatasetItemID
+from app.api.validators import DatasetItemID, ProjectID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.services import DatasetService
 from app.services.dataset_service import DatasetItemFilters, SubsetAlreadyAssignedError
 
-router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
+router = APIRouter(prefix="/api/projects/{project_id}/dataset", tags=["Datasets"])
 
 DEFAULT_DATASET_ITEMS_NUMBER_RETURNED = 10
 MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
 
 
 @router.get(
-    "",
+    "/items",
     responses={
         status.HTTP_200_OK: {"description": "List of available dataset items", "model": DatasetItemsWithPagination},
     },
@@ -74,7 +75,7 @@ def list_dataset_items(  # noqa: PLR0913
 
 
 @router.get(
-    "/{dataset_item_id}",
+    "/items/{dataset_item_id}",
     responses={
         status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
@@ -91,8 +92,25 @@ def get_dataset_item(
     return DatasetItemView.model_validate(dataset_item, from_attributes=True)
 
 
+@router.get(
+    "/statistics",
+    responses={
+        status.HTTP_200_OK: {"description": "Dataset statistics retrieved", "model": DatasetStatisticsView},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def get_dataset_statistics(
+    project_id: ProjectID,
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+) -> DatasetStatisticsView:
+    """Get information about a specific dataset item"""
+    dataset_statistics = dataset_service.get_dataset_statistics(project_id=project_id)
+    return DatasetStatisticsView.model_validate(dataset_statistics, from_attributes=True)
+
+
 @router.patch(
-    "/{dataset_item_id}/subset",
+    "/items/{dataset_item_id}/subset",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {"description": "Dataset item subset is assigned"},
