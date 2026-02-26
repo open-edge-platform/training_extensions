@@ -86,7 +86,7 @@ export const ReadOnlyAnnotator = ({
             </View>
 
             <View gridArea={'bottom'}>
-                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} hideHotkeys />
+                <BottomToolbar mediaItem={mediaItem} isUserReviewed={isUserReviewed} hideHotkeys />
             </View>
         </>
     );

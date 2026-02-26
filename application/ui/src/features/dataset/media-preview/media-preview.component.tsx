@@ -8,13 +8,13 @@ import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';
+import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
-import { useSelectedData } from '../selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -48,7 +48,6 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 };
 
 type AnnotatorProps = {
-    isUserReviewed: boolean;
     mode: AnnotatorMode;
     changeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
@@ -58,7 +57,6 @@ type AnnotatorProps = {
 };
 
 const Annotator = ({
-    isUserReviewed,
     mode,
     changeAnnotatorMode,
     onClose,
@@ -67,11 +65,14 @@ const Annotator = ({
     onSelectedMediaItem,
 }: AnnotatorProps) => {
     const { mediaItem, setMediaItem, image } = useSelectedMediaItem();
+    const { datasetItemsById } = useGetDatasetItemsById();
 
     const selectMediaItem = (item: Media) => {
         setMediaItem(item);
         onSelectedMediaItem(item);
     };
+
+    const isUserReviewed = datasetItemsById.get(String(mediaItem.id)) ?? false;
 
     return (
         <VideoPlayerProvider
@@ -112,7 +113,7 @@ const Annotator = ({
                     )}
 
                     <View gridArea={'bottom'}>
-                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                        <BottomToolbar mediaItem={mediaItem} isUserReviewed={isUserReviewed} />
                     </View>
 
                     <View gridArea={'canvas'} overflow={'hidden'}>
@@ -133,19 +134,10 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const queryClient = useQueryClient();
-    const { setMediaState } = useSelectedData();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmitAnnotations = async () => {
-        setMediaState((prev) => {
-            const newState = new Map(prev);
-
-            newState.set(String(mediaItem.id), 'accepted');
-
-            return newState;
-        });
-
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
 
@@ -175,7 +167,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                     items={items}
                     onClose={onClose}
                     changeAnnotatorMode={setMode}
-                    isUserReviewed={isUserReviewed}
                     onSelectedMediaItem={onSelectedMediaItem}
                     onSubmitAnnotations={handleSubmitAnnotations}
                 />

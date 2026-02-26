@@ -28,7 +28,7 @@ import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-it
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
-import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
+import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
     items: Media[];
@@ -54,9 +54,14 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const queryClient = useQueryClient();
 
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
-    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
+    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
+    const acceptMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations');
+    const declineMutation = $api.useMutation(
+        'delete',
+        '/api/projects/{project_id}/dataset/media/{media_id}/annotations'
+    );
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -67,14 +72,55 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
         setSelectedKeys(toggleMultipleSelection(images));
     };
 
-    const handleAccept = () => {
-        setSelectedKeys(new Set());
-        setMediaState(updateSelectedKeysTo(selectedKeys, 'accepted'));
+    const syncReviewStatus = async (action: 'accept' | 'decline') => {
+        if (selectedKeys === 'all') {
+            return;
+        }
+
+        const selectedMediaIds = Array.from(selectedKeys).map(String);
+
+        const requests = selectedMediaIds.map((mediaId) => {
+            const payload = {
+                params: {
+                    path: {
+                        project_id: projectId,
+                        media_id: mediaId,
+                    },
+                },
+            };
+
+            return action === 'accept'
+                ? acceptMutation.mutateAsync({ ...payload, body: { annotations: [] } })
+                : declineMutation.mutateAsync(payload);
+        });
+
+        await Promise.allSettled(requests);
+
+        await Promise.all([
+            queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/dataset/items',
+                    { params: { path: { project_id: projectId } } },
+                ]),
+            }),
+            queryClient.invalidateQueries({
+                queryKey: ['get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}'],
+            }),
+            queryClient.invalidateQueries({
+                queryKey: ['get', '/api/projects/{project_id}/dataset/media/{media_id}/annotations'],
+            }),
+        ]);
     };
 
-    const handleReject = () => {
+    const handleAccept = async () => {
+        await syncReviewStatus('accept');
         setSelectedKeys(new Set());
-        setMediaState(updateSelectedKeysTo(selectedKeys, 'rejected'));
+    };
+
+    const handleReject = async () => {
+        await syncReviewStatus('decline');
+        setSelectedKeys(new Set());
     };
 
     const handleAddMediaItem = async (files: File[]) => {

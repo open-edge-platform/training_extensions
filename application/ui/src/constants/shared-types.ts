@@ -38,7 +38,6 @@ export type MediaDTO = MediaImage | MediaVideo | MediaVideoFrameDTO;
 export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 
 export type MediaItemState = 'accepted' | 'rejected';
-export type MediaStateMap = Map<string, MediaItemState>;
 
 export type DeviceType = components['schemas']['DeviceType'];
 export type TrainingDevice = {
@@ -71,3 +70,4 @@ export type SourceConfig =
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
 
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
+export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];

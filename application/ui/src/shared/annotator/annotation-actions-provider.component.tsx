@@ -89,6 +89,11 @@ export const AnnotationActionsProvider = ({
                     { params: { path: { project_id: projectId, media_id: mediaItem.id } } },
                 ],
                 ['get', '/api/projects/{project_id}/dataset/items', { params: { path: { project_id: projectId } } }],
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/items/{dataset_item_id}',
+                    { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
+                ],
             ],
         },
     });
