@@ -3,26 +3,42 @@
 
 import { Flex } from '@geti/ui';
 
+import { LineMetric } from '../../../../constants/shared-types';
 import { MetricGraph } from './metric-graph.component';
 
 type ModelMetricsGraphsProps = {
-    // TODO: update types
-    lossData?: { epoch: number; trainLoss: number }[];
-    accuracyData?: { epoch: number; trainAccuracy: number }[];
+    trainingMetrics: LineMetric[];
 };
 
-export const ModelMetricsGraphs = ({ lossData, accuracyData }: ModelMetricsGraphsProps) => {
+export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps) => {
+    const graphs = trainingMetrics.map((metric) => {
+        const line = metric.value.line_data[0];
+        const data = line?.points.map((point) => ({ x: point.x, y: point.y })) ?? [];
+        const xAxisTicks = data.map(({ x }) => x);
+
+        return {
+            title: metric.header,
+            xAxisLabel: metric.value.x_axis_label,
+            yAxisLabel: metric.value.y_axis_label,
+            data,
+            xAxisTicks,
+        };
+    });
+
     return (
-        <Flex width={'100%'} direction={'row'} gap={'size-300'}>
-            <MetricGraph
-                title='ACCURACY'
-                data={accuracyData}
-                dataKey='trainAccuracy'
-                yAxisLabel='train accuracy'
-                yAxisDomain={[0, 1]}
-                yAxisTicks={[0, 0.2, 0.4, 0.6, 0.8, 1.0]}
-            />
-            <MetricGraph title='LOSS' data={lossData} dataKey='trainLoss' yAxisLabel='train loss' />
+        <Flex width={'100%'} direction={'row'} gap={'size-300'} wrap>
+            {graphs.map((graph) => (
+                <MetricGraph
+                    key={graph.title}
+                    title={graph.title}
+                    data={graph.data}
+                    dataKey='y'
+                    xAxisKey='x'
+                    xAxisLabel={graph.xAxisLabel}
+                    yAxisLabel={graph.yAxisLabel}
+                    xAxisTicks={graph.xAxisTicks}
+                />
+            ))}
         </Flex>
     );
 };

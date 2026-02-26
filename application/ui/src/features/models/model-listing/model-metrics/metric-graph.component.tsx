@@ -10,6 +10,7 @@ type MetricGraphProps<T extends Record<string, unknown>> = {
     data?: T[];
     dataKey: keyof T & string;
     xAxisKey?: keyof T & string;
+    xAxisLabel?: string;
     yAxisLabel: string;
     yAxisDomain?: [number, number];
     yAxisTicks?: number[];
@@ -22,6 +23,7 @@ export const MetricGraph = <T extends Record<string, unknown>>({
     data,
     dataKey,
     xAxisKey = 'epoch' as keyof T & string,
+    xAxisLabel,
     yAxisLabel,
     yAxisDomain,
     yAxisTicks,
@@ -65,7 +67,7 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                     <CartesianGrid />
                     <XAxis
                         dataKey={xAxisKey}
-                        label={{ value: xAxisKey, position: 'bottom', fill: '#666', offset: 12 }}
+                        label={{ value: xAxisLabel ?? xAxisKey, position: 'bottom', fill: '#666', offset: 12 }}
                         ticks={xAxisTicks}
                         tickMargin={12}
                     />
