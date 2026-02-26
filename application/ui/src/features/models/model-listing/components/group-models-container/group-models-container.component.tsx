@@ -26,7 +26,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
 
     return (
         <Flex direction={'column'} UNSAFE_className={classes.groupModelsContainer}>
-            <GroupHeader data={group} modelArchitectures={modelArchitectures} />
+            <GroupHeader data={group} models={models} modelArchitectures={modelArchitectures} />
             <ModelsTableHeader />
 
             {models.map((model) => {

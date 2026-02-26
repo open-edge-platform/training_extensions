@@ -10,9 +10,10 @@ import { TrainModelProvider } from './train-model-provider.component';
 
 type TrainModelProps = {
     preSelectedDatasetRevisionId?: string;
+    preSelectedModelRevisionId?: string;
 };
 
-export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) => {
+export const TrainModel = ({ preSelectedDatasetRevisionId, preSelectedModelRevisionId }: TrainModelProps) => {
     return (
         <DialogTrigger>
             <Button margin={0}>Train model</Button>
@@ -24,7 +25,10 @@ export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) =>
                         </View>
                     }
                 >
-                    <TrainModelProvider preSelectedDatasetRevisionId={preSelectedDatasetRevisionId}>
+                    <TrainModelProvider
+                        preSelectedDatasetRevisionId={preSelectedDatasetRevisionId}
+                        preSelectedModelRevisionId={preSelectedModelRevisionId}
+                    >
                         <TrainModelDialog onClose={close} />
                     </TrainModelProvider>
                 </Suspense>

@@ -6,30 +6,36 @@ import { capitalize } from 'lodash-es';
 
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
 import { type ModelArchitectureWithPerformanceCategory } from '../../../../../constants/shared-types';
+import { TrainModel } from '../../../train-model/train-model.component';
 import { ModelBadge } from '../model-row/model-badge.component';
 
 type ArchitectureGroupHeaderProps = {
     architecture: ModelArchitectureWithPerformanceCategory | undefined;
+    preSelectedModelRevisionId?: string;
 };
 
-export const ArchitectureGroupHeader = ({ architecture }: ArchitectureGroupHeaderProps) => {
+export const ArchitectureGroupHeader = ({ architecture, preSelectedModelRevisionId }: ArchitectureGroupHeaderProps) => {
     // Should never happen, but just in case
     if (architecture === undefined) {
         return <Text>Unknown</Text>;
     }
 
     return (
-        <Flex alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
-            <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
-                {architecture.name}
-            </Heading>
+        <Flex alignItems={'center'} marginBottom={'size-225'} gap={'size-200'} justifyContent={'space-between'}>
+            <Flex alignItems={'center'} gap={'size-200'}>
+                <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
+                    {architecture.name}
+                </Heading>
 
-            <Flex alignItems={'center'} gap={'size-100'}>
-                <ModelBadge>
-                    <ThumbsUp />
-                    <Text>{capitalize(architecture.performanceCategory)}</Text>
-                </ModelBadge>
+                <Flex alignItems={'center'} gap={'size-100'}>
+                    <ModelBadge>
+                        <ThumbsUp />
+                        <Text>{capitalize(architecture.performanceCategory)}</Text>
+                    </ModelBadge>
+                </Flex>
             </Flex>
+
+            <TrainModel preSelectedModelRevisionId={preSelectedModelRevisionId} />
         </Flex>
     );
 };
