@@ -6,15 +6,13 @@ import { capitalize } from 'lodash-es';
 
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
 import { type ModelArchitectureWithPerformanceCategory } from '../../../../../constants/shared-types';
-import { TrainModel } from '../../../train-model/train-model.component';
 import { ModelBadge } from '../model-row/model-badge.component';
 
 type ArchitectureGroupHeaderProps = {
     architecture: ModelArchitectureWithPerformanceCategory | undefined;
-    preSelectedModelRevisionId?: string;
 };
 
-export const ArchitectureGroupHeader = ({ architecture, preSelectedModelRevisionId }: ArchitectureGroupHeaderProps) => {
+export const ArchitectureGroupHeader = ({ architecture }: ArchitectureGroupHeaderProps) => {
     // Should never happen, but just in case
     if (architecture === undefined) {
         return <Text>Unknown</Text>;
@@ -34,8 +32,6 @@ export const ArchitectureGroupHeader = ({ architecture, preSelectedModelRevision
                     </ModelBadge>
                 </Flex>
             </Flex>
-
-            <TrainModel preSelectedModelRevisionId={preSelectedModelRevisionId} />
         </Flex>
     );
 };

@@ -44,8 +44,6 @@ const TrainModelContext = createContext<TrainModelContextProps | null>(null);
 
 type TrainModelProviderProps = {
     children: ReactNode;
-    preSelectedDatasetRevisionId?: string;
-    preSelectedModelRevisionId?: string;
 };
 
 const useDatasetRevisions = () => {
@@ -59,12 +57,13 @@ const useDatasetRevisions = () => {
     };
 };
 
+const TRAIN_FROM_SCRATCH = 'train-from-scratch';
 const useModelRevisions = () => {
     const { data: models } = useGetModels();
 
     return {
         modelRevisions: [
-            { id: 'train-from-scratch', name: 'Train from scratch', architecture: '', value: null },
+            { id: TRAIN_FROM_SCRATCH, name: 'Train from scratch', architecture: '', value: null },
             ...(models?.map(({ id, name, architecture }) => ({ id, name, architecture, value: String(id) })) ?? []),
         ],
     };
@@ -75,7 +74,7 @@ const getModelRevisionsForArchitecture = (
     architectureId: string | null
 ): ModelRevisionWithValue[] => {
     return modelRevisions.filter((modelRevision) => {
-        if (modelRevision.id === 'train-from-scratch') {
+        if (modelRevision.id === TRAIN_FROM_SCRATCH) {
             return true;
         }
 
@@ -88,41 +87,34 @@ const getDefaultModelRevisionIdForArchitecture = (
     architectureId: string | null
 ): string | null => {
     const revisionsForArchitecture = getModelRevisionsForArchitecture(modelRevisions, architectureId);
-    const firstRevision = revisionsForArchitecture.find(({ id }) => id !== 'train-from-scratch');
+    const firstRevision = revisionsForArchitecture.find(({ id }) => id !== TRAIN_FROM_SCRATCH);
 
     return firstRevision?.id ?? revisionsForArchitecture.at(0)?.id ?? null;
 };
 
-export const TrainModelProvider = ({
-    children,
-    preSelectedDatasetRevisionId,
-    preSelectedModelRevisionId,
-}: TrainModelProviderProps) => {
+export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const { modelArchitectures } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { datasetRevisions } = useDatasetRevisions();
     const { modelRevisions: allModelRevisions } = useModelRevisions();
     const activeModel = useGetActiveModel();
-    const preSelectedModelRevision = allModelRevisions.find(({ id }) => id === preSelectedModelRevisionId);
 
     const activeModelArchitecture = modelArchitectures.find(
         (modelArchitecture) => modelArchitecture.id === activeModel?.architecture
     );
 
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
-        preSelectedModelRevision?.architecture ?? activeModelArchitecture?.id ?? null
+        activeModelArchitecture?.id ?? null
     );
 
     const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<DeviceType | null>(
         trainingDevices?.at(0)?.type ?? null
     );
     const [selectedDatasetRevisionId, setSelectedDatasetRevisionId] = useState<string | null>(
-        preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
+        datasetRevisions?.at(0)?.id ?? null
     );
-    const [selectedModelRevisionId, setSelectedModelRevisionId] = useState<string | null>(
-        () =>
-            preSelectedModelRevisionId ??
-            getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
+    const [selectedModelRevisionId, setSelectedModelRevisionId] = useState<string | null>(() =>
+        getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
     );
 
     const modelRevisions = useMemo(() => {
