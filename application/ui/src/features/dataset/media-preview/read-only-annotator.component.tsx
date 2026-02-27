@@ -17,7 +17,6 @@ import classes from './read-only-annotator.module.scss';
 type ReadOnlyAnnotatorProps = {
     mediaItem: Media;
     image: ImageData;
-    isUserReviewed: boolean;
     onClose: () => void;
     onModeChange?: (mode: 'annotation' | 'prediction') => void;
     onAcceptPrediction?: () => void;
@@ -37,7 +36,6 @@ type ReadOnlyAnnotatorProps = {
 export const ReadOnlyAnnotator = ({
     image,
     mediaItem,
-    isUserReviewed,
     onModeChange,
     onClose,
     onAcceptPrediction,
@@ -86,7 +84,7 @@ export const ReadOnlyAnnotator = ({
             </View>
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} isUserReviewed={isUserReviewed} hideHotkeys />
+                <BottomToolbar mediaItem={mediaItem} hideHotkeys />
             </View>
         </>
     );

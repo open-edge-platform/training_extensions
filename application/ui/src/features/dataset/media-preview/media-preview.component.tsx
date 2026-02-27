@@ -72,7 +72,7 @@ const Annotator = ({
         onSelectedMediaItem(item);
     };
 
-    const isUserReviewed = datasetItemsById.get(String(mediaItem.id)) ?? false;
+    const isUserReviewed = datasetItemsById.get(String(mediaItem.id));
 
     return (
         <VideoPlayerProvider
@@ -83,7 +83,6 @@ const Annotator = ({
                 <ReadOnlyAnnotator
                     image={image}
                     mediaItem={mediaItem}
-                    isUserReviewed={isUserReviewed}
                     onModeChange={changeAnnotatorMode}
                     onClose={onClose}
                     onAcceptPrediction={onSubmitAnnotations}
