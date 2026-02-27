@@ -20,7 +20,6 @@ from app.services import (
     PipelineService,
     ProjectService,
     SystemService,
-    VideoFrameService,
 )
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
@@ -53,19 +52,9 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
-def fxt_video_frame_service(db_session: Session) -> VideoFrameService:
-    """Fixture to create a VideoFrameService instance."""
-    return VideoFrameService(db_session=db_session)
-
-
-@pytest.fixture
-def fxt_media_service(
-    fxt_projects_dir: Path, fxt_video_frame_service: VideoFrameService, db_session: Session
-) -> MediaService:
+def fxt_media_service(fxt_projects_dir: Path, db_session: Session) -> MediaService:
     """Fixture to create a MediaService instance."""
-    return MediaService(
-        data_dir=fxt_projects_dir.parent, video_frame_service=fxt_video_frame_service, db_session=db_session
-    )
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
 
 
 @pytest.fixture
@@ -171,6 +160,7 @@ def fxt_project_with_subset_items(
                 user_reviewed=False,
                 project_id=str(project.id),
                 created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+                updated_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
             )
             dataset_item.id = db_media.id
 
@@ -227,6 +217,7 @@ def fxt_project_with_subset_items_on_disk(
             user_reviewed=True,
             project_id=str(project.id),
             created_at=created_at,
+            updated_at=created_at,
             annotation_data=annotation(),
         )
         dataset_item.id = db_media.id
@@ -321,7 +312,7 @@ class TestDatasetRevisionServiceIntegration:
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
         db_session: Session,
     ) -> None:
         """Test saving a dataset revision."""
@@ -348,7 +339,7 @@ class TestDatasetRevisionServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
     ) -> None:
         """Test saving a dataset revision."""
         project, _ = fxt_project_with_subset_items
@@ -364,7 +355,7 @@ class TestDatasetRevisionServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
     ) -> None:
         """Test getting a dataset revision."""
         project, _ = fxt_project_with_subset_items_on_disk
@@ -383,6 +374,59 @@ class TestDatasetRevisionServiceIntegration:
         assert revision.id == revision_id
         assert revision.name == f"Dataset ({str(revision.id).split('-')[0]})"
         assert revision.files_deleted is False
+
+    def test_get_latest_uptodate_dataset_revision_success(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
+    ) -> None:
+        """Test getting a dataset revision."""
+        project, _ = fxt_project_with_subset_items_on_disk
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Now get the revision
+        latest_revision = fxt_dataset_revision_service.get_latest_uptodate_dataset_revision(project_id=project.id)
+
+        assert latest_revision is not None
+        assert latest_revision.id == revision_id
+
+    def test_get_latest_uptodate_dataset_revision_not_exists(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
+    ) -> None:
+        """Test getting a dataset revision."""
+        project, media_and_dataset_items = fxt_project_with_subset_items_on_disk
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Update dataset item
+        dataset_item = next(
+            ds_item
+            for _, ds_item in media_and_dataset_items
+            if ds_item.subset == DatasetItemSubset.UNASSIGNED.name.lower()
+        )
+        fxt_dataset_service.assign_dataset_item_subset(
+            project_id=project.id, dataset_item_id=UUID(dataset_item.id), subset=DatasetItemSubset.TRAINING
+        )
+
+        # Now get the revision
+        latest_revision = fxt_dataset_revision_service.get_latest_uptodate_dataset_revision(project_id=project.id)
+
+        assert latest_revision is None
 
     def test_get_dataset_revision_not_found(
         self,
@@ -519,6 +563,37 @@ class TestDatasetRevisionServiceIntegration:
         # Verify the database record is marked as deleted
         revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
         assert revision.files_deleted is True
+
+    def test_delete_dataset_revision(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test deleting dataset revision files."""
+        project, _ = fxt_project_with_subset_items_on_disk
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
+        assert revision_path.exists()
+        assert (revision_path / "data.parquet").exists()
+
+        # Delete the revision files
+        fxt_dataset_revision_service.delete_dataset_revision(project_id=project.id, revision_id=revision_id)
+
+        # Verify the files were deleted
+        assert not revision_path.exists()
+
+        # Verify the database record is removed
+        with pytest.raises(ResourceNotFoundError):
+            fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
 
     def test_delete_dataset_revision_files_not_found(
         self,

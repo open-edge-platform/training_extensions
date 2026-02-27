@@ -3,12 +3,13 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Flex, Text, View } from '@geti/ui';
+import { ActionButton, Divider, Flex, Text, View } from '@geti/ui';
 import { ChevronDownLight } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
 import { Toolbar } from '../../../dataset/media-preview/toolbar-container/toolbar-container.component';
 import { useVideoPlayer } from '../video-player-provider.component';
+import { FrameStep } from './frame-step/frame-step.component';
 import { PlaybackSpeedSlider } from './playback-rate.component';
 import { VideoAnnotator } from './video-annotator/video-annotator.component';
 import { VideoControls } from './video-controls.component';
@@ -17,7 +18,7 @@ import { VideoDuration } from './video-duration.component';
 import classes from './video-toolbar.module.scss';
 
 export const VideoToolbar = () => {
-    const { videoFrame } = useVideoPlayer();
+    const { videoFrame, step, changeStep, videoControls } = useVideoPlayer();
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
@@ -29,11 +30,25 @@ export const VideoToolbar = () => {
                             <Text>Frames</Text>
                             <VideoControls />
                             <VideoDuration />
+
+                            <Divider orientation={'vertical'} size={'S'} />
+
+                            <FrameStep
+                                step={step}
+                                onChangeStep={changeStep}
+                                isDisabled={videoControls.isPlaying}
+                                defaultFps={videoFrame.frame_stride}
+                            />
+
                             <PlaybackSpeedSlider />
+
+                            <Divider orientation={'vertical'} size={'S'} />
                         </Flex>
 
                         <Flex alignItems={'center'} gap={'size-100'}>
-                            <Text>Current frame: 0 / Total frames: {videoFrame?.frame_count}</Text>
+                            <Text>
+                                Current frame: {videoFrame.frame_number} / Total frames: {videoFrame.frame_count - 1}
+                            </Text>
                             <ActionButton
                                 isQuiet
                                 onPress={() => setIsExpanded((prev) => !prev)}

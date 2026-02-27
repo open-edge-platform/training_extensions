@@ -24,7 +24,19 @@ export type PrepareImportDatasetJob = Job & {
     metadata: components['schemas']['PrepareDatasetForImportRequest'];
 };
 
-export type Media = components['schemas']['MediaView'];
+export type MediaImage = components['schemas']['ImageView'];
+export type MediaVideo = components['schemas']['VideoView'];
+export type MediaVideoFrameDTO = components['schemas']['VideoFrameView'];
+export type MediaVideoFrame = Omit<MediaVideo, 'type'> & {
+    frame_number: number;
+    frame_stride: number;
+    type: 'video_frame';
+};
+
+export type MediaDTO = MediaImage | MediaVideo | MediaVideoFrameDTO;
+
+export type Media = MediaImage | MediaVideo | MediaVideoFrame;
+
 export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
 

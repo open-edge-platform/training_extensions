@@ -41,6 +41,8 @@ jobs:
           files_yaml: |
             test:
               - application/**
+              - '!application/docs/**'
+              - library/**
               - .github/**
 
   build:
@@ -65,6 +67,10 @@ jobs:
         uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
         with:
           type: "pre-build"
+
+      # Install the latest Docker, since the version available by default on the runners may be outdated
+      - name: Set up Docker
+        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 #v4.7.0
 
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0

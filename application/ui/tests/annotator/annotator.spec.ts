@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { mockedMedia } from 'mocks/mock-media';
+import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -183,16 +183,7 @@ test.describe('Annotator', () => {
             });
         });
 
-        test('renders "No object" when server returns empty annotations list', async ({ page, network }) => {
-            network.use(
-                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
-                    return HttpResponse.json({
-                        annotations: [],
-                        user_reviewed: true,
-                    });
-                })
-            );
-
+        test('renders "No object" when server returns empty annotations list', async ({ page }) => {
             await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
             await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
 
@@ -302,8 +293,8 @@ test.describe('Annotator', () => {
         };
 
         const mediaItems = [
-            mockedMedia({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
-            mockedMedia({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
         ];
         const mockedSegmentationProject = getMockedProject({
             id: '123e4567-e89b-12d3-a456-426614174000',

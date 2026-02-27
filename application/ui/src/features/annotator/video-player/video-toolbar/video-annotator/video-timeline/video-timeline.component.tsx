@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useSizeHook } from 'hooks/use-size.hook';
 import useVirtual from 'react-cool-virtual';
@@ -22,23 +22,28 @@ const MIN_SIZE_OF_SEGMENT = 2 * 8;
 export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const size = useSizeHook(containerRef);
-    const { videoFrame, videoControls } = useVideoPlayer();
+    const { videoFrame, videoControls, step } = useVideoPlayer();
     const { isPlaying } = videoControls;
-    const frameNumber = 0;
 
-    const step = 60;
-    const totalFrames = Number(videoFrame.frame_count);
+    const frameNumber = videoFrame.frame_number;
+    const totalFrames = videoFrame.frame_count;
 
-    const totalSegments = Math.ceil(totalFrames / step);
+    const totalSegments = Math.max(Math.ceil(totalFrames / step), 0);
     const sizePerSquare = size === undefined ? 0 : Math.max(MIN_SIZE_OF_SEGMENT, size.width / totalSegments);
     const frameOffset = Math.round(sizePerSquare / 2);
 
-    const { outerRef, innerRef, items } = useVirtual<HTMLDivElement, HTMLDivElement>({
+    const { outerRef, innerRef, items, scrollToItem } = useVirtual<HTMLDivElement, HTMLDivElement>({
         horizontal: true,
         itemCount: totalSegments,
         itemSize: sizePerSquare,
-        overscanCount: 5,
+        overscanCount: 20,
     });
+
+    useEffect(() => {
+        const segmentIndex = Math.round(frameNumber / step);
+
+        scrollToItem({ index: segmentIndex, align: 'center' });
+    }, [scrollToItem, frameNumber, step]);
 
     return (
         <div ref={containerRef}>
@@ -46,11 +51,12 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                 <div style={{ width: sizePerSquare * totalSegments }} className={classes.timelineSliderWrapper}>
                     <VideoPlayerSlider
                         ref={outerRef}
-                        mediaItem={videoFrame}
+                        videoFrame={videoFrame}
                         step={step}
                         frameNumber={frameNumber}
                         sizePerSquare={sizePerSquare}
                         frameOffset={frameOffset}
+                        selectFrame={videoControls.goto}
                     />
                 </div>
                 <VideoFrameSegments
@@ -63,6 +69,7 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                     totalSegments={totalSegments}
                     minSizeOfSegment={MIN_SIZE_OF_SEGMENT}
                     isPlaying={isPlaying}
+                    selectFrame={videoControls.goto}
                 />
             </div>
         </div>

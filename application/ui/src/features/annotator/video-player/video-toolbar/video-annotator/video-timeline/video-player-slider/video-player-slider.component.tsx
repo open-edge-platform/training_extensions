@@ -7,19 +7,21 @@ import { useDebouncedCallback } from 'hooks/use-debounced-callback/use-debounced
 import { defer } from 'lodash-es';
 import { useHover } from 'react-aria';
 
-import { Media } from '../../../../../../../constants/shared-types';
+import type { MediaVideoFrame } from '../../../../../../../constants/shared-types';
+import { FRAME_STEP_TO_DISPLAY_ALL_FRAMES } from '../../../frame-step/utils';
 import { ThumbnailPreview } from './thumbnail-preview.component';
 import { VideoSlider } from './video-slider.component';
 
 import classes from './video-slider.module.scss';
 
 type VideoPlayerSliderProps = {
-    mediaItem: Media;
+    videoFrame: MediaVideoFrame;
     step: number;
     frameNumber: number;
     sizePerSquare: number;
     frameOffset?: number;
     ref?: RefObject<HTMLDivElement | null>;
+    selectFrame: (frameNumber: number) => void;
 };
 
 const THUMBNAIL_DELAY = 1000;
@@ -92,13 +94,16 @@ const blurActiveInput = (isFocused: boolean): void => {
 
 export const VideoPlayerSlider = ({
     ref,
-    mediaItem,
+    videoFrame,
     step,
     frameNumber,
     sizePerSquare,
+    selectFrame,
     frameOffset = 0,
 }: VideoPlayerSliderProps) => {
     const [sliderValue, setSliderValue] = useState<number>(frameNumber);
+
+    useEffect(() => setSliderValue(frameNumber), [frameNumber]);
 
     const {
         hoverProps,
@@ -110,13 +115,15 @@ export const VideoPlayerSlider = ({
         thumbnailPosition,
     } = useShowThumbnail();
 
-    const framesCount = Number(mediaItem.frame_count);
+    const framesCount = videoFrame.frame_count;
     const minValue = 0;
     const maxValue = framesCount - 1;
-    const lastFrame = framesCount - step;
+    const isDisplayingAllFrames = FRAME_STEP_TO_DISPLAY_ALL_FRAMES === step;
+    const lastFrame = isDisplayingAllFrames ? maxValue : framesCount - step;
     const isLastFrame = sliderValue >= lastFrame;
     const containerScrollLeft = getContainerScroll(ref);
 
+    // TODO: Update highlighted frames and buffers
     const highlightedFrames: number[] = [];
     const buffers = undefined;
 
@@ -152,9 +159,8 @@ export const VideoPlayerSlider = ({
                     setSliderValue(newFrameNumber);
                     onShowThumbnail(true);
                 }}
-                onChangeEnd={(_newFrameNumber) => {
-                    // TODO: Implement frame selection behavior on slider change end once selectFrame is available.
-                    // selectFrame(newFrameNumber);
+                onChangeEnd={(newFrameNumber) => {
+                    selectFrame(newFrameNumber);
                     blurActiveInput(true);
                 }}
                 step={step}
@@ -169,8 +175,8 @@ export const VideoPlayerSlider = ({
                     x={thumbnailPosition}
                     width={100}
                     height={100}
-                    videoFrame={thumbnailVideoFrame}
-                    mediaItem={mediaItem}
+                    frameNumber={thumbnailVideoFrame}
+                    videoFrame={videoFrame}
                 />
             )}
         </div>

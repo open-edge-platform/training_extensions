@@ -30,4 +30,23 @@ describe('MenuActions', () => {
 
         expect(await screen.findByText(`Are you sure you want to delete project "${projectName}"?`)).toBeVisible();
     });
+
+    it('shows an explanation dialog when enabling pipeline is blocked', async () => {
+        render(
+            <MenuActions
+                projectId={projectId}
+                projectName={projectName}
+                actionButtonStyle={actionButtonStyle}
+                isPipelineRunning={false}
+            />
+        );
+
+        fireEvent.click(screen.getByLabelText(/open project options/i));
+        fireEvent.click(await screen.findByText('Enable pipeline'));
+
+        expect(await screen.findByText('Cannot enable pipeline')).toBeVisible();
+        expect(
+            await screen.findByText('Make sure you selected a model, source, and sink before enabling the pipeline.')
+        ).toBeVisible();
+    });
 });

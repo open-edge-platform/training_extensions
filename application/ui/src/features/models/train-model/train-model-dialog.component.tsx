@@ -29,8 +29,14 @@ type TrainModelDialogProps = {
 };
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevisionId, datasetRevisions } =
-        useTrainModel();
+    const {
+        selectedTrainingDevice,
+        selectedModelArchitectureId,
+        selectedDatasetRevisionId,
+        selectedModelRevisionId,
+        datasetRevisions,
+        modelRevisions,
+    } = useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
     const isModelsPage = useMatch(paths.project.models.pattern);
@@ -43,10 +49,12 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         if (isStartButtonDisabled) return;
 
         const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
+        const parentModelRevisionId = modelRevisions.find((revision) => revision.id === selectedModelRevisionId)?.value;
 
         trainModelMutation.mutate(
             {
                 datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
+                parentModelRevisionId: parentModelRevisionId === undefined ? null : parentModelRevisionId,
                 device: selectedTrainingDevice,
                 modelArchitectureId: selectedModelArchitectureId,
             },
@@ -91,7 +99,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                             <Heading>Why can I not start training?</Heading>
                             <Content>
                                 In order to train a model, you need to annotate at least 3 items in your dataset,
-                                although we recommend annotating at least 10 for better results.
+                                although we recommend annotating several more for better results.
                             </Content>
                         </InlineAlert>
                     ) : null}

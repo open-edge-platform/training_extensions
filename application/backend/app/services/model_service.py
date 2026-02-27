@@ -1,11 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import shutil
+from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import cast
 from uuid import UUID
 
 import polars as pl
@@ -18,6 +19,7 @@ from app.models import EvaluationResult, ModelRevision, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
+from app.services.dataset_revision_service import DatasetRevisionService
 from app.supported_models import SupportedModels
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
@@ -184,7 +186,9 @@ class ModelService(BaseSessionManagedService):
         Delete a model.
 
         Deletes a model revision from the database and deletes the folder from the filesystem
-        associated with this model.
+        associated with this model. Moreover, if no other models are linked to the linked
+        dataset revision, deletes the dataset revision from the database and deletes its
+        associated files from the filesystem.
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to delete.
@@ -199,10 +203,14 @@ class ModelService(BaseSessionManagedService):
                 (e.g., the model is referenced by other entities).
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_to_delete = model_rev_repo.get_by_id(str(model_id))
+        if model_to_delete is None:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
             shutil.rmtree(path)
+            logger.info("Deleted model files at '{}'", path)
 
         try:
             deleted = model_rev_repo.delete(str(model_id))
@@ -210,6 +218,17 @@ class ModelService(BaseSessionManagedService):
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
+        if model_to_delete.training_dataset_id is not None:
+            model_list = model_rev_repo.list_all(training_dataset_id=model_to_delete.training_dataset_id)
+            if len(model_list) == 0:
+                dataset_rev_service = DatasetRevisionService(
+                    data_dir=self._projects_dir.parent, db_session=self.db_session
+                )
+                dataset_rev_service.delete_dataset_revision(
+                    project_id=UUID(model_to_delete.project_id),
+                    revision_id=UUID(model_to_delete.training_dataset_id),
+                )
 
     @parent_process_only
     def delete_model_files(self, project_id: UUID, model_id: UUID) -> None:
@@ -220,22 +239,22 @@ class ModelService(BaseSessionManagedService):
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
         """
-        for model_format in ModelFormat:
-            exists, _ = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=model_format)
-
-            # Delete model files from disk, if at least 1 model file is present
-            if exists:
-                path = self._projects_dir / str(project_id) / "models" / str(model_id)
-                shutil.rmtree(path)
-                logger.info("Deleted model files at '{}'", path)
-                break
-
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
+        model_rev_db = model_rev_repo.get_by_id(str(model_id))
+        if model_rev_db is None:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+            logger.info("Deleted model files at '{}'", path)
 
     def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
@@ -495,16 +514,18 @@ class ModelService(BaseSessionManagedService):
         # If the number of unique steps equals the expected count, they are consecutive and hence step-based
         return len(unique_steps) == expected_count
 
-    def get_logs(self, project_id: UUID, model_id: UUID) -> Path | None:
+    def get_logs(self, project_id: UUID, model_id: UUID, as_text: bool = False) -> Path | Iterator[str] | None:
         """
         Get the training logs for a model revision.
 
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
+            as_text (bool): If True, parse NDJSON and return plain text. If False, return file path.
 
         Returns:
-            Path | None: Path to the training log file.
+            Path | Iterator[str] | None: Path to the training log file (if as_text=False),
+                iterator yielding plain text log lines (if as_text=True), or None if logs don't exist.
 
         Raises:
             ResourceNotFoundError: If no model with the given model_id is found.
@@ -525,4 +546,19 @@ class ModelService(BaseSessionManagedService):
         if not log_file.exists():
             return None
 
-        return log_file
+        if not as_text:
+            return log_file
+
+        def _iter_text_lines() -> Iterator[str]:
+            with open(log_file, encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        entry = json.loads(line)
+                        text = entry.get("text", "")
+                        if text:
+                            yield text
+                    except json.JSONDecodeError as e:
+                        logger.warning("Failed to parse log line: {}", e)
+                        yield "[MALFORMED LOG LINE]\n"
+
+        return _iter_text_lines()

@@ -5,7 +5,6 @@ import { dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
 import { Image, Tag } from '@geti/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
-import { TrainModel } from '../../../train-model/train-model.component';
 import type { DatasetGroup } from '../../types';
 import { DatasetActions } from '../dataset-actions/dataset-actions.component';
 import { ModelBadge } from '../model-row/model-badge.component';
@@ -17,9 +16,7 @@ type DatasetGroupHeaderProps = {
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
     const hasDatasetRevisionData = dataset.imageCount > 0 && !dataset.filesDeleted;
-    const gridColumns = hasDatasetRevisionData
-        ? ['auto', '1fr', 'auto', '1fr', 'auto']
-        : ['auto', '1fr', 'auto', 'auto'];
+    const gridColumns = hasDatasetRevisionData ? ['auto', '1fr', 'auto', '1fr'] : ['auto', '1fr', 'auto'];
     const formatter = useNumberFormatter();
 
     return (
@@ -56,10 +53,6 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                     testingValue={dataset.trainingSubsets.testing}
                 />
             )}
-
-            <Flex>
-                <TrainModel preSelectedDatasetRevisionId={dataset.id} />
-            </Flex>
         </Grid>
     );
 };

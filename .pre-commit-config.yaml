@@ -6,7 +6,7 @@ minimum_prek_version: "0.2.19"
 
 default_language_version:
   node: 24.11.1
-  python: python3.12
+  python: python3.13
 
 repos:
   # Ruff - Python linter and formatter
