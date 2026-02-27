@@ -43,16 +43,38 @@ const useSubsets = (mediaItemId: string) => {
         dataset_item_id: mediaItemId,
     };
     const datasetItemParams = { params: { path: datasetItemPath } };
-    const datasetItemQueryKey = getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]);
 
     const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
 
     const updateSubsetMutation = $api.useMutation(UPDATE_SUBSET_OPERATION, UPDATE_SUBSET_URL, {
-        meta: {
-            invalidateQueries: [datasetItemQueryKey],
-        },
-        onSuccess: (updatedItem) => {
-            queryClient.setQueryData(datasetItemQueryKey, updatedItem);
+        onSuccess: async (_, variables) => {
+            const updatedDatasetItemQueryKey = getQueryKey([
+                DATASET_ITEM_OPERATION,
+                DATASET_ITEM_URL,
+                {
+                    params: {
+                        path: {
+                            project_id: variables.params.path.project_id,
+                            dataset_item_id: variables.params.path.dataset_item_id,
+                        },
+                    },
+                },
+            ]);
+
+            const mediaListQueryKey = getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/media',
+                {
+                    params: {
+                        path: {
+                            project_id: variables.params.path.project_id,
+                        },
+                    },
+                },
+            ]);
+
+            await queryClient.invalidateQueries({ queryKey: updatedDatasetItemQueryKey });
+            await queryClient.invalidateQueries({ queryKey: mediaListQueryKey });
         },
     });
 
@@ -60,12 +82,8 @@ const useSubsets = (mediaItemId: string) => {
         if (!isAssignableSubset(key)) return;
 
         updateSubsetMutation.mutate({
-            params: {
-                path: datasetItemPath,
-            },
-            body: {
-                subset: key,
-            },
+            params: { path: datasetItemPath },
+            body: { subset: key },
         });
     };
 
