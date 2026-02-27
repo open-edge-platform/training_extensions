@@ -17,15 +17,15 @@ from app.models import DatasetFormat, TaskType
 from tests.bdd.utils import export_dataset, generate_random_image, import_dataset_by_format
 
 
-@given('A "{task_type}" project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
-@given('An "{task_type}" project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
+@given('A {task_type} project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
+@given('An {task_type} project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
 def step_project_exists(context: Context, task_type: TaskType, project_name: str, labels: str) -> None:
     labels_list = ast.literal_eval(labels)
     project_body = {
         "name": project_name,
         "task": {
-            "task_type": task_type,
-            "exclusive_labels": True,
+            "task_type": TaskType.CLASSIFICATION if task_type == "multilabel" else task_type,
+            "exclusive_labels": task_type == TaskType.CLASSIFICATION,
             "labels": [{"name": label, "color": f"#{secrets.token_hex(3)}"} for label in labels_list],
         },
     }
@@ -33,13 +33,13 @@ def step_project_exists(context: Context, task_type: TaskType, project_name: str
     context.project = ProjectView.model_validate(response.json())
 
 
-@given('the project dataset has {count:d} unannotated images in subset "{subset}"')  # pyrefly: ignore
+@given("the project dataset has {count:d} unannotated {subset} images")  # pyrefly: ignore
 def step_dataset_has_unannotated_images(context: Context, count: int, subset: str) -> None:
     """Add multiple random unannotated images to the dataset."""
     project = cast(ProjectView, context.project)
     for _ in range(count):
         # Upload random image
-        buffer, filename, _ = generate_random_image()
+        buffer, filename = generate_random_image()
         files = {"file": (filename, buffer, "image/jpeg")}
         media_response = requests.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
         dataset_item_id = media_response.json()["id"]
@@ -51,13 +51,13 @@ def step_dataset_has_unannotated_images(context: Context, count: int, subset: st
         )
 
 
-@given('the project dataset has {count:d} images with annotations in subset "{subset}"')  # pyrefly: ignore
+@given("the project dataset has {count:d} annotated {subset} images")  # pyrefly: ignore
 def step_dataset_has_annotated_images(context: Context, count: int, subset: str) -> None:
     """Add multiple random unannotated images to the dataset specific subset."""
     project = cast(ProjectView, context.project)
     for i in range(count):
         # Upload random image
-        buffer, filename, _ = generate_random_image()
+        buffer, filename = generate_random_image()
         files = {"file": (filename, buffer, "image/jpeg")}
         media_response = requests.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
         dataset_item_id = media_response.json()["id"]

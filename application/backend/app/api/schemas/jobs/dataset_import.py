@@ -150,7 +150,7 @@ class ImportDatasetMetadata(BaseModel):
     staged_dataset_id: UUID = Field(..., description="Dataset ID")
     project_id: UUID | None = Field(None, description="Project ID")
     filters: DatasetFilters | None = Field(None, description="Filters to apply to the dataset during import")
-    labels_mapping: dict[str, str] | None = Field(
+    labels_mapping: dict[str, str | None] | None = Field(
         None,
         description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
         "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",

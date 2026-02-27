@@ -119,17 +119,22 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                     format=ImageFormat.JPG,
                     data=item.image.data,
                 )
+                annotations = converter.convert_sample(item) or None
+                user_reviewed = item.user_reviewed if item.user_reviewed is not None else True
+                # If there are no annotations (due to filtering), we can consider the item as not reviewed by the user.
+                if not annotations:
+                    user_reviewed = False
                 self._dataset_service.create_dataset_item(
                     project_id=params.project_id,
                     task=params.task,
                     media=media,
-                    user_reviewed=item.user_reviewed if item.user_reviewed is not None else True,
-                    annotations=converter.convert_sample(item),
+                    user_reviewed=user_reviewed,
+                    annotations=annotations,
                     subset=DatasetItemSubset(item.subset.name.lower()),
                 )
 
     def execute(self, params: ImportDatasetToProjectJobParams) -> None:
-        dataset = self.prepare_dataset(params.staged_dataset_id)
+        dataset = self.prepare_dataset(staged_dataset_id=params.staged_dataset_id, task=params.task)
         self.create_items(dataset=dataset, params=params)
 
     @staticmethod

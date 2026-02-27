@@ -13,7 +13,9 @@ from tests.bdd.utils.parsers import parse_sse_events
 
 
 def expect_job_accepted(response: requests.Response) -> JobView:
-    assert response.status_code == 202, f"Expected job to be ACCEPTED, but got {response.status_code}"
+    assert response.status_code == 202, (
+        f"Expected job to be ACCEPTED, but got {response.status_code}, response: {response.text}"
+    )
     return JobView.model_validate(response.json())
 
 
@@ -50,6 +52,22 @@ def prepare_dataset(base_url: str, staged_dataset_id: str) -> JobView:
         "job_type": JobType.PREPARE_DATASET_FOR_IMPORT,
         "staged_dataset_id": staged_dataset_id,
     }
+    response = requests.post(f"{base_url}/api/jobs", json=job_body)
+    job = expect_job_accepted(response)
+    return wait_for_job_completion(base_url, job.job_id)
+
+
+def import_dataset_to_project(
+    base_url: str, project_id: str, staged_dataset_id: str, labels_mapping: dict[str, str | None] | None = None
+) -> JobView:
+    job_body = {
+        "job_type": JobType.IMPORT_DATASET_TO_PROJECT,
+        "project_id": project_id,
+        "staged_dataset_id": staged_dataset_id,
+        "parameters": {},
+    }
+    if labels_mapping is not None:
+        job_body["parameters"] = {"labels_mapping": labels_mapping}
     response = requests.post(f"{base_url}/api/jobs", json=job_body)
     job = expect_job_accepted(response)
     return wait_for_job_completion(base_url, job.job_id)
