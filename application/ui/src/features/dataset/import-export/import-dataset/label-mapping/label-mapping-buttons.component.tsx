@@ -23,7 +23,7 @@ export const LabelMappingButtons = ({ stagedDatasetId, onClose }: LabelMappingBu
             {
                 onSuccess: () => {
                     onClose();
-                    deleteImportEntry({ stagedDatasetId });
+                    deleteImportEntry(stagedDatasetId);
                 },
             }
         );

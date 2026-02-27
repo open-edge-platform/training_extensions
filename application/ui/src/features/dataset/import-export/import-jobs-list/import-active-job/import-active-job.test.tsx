@@ -13,13 +13,11 @@ import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { server } from '../../../../../msw-node-setup';
 import { ImportActiveJob } from './import-active-job.component';
 
-const mockedRemoveLsPreparingImport = vi.fn();
+const mockedDeleteImportEntry = vi.fn();
 
-vi.mock('hooks/localStorage/use-prepare-import-dataset.hook', () => ({
-    usePrepareImportDataset: () => ({
-        removeLsPreparingImport: mockedRemoveLsPreparingImport,
-        getLsPreparingImport: vi.fn(() => null),
-        addLsPreparingImport: vi.fn(),
+vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', () => ({
+    useImportDatasetToProject: () => ({
+        deleteImportEntry: mockedDeleteImportEntry,
     }),
 }));
 
@@ -28,10 +26,20 @@ describe('ImportActiveJob', () => {
         server.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(getMockedProject({ id: 'project-123' }));
+            }),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
+                return HttpResponse.json(null, { status: 200 });
             })
         );
 
-        render(<ImportActiveJob job={job} fileName='dataset.zip' size={1024} />);
+        render(
+            <ImportActiveJob
+                job={job}
+                fileName='dataset.zip'
+                size={1024}
+                stagedDatasetId={job.metadata.staged_dataset_id}
+            />
+        );
     };
 
     beforeEach(() => {
@@ -71,7 +79,7 @@ describe('ImportActiveJob', () => {
         await userEvent.click(await screen.findByRole('button', { name: /cancel job/i }));
 
         await waitFor(() => {
-            expect(mockedRemoveLsPreparingImport).toHaveBeenCalledTimes(1);
+            expect(mockedDeleteImportEntry).toHaveBeenCalledTimes(1);
         });
     });
 });

@@ -2,19 +2,33 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
+import { $api } from '../../../../../api/client';
 import { useCancelJob } from '../../../../../hooks/api/jobs.hook';
 
 type ImportProcessButtonsProps = {
     prepareJobId: string;
+    stagedDatasetId: string;
     onClose: () => void;
 };
 
-export const ImportProcessButtons = ({ prepareJobId, onClose }: ImportProcessButtonsProps) => {
+export const ImportProcessButtons = ({ prepareJobId, stagedDatasetId, onClose }: ImportProcessButtonsProps) => {
     const cancelJobMutation = useCancelJob();
+    const { deleteImportEntry } = useImportDatasetToProject();
+    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
-    const handleCancelJob = (jobId: string) => {
-        cancelJobMutation.mutate({ params: { path: { job_id: jobId } } }, { onSuccess: onClose });
+    const handleCancelJob = async (jobId: string) => {
+        await cancelJobMutation.mutateAsync({ params: { path: { job_id: jobId } } });
+        await deleteFileMutation.mutateAsync(
+            { params: { path: { staged_dataset_id: stagedDatasetId } } },
+            {
+                onSuccess: () => {
+                    deleteImportEntry(stagedDatasetId);
+                    onClose();
+                },
+            }
+        );
     };
 
     return (

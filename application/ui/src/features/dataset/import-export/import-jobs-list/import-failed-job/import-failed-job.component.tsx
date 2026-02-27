@@ -3,6 +3,7 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
+import { $api } from '../../../../../api/client';
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
@@ -10,14 +11,23 @@ import { formatBytes } from '../../../../../shared/util';
 type ImportFailedJobProps = {
     size: number;
     fileName: string;
+    stagedDatasetId: string;
     job: PrepareImportDatasetJob;
 };
 
-export const ImportFailedJob = ({ job, fileName, size }: ImportFailedJobProps) => {
+export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: ImportFailedJobProps) => {
     const { deleteImportEntry } = useImportDatasetToProject();
+    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
     const handleClose = () => {
-        deleteImportEntry({ prepareJobId: job.job_id });
+        deleteFileMutation.mutateAsync(
+            { params: { path: { staged_dataset_id: stagedDatasetId } } },
+            {
+                onSuccess: () => {
+                    deleteImportEntry(stagedDatasetId);
+                },
+            }
+        );
     };
 
     return (

@@ -9,7 +9,7 @@ import { isInvalidJob } from '../util';
 
 type CancelJobConfirmationProps = {
     jobId: string;
-    onRemove: () => void;
+    onRemove: () => Promise<void>;
 };
 
 export const CancelJobConfirmation = ({ jobId, onRemove }: CancelJobConfirmationProps) => {
@@ -20,9 +20,9 @@ export const CancelJobConfirmation = ({ jobId, onRemove }: CancelJobConfirmation
         cancelMutation.mutate(
             { params: { path: { job_id: jobId } } },
             {
-                onSuccess: () => onRemove(),
-                onError: (error) => {
-                    isInvalidJob(error) && onRemove();
+                onSuccess: async () => await onRemove(),
+                onError: async (error) => {
+                    isInvalidJob(error) && (await onRemove());
                 },
                 onSettled: () => {
                     dialogState.close();
@@ -33,7 +33,13 @@ export const CancelJobConfirmation = ({ jobId, onRemove }: CancelJobConfirmation
 
     return (
         <DialogTrigger>
-            <Button variant='negative' style='outline' aria-label='cancel job dialog'>
+            <Button
+                variant='negative'
+                style='outline'
+                aria-label='cancel job dialog'
+                isDisabled={cancelMutation.isPending}
+                isPending={cancelMutation.isPending}
+            >
                 Cancel
             </Button>
             <AlertDialog

@@ -13,14 +13,14 @@ import { isNonEmptyString } from '../../../../../shared/util';
 import { isInvalidJob, isJobDone, isJobFailed } from '../../util';
 
 type UsePrepareImportStatusProps = {
-    prepareJobId: string;
+    stagedDatasetId: string;
     onError?: () => void;
-    onSuccess?: (stagedDatasetId: string) => void;
+    onSuccess?: () => void;
 };
 
-export const usePrepareImportStatus = ({ prepareJobId, onError, onSuccess }: UsePrepareImportStatusProps) => {
-    const { findImportEntry, updateImportEntryStagedId, deleteImportEntry } = useImportDatasetToProject();
-    const importLsEntry = findImportEntry({ prepareJobId });
+export const usePrepareImportStatus = ({ stagedDatasetId, onError, onSuccess }: UsePrepareImportStatusProps) => {
+    const { findImportEntry, updateImportEntryStep, deleteImportEntry } = useImportDatasetToProject();
+    const importLsEntry = findImportEntry({ stagedDatasetId });
 
     const response = $api.useQuery(
         'get',
@@ -35,15 +35,13 @@ export const usePrepareImportStatus = ({ prepareJobId, onError, onSuccess }: Use
         }
     );
 
-    const stagedDatasetId = response.data?.metadata.staged_dataset_id ?? '';
-
     useEffect(() => {
         if (response.isError && isInvalidJob(response.error)) {
             isFunction(onError) && onError();
-            deleteImportEntry({ prepareJobId: importLsEntry?.prepareJobId });
+            deleteImportEntry(stagedDatasetId);
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.error?.detail}` });
         }
-    }, [onError, deleteImportEntry, response, importLsEntry?.prepareJobId]);
+    }, [onError, deleteImportEntry, response, stagedDatasetId]);
 
     useEffect(() => {
         if (isJobFailed(response.data)) {
@@ -54,10 +52,15 @@ export const usePrepareImportStatus = ({ prepareJobId, onError, onSuccess }: Use
 
     useEffect(() => {
         if (isJobDone(response.data)) {
-            updateImportEntryStagedId(prepareJobId, stagedDatasetId);
-            isFunction(onSuccess) && onSuccess(stagedDatasetId);
+            isFunction(onSuccess) && onSuccess();
+            updateImportEntryStep(stagedDatasetId, 'labelMapping');
         }
-    }, [onSuccess, updateImportEntryStagedId, prepareJobId, stagedDatasetId, response.data]);
+    }, [onSuccess, updateImportEntryStep, response.data, stagedDatasetId]);
 
-    return { ...response, fileName: importLsEntry?.fileName, size: importLsEntry?.size ?? 0 };
+    return {
+        ...response,
+        size: importLsEntry?.size ?? 0,
+        fileName: importLsEntry?.fileName ?? '',
+        stagedDatasetId,
+    };
 };

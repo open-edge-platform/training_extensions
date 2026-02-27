@@ -25,7 +25,7 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
-                    <CancelJobConfirmation jobId={job.job_id} onRemove={() => removeLsExportId(job.job_id)} />
+                    <CancelJobConfirmation jobId={job.job_id} onRemove={async () => removeLsExportId(job.job_id)} />
                 </Flex>
 
                 <Text>Dataset is being processed in order to export it</Text>

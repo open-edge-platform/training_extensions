@@ -15,11 +15,17 @@ type ImportDatasetButtonsProps = {
 };
 
 export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: ImportDatasetButtonsProps) => {
-    const { getLastImportEntry } = useImportDatasetToProject();
-    const prepareJobId = getLastImportEntry()?.prepareJobId ?? null;
+    const { findImportEntry } = useImportDatasetToProject();
+    const { prepareJobId } = findImportEntry({ stagedDatasetId }) ?? { prepareJobId: null };
 
-    if (currentStep === 'preparing' && prepareJobId !== null) {
-        return <ImportProcessButtons prepareJobId={prepareJobId} onClose={onClose} />;
+    if (currentStep === 'preparing') {
+        return (
+            <ImportProcessButtons
+                onClose={onClose}
+                prepareJobId={String(prepareJobId)}
+                stagedDatasetId={stagedDatasetId}
+            />
+        );
     }
 
     if (currentStep === 'labelMapping') {

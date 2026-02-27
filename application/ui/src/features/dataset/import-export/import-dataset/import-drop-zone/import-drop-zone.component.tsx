@@ -18,16 +18,13 @@ import { LinkOut } from '@geti/ui/icons';
 import { $api } from '../../../../../api/client';
 import { ReactComponent as EmptyDataset } from '../../../../../assets/drop-files.svg';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
-import { ImportDatasetState } from '../util';
+import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
 
 import classes from './import-drop-zone.module.scss';
 
-type ImportDropZoneProps = {
-    onNextStep: (step: ImportDatasetState) => void;
-};
-
-export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
+export const ImportDropZone = () => {
+    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
     const { appendImportEntry } = useImportDatasetToProject();
 
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
@@ -73,12 +70,16 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
 
         appendImportEntry({
             size: file.size,
+            step: 'preparing',
             fileName: file.name,
-            stagedDatasetId: null,
             prepareJobId: prepareImportJob.job_id,
+            stagedDatasetId: stagedDataset.id,
         });
-        onNextStep('preparing');
+        setCurrentStep('preparing');
+        setCurrentStagedId(stagedDataset.id);
     };
+
+    const isPending = stagedDatasetMutation.isPending || prepareImportJobMutation.isPending;
 
     return (
         <DropZone
@@ -89,14 +90,14 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
                 <EmptyDataset />
 
                 <Content>
-                    {stagedDatasetMutation.isPending && (
+                    {isPending && (
                         <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
                             <Heading level={1}>Uploading...</Heading>
                             <Text>Dataset is being uploaded</Text>
                         </Flex>
                     )}
 
-                    {!stagedDatasetMutation.isPending && (
+                    {!isPending && (
                         <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
                             <Text>Drop the dataset .zip file here</Text>
 

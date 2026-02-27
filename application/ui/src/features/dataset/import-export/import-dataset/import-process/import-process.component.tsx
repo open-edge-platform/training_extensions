@@ -9,17 +9,13 @@ import { CircularProgress } from '../../../../../components/circular-progress/ci
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { getJobProgress, isJobPending } from '../../util';
 import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
-import { ImportDatasetState } from '../util';
 
 import classes from './import-process.module.scss';
 
-type ImportProcessProps = {
-    onNextStep: (step: ImportDatasetState) => void;
-};
-
-export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
-    const { setCurrentStagedId } = useImportDatasetDialogState();
+export const ImportProcess = () => {
+    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
     const { getLastImportEntry } = useImportDatasetToProject();
+    const { stagedDatasetId } = getLastImportEntry() ?? {};
 
     const {
         data: job,
@@ -27,11 +23,11 @@ export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
         isPending,
         fileName,
     } = usePrepareImportStatus({
-        prepareJobId: getLastImportEntry()?.prepareJobId ?? '',
-        onError: () => onNextStep('dropzone'),
-        onSuccess: (stagedDatasetId: string) => {
-            onNextStep('labelMapping');
-            setCurrentStagedId(stagedDatasetId);
+        stagedDatasetId: stagedDatasetId ?? '',
+        onError: () => setCurrentStep('dropzone'),
+        onSuccess: () => {
+            setCurrentStep('labelMapping');
+            setCurrentStagedId(stagedDatasetId ?? null);
         },
     });
 

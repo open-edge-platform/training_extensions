@@ -9,7 +9,16 @@ import { render } from 'test-utils/render';
 import { getMockedPrepareImportDatasetJob } from '../../../../../../mocks/mock-job';
 import { http } from '../../../../../api/utils';
 import { server } from '../../../../../msw-node-setup';
+import { ImportDatasetDialogStateProvider } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { ImportDropZone } from './import-drop-zone.component';
+
+const mockedAppendImportEntry = vi.fn();
+
+vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', () => ({
+    useImportDatasetToProject: () => ({
+        appendImportEntry: mockedAppendImportEntry,
+    }),
+}));
 
 describe('ImportDropZone', () => {
     const validFile = new File(['file content'], 'test.zip', { type: 'application/zip' });
@@ -22,11 +31,11 @@ describe('ImportDropZone', () => {
                     {
                         id: 'staged-dataset-123',
                         format: 'geti',
+                        size: 123,
+                        metadata: null,
                         compressed: true,
                         ready_for_export: false,
                         ready_for_import: true,
-                        size: 123,
-                        metadata: null,
                     },
                     { status: 201 }
                 );
@@ -36,14 +45,19 @@ describe('ImportDropZone', () => {
             })
         );
 
-        const mockedNextStep = vi.fn();
-
-        render(<ImportDropZone onNextStep={mockedNextStep} />);
-        return mockedNextStep;
+        render(
+            <ImportDatasetDialogStateProvider>
+                <ImportDropZone />
+            </ImportDatasetDialogStateProvider>
+        );
     };
 
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('invalid file extension', async () => {
-        const mockedNextStep = renderApp();
+        renderApp();
 
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
@@ -52,19 +66,19 @@ describe('ImportDropZone', () => {
         expect(screen.getByText(/Unsupported file format. Please upload a valid .zip file./i)).toBeVisible();
 
         await waitFor(() => {
-            expect(mockedNextStep).not.toHaveBeenCalled();
+            expect(mockedAppendImportEntry).not.toHaveBeenCalled();
         });
     });
 
     it('valid file extension', async () => {
-        const mockedNextStep = renderApp();
+        renderApp();
 
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
         await userEvent.upload(uploadFileElement, [validFile]);
 
         await waitFor(() => {
-            expect(mockedNextStep).toHaveBeenCalledWith('preparing');
+            expect(mockedAppendImportEntry).toHaveBeenCalledWith(expect.objectContaining({ step: 'preparing' }));
         });
     });
 });

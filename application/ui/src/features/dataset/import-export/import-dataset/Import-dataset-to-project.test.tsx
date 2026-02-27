@@ -2,41 +2,51 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { render } from 'test-utils/render';
 
-import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { ImportDataset } from './Import-dataset-to-project.component';
+import { useImportDatasetToProject } from '../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import {
+    ImportDatasetDialogStateProvider,
+    useImportDatasetDialogState,
+} from '../../providers/export-import-dataset-dialog-provider.component';
+import { ImportDatasetToProject } from './Import-dataset-to-project.component';
 
-vi.mock('../../../../hooks/localStorage/use-prepare-import-dataset.hook');
+vi.mock('../../../../hooks/localStorage/use-import-dataset-to-project.hook');
 
-const mockDialogState = {
-    isOpen: true,
-    open: vi.fn(),
-    close: vi.fn(),
-    toggle: vi.fn(),
-    setOpen: vi.fn(),
-};
-
-describe('ImportDataset', () => {
+describe('ImportDatasetToProject', () => {
     const renderApp = (data: null | { id: string; fileName: string }) => {
-        vi.mocked(usePrepareImportDataset).mockReturnValue({
-            getLsPreparingImport: vi.fn().mockReturnValue(data),
-            addLsPreparingImport: vi.fn(),
-            removeLsPreparingImport: vi.fn(),
+        vi.mocked(useImportDatasetToProject).mockReturnValue({
+            findImportEntry: vi.fn().mockReturnValue(data),
+            getAllImportEntries: vi.fn(),
+            appendImportEntry: vi.fn(),
+            deleteImportEntry: vi.fn(),
+            updateImportEntryStep: vi.fn(),
+            getLastImportEntry: vi.fn(),
         });
 
-        render(<ImportDataset dialogState={{ ...mockDialogState, isOpen: true }} />);
+        const App = () => {
+            const { datasetImportDialogState } = useImportDatasetDialogState();
+
+            return (
+                <>
+                    <button onClick={datasetImportDialogState.open}>Open Import Dialog</button>
+                    <ImportDatasetToProject />
+                </>
+            );
+        };
+
+        render(
+            <ImportDatasetDialogStateProvider>
+                <App />
+            </ImportDatasetDialogStateProvider>
+        );
     };
 
-    it('renders ImportDropZone component in initial state', () => {
+    it('renders ImportDropZone component in initial state', async () => {
         renderApp(null);
 
-        expect(screen.getByText('Drop the dataset .zip file here')).toBeVisible();
-    });
-
-    it('renders ImportProcess component when there is a preparing import in localStorage', () => {
-        renderApp({ id: 'test-job-id', fileName: 'test-dataset.zip' });
-
-        expect(screen.getByText('Prepare dataset import to existing project')).toBeVisible();
+        userEvent.click(screen.getByRole('button', { name: /open import dialog/i }));
+        expect(await screen.findByText('Drop the dataset .zip file here')).toBeVisible();
     });
 });

@@ -11,6 +11,7 @@ type DataValue = {
     fileName: string;
     prepareJobId: string | null;
     stagedDatasetId: string | null;
+    step: 'preparing' | 'labelMapping';
 };
 
 const IMPORT_DATASET_TO_PROJECT_KEY = (projectId: string) => `import-dataset-to-project-${projectId}`;
@@ -40,22 +41,17 @@ export const useImportDatasetToProject = () => {
         return setLsImportDatasetToProject((prev) => [...(prev ?? []), newEntry]);
     };
 
-    const deleteImportEntry = (item: Partial<DataValue>): void => {
+    const deleteImportEntry = (stagedDatasetId: string): void => {
         return setLsImportDatasetToProject(
-            (prev) =>
-                prev?.filter(
-                    ({ prepareJobId, stagedDatasetId }) =>
-                        item.prepareJobId !== prepareJobId && item.stagedDatasetId !== stagedDatasetId
-                ) ?? null
+            (prev) => prev?.filter((item) => item.stagedDatasetId !== stagedDatasetId) ?? null
         );
     };
 
-    const updateImportEntryStagedId = (prepareJobId: string, stagedDatasetId: string): void => {
+    const updateImportEntryStep = (stagedDatasetId: string, newStep: 'preparing' | 'labelMapping'): void => {
         return setLsImportDatasetToProject(
             (prev) =>
-                prev?.map((item) =>
-                    item.prepareJobId === prepareJobId ? { ...item, prepareJobId: null, stagedDatasetId } : item
-                ) ?? null
+                prev?.map((item) => (item.stagedDatasetId === stagedDatasetId ? { ...item, step: newStep } : item)) ??
+                null
         );
     };
 
@@ -68,7 +64,7 @@ export const useImportDatasetToProject = () => {
         appendImportEntry,
         findImportEntry,
         deleteImportEntry,
-        updateImportEntryStagedId,
+        updateImportEntryStep,
         getLastImportEntry,
     };
 };

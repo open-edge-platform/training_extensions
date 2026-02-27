@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Flex, Text, View } from '@geti/ui';
+import { isNil } from 'lodash-es';
 
 import { $api, API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
@@ -23,12 +24,8 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
     const removeStagedDatasetMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
     const handleClose = () => {
-        removeStagedDatasetMutation.mutate(
-            { params: { path: { staged_dataset_id: job.metadata.dataset_id } } },
-            {
-                onSuccess: () => removeLsExportId(job.job_id),
-            }
-        );
+        removeStagedDatasetMutation.mutate({ params: { path: { staged_dataset_id: job.metadata.dataset_id } } });
+        removeLsExportId(job.job_id);
     };
 
     const handleDownload = () => {
@@ -58,7 +55,11 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
                         aria-label='download dataset'
                         onPress={handleDownload}
                         isPending={stageDatasetResponse.isFetching}
-                        isDisabled={stageDatasetResponse.isFetching || removeStagedDatasetMutation.isPending}
+                        isDisabled={
+                            stageDatasetResponse.isFetching ||
+                            removeStagedDatasetMutation.isPending ||
+                            isNil(job.metadata.dataset_id)
+                        }
                     >
                         Download
                     </Button>

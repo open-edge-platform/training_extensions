@@ -3,6 +3,7 @@
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
 
+import { $api } from '../../../../../api/client';
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
@@ -11,15 +12,24 @@ import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-
 import { getJobProgress, isJobRunning } from '../../util';
 
 type ImportActiveJobProps = {
+    job: PrepareImportDatasetJob;
     size: number;
     fileName: string;
-    job: PrepareImportDatasetJob;
+    stagedDatasetId: string;
 };
 
-export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) => {
+export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId }: ImportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
     const { deleteImportEntry } = useImportDatasetToProject();
+    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+
+    const handleRemove = () => {
+        return deleteFileMutation.mutateAsync(
+            { params: { path: { staged_dataset_id: stagedDatasetId } } },
+            { onSuccess: () => deleteImportEntry(stagedDatasetId) }
+        );
+    };
 
     return (
         <BottomProgressBar progress={progress}>
@@ -29,10 +39,7 @@ export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) =
                         Import dataset - {fileName} - {formatBytes(size)}
                     </Text>
 
-                    <CancelJobConfirmation
-                        jobId={job.job_id}
-                        onRemove={() => deleteImportEntry({ prepareJobId: job.job_id })}
-                    />
+                    <CancelJobConfirmation jobId={job.job_id} onRemove={handleRemove} />
                 </Flex>
 
                 <Text>{fileName} file is being processed for import</Text>

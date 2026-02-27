@@ -13,13 +13,11 @@ import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { server } from '../../../../../msw-node-setup';
 import { ImportFailedJob } from './import-failed-job.component';
 
-const mockedRemoveLsPreparingImport = vi.fn();
+const mockedDeleteImportEntry = vi.fn();
 
-vi.mock('../../../../../hooks/localStorage/use-prepare-import-dataset.hook', () => ({
-    usePrepareImportDataset: () => ({
-        removeLsPreparingImport: mockedRemoveLsPreparingImport,
-        getLsPreparingImport: vi.fn(() => null),
-        addLsPreparingImport: vi.fn(),
+vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', () => ({
+    useImportDatasetToProject: () => ({
+        deleteImportEntry: mockedDeleteImportEntry,
     }),
 }));
 
@@ -28,10 +26,20 @@ describe('ImportFailedJob', () => {
         server.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(getMockedProject({ id: 'project-123' }));
+            }),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
+                return HttpResponse.json(null, { status: 200 });
             })
         );
 
-        render(<ImportFailedJob job={job} fileName='dataset.zip' size={1024} />);
+        render(
+            <ImportFailedJob
+                job={job}
+                size={1024}
+                fileName='dataset.zip'
+                stagedDatasetId={job.metadata.staged_dataset_id}
+            />
+        );
     };
 
     beforeEach(() => {
@@ -44,7 +52,7 @@ describe('ImportFailedJob', () => {
         const closeButton = await screen.findByRole('button', { name: 'close import dataset status' });
         await userEvent.click(closeButton);
 
-        expect(mockedRemoveLsPreparingImport).toHaveBeenCalledTimes(1);
+        expect(mockedDeleteImportEntry).toHaveBeenCalledTimes(1);
     });
 
     it('displays job message and job error', async () => {

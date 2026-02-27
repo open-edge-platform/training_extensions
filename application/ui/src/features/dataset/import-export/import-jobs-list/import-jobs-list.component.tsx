@@ -5,7 +5,6 @@ import { Flex } from '@geti/ui';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 import { partition } from 'lodash-es';
 
-import { isNonEmptyString } from '../../../../shared/util';
 import { PrepareImportDataset } from './prepare-import-dataset.component';
 import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
 
@@ -13,8 +12,8 @@ export const ImportJobsList = () => {
     const { getAllImportEntries } = useImportDatasetToProject();
     const importEntries = getAllImportEntries();
 
-    const [preparingImports, otherItems] = partition(importEntries, (item) => isNonEmptyString(item.prepareJobId));
-    const stagedImports = otherItems.filter((item) => isNonEmptyString(item.stagedDatasetId));
+    const [preparingImports, otherItems] = partition(importEntries, ({ step }) => step === 'preparing');
+    const stagedImports = otherItems.filter(({ step }) => step === 'labelMapping');
 
     return (
         <Flex
@@ -24,13 +23,13 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {preparingImports.map(({ prepareJobId }) => (
-                <PrepareImportDataset key={prepareJobId} prepareJobId={String(prepareJobId)} />
+            {preparingImports.reverse().map(({ stagedDatasetId }) => (
+                <PrepareImportDataset key={`prepare-${stagedDatasetId}`} stagedDatasetId={String(stagedDatasetId)} />
             ))}
 
-            {stagedImports.map(({ fileName, stagedDatasetId }) => (
+            {stagedImports.reverse().map(({ fileName, stagedDatasetId }) => (
                 <StagedImportDataset
-                    key={stagedDatasetId}
+                    key={`staged-${stagedDatasetId}`}
                     fileName={String(fileName)}
                     stagedDatasetId={String(stagedDatasetId)}
                 />

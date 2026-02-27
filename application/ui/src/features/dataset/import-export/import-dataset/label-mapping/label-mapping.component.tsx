@@ -9,17 +9,15 @@ import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
 import { useProject } from '../../../../../hooks/api/project.hook';
 import { isNonEmptyString } from '../../../../../shared/util';
-import { ImportDatasetState } from '../util';
 import { IMPORT_DATASET_FORM_ID } from './util';
 
 type LabelMappingProps = {
     stagedDatasetId: string;
-    onNextStep: (step: ImportDatasetState) => void;
 };
 
 type LabelsMapping = Record<string, string>;
 
-export const LabelMapping = ({ onNextStep: _onNextStep, stagedDatasetId }: LabelMappingProps) => {
+export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const { data: selectedProject } = useProject();
 
     const { data } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
@@ -30,6 +28,10 @@ export const LabelMapping = ({ onNextStep: _onNextStep, stagedDatasetId }: Label
     const datasetLabels = data?.metadata?.labels ?? [];
     const projectLabels = selectedProject?.task?.labels ?? [];
     const totalDatasetItems = data?.metadata?.num_items ?? 0;
+    /* 
+        Todo: update with totalAnnotatedImages 
+        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
+    */
     const totalAnnotatedItems = data?.metadata?.num_annotations ?? 0;
 
     const [_labelsMapping, submitAction] = useActionState<unknown, FormData>(async (_prevState, formData) => {
@@ -41,9 +43,10 @@ export const LabelMapping = ({ onNextStep: _onNextStep, stagedDatasetId }: Label
             }
             return acc;
         }, {});
-        //Todo: implemente once the backend support "import_dataset_to_project" jobs
+        /* 
+         Todo: to implement once the backend support "import_dataset_to_project" jobs
 
-        /*  const response = await importDatasetJobMutation.mutateAsync({
+         const response = await importDatasetJobMutation.mutateAsync({
             body: {
                 job_type: 'import_dataset_to_project',
                 project_id: String(selectedProject?.id),

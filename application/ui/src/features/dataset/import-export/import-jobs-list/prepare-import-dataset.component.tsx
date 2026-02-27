@@ -9,10 +9,10 @@ import { ImportActiveJob } from './import-active-job/import-active-job.component
 import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
 
 interface PrepareImportDatasetProps {
-    prepareJobId: string;
+    stagedDatasetId: string;
 }
-export const PrepareImportDataset = ({ prepareJobId }: PrepareImportDatasetProps) => {
-    const { data: job, fileName, size } = usePrepareImportStatus({ prepareJobId });
+export const PrepareImportDataset = ({ stagedDatasetId }: PrepareImportDatasetProps) => {
+    const { data: job, fileName, size } = usePrepareImportStatus({ stagedDatasetId, onSuccess: () => {} });
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 
@@ -24,8 +24,13 @@ export const PrepareImportDataset = ({ prepareJobId }: PrepareImportDatasetProps
             backgroundColor='gray-75'
             borderWidth='thin'
         >
-            {isJobFailed(job) && <ImportFailedJob job={job} fileName={String(fileName)} size={size} />}
-            {isRunningOrPending && <ImportActiveJob job={job} fileName={String(fileName)} size={size} />}
+            {isJobFailed(job) && (
+                <ImportFailedJob job={job} fileName={fileName} size={size} stagedDatasetId={stagedDatasetId} />
+            )}
+
+            {isRunningOrPending && (
+                <ImportActiveJob job={job} fileName={fileName} size={size} stagedDatasetId={stagedDatasetId} />
+            )}
         </View>
     );
 };
