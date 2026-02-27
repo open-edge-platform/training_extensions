@@ -60,8 +60,7 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
             frame_count: videoFrame.frame_count,
             fps: videoFrame.fps,
             duration: videoFrame.duration,
-            // TODO: This should be returned by the backend, atm it's mocked to be 60 fps
-            frame_stride: 60,
+            frame_stride: videoFrame.fps,
         };
     }, [currentFrameIndex, videoFrame]);
 

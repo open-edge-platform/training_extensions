@@ -26,7 +26,7 @@ const mockedTrainingJob = getMockedJob({
 });
 
 test.describe('Jobs - Current Training', () => {
-    test.beforeEach(({ network }) => {
+    test('displays current training section when a job is running', async ({ jobsPage, network }) => {
         network.use(
             http.get('/api/jobs', () => {
                 return HttpResponse.json([mockedTrainingJob]);
@@ -35,7 +35,6 @@ test.describe('Jobs - Current Training', () => {
                 return HttpResponse.json(null, { status: 204 });
             })
         );
-    });
 
     test('displays current training section with architecture, tags and logs button for a running job', async ({
         jobsPage,
@@ -45,35 +44,48 @@ test.describe('Jobs - Current Training', () => {
         await expect(jobsPage.getCurrentTrainingSection()).toBeVisible();
         await expect(jobsPage.getTrainingTag()).toBeVisible();
         await expect(jobsPage.getStatusTag()).toBeVisible();
+    });
+
+    test('shows model architecture in training row', async ({ jobsPage, network }) => {
+        network.use(
+            http.get('/api/jobs', () => {
+                return HttpResponse.json([mockedTrainingJob]);
+            }),
+            http.post('/api/jobs/{job_id}:cancel', () => {
+                return HttpResponse.json(null, { status: 204 });
+            })
+        );
+
+        await jobsPage.goto();
+
         await expect(jobsPage.getArchitectureText('Custom_Object_Detection_Gen3_ATSS')).toBeVisible();
         await expect(jobsPage.getViewLogsButton()).toBeVisible();
     });
 
     test('can cancel a running training job', async ({ jobsPage, network }) => {
+        let hasCancelledTraining = false;
+
+        network.use(
+            http.get('/api/jobs', () => {
+                return HttpResponse.json(hasCancelledTraining ? [] : [mockedTrainingJob]);
+            }),
+            http.post('/api/jobs/{job_id}:cancel', () => {
+                hasCancelledTraining = true;
+                return HttpResponse.json(null, { status: 204 });
+            })
+        );
+
         await jobsPage.goto();
 
         await expect(jobsPage.getCurrentTrainingSection()).toBeVisible();
-
-        // After cancel, return empty jobs list
-        network.use(
-            http.get('/api/jobs', () => {
-                return HttpResponse.json([]);
-            })
-        );
 
         await jobsPage.cancelTrainingJob();
 
         await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
     });
 
-    test('hides current training section when no jobs are running', async ({ jobsPage, network }) => {
-        network.use(
-            http.get('/api/jobs', () => {
-                return HttpResponse.json([]);
-            })
-        );
-
-        await jobsPage.goto();
+    test('hides current training section when no jobs are running', async ({ jobsPage }) => {
+        await jobsPage.goto('id-2');
 
         await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
     });

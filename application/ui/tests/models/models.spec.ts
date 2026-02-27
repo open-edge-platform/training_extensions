@@ -101,6 +101,20 @@ test.describe('Models', () => {
                         accuracy: mockedModelArchitectures[2].id,
                     },
                 });
+            }),
+            http.get('/api/system/devices/training', () => {
+                return HttpResponse.json([{ type: 'cpu', name: 'CPU' }]);
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    items: [],
+                    pagination: {
+                        total: 0,
+                        count: 0,
+                        limit: 5,
+                        offset: 0,
+                    },
+                });
             })
         );
     });

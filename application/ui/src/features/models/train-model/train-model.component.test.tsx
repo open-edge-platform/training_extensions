@@ -24,6 +24,9 @@ describe('TrainModel', () => {
             http.get('/api/projects/{project_id}/dataset_revisions', () => {
                 return HttpResponse.json([]);
             }),
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json([]);
+            }),
             http.get('/api/model_architectures', () => {
                 return HttpResponse.json({
                     model_architectures: [],

@@ -6,6 +6,7 @@ import { CSSProperties, Fragment, useMemo } from 'react';
 import { Divider, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import type { Label } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
@@ -42,6 +43,21 @@ type LabelsProps = {
     isMultiLabel?: boolean;
 };
 
+type LabelHotkeyBindingProps = {
+    label: Label;
+    onTrigger: (label: Label) => void;
+};
+
+const LabelHotkeyBinding = ({ label, onTrigger }: LabelHotkeyBindingProps) => {
+    const hotkey = label.hotkey ?? '';
+
+    useHotkeys(hotkey ?? '', () => onTrigger(label), [label, onTrigger], {
+        enabled: !!label.hotkey,
+    });
+
+    return null;
+};
+
 export const Labels = ({ isClassification = false, isMultiLabel = false }: LabelsProps) => {
     const { labels, hasLabels, toggleLabelOnAnnotations, isLabelActive, editableLabels } = useLabels({
         isClassification,
@@ -69,6 +85,10 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
+            {editableLabels.map((label) => (
+                <LabelHotkeyBinding key={`hotkey-${label.id}`} label={label} onTrigger={toggleLabelOnAnnotations} />
+            ))}
+
             {hasLabels && (
                 <div aria-label={'Labels'} className={classes.labelsContainer}>
                     {visibleLabels.map((label) => (
