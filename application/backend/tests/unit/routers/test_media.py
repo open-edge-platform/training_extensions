@@ -609,20 +609,14 @@ class TestMediaEndpoints:
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
 
     @pytest.mark.parametrize(
-        "media, suffix, mime_type",
+        "media, suffix",
         [
-            (MagicMock(spec=Image, id=uuid4(), format=ImageFormat.JPG, type=MediaType.IMAGE), ".jpg", "image/jpeg"),
-            (MagicMock(spec=Video, id=uuid4(), format=VideoFormat.MP4, type=MediaType.VIDEO), ".mp4", "video/mp4"),
-            (
-                MagicMock(spec=VideoFrame, id=uuid4(), format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME),
-                ".jpg",
-                "image/jpeg",
-            ),
+            (MagicMock(spec=Image, id=uuid4(), format=ImageFormat.JPG, type=MediaType.IMAGE), ".jpg"),
+            (MagicMock(spec=Video, id=uuid4(), format=VideoFormat.MP4, type=MediaType.VIDEO), ".mp4"),
+            (MagicMock(spec=VideoFrame, id=uuid4(), format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME), ".jpg"),
         ],
     )
-    def test_get_media_thumbnail_success(
-        self, fxt_get_project, fxt_media_service, fxt_client, media, suffix, mime_type
-    ):
+    def test_get_media_thumbnail_success(self, fxt_get_project, fxt_media_service, fxt_client, media, suffix):
         # Create a temporary JPEG file to act as the thumbnail
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
             thumbnail_path = Path(tmp_file.name)
@@ -636,7 +630,7 @@ class TestMediaEndpoints:
             response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/media/{str(media.id)}/thumbnail")
 
             assert response.status_code == status.HTTP_200_OK
-            assert response.headers["content-type"] == mime_type
+            assert response.headers["content-type"] == "image/jpeg"
             with open(thumbnail_path, "rb") as f:
                 assert response.content == f.read()
             fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
