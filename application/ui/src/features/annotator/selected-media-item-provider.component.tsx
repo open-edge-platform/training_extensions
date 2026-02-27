@@ -17,6 +17,7 @@ type SelectedMediaItemContextProps = {
     roi: RegionOfInterest;
     setMediaItem: (item: Media) => void;
     image: ImageData;
+    isImageReady: boolean;
 };
 
 const SelectedMediaItemContext = createContext<SelectedMediaItemContextProps | null>(null);
@@ -65,12 +66,15 @@ export const SelectedMediaItemProvider = ({
 }: SelectedMediaItemProviderProps) => {
     const [mediaItem, setMediaItem] = useMediaItem(initialMediaItem);
 
-    const { data: image = getImageData(new Image()) } = useLoadImageQuery(mediaItem);
+    const { data: image = getImageData(new Image()), isSuccess, isPlaceholderData } = useLoadImageQuery(mediaItem);
+    const isImageReady = isSuccess && !isPlaceholderData;
 
     const roi: RegionOfInterest = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     return (
-        <SelectedMediaItemContext value={{ mediaItem, roi, setMediaItem, image }}>{children}</SelectedMediaItemContext>
+        <SelectedMediaItemContext value={{ mediaItem, roi, setMediaItem, image, isImageReady }}>
+            {children}
+        </SelectedMediaItemContext>
     );
 };
 
