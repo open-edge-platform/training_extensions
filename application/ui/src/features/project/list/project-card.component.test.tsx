@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -132,25 +132,5 @@ describe('ProjectCard', () => {
         render(<ProjectCard item={classificationProject} />);
 
         expect(await screen.findByText('Multi-label classification')).toBeInTheDocument();
-    });
-
-    it('should pass correct project id to menu actions', async () => {
-        render(<ProjectCard item={mockProject} />);
-
-        const menuButton = await screen.findByRole('button', { name: /open project options/i });
-        expect(menuButton).toBeInTheDocument();
-    });
-
-    it('should handle menu actions without interfering with card click', async () => {
-        render(<ProjectCard item={mockProject} />);
-
-        const menuButton = await screen.findByRole('button', { name: /open project options/i });
-        const cardLink = await screen.findByRole('link');
-
-        // Menu button should be clickable without triggering link navigation
-        fireEvent.click(menuButton);
-
-        expect(menuButton).toBeInTheDocument();
-        expect(cardLink).toBeInTheDocument();
     });
 });

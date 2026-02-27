@@ -27,9 +27,6 @@ test('[E2E] Existing project', async ({ page }) => {
         await page.getByLabel('Start stream').click();
 
         await expect(page.getByLabel('Connected')).toBeVisible({ timeout: 120000 });
-
-        // Wait a bit for the stream to capture some data
-        await page.waitForTimeout(5000);
     });
 
     await test.step('Confirm data was collected', async () => {
@@ -40,7 +37,6 @@ test('[E2E] Existing project', async ({ page }) => {
         const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
         const options = listbox.getByRole('option');
 
-        const count = await options.count();
-        expect(count).toBeGreaterThanOrEqual(1);
+        await expect.poll(async () => options.count(), { timeout: 30000 }).toBeGreaterThanOrEqual(1);
     });
 });
