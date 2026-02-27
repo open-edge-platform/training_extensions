@@ -2,13 +2,12 @@
 #  SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Literal, Union
+from typing import Generic, Literal, TypeVar, Union, cast
 
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
-from pydantic_core import PydanticUndefined
 
-from app.models.training_configuration import Scalar, TrainingConfiguration
+from app.models.training_configuration import ParamValueType, TrainingConfiguration
 
 
 class ConfigurableParameterViewElementType(StrEnum):
@@ -16,7 +15,10 @@ class ConfigurableParameterViewElementType(StrEnum):
     PARAMETER_GROUP = "parameter_group"
 
 
-class ConfigurableParameterView(BaseModel):
+ParameterT = TypeVar("ParameterT", bool, int, str, float, tuple[float, float])
+
+
+class ConfigurableParameterView(BaseModel, Generic[ParameterT]):
     """
     A single configurable parameter that can be customized by the user. Includes metadata such as type, default value,
     and constraints to guide user input and validation.
@@ -26,14 +28,18 @@ class ConfigurableParameterView(BaseModel):
     key: str = Field(title="Key to identify the parameter")
     name: str = Field(title="User-friendly name of the parameter")
     description: str = Field(title="Extended description of the parameter", default="")
-    value: bool | int | str | float | tuple[float, float] | None = Field(title="Actual value of the parameter")
-    default_value: bool | int | str | float | tuple[float, float] | None = Field(title="Default value of the parameter")
-    value_type: Literal["bool", "int", "float", "str", "float_range"] = Field(title="Type of the parameter value")
+    value: ParameterT | None = Field(title="Actual value of the parameter")
+    default_value: ParameterT | None = Field(title="Default value of the parameter")
+    value_type: Literal["bool", "str", "int", "float", "float_range"] = Field(title="Type of the parameter value")
     min_value: int | float | None = Field(
         default=None, title="Minimum value for numeric parameters. None if unbounded or not applicable"
     )
     max_value: int | float | None = Field(
         default=None, title="Maximum value for numeric parameters. None if unbounded or not applicable"
+    )
+    allowed_values: list[ParameterT] | None = Field(
+        default=None,
+        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
     )
 
 
@@ -121,17 +127,16 @@ class TrainingConfigurationView(BaseModel):
 
     @classmethod
     def _field_to_configurable_parameter(
-        cls, key: str, value: Scalar | None, field_info: FieldInfo
+        cls,
+        key: str,
+        value: ParamValueType | None,
+        default_value: ParamValueType | None,
+        field_info: FieldInfo,
+        allowed_values: list | None = None,
     ) -> ConfigurableParameterView:
         """Convert a single field to ConfigurableParameterView."""
         min_value, max_value = cls._extract_constraints(field_info)
         value_type = cls._get_value_type(field_info)
-
-        # Handle PydanticUndefined default values
-        if field_info.default is PydanticUndefined:
-            default_value = value
-        else:
-            default_value = field_info.default
 
         if field_info.title is None:
             raise ValueError(
@@ -148,11 +153,31 @@ class TrainingConfigurationView(BaseModel):
             value_type=value_type,
             min_value=min_value,
             max_value=max_value,
+            allowed_values=allowed_values,
         )
 
     @classmethod
+    def _resolve_allowed_values(cls, model: BaseModel, field_info: FieldInfo) -> list | None:
+        """Resolve allowed_values for a field from json_schema_extra or StrEnum annotation."""
+        allowed_values = None
+
+        # Check json_schema_extra for allowed_values_from
+        if isinstance(field_info.json_schema_extra, dict):
+            allowed_values_from = cast(str | None, field_info.json_schema_extra.get("allowed_values_from"))
+            if allowed_values_from is not None:
+                allowed_values = getattr(model, allowed_values_from, None)
+
+        # Check if annotation is a StrEnum subclass
+        if allowed_values is None:
+            annotation = field_info.annotation
+            if isinstance(annotation, type) and issubclass(annotation, StrEnum):
+                allowed_values = [member.value for member in annotation]
+
+        return allowed_values
+
+    @classmethod
     def _model_to_parameter_group(
-        cls, key: str, model: BaseModel, field_info: FieldInfo
+        cls, key: str, model: BaseModel, default_model: BaseModel | None, field_info: FieldInfo
     ) -> ConfigurableParameterGroupView:
         """Convert a Pydantic model to a ConfigurableParameterGroupView with nested parameters."""
         parameters: list[ConfigurableParameterView | ConfigurableParameterGroupView] = []
@@ -172,13 +197,27 @@ class TrainingConfigurationView(BaseModel):
 
             if isinstance(value, BaseModel):
                 # Nested model -> create a nested parameter group
-                nested_group = cls._model_to_parameter_group(field_name, value, child_field_info)
+                default_child = getattr(default_model, field_name) if default_model is not None else None
+                nested_group = cls._model_to_parameter_group(field_name, value, default_child, child_field_info)
                 # Only add the group if it has parameters (not empty due to null filtering)
                 if nested_group.parameters:
                     parameters.append(nested_group)
             else:
+                # Resolve allowed_values from another field or StrEnum annotation
+                allowed_values = cls._resolve_allowed_values(model, child_field_info)
+
+                # Get the default value from the default model, falling back to field_info.default
+                if default_model is not None:
+                    default_value = getattr(default_model, field_name)
+                else:
+                    default_value = child_field_info.default
+
                 # Scalar value -> create a parameter
-                parameters.append(cls._field_to_configurable_parameter(field_name, value, child_field_info))
+                parameters.append(
+                    cls._field_to_configurable_parameter(
+                        field_name, value, default_value, child_field_info, allowed_values
+                    )
+                )
 
         if field_info.title is None:
             raise ValueError(
@@ -230,13 +269,21 @@ class TrainingConfigurationView(BaseModel):
         )
 
     @classmethod
-    def from_training_configuration(cls, config: TrainingConfiguration) -> "TrainingConfigurationView":
-        """Convert TrainingConfiguration to TrainingConfigurationView."""
+    def from_training_configuration(
+        cls, config: TrainingConfiguration, default_config: TrainingConfiguration
+    ) -> "TrainingConfigurationView":
+        """Convert TrainingConfiguration to TrainingConfigurationView.
+
+        Args:
+            config: The current training configuration with actual parameter values.
+            default_config: The default training configuration, used to populate default_value fields.
+        """
 
         # Convert task-level dataset_preparation to a parameter group
         task_dataset_prep = cls._model_to_parameter_group(
             "dataset_preparation",
             config.task_level_parameters.dataset_preparation,
+            default_config.task_level_parameters.dataset_preparation,
             type(config.task_level_parameters).model_fields["dataset_preparation"],
         )
 
@@ -244,6 +291,7 @@ class TrainingConfigurationView(BaseModel):
         model_dataset_prep = cls._model_to_parameter_group(
             "dataset_preparation",
             config.algo_level_parameters.dataset_preparation,
+            default_config.algo_level_parameters.dataset_preparation,
             type(config.algo_level_parameters).model_fields["dataset_preparation"],
         )
 
@@ -254,8 +302,17 @@ class TrainingConfigurationView(BaseModel):
         training_group = cls._model_to_parameter_group(
             "training",
             config.algo_level_parameters.training,
+            default_config.algo_level_parameters.training,
             type(config.algo_level_parameters).model_fields["training"],
         )
 
+        # Convert evaluation parameters to a parameter group
+        evaluation_group = cls._model_to_parameter_group(
+            "evaluation",
+            config.task_level_parameters.evaluation,
+            default_config.task_level_parameters.evaluation,
+            type(config.task_level_parameters).model_fields["evaluation"],
+        )
+
         # Return with direct list of parameter groups
-        return cls(parameters=[merged_dataset_prep, training_group])
+        return cls(parameters=[merged_dataset_prep, training_group, evaluation_group])

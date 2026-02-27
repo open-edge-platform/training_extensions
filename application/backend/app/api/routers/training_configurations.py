@@ -32,7 +32,10 @@ def get_training_configuration_by_model_architecture(
         training_config = training_configuration_service.get_by_model_architecture(
             project_id=project_id, model_architecture_id=model_architecture_id
         )
-        return TrainingConfigurationView.from_training_configuration(training_config)
+        default_config = TrainingConfigurationService.get_default_by_model_architecture(
+            model_architecture_id=model_architecture_id
+        )
+        return TrainingConfigurationView.from_training_configuration(training_config, default_config)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except ManifestNotFoundException as e:
@@ -61,7 +64,13 @@ def update_training_configuration_for_model_architecture(
             project_id=project_id, model_architecture_id=model_architecture_id
         )
         training_config.apply_updates(training_config_update)
-        return TrainingConfigurationView.from_training_configuration(training_config)
+        training_configuration_service.update(
+            project_id=project_id, model_architecture_id=model_architecture_id, training_configuration=training_config
+        )
+        default_config = TrainingConfigurationService.get_default_by_model_architecture(
+            model_architecture_id=model_architecture_id
+        )
+        return TrainingConfigurationView.from_training_configuration(training_config, default_config)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except ManifestNotFoundException as e:

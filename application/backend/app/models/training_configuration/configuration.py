@@ -7,7 +7,7 @@ from .dataset_preparation import AlgoLevelDatasetPreparationParameters, TaskLeve
 from .evaluation import TaskLevelEvaluationParameters
 from .training import AlgoLevelTrainingParameters
 
-type Scalar = bool | bytearray | bytes | float | int | str
+type ParamValueType = bool | str | float | int | tuple[float, float]
 
 
 class TaskLevelParameters(BaseModel):
@@ -74,20 +74,21 @@ class TrainingConfiguration(BaseModel):
         # Check if top_section exists in task_level_parameters
         if hasattr(task_level, top_section):
             task_section = getattr(task_level, top_section)
-            resolved = self._try_resolve_path(task_section, remaining_parts)
+            resolved = TrainingConfiguration._try_resolve_path(task_section, remaining_parts)
             if resolved is not None:
                 return resolved
 
         # Check if top_section exists in model_level_parameters
         if hasattr(algo_level, top_section):
             model_section = getattr(algo_level, top_section)
-            resolved = self._try_resolve_path(model_section, remaining_parts)
+            resolved = TrainingConfiguration._try_resolve_path(model_section, remaining_parts)
             if resolved is not None:
                 return resolved
 
         raise ValueError(f"Cannot resolve path '{path}': path not found in configuration")
 
-    def _try_resolve_path(self, obj: BaseModel, path_parts: list[str]) -> tuple[BaseModel, str] | None:
+    @staticmethod
+    def _try_resolve_path(obj: BaseModel, path_parts: list[str]) -> tuple[BaseModel, str] | None:
         """
         Try to resolve remaining path parts starting from obj.
 
@@ -116,7 +117,7 @@ class TrainingConfiguration(BaseModel):
 
         return current, final_field
 
-    def apply_updates(self, updates: dict[str, Scalar]) -> "TrainingConfiguration":
+    def apply_updates(self, updates: dict[str, ParamValueType]) -> "TrainingConfiguration":
         """
         Apply a dictionary of updates to this TrainingConfiguration instance.
 
@@ -130,7 +131,7 @@ class TrainingConfiguration(BaseModel):
             ValueError: If any key in updates cannot be resolved
         """
         # First, validate all paths exist before applying any updates
-        resolved_updates: list[tuple[BaseModel, str, Scalar]] = []
+        resolved_updates: list[tuple[BaseModel, str, ParamValueType]] = []
         for path, value in updates.items():
             parent_obj, field_name = self._resolve_parameter_path(path)
             resolved_updates.append((parent_obj, field_name, value))

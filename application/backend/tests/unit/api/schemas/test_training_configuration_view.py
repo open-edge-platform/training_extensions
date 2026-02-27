@@ -45,7 +45,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                         contrast=(0.85, 1.15),
                         saturation=(0.8, 1.2),
                         hue=(-0.05, 0.05),
-                        probability=0.5,
+                        probability=0.6,
                     )
                 )
             ),
@@ -55,6 +55,36 @@ def fxt_training_configuration() -> TrainingConfiguration:
                 learning_rate=0.001,
                 input_size_width=256,
                 input_size_height=256,
+                allowed_values_input_size=[128, 256, 512],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def fxt_default_training_configuration() -> TrainingConfiguration:
+    """Create a default training configuration with default values."""
+    return TrainingConfiguration(
+        task_level_parameters=TaskLevelParameters(),
+        algo_level_parameters=AlgoLevelParameters(
+            dataset_preparation=AlgoLevelDatasetPreparationParameters(
+                augmentation=AugmentationParameters(
+                    color_jitter=ColorJitter(
+                        enable=False,
+                        brightness=(0.8, 1.2),
+                        contrast=(0.75, 1.25),
+                        saturation=(0.9, 1.1),
+                        hue=(-0.1, 0.1),
+                        probability=0.5,
+                    )
+                )
+            ),
+            training=AlgoLevelTrainingParameters(
+                max_epochs=250,
+                early_stopping=EarlyStopping(enable=False, patience=1),
+                learning_rate=0.0015,
+                input_size_width=512,
+                input_size_height=512,
                 allowed_values_input_size=[128, 256, 512],
             ),
         ),
@@ -95,6 +125,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value_type": "int",
                                 "min_value": 1,
                                 "max_value": 100,
+                                "allowed_values": None,
                             },
                             {
                                 "type": "parameter",
@@ -106,6 +137,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value_type": "int",
                                 "min_value": 1,
                                 "max_value": 100,
+                                "allowed_values": None,
                             },
                             {
                                 "type": "parameter",
@@ -117,6 +149,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value_type": "int",
                                 "min_value": 1,
                                 "max_value": 100,
+                                "allowed_values": None,
                             },
                         ],
                     },
@@ -146,6 +179,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "bool",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -157,6 +191,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "int",
                                         "min_value": 0,
                                         "max_value": 200000000,
+                                        "allowed_values": None,
                                     },
                                 ],
                             },
@@ -176,6 +211,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "bool",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -187,6 +223,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "int",
                                         "min_value": 0,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                 ],
                             },
@@ -206,6 +243,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "bool",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -217,6 +255,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "int",
                                         "min_value": 0,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                 ],
                             },
@@ -251,6 +290,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value_type": "bool",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -263,10 +303,11 @@ def fxt_training_configuration_view_json() -> dict:
                                             "by 20% or increased by 20%."
                                         ),
                                         "value": [0.9, 1.1],
-                                        "default_value": [0.9, 1.1],
+                                        "default_value": [0.8, 1.2],
                                         "value_type": "float_range",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -279,10 +320,11 @@ def fxt_training_configuration_view_json() -> dict:
                                             "increased by up to 50%."
                                         ),
                                         "value": [0.85, 1.15],
-                                        "default_value": [0.85, 1.15],
+                                        "default_value": [0.75, 1.25],
                                         "value_type": "float_range",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -295,10 +337,11 @@ def fxt_training_configuration_view_json() -> dict:
                                             "or increased by up to 50%."
                                         ),
                                         "value": [0.8, 1.2],
-                                        "default_value": [0.8, 1.2],
+                                        "default_value": [0.9, 1.1],
                                         "value_type": "float_range",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -310,10 +353,11 @@ def fxt_training_configuration_view_json() -> dict:
                                             "For example, (-0.05, 0.05) means hue can be shifted by up to ±0.05."
                                         ),
                                         "value": [-0.05, 0.05],
-                                        "default_value": [-0.05, 0.05],
+                                        "default_value": [-0.1, 0.1],
                                         "value_type": "float_range",
                                         "min_value": None,
                                         "max_value": None,
+                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -323,11 +367,12 @@ def fxt_training_configuration_view_json() -> dict:
                                             "Probability of applying color jitter. "
                                             "A value of 0.5 means each image has a 50% chance to be color jittered."
                                         ),
-                                        "value": 0.5,
+                                        "value": 0.6,
                                         "default_value": 0.5,
                                         "value_type": "float",
                                         "min_value": 0.0,
                                         "max_value": 1.0,
+                                        "allowed_values": None,
                                     },
                                 ],
                             }
@@ -350,10 +395,11 @@ def fxt_training_configuration_view_json() -> dict:
                             "An epoch is one complete pass through the training dataset."
                         ),
                         "value": 120,
-                        "default_value": 200,
+                        "default_value": 250,
                         "value_type": "int",
                         "min_value": 0,
                         "max_value": None,
+                        "allowed_values": None,
                     },
                     {
                         "type": "parameter_group",
@@ -374,6 +420,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value_type": "bool",
                                 "min_value": None,
                                 "max_value": None,
+                                "allowed_values": None,
                             },
                             {
                                 "type": "parameter",
@@ -387,6 +434,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value_type": "int",
                                 "min_value": 0,
                                 "max_value": None,
+                                "allowed_values": None,
                             },
                         ],
                     },
@@ -400,10 +448,11 @@ def fxt_training_configuration_view_json() -> dict:
                             "may speed up training but risk overshooting minima in the loss landscape."
                         ),
                         "value": 0.001,
-                        "default_value": 0.001,
+                        "default_value": 0.0015,
                         "value_type": "float",
                         "min_value": 0,
                         "max_value": 1,
+                        "allowed_values": None,
                     },
                     {
                         "type": "parameter",
@@ -414,10 +463,11 @@ def fxt_training_configuration_view_json() -> dict:
                             "Determines the horizontal resolution at which images are processed."
                         ),
                         "value": 256,
-                        "default_value": 256,
+                        "default_value": 512,
                         "value_type": "int",
                         "min_value": 0,
                         "max_value": None,
+                        "allowed_values": [128, 256, 512],
                     },
                     {
                         "type": "parameter",
@@ -428,19 +478,44 @@ def fxt_training_configuration_view_json() -> dict:
                             "Determines the vertical resolution at which images are processed."
                         ),
                         "value": 256,
-                        "default_value": 256,
+                        "default_value": 512,
                         "value_type": "int",
                         "min_value": 0,
                         "max_value": None,
+                        "allowed_values": [128, 256, 512],
                     },
                 ],
+            },
+            {
+                "key": "evaluation",
+                "name": "Evaluation parameters",
+                "description": "Configurable parameters related to the model evaluation.",
+                "parameters": [
+                    {
+                        "type": "parameter",
+                        "key": "validation_metric",
+                        "name": "Validation metric",
+                        "description": "Metric used to evaluate model performance during validation.",
+                        "value": "default",
+                        "default_value": "default",
+                        "value_type": "str",
+                        "min_value": None,
+                        "max_value": None,
+                        "allowed_values": ["default"],
+                    },
+                ],
+                "type": "parameter_group",
             },
         ]
     }
 
 
 class TestTrainingConfigurationView:
-    def test_from_training_configuration(self, fxt_training_configuration, fxt_training_configuration_view_json):
-        view = TrainingConfigurationView.from_training_configuration(fxt_training_configuration)
+    def test_from_training_configuration(
+        self, fxt_training_configuration, fxt_default_training_configuration, fxt_training_configuration_view_json
+    ):
+        view = TrainingConfigurationView.from_training_configuration(
+            fxt_training_configuration, fxt_default_training_configuration
+        )
 
         assert view.model_dump(mode="json") == fxt_training_configuration_view_json

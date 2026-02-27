@@ -441,13 +441,20 @@ class TestModelEndpoints:
     ):
         mock_training_config = MagicMock()
         fxt_training_configuration_service.get_by_model_revision.return_value = mock_training_config
+        fxt_model_service.get_model_revision_architecture.return_value = "object-detection-yolox-x"
 
+        mock_default_config = MagicMock()
         mock_view = MagicMock(spec=TrainingConfigurationView)
         mock_view.model_dump.return_value = {"parameters": []}
 
-        with patch.object(
-            TrainingConfigurationView, "from_training_configuration", return_value=mock_view
-        ) as mock_from:
+        with (
+            patch.object(
+                TrainingConfigurationService,
+                "get_default_by_model_architecture",
+                return_value=mock_default_config,
+            ) as mock_get_default,
+            patch.object(TrainingConfigurationView, "from_training_configuration", return_value=mock_view) as mock_from,
+        ):
             response = fxt_client.get(
                 f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/training_configuration"
             )
@@ -455,7 +462,11 @@ class TestModelEndpoints:
             fxt_training_configuration_service.get_by_model_revision.assert_called_once_with(
                 project_id=fxt_get_project.id, model_revision_id=fxt_model.id
             )
-            mock_from.assert_called_once_with(mock_training_config)
+            fxt_model_service.get_model_revision_architecture.assert_called_once_with(
+                project_id=fxt_get_project.id, model_id=fxt_model.id
+            )
+            mock_get_default.assert_called_once_with(model_architecture_id="object-detection-yolox-x")
+            mock_from.assert_called_once_with(config=mock_training_config, default_config=mock_default_config)
 
         assert response.status_code == status.HTTP_200_OK
 

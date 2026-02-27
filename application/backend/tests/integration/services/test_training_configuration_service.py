@@ -109,6 +109,38 @@ class TestTrainingConfigurationService:
                 model_revision_id=uuid4(),
             )
 
+    def test_get_default_by_model_architecture(
+        self,
+        fxt_training_configuration_service: TrainingConfigurationService,
+    ):
+        """Test retrieving default training configuration for a model architecture."""
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+
+        result = TrainingConfigurationService.get_default_by_model_architecture(
+            model_architecture_id="object-detection-yolox-s",
+        )
+
+        assert isinstance(result, TrainingConfiguration)
+        # Task-level parameters should be the defaults
+        default_task_level = TaskLevelParameters()
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.training
+            == default_task_level.dataset_preparation.subset_split.training
+        )
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.validation
+            == default_task_level.dataset_preparation.subset_split.validation
+        )
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.test
+            == default_task_level.dataset_preparation.subset_split.test
+        )
+        # Algo-level parameters should be populated from the model manifest
+        assert result.algo_level_parameters is not None
+        assert result.algo_level_parameters.training.learning_rate == 0.001
+
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+
     def test_get_by_model_architecture_with_existing_config(
         self,
         fxt_training_configuration: TrainingConfiguration,

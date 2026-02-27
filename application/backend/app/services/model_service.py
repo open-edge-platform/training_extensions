@@ -107,6 +107,26 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevision.model_validate(model_rev_db)
 
+    def get_model_revision_architecture(self, project_id: UUID, model_id: UUID) -> str:
+        """
+        Get the architecture ID of a model revision.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            str: The architecture ID of the model revision.
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
+        """
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_rev_db = model_rev_repo.get_by_id(str(model_id))
+        if not model_rev_db:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+        return model_rev_db.architecture
+
     def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[dict]:
         """
         Get all variants and their information of a model.

@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from copy import deepcopy
+from functools import lru_cache
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -34,6 +36,28 @@ class TrainingConfigurationService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_revision_id))
         return TrainingConfiguration.model_validate(model.training_configuration)
 
+    @staticmethod
+    @lru_cache(maxsize=8)
+    def get_default_by_model_architecture(model_architecture_id: str) -> TrainingConfiguration:
+        """
+        Retrieve the default training configuration for a given model architecture.
+
+        This is the configuration that will be used to train new model revisions of the specified architecture if no
+        custom configuration has been set. The algo-level part of the configuration is based on the model manifest.
+
+        Args:
+            model_architecture_id: Identifier for the model architecture.
+
+        Returns:
+            TrainingConfiguration: The default training configuration object for the specified model architecture.
+        """
+        model_manifest = ModelManifestService.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
+
+        return TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=model_manifest.hyperparameters,
+        )
+
     def get_by_model_architecture(self, project_id: UUID, model_architecture_id: str) -> TrainingConfiguration:
         """
         Retrieve the current training configuration for a given model architecture within a project.
@@ -52,15 +76,15 @@ class TrainingConfigurationService(BaseSessionManagedService):
         Raises:
             ManifestNotFoundException: If the specified model architecture does not exist.
         """
-        # Validate that the specified model architecture exists by loading its manifest
-        model_manifest = ModelManifestService.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
+        # Loading the default configuration also validates that the specified model architecture exists
+        default_config = self.get_default_by_model_architecture(model_architecture_id=model_architecture_id)
 
         training_config_repo = TrainingConfigurationRepository(self.db_session)
 
         # Load the task-level configuration, or initialize one with default values if not found in the database
         task_level_config_db = training_config_repo.get_task_level_configuration(project_id=str(project_id))
         if task_level_config_db is None:
-            task_level_parameters = TaskLevelParameters()
+            task_level_parameters = deepcopy(default_config.task_level_parameters)
         else:
             task_level_parameters = TaskLevelParameters.model_validate(task_level_config_db.configuration_data)
 
@@ -68,7 +92,7 @@ class TrainingConfigurationService(BaseSessionManagedService):
             project_id=str(project_id), model_architecture_id=model_architecture_id
         )
         if algo_level_config_db is None:
-            algo_level_parameters = model_manifest.hyperparameters
+            algo_level_parameters = deepcopy(default_config.algo_level_parameters)
         else:
             algo_level_parameters = AlgoLevelParameters.model_validate(algo_level_config_db.configuration_data)
 

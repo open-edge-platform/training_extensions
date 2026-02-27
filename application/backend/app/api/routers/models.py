@@ -207,6 +207,7 @@ def delete_model(
 def get_model_training_configuration(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
@@ -218,7 +219,13 @@ def get_model_training_configuration(
         project_id=project.id,
         model_revision_id=model_id,
     )
-    return TrainingConfigurationView.from_training_configuration(training_configuration)
+    model_architecture_id = model_service.get_model_revision_architecture(project_id=project.id, model_id=model_id)
+    default_config = TrainingConfigurationService.get_default_by_model_architecture(
+        model_architecture_id=model_architecture_id
+    )
+    return TrainingConfigurationView.from_training_configuration(
+        config=training_configuration, default_config=default_config
+    )
 
 
 @router.get(

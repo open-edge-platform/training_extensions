@@ -54,7 +54,7 @@ class AlgoLevelTrainingParameters(BaseModel):
             "Width size in pixels for model input images. "
             "Determines the horizontal resolution at which images are processed."
         ),
-        json_schema_extra={},
+        json_schema_extra={"allowed_values_from": "allowed_values_input_size"},
     )
     input_size_height: int = Field(
         gt=0,
@@ -63,7 +63,7 @@ class AlgoLevelTrainingParameters(BaseModel):
             "Height size in pixels for model input images. "
             "Determines the vertical resolution at which images are processed."
         ),
-        json_schema_extra={},
+        json_schema_extra={"allowed_values_from": "allowed_values_input_size"},
     )
     allowed_values_input_size: list[int] = Field(
         title="Supported input size (width and height)",
