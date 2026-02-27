@@ -322,6 +322,7 @@ def get_media_binary(
 
 @router.get(
     "/{media_id}/thumbnail",
+    response_model=None,
     responses={
         status.HTTP_200_OK: {"description": "Media thumbnail found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or project ID"},
