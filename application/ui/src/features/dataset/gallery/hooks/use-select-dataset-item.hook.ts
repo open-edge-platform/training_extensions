@@ -22,13 +22,13 @@ export const useSelectDatasetItem = () => {
         }
 
         if (isVideo(item)) {
-            navigate(paths.project.dataset.videoFrame({ projectId, datasetItemId: item.id, frameNumber: '0' }));
+            navigate(paths.project.dataset.item.frame({ projectId, datasetItemId: item.id, frameNumber: '0' }));
             return;
         }
 
         if (isVideoFrame(item)) {
             navigate(
-                paths.project.dataset.videoFrame({
+                paths.project.dataset.item.frame({
                     projectId,
                     datasetItemId: item.id,
                     frameNumber: item.frame_number.toString(),
@@ -37,7 +37,7 @@ export const useSelectDatasetItem = () => {
             return;
         }
 
-        navigate(paths.project.dataset.datasetItem({ projectId, datasetItemId: item.id }));
+        navigate(paths.project.dataset.item.index({ projectId, datasetItemId: item.id }));
     };
 
     return {

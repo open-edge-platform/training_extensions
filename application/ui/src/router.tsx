@@ -93,11 +93,11 @@ export const router = createBrowserRouter([
                                 element: <Dataset />,
                             },
                             {
-                                path: paths.project.dataset.datasetItem.pattern,
+                                path: paths.project.dataset.item.index.pattern,
                                 element: <Dataset />,
                             },
                             {
-                                path: paths.project.dataset.videoFrame.pattern,
+                                path: paths.project.dataset.item.frame.pattern,
                                 element: <Dataset />,
                             },
                         ],

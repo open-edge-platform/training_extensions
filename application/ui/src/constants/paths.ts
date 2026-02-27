@@ -21,8 +21,10 @@ export const paths = {
         inference,
         dataset: {
             index: dataset,
-            datasetItem,
-            videoFrame,
+            item: {
+                index: datasetItem,
+                frame: videoFrame,
+            },
         },
         models,
     },

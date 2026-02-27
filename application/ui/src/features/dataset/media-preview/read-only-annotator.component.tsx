@@ -1,9 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
-
-import { ActionButton, Button, Flex, Loading, Text, View } from '@geti/ui';
+import { ActionButton, Button, Flex, Text, View } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
