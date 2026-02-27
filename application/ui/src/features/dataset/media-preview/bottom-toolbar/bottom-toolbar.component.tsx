@@ -3,7 +3,6 @@
 
 import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
-import { useQueryClient } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
@@ -36,45 +35,22 @@ const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !==
 
 const useSubsets = (mediaItemId: string) => {
     const projectId = useProjectIdentifier();
-    const queryClient = useQueryClient();
 
-    const datasetItemPath = {
+    const datasetItemParamsPath = {
         project_id: projectId,
         dataset_item_id: mediaItemId,
     };
-    const datasetItemParams = { params: { path: datasetItemPath } };
+    const datasetItemParams = { params: { path: datasetItemParamsPath } };
+    const mediaListParams = { params: { path: { project_id: projectId } } };
 
     const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
 
     const updateSubsetMutation = $api.useMutation(UPDATE_SUBSET_OPERATION, UPDATE_SUBSET_URL, {
-        onSuccess: async (_, variables) => {
-            const updatedDatasetItemQueryKey = getQueryKey([
-                DATASET_ITEM_OPERATION,
-                DATASET_ITEM_URL,
-                {
-                    params: {
-                        path: {
-                            project_id: variables.params.path.project_id,
-                            dataset_item_id: variables.params.path.dataset_item_id,
-                        },
-                    },
-                },
-            ]);
-
-            const mediaListQueryKey = getQueryKey([
-                'get',
-                '/api/projects/{project_id}/dataset/media',
-                {
-                    params: {
-                        path: {
-                            project_id: variables.params.path.project_id,
-                        },
-                    },
-                },
-            ]);
-
-            await queryClient.invalidateQueries({ queryKey: updatedDatasetItemQueryKey });
-            await queryClient.invalidateQueries({ queryKey: mediaListQueryKey });
+        meta: {
+            invalidateQueries: [
+                getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]),
+                getQueryKey(['get', '/api/projects/{project_id}/dataset/media', mediaListParams]),
+            ],
         },
     });
 
@@ -82,7 +58,7 @@ const useSubsets = (mediaItemId: string) => {
         if (!isAssignableSubset(key)) return;
 
         updateSubsetMutation.mutate({
-            params: { path: datasetItemPath },
+            params: { path: datasetItemParamsPath },
             body: { subset: key },
         });
     };
