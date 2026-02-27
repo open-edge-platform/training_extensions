@@ -20,7 +20,6 @@ import classes from './bottom-toolbar.module.scss';
 
 type BottomToolbarProps = {
     mediaItem: Media;
-    isUserReviewed?: boolean;
     hideHotkeys?: boolean;
 };
 
@@ -66,11 +65,10 @@ const useSubsets = (mediaItemId: string) => {
     return { currentSubset: data?.subset ?? null, isUserReviewed: data?.user_reviewed ?? false, handleSubsetChange };
 };
 
-export const BottomToolbar = ({ mediaItem, isUserReviewed: isUserReviewedProp, hideHotkeys }: BottomToolbarProps) => {
+export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
-    const { currentSubset, isUserReviewed: fetchedIsUserReviewed, handleSubsetChange } = useSubsets(mediaItem.id);
-    const isUserReviewed = isUserReviewedProp ?? fetchedIsUserReviewed;
+    const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem.id);
 
     return (
         <Flex justifyContent={'end'}>

@@ -8,7 +8,6 @@ import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';
-import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
@@ -65,14 +64,11 @@ const Annotator = ({
     onSelectedMediaItem,
 }: AnnotatorProps) => {
     const { mediaItem, setMediaItem, image } = useSelectedMediaItem();
-    const { datasetItemsById } = useGetDatasetItemsById();
 
     const selectMediaItem = (item: Media) => {
         setMediaItem(item);
         onSelectedMediaItem(item);
     };
-
-    const isUserReviewed = datasetItemsById.get(String(mediaItem.id));
 
     return (
         <VideoPlayerProvider
@@ -112,7 +108,7 @@ const Annotator = ({
                     )}
 
                     <View gridArea={'bottom'}>
-                        <BottomToolbar mediaItem={mediaItem} isUserReviewed={isUserReviewed} />
+                        <BottomToolbar mediaItem={mediaItem} />
                     </View>
 
                     <View gridArea={'canvas'} overflow={'hidden'}>
