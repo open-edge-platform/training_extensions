@@ -332,7 +332,13 @@ field is only returned for quantized models (null for non-quantized models). The
         "id": "4c576bce-5e97-408d-a0ea-cc3801e4c453",
         "format": "openvino",
         "precision": "fp16",
-        "weights_size": 123456
+        "weights_size": 123456,
+        "evaluations": [
+          {
+            "subset": "testing",
+            "metrics": { "mAP@0.5": 0.78, "mAP@0.5-0.95": 0.62 }
+          }
+        ]
       },
       {
         "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
@@ -355,13 +361,25 @@ field is only returned for quantized models (null for non-quantized models). The
         "id": "d01945ae-1578-41f9-a2b3-11865032981c",
         "format": "onnx",
         "precision": "fp16",
-        "weights_size": 123456
+        "weights_size": 123456,
+        "evaluations": [
+          {
+            "subset": "testing",
+            "metrics": { "mAP@0.5": 0.78, "mAP@0.5-0.95": 0.62 }
+          }
+        ]
       },
       {
         "id": "0e432cc0-d30a-4e76-9da9-896147a271c0",
         "format": "pytorch",
         "precision": "fp32",
-        "weights_size": 123456
+        "weights_size": 123456,
+        "evaluations": [
+          {
+            "subset": "testing",
+            "metrics": { "mAP@0.5": 0.78, "mAP@0.5-0.95": 0.62 }
+          }
+        ]
       }
     ]
 }
@@ -371,16 +389,11 @@ field is only returned for quantized models (null for non-quantized models). The
 
 The existing model binary download endpoint supports downloading the quantized model variant.
 
-| Method | Path                                          | Query params       | Return | Description                    |
-| ------ | --------------------------------------------- | ------------------ | ------ | ------------------------------ |
-| `GET`  | `/api/projects/<id>/models/<model_id>/binary` | `format=quantized` | zip    | Download quantized model files |
+| Method | Path                                          | Query params                                            | Return | Description                  |
+| ------ | --------------------------------------------- | ------------------------------------------------------- | ------ | ---------------------------- |
+| `GET`  | `/api/projects/<id>/models/<model_id>/binary` | `model_variant_id=6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b` | zip    | Download model variant files |
 
-The `format` query parameter now accepts an additional value:
-
-- `openvino` (default): FP16 OpenVINO IR model
-- `onnx`: FP16 ONNX model
-- `pytorch`: FP32 PyTorch checkpoint
-- `quantized`: INT8 quantized OpenVINO IR model
+The `model_variant_id` query parameter specifies which model variant to download. If omitted, the openvino model files are returned by default.
 
 ### Enable quantized model in pipeline
 
@@ -418,9 +431,9 @@ The pipeline response includes the active model variant:
 
 Quantized model variants can be deleted independently of the parent model. See the folder structure in the Storage section for more details.
 
-| Method   | Path                                   | Query params        | Return | Description                       |
-| -------- | -------------------------------------- | ------------------- | ------ | --------------------------------- |
-| `DELETE` | `/api/projects/<id>/models/<model_id>` | `variant=quantized` | -      | Delete only the quantized variant |
+| Method   | Path                                   | Query params                                            | Return | Description                   |
+| -------- | -------------------------------------- | ------------------------------------------------------- | ------ | ----------------------------- |
+| `DELETE` | `/api/projects/<id>/models/<model_id>` | `model_variant_id=6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b` | -      | Delete only the model variant |
 
 ## Quantization job structure
 
@@ -542,13 +555,13 @@ class OTXQuantizer(Execution):
 
 The quantization metadata is stored in a new `model_variants` table:
 
-| Column                     | Type    | Description                                               |
-| -------------------------- | ------- | --------------------------------------------------------- |
-| `id`                       | UUID    | Primary key                                               |
-| `source_model_revision_id` | UUID    | Foreign key to `model_revisions` (parent model)           |
-| `precision`                | VARCHAR | Precision type (e.g., 'int8')                             |
-| `quantization_info`        | JSON    | Info such as `max_drop` and `max_calibration_subset_size` |
-| `files_deleted`            | BOOLEAN | Whether quantized model files have been deleted           |
+| Column              | Type    | Description                                               |
+| ------------------- | ------- | --------------------------------------------------------- |
+| `id`                | UUID    | Primary key                                               |
+| `model_revision_id` | UUID    | Foreign key to `model_revisions` (parent model)           |
+| `precision`         | VARCHAR | Precision type (e.g., 'int8')                             |
+| `quantization_info` | JSON    | Info such as `max_drop` and `max_calibration_subset_size` |
+| `files_deleted`     | BOOLEAN | Whether quantized model files have been deleted           |
 
 Quantization info is `None` for model variants which are not quantized.
 Evaluation results for quantized models are stored in the existing `evaluations` table with a reference to the quantized model ID.
@@ -563,14 +576,19 @@ BASE_DATA_DIR/
 │  ├─ <project_id>/
 │  │  ├─ models/
 │  │  │  ├─ <model_id>/
-│  │  │  │  ├─ model.ckpt              # Original PyTorch checkpoint
-│  │  │  │  ├─ model.xml               # Original OpenVINO IR (FP16)
-│  │  │  │  ├─ model.bin               # Original OpenVINO weights (FP16)
-│  │  │  │  ├─ model.onnx              # Original ONNX model (FP16)
-│  │  │  │  ├─ quantized/              # Quantized model directory
-│  │  │  │  │  ├─ model.xml            # Quantized OpenVINO IR (INT8)
-│  │  │  │  │  ├─ model.bin            # Quantized OpenVINO weights (INT8)
-│  │  │  │  │  ├─ quantization.log     # Quantization process log
+│  │  │  │  ├─ training.log
+│  │  │  │  ├─ variants/
+│  │  │  │  │  ├─ <variant_id>/     # Original PyTorch checkpoint
+│  │  │  │  │  │  ├─ model.ckpt
+│  │  │  │  │  ├─ <variant_id>/     # Original OpenVINO IR (FP16)
+│  │  │  │  │  │  ├─ model.xml
+│  │  │  │  │  │  ├─ model.bin
+│  │  │  │  │  ├─ <variant_id>/     # Original ONNX model (FP16)
+│  │  │  │  │  │  ├─ model.onnx
+│  │  │  │  │  ├─ <variant_id>/     #Quantized model directory (INT8)
+│  │  │  │  │  │  ├─ model.xml
+│  │  │  │  │  │  ├─ model.bin
+│  │  │  │  │  │  ├─ quantization.log     # Quantization process log
 ```
 
 ## Error handling
