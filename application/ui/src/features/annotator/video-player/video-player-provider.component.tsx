@@ -1,17 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    createContext,
-    Dispatch,
-    ReactNode,
-    RefObject,
-    SetStateAction,
-    use,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { createContext, Dispatch, ReactNode, RefObject, SetStateAction, use, useMemo, useRef, useState } from 'react';
 
 import { VisuallyHidden } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
