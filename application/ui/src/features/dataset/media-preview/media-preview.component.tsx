@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { Content, Dialog, Grid, Loading, View } from '@geti/ui';
+import { Content, Dialog, Grid, View } from '@geti/ui';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
@@ -11,7 +11,7 @@ import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { MediaItemImageLoader, useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { useSelectedData } from '../selected-data-provider.component';
@@ -66,7 +66,7 @@ const Annotator = ({
     items,
     onSelectedMediaItem,
 }: AnnotatorProps) => {
-    const { mediaItem, setMediaItem } = useSelectedMediaItem();
+    const { mediaItem, setMediaItem, image } = useSelectedMediaItem();
 
     const selectMediaItem = (item: Media) => {
         setMediaItem(item);
@@ -80,6 +80,7 @@ const Annotator = ({
         >
             {mode === 'prediction' ? (
                 <ReadOnlyAnnotator
+                    image={image}
                     mediaItem={mediaItem}
                     isUserReviewed={isUserReviewed}
                     onModeChange={changeAnnotatorMode}
@@ -116,11 +117,7 @@ const Annotator = ({
 
                     <View gridArea={'canvas'} overflow={'hidden'}>
                         <AnnotatorCanvasSettings>
-                            <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
-                                <MediaItemImageLoader>
-                                    <AnnotatorCanvas mediaItem={mediaItem} />
-                                </MediaItemImageLoader>
-                            </Suspense>
+                            <AnnotatorCanvas mediaItem={mediaItem} image={image} />
                         </AnnotatorCanvasSettings>
                     </View>
                 </>

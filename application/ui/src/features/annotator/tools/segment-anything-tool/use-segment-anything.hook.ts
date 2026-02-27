@@ -10,7 +10,7 @@ import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { isDetectionTask } from '../../../project/task-type-guards';
-import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
@@ -121,8 +121,7 @@ export const useSegmentAnythingModel = () => {
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
     const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
 
-    const { mediaItem } = useSelectedMediaItem();
-    const { image } = useMediaItemImage();
+    const { mediaItem, image } = useSelectedMediaItem();
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 

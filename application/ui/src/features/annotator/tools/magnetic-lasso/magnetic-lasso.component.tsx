@@ -12,7 +12,7 @@ import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { Point } from '../../../../shared/types';
 import { isNonEmptyArray } from '../../../../shared/util';
 import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
-import { useMediaItemImage } from '../../selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { PolygonDraw } from '../polygon-tool/polygon-draw.component';
 import {
@@ -34,7 +34,7 @@ export const MagneticLasso = () => {
     const { scale: zoom } = useZoom();
     const [mode, setMode] = useState<PolygonMode>(PolygonMode.MagneticLasso);
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { image } = useMediaItemImage();
+    const { image } = useSelectedMediaItem();
     const { selectedLabel } = useAnnotatorLabels();
     const [isPendingPolygonOptimization, startTransition] = useTransition();
 

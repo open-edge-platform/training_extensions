@@ -8,7 +8,6 @@ import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
@@ -19,6 +18,7 @@ import classes from './read-only-annotator.module.scss';
 
 type ReadOnlyAnnotatorProps = {
     mediaItem: Media;
+    image: ImageData;
     isUserReviewed: boolean;
     onClose: () => void;
     onModeChange?: (mode: 'annotation' | 'prediction') => void;
@@ -37,6 +37,7 @@ type ReadOnlyAnnotatorProps = {
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
 export const ReadOnlyAnnotator = ({
+    image,
     mediaItem,
     isUserReviewed,
     onModeChange,
@@ -82,11 +83,7 @@ export const ReadOnlyAnnotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'} UNSAFE_className={classes.readOnlyCanvas}>
                 <AnnotatorCanvasSettings>
-                    <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
-                        <MediaItemImageLoader>
-                            <AnnotatorCanvas isReadOnly mediaItem={mediaItem} />
-                        </MediaItemImageLoader>
-                    </Suspense>
+                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} />
                 </AnnotatorCanvasSettings>
             </View>
 
