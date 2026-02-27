@@ -51,6 +51,7 @@ interface AnnotationsContextValue {
     submitAnnotations: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
+    isReadOnlyMode: boolean;
 }
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
@@ -62,6 +63,7 @@ type AnnotationActionsProviderProps = {
     isUserReviewed?: boolean;
     mediaItem: Media;
     mode: AnnotatorMode;
+    isReadOnly?: boolean;
 };
 
 const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotation[] => {
@@ -75,6 +77,7 @@ export const AnnotationActionsProvider = ({
     isUserReviewed = false,
     mediaItem,
     mode,
+    isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
@@ -177,6 +180,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+    const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
     return (
         <AnnotationsContext.Provider
@@ -194,6 +198,7 @@ export const AnnotationActionsProvider = ({
                 submitAnnotations,
 
                 isSaving: saveMutation.isPending,
+                isReadOnlyMode,
             }}
         >
             <UndoRedoProvider state={undoRedoActions}>{children}</UndoRedoProvider>
