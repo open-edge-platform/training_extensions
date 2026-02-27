@@ -497,7 +497,7 @@ class TestModelServiceIntegration:
             assert metric["type"] == "line"
             assert metric["key"] in ["Training total loss", "Validation F1 score"]
             assert metric.get("value")
-            # Check that x_axis_label is set correctly (should be "Step" since steps are consecutive)
+            # Check that x_axis_label is set correctly
             assert metric["value"]["x_axis_label"] in ["Step", "Epoch"]
 
     def test_get_training_metrics_epoch_step_based(
