@@ -17,7 +17,7 @@ import { getRandomDistinctColor } from '../../../annotator/label-utils';
 
 const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomDistinctColor(), name: '', hotkey: null });
 
-export type CreateLabelProps = {
+type CreateLabelProps = {
     onCreate: (label: Label) => void;
     labels: Label[];
     taskType: TaskType;

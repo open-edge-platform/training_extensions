@@ -4,11 +4,11 @@
 import { Polygon } from '../../../../shared/types';
 import { getFormattedPoints, ShapeStyle } from './utils';
 
-export interface PolygonDrawProps extends ShapeStyle<SVGPolygonElement> {
+type PolygonDrawProps = ShapeStyle<SVGPolygonElement> & {
     shape: Polygon;
     ariaLabel?: string;
     indicatorRadius?: number;
-}
+};
 
 export const PolygonDraw = ({ shape, styles, indicatorRadius, className = '', ariaLabel = '' }: PolygonDrawProps) => {
     return (

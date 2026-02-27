@@ -33,7 +33,7 @@ const fillProjectForm = async ({
     }
 };
 
-test.skip('Project creation', async ({ page }) => {
+test('Project creation', async ({ page }) => {
     await test.step('Navigate to projects page', async () => {
         await page.goto('/projects');
     });
