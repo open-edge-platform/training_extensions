@@ -230,8 +230,8 @@ class DatasetItemRepository:
             .group_by(MediaDB.type)
         )
         result = self.db.execute(stmt)
-        media_counts: dict[str, int] = {f"{row.type}s": cast(int, row.count) for row in result}
-        media_counts["video_frames"] = int(sum(row.frame_count for row in result))
+        statistics: dict[str, Any] = {f"{row.type}s": cast(int, row.count) for row in result}
+        statistics["video_frames"] = int(sum(row.frame_count for row in result))
 
         # Annotation Counts (annotated images, videos, video frames):
         stmt = (
@@ -263,4 +263,6 @@ class DatasetItemRepository:
         result = self.db.execute(stmt)
         annotated_counts["instances"] = sum(len(item.annotation_data) for item in result)
 
-        return {"media_counts": media_counts, "annotated_counts": annotated_counts}
+        statistics.update(annotated_counts)
+
+        return statistics

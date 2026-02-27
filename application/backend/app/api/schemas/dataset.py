@@ -77,31 +77,33 @@ class StagedDatasetView(BaseRequiredIDModel):
         return data
 
 
-class MediaCounts(BaseModel):
+class MediaCountsView(BaseModel):
     """Media counts"""
 
-    images: int
-    videos: int
-    video_frames: int
+    images: int = Field(0, description="Number of images in dataset")
+    videos: int = Field(0, description="Number of videos in dataset")
+    video_frames: int = Field(0, description="Number of video frames in dataset")
 
     model_config = {"json_schema_extra": {"example": {"images": 10, "videos": 3, "video_frames": 312}}}
 
 
-class InstancesPerLabel(BaseModel):
-    label_id: UUID
-    instances: int
+class InstancesPerLabelView(BaseModel):
+    label_id: UUID = Field(..., description="Unique identifier of label")
+    instances: int = Field(0, description="Number of video frames in dataset")
 
     model_config = {
         "json_schema_extra": {"example": {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24}}
     }
 
 
-class AnnotationCounts(BaseModel):
-    annotated_images: int
-    annotated_videos: int
-    annotated_video_frames: int
-    instances: int
-    instances_per_label: list[InstancesPerLabel]
+class AnnotationCountsView(BaseModel):
+    annotated_images: int = Field(0, description="Number of annotated images in dataset")
+    annotated_videos: int = Field(0, description="Number of annotated videos in dataset")
+    annotated_video_frames: int = Field(0, description="Number of annotated video frames in dataset")
+    instances: int = Field(0, description="Number of annotation shapes in dataset")
+    instances_per_label: list[InstancesPerLabelView] = Field(
+        [], description="List of number of annotation shapes per label"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -124,8 +126,10 @@ class DatasetStatisticsView(BaseModel):
     Dataset statistics
     """
 
-    media_counts: MediaCounts
-    annotations_counts: AnnotationCounts
+    media_counts: MediaCountsView = Field(..., description="Number of media per media type in dataset")
+    annotations_counts: AnnotationCountsView = Field(
+        ..., description="Number of annotated media per media type en labels"
+    )
 
     model_config = {
         "json_schema_extra": {

@@ -1298,3 +1298,29 @@ class TestDatasetServiceIntegration:
         assert len(testing_items) == 1
         for item in testing_items:
             assert item.subset == DatasetItemSubset.TESTING
+
+    def test_get_dataset_statistics(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+    ):
+        """Test retrieving dataset statistics."""
+        project, _ = fxt_project_with_dataset_items
+
+        statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
+
+        # There are 3 images, 0 videos, 0 video_frames in fxt_project_with_dataset_items
+        assert statistics.media_counts.images == 3
+        assert statistics.media_counts.videos == 0
+        assert statistics.media_counts.video_frames == 0
+
+        # Only item 2 is in training subset, item 1 has annotation, so annotated_images = 1
+        assert statistics.annotations_counts.annotated_images == 1
+        assert statistics.annotations_counts.annotated_videos == 0
+        assert statistics.annotations_counts.annotated_video_frames == 0
+
+        # Only one annotation instance (item 1)
+        assert statistics.annotations_counts.instances == 1
+        assert len(statistics.annotations_counts.instances_per_label) == 1
+        assert statistics.annotations_counts.instances_per_label[0].instances == 1
+        assert statistics.annotations_counts.instances_per_label[0].label_id == project.task.labels[0].id

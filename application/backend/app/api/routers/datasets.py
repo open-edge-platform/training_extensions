@@ -106,6 +106,7 @@ def get_dataset_statistics(
 ) -> DatasetStatisticsView:
     """Get information about a specific dataset item"""
     dataset_statistics = dataset_service.get_dataset_statistics(project_id=project_id)
+    print(dataset_statistics)
     return DatasetStatisticsView.model_validate(dataset_statistics, from_attributes=True)
 
 
