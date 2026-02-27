@@ -53,6 +53,10 @@ const useSynchronizeVideoTimeWithInitialFrame = (
             return;
         }
 
+        if (videoFrame.frame_number === 0) {
+            return;
+        }
+
         const videoElement = videoRef.current;
         const seekToInitialFrame = () => {
             if (videoFrame.frame_number > 0 && videoElement.currentTime === 0) {
