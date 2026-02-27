@@ -233,5 +233,7 @@ class TestImportDatasetToProject:
         ):
             fxt_import.execute(fxt_import_params)
 
-            mock_prepare.assert_called_once_with(fxt_import_params.staged_dataset_id)
+            mock_prepare.assert_called_once_with(
+                staged_dataset_id=fxt_import_params.staged_dataset_id, task=fxt_import_params.task
+            )
             mock_create.assert_called_once_with(dataset=dataset, params=fxt_import_params)
