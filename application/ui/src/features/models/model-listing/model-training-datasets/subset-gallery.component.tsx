@@ -64,6 +64,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                         initialPredictionsDTO={[]}
                         isUserReviewed={isUserReviewed}
                         mode={mode}
+                        isReadOnly
                     >
                         <ReadOnlyAnnotator mediaItem={mediaItem} isUserReviewed={isUserReviewed} onClose={onClose} />
                     </AnnotatorProviders>
