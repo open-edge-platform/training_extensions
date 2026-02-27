@@ -7,7 +7,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.openapi.models import Example
-from starlette.responses import StreamingResponse
+from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
 from app.api.io_utils import write_file_to_response, write_image_to_response
@@ -306,7 +306,7 @@ def get_media_binary(
     project: Annotated[Project, Depends(get_project)],
     media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
-) -> StreamingResponse:
+) -> StreamingResponse | FileResponse:
     """Get media binary content"""
     if isinstance(media, NotAnnotatedFrame):
         frame_binary = media_service.get_frame_binary(project=project, video=media.video, frame_index=media.frame_index)
@@ -322,6 +322,7 @@ def get_media_binary(
 
 @router.get(
     "/{media_id}/thumbnail",
+    response_model=None,
     responses={
         status.HTTP_200_OK: {"description": "Media thumbnail found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or project ID"},
@@ -332,7 +333,7 @@ def get_media_thumbnail(
     project: Annotated[Project, Depends(get_project)],
     media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
-) -> StreamingResponse:
+) -> StreamingResponse | FileResponse:
     """Get media thumbnail binary content"""
     if isinstance(media, NotAnnotatedFrame):
         frame_thumbnail = media_service.get_frame_thumbnail(
