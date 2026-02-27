@@ -26,7 +26,6 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.tile import OTXTileBatchDataEntity
-from otx.data.entity.utils import stack_batch
 from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
 from otx.types.export import TaskLevelExportParameters

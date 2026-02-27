@@ -42,7 +42,8 @@ if TYPE_CHECKING:
 # no ImageNet normalization was applied during pretraining.
 # These models are NOT compatible with 16-bit images because the uint8 pixel range
 # assumption is baked into the weights.
-_RAW_UINT8_MODELS: ClassVar[frozenset[str]] = frozenset({"yolox_s", "yolox_l", "yolox_x"})
+_RAW_UINT8_MODELS: frozenset[str] = frozenset({"yolox_s", "yolox_l", "yolox_x"})
+
 
 class YOLOX(OTXDetectionModel):
     """OTX Detection model class for YOLOX.
@@ -196,16 +197,14 @@ class YOLOX(OTXDetectionModel):
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
         return {
-            "yolox_tiny": DataInputParams(
-                input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
-            ),
+            "yolox_tiny": DataInputParams(input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
         }
 
     def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
-        if self.model_name in self._RAW_UINT8_MODELS:
+        if self.model_name in _RAW_UINT8_MODELS:
             if entity.imgs_info is not None:
                 for info in entity.imgs_info:
                     if info is not None and getattr(info, "bit_depth", 8) > 8:
@@ -216,7 +215,6 @@ class YOLOX(OTXDetectionModel):
                             "Use yolox_tiny or a model with normalization for 16-bit images."
                         )
                         raise RuntimeError(msg)
-
 
             inputs = super()._customize_inputs(entity)
             # The CPU pipeline always scales images to [0, 1] float.

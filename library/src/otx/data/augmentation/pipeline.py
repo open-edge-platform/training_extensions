@@ -38,7 +38,6 @@ if TYPE_CHECKING:
 _original_transform_list = ops.MaskSequentialOps.transform_list
 
 
-@classmethod
 def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: ANN001, ANN202, A002
     """Fixed version that slices transform_matrix for each list element."""
     if extra_args is None:
@@ -60,7 +59,7 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: 
     return _original_transform_list.__func__(cls, input, module, param, extra_args)  # type: ignore[attr-defined]
 
 
-ops.MaskSequentialOps.transform_list = _fixed_transform_list  # type: ignore[assignment]
+ops.MaskSequentialOps.transform_list = classmethod(_fixed_transform_list)  # type: ignore[assignment]
 
 
 # Mapping from storage_dtype string to bit depth.
@@ -232,11 +231,11 @@ class CPUAugmentationPipeline(nn.Module):
         """
         if isinstance(cfg_transform, (DictConfig, dict)):
             return instantiate_class(args=(), init=dict(cfg_transform))
-        elif isinstance(cfg_transform, nn.Module):
+        if isinstance(cfg_transform, nn.Module):
             # Already instantiated transform, return as-is
             return cfg_transform
 
-        msg = f"cfg_transform should be DictConfig | dict | nn.Module. However, its type is {type(cfg_transform)}."
+        msg = f"CPUAugmentationPipeline accepts only DictConfig | dict | nn.Module, got {type(cfg_transform)}."
         raise TypeError(msg)
 
     @classmethod
@@ -409,9 +408,9 @@ class CPUAugmentationPipeline(nn.Module):
             if isinstance(result, dict):
                 for key, value in result.items():
                     if key == "boxes":
-                        inputs.bboxes = value
+                        inputs.bboxes = value  # type: ignore[missing-attribute]
                     elif key == "labels":
-                        inputs.label = value
+                        inputs.label = value  # type: ignore[missing-attribute]
                     else:
                         setattr(inputs, key, value)
             else:
@@ -485,8 +484,11 @@ class GPUAugmentationPipeline(nn.Module):
         # Build Kornia AugmentationSequential for efficient batch processing
         self.aug_sequential: K.AugmentationSequential | None = None
         if self._augmentations_list:
+            # Cast to Any because Kornia stubs restrict to _AugmentationBase but
+            # any nn.Module works at runtime.
+            _augs: Any = self._augmentations_list
             self.aug_sequential = K.AugmentationSequential(
-                *self._augmentations_list,
+                *_augs,
                 data_keys=self._data_keys,
                 same_on_batch=False,
             )
@@ -509,9 +511,8 @@ class GPUAugmentationPipeline(nn.Module):
         for aug in augmentations:
             # Check if this is a Normalize augmentation (Kornia stores in flags dict)
             if isinstance(aug, K.Normalize):
-                flags = aug.flags
-                mean = tuple(aug.flags["mean"].tolist())
-                std = tuple(aug.flags["std"].tolist())
+                mean = typing.cast("tuple[float, float, float]", tuple(aug.flags["mean"].tolist()))
+                std = typing.cast("tuple[float, float, float]", tuple(aug.flags["std"].tolist()))
                 # Stop after finding the first Normalize
                 break
 
@@ -607,10 +608,10 @@ class GPUAugmentationPipeline(nn.Module):
         """
         if isinstance(cfg_transform, (DictConfig, dict)):
             return instantiate_class(args=(), init=dict(cfg_transform))
-        elif isinstance(cfg_transform, nn.Module):
+        if isinstance(cfg_transform, nn.Module):
             # Already instantiated transform, return as-is
             return cfg_transform
-        msg = f"cfg_transform should be DictConfig | dict | nn.Module. However, its type is {type(cfg_transform)}."
+        msg = f"GPUAugmentationPipeline accepts only DictConfig | dict | nn.Module, got {type(cfg_transform)}."
         raise TypeError(msg)
 
     def forward(
@@ -669,6 +670,11 @@ class GPUAugmentationPipeline(nn.Module):
         # Apply augmentation to all inputs
         results = self.aug_sequential(*inputs)
 
+        # Kornia returns a plain tensor when only one data key is provided,
+        # but a list when multiple keys are used. Normalise to always be a list.
+        if not isinstance(results, (list, tuple)):
+            results = [results]
+
         # Parse results back
         output = {"images": None, "labels": labels, "bboxes": bboxes, "masks": masks, "keypoints": keypoints}
         for i, key in enumerate(provided_keys):
@@ -690,10 +696,10 @@ class GPUAugmentationPipeline(nn.Module):
         if output["images"] is not None:
             s_bboxes, s_labels, s_masks, s_keypoints = self._sanitize_annotations(
                 typing.cast("torch.Tensor", output["images"]),
-                typing.cast("list[torch.Tensor] | None", output["bboxes"]),
-                typing.cast("list[torch.Tensor] | None", output["labels"]),
-                typing.cast("list[torch.Tensor] | None", output["masks"]),
-                typing.cast("list[torch.Tensor] | None", output["keypoints"]),
+                output["bboxes"],
+                output["labels"],
+                output["masks"],
+                output["keypoints"],
             )
             output["bboxes"] = s_bboxes
             output["labels"] = s_labels
@@ -731,18 +737,15 @@ class GPUAugmentationPipeline(nn.Module):
             msg = f"GPU sanitize: bboxes batch mismatch, got {len(bboxes)} vs {batch_size}"
             raise RuntimeError(msg)
 
-        if labels is not None:
-            if len(labels) != batch_size:
-                msg = f"GPU sanitize: labels batch mismatch, got {len(labels)} vs {batch_size}"
-                raise RuntimeError(msg)
-        if masks is not None:
-            if len(masks) != batch_size:
-                msg = f"GPU sanitize: masks batch mismatch, got {len(masks)} vs {batch_size}"
-                raise RuntimeError(msg)
-        if keypoints is not None:
-            if len(keypoints) != batch_size:
-                msg = f"GPU sanitize: keypoints batch mismatch, got {len(keypoints)} vs {batch_size}"
-                raise RuntimeError(msg)
+        if labels is not None and len(labels) != batch_size:
+            msg = f"GPU sanitize: labels batch mismatch, got {len(labels)} vs {batch_size}"
+            raise RuntimeError(msg)
+        if masks is not None and len(masks) != batch_size:
+            msg = f"GPU sanitize: masks batch mismatch, got {len(masks)} vs {batch_size}"
+            raise RuntimeError(msg)
+        if keypoints is not None and len(keypoints) != batch_size:
+            msg = f"GPU sanitize: keypoints batch mismatch, got {len(keypoints)} vs {batch_size}"
+            raise RuntimeError(msg)
 
         out_bboxes: list[torch.Tensor] = []
         out_labels: list[torch.Tensor] | None = [] if labels is not None else None

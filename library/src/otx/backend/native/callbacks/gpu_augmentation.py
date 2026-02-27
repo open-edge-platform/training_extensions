@@ -6,10 +6,11 @@
 from __future__ import annotations
 
 import logging as log
+import typing
 from typing import TYPE_CHECKING, ClassVar
 
-from lightning import Callback
 import torch
+from lightning import Callback
 
 from otx.data.augmentation import GPUAugmentationPipeline
 from otx.data.entity.sample import OTXSampleBatch
@@ -51,14 +52,14 @@ class GPUAugmentationCallback(Callback):
 
     # Data keys for each task type. Masks for instance segmentation are handled
     # with special preprocessing (add channel dim) in GPUAugmentationPipeline.forward().
-    _DATA_KEYS_BY_TASK: ClassVar[dict[OTXTaskType, list[str]]] = {
-        OTXTaskType.MULTI_CLASS_CLS: ["label"],
-        OTXTaskType.MULTI_LABEL_CLS: ["label"],
-        OTXTaskType.H_LABEL_CLS: ["label"],
-        OTXTaskType.DETECTION: ["bbox_xyxy", "label"],
-        OTXTaskType.INSTANCE_SEGMENTATION: ["bbox_xyxy", "mask", "label"],
-        OTXTaskType.KEYPOINT_DETECTION: ["keypoints", "label"],
-        OTXTaskType.SEMANTIC_SEGMENTATION: ["mask"],
+    _DATA_KEYS_BY_TASK: ClassVar[dict[OTXTaskType, tuple[str, ...]]] = {
+        OTXTaskType.MULTI_CLASS_CLS: ("label",),
+        OTXTaskType.MULTI_LABEL_CLS: ("label",),
+        OTXTaskType.H_LABEL_CLS: ("label",),
+        OTXTaskType.DETECTION: ("bbox_xyxy", "label"),
+        OTXTaskType.INSTANCE_SEGMENTATION: ("bbox_xyxy", "mask", "label"),
+        OTXTaskType.KEYPOINT_DETECTION: ("keypoints", "label"),
+        OTXTaskType.SEMANTIC_SEGMENTATION: ("mask",),
     }
 
     def __init__(
@@ -178,11 +179,11 @@ class GPUAugmentationCallback(Callback):
         batch.images = result["images"]
         if result.get("labels") is not None:
             batch.labels = result["labels"]
-        if result.get("bboxes") is not None:
+        if result.get("bboxes") is not None and batch.bboxes is not None:
             # Kornia may return plain tensors, wrap them back to BoundingBoxes
             # Use original canvas_size from batch.bboxes since Kornia does not modify the shape.
             batch.bboxes = [
-                tv_tensors.BoundingBoxes(
+                tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
                     b,
                     format=tv_tensors.BoundingBoxFormat.XYXY,
                     canvas_size=batch.bboxes[i].canvas_size,
@@ -207,15 +208,12 @@ class GPUAugmentationCallback(Callback):
                         continue
 
                     in_bounds = (
-                        (aug_xy[:, 0] >= 0)
-                        & (aug_xy[:, 0] < width)
-                        & (aug_xy[:, 1] >= 0)
-                        & (aug_xy[:, 1] < height)
+                        (aug_xy[:, 0] >= 0) & (aug_xy[:, 0] < width) & (aug_xy[:, 1] >= 0) & (aug_xy[:, 1] < height)
                     )
-                    vis = vis.to(dtype=aug_xy.dtype) * in_bounds.to(dtype=aug_xy.dtype)
-                    restored_keypoints.append(torch.cat([aug_xy, vis.unsqueeze(-1)], dim=-1))
+                    updated_vis = vis.to(dtype=aug_xy.dtype) * in_bounds.to(dtype=aug_xy.dtype)
+                    restored_keypoints.append(torch.cat([aug_xy, updated_vis.unsqueeze(-1)], dim=-1))
 
-                batch.keypoints = restored_keypoints
+                batch.keypoints = typing.cast("list[torch.Tensor] | None", restored_keypoints)
 
     def on_train_batch_start(
         self,

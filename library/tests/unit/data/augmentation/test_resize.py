@@ -37,7 +37,9 @@ class TestResize:
         return InstanceSegmentationSample(
             image=tv_tensors.Image(fake_image),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(fake_bboxes, format="XYXY", canvas_size=img_size),
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
+                fake_bboxes, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=img_size
+            ),
             label=LongTensor([0, 1]),
             masks=tv_tensors.Mask(masks),
         )
@@ -56,7 +58,9 @@ class TestResize:
         return InstanceSegmentationSample(
             image=tv_tensors.Image(fake_image),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(fake_bboxes, format="XYXY", canvas_size=img_size),
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
+                fake_bboxes, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=img_size
+            ),
             label=LongTensor([0, 1]),
             masks=tv_tensors.Mask(masks),
         )
@@ -75,7 +79,9 @@ class TestResize:
         return InstanceSegmentationSample(
             image=tv_tensors.Image(fake_image),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(fake_bboxes, format="XYXY", canvas_size=img_size),
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
+                fake_bboxes, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=img_size
+            ),
             label=LongTensor([0, 1]),
             masks=tv_tensors.Mask(masks),
         )
@@ -158,18 +164,20 @@ class TestResize:
         assert result.masks.shape[-2:] == (128, 128)
 
         # Wide image (200w x 100h) -> scale by min(128/200, 128/100) = 0.64
-        # Resized: 128w x 64h, then pad vertically by (128-64)/2 = 32 on each side
+        # Resized: 128w x 64h, then pad bottom-right only (pad_bottom=64)
         scale = min(128 / orig_w, 128 / orig_h)
         new_h = round(orig_h * scale)  # 64
-        pad_top = (128 - new_h) // 2  # 32
+        pad_bottom = 128 - new_h  # 64
 
-        # Check that padding info is stored
+        # Check that padding info is stored (pad_left, pad_top, pad_right, pad_bottom)
         assert hasattr(result.img_info, "pad_offset")
-        assert result.img_info.pad_offset[1] == pad_top  # pad_top
+        assert result.img_info.pad_offset[0] == 0  # pad_left
+        assert result.img_info.pad_offset[1] == 0  # pad_top
+        assert result.img_info.pad_offset[3] == pad_bottom  # pad_bottom
 
-        # Verify bboxes are correctly transformed (scale + offset)
+        # Verify bboxes are correctly transformed (scale only, no offset since pad is bottom-right)
         expected_x1 = orig_bboxes[:, 0] * scale
-        expected_y1 = orig_bboxes[:, 1] * scale + pad_top
+        expected_y1 = orig_bboxes[:, 1] * scale
         assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
         assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
 
@@ -187,17 +195,19 @@ class TestResize:
         assert result.masks.shape[-2:] == (128, 128)
 
         # Tall image (100w x 200h) -> scale by min(128/100, 128/200) = 0.64
-        # Resized: 64w x 128h, then pad horizontally by (128-64)/2 = 32 on each side
+        # Resized: 64w x 128h, then pad bottom-right only (pad_right=64)
         scale = min(128 / orig_w, 128 / orig_h)
         new_w = round(orig_w * scale)  # 64
-        pad_left = (128 - new_w) // 2  # 32
+        pad_right = 128 - new_w  # 64
 
-        # Check that padding info is stored
+        # Check that padding info is stored (pad_left, pad_top, pad_right, pad_bottom)
         assert hasattr(result.img_info, "pad_offset")
-        assert result.img_info.pad_offset[0] == pad_left  # pad_left
+        assert result.img_info.pad_offset[0] == 0  # pad_left
+        assert result.img_info.pad_offset[1] == 0  # pad_top
+        assert result.img_info.pad_offset[2] == pad_right  # pad_right
 
-        # Verify bboxes are correctly transformed (scale + offset)
-        expected_x1 = orig_bboxes[:, 0] * scale + pad_left
+        # Verify bboxes are correctly transformed (scale only, no offset since pad is bottom-right)
+        expected_x1 = orig_bboxes[:, 0] * scale
         expected_y1 = orig_bboxes[:, 1] * scale
         assert torch.allclose(result.bboxes[:, 0].float(), expected_x1.float(), atol=1.0)
         assert torch.allclose(result.bboxes[:, 1].float(), expected_y1.float(), atol=1.0)
@@ -249,8 +259,10 @@ class TestResize:
         entity = DetectionSample(
             image=tv_tensors.Image(torch.randint(0, 256, (3, *img_size), dtype=torch.uint8)),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(
-                torch.empty((0, 4), dtype=torch.float32), format="XYXY", canvas_size=img_size
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
+                torch.empty((0, 4), dtype=torch.float32),
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=img_size,
             ),
             label=LongTensor([]),
         )
@@ -267,8 +279,10 @@ class TestResize:
         entity = InstanceSegmentationSample(
             image=tv_tensors.Image(torch.randint(0, 256, (3, *img_size), dtype=torch.uint8)),
             dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
-            bboxes=tv_tensors.BoundingBoxes(
-                torch.tensor([[10, 10, 50, 50]], dtype=torch.float32), format="XYXY", canvas_size=img_size
+            bboxes=tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
+                torch.tensor([[10, 10, 50, 50]], dtype=torch.float32),
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=img_size,
             ),
             label=LongTensor([0]),
             masks=tv_tensors.Mask(torch.empty((0, *img_size), dtype=torch.uint8)),

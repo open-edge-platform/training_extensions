@@ -20,7 +20,7 @@ from otx.config.data import IntensityConfig, SubsetConfig
 from otx.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
-    _SampleImageAdapter,
+    _IntensityAdapter,
 )
 
 # ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ def _make_sample(
     bboxes = None
     label = None
     if with_bboxes:
-        bboxes = tv_tensors.BoundingBoxes(
+        bboxes = tv_tensors.BoundingBoxes(  # type: ignore[call-overload]
             torch.tensor([[10.0, 10.0, 30.0, 30.0]]),
             format=tv_tensors.BoundingBoxFormat.XYXY,
             canvas_size=(h, w),
@@ -88,7 +88,7 @@ class TestCPUAugmentationPipelineInit:
         assert len(pipeline.augmentations) == 0
 
     def test_pipeline_with_transforms(self):
-        transforms = [tvt_v2.RandomHorizontalFlip(p=0.5), tvt_v2.ToDtype(torch.float32, scale=True)]
+        transforms: list[nn.Module] = [tvt_v2.RandomHorizontalFlip(p=0.5), tvt_v2.ToDtype(torch.float32, scale=True)]
         pipeline = CPUAugmentationPipeline(transforms)
         assert len(pipeline.augmentations) == 2
 
@@ -97,7 +97,7 @@ class TestCPUAugmentationPipelineInit:
         assert isinstance(pipeline, nn.Module)
 
     def test_augmentations_are_module_list(self):
-        transforms = [tvt_v2.RandomHorizontalFlip(p=0.5)]
+        transforms: list[nn.Module] = [tvt_v2.RandomHorizontalFlip(p=0.5)]
         pipeline = CPUAugmentationPipeline(transforms)
         assert isinstance(pipeline.augmentations, nn.ModuleList)
 
@@ -134,7 +134,7 @@ class TestCPUAugmentationPipelineDispatchTransform:
 
     def test_unsupported_type_raises(self):
         with pytest.raises(TypeError, match="CPUAugmentationPipeline accepts only"):
-            CPUAugmentationPipeline._dispatch_transform("bad_value")
+            CPUAugmentationPipeline._dispatch_transform("bad_value")  # type: ignore[arg-type]
 
 
 class TestCPUAugmentationPipelineFromConfig:
@@ -146,7 +146,7 @@ class TestCPUAugmentationPipelineFromConfig:
         pipeline = CPUAugmentationPipeline.from_config(config)
         # Default IntensityConfig(mode='scale_to_unit') always prepends an intensity transform
         assert len(pipeline.augmentations) == 1
-        assert isinstance(pipeline.augmentations[0], _SampleImageAdapter)
+        assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
 
     def test_empty_config_no_intensity(self):
         """With intensity=None, no transforms are created."""
@@ -168,7 +168,7 @@ class TestCPUAugmentationPipelineFromConfig:
         pipeline = CPUAugmentationPipeline.from_config(config)
         # 1 intensity (default) + 1 user augmentation
         assert len(pipeline.augmentations) == 2
-        assert isinstance(pipeline.augmentations[0], _SampleImageAdapter)
+        assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
         assert isinstance(pipeline.augmentations[1], tvt_v2.RandomHorizontalFlip)
 
     def test_disabled_transform_skipped(self):
@@ -194,14 +194,14 @@ class TestCPUAugmentationPipelineFromConfig:
     def test_nn_module_passthrough(self):
         """Pre-instantiated nn.Module should be passed through directly."""
         flip = tvt_v2.RandomHorizontalFlip(p=1.0)
-        config = SubsetConfig(augmentations_cpu=[flip], input_size=None)
+        config = SubsetConfig(augmentations_cpu=[flip], input_size=None)  # type: ignore[arg-type]
         pipeline = CPUAugmentationPipeline.from_config(config)
         # 1 intensity (default) + 1 nn.Module passthrough
         assert len(pipeline.augmentations) == 2
         assert isinstance(pipeline.augmentations[1], tvt_v2.RandomHorizontalFlip)
 
     def test_unsupported_config_type_raises(self):
-        config = SubsetConfig(augmentations_cpu=["bad_value"], input_size=None)
+        config = SubsetConfig(augmentations_cpu=["bad_value"], input_size=None)  # type: ignore[arg-type]
         with pytest.raises(TypeError, match="Unsupported augmentation config type"):
             CPUAugmentationPipeline.from_config(config)
 
@@ -220,13 +220,13 @@ class TestCPUAugmentationPipelineFromConfig:
         pipeline = CPUAugmentationPipeline.from_config(config)
         # intensity transform (wrapped) + 1 user augmentation
         assert len(pipeline.augmentations) == 2
-        # First transform should be a _SampleImageAdapter wrapping ScaleToUnit
+        # First transform should be an _IntensityAdapter wrapping ScaleToUnit
         from otx.data.augmentation.intensity import ScaleToUnit
 
-        assert isinstance(pipeline.augmentations[0], _SampleImageAdapter)
+        assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
         # The inner nn.Sequential should contain ScaleToUnit
         inner = pipeline.augmentations[0].transform
-        assert isinstance(inner[0], ScaleToUnit)
+        assert isinstance(inner[0], ScaleToUnit)  # type: ignore[bad-index]
 
     def test_intensity_config_none_no_prepend(self):
         """No intensity config → no prepended transform."""
@@ -261,8 +261,8 @@ class TestCPUAugmentationPipelineFromConfig:
         from otx.data.augmentation.intensity import RangeScale
 
         assert len(pipeline.augmentations) == 1
-        assert isinstance(pipeline.augmentations[0], _SampleImageAdapter)
-        assert isinstance(pipeline.augmentations[0].transform[0], RangeScale)
+        assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
+        assert isinstance(pipeline.augmentations[0].transform[0], RangeScale)  # type: ignore[bad-index]
 
 
 class TestCPUAugmentationPipelineInputSize:
@@ -371,7 +371,7 @@ class TestCPUAugmentationPipelineForward:
         pipeline = CPUAugmentationPipeline()
         sample = _SimpleSample(image=_make_image(32, 32, dtype=torch.uint8))
         transform = tvt_v2.ToDtype(torch.float32, scale=True)
-        result = pipeline._apply_native_transform(transform, sample)
+        result = pipeline._apply_native_transform(transform, sample)  # type: ignore[arg-type]
         assert result.image.dtype == torch.float32
 
     def test_apply_native_transform_with_bboxes(self):
@@ -380,19 +380,19 @@ class TestCPUAugmentationPipelineForward:
         sample = _make_sample(64, 64, with_bboxes=True)
         # Use a transform that should keep image size the same
         transform = tvt_v2.RandomHorizontalFlip(p=1.0)  # Always flip
-        result = pipeline._apply_native_transform(transform, sample)
-        assert result.bboxes is not None
+        result = pipeline._apply_native_transform(transform, sample)  # type: ignore[arg-type]
+        assert result.bboxes is not None  # type: ignore[union-attr]
 
     def test_apply_native_transform_empty_sample(self):
         """Sample with no transformable fields returns unchanged."""
         pipeline = CPUAugmentationPipeline()
-        sample = _SimpleSample(image=None)
+        sample = _SimpleSample(image=None)  # type: ignore[arg-type]
         transform = tvt_v2.RandomHorizontalFlip(p=0.5)
-        result = pipeline._apply_native_transform(transform, sample)
+        result = pipeline._apply_native_transform(transform, sample)  # type: ignore[arg-type]
         assert result is sample
 
     def test_repr(self):
-        transforms = [tvt_v2.RandomHorizontalFlip(p=0.5)]
+        transforms: list[nn.Module] = [tvt_v2.RandomHorizontalFlip(p=0.5)]
         pipeline = CPUAugmentationPipeline(transforms)
         r = repr(pipeline)
         assert "CPUAugmentationPipeline" in r
@@ -487,7 +487,7 @@ class TestGPUAugmentationPipelineInit:
         assert pipeline.std is None
 
     def test_pipeline_with_augmentations(self):
-        augs = [kornia_aug.RandomHorizontalFlip(p=0.5)]
+        augs: list[nn.Module] = [kornia_aug.RandomHorizontalFlip(p=0.5)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.aug_sequential is not None
 
@@ -510,7 +510,7 @@ class TestGPUAugmentationPipelineNormalization:
     def test_extract_norm_from_kornia_normalize(self):
         mean = torch.tensor([0.485, 0.456, 0.406])
         std = torch.tensor([0.229, 0.224, 0.225])
-        augs = [kornia_aug.Normalize(mean=mean, std=std)]
+        augs: list[nn.Module] = [kornia_aug.Normalize(mean=mean, std=std)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.mean is not None
         assert pipeline.std is not None
@@ -519,7 +519,7 @@ class TestGPUAugmentationPipelineNormalization:
         assert abs(pipeline.mean[0] - 0.485) < 1e-4
 
     def test_no_normalize_returns_none(self):
-        augs = [kornia_aug.RandomHorizontalFlip(p=0.5)]
+        augs: list[nn.Module] = [kornia_aug.RandomHorizontalFlip(p=0.5)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.mean is None
         assert pipeline.std is None
@@ -528,7 +528,7 @@ class TestGPUAugmentationPipelineNormalization:
         """Normalization params found even when mixed with other augs."""
         mean = torch.tensor([0.5, 0.5, 0.5])
         std = torch.tensor([0.25, 0.25, 0.25])
-        augs = [kornia_aug.RandomHorizontalFlip(p=0.5), kornia_aug.Normalize(mean=mean, std=std)]
+        augs: list[nn.Module] = [kornia_aug.RandomHorizontalFlip(p=0.5), kornia_aug.Normalize(mean=mean, std=std)]
         pipeline = GPUAugmentationPipeline(augs)
         assert pipeline.mean is not None
         assert abs(pipeline.mean[0] - 0.5) < 1e-4
@@ -561,7 +561,7 @@ class TestGPUAugmentationPipelineDispatchTransform:
 
     def test_unsupported_type_raises(self):
         with pytest.raises(TypeError, match="GPUAugmentationPipeline accepts only"):
-            GPUAugmentationPipeline._dispatch_transform("bad_value")
+            GPUAugmentationPipeline._dispatch_transform("bad_value")  # type: ignore[arg-type]
 
 
 class TestGPUAugmentationPipelineFromConfig:
@@ -602,12 +602,12 @@ class TestGPUAugmentationPipelineFromConfig:
 
     def test_nn_module_passthrough(self):
         aug = kornia_aug.RandomHorizontalFlip(p=1.0)
-        config = SubsetConfig(augmentations_gpu=[aug], input_size=None)
+        config = SubsetConfig(augmentations_gpu=[aug], input_size=None)  # type: ignore[arg-type]
         pipeline = GPUAugmentationPipeline.from_config(config)
         assert pipeline.aug_sequential is not None
 
     def test_unsupported_config_type_raises(self):
-        config = SubsetConfig(augmentations_gpu=["bad_value"], input_size=None)
+        config = SubsetConfig(augmentations_gpu=["bad_value"], input_size=None)  # type: ignore[arg-type]
         with pytest.raises(TypeError, match="Unsupported augmentation config type"):
             GPUAugmentationPipeline.from_config(config)
 

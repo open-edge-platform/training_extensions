@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import typing
-from typing import Any
+from typing import Any, cast
 
 import torch
 import torchvision.transforms.v2 as tvt_v2
@@ -99,11 +99,14 @@ class Resize(tvt_v2.Transform):
 
         if not hasattr(sample, "image"):
             # Fallback: just resize the tensor directly
-            return F.resize(
-                sample,
-                size=list(self.size),
-                interpolation=self.interpolation,
-                antialias=self.antialias,
+            return cast(
+                "OTXSample",
+                F.resize(
+                    cast("torch.Tensor", sample),
+                    size=list(self.size),
+                    interpolation=self.interpolation,
+                    antialias=self.antialias,
+                ),
             )
 
         # Get original dimensions
@@ -122,10 +125,13 @@ class Resize(tvt_v2.Transform):
         sample.image = sample.image.clamp(0, 1)
         # Apply padding if needed
         if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
+            fill_value: float | int | list[float] = (
+                list(self.pad_value) if isinstance(self.pad_value, tuple) else self.pad_value
+            )
             sample.image = F.pad(
                 sample.image,
                 padding=[pad_left, pad_top, pad_right, pad_bottom],
-                fill=self.pad_value,
+                fill=fill_value,
             )
 
         # Calculate scale factors for target transforms
@@ -135,8 +141,8 @@ class Resize(tvt_v2.Transform):
         # Resize/transform targets if requested
         if self.resize_targets:
             # Transform bounding boxes
-            if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
-                bboxes = sample.bboxes
+            bboxes = getattr(sample, "bboxes", None)
+            if bboxes is not None and len(bboxes) > 0:
                 # Scale bboxes
                 if isinstance(bboxes, tv_tensors.BoundingBoxes):
                     bboxes_data = bboxes.clone()
@@ -152,15 +158,15 @@ class Resize(tvt_v2.Transform):
                     bboxes_data[..., 0::2] = bboxes_data[..., 0::2] + pad_left  # x coordinates
                     bboxes_data[..., 1::2] = bboxes_data[..., 1::2] + pad_top  # y coordinates
 
-                sample.bboxes = tv_tensors.BoundingBoxes(
+                sample.bboxes = tv_tensors.BoundingBoxes(  # type: ignore[missing-attribute]
                     bboxes_data,
                     format=bboxes.format if isinstance(bboxes, tv_tensors.BoundingBoxes) else "XYXY",
                     canvas_size=self.size,
                 )
 
             # Transform masks
-            if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
-                masks = sample.masks
+            masks = getattr(sample, "masks", None)
+            if masks is not None and len(masks) > 0:
                 # Resize masks
                 resized_masks = F.resize(
                     masks,
@@ -175,17 +181,18 @@ class Resize(tvt_v2.Transform):
                         padding=[pad_left, pad_top, pad_right, pad_bottom],
                         fill=0,
                     )
-                sample.masks = tv_tensors.Mask(resized_masks) if isinstance(masks, tv_tensors.Mask) else resized_masks
+                sample.masks = (  # type: ignore[missing-attribute]
+                    tv_tensors.Mask(resized_masks) if isinstance(masks, tv_tensors.Mask) else resized_masks
+                )
 
             # Transform keypoints/points
-            if hasattr(sample, "keypoints") and sample.keypoints is not None:
-                keypoints = sample.keypoints
-                if isinstance(keypoints, torch.Tensor):
-                    keypoints = keypoints.clone()
-                    # Scale keypoints (assuming format [..., x, y] or [..., x, y, visibility])
-                    keypoints[..., 0] = keypoints[..., 0] * scale_x + pad_left
-                    keypoints[..., 1] = keypoints[..., 1] * scale_y + pad_top
-                    sample.keypoints = keypoints
+            keypoints = getattr(sample, "keypoints", None)
+            if keypoints is not None and isinstance(keypoints, torch.Tensor):
+                keypoints = keypoints.clone()
+                # Scale keypoints (assuming format [..., x, y] or [..., x, y, visibility])
+                keypoints[..., 0] = keypoints[..., 0] * scale_x + pad_left
+                keypoints[..., 1] = keypoints[..., 1] * scale_y + pad_top
+                sample.keypoints = keypoints  # type: ignore[missing-attribute]
 
         # Update img_info if available
         if hasattr(sample, "img_info") and sample.img_info is not None:
@@ -200,7 +207,7 @@ class Resize(tvt_v2.Transform):
                 )
             if self.keep_aspect_ratio:
                 # Store padding info for potential inverse transforms
-                sample.img_info.pad_offset = (pad_left, pad_top, pad_right, pad_bottom)
+                sample.img_info.pad_offset = (pad_left, pad_top, pad_right, pad_bottom)  # type: ignore[missing-attribute]
                 # ImageInfo.scale_factor uses (height, width)
                 sample.img_info.scale_factor = (scale_y, scale_x)
                 sample.img_info.keep_ratio = True
@@ -244,9 +251,15 @@ class CachedMosaic(tvt_v2.Transform):
     ) -> None:
         super().__init__()
 
-        assert isinstance(img_scale, (tuple, list)), "img_scale must be a tuple or list"  # noqa: S101
-        assert 0 <= probability <= 1.0, f"probability must be in [0, 1], got {probability}"  # noqa: S101
-        assert max_cached_images >= 4, f"max_cached_images must be >= 4, got {max_cached_images}"  # noqa: S101
+        if not isinstance(img_scale, (tuple, list)):
+            msg = "img_scale must be a tuple or list"
+            raise TypeError(msg)
+        if not 0 <= probability <= 1.0:
+            msg = f"probability must be in [0, 1], got {probability}"
+            raise ValueError(msg)
+        if max_cached_images < 4:
+            msg = f"max_cached_images must be >= 4, got {max_cached_images}"
+            raise ValueError(msg)
 
         self.img_scale = tuple(img_scale)  # (H, W)
         self.center_ratio_range = center_ratio_range
@@ -611,9 +624,15 @@ class CachedMixUp(tvt_v2.Transform):
     ) -> None:
         super().__init__()
 
-        assert isinstance(img_scale, (tuple, list))  # noqa: S101
-        assert max_cached_images >= 2, f"Cache size must be >= 2, got {max_cached_images}"  # noqa: S101
-        assert 0 <= probability <= 1.0, f"Probability must be in [0,1], got {probability}"  # noqa: S101
+        if not isinstance(img_scale, (tuple, list)):
+            msg = "img_scale must be a tuple or list"
+            raise TypeError(msg)
+        if max_cached_images < 2:
+            msg = f"Cache size must be >= 2, got {max_cached_images}"
+            raise ValueError(msg)
+        if not 0 <= probability <= 1.0:
+            msg = f"Probability must be in [0,1], got {probability}"
+            raise ValueError(msg)
 
         self.img_scale = tuple(img_scale)  # (H, W)
         self.ratio_range = ratio_range
@@ -718,7 +737,7 @@ class CachedMixUp(tvt_v2.Transform):
         index = 0
         for _ in range(self.max_iters):
             index = int(torch.randint(0, len(self.results_cache), (1,)).item())
-            if len(self.results_cache[index].bboxes) > 0:
+            if len(getattr(self.results_cache[index], "bboxes", [])) > 0:
                 return index
         return index
 
@@ -846,20 +865,22 @@ class CachedMixUp(tvt_v2.Transform):
                 new_w = int(mw * combined_scale)
                 if new_h > 0 and new_w > 0:
                     # Batch resize: (N, H, W) -> (N, 1, H, W) -> interpolate -> (N, new_h, new_w)
-                    resized_batch = torch.nn.functional.interpolate(
-                        cached_masks.unsqueeze(1).float(),
-                        size=(new_h, new_w),
-                        mode="nearest",
-                    ).squeeze(1).to(torch.uint8)
+                    resized_batch = (
+                        torch.nn.functional.interpolate(
+                            cached_masks.unsqueeze(1).float(),
+                            size=(new_h, new_w),
+                            mode="nearest",
+                        )
+                        .squeeze(1)
+                        .to(torch.uint8)
+                    )
 
                     # Batch flip
                     if do_flip:
                         resized_batch = resized_batch.flip(-1)
 
                     # Batch translate/crop - same src/dst region for all N masks
-                    out_batch = torch.zeros(
-                        (n_m, target_h, target_w), dtype=torch.uint8, device=resized_batch.device
-                    )
+                    out_batch = torch.zeros((n_m, target_h, target_w), dtype=torch.uint8, device=resized_batch.device)
                     oy, ox = -y_offset, -x_offset
                     rh, rw = resized_batch.shape[-2], resized_batch.shape[-1]
                     src_y1 = max(0, oy)
