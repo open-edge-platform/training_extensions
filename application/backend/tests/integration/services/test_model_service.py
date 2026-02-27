@@ -516,9 +516,9 @@ class TestModelServiceIntegration:
 
         # Steps are not consecutive (1, 5, 9) so metric should be epoch-based
         csv_content = """epoch,step,train/total_loss,val/f1-score
-        1,1,0.1,0.95
-        2,5,0.2,0.89
-        3,9,0.3,0.92
+        ,1,0.1,0.95
+        1,5,0.2,0.89
+        2,9,0.3,0.92
         """.replace(" ", "")  # Remove leading tabs for correct CSV formatting
         (metrics_dir / "metrics.csv").write_text(csv_content)
 

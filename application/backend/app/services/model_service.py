@@ -441,9 +441,12 @@ class ModelService(BaseSessionManagedService):
 
         # Due to a quirk in SimpleLearningRateMonitor/LearningRateMonitor, the LR metric does not log the epoch value.
         # Fill in missing epoch values.
-        for i in range(df.shape[0]):
-            if df[i, "epoch"] is None:
-                df[i, "epoch"] = df[i + 1, "epoch"]
+        df = df.with_columns(
+            pl.when(pl.col("epoch").is_null() & pl.col("epoch").shift(-1).is_not_null())
+            .then(pl.col("epoch").shift(-1))
+            .otherwise(pl.col("epoch"))
+            .alias("epoch")
+        )
 
         for col in df.columns:
             if col in ["epoch", "step"]:
