@@ -37,6 +37,8 @@ test('[E2E] Existing project', async ({ page }) => {
         const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
         const options = listbox.getByRole('option');
 
-        await expect.poll(async () => options.count(), { timeout: 30000 }).toBeGreaterThanOrEqual(1);
+        await expect(async () => {
+            expect(await options.count()).toBeGreaterThanOrEqual(1);
+        }).toPass({ timeout: 30000 });
     });
 });
