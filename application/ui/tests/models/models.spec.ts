@@ -416,7 +416,7 @@ test.describe('Models - Training Logs', () => {
         await modelsPage.goto();
 
         await test.step('opens and closes logs dialog for a successful model', async () => {
-            await modelsPage.openModelMenu();
+            await modelsPage.openModelMenuForModel('YOLOX Model v1');
             await modelsPage.clickViewTrainingLogsAction();
 
             await expect(modelsPage.getLogsDialog()).toBeVisible();

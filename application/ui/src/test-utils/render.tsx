@@ -60,7 +60,7 @@ export const render = (ui: ReactNode, options: RenderOptions = {}) => {
         return <RouterProvider router={router} />;
     };
 
-    return rtlRender(ui, { wrapper: Wrapper, ...options });
+    return rtlRender(ui, { ...options, wrapper: Wrapper });
 };
 
 export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult, options: RenderOptions = {}) => {

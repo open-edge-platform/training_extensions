@@ -90,7 +90,7 @@ test.describe('Jobs - Current Training', () => {
         await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
     });
 
-    test('opens and closes training logs dialog when "Logs" button is clicked', async ({ jobsPage }) => {
+    test('opens and closes training logs dialog when "View logs" button is clicked', async ({ jobsPage }) => {
         await jobsPage.goto();
 
         await jobsPage.openLogsDialog();

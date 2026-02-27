@@ -142,7 +142,7 @@ test.describe('TrainingLogsDialog - Historical Model Logs (REST fetch)', () => {
         await expect(dialog.getByText(logMessage)).toBeVisible();
     });
 
-    test('renders toolbar without auto-scroll toggle for historical logs and dismisses on close', async ({
+    test('renders toolbar without scroll-to-bottom button for historical logs and dismisses on close', async ({
         modelsPage,
         network,
     }) => {
@@ -161,7 +161,7 @@ test.describe('TrainingLogsDialog - Historical Model Logs (REST fetch)', () => {
 
         const dialog = modelsPage.getLogsDialog();
         await expect(dialog).toBeVisible();
-        await expect(dialog.getByRole('switch', { name: 'Auto-scroll' })).toBeHidden();
+        await expect(dialog.getByRole('button', { name: 'Scroll to bottom' })).toBeHidden();
         await expect(dialog.getByRole('button', { name: /minimum log level/i })).toBeVisible();
         await expect(dialog.getByLabel('Search logs')).toBeVisible();
 
