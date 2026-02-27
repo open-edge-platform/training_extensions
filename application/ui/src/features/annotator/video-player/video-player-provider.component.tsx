@@ -49,13 +49,33 @@ const useSynchronizeVideoTimeWithInitialFrame = (
      * In that case we need to move the video to the correct frame number.
      * */
     useLayoutEffect(() => {
-        if (videoFrame?.frame_number == undefined || videoRef.current === null) {
+        if (videoFrame?.frame_number == undefined || videoFrame?.fps === undefined || videoRef.current === null) {
             return;
         }
 
-        if (videoFrame.frame_number > 0 && videoRef.current.currentTime === 0) {
-            videoRef.current.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
+        const videoElement = videoRef.current;
+        const seekToInitialFrame = () => {
+            if (videoFrame.frame_number > 0 && videoElement.currentTime === 0) {
+                videoElement.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
+            }
+        };
+
+        // If metadata is already loaded (readyState >= HAVE_METADATA == 1), seek immediately.
+        if (videoElement.readyState >= 1) {
+            seekToInitialFrame();
+            return;
         }
+
+        // Otherwise wait for metadata to load before seeking.
+        const handleLoadedMetadata = () => {
+            seekToInitialFrame();
+        };
+
+        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+
+        return () => {
+            videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
     }, [videoFrame?.frame_number, videoFrame?.fps, videoRef]);
 };
 
