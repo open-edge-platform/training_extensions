@@ -9,7 +9,7 @@ import { isInvalidJob } from '../util';
 
 type CancelJobConfirmationProps = {
     jobId: string;
-    onRemove: () => Promise<void>;
+    onRemove: () => void | Promise<void>;
 };
 
 export const CancelJobConfirmation = ({ jobId, onRemove }: CancelJobConfirmationProps) => {

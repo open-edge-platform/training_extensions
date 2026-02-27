@@ -7,6 +7,7 @@ import { $api } from '../../../../../api/client';
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
+import { isInvalidStagedFile } from '../../util';
 
 type ImportFailedJobProps = {
     size: number;
@@ -25,6 +26,9 @@ export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: Import
             {
                 onSuccess: () => {
                     deleteImportEntry(stagedDatasetId);
+                },
+                onError: (error) => {
+                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
                 },
             }
         );

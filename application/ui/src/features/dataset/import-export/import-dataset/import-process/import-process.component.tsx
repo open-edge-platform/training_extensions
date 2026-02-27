@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
@@ -12,10 +11,12 @@ import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook'
 
 import classes from './import-process.module.scss';
 
-export const ImportProcess = () => {
-    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
-    const { getLastImportEntry } = useImportDatasetToProject();
-    const { stagedDatasetId } = getLastImportEntry() ?? {};
+type ImportProcessProps = {
+    currentStagedId: string;
+};
+
+export const ImportProcess = ({ currentStagedId }: ImportProcessProps) => {
+    const { setCurrentStep } = useImportDatasetDialogState();
 
     const {
         data: job,
@@ -23,12 +24,9 @@ export const ImportProcess = () => {
         isPending,
         fileName,
     } = usePrepareImportStatus({
-        stagedDatasetId: stagedDatasetId ?? '',
+        stagedDatasetId: currentStagedId,
         onError: () => setCurrentStep('dropzone'),
-        onSuccess: () => {
-            setCurrentStep('labelMapping');
-            setCurrentStagedId(stagedDatasetId ?? null);
-        },
+        onSuccess: () => setCurrentStep('labelMapping'),
     });
 
     const progress = getJobProgress(job?.progress);

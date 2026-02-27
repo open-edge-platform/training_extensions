@@ -6,6 +6,7 @@ import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset
 
 import { $api } from '../../../../../api/client';
 import { useCancelJob } from '../../../../../hooks/api/jobs.hook';
+import { isInvalidStagedFile } from '../../util';
 
 type ImportProcessButtonsProps = {
     prepareJobId: string;
@@ -26,6 +27,9 @@ export const ImportProcessButtons = ({ prepareJobId, stagedDatasetId, onClose }:
                 onSuccess: () => {
                     deleteImportEntry(stagedDatasetId);
                     onClose();
+                },
+                onError: (error) => {
+                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
                 },
             }
         );

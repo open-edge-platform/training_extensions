@@ -6,13 +6,13 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { OverlayTriggerState } from 'react-stately';
 
-interface ImportDatasetDialogStateContextProps {
+type ImportDatasetDialogStateContextProps = {
     datasetImportDialogState: OverlayTriggerState;
     currentStagedId: string | null;
     setCurrentStagedId: React.Dispatch<React.SetStateAction<string | null>>;
     currentStep: ImportDatasetState;
     setCurrentStep: React.Dispatch<React.SetStateAction<ImportDatasetState>>;
-}
+};
 
 const ImportDatasetDialogStateContext = createContext<ImportDatasetDialogStateContextProps | undefined>(undefined);
 

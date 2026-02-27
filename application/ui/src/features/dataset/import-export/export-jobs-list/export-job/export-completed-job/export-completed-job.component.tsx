@@ -8,6 +8,7 @@ import { $api, API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
 import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
 import { downloadFile } from '../../../../../../shared/util';
+import { isInvalidStagedFile } from '../../../util';
 import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportCompletedJobProps = {
@@ -24,8 +25,15 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
     const removeStagedDatasetMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
     const handleClose = () => {
-        removeStagedDatasetMutation.mutate({ params: { path: { staged_dataset_id: job.metadata.dataset_id } } });
-        removeLsExportId(job.job_id);
+        removeStagedDatasetMutation.mutate(
+            { params: { path: { staged_dataset_id: job.metadata.dataset_id } } },
+            {
+                onSuccess: () => removeLsExportId(job.job_id),
+                onError: (error) => {
+                    isInvalidStagedFile(error) && removeLsExportId(job.job_id);
+                },
+            }
+        );
     };
 
     const handleDownload = () => {

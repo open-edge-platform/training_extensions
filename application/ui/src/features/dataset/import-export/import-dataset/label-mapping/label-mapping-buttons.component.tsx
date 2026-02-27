@@ -5,12 +5,13 @@ import { Button, ButtonGroup } from '@geti/ui';
 
 import { $api } from '../../../../../api/client';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { isInvalidStagedFile } from '../../util';
 import { IMPORT_DATASET_FORM_ID } from './util';
 
-interface LabelMappingButtonsProps {
+type LabelMappingButtonsProps = {
     stagedDatasetId: string;
     onClose: () => void;
-}
+};
 
 export const LabelMappingButtons = ({ stagedDatasetId, onClose }: LabelMappingButtonsProps) => {
     const { deleteImportEntry } = useImportDatasetToProject();
@@ -19,11 +20,14 @@ export const LabelMappingButtons = ({ stagedDatasetId, onClose }: LabelMappingBu
 
     const handleDelete = () => {
         deleteFileMutation.mutateAsync(
-            { params: { path: { staged_dataset_id: String(stagedDatasetId) } } },
+            { params: { path: { staged_dataset_id: stagedDatasetId } } },
             {
                 onSuccess: () => {
                     onClose();
                     deleteImportEntry(stagedDatasetId);
+                },
+                onError: (error) => {
+                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
                 },
             }
         );

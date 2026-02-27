@@ -41,7 +41,7 @@ export const usePrepareImportStatus = ({ stagedDatasetId, onError, onSuccess }: 
             deleteImportEntry(stagedDatasetId);
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.error?.detail}` });
         }
-    }, [onError, deleteImportEntry, response, stagedDatasetId]);
+    }, [deleteImportEntry, onError, response.error, response.isError, stagedDatasetId]);
 
     useEffect(() => {
         if (isJobFailed(response.data)) {

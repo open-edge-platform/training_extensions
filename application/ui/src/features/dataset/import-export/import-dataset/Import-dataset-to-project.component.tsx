@@ -3,6 +3,7 @@
 
 import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
 
+import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportDropZone } from './import-drop-zone/import-drop-zone.component';
@@ -21,16 +22,20 @@ export const ImportDatasetToProject = () => {
                     <Content minHeight={'size-5000'}>
                         <View height={'100%'} backgroundColor={'gray-50'}>
                             {currentStep === 'dropzone' && <ImportDropZone />}
-                            {currentStep === 'preparing' && <ImportProcess />}
-                            {currentStep === 'labelMapping' && (
-                                <LabelMapping stagedDatasetId={String(currentStagedId)} />
+
+                            {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
+                                <ImportProcess currentStagedId={currentStagedId} />
+                            )}
+
+                            {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
+                                <LabelMapping stagedDatasetId={currentStagedId} />
                             )}
                         </View>
                     </Content>
 
                     <ImportDatasetButtons
                         currentStep={currentStep}
-                        stagedDatasetId={String(currentStagedId)}
+                        stagedDatasetId={currentStagedId}
                         onClose={datasetImportDialogState.close}
                     />
                 </Dialog>

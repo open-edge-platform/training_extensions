@@ -9,7 +9,7 @@ import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use
 import { formatBytes } from '../../../../../shared/util';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
-import { getJobProgress, isJobRunning } from '../../util';
+import { getJobProgress, isInvalidStagedFile, isJobRunning } from '../../util';
 
 type ImportActiveJobProps = {
     job: PrepareImportDatasetJob;
@@ -27,7 +27,12 @@ export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId }: Import
     const handleRemove = () => {
         return deleteFileMutation.mutateAsync(
             { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            { onSuccess: () => deleteImportEntry(stagedDatasetId) }
+            {
+                onSuccess: () => deleteImportEntry(stagedDatasetId),
+                onError: (error) => {
+                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
+                },
+            }
         );
     };
 

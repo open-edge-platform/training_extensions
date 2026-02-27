@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
-import { useOverlayTriggerState } from '@react-stately/overlays';
 
 import { $api } from '../../../../api/client';
 import { useImportDatasetToProject } from '../../../../hooks/localStorage/use-import-dataset-to-project.hook';
@@ -13,7 +12,6 @@ type DeleteStagedFileConfirmationProps = {
 };
 
 export const DeleteStagedFileConfirmation = ({ stagedDatasetId }: DeleteStagedFileConfirmationProps) => {
-    const dialogState = useOverlayTriggerState({});
     const { deleteImportEntry } = useImportDatasetToProject();
 
     const removeStagedDatasetMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
@@ -42,7 +40,6 @@ export const DeleteStagedFileConfirmation = ({ stagedDatasetId }: DeleteStagedFi
                 autoFocusButton='primary'
                 primaryActionLabel='Delete'
                 onPrimaryAction={handleCancel}
-                onSecondaryAction={dialogState.close}
                 isPrimaryActionDisabled={removeStagedDatasetMutation.isPending}
             >
                 {`Are you sure you want to delete the dataset file "${stagedDatasetId}"?`}

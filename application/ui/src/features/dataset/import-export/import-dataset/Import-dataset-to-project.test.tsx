@@ -10,7 +10,7 @@ import {
     ImportDatasetDialogStateProvider,
     useImportDatasetDialogState,
 } from '../../providers/export-import-dataset-dialog-provider.component';
-import { ImportDatasetToProject } from './Import-dataset-to-project.component';
+import { ImportDatasetToProject } from './import-dataset-to-project.component';
 
 vi.mock('../../../../hooks/localStorage/use-import-dataset-to-project.hook');
 

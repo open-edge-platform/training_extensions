@@ -18,9 +18,10 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
     const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
 
     const {
-        data: stagedDataset,
-        isError,
         error,
+        isError,
+        isFetching,
+        data: stagedDataset,
     } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
         params: { path: { staged_dataset_id: String(stagedDatasetId) } },
     });
@@ -50,7 +51,11 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
                     <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                         <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} />
 
-                        <Button aria-label='continue dataset import' onPress={handleOpen} isDisabled={isError}>
+                        <Button
+                            aria-label='continue dataset import'
+                            onPress={handleOpen}
+                            isDisabled={isError || isFetching}
+                        >
                             Continue
                         </Button>
                     </Flex>
