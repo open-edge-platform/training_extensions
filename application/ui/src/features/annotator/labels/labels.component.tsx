@@ -49,10 +49,10 @@ type LabelHotkeyBindingProps = {
 };
 
 const LabelHotkeyBinding = ({ label, onTrigger }: LabelHotkeyBindingProps) => {
-    const hotkey = label.hotkey ?? undefined;
+    const hotkey = label.hotkey ?? '';
 
-    useHotkeys(hotkey ?? '', () => onTrigger(label), [label.id, onTrigger], {
-        enabled: hotkey !== undefined && hotkey.length > 0,
+    useHotkeys(hotkey ?? '', () => onTrigger(label), [label, onTrigger], {
+        enabled: !!label.hotkey,
     });
 
     return null;
