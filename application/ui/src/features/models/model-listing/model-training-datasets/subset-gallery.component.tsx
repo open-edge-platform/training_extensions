@@ -15,6 +15,8 @@ import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
+import { useLoadImageQuery } from '../../../annotator/hooks/use-load-image-query.hook';
+import { getImageData } from '../../../annotator/tools/utils';
 import { datasetRevisionItemToMedia } from './utils';
 
 const layoutOptions = {
@@ -41,6 +43,7 @@ type SubsetMediaDialogProps = {
 const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
     const mediaItem = datasetRevisionItemToMedia(item);
     const { data: annotationsData } = useAnnotationsQuery(mediaItem);
+    const { data: image = getImageData(new Image()) } = useLoadImageQuery(mediaItem);
 
     const annotationsDTO = annotationsData?.annotations ?? [];
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
@@ -66,7 +69,12 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                         mode={mode}
                         isReadOnly
                     >
-                        <ReadOnlyAnnotator mediaItem={mediaItem} isUserReviewed={isUserReviewed} onClose={onClose} />
+                        <ReadOnlyAnnotator
+                            image={image}
+                            mediaItem={mediaItem}
+                            isUserReviewed={isUserReviewed}
+                            onClose={onClose}
+                        />
                     </AnnotatorProviders>
                 </Grid>
             </Content>
