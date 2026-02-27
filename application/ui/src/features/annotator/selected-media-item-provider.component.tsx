@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useRef, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useRef, useState } from 'react';
 
 import { isEqual } from 'lodash-es';
 import { useParams } from 'react-router';
@@ -30,10 +30,16 @@ type SelectedMediaItemProviderProps = {
 const useVideoFrameNumberQueryParam = () => {
     const { frameNumber } = useParams<{ frameNumber?: string }>();
 
-    return frameNumber ? parseInt(frameNumber) : 0;
+    if (frameNumber === undefined) {
+        return 0;
+    }
+
+    const frameNumberInt = parseInt(frameNumber, 10);
+
+    return Number.isNaN(frameNumberInt) ? 0 : frameNumberInt;
 };
 
-const getMediaItem = (mediaItem: Media, frameNumber: number): Media => {
+const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
     if (isVideo(mediaItem)) {
         return {
             ...mediaItem,
@@ -49,15 +55,25 @@ const getMediaItem = (mediaItem: Media, frameNumber: number): Media => {
 const useMediaItem = (initialMediaItem: Media) => {
     const frameNumber = useVideoFrameNumberQueryParam();
 
-    const [mediaItem, setMediaItem] = useState<Media>(() => getMediaItem(initialMediaItem, frameNumber));
+    const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
     const prevInitialMediaItem = useRef(initialMediaItem);
 
     if (!isEqual(initialMediaItem, prevInitialMediaItem.current)) {
         prevInitialMediaItem.current = initialMediaItem;
-        setMediaItem(getMediaItem(initialMediaItem, frameNumber));
+        setMediaItem(convertMediaItem(initialMediaItem, frameNumber));
     }
 
-    return [mediaItem, setMediaItem] as const;
+    const changeMediaItem = useCallback((newMedia: Media) => {
+        setMediaItem((prevMediaItem) => {
+            if (isEqual(prevMediaItem, newMedia)) {
+                return prevMediaItem;
+            }
+
+            return convertMediaItem(newMedia, 0);
+        });
+    }, []);
+
+    return [mediaItem, changeMediaItem] as const;
 };
 
 export const SelectedMediaItemProvider = ({
