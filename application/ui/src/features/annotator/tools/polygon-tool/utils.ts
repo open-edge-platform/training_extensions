@@ -27,7 +27,7 @@ export enum PolygonMode {
     MagneticLassoClose = 'magneticLassoClose',
 }
 
-export enum PointerIcons {
+enum PointerIcons {
     Eraser = 'eraser-tool',
     Lasso = 'lasso-drawing',
     LassoClose = 'lasso-closing',
@@ -37,7 +37,7 @@ export enum PointerIcons {
     MagneticLassoClose = 'magnetic-lasso-closing',
 }
 
-export enum PointerIconsOffset {
+enum PointerIconsOffset {
     Eraser = '15 15',
     Lasso = '0 0',
     LassoClose = '0 0',
@@ -45,12 +45,6 @@ export enum PointerIconsOffset {
     PolygonClose = '0 0',
     MagneticLasso = '0 0',
     MagneticLassoClose = '0 0',
-}
-
-export interface MouseEventHandlers {
-    onPointerUp: (event: PointerEvent<SVGSVGElement>) => void;
-    onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
-    onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
 }
 
 const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {

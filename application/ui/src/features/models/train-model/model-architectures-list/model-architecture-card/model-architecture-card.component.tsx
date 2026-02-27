@@ -76,7 +76,7 @@ type ModelArchitectureContextProps = {
 
 const ModelArchitectureContext = createContext<ModelArchitectureContextProps | null>(null);
 
-export const useModelArchitecture = () => {
+const useModelArchitecture = () => {
     const context = useContext(ModelArchitectureContext);
 
     if (context === null) {

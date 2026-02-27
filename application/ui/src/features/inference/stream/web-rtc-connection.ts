@@ -17,7 +17,7 @@ type WebRTCConnectionEvent =
           error: Error;
       };
 
-export type Listener = (event: WebRTCConnectionEvent) => void;
+type Listener = (event: WebRTCConnectionEvent) => void;
 
 type SessionData =
     | RTCSessionDescriptionInit

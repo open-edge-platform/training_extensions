@@ -154,14 +154,21 @@ class TestMediaEndpoints:
         fxt_media_service.create_video.assert_not_called()
         fxt_dataset_service.create_dataset_item.assert_not_called()
 
+    @pytest.mark.parametrize("image_format", ["jpg", "jpeg", "bmp", "png", "tiff", "tif", "webp", "jfif"])
     def test_create_image_success(
-        self, fxt_get_project, fxt_image_media, fxt_media_service, fxt_dataset_service, fxt_client
+        self,
+        fxt_get_project,
+        fxt_image_media,
+        fxt_media_service,
+        fxt_dataset_service,
+        fxt_client,
+        image_format,
     ):
         fxt_media_service.create_image.return_value = fxt_image_media
 
         response = fxt_client.post(
             f"/api/projects/{str(uuid4())}/dataset/media",
-            files={"file": ("test_file.jpg", BytesIO(b"123"), "image/jpeg")},
+            files={"file": (f"test_file.{image_format}", BytesIO(b"123"), "image/jpeg")},
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -179,13 +186,30 @@ class TestMediaEndpoints:
             project=fxt_get_project,
             data=ANY,
             name="test_file",
-            format="jpg",
+            format=ImageFormat(image_format),
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_get_project,
             media=fxt_image_media,
             user_reviewed=False,
         )
+
+    @pytest.mark.parametrize("image_format", ["svg"])
+    def test_create_image_unsupported_image_format(
+        self,
+        fxt_get_project,
+        fxt_media_service,
+        fxt_dataset_service,
+        fxt_client,
+        image_format,
+    ):
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media",
+            files={"file": (f"test_file.{image_format}", BytesIO(b"123"), "image/jpeg")},
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        fxt_media_service.create_image.assert_not_called()
+        fxt_dataset_service.create_dataset_item.assert_not_called()
 
     def test_create_video_success(
         self, fxt_get_project, fxt_video_media, fxt_media_service, fxt_dataset_service, fxt_client
@@ -609,20 +633,14 @@ class TestMediaEndpoints:
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
 
     @pytest.mark.parametrize(
-        "media, suffix, mime_type",
+        "media, suffix",
         [
-            (MagicMock(spec=Image, id=uuid4(), format=ImageFormat.JPG, type=MediaType.IMAGE), ".jpg", "image/jpeg"),
-            (MagicMock(spec=Video, id=uuid4(), format=VideoFormat.MP4, type=MediaType.VIDEO), ".mp4", "video/mp4"),
-            (
-                MagicMock(spec=VideoFrame, id=uuid4(), format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME),
-                ".jpg",
-                "image/jpeg",
-            ),
+            (MagicMock(spec=Image, id=uuid4(), format=ImageFormat.JPG, type=MediaType.IMAGE), ".jpg"),
+            (MagicMock(spec=Video, id=uuid4(), format=VideoFormat.MP4, type=MediaType.VIDEO), ".mp4"),
+            (MagicMock(spec=VideoFrame, id=uuid4(), format=ImageFormat.JPG, type=MediaType.VIDEO_FRAME), ".jpg"),
         ],
     )
-    def test_get_media_thumbnail_success(
-        self, fxt_get_project, fxt_media_service, fxt_client, media, suffix, mime_type
-    ):
+    def test_get_media_thumbnail_success(self, fxt_get_project, fxt_media_service, fxt_client, media, suffix):
         # Create a temporary JPEG file to act as the thumbnail
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_file:
             thumbnail_path = Path(tmp_file.name)
@@ -636,7 +654,7 @@ class TestMediaEndpoints:
             response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/media/{str(media.id)}/thumbnail")
 
             assert response.status_code == status.HTTP_200_OK
-            assert response.headers["content-type"] == mime_type
+            assert response.headers["content-type"] == "image/jpeg"
             with open(thumbnail_path, "rb") as f:
                 assert response.content == f.read()
             fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)

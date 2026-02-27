@@ -52,7 +52,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
 
     return (
         <div style={{ position: 'relative' }}>
-            <NavLink to={paths.project.dataset({ projectId: item.id })}>
+            <NavLink to={paths.project.dataset.index({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <Flex>
                         <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />

@@ -9,8 +9,9 @@ import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
+import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { isDetectionTask } from '../../../project/task-type-guards';
-import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
@@ -55,23 +56,26 @@ const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'S
     return modelRef.current;
 };
 
-const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, mediaItem: Media, image: ImageData) => {
+const useEncodingQuery = (
+    model: Remote<SegmentAnythingModel> | undefined,
+    mediaItem: Media,
+    image: ImageData,
+    isImageReady: boolean
+) => {
     return useQuery({
-        queryKey: ['segment-anything-model', 'encoding', mediaItem?.id],
+        queryKey: isVideoFrame(mediaItem)
+            ? ['segment-anything-model', 'encoding', mediaItem.id, mediaItem.frame_number]
+            : ['segment-anything-model', 'encoding', mediaItem.id],
         queryFn: async () => {
             if (model === undefined) {
                 throw new Error('Model not yet initialized');
-            }
-
-            if (image === undefined) {
-                throw new Error('Image not available');
             }
 
             return await model.processEncoder(image);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
-        enabled: model !== undefined && mediaItem !== undefined,
+        enabled: model !== undefined && isImageReady,
     });
 };
 
@@ -121,9 +125,8 @@ export const useSegmentAnythingModel = () => {
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
     const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
 
-    const { mediaItem } = useSelectedMediaItem();
-    const { image } = useMediaItemImage();
-    const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image);
+    const { mediaItem, image, isImageReady } = useSelectedMediaItem();
+    const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image, isImageReady);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
     const isLoading = isLoadingWorkers || encodingQuery.isLoading;

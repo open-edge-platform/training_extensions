@@ -8,13 +8,12 @@ import { OverlayTriggerState } from 'react-stately';
 
 import { useEventListener } from '../../hooks/event-listener.hook';
 
-export interface CursorContextMenuProps {
+type CursorContextMenuProps = {
     state: OverlayTriggerState;
     children: ReactNode;
     onOpen: () => void;
-
     triggerRef: RefObject<Element | null>;
-}
+};
 
 export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: CursorContextMenuProps) => {
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });

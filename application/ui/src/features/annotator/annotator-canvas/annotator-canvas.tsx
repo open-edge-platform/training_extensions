@@ -11,7 +11,6 @@ import { useSelectedAnnotations } from '../../../shared/annotator/select-annotat
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
-import { useMediaItemImage } from '../selected-media-item-provider.component';
 import { ToolManager } from '../tools/tool-manager.component';
 import { VideoFrame } from '../video-player/video-frame.component';
 
@@ -51,14 +50,14 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
 
 type AnnotatorCanvasProps = {
     mediaItem: Media;
+    image: ImageData;
     isReadOnly?: boolean;
 };
 
-export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanvasProps) => {
+export const AnnotatorCanvas = ({ mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
     const { annotations } = useAnnotationActions();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { isFocussed } = useAnnotationVisibility();
-    const { image } = useMediaItemImage();
     const isSceneBusy = useIsAnnotatorSceneBusy();
 
     const areToolsDisabled = isSceneBusy || isReadOnly;

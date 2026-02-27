@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Generator
 from io import BytesIO
-from mimetypes import guess_file_type
 from pathlib import Path
 
 from PIL.Image import Image
-from starlette.responses import StreamingResponse
+from starlette.responses import FileResponse, StreamingResponse
 
 
 def file_iterator(filepath: Path, chunk_size: int = 1024 * 1024) -> Generator[bytes]:
@@ -75,9 +74,9 @@ def write_image_to_response(image: Image, filename: str, cache_control: str | No
     )
 
 
-def write_file_to_response(path: Path, filename: str, cache_control: str | None = None) -> StreamingResponse:
+def write_file_to_response(path: Path, filename: str, cache_control: str | None = None) -> FileResponse:
     """
-    Stream a file from file system to FastAPI StreamingResponse.
+    Return a file from file system as FastAPI FileResponse.
     Additionally, method sets file name and cache control headers if provided.
 
     Args:
@@ -86,9 +85,9 @@ def write_file_to_response(path: Path, filename: str, cache_control: str | None 
         cache_control: Cache control header, optional.
 
     Returns:
-        FastAPI StreamingResponse.
+        FastAPI FileResponse.
     """
-    media_type, _ = guess_file_type(path)
-    return write_bytes_to_response(
-        bytes=file_iterator(filepath=path), filename=filename, media_type=media_type, cache_control=cache_control
-    )
+    headers = {}
+    if cache_control:
+        headers["Cache-Control"] = cache_control
+    return FileResponse(path=path, filename=filename, headers=headers)

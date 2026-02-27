@@ -19,6 +19,7 @@ type AnnotatorProvidersProps = {
     initialPredictionsDTO: AnnotationDTO[];
     isUserReviewed: boolean;
     mode: AnnotatorMode;
+    isReadOnly?: boolean;
     children: ReactNode;
 };
 
@@ -39,6 +40,7 @@ export const AnnotatorProviders = ({
     initialPredictionsDTO,
     isUserReviewed,
     mode,
+    isReadOnly = false,
     children,
 }: AnnotatorProvidersProps) => {
     return (
@@ -55,6 +57,7 @@ export const AnnotatorProviders = ({
                                     initialPredictionsDTO={initialPredictionsDTO}
                                     isUserReviewed={isUserReviewed}
                                     mode={mode}
+                                    isReadOnly={isReadOnly}
                                 >
                                     {children}
                                 </AnnotationActionsProvider>

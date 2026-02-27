@@ -27,7 +27,7 @@ type GalleryProps = {
 };
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
-export const VIEW_MODE_SETTINGS = {
+const VIEW_MODE_SETTINGS = {
     [ViewModes.LARGE]: { minItemSize: new Size(300, 300), minSpace: new Size(10, 10), preserveAspectRatio: true },
     [ViewModes.MEDIUM]: { minItemSize: new Size(200, 200), minSpace: new Size(6, 6), preserveAspectRatio: true },
     [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
