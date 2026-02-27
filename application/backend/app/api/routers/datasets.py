@@ -104,9 +104,8 @@ def get_dataset_statistics(
     project_id: ProjectID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetStatisticsView:
-    """Get information about a specific dataset item"""
+    """Get statistics about the number of media and annotations in a dataset"""
     dataset_statistics = dataset_service.get_dataset_statistics(project_id=project_id)
-    print(dataset_statistics)
     return DatasetStatisticsView.model_validate(dataset_statistics, from_attributes=True)
 
 

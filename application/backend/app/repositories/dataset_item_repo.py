@@ -256,7 +256,6 @@ class DatasetItemRepository:
         ]
 
         # Total instances:
-        # We need to sum the number of instances in annotation_data for all annotated items.
         stmt = select(DatasetItemDB.annotation_data).where(
             DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
         )
