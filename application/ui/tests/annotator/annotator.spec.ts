@@ -183,16 +183,7 @@ test.describe('Annotator', () => {
             });
         });
 
-        test('renders "No object" when server returns empty annotations list', async ({ page, network }) => {
-            network.use(
-                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
-                    return HttpResponse.json({
-                        annotations: [],
-                        user_reviewed: true,
-                    });
-                })
-            );
-
+        test('renders "No object" when server returns empty annotations list', async ({ page }) => {
             await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
             await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
 

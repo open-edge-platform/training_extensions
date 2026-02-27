@@ -19,7 +19,7 @@ export const ArchitectureGroupHeader = ({ architecture }: ArchitectureGroupHeade
     }
 
     return (
-        <Flex alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
+        <Flex alignItems={'center'} gap={'size-200'} marginBottom={'size-225'}>
             <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                 {architecture.name}
             </Heading>
