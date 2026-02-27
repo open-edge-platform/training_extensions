@@ -6,7 +6,7 @@ import { type SpectrumDropZoneProps } from '@geti/ui';
 import { GetElementType } from '../../../../../shared/util';
 
 type DropItem = GetElementType<DropEvent['items']>;
-export type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
+type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
 
 const VALID_DATASET_TYPES = ['zip'];
 

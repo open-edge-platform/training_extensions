@@ -11,7 +11,7 @@ import { useSSE } from '../use-sse.hook';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
 
-export const useStreamJobStatus = (jobId: string | undefined) => {
+const useStreamJobStatus = (jobId: string | undefined) => {
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
 
@@ -51,13 +51,13 @@ export const useSubmitJob = () => {
     });
 };
 
-export const useListJobs = () => {
+const useListJobs = () => {
     return $api.useQuery('get', '/api/jobs');
 };
 
 export const useGetCurrentTrainingJob = () => {
     const projectId = useProjectIdentifier();
-    const activeJobs = $api.useQuery('get', '/api/jobs');
+    const activeJobs = useListJobs();
 
     const activeTrainingJob = activeJobs.data?.find((job) => {
         const jobProjectId =

@@ -4,7 +4,7 @@
 import { Polygon } from '../../../../shared/types';
 import { getFormattedPoints, ShapeStyle } from './utils';
 
-export interface PolygonDrawProps extends ShapeStyle<SVGPolygonElement> {
+interface PolygonDrawProps extends ShapeStyle<SVGPolygonElement> {
     shape: Polygon;
     ariaLabel?: string;
     indicatorRadius?: number;
