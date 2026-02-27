@@ -89,7 +89,7 @@ class MediaCountsView(BaseModel):
 
 class InstancesPerLabelView(BaseModel):
     label_id: UUID = Field(..., description="Unique identifier of label")
-    instances: int = Field(0, description="Number of video frames in dataset")
+    instances: int = Field(0, description="Number of annotation instances with this label in dataset")
 
     model_config = {
         "json_schema_extra": {"example": {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24}}
@@ -128,7 +128,7 @@ class DatasetStatisticsView(BaseModel):
 
     media_counts: MediaCountsView = Field(..., description="Number of media per media type in dataset")
     annotations_counts: AnnotationCountsView = Field(
-        ..., description="Number of annotated media per media type en labels"
+        ..., description="Number of annotated media per media type and labels"
     )
 
     model_config = {

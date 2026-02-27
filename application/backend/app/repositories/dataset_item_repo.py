@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections import Counter
 from datetime import UTC, datetime
 from typing import Any, NamedTuple, cast
 
@@ -244,24 +245,18 @@ class DatasetItemRepository:
         result = self.db.execute(stmt)
         annotated_counts: dict[str, Any] = {f"annotated_{row.type}s": row.count for row in result}
 
-        # Instances per label:
-        stmt = (
-            select(DatasetItemLabelDB.label_id, func.count(DatasetItemLabelDB.dataset_item_id).label("instances"))
-            .join(DatasetItemDB, DatasetItemLabelDB.dataset_item_id == DatasetItemDB.id)
-            .where(DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None))
-            .group_by(DatasetItemLabelDB.label_id)
-        )
-        result = self.db.execute(stmt)
-        annotated_counts["instances_per_label"] = [
-            {"label_id": row.label_id, "instances": row.instances} for row in result
-        ]
-
         # Total instances:
         stmt = select(DatasetItemDB.annotation_data).where(
             DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
         )
-        result = self.db.execute(stmt)
+        result = list(self.db.execute(stmt))
         annotated_counts["instances"] = sum(len(item.annotation_data) for item in result)
+        labels_counts = Counter(
+            label["id"] for item in result for annotation in item.annotation_data for label in annotation["labels"]
+        )
+        annotated_counts["instances_per_label"] = [
+            {"label_id": label_id, "instances": count} for label_id, count in labels_counts.items()
+        ]
 
         statistics.update(annotated_counts)
 
