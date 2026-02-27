@@ -5,7 +5,7 @@ import { screen } from '@testing-library/react';
 import { render } from 'test-utils/render';
 
 import { usePrepareImportDataset } from '../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { ImportDataset } from './import-dataset.component';
+import { ImportDataset } from './Import-dataset-to-project.component';
 
 vi.mock('../../../../hooks/localStorage/use-prepare-import-dataset.hook');
 

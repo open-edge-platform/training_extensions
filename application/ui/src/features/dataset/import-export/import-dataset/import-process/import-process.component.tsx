@@ -6,6 +6,7 @@ import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset
 import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
+import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { getJobProgress, isJobPending } from '../../util';
 import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
 import { ImportDatasetState } from '../util';
@@ -17,7 +18,9 @@ type ImportProcessProps = {
 };
 
 export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
+    const { setCurrentStagedId } = useImportDatasetDialogState();
     const { getLastImportEntry } = useImportDatasetToProject();
+
     const {
         data: job,
         isFetching,
@@ -26,7 +29,10 @@ export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
     } = usePrepareImportStatus({
         prepareJobId: getLastImportEntry()?.prepareJobId ?? '',
         onError: () => onNextStep('dropzone'),
-        onSuccess: () => onNextStep('labelMapping'),
+        onSuccess: (stagedDatasetId: string) => {
+            onNextStep('labelMapping');
+            setCurrentStagedId(stagedDatasetId);
+        },
     });
 
     const progress = getJobProgress(job?.progress);

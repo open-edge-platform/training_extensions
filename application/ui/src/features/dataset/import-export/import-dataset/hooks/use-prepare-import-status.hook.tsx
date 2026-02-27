@@ -15,7 +15,7 @@ import { isInvalidJob, isJobDone, isJobFailed } from '../../util';
 type UsePrepareImportStatusProps = {
     prepareJobId: string;
     onError?: () => void;
-    onSuccess?: () => void;
+    onSuccess?: (stagedDatasetId: string) => void;
 };
 
 export const usePrepareImportStatus = ({ prepareJobId, onError, onSuccess }: UsePrepareImportStatusProps) => {
@@ -55,7 +55,7 @@ export const usePrepareImportStatus = ({ prepareJobId, onError, onSuccess }: Use
     useEffect(() => {
         if (isJobDone(response.data)) {
             updateImportEntryStagedId(prepareJobId, stagedDatasetId);
-            isFunction(onSuccess) && onSuccess();
+            isFunction(onSuccess) && onSuccess(stagedDatasetId);
         }
     }, [onSuccess, updateImportEntryStagedId, prepareJobId, stagedDatasetId, response.data]);
 

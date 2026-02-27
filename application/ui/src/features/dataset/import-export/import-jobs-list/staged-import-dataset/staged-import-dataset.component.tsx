@@ -16,7 +16,7 @@ type StagedImportDatasetProps = {
 
 export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportDatasetProps) => {
     const { deleteImportEntry } = useImportDatasetToProject();
-    const { datasetImportDialogState } = useImportDatasetDialogState();
+    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
 
     const { data: stagedDataset } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
         params: { path: { staged_dataset_id: String(stagedDatasetId) } },
@@ -24,12 +24,20 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
 
     const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
+    const handleOpen = () => {
+        setCurrentStep('labelMapping');
+        setCurrentStagedId(stagedDatasetId);
+        datasetImportDialogState.open();
+    };
+
     const handleDelete = () => {
         deleteFileMutation.mutateAsync(
             { params: { path: { staged_dataset_id: String(stagedDatasetId) } } },
             {
                 onSuccess: () => {
                     datasetImportDialogState.close();
+                    setCurrentStep('dropzone');
+                    setCurrentStagedId(null);
                     deleteImportEntry({ stagedDatasetId });
                 },
             }
@@ -61,7 +69,7 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
                         >
                             Delete
                         </Button>
-                        <Button aria-label='continue dataset import' onPress={datasetImportDialogState.open}>
+                        <Button aria-label='continue dataset import' onPress={handleOpen}>
                             Continue
                         </Button>
                     </Flex>
