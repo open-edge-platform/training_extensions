@@ -43,7 +43,7 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision import tv_tensors
 
 # ── path setup ───────────────────────────────────────────────────────────────
-LIB_DIR = Path(__file__).parent / "geti_tune_clean" / "library"
+LIB_DIR = Path(__file__).resolve().parent
 if str(LIB_DIR / "src") not in sys.path:
     sys.path.insert(0, str(LIB_DIR / "src"))
 
@@ -221,10 +221,13 @@ def run_torch_without_nms(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Run YOLOX torch model WITHOUT NMS via export_by_feat.
 
+    The non-NMS path now returns (B, K, 5) + (B, K) — same shape contract
+    as the NMS path but with top-K selection instead of NMS.
+
     Returns
     -------
-    bboxes : ndarray (anchors, 4) [x1, y1, x2, y2]
-    scores : ndarray (anchors, num_classes)
+    dets   : ndarray (N, 5) [x1, y1, x2, y2, score]  (model-input coords)
+    labels : ndarray (N,)
     """
     tensor = tensor.to(device)
     inner = model.model
@@ -241,14 +244,17 @@ def run_torch_without_nms(
     x = inner.extract_feat(tensor)
     outs = inner.bbox_head(x)
 
-    bboxes_batch, scores_batch = inner.bbox_head.export_by_feat(
+    dets_batch, labels_batch = inner.bbox_head.export_by_feat(
         *outs,
         batch_img_metas=[meta_info],
         rescale=False,
         with_nms=False,
     )
-    # bboxes_batch: [1, anchors, 4], scores_batch: [1, anchors, num_classes]
-    return bboxes_batch[0].cpu().numpy(), scores_batch[0].cpu().numpy()
+    # dets_batch: [1, K, 5], labels_batch: [1, K]
+    dets = dets_batch[0].cpu().numpy()      # (K, 5)
+    labels = labels_batch[0].cpu().numpy()   # (K,)
+    valid = dets[:, 4] > 0
+    return dets[valid], labels[valid].astype(np.int64)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -373,8 +379,9 @@ def run_ov_without_nms(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Run OV model WITHOUT NMS.
 
-    Expected outputs: 'boxes'/'bboxes' [B,anchors,4] and 'labels'/'scores' [B,anchors,C].
-    Returns (anchors, 4) and (anchors, C) arrays for the first batch item.
+    The non-NMS export path now returns (B, K, 5) + (B, K) — same shape
+    contract as the NMS path but with top-K selection instead of NMS.
+    Returns (N, 5) and (N,) arrays for the first batch item.
     """
     np_input = tensor.numpy()
     result = compiled(np_input)
@@ -387,9 +394,13 @@ def run_ov_without_nms(
                 return result[k]
         return result[compiled.outputs[fallback_idx]]
 
-    bboxes = _get(["boxes", "bboxes"], 0)    # (B, anchors, 4)
-    scores = _get(["labels", "scores"], 1)   # (B, anchors, C)
-    return bboxes[0], scores[0]
+    dets = _get(["boxes", "bboxes", "dets"], 0)    # (B, K, 5)
+    labels = _get(["labels"], 1)              # (B, K)
+
+    dets = dets[0]                             # (K, 5)
+    labels = labels[0]                         # (K,)
+    valid = dets[:, 4] > 0
+    return dets[valid], labels[valid].astype(np.int64)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -463,6 +474,56 @@ def apply_nms_to_raw(
         labels_cat = labels_cat[top_idx]
 
     return boxes_cat.numpy(), scores_cat.numpy(), labels_cat.numpy()
+
+
+def apply_postprocess_nms(
+    dets: np.ndarray,
+    labels: np.ndarray,
+    iou_thr: float = 0.5,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Post-processing NMS on top-K model outputs.
+    The model outputs top-K boxes by score (without NMS). This function
+    applies per-class NMS to remove overlapping duplicates, matching what
+    model_api / SSD adapter does at inference time.
+
+    Parameters
+    ----------
+    dets   : (K, 5) [x1, y1, x2, y2, score]
+    labels : (K,)   class labels
+    iou_thr: IoU threshold for NMS
+
+    Returns
+    -------
+    boxes  : (N, 4)
+    scores : (N,)
+    labels : (N,)
+    """
+    if len(dets) == 0:
+        return np.zeros((0, 4), np.float32), np.zeros(0, np.float32), np.zeros(0, np.int64)
+
+    t_boxes = torch.from_numpy(dets[:, :4]).float()
+    t_scores = torch.from_numpy(dets[:, 4]).float()
+    t_labels = torch.from_numpy(labels).long()
+
+    # Per-class NMS
+    all_boxes, all_scores, all_labels = [], [], []
+    for cls_id in t_labels.unique():
+        mask = t_labels == cls_id
+        cls_boxes = t_boxes[mask]
+        cls_scores = t_scores[mask]
+        keep = torchvision.ops.nms(cls_boxes, cls_scores, iou_thr)
+        all_boxes.append(cls_boxes[keep])
+        all_scores.append(cls_scores[keep])
+        all_labels.append(t_labels[mask][keep])
+
+    if not all_boxes:
+        return np.zeros((0, 4), np.float32), np.zeros(0, np.float32), np.zeros(0, np.int64)
+
+    return (
+        torch.cat(all_boxes).numpy(),
+        torch.cat(all_scores).numpy(),
+        torch.cat(all_labels).numpy(),
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -583,9 +644,10 @@ def run_comparison(args: argparse.Namespace) -> None:
             t_boxes = t_dets[:, :4]
             t_scores = t_dets[:, 4]
         else:
-            t_bboxes_raw, t_scores_raw = run_torch_without_nms(torch_model, tensor, device=device)
-            t_boxes, t_scores, t_labels = apply_nms_to_raw(
-                t_bboxes_raw, t_scores_raw, args.score_thr, args.iou_thr
+            t_dets, t_labels_raw = run_torch_without_nms(torch_model, tensor, device=device)
+            # Model outputs top-K without NMS; apply post-processing NMS on CPU
+            t_boxes, t_scores, t_labels = apply_postprocess_nms(
+                t_dets, t_labels_raw, iou_thr=args.iou_thr,
             )
 
         # ── OV inference ────────────────────────────────────────────────────
@@ -594,9 +656,10 @@ def run_comparison(args: argparse.Namespace) -> None:
             ov_boxes = ov_dets[:, :4]
             ov_scores = ov_dets[:, 4]
         else:
-            ov_bboxes_raw, ov_scores_raw = run_ov_without_nms(ov_compiled, tensor)
-            ov_boxes, ov_scores, ov_labels = apply_nms_to_raw(
-                ov_bboxes_raw, ov_scores_raw, args.score_thr, args.iou_thr
+            ov_dets, ov_labels_raw = run_ov_without_nms(ov_compiled, tensor)
+            # Model outputs top-K without NMS; apply post-processing NMS on CPU
+            ov_boxes, ov_scores, ov_labels = apply_postprocess_nms(
+                ov_dets, ov_labels_raw, iou_thr=args.iou_thr,
             )
 
         # ── Rescale to original image space ─────────────────────────────────

@@ -161,7 +161,7 @@ class YOLOX(OTXDetectionModel):
                 "verbose": False,
                 "autograd_inlining": False,
             },
-            output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
+            output_names=["boxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
     # NOTE: The Focus patch (stem.forward = stem.export) is no longer needed here.

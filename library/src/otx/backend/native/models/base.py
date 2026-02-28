@@ -187,7 +187,7 @@ class OTXModel(LightningModule):
 
         # NOTE: To guarantee immutablility of the default value
         if isinstance(tile_config, dict):
-            tile_config = TileConfig(**tile_config)
+            tile_config = TileConfig()
         self._tile_config = tile_config.clone()
         self.save_hyperparameters(
             logger=False,
@@ -473,7 +473,7 @@ class OTXModel(LightningModule):
                 self._label_info = self._dispatch_label_info(ckpt_label_info)
             if ckpt_tile_config := hyper_parameters.get("tile_config"):
                 if isinstance(ckpt_tile_config, dict):
-                    ckpt_tile_config = TileConfig(**ckpt_tile_config)
+                    ckpt_tile_config = TileConfig()
                 self.tile_config = ckpt_tile_config
 
     def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:

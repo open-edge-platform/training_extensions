@@ -368,7 +368,30 @@ class YOLOXHeadModule(BaseDenseHead):
         scores = cls_scores * (score_factor.unsqueeze(-1))
 
         if not with_nms:
-            return bboxes, scores
+            # Non-NMS path: reduce per-class scores to (max_score, label) per box,
+            # then keep top-K by score.  This produces fully static output shapes
+            # (B, K, 5) + (B, K) matching the NMS path's output contract,
+            # without emitting the ONNX NonMaxSuppression op.
+            # All ops are static (no dynamic_topk / torch.where) → NPU-compatible.
+            max_scores, labels = scores.max(dim=-1)  # (B, N), (B, N)
+
+            # Zero out detections below score threshold
+            score_thr = cfg["score_thr"]  # type: ignore[index]
+            max_scores = max_scores * (max_scores >= score_thr).float()
+
+            # Static top-K: keep_top_k must be a Python int so torch.topk
+            # produces a fixed output shape in the ONNX graph.
+            keep_top_k = int(cfg["max_per_img"])  # type: ignore[index]
+            topk_scores, topk_inds = torch.topk(max_scores, keep_top_k, dim=1)
+
+            batch_inds = torch.arange(batch_size, device=bboxes.device).view(-1, 1).long()
+            topk_bboxes = bboxes[batch_inds, topk_inds]  # (B, K, 4)
+            topk_labels = labels[batch_inds, topk_inds]  # (B, K)
+
+            # Concat score to boxes -> (B, K, 5) [x1, y1, x2, y2, score]
+            dets = torch.cat([topk_bboxes, topk_scores.unsqueeze(-1)], dim=-1)
+            return dets, topk_labels.float()
+
         return multiclass_nms(
             bboxes,
             scores,
