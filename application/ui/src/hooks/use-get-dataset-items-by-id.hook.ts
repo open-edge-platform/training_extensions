@@ -5,8 +5,8 @@ import { useMemo } from 'react';
 
 import { useGetDatasetItems } from './use-get-dataset-items.hook';
 
-export const useGetDatasetItemsById = (options?: Parameters<typeof useGetDatasetItems>[0]) => {
-    const { data } = useGetDatasetItems(options);
+export const useGetDatasetItemsById = () => {
+    const { data } = useGetDatasetItems();
 
     const datasetItemsById = useMemo(() => {
         const datasetItems = data?.items ?? [];
