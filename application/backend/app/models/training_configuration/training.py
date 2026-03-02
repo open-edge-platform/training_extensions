@@ -92,19 +92,4 @@ class AlgoLevelTrainingParameters(BaseModel):
                 raise ValueError(
                     f"Input size height '{h}' is not in the list of supported input sizes: {allowed_values}"
                 )
-
-        # Update the model's json_schema to include allowed values for input_size
-        # Note: existing json_schema_extra cannot be overwritten, otherwise it will absent from model_json_schema()
-        AlgoLevelTrainingParameters.model_fields["input_size_width"].json_schema_extra.update(  # type: ignore[union-attr]
-            {
-                "allowed_values": self.allowed_values_input_size,  # type:ignore[dict-item]
-                "default_value": w,
-            }
-        )
-        AlgoLevelTrainingParameters.model_fields["input_size_height"].json_schema_extra.update(  # type: ignore[union-attr]
-            {
-                "allowed_values": self.allowed_values_input_size,  # type:ignore[dict-item]
-                "default_value": h,
-            }
-        )
         return self
