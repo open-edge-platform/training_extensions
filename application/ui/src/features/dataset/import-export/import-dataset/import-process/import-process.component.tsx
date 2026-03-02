@@ -5,9 +5,10 @@ import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { getJobProgress, isJobPending } from '../../util';
-import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
+import { useImportJobStatus } from '../hooks/use-import-job-status.hook';
 
 import classes from './import-process.module.scss';
 
@@ -17,18 +18,26 @@ type ImportProcessProps = {
 
 export const ImportProcess = ({ currentStagedId }: ImportProcessProps) => {
     const { setCurrentStep } = useImportDatasetDialogState();
+    const { getImportEntry, updateImportEntryStep, deleteImportEntry } = useImportDatasetToProject();
+    const importLsEntry = getImportEntry(currentStagedId);
 
     const {
         data: job,
         isFetching,
         isPending,
-        fileName,
-    } = usePrepareImportStatus({
-        stagedDatasetId: currentStagedId,
-        onError: () => setCurrentStep('uploading'),
-        onSuccess: () => setCurrentStep('labelMapping'),
+    } = useImportJobStatus({
+        jobId: importLsEntry?.prepareJobId,
+        onError: () => {
+            setCurrentStep('uploading');
+            deleteImportEntry(currentStagedId);
+        },
+        onSuccess: () => {
+            setCurrentStep('labelMapping');
+            updateImportEntryStep(currentStagedId, 'labelMapping');
+        },
     });
 
+    const fileName = importLsEntry?.fileName ?? '';
     const progress = getJobProgress(job?.progress);
     const isPreparingJobLoading = isJobPending(job) && isPending;
 

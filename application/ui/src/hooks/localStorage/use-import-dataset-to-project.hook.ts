@@ -30,15 +30,8 @@ export const useImportDatasetToProject = () => {
         return lsImportDatasetToProject ?? [];
     };
 
-    const getImportEntry = (item: Partial<DatasetImportState>): DatasetImportState | null => {
-        return (
-            lsImportDatasetToProject?.find(
-                ({ importJobId, prepareJobId, stagedDatasetId }) =>
-                    item.importJobId === importJobId ||
-                    item.prepareJobId === prepareJobId ||
-                    item.stagedDatasetId === stagedDatasetId
-            ) ?? null
-        );
+    const getImportEntry = (stagedDatasetId: string): DatasetImportState | null => {
+        return lsImportDatasetToProject?.find((item) => item.stagedDatasetId === stagedDatasetId) ?? null;
     };
 
     const appendImportEntry = (newEntry: DatasetImportState) => {

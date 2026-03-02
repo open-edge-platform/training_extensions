@@ -9,6 +9,8 @@ import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use
 import { formatBytes } from '../../../../../shared/util';
 import { isInvalidStagedFile } from '../../util';
 
+import classes from './import-job-done.module.scss';
+
 type ImportJobDoneProps = {
     size: number;
     fileName: string;
@@ -56,7 +58,7 @@ export const ImportJobDone = ({ fileName, size, stagedDatasetId }: ImportJobDone
             <Divider size='S' marginY='size-150' />
 
             <Flex alignItems='center' gap='size-100'>
-                <CheckCircleOutlined width={16} height={16} />
+                <CheckCircleOutlined className={classes.checkIcon} width={16} height={16} />
 
                 <Text>Ready</Text>
             </Flex>
