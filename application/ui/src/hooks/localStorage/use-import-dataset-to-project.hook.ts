@@ -61,7 +61,7 @@ export const useImportDatasetToProject = () => {
             (prev) =>
                 prev?.map((item) =>
                     item.stagedDatasetId === stagedDatasetId ? { ...item, ...newImportState } : item
-                ) ?? null
+                ) ?? []
         );
     };
 

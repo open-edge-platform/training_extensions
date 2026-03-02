@@ -4,7 +4,7 @@
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
 import { $api } from '../../../../../api/client';
-import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { Job } from '../../../../../constants/shared-types';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { isInvalidStagedFile } from '../../util';
@@ -13,7 +13,7 @@ type ImportFailedJobProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    job: PrepareImportDatasetJob;
+    job: Job;
 };
 
 export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: ImportFailedJobProps) => {
