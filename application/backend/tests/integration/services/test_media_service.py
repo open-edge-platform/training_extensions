@@ -528,7 +528,7 @@ class TestMediaServiceIntegration:
         project, pipeline = fxt_project_with_pipeline
 
         created_media = fxt_media_service.create_image(
-            project=project,
+            project_id=project.id,
             name="test",
             format=format,
             data=image,
@@ -581,7 +581,7 @@ class TestMediaServiceIntegration:
             fxt_video_data(Path(tmp_file))
             with open(tmp_file, mode="rb") as data:
                 created_media = fxt_media_service.create_video(
-                    project=project,
+                    project_id=project.id,
                     name="test",
                     format=format,
                     data=data,
@@ -623,7 +623,7 @@ class TestMediaServiceIntegration:
 
         with pytest.raises(InvalidImageError):
             fxt_media_service.create_image(
-                project=project,
+                project_id=project.id,
                 name="test",
                 format=ImageFormat.JPG,
                 data=BytesIO(b"123"),

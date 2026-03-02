@@ -183,13 +183,14 @@ class TestMediaEndpoints:
             "width": 1024,
         }
         fxt_media_service.create_image.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             data=ANY,
             name="test_file",
             format=ImageFormat(image_format),
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
+            task=fxt_get_project.task,
             media=fxt_image_media,
             user_reviewed=False,
         )
@@ -236,7 +237,7 @@ class TestMediaEndpoints:
             "duration": 40,
         }
         fxt_media_service.create_video.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             data=ANY,
             name="test_file",
             format="mp4",
@@ -957,7 +958,8 @@ class TestMediaEndpoints:
             project=fxt_get_project, video=media, frame_index=10
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
+            task=fxt_get_project.task,
             media=video_frame,
             user_reviewed=True,
         )

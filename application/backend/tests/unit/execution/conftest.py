@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.services import DatasetRevisionService, DatasetService
+from app.services import DatasetRevisionService, DatasetService, LabelService, MediaService
 
 
 @pytest.fixture
@@ -36,3 +36,15 @@ def fxt_dataset_service() -> Mock:
 def fxt_dataset_revision_service() -> Mock:
     """Mock DatasetRevisionService for testing."""
     return Mock(spec=DatasetRevisionService)
+
+
+@pytest.fixture
+def fxt_label_service() -> Mock:
+    """Mock LabelService for testing."""
+    return Mock(spec=LabelService)
+
+
+@pytest.fixture
+def fxt_media_service() -> Mock:
+    """Mock MediaService for testing."""
+    return Mock(spec=MediaService)

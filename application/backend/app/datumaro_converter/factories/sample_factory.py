@@ -3,27 +3,28 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from typing import Generic, TypeVar
 
 from datumaro.experimental import Sample
 
 from app.datumaro_converter.domain import LabelIndex
 from app.models import DatasetItem, Label, Media
 
+SampleT = TypeVar("SampleT", bound=Sample)
 
-class SampleFactory(ABC):
+
+class SampleFactory(ABC, Generic[SampleT]):
     """Knows how to create a specific type of Datumaro sample from dataset items."""
+
+    sample_type: type[SampleT]
 
     def __init__(self, project_labels: Sequence[Label]):
         self._label_index = LabelIndex(project_labels)
 
     @abstractmethod
-    def create_sample(self, dataset_item: DatasetItem, media: Media, image_path: str) -> Sample | None:
+    def create_sample(self, dataset_item: DatasetItem, media: Media, image_path: str) -> SampleT | None:
         """Creates a sample from dataset item."""
-
-    @property
-    @abstractmethod
-    def sample_type(self) -> type[Sample]:
-        """Returns the sample type this factory produces."""
+        ...
 
     @property
     def label_index(self) -> LabelIndex:

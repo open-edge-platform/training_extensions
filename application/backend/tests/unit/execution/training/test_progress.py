@@ -55,7 +55,7 @@ class TestTrainingProgressCallback:
             10.0 + (2 / 10) * 70.0,
             10.0 + (3 / 10) * 70.0,
         ]
-        actual = [c.args[1] for c in calls]
+        actual = [c.args[0] for c in calls]
         assert actual == expected
 
     def test_on_train_batch_end_respects_custom_progress_bounds(self) -> None:
@@ -74,5 +74,5 @@ class TestTrainingProgressCallback:
             )
 
         expected = [25.0, 50.0, 75.0, 100.0]
-        actual = [c.args[1] for c in report_progress.call_args_list]
+        actual = [c.args[0] for c in report_progress.call_args_list]
         assert actual == expected

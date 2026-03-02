@@ -1,6 +1,5 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 from uuid import UUID, uuid4
@@ -9,8 +8,8 @@ import pytest
 from datumaro.experimental.data_formats.base import DataFormat
 from loguru import logger
 
-from app.core.run import ExecutionContext
 from app.execution import PrepareDataset
+from app.models.jobs import PrepareDatasetForImportJobParams
 
 
 @pytest.fixture
@@ -158,19 +157,16 @@ class TestPrepareDataset:
         assert not archive_path.exists()
         assert not extract_dir.exists()
 
-    def test_run(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
+    def test_execute(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
         dataset_dir = fxt_staged_datasets_dir / str(uuid4())
         archive_path = dataset_dir / "dataset-coco.zip"
-
-        execution_context = Mock(spec=ExecutionContext)
-        execution_context.payload = json.dumps({"staged_dataset_id": dataset_dir.name})
 
         with (
             patch.object(fxt_prepare, "check_archive", return_value=archive_path) as mock_check_archive,
             patch.object(fxt_prepare, "convert_archive") as mock_convert_archive,
             patch.object(fxt_prepare, "cleanup") as mock_cleanup,
         ):
-            fxt_prepare.run(execution_context)
+            fxt_prepare.execute(PrepareDatasetForImportJobParams(staged_dataset_id=UUID(dataset_dir.name)))
 
             mock_check_archive.assert_called_once_with(UUID(dataset_dir.name))
             mock_convert_archive.assert_called_once_with(archive_path)

@@ -156,20 +156,21 @@ def add_media(
     try:
         if isinstance(format, ImageFormat):
             media = media_service.create_image(
-                project=project,
+                project_id=project.id,
                 data=file.file,
                 name=name,
                 format=format,
             )
             dataset_service.create_dataset_item(
-                project=project,
+                project_id=project.id,
+                task=project.task,
                 media=media,
                 user_reviewed=False,
             )
         else:
             # Dataset items for videos are created separately after video upload for each frame being annotated
             media = media_service.create_video(
-                project=project,
+                project_id=project.id,
                 data=file.file,
                 name=name,
                 format=format,
@@ -394,7 +395,8 @@ def set_media_annotations(
             project=project, video=media.video, frame_index=media.frame_index
         )
         dataset_service.create_dataset_item(
-            project=project,
+            project_id=project.id,
+            task=project.task,
             media=video_frame,
             user_reviewed=True,
         )
