@@ -1,9 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
-
-import { EncodingOutput, SegmentAnythingModel } from '@geti/smart-tools/segment-anything';
+import { EncodingOutput } from '@geti/smart-tools/segment-anything';
 import { useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
@@ -12,66 +10,78 @@ import type { Media } from '../../../../constants/shared-types';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { isDetectionTask } from '../../../project/task-type-guards';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import type {
+    SegmentAnythingWorkerApi,
+    SegmentAnythingWorkerModel,
+} from '../../webworkers/segment-anything.worker.interface';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
-const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') => {
-    const { data } = useQuery<Remote<SegmentAnythingModel>>({
-        queryKey: ['workers', algorithmType],
-        queryFn: async () => {
-            const baseWorker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
-                type: 'module',
-            });
-            const samWorker = wrap(baseWorker);
+type SegmentAnythingRemoteModel = Remote<SegmentAnythingWorkerModel>;
 
-            // @ts-expect-error build exists on every worker
-            return samWorker.build();
-        },
+export const getSegmentAnythingWorkerQueryKey = (
+    algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER'
+) => ['workers', algorithmType] as const;
+
+export const segmentAnythingWorkerQueryFn =
+    (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') => async () => {
+        const baseWorker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
+            type: 'module',
+        });
+        const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
+        const model = await samWorker.build();
+
+        await model.init(algorithmType);
+
+        return model;
+    };
+
+export const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
+    return isVideoFrame(mediaItem)
+        ? ['segment-anything-model', 'encoding', mediaItem.id, mediaItem.frame_number]
+        : ['segment-anything-model', 'encoding', mediaItem.id];
+};
+
+export const segmentAnythingEncodingQueryFn = (
+    model: SegmentAnythingRemoteModel,
+    image: ImageData
+): Promise<EncodingOutput> => {
+    return model.processEncoder(image);
+};
+
+const useSegmentAnythingWorker = (
+    algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
+    enabled = true
+) => {
+    const { data } = useQuery<SegmentAnythingRemoteModel>({
+        queryKey: getSegmentAnythingWorkerQueryKey(algorithmType),
+        queryFn: segmentAnythingWorkerQueryFn(algorithmType),
         staleTime: Infinity,
+        enabled,
     });
 
-    const modelRef = useRef<Remote<SegmentAnythingModel>>(undefined);
-    const [modelIsLoading, setModelIsLoading] = useState(false);
+    return data;
+};
 
-    useEffect(() => {
-        const loadWorker = async () => {
-            setModelIsLoading(true);
-
-            if (data) {
-                const model = data;
-
-                await model.init(algorithmType);
-
-                modelRef.current = model;
-            }
-
-            setModelIsLoading(false);
-        };
-
-        if (data && modelRef.current === undefined && !modelIsLoading) {
-            loadWorker();
-        }
-    }, [data, modelIsLoading, algorithmType]);
-
-    return modelRef.current;
+export const usePreloadSAMWorkers = (enabled = true) => {
+    useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER', enabled);
+    useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', enabled);
 };
 
 const useEncodingQuery = (
-    model: Remote<SegmentAnythingModel> | undefined,
+    model: SegmentAnythingRemoteModel | undefined,
     mediaItem: Media,
     image: ImageData,
     isImageReady: boolean
 ) => {
     return useQuery({
-        queryKey: isVideoFrame(mediaItem)
-            ? ['segment-anything-model', 'encoding', mediaItem.id, mediaItem.frame_number]
-            : ['segment-anything-model', 'encoding', mediaItem.id],
+        queryKey: getSegmentAnythingEncodingQueryKey(mediaItem),
         queryFn: async () => {
             if (model === undefined) {
                 throw new Error('Model not yet initialized');
             }
 
-            return await model.processEncoder(image);
+            return await segmentAnythingEncodingQueryFn(model, image);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -89,7 +99,7 @@ const useDecoderOutputType = () => {
     return 'polygon';
 };
 
-const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding: EncodingOutput | undefined) => {
+const useDecodingFn = (model: SegmentAnythingRemoteModel | undefined, encoding: EncodingOutput | undefined) => {
     const decoderOutput = useDecoderOutputType();
 
     // TODO: look into returning a new "decoder model" instance that already has the encoding data
