@@ -42,7 +42,7 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
             <FullImageShape
                 color={color}
                 strokeDasharray={strokeDasharray}
-                ariaLabel={`${hasPredictionLabel ? 'prediction' : 'annotation'} rect`}
+                ariaLabel={`${hasPredictionLabel ? 'prediction' : 'annotation'} full image`}
             />
         );
     }
