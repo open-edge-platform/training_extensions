@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, Dispatch, ReactNode, useContext, useState } from 'react';
 
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { OverlayTriggerState } from 'react-stately';
@@ -9,9 +9,9 @@ import { OverlayTriggerState } from 'react-stately';
 type ImportDatasetDialogStateContextProps = {
     datasetImportDialogState: OverlayTriggerState;
     currentStagedId: string | null;
-    setCurrentStagedId: React.Dispatch<React.SetStateAction<string | null>>;
+    setCurrentStagedId: Dispatch<React.SetStateAction<string | null>>;
     currentStep: ImportDatasetState;
-    setCurrentStep: React.Dispatch<React.SetStateAction<ImportDatasetState>>;
+    setCurrentStep: Dispatch<React.SetStateAction<ImportDatasetState>>;
 };
 
 const ImportDatasetDialogStateContext = createContext<ImportDatasetDialogStateContextProps | undefined>(undefined);

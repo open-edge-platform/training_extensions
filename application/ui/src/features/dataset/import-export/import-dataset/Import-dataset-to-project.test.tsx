@@ -10,14 +10,14 @@ import {
     ImportDatasetDialogStateProvider,
     useImportDatasetDialogState,
 } from '../../providers/export-import-dataset-dialog-provider.component';
-import { ImportDatasetToProject } from './import-dataset-to-project.component';
+import { ImportDatasetToProject } from './Import-dataset-to-project.component';
 
 vi.mock('../../../../hooks/localStorage/use-import-dataset-to-project.hook');
 
 describe('ImportDatasetToProject', () => {
     const renderApp = (data: null | { id: string; fileName: string }) => {
         vi.mocked(useImportDatasetToProject).mockReturnValue({
-            findImportEntry: vi.fn().mockReturnValue(data),
+            getImportEntry: vi.fn().mockReturnValue(data),
             getAllImportEntries: vi.fn(),
             appendImportEntry: vi.fn(),
             deleteImportEntry: vi.fn(),

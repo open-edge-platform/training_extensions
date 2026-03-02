@@ -15,8 +15,8 @@ type ImportDatasetButtonsProps = {
 };
 
 export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: ImportDatasetButtonsProps) => {
-    const { findImportEntry } = useImportDatasetToProject();
-    const { prepareJobId } = findImportEntry({ stagedDatasetId }) ?? { prepareJobId: null };
+    const { getImportEntry } = useImportDatasetToProject();
+    const { prepareJobId } = getImportEntry({ stagedDatasetId }) ?? { prepareJobId: null };
 
     if (stagedDatasetId === null || prepareJobId === null) {
         return (

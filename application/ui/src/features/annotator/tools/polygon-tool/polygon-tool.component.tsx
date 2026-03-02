@@ -9,7 +9,7 @@ import { isEmpty } from 'lodash-es';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { Point } from '../../../../shared/types';
 import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
-import { useMediaItemImage } from '../../selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
@@ -31,7 +31,7 @@ import classes from './polygon-tool.module.scss';
 export const PolygonTool = () => {
     const { scale: zoom } = useZoom();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { image } = useMediaItemImage();
+    const { image } = useSelectedMediaItem();
     const { selectedLabel } = useAnnotatorLabels();
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);

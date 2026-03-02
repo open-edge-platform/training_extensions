@@ -8,9 +8,10 @@ import { isJobFailed, isJobPending, isJobRunning } from '../util';
 import { ImportActiveJob } from './import-active-job/import-active-job.component';
 import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
 
-interface PrepareImportDatasetProps {
+type PrepareImportDatasetProps = {
     stagedDatasetId: string;
-}
+};
+
 export const PrepareImportDataset = ({ stagedDatasetId }: PrepareImportDatasetProps) => {
     const { data: job, fileName, size } = usePrepareImportStatus({ stagedDatasetId, onSuccess: () => {} });
 

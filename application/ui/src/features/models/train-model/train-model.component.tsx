@@ -8,11 +8,7 @@ import { Button, DialogTrigger, Loading, View } from '@geti/ui';
 import { TrainModelDialog } from './train-model-dialog.component';
 import { TrainModelProvider } from './train-model-provider.component';
 
-type TrainModelProps = {
-    preSelectedDatasetRevisionId?: string;
-};
-
-export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) => {
+export const TrainModel = () => {
     return (
         <DialogTrigger>
             <Button margin={0}>Train model</Button>
@@ -24,7 +20,7 @@ export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) =>
                         </View>
                     }
                 >
-                    <TrainModelProvider preSelectedDatasetRevisionId={preSelectedDatasetRevisionId}>
+                    <TrainModelProvider>
                         <TrainModelDialog onClose={close} />
                     </TrainModelProvider>
                 </Suspense>

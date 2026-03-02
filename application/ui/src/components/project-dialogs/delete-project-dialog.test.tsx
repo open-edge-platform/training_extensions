@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -26,6 +26,9 @@ describe('DeleteProjectDialog', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
         expect(await screen.findByText('Project deleted successfully')).toBeVisible();
+        await waitFor(() => {
+            expect(onClose).toHaveBeenCalled();
+        });
     });
 
     it('shows error toast when delete project fails', async () => {
@@ -44,5 +47,8 @@ describe('DeleteProjectDialog', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
         expect(await screen.findByText(errorMessage)).toBeVisible();
+        await waitFor(() => {
+            expect(onClose).toHaveBeenCalled();
+        });
     });
 });

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { paths } from './constants/paths';
 import { ImportDatasetDialogStateProvider } from './features/dataset/providers/export-import-dataset-dialog-provider.component';
@@ -31,7 +31,7 @@ const Redirect = () => {
         const projectId = projects[0].id;
 
         if (projectId) {
-            path = paths.project.dataset({ projectId });
+            path = paths.project.dataset.index({ projectId });
         } else {
             path = paths.project.new({});
         }
@@ -41,7 +41,7 @@ const Redirect = () => {
         const projectWithActivePipeline = projects.find((project) => Boolean(project.active_pipeline));
 
         if (projectWithActivePipeline) {
-            path = paths.project.dataset({ projectId: projectWithActivePipeline.id });
+            path = paths.project.dataset.index({ projectId: projectWithActivePipeline.id });
         } else {
             path = paths.project.index({});
         }
@@ -82,24 +82,28 @@ export const router = createBrowserRouter([
                         element: <Inference />,
                     },
                     {
-                        path: paths.project.dataset.pattern,
+                        path: paths.project.dataset.index.pattern,
                         element: (
                             <ImportDatasetDialogStateProvider>
                                 <SelectedDataProvider>
-                                    <Dataset />
+                                    <Outlet />
                                 </SelectedDataProvider>
                             </ImportDatasetDialogStateProvider>
                         ),
-                    },
-                    {
-                        path: paths.project.datasetItem.pattern,
-                        element: (
-                            <ImportDatasetDialogStateProvider>
-                                <SelectedDataProvider>
-                                    <Dataset />
-                                </SelectedDataProvider>
-                            </ImportDatasetDialogStateProvider>
-                        ),
+                        children: [
+                            {
+                                index: true,
+                                element: <Dataset />,
+                            },
+                            {
+                                path: paths.project.dataset.item.index.pattern,
+                                element: <Dataset />,
+                            },
+                            {
+                                path: paths.project.dataset.item.frame.pattern,
+                                element: <Dataset />,
+                            },
+                        ],
                     },
                     {
                         path: paths.project.models.pattern,

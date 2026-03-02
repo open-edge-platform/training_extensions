@@ -15,6 +15,9 @@ export const ImportJobsList = () => {
     const [preparingImports, otherItems] = partition(importEntries, ({ step }) => step === 'preparing');
     const stagedImports = otherItems.filter(({ step }) => step === 'labelMapping');
 
+    const stagedImportsQueue = stagedImports.reverse();
+    const preparingImportsQueue = preparingImports.reverse();
+
     return (
         <Flex
             gap='size-250'
@@ -23,11 +26,11 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {preparingImports.reverse().map(({ stagedDatasetId }) => (
+            {preparingImportsQueue.map(({ stagedDatasetId }) => (
                 <PrepareImportDataset key={`prepare-${stagedDatasetId}`} stagedDatasetId={String(stagedDatasetId)} />
             ))}
 
-            {stagedImports.reverse().map(({ fileName, stagedDatasetId }) => (
+            {stagedImportsQueue.map(({ fileName, stagedDatasetId }) => (
                 <StagedImportDataset
                     key={`staged-${stagedDatasetId}`}
                     fileName={String(fileName)}

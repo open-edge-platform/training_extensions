@@ -28,7 +28,7 @@ export const useImportDatasetToProject = () => {
         return lsImportDatasetToProject ?? [];
     };
 
-    const findImportEntry = (item: Partial<DataValue>): DataValue | null => {
+    const getImportEntry = (item: Partial<DataValue>): DataValue | null => {
         return (
             lsImportDatasetToProject?.find(
                 ({ prepareJobId, stagedDatasetId }) =>
@@ -62,7 +62,7 @@ export const useImportDatasetToProject = () => {
     return {
         getAllImportEntries,
         appendImportEntry,
-        findImportEntry,
+        getImportEntry,
         deleteImportEntry,
         updateImportEntryStep,
         getLastImportEntry,

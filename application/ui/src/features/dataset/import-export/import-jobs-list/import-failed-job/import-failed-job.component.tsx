@@ -21,7 +21,7 @@ export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: Import
     const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
     const handleClose = () => {
-        deleteFileMutation.mutateAsync(
+        deleteFileMutation.mutate(
             { params: { path: { staged_dataset_id: stagedDatasetId } } },
             {
                 onSuccess: () => {

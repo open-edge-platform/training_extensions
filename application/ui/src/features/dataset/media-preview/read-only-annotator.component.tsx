@@ -1,14 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
-
-import { ActionButton, Button, Flex, Loading, Text, View } from '@geti/ui';
+import { ActionButton, Button, Flex, Text, View } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { MediaItemImageLoader } from '../../annotator/selected-media-item-provider.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
@@ -19,7 +16,7 @@ import classes from './read-only-annotator.module.scss';
 
 type ReadOnlyAnnotatorProps = {
     mediaItem: Media;
-    isUserReviewed: boolean;
+    image: ImageData;
     onClose: () => void;
     onModeChange?: (mode: 'annotation' | 'prediction') => void;
     onAcceptPrediction?: () => void;
@@ -37,8 +34,8 @@ type ReadOnlyAnnotatorProps = {
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
 export const ReadOnlyAnnotator = ({
+    image,
     mediaItem,
-    isUserReviewed,
     onModeChange,
     onClose,
     onAcceptPrediction,
@@ -82,16 +79,12 @@ export const ReadOnlyAnnotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'} UNSAFE_className={classes.readOnlyCanvas}>
                 <AnnotatorCanvasSettings>
-                    <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
-                        <MediaItemImageLoader>
-                            <AnnotatorCanvas isReadOnly mediaItem={mediaItem} />
-                        </MediaItemImageLoader>
-                    </Suspense>
+                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} />
                 </AnnotatorCanvasSettings>
             </View>
 
             <View gridArea={'bottom'}>
-                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} hideHotkeys />
+                <BottomToolbar mediaItem={mediaItem} hideHotkeys />
             </View>
         </>
     );

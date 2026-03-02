@@ -1,16 +1,23 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useRef, useState } from 'react';
+
+import { isEqual } from 'lodash-es';
+import { useParams } from 'react-router';
 
 import type { Media } from '../../constants/shared-types';
+import { isVideo } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
+import { getImageData } from './tools/utils';
 
 type SelectedMediaItemContextProps = {
     mediaItem: Media;
     roi: RegionOfInterest;
     setMediaItem: (item: Media) => void;
+    image: ImageData;
+    isImageReady: boolean;
 };
 
 const SelectedMediaItemContext = createContext<SelectedMediaItemContextProps | null>(null);
@@ -20,20 +27,71 @@ type SelectedMediaItemProviderProps = {
     children: ReactNode;
 };
 
+const useVideoFrameNumberQueryParam = () => {
+    const { frameNumber } = useParams<{ frameNumber?: string }>();
+
+    if (frameNumber === undefined) {
+        return 0;
+    }
+
+    const frameNumberInt = parseInt(frameNumber, 10);
+
+    return Number.isNaN(frameNumberInt) ? 0 : frameNumberInt;
+};
+
+const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
+    if (isVideo(mediaItem)) {
+        return {
+            ...mediaItem,
+            type: 'video_frame',
+            frame_stride: mediaItem.fps,
+            frame_number: frameNumber,
+        };
+    }
+
+    return mediaItem;
+};
+
+const useMediaItem = (initialMediaItem: Media) => {
+    const frameNumber = useVideoFrameNumberQueryParam();
+
+    const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
+    const prevInitialMediaItem = useRef(initialMediaItem);
+
+    if (!isEqual(initialMediaItem, prevInitialMediaItem.current)) {
+        prevInitialMediaItem.current = initialMediaItem;
+        setMediaItem(convertMediaItem(initialMediaItem, frameNumber));
+    }
+
+    const changeMediaItem = useCallback((newMedia: Media) => {
+        setMediaItem((prevMediaItem) => {
+            if (isEqual(prevMediaItem, newMedia)) {
+                return prevMediaItem;
+            }
+
+            return convertMediaItem(newMedia, 0);
+        });
+    }, []);
+
+    return [mediaItem, changeMediaItem] as const;
+};
+
 export const SelectedMediaItemProvider = ({
     mediaItem: initialMediaItem,
     children,
 }: SelectedMediaItemProviderProps) => {
-    const [mediaItem, setMediaItem] = useState<Media>(initialMediaItem);
+    const [mediaItem, setMediaItem] = useMediaItem(initialMediaItem);
 
-    /* TODO: Check if we need this */
-    useEffect(() => {
-        setMediaItem(initialMediaItem);
-    }, [initialMediaItem]);
+    const { data: image = getImageData(new Image()), isSuccess, isPlaceholderData } = useLoadImageQuery(mediaItem);
+    const isImageReady = isSuccess && !isPlaceholderData;
 
     const roi: RegionOfInterest = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
-    return <SelectedMediaItemContext value={{ mediaItem, roi, setMediaItem }}>{children}</SelectedMediaItemContext>;
+    return (
+        <SelectedMediaItemContext value={{ mediaItem, roi, setMediaItem, image, isImageReady }}>
+            {children}
+        </SelectedMediaItemContext>
+    );
 };
 
 export const useSelectedMediaItem = (): SelectedMediaItemContextProps => {
@@ -41,47 +99,6 @@ export const useSelectedMediaItem = (): SelectedMediaItemContextProps => {
 
     if (context === null) {
         throw new Error('useSelectedMediaItem was used outside of SelectedMediaItemProvider');
-    }
-
-    return context;
-};
-
-type MediaItemImageContextType = {
-    image: ImageData;
-};
-
-const MediaItemImageContext = createContext<MediaItemImageContextType | null>(null);
-
-/*
-TODO: Use this when API supports video frames
-const getMediaItem = (mediaItem: Media) => {
-    if (isVideo(mediaItem)) {
-        // For video, we want to get the first frame of the video, that's not supported right now
-        return undefined;
-    }
-
-    return mediaItem;
-};*/
-
-/**
- * Loads the image for the currently selected media item via a suspense query.
- * Must be placed INSIDE a <Suspense> boundary so that only the canvas area
- * suspends — not the toolbars or annotation state above it.
- */
-export const MediaItemImageLoader = ({ children }: { children: ReactNode }) => {
-    const { mediaItem } = useSelectedMediaItem();
-
-    // TODO: Use getMediaItem when API supports video frames
-    const { data: image } = useLoadImageQuery(mediaItem.id);
-
-    return <MediaItemImageContext value={{ image }}>{children}</MediaItemImageContext>;
-};
-
-export const useMediaItemImage = (): MediaItemImageContextType => {
-    const context = useContext(MediaItemImageContext);
-
-    if (context === null) {
-        throw new Error('useMediaItemImage was used outside of MediaItemImageLoader');
     }
 
     return context;

@@ -8,14 +8,9 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
-import { queryClient } from '../../../query-client/query-client';
 import { TogglePipelineButton } from './toggle-pipeline-button.component';
 
 describe('TogglePipelineButton', () => {
-    beforeEach(() => {
-        queryClient.removeQueries();
-    });
-
     it('enables pipeline when currently idle', async () => {
         server.use(
             http.get('/api/projects/{project_id}/pipeline', () => {

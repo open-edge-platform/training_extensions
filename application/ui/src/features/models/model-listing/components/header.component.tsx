@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
+import { Flex, Grid, Item, Picker, ToggleButton } from '@geti/ui';
 
+import { TrainModel } from '../../train-model/train-model.component';
 import { useModelListing } from '../provider/model-listing-provider';
 import type { GroupByMode, SortBy } from '../types';
 import { ExpandableSearch } from './expandable-search/expandable-search.component';
@@ -23,12 +24,10 @@ export const Header = () => {
 
     return (
         <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
-            <Text>Models</Text>
-
-            <Flex marginStart={'size-300'} gap={'size-100'}>
+            <Flex gap={'size-100'}>
                 <Picker
                     placeholder={'Group by'}
-                    width={'size-3000'}
+                    width={'size-2400'}
                     aria-label={'Group models'}
                     selectedKey={groupBy}
                     onSelectionChange={(key) => onGroupByChange(key as GroupByMode)}
@@ -38,7 +37,7 @@ export const Header = () => {
                 </Picker>
                 <Picker
                     placeholder={'Sort by'}
-                    width={'size-3000'}
+                    width={'size-2000'}
                     aria-label={'Sort models'}
                     selectedKey={sortBy}
                     onSelectionChange={(key) => onSortChange(key as SortBy)}
@@ -61,8 +60,9 @@ export const Header = () => {
                 </ToggleButton>
             </Flex>
 
-            <Flex>
+            <Flex marginStart={'auto'} gap={'size-100'}>
                 <ExpandableSearch value={searchBy} onChange={onSearchChange} />
+                <TrainModel />
             </Flex>
         </Grid>
     );

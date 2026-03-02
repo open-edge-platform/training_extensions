@@ -5,7 +5,7 @@ import { Image, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { MediaVideoFrame } from '../../../../../../../constants/shared-types';
-import { getThumbnailUrl } from '../../../../../../../shared/media-url.utils';
+import { getVideoFrameThumbnailUrl } from '../../../../../../../shared/media-url.utils';
 import { formatDurationText } from '../../../time-utils';
 import { FrameNumberIndicator } from './frame-number-indicator.component';
 
@@ -24,8 +24,7 @@ export const ThumbnailPreview = ({ videoFrame, frameNumber, width, height, x }: 
     const projectIdentifier = useProjectIdentifier();
 
     const fps = videoFrame.fps;
-    // TODO: Replace it with the video frame thumbnail when the endpoint will be ready.
-    const src = getThumbnailUrl(projectIdentifier, videoFrame.id);
+    const src = getVideoFrameThumbnailUrl(projectIdentifier, videoFrame.id, frameNumber);
 
     const durationText = formatDurationText(frameNumber / fps);
 

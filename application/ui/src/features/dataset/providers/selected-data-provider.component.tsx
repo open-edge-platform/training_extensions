@@ -5,21 +5,15 @@ import { createContext, ReactNode, useContext, useState, type Dispatch, type Set
 
 import { Selection } from '@geti/ui';
 
-import { MediaStateMap } from '../../../constants/shared-types';
-
 type SelectedDataState = null | {
     selectedKeys: Selection;
     setSelectedKeys: Dispatch<SetStateAction<Selection>>;
-
-    mediaState: MediaStateMap;
-    setMediaState: Dispatch<SetStateAction<MediaStateMap>>;
     toggleSelectedKeys: (key: string[]) => void;
 };
 
 const SelectedDataContext = createContext<SelectedDataState>(null);
 
 export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
-    const [mediaState, setMediaState] = useState<MediaStateMap>(new Map());
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
     const toggleSelectedKeys = (keys: string[]) => {
@@ -39,9 +33,6 @@ export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 selectedKeys,
                 setSelectedKeys,
-
-                mediaState,
-                setMediaState,
                 toggleSelectedKeys,
             }}
         >

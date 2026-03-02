@@ -19,8 +19,8 @@ type UsePrepareImportStatusProps = {
 };
 
 export const usePrepareImportStatus = ({ stagedDatasetId, onError, onSuccess }: UsePrepareImportStatusProps) => {
-    const { findImportEntry, updateImportEntryStep, deleteImportEntry } = useImportDatasetToProject();
-    const importLsEntry = findImportEntry({ stagedDatasetId });
+    const { getImportEntry, updateImportEntryStep, deleteImportEntry } = useImportDatasetToProject();
+    const importLsEntry = getImportEntry({ stagedDatasetId });
 
     const response = $api.useQuery(
         'get',

@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { Content, Dialog, Grid, Loading, View } from '@geti/ui';
+import { Content, Dialog, Grid, View } from '@geti/ui';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
@@ -11,10 +11,9 @@ import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { MediaItemImageLoader, useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
-import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -48,7 +47,6 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 };
 
 type AnnotatorProps = {
-    isUserReviewed: boolean;
     mode: AnnotatorMode;
     changeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
@@ -58,7 +56,6 @@ type AnnotatorProps = {
 };
 
 const Annotator = ({
-    isUserReviewed,
     mode,
     changeAnnotatorMode,
     onClose,
@@ -66,17 +63,22 @@ const Annotator = ({
     items,
     onSelectedMediaItem,
 }: AnnotatorProps) => {
-    const { mediaItem, setMediaItem } = useSelectedMediaItem();
+    const { mediaItem, setMediaItem, image } = useSelectedMediaItem();
+
+    const selectMediaItem = (item: Media) => {
+        setMediaItem(item);
+        onSelectedMediaItem(item);
+    };
 
     return (
         <VideoPlayerProvider
-            videoFrame={isVideo(mediaItem) || isVideoFrame(mediaItem) ? mediaItem : undefined}
-            changeSelectedMediaItem={setMediaItem}
+            videoFrame={isVideoFrame(mediaItem) ? mediaItem : undefined}
+            changeSelectedMediaItem={selectMediaItem}
         >
             {mode === 'prediction' ? (
                 <ReadOnlyAnnotator
+                    image={image}
                     mediaItem={mediaItem}
-                    isUserReviewed={isUserReviewed}
                     onModeChange={changeAnnotatorMode}
                     onClose={onClose}
                     onAcceptPrediction={onSubmitAnnotations}
@@ -106,16 +108,12 @@ const Annotator = ({
                     )}
 
                     <View gridArea={'bottom'}>
-                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                        <BottomToolbar mediaItem={mediaItem} />
                     </View>
 
                     <View gridArea={'canvas'} overflow={'hidden'}>
                         <AnnotatorCanvasSettings>
-                            <Suspense fallback={<Loading size='L' mode='inline' style={{ height: '100%' }} />}>
-                                <MediaItemImageLoader>
-                                    <AnnotatorCanvas mediaItem={mediaItem} />
-                                </MediaItemImageLoader>
-                            </Suspense>
+                            <AnnotatorCanvas mediaItem={mediaItem} image={image} />
                         </AnnotatorCanvasSettings>
                     </View>
                 </>
@@ -131,19 +129,10 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const queryClient = useQueryClient();
-    const { setMediaState } = useSelectedData();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmitAnnotations = async () => {
-        setMediaState((prev) => {
-            const newState = new Map(prev);
-
-            newState.set(String(mediaItem.id), 'accepted');
-
-            return newState;
-        });
-
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
 
@@ -173,7 +162,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                     items={items}
                     onClose={onClose}
                     changeAnnotatorMode={setMode}
-                    isUserReviewed={isUserReviewed}
                     onSelectedMediaItem={onSelectedMediaItem}
                     onSubmitAnnotations={handleSubmitAnnotations}
                 />

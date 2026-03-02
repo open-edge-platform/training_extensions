@@ -43,7 +43,7 @@ const Header = () => {
                     <Item
                         textValue='Data collection page to visualise your media items'
                         key={'dataset'}
-                        href={paths.project.dataset({ projectId })}
+                        href={paths.project.dataset.index({ projectId })}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <BuildIcon style={iconStyles} />
