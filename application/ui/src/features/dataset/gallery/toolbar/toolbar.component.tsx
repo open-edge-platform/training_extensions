@@ -26,7 +26,7 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { ImportExport } from '../../import-export/import-export.component';
-import { useSelectedData } from '../../selected-data-provider.component';
+import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { toggleMultipleSelection } from './util';
 

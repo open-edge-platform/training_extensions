@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Flex, Text, View } from '@geti/ui';
+import { isNil } from 'lodash-es';
 
 import { $api, API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
 import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
 import { downloadFile } from '../../../../../../shared/util';
+import { isInvalidStagedFile } from '../../../util';
 import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportCompletedJobProps = {
@@ -27,6 +29,9 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
             { params: { path: { staged_dataset_id: job.metadata.dataset_id } } },
             {
                 onSuccess: () => removeLsExportId(job.job_id),
+                onError: (error) => {
+                    isInvalidStagedFile(error) && removeLsExportId(job.job_id);
+                },
             }
         );
     };
@@ -58,7 +63,11 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
                         aria-label='download dataset'
                         onPress={handleDownload}
                         isPending={stageDatasetResponse.isFetching}
-                        isDisabled={stageDatasetResponse.isFetching || removeStagedDatasetMutation.isPending}
+                        isDisabled={
+                            stageDatasetResponse.isFetching ||
+                            removeStagedDatasetMutation.isPending ||
+                            isNil(job.metadata.dataset_id)
+                        }
                     >
                         Download
                     </Button>

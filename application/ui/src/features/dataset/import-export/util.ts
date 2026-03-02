@@ -16,7 +16,16 @@ export const isInvalidJob = (error: unknown): boolean => {
     return false;
 };
 
-export const isJobDone = (job?: Job) => job?.status === 'DONE';
-export const isJobFailed = (job?: Job) => job?.status === 'FAILED';
-export const isJobRunning = (job?: Job) => job?.status === 'RUNNING';
-export const isJobPending = (job?: Job) => job?.status === 'PENDING';
+export const isInvalidStagedFile = (error: unknown): boolean => {
+    if (isObject(error) && 'detail' in error) {
+        const detail = String(error.detail);
+        return detail.includes('not found');
+    }
+
+    return false;
+};
+
+export const isJobDone = (job?: Job): job is Job => job?.status === 'DONE';
+export const isJobFailed = (job?: Job): job is Job => job?.status === 'FAILED';
+export const isJobRunning = (job?: Job): job is Job => job?.status === 'RUNNING';
+export const isJobPending = (job?: Job): job is Job => job?.status === 'PENDING';

@@ -5,27 +5,32 @@ import { dimensionValue, Flex, Loading, Text } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { CircularProgress } from '../../../../../components/circular-progress/circular-progress.component';
+import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { getJobProgress, isJobPending } from '../../util';
 import { usePrepareImportStatus } from '../hooks/use-prepare-import-status.hook';
-import { ImportDatasetState } from '../util';
 
 import classes from './import-process.module.scss';
 
 type ImportProcessProps = {
-    onNextStep: (step: ImportDatasetState) => void;
+    currentStagedId: string;
 };
 
-export const ImportProcess = ({ onNextStep }: ImportProcessProps) => {
+export const ImportProcess = ({ currentStagedId }: ImportProcessProps) => {
+    const { setCurrentStep } = useImportDatasetDialogState();
+
     const {
         data: job,
         isFetching,
+        isPending,
         fileName,
     } = usePrepareImportStatus({
-        onError: () => onNextStep('dropzone'),
+        stagedDatasetId: currentStagedId,
+        onError: () => setCurrentStep('uploading'),
+        onSuccess: () => setCurrentStep('labelMapping'),
     });
 
     const progress = getJobProgress(job?.progress);
-    const isPreparingJobLoading = isJobPending(job) && isFetching;
+    const isPreparingJobLoading = isJobPending(job) && isPending;
 
     if (!isFetching && isEmpty(job)) {
         return null;

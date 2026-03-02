@@ -17,18 +17,16 @@ import { LinkOut } from '@geti/ui/icons';
 
 import { $api } from '../../../../../api/client';
 import { ReactComponent as EmptyDataset } from '../../../../../assets/drop-files.svg';
-import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
-import { ImportDatasetState } from '../util';
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
 
-import classes from './import-drop-zone.module.scss';
+import classes from './import-upload-file.module.scss';
 
-type ImportDropZoneProps = {
-    onNextStep: (step: ImportDatasetState) => void;
-};
+export const ImportUploadFile = () => {
+    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
+    const { appendImportEntry } = useImportDatasetToProject();
 
-export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
-    const { addLsPreparingImport } = usePrepareImportDataset();
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
     const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
 
@@ -70,9 +68,18 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
             },
         });
 
-        addLsPreparingImport(prepareImportJob.job_id, file.name, file.size);
-        onNextStep('preparing');
+        appendImportEntry({
+            size: file.size,
+            step: 'preparing',
+            fileName: file.name,
+            prepareJobId: prepareImportJob.job_id,
+            stagedDatasetId: stagedDataset.id,
+        });
+        setCurrentStep('preparing');
+        setCurrentStagedId(stagedDataset.id);
     };
+
+    const isPending = stagedDatasetMutation.isPending || prepareImportJobMutation.isPending;
 
     return (
         <DropZone
@@ -83,14 +90,14 @@ export const ImportDropZone = ({ onNextStep }: ImportDropZoneProps) => {
                 <EmptyDataset />
 
                 <Content>
-                    {stagedDatasetMutation.isPending && (
+                    {isPending && (
                         <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
                             <Heading level={1}>Uploading...</Heading>
                             <Text>Dataset is being uploaded</Text>
                         </Flex>
                     )}
 
-                    {!stagedDatasetMutation.isPending && (
+                    {!isPending && (
                         <Flex alignItems={'center'} direction={'column'} gap={'size-100'}>
                             <Text>Drop the dataset .zip file here</Text>
 

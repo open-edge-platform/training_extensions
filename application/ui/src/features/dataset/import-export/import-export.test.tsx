@@ -8,6 +8,7 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
+import { ImportDatasetDialogStateProvider } from '../providers/export-import-dataset-dialog-provider.component';
 import { ImportExport } from './import-export.component';
 
 describe('ImportExport', () => {
@@ -29,7 +30,11 @@ describe('ImportExport', () => {
             })
         );
 
-        render(<ImportExport />);
+        render(
+            <ImportDatasetDialogStateProvider>
+                <ImportExport />
+            </ImportDatasetDialogStateProvider>
+        );
 
         fireEvent.click(await screen.findByRole('button', { name: /import-export dataset/i }));
         fireEvent.click(await screen.findByRole('menuitem', { name: /Export dataset/i }));

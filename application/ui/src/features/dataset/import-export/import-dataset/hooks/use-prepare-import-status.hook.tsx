@@ -4,27 +4,30 @@
 import { useEffect } from 'react';
 
 import { toast } from '@geti/ui';
-import { isEmpty, isFunction } from 'lodash-es';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
 import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
-import { usePrepareImportDataset } from '../../../../../hooks/localStorage/use-prepare-import-dataset.hook';
+import { isNonEmptyString } from '../../../../../shared/util';
 import { isInvalidJob, isJobDone, isJobFailed } from '../../util';
 
 type UsePrepareImportStatusProps = {
+    stagedDatasetId: string;
     onError?: () => void;
+    onSuccess?: () => void;
 };
 
-export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps) => {
-    const { getLsPreparingImport, removeLsPreparingImport } = usePrepareImportDataset();
-    const { id: jobId, fileName, size } = getLsPreparingImport() ?? {};
+export const usePrepareImportStatus = ({ stagedDatasetId, onError, onSuccess }: UsePrepareImportStatusProps) => {
+    const { getImportEntry, updateImportEntryStep, deleteImportEntry } = useImportDatasetToProject();
+    const importLsEntry = getImportEntry({ stagedDatasetId });
 
     const response = $api.useQuery(
         'get',
         '/api/jobs/{job_id}',
-        { params: { path: { job_id: jobId } } },
+        { params: { path: { job_id: importLsEntry?.prepareJobId } } },
         {
-            enabled: !isEmpty(jobId),
+            enabled: isNonEmptyString(importLsEntry?.prepareJobId),
             select: (currentData) => currentData as PrepareImportDatasetJob,
             refetchInterval: ({ state }) => {
                 return isJobDone(state.data) || isJobFailed(state.data) || state.status === 'error' ? false : 1_000;
@@ -35,10 +38,10 @@ export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps)
     useEffect(() => {
         if (response.isError && isInvalidJob(response.error)) {
             isFunction(onError) && onError();
-            removeLsPreparingImport();
+            deleteImportEntry(stagedDatasetId);
             toast({ type: 'error', message: `Failed to prepare dataset for import. ${response.error?.detail}` });
         }
-    }, [onError, removeLsPreparingImport, response.error, response.isError]);
+    }, [deleteImportEntry, onError, response.error, response.isError, stagedDatasetId]);
 
     useEffect(() => {
         if (isJobFailed(response.data)) {
@@ -47,5 +50,17 @@ export const usePrepareImportStatus = ({ onError }: UsePrepareImportStatusProps)
         }
     }, [onError, response.data]);
 
-    return { ...response, fileName, size };
+    useEffect(() => {
+        if (isJobDone(response.data)) {
+            isFunction(onSuccess) && onSuccess();
+            updateImportEntryStep(stagedDatasetId, 'labelMapping');
+        }
+    }, [onSuccess, updateImportEntryStep, response.data, stagedDatasetId]);
+
+    return {
+        ...response,
+        size: importLsEntry?.size ?? 0,
+        fileName: importLsEntry?.fileName ?? '',
+        stagedDatasetId,
+    };
 };
