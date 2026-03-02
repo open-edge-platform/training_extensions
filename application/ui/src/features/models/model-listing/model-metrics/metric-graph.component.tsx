@@ -6,11 +6,14 @@ import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { Box } from '../components/box/box.component';
 
+export type MetricGraphPoint = {
+    x: number;
+    y: number;
+};
+
 type MetricGraphProps = {
     title: string;
-    data?: Record<string, unknown>[];
-    dataKey: string;
-    xAxisKey?: string;
+    data?: MetricGraphPoint[];
     xAxisLabel?: string;
     yAxisLabel: string;
 };
@@ -18,7 +21,7 @@ type MetricGraphProps = {
 const X_AXIS_TICK_COUNT = 8;
 const Y_AXIS_TICK_COUNT = 4;
 
-export const MetricGraph = ({ title, data, dataKey, xAxisKey = 'epoch', xAxisLabel, yAxisLabel }: MetricGraphProps) => {
+export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraphProps) => {
     return (
         <Flex flex={1} direction={'column'} minWidth={'size-5000'}>
             <Box
@@ -39,8 +42,8 @@ export const MetricGraph = ({ title, data, dataKey, xAxisKey = 'epoch', xAxisLab
                         >
                             <CartesianGrid />
                             <XAxis
-                                dataKey={xAxisKey}
-                                label={{ value: xAxisLabel ?? xAxisKey, position: 'bottom', fill: '#666', offset: 12 }}
+                                dataKey='x'
+                                label={{ value: xAxisLabel ?? 'x', position: 'bottom', fill: '#666', offset: 12 }}
                                 tickCount={X_AXIS_TICK_COUNT}
                                 tickMargin={12}
                             />
@@ -48,6 +51,7 @@ export const MetricGraph = ({ title, data, dataKey, xAxisKey = 'epoch', xAxisLab
                                 label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -38 }}
                                 tickCount={Y_AXIS_TICK_COUNT}
                                 tickMargin={12}
+                                tickFormatter={(value) => Number(value).toFixed(4)}
                             />
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
@@ -55,7 +59,7 @@ export const MetricGraph = ({ title, data, dataKey, xAxisKey = 'epoch', xAxisLab
                             />
                             <Line
                                 type='linear'
-                                dataKey={dataKey}
+                                dataKey='y'
                                 name={yAxisLabel}
                                 stroke='var(--energy-blue)'
                                 strokeWidth={2}

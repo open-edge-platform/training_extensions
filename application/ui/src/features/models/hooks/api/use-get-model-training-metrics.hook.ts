@@ -8,7 +8,12 @@ import { $api } from '../../../../api/client';
 export const useGetModelTrainingMetrics = (modelId: string | null | undefined) => {
     const projectId = useProjectIdentifier();
 
-    return $api.useSuspenseQuery('get', '/api/projects/{project_id}/models/{model_id}/training_metrics', {
-        params: { path: { project_id: projectId, model_id: String(modelId) } },
-    });
+    return $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/models/{model_id}/training_metrics',
+        {
+            params: { path: { project_id: projectId, model_id: String(modelId) } },
+        },
+        { enabled: Boolean(modelId) }
+    );
 };

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { Flex, Loading, Text } from '@geti/ui';
 
 import type { Evaluation } from '../../../../constants/shared-types';
 import { useGetModelTrainingMetrics } from '../../hooks/api/use-get-model-training-metrics.hook';
@@ -14,16 +14,27 @@ type ModelMetricsProps = {
 };
 
 export const ModelMetrics = ({ modelId, evaluations }: ModelMetricsProps) => {
-    const { data: trainingMetrics } = useGetModelTrainingMetrics(modelId);
+    const { data: trainingMetrics, isPending, isError } = useGetModelTrainingMetrics(modelId);
 
     const testingEvaluations = evaluations.find(({ subset }) => subset === 'testing');
     const testingMetrics = testingEvaluations?.metrics ?? [];
 
     return (
         <Flex direction='column' gap={'size-300'}>
-            <ModelEvaluations metrics={testingMetrics} />
-
-            <ModelMetricsGraphs trainingMetrics={trainingMetrics.training_metrics} />
+            {isPending ? (
+                <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
+                    <Loading size={'M'} />
+                </Flex>
+            ) : isError ? (
+                <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
+                    <Text>Failed to load training metrics</Text>
+                </Flex>
+            ) : (
+                <>
+                    <ModelEvaluations metrics={testingMetrics} />
+                    <ModelMetricsGraphs trainingMetrics={trainingMetrics?.training_metrics ?? []} />
+                </>
+            )}
         </Flex>
     );
 };

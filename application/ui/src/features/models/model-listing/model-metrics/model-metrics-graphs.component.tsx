@@ -4,20 +4,18 @@
 import { Flex } from '@geti/ui';
 
 import type { LineMetric } from '../../../../constants/shared-types';
-import { MetricGraph } from './metric-graph.component';
+import { MetricGraph, type MetricGraphPoint } from './metric-graph.component';
 
 type ModelMetricsGraphsProps = {
     trainingMetrics: LineMetric[];
 };
-
-type GraphPoint = { x: number; y: number };
 
 type GraphData = {
     key: string;
     title: string;
     xAxisLabel: string;
     yAxisLabel: string;
-    data: GraphPoint[];
+    data: MetricGraphPoint[];
 };
 
 export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps) => {
@@ -36,8 +34,6 @@ export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps)
                     key={graph.key}
                     title={graph.title}
                     data={graph.data}
-                    dataKey='y'
-                    xAxisKey='x'
                     xAxisLabel={graph.xAxisLabel}
                     yAxisLabel={graph.yAxisLabel}
                 />
