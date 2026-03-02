@@ -9,11 +9,7 @@ import type { Metric } from '../../../../constants/shared-types';
 import { Box } from '../components/box/box.component';
 
 const formatEvaluationValue = (value: number): string => {
-    if (value >= 0 && value <= 1) {
-        return `${(value * 100).toFixed(1)}%`;
-    }
-
-    return value.toFixed(4);
+    return `${(value * 100).toFixed(1)}%`;
 };
 
 type ModelEvaluationMetrics = {
