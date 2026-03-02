@@ -48,17 +48,6 @@ class MediaCounts(BaseEntity):
     videos: int = 0
     video_frames: int = 0
 
-    @model_validator(mode="before")
-    @classmethod
-    def populate_media_counts(cls, data: object) -> object:
-        if isinstance(data, dict):
-            return {
-                "images": data.get("images", 0),
-                "videos": data.get("videos", 0),
-                "video_frames": data.get("video_frames", 0),
-            }
-        return data
-
 
 class InstancesPerLabel(BaseEntity):
     label_id: UUID
