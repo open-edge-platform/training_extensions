@@ -6,6 +6,8 @@ import { createContext, Dispatch, ReactNode, useContext, useState } from 'react'
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { OverlayTriggerState } from 'react-stately';
 
+import { ImportDatasetState } from '../import-export/import-dataset/util';
+
 type ImportDatasetDialogStateContextProps = {
     datasetImportDialogState: OverlayTriggerState;
     currentStagedId: string | null;
@@ -16,11 +18,9 @@ type ImportDatasetDialogStateContextProps = {
 
 const ImportDatasetDialogStateContext = createContext<ImportDatasetDialogStateContextProps | undefined>(undefined);
 
-export type ImportDatasetState = 'dropzone' | 'preparing' | 'labelMapping';
-
 export const ImportDatasetDialogStateProvider = ({ children }: { children: ReactNode }) => {
     const datasetImportDialogState = useOverlayTriggerState({});
-    const [currentStep, setCurrentStep] = useState<ImportDatasetState>('dropzone');
+    const [currentStep, setCurrentStep] = useState<ImportDatasetState>('uploading');
     const [currentStagedId, setCurrentStagedId] = useState<string | null>(null);
 
     return (

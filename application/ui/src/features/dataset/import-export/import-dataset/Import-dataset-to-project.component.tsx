@@ -6,8 +6,8 @@ import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
-import { ImportDropZone } from './import-drop-zone/import-drop-zone.component';
 import { ImportProcess } from './import-process/import-process.component';
+import { ImportUploadFile } from './import-upload-file/import-upload-file.component';
 import { LabelMapping } from './label-mapping/label-mapping.component';
 
 export const ImportDatasetToProject = () => {
@@ -21,7 +21,7 @@ export const ImportDatasetToProject = () => {
                     <Divider />
                     <Content minHeight={'size-5000'}>
                         <View height={'100%'} backgroundColor={'gray-50'}>
-                            {currentStep === 'dropzone' && <ImportDropZone />}
+                            {currentStep === 'uploading' && <ImportUploadFile />}
 
                             {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
                                 <ImportProcess currentStagedId={currentStagedId} />

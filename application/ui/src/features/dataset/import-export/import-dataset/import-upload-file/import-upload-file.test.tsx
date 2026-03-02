@@ -10,7 +10,7 @@ import { getMockedPrepareImportDatasetJob } from '../../../../../../mocks/mock-j
 import { http } from '../../../../../api/utils';
 import { server } from '../../../../../msw-node-setup';
 import { ImportDatasetDialogStateProvider } from '../../../providers/export-import-dataset-dialog-provider.component';
-import { ImportDropZone } from './import-drop-zone.component';
+import { ImportUploadFile } from './import-upload-file.component';
 
 const mockedAppendImportEntry = vi.fn();
 
@@ -20,7 +20,7 @@ vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', 
     }),
 }));
 
-describe('ImportDropZone', () => {
+describe('ImportUploadFile', () => {
     const validFile = new File(['file content'], 'test.zip', { type: 'application/zip' });
     const inValidFiles = new File(['foo'], 'video.mov', { type: 'video/quicktime' });
 
@@ -47,7 +47,7 @@ describe('ImportDropZone', () => {
 
         render(
             <ImportDatasetDialogStateProvider>
-                <ImportDropZone />
+                <ImportUploadFile />
             </ImportDatasetDialogStateProvider>
         );
     };

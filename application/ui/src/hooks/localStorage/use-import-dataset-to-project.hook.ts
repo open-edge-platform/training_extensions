@@ -6,7 +6,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useProjectIdentifier } from '../use-project-identifier.hook';
 import { getParsedLocalStorage } from './utils';
 
-type DataValue = {
+type DatasetImportState = {
     size: number;
     fileName: string;
     prepareJobId: string | null;
@@ -19,16 +19,16 @@ const IMPORT_DATASET_TO_PROJECT_KEY = (projectId: string) => `import-dataset-to-
 export const useImportDatasetToProject = () => {
     const projectId = useProjectIdentifier();
 
-    const [lsImportDatasetToProject, setLsImportDatasetToProject] = useLocalStorage<DataValue[] | null>(
+    const [lsImportDatasetToProject, setLsImportDatasetToProject] = useLocalStorage<DatasetImportState[] | null>(
         IMPORT_DATASET_TO_PROJECT_KEY(projectId),
-        () => getParsedLocalStorage<DataValue[]>(IMPORT_DATASET_TO_PROJECT_KEY(projectId)) ?? null
+        () => getParsedLocalStorage<DatasetImportState[]>(IMPORT_DATASET_TO_PROJECT_KEY(projectId)) ?? null
     );
 
-    const getAllImportEntries = (): DataValue[] => {
+    const getAllImportEntries = (): DatasetImportState[] => {
         return lsImportDatasetToProject ?? [];
     };
 
-    const getImportEntry = (item: Partial<DataValue>): DataValue | null => {
+    const getImportEntry = (item: Partial<DatasetImportState>): DatasetImportState | null => {
         return (
             lsImportDatasetToProject?.find(
                 ({ prepareJobId, stagedDatasetId }) =>
@@ -37,7 +37,7 @@ export const useImportDatasetToProject = () => {
         );
     };
 
-    const appendImportEntry = (newEntry: DataValue) => {
+    const appendImportEntry = (newEntry: DatasetImportState) => {
         return setLsImportDatasetToProject((prev) => [...(prev ?? []), newEntry]);
     };
 
@@ -55,7 +55,7 @@ export const useImportDatasetToProject = () => {
         );
     };
 
-    const getLastImportEntry = (): DataValue | null => {
+    const getLastImportEntry = (): DatasetImportState | null => {
         return lsImportDatasetToProject ? lsImportDatasetToProject[lsImportDatasetToProject.length - 1] : null;
     };
 

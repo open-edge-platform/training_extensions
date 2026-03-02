@@ -21,9 +21,9 @@ import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
 
-import classes from './import-drop-zone.module.scss';
+import classes from './import-upload-file.module.scss';
 
-export const ImportDropZone = () => {
+export const ImportUploadFile = () => {
     const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
     const { appendImportEntry } = useImportDatasetToProject();
 

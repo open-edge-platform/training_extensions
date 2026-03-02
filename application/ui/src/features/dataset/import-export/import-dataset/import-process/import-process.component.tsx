@@ -25,7 +25,7 @@ export const ImportProcess = ({ currentStagedId }: ImportProcessProps) => {
         fileName,
     } = usePrepareImportStatus({
         stagedDatasetId: currentStagedId,
-        onError: () => setCurrentStep('dropzone'),
+        onError: () => setCurrentStep('uploading'),
         onSuccess: () => setCurrentStep('labelMapping'),
     });
 

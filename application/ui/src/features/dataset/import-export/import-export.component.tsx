@@ -19,7 +19,7 @@ export const ImportExport = () => {
                 exportDialogState.open();
                 break;
             case 'import':
-                setCurrentStep('dropzone');
+                setCurrentStep('uploading');
                 datasetImportDialogState.open();
                 break;
         }
