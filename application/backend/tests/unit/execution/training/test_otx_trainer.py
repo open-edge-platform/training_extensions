@@ -224,6 +224,7 @@ class TestOTXTrainerPrepareTrainingConfiguration:
         )
         expected_otx_training_config = mock_training_config.model_dump(mode="json")
         expected_otx_training_config["hyper_parameters"] = expected_otx_training_config.pop("algo_level_parameters")
+        expected_otx_training_config["model_manifest_id"] = training_params.model_architecture_id
         expected_otx_training_config["sub_task_type"] = OTXTaskType.DETECTION
         mock_convert.assert_called_once_with(expected_otx_training_config)
         assert training_config == mock_training_config

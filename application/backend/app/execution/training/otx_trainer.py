@@ -194,6 +194,7 @@ class OTXTrainer(Execution):
             # we should update this code to build the configuration directly in the format consumed by OTX
             geti_training_config = training_config.model_dump(exclude_none=True)
             geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
+            geti_training_config["model_manifest_id"] = training_params.model_architecture_id
             geti_training_config["sub_task_type"] = self.__get_otx_task_type_by_task(task)
             geti_config_path = self.__build_model_config_path(self._data_dir, project_id, training_params.model_id)
             geti_config_path.parent.mkdir(parents=True, exist_ok=True)
