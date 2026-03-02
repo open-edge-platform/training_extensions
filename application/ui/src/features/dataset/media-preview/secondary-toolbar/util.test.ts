@@ -107,6 +107,12 @@ describe('secondary toolbar utils', () => {
                 const result = getNextMediaItem(frame, [frame, nextImage], 3);
                 expect(result).toEqual(nextImage);
             });
+
+            it('handles a frame_number that is not aligned with the step', () => {
+                const frame = getMockedVideoFrame({ id: 'video-1', frame_number: 5, frame_count: 10 });
+                const result = getNextMediaItem(frame, [frame], 3);
+                expect(result).toEqual({ ...frame, frame_number: 6 });
+            });
         });
     });
 });

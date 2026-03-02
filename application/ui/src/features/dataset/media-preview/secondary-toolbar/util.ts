@@ -26,11 +26,20 @@ export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[]
         const videoFrames = range(0, currentMediaItem.frame_count, step);
         const currentIndex = videoFrames.findIndex((frame) => frame === currentMediaItem.frame_number);
 
-        if (currentIndex < videoFrames.length - 1) {
+        if (currentIndex >= 0 && currentIndex < videoFrames.length - 1) {
             return {
                 ...currentMediaItem,
                 frame_number: videoFrames[currentIndex + 1],
             };
+        } else {
+            const nextFrame = videoFrames.find((frame) => frame > currentMediaItem.frame_number);
+
+            if (nextFrame !== undefined) {
+                return {
+                    ...currentMediaItem,
+                    frame_number: nextFrame ?? 0,
+                };
+            }
         }
     }
 
