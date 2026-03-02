@@ -1,95 +1,74 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, dimensionValue, Flex, Heading, Item, Menu, MenuTrigger, View } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
-import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
+import { Flex, View } from '@geti/ui';
+import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
 
-type MetricGraphProps<T extends Record<string, unknown>> = {
-    title: string;
-    data?: T[];
-    dataKey: keyof T & string;
-    xAxisKey?: keyof T & string;
-    yAxisLabel: string;
-    yAxisDomain?: [number, number];
-    yAxisTicks?: number[];
-    xAxisTicks?: number[];
+import { Box } from '../components/box/box.component';
+
+export type MetricGraphPoint = {
+    x: number;
+    y: number;
 };
 
-const DEFAULT_TICKS = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 43];
-export const MetricGraph = <T extends Record<string, unknown>>({
-    title,
-    data,
-    dataKey,
-    xAxisKey = 'epoch' as keyof T & string,
-    yAxisLabel,
-    yAxisDomain,
-    yAxisTicks,
-    xAxisTicks = DEFAULT_TICKS,
-}: MetricGraphProps<T>) => {
+type MetricGraphProps = {
+    title: string;
+    data?: MetricGraphPoint[];
+    xAxisLabel?: string;
+    yAxisLabel: string;
+};
+
+const X_AXIS_TICK_COUNT = 8;
+const Y_AXIS_TICK_COUNT = 4;
+
+export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraphProps) => {
     return (
-        <Flex flex={1} direction={'column'}>
-            <Flex
-                justifyContent={'space-between'}
-                alignItems={'center'}
-                UNSAFE_style={{
-                    backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                    padding: `${dimensionValue('size-50')} ${dimensionValue('size-200')}`,
-                }}
-            >
-                <Heading level={5}>{title}</Heading>
-                <MenuTrigger>
-                    <ActionButton isQuiet>
-                        <MoreMenu />
-                    </ActionButton>
-                    <Menu>
-                        <Item key='delete'>Delete</Item>
-                        <Item key='export'>Export</Item>
-                    </Menu>
-                </MenuTrigger>
-            </Flex>
-            <View
-                flex={1}
-                paddingY={'size-200'}
-                paddingX={'size-550'}
-                backgroundColor={'gray-50'}
-                minHeight={'size-3400'}
-            >
-                <AreaChart
-                    responsive
-                    height={'100%'}
-                    width={'100%'}
-                    data={data}
-                    margin={{ top: 35, bottom: 35, left: 20 }}
-                >
-                    <CartesianGrid />
-                    <XAxis
-                        dataKey={xAxisKey}
-                        label={{ value: xAxisKey, position: 'bottom', fill: '#666', offset: 12 }}
-                        ticks={xAxisTicks}
-                        tickMargin={12}
-                    />
-                    <YAxis
-                        label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -30 }}
-                        domain={yAxisDomain}
-                        ticks={yAxisTicks}
-                        tickMargin={12}
-                    />
-                    <Tooltip
-                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
-                        labelStyle={{ color: '#333' }}
-                    />
-                    <Area
-                        type='linear'
-                        dataKey={dataKey}
-                        name={yAxisLabel}
-                        stroke='var(--energy-blue)'
-                        strokeWidth={2}
-                        fill='var(--energy-blue)'
-                        fillOpacity={0.3}
-                    />
-                </AreaChart>
-            </View>
+        <Flex flex={1} direction={'column'} minWidth={'size-5000'}>
+            <Box
+                title={title}
+                content={
+                    <View
+                        paddingY={'size-200'}
+                        paddingX={'size-550'}
+                        backgroundColor={'gray-50'}
+                        minHeight={'size-3800'}
+                    >
+                        <LineChart
+                            responsive
+                            width={'100%'}
+                            style={{ aspectRatio: 1.6 }}
+                            data={data}
+                            margin={{ top: 35, bottom: 35, left: 35 }}
+                        >
+                            <CartesianGrid />
+                            <XAxis
+                                dataKey='x'
+                                label={{ value: xAxisLabel ?? 'x', position: 'bottom', fill: '#666', offset: 12 }}
+                                tickCount={X_AXIS_TICK_COUNT}
+                                tickMargin={12}
+                            />
+                            <YAxis
+                                label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -38 }}
+                                tickCount={Y_AXIS_TICK_COUNT}
+                                tickMargin={12}
+                                tickFormatter={(value) => Number(value).toFixed(4)}
+                            />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
+                                labelStyle={{ color: '#333' }}
+                            />
+                            <Line
+                                type='linear'
+                                dataKey='y'
+                                name={yAxisLabel}
+                                stroke='var(--energy-blue)'
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                        </LineChart>
+                    </View>
+                }
+            />
         </Flex>
     );
 };

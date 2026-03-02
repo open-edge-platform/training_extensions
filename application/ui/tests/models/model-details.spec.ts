@@ -68,6 +68,36 @@ test.describe('Model Details', () => {
 
                 return new HttpResponse(null, { status: 404 });
             }),
+            http.get('/api/projects/{project_id}/models/{model_id}/training_metrics', ({ params }) => {
+                if (params.model_id === 'model-1') {
+                    return HttpResponse.json({
+                        training_metrics: [
+                            {
+                                header: 'Learning rate (SGD)',
+                                key: 'lr-sgd',
+                                type: 'line',
+                                value: {
+                                    x_axis_label: 'Epoch',
+                                    y_axis_label: 'Learning rate',
+                                    line_data: [
+                                        {
+                                            header: 'Learning rate (SGD)',
+                                            key: 'lr-sgd',
+                                            points: [
+                                                { type: 'point', x: 1, y: 0.01 },
+                                                { type: 'point', x: 2, y: 0.008 },
+                                                { type: 'point', x: 3, y: 0.006 },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            },
+                        ],
+                    });
+                }
+
+                return new HttpResponse(null, { status: 404 });
+            }),
             http.get('/api/projects/{project_id}/dataset_revisions', () => {
                 return HttpResponse.json([mockedDatasetRevision]);
             }),
@@ -244,6 +274,31 @@ test.describe('Model Details', () => {
             await expect(page.getByText('(70)')).toBeVisible();
             await expect(page.getByText('(20)')).toBeVisible();
             await expect(page.getByText('(10)')).toBeVisible();
+        });
+    });
+
+    test.describe('Training Metrics', () => {
+        test('renders evaluations and training metric graphs', async ({ page, modelsPage }) => {
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await page.getByRole('tab', { name: 'Model metrics' }).click();
+
+            await expect(page.getByRole('heading', { name: /Evaluations/i })).toBeVisible();
+            await expect(page.getByRole('heading', { name: 'Learning rate (SGD)' })).toBeVisible();
+        });
+
+        test('shows error message when training metrics fail to load', async ({ network, page, modelsPage }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models/{model_id}/training_metrics', () => {
+                    return new HttpResponse(null, { status: 500 });
+                })
+            );
+
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await page.getByRole('tab', { name: 'Model metrics' }).click();
+
+            await expect(page.getByText('Failed to load training metrics')).toBeVisible();
         });
     });
 });
