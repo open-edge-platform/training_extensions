@@ -28,6 +28,7 @@ export const useKeyboardNavigation = ({
         if (key === 'ArrowDown') {
             return Math.min(items.length - 1, selectedIndex + 1);
         }
+
         return selectedIndex;
     };
 

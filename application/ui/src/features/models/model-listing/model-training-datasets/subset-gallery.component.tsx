@@ -69,12 +69,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                         mode={mode}
                         isReadOnly
                     >
-                        <ReadOnlyAnnotator
-                            image={image}
-                            mediaItem={mediaItem}
-                            isUserReviewed={isUserReviewed}
-                            onClose={onClose}
-                        />
+                        <ReadOnlyAnnotator image={image} mediaItem={mediaItem} onClose={onClose} />
                     </AnnotatorProviders>
                 </Grid>
             </Content>

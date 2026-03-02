@@ -6,7 +6,6 @@ import { getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { Size } from 'react-aria-components';
 import { render } from 'test-utils/render';
 
-import { MediaStateMap } from '../../constants/shared-types';
 import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
 
 // required configuration; otherwise, the list renders empty
@@ -26,7 +25,6 @@ describe('VirtualizerGridLayout', () => {
             <VirtualizerGridLayout
                 items={mockedItems}
                 ariaLabel={'test list'}
-                mediaState={new Map() as MediaStateMap}
                 selectionMode={'single'}
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={false}
@@ -44,7 +42,6 @@ describe('VirtualizerGridLayout', () => {
             <VirtualizerGridLayout
                 items={[]}
                 ariaLabel={'empty list'}
-                mediaState={new Map() as MediaStateMap}
                 selectionMode={'single'}
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={false}
@@ -61,7 +58,6 @@ describe('VirtualizerGridLayout', () => {
             <VirtualizerGridLayout
                 items={mockedItems}
                 ariaLabel={'loading list'}
-                mediaState={new Map() as MediaStateMap}
                 selectionMode={'single'}
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={true}

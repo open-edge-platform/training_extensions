@@ -1,7 +1,18 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, Dispatch, ReactNode, RefObject, SetStateAction, use, useMemo, useRef, useState } from 'react';
+import {
+    createContext,
+    Dispatch,
+    ReactNode,
+    RefObject,
+    SetStateAction,
+    use,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
 import { VisuallyHidden } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -29,6 +40,49 @@ type VideoPlayerContextProps = {
     changeStep: Dispatch<SetStateAction<number>>;
 };
 
+const useSynchronizeVideoTimeWithInitialFrame = (
+    videoRef: RefObject<HTMLVideoElement | null>,
+    videoFrame: MediaVideoFrame | undefined
+) => {
+    /*
+     * This part is responsible for updating video time on the initial load when the frame number is not 0.
+     * In that case we need to move the video to the correct frame number.
+     * */
+    useLayoutEffect(() => {
+        if (videoFrame?.frame_number == undefined || videoFrame?.fps === undefined || videoRef.current === null) {
+            return;
+        }
+
+        if (videoFrame.frame_number === 0) {
+            return;
+        }
+
+        const videoElement = videoRef.current;
+        const seekToInitialFrame = () => {
+            if (videoFrame.frame_number > 0 && videoElement.currentTime === 0) {
+                videoElement.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
+            }
+        };
+
+        // If metadata is already loaded (readyState >= HAVE_METADATA == 1), seek immediately.
+        if (videoElement.readyState >= 1) {
+            seekToInitialFrame();
+            return;
+        }
+
+        // Otherwise wait for metadata to load before seeking.
+        const handleLoadedMetadata = () => {
+            seekToInitialFrame();
+        };
+
+        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+
+        return () => {
+            videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
+    }, [videoFrame?.frame_number, videoFrame?.fps, videoRef]);
+};
+
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
@@ -43,6 +97,8 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
     const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(videoFrame?.frame_number ?? 0);
+
+    useSynchronizeVideoTimeWithInitialFrame(videoRef, videoFrame);
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
         if (videoFrame === undefined) {

@@ -15,16 +15,15 @@ import { CanvasSettingsProvider } from '../primary-toolbar/settings/canvas-setti
 import { BottomToolbar } from './bottom-toolbar.component';
 
 type BottomToolbarProps = {
-    isUserReviewed: boolean;
     mediaItem: ReturnType<typeof getMockedMediaImage>;
 };
 
-const renderBottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps) => {
+const renderBottomToolbar = ({ mediaItem }: BottomToolbarProps) => {
     return render(
         <ZoomProvider>
             <AnnotationVisibilityProvider>
                 <CanvasSettingsProvider>
-                    <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                    <BottomToolbar mediaItem={mediaItem} />
                 </CanvasSettingsProvider>
             </AnnotationVisibilityProvider>
         </ZoomProvider>
@@ -41,25 +40,41 @@ describe('BottomToolbar', () => {
     });
 
     it('displays the filename with correct format and dimensions', () => {
-        renderBottomToolbar({ isUserReviewed: false, mediaItem: mockMediaItem });
+        renderBottomToolbar({ mediaItem: mockMediaItem });
 
         expect(screen.getByText('test-image.jpg (1920 x 1080 px)')).toBeInTheDocument();
     });
 
-    it('displays "Accepted" tag when user has reviewed the media', () => {
-        renderBottomToolbar({ isUserReviewed: true, mediaItem: mockMediaItem });
+    it('displays "Accepted" tag when user has reviewed the media', async () => {
+        server.use(
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+                return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', user_reviewed: true }), {
+                    status: 200,
+                });
+            })
+        );
 
-        expect(screen.getByLabelText('Accepted')).toBeInTheDocument();
+        renderBottomToolbar({ mediaItem: mockMediaItem });
+
+        expect(await screen.findByLabelText('Accepted')).toBeInTheDocument();
     });
 
     it('displays "For Review" tag when user has not reviewed the media', () => {
-        renderBottomToolbar({ isUserReviewed: false, mediaItem: mockMediaItem });
+        server.use(
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+                return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', user_reviewed: false }), {
+                    status: 200,
+                });
+            })
+        );
+
+        renderBottomToolbar({ mediaItem: mockMediaItem });
 
         expect(screen.getByLabelText('For Review')).toBeInTheDocument();
     });
 
     it('renders the subset picker with default placeholder', () => {
-        renderBottomToolbar({ isUserReviewed: false, mediaItem: mockMediaItem });
+        renderBottomToolbar({ mediaItem: mockMediaItem });
 
         expect(screen.getByLabelText('Select subset')).toBeInTheDocument();
     });
@@ -87,7 +102,7 @@ describe('BottomToolbar', () => {
             )
         );
 
-        renderBottomToolbar({ isUserReviewed: false, mediaItem: mockMediaItem });
+        renderBottomToolbar({ mediaItem: mockMediaItem });
 
         const pickerButton = screen.getByRole('button', { name: /select subset/i });
         fireEvent.click(pickerButton);

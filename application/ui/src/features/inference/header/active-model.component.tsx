@@ -9,7 +9,7 @@ import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.h
 import { useGetModels } from '../../models/hooks/api/use-get-models.hook';
 
 export const ActiveModel = () => {
-    const { data: models = [] } = useGetModels();
+    const { data: models } = useGetModels();
     const activeModel = useGetActiveModel();
     const projectId = useProjectIdentifier();
     const updatePipeline = usePatchPipeline();
