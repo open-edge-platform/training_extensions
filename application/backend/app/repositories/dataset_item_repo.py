@@ -239,7 +239,11 @@ class DatasetItemRepository:
         annotated_images_frames_stmt = (
             select(MediaDB.type, func.count(DatasetItemDB.id).label("count"))
             .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
-            .where(DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None))
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.annotation_data.isnot(None),
+                DatasetItemDB.user_reviewed,
+            )
             .group_by(MediaDB.type)
         )
         result = self.db.execute(annotated_images_frames_stmt)
@@ -252,6 +256,7 @@ class DatasetItemRepository:
             .where(
                 DatasetItemDB.project_id == self.project_id,
                 DatasetItemDB.annotation_data.isnot(None),
+                DatasetItemDB.user_reviewed,
                 MediaDB.type == "video_frame",
             )
         )
@@ -260,7 +265,9 @@ class DatasetItemRepository:
 
         # Total instances:
         annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
-            DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
+            DatasetItemDB.project_id == self.project_id,
+            DatasetItemDB.annotation_data.isnot(None),
+            DatasetItemDB.user_reviewed,
         )
         annotated_counts["instances"] = sum(
             len(item.annotation_data) for item in self.db.execute(annotated_dataset_items_stmt)
