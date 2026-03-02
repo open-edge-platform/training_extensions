@@ -70,7 +70,7 @@ services:
   coturn-server:
     profiles:
       - coturn
-    image: quay.io/coturn/coturn@sha256:10514b502709263f3e7216873f42b48b7f8a2679090eedb5be0954fd1bba9f94
+    image: quay.io/coturn/coturn@sha256:254a7e19f23366bc638af8e092c18ea52e0eefc9e44041f376e58b61b3b6d646
     restart: unless-stopped
     network_mode: host
     command:
