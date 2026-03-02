@@ -287,9 +287,6 @@ class DatasetItemRepository:
         annotated_counts["instances_per_label"] = [
             {"label_id": label_id, "instances": count} for label_id, count in labels_counts.items()
         ]
-        annotated_counts["instances_per_label"] = [
-            {"label_id": row.label_id, "instances": row.instances} for row in labels_counts
-        ]
 
         statistics.update(annotated_counts)
 

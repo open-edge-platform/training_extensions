@@ -476,6 +476,138 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
+@pytest.fixture
+def fxt_project_with_rich_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
+    """Fixture with images, videos, annotated video frames, and a dataset item with multiple annotations."""
+    project, _ = fxt_project_with_pipeline
+
+    label_1_id = str(project.task.labels[0].id)
+    label_2_id = str(project.task.labels[1].id)
+
+    db_dataset_items = []
+
+    # Image (unannotated)
+    media_img = MediaDB(
+        type="image",
+        name="img1",
+        format="jpg",
+        size=1024,
+        width=1024,
+        height=768,
+        project_id=str(project.id),
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(media_img)
+    db_session.flush()
+    item_img = DatasetItemDB(
+        id=str(media_img.id),
+        project_id=str(project.id),
+        subset="unassigned",
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(item_img)
+    db_dataset_items.append(item_img)
+    db_session.flush()
+
+    # Video (unannotated)
+    media_vid = MediaDB(
+        type="video",
+        name="vid1",
+        format="mp4",
+        size=2048,
+        width=1920,
+        height=1080,
+        fps=30.0,
+        frame_count=2,
+        project_id=str(project.id),
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(media_vid)
+    db_session.flush()
+    item_vid = DatasetItemDB(
+        id=str(media_vid.id),
+        project_id=str(project.id),
+        subset="unassigned",
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(item_vid)
+    db_dataset_items.append(item_vid)
+    db_session.flush()
+
+    # Video frame (annotated with label_1)
+    media_vf = MediaDB(
+        type="video_frame",
+        name="vf1",
+        format="jpg",
+        size=512,
+        width=1920,
+        height=1080,
+        fps=30.0,
+        frame_count=None,
+        video_id=str(media_vid.id),
+        frame_index=0,
+        project_id=str(project.id),
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(media_vf)
+    db_session.flush()
+    item_vf = DatasetItemDB(
+        id=str(media_vf.id),
+        project_id=str(project.id),
+        subset="unassigned",
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        annotation_data=[
+            {"labels": [{"id": label_1_id}], "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10}}
+        ],
+        user_reviewed=True,
+    )
+    db_session.add(item_vf)
+    db_session.flush()
+    db_dataset_items.append(item_vf)
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_vf.id, label_id=label_1_id))
+    db_session.flush()
+
+    # Dataset item with multiple annotations (2 with label_1, 1 with label_2)
+    media_multi = MediaDB(
+        type="image",
+        name="multi_ann",
+        format="jpg",
+        size=1024,
+        width=1024,
+        height=768,
+        project_id=str(project.id),
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(media_multi)
+    db_session.flush()
+    item_multi = DatasetItemDB(
+        id=str(media_multi.id),
+        project_id=str(project.id),
+        subset="training",
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        annotation_data=[
+            {"labels": [{"id": label_1_id}], "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10}},
+            {
+                "labels": [{"id": label_1_id}],
+                "shape": {"type": "rectangle", "x": 20, "y": 20, "width": 10, "height": 10},
+            },
+            {
+                "labels": [{"id": label_2_id}],
+                "shape": {"type": "rectangle", "x": 40, "y": 40, "width": 10, "height": 10},
+            },
+        ],
+        user_reviewed=True,
+    )
+    db_session.add(item_multi)
+    db_session.flush()
+    db_dataset_items.append(item_multi)
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_multi.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_multi.id, label_id=label_2_id))
+    db_session.flush()
+
+    return project, db_dataset_items
+
+
 class TestDatasetServiceIntegration:
     """Integration tests for DatasetService."""
 
@@ -1302,25 +1434,26 @@ class TestDatasetServiceIntegration:
     def test_get_dataset_statistics(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_rich_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test retrieving dataset statistics."""
-        project, _ = fxt_project_with_dataset_items
+        """Test retrieving dataset statistics with images, videos, video frames, and multiple annotation instances."""
+        project, _ = fxt_project_with_rich_dataset_items
 
         statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
 
-        # There are 3 images, 0 videos, 0 video_frames in fxt_project_with_dataset_items
-        assert statistics.media_counts.images == 3
-        assert statistics.media_counts.videos == 0
-        assert statistics.media_counts.video_frames == 0
+        # There are 2 images, 1 video, 1 video_frame
+        assert statistics.media_counts.images == 2
+        assert statistics.media_counts.videos == 1
+        assert statistics.media_counts.video_frames == 2
 
-        # Only item 2 is in training subset, item 1 has annotation, so annotated_images = 1
-        assert statistics.annotations_counts.annotated_images == 1
-        assert statistics.annotations_counts.annotated_videos == 0
-        assert statistics.annotations_counts.annotated_video_frames == 0
+        # Only item_multi is in training subset and annotated, item_vf is annotated video_frame
+        assert statistics.annotations_counts.annotated_images == 1  # item_multi
+        assert statistics.annotations_counts.annotated_videos == 1
+        assert statistics.annotations_counts.annotated_video_frames == 1  # item_vf
 
-        # Only one annotation instance (item 1)
-        assert statistics.annotations_counts.instances == 1
-        assert len(statistics.annotations_counts.instances_per_label) == 1
-        assert statistics.annotations_counts.instances_per_label[0].instances == 1
-        assert statistics.annotations_counts.instances_per_label[0].label_id == project.task.labels[0].id
+        # item_multi: 2 instances label_1, 1 instance label_2; item_vf: 1 instance label_1
+        assert statistics.annotations_counts.instances == 4
+        assert len(statistics.annotations_counts.instances_per_label) == 2
+        label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
+        assert label_counts[str(project.task.labels[0].id)] == 3
+        assert label_counts[str(project.task.labels[1].id)] == 1
