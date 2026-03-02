@@ -12,7 +12,7 @@ from app.execution.base import Execution, step
 class TestStepDecorator:
     """Test suite for the @step decorator."""
 
-    @pytest.mark.parametrize("percent", [None, 50])
+    @pytest.mark.parametrize("percent", [0, 50])
     def test_step_calls_report_progress_on_success(self, percent):
         """Test that the decorator calls report_progress when the step starts and completes."""
 

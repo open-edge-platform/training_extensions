@@ -104,16 +104,18 @@ class DatumaroSampleToGetiAnnotationConverter:
                 return self.__convert_detection_sample(labels, bboxes, confidences)
             case InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences):
                 return self.__convert_segmentation_sample(labels, polygons, confidences)
+            case _:
+                raise ValueError(f"Unsupported sample type: {type(sample)}")
 
     def __convert_classification_sample(
         self, label: int | None, confidence: float | None
     ) -> list[DatasetItemAnnotation]:
-        if label_refs := self.__convert_labels_to_refs(label):
+        if (label_refs := self.__convert_labels_to_refs(label)) and label_refs[0] is not None:
             return [
                 DatasetItemAnnotation(
                     shape=FullImage(),
                     labels=label_refs,
-                    confidences=[confidence] if confidence else None,
+                    confidences=[confidence] if confidence is not None else None,
                 )
             ]
         return []
@@ -136,16 +138,15 @@ class DatumaroSampleToGetiAnnotationConverter:
     ) -> list[DatasetItemAnnotation]:
         annotations = []
         if label_refs := self.__convert_labels_to_refs(labels):
-            for idx, bbox in enumerate(bboxes):
-                label_ref = label_refs[idx]
-                x1, y1, x2, y2 = bbox
-                annotations.append(
-                    DatasetItemAnnotation(
-                        labels=[label_ref],
-                        shape=Rectangle(x=x1, y=y1, width=(x2 - x1), height=(y2 - y1)),
-                        confidences=[confidences[idx]] if confidences is not None else None,
+            for idx, (x1, y1, x2, y2) in enumerate(bboxes):
+                if (label_ref := label_refs[idx]) is not None:
+                    annotations.append(
+                        DatasetItemAnnotation(
+                            labels=[label_ref],
+                            shape=Rectangle(x=x1, y=y1, width=(x2 - x1), height=(y2 - y1)),
+                            confidences=[confidences[idx]] if confidences is not None else None,
+                        )
                     )
-                )
         return annotations
 
     def __convert_segmentation_sample(
@@ -154,31 +155,24 @@ class DatumaroSampleToGetiAnnotationConverter:
         annotations = []
         if label_refs := self.__convert_labels_to_refs(labels):
             for idx, polygon in enumerate(polygons):
-                label_ref = label_refs[idx]
-                annotations.append(
-                    DatasetItemAnnotation(
-                        labels=[label_ref],
-                        shape=Polygon(points=[Point(x=x, y=y) for (x, y) in polygon]),
-                        confidences=[confidences[idx]] if confidences is not None else None,
+                if (label_ref := label_refs[idx]) is not None:
+                    annotations.append(
+                        DatasetItemAnnotation(
+                            labels=[label_ref],
+                            shape=Polygon(points=[Point(x=x, y=y) for (x, y) in polygon]),
+                            confidences=[confidences[idx]] if confidences is not None else None,
+                        )
                     )
-                )
         return annotations
 
-    def __convert_labels_to_refs(self, label_idx: int | NDArrayInt | None) -> list[LabelReference]:
+    def __convert_labels_to_refs(self, label_idx: int | NDArrayInt | None) -> list[LabelReference | None]:
         if label_idx is None:
             return []
-        label_refs = []
         if isinstance(label_idx, int):
-            label_ref = self.__get_label_ref_by_dm_index(label_idx)
-            if label_ref is not None:
-                label_refs.append(label_ref)
-        elif isinstance(label_idx, np.ndarray):
-            label_refs = []
-            for idx in label_idx:
-                label_ref = self.__get_label_ref_by_dm_index(idx)
-                if label_ref is not None:
-                    label_refs.append(label_ref)
-        return label_refs
+            return [self.__get_label_ref_by_dm_index(label_idx)]
+        if isinstance(label_idx, np.ndarray):
+            return [self.__get_label_ref_by_dm_index(idx) for idx in label_idx]
+        raise ValueError(f"Unsupported label index type: {type(label_idx)}")
 
     def __get_label_ref_by_dm_index(self, dm_label_idx: int) -> LabelReference | None:
         """Get a Geti label reference by the index of a Datumaro label."""

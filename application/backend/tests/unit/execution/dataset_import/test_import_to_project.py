@@ -74,22 +74,6 @@ class TestImportDatasetToProject:
         with pytest.raises(ValueError, match="Staged dataset directory does not exist"):
             fxt_import.prepare_dataset(staged_dataset_id=uuid4(), task=fxt_import_params.task)
 
-    def test_prepare_dataset_import_fails(
-        self,
-        fxt_import: ImportDatasetToProject,
-        fxt_staged_datasets_dir: Path,
-        fxt_import_params: ImportDatasetToProjectJobParams,
-    ) -> None:
-        dataset_id = uuid4()
-        dataset_dir = fxt_staged_datasets_dir / str(dataset_id) / "dataset"
-        dataset_dir.mkdir(parents=True)
-
-        with (
-            pytest.raises(ValueError, match="Failed to import dataset"),
-            patch("app.execution.dataset_import.import_to_project.import_dataset", return_value=None),
-        ):
-            fxt_import.prepare_dataset(staged_dataset_id=dataset_id, task=fxt_import_params.task)
-
     def test_prepare_dataset_success(
         self,
         fxt_import: ImportDatasetToProject,

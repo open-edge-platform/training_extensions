@@ -4,7 +4,6 @@
 from uuid import uuid4
 
 import numpy as np
-import polars as pl
 import pytest
 from datumaro.experimental.categories import LabelCategories
 
@@ -29,6 +28,15 @@ def fxt_project_labels() -> list[Label]:
 
 
 @pytest.fixture
+def fxt_project_labels_for_mapping() -> list[Label]:
+    """Create sample project labels for mapping scenario."""
+    return [
+        Label(id=uuid4(), name="feline", color="#FF0000", hotkey=None),
+        Label(id=uuid4(), name="canine", color="#00FF00", hotkey=None),
+    ]
+
+
+@pytest.fixture
 def fxt_label_categories() -> LabelCategories:
     """Create Datumaro label categories."""
     return LabelCategories(
@@ -41,9 +49,25 @@ def fxt_label_categories() -> LabelCategories:
 
 
 @pytest.fixture
+def fxt_label_mapping() -> dict[str, str | None]:
+    """Create sample label mapping with filtered label."""
+    return {"cat": "feline", "dog": "canine", "bird": None}
+
+
+@pytest.fixture
 def fxt_converter(fxt_project_labels, fxt_label_categories) -> DatumaroSampleToGetiAnnotationConverter:
-    """Create converter instance."""
+    """Create converter instance without label mapping."""
     return DatumaroSampleToGetiAnnotationConverter(fxt_project_labels, fxt_label_categories, None)
+
+
+@pytest.fixture
+def fxt_converter_with_mapping(
+    fxt_project_labels_for_mapping, fxt_label_categories, fxt_label_mapping
+) -> DatumaroSampleToGetiAnnotationConverter:
+    """Create converter instance with label mapping."""
+    return DatumaroSampleToGetiAnnotationConverter(
+        fxt_project_labels_for_mapping, fxt_label_categories, fxt_label_mapping
+    )
 
 
 class TestClassificationConversion:
@@ -77,12 +101,34 @@ class TestClassificationConversion:
 
         assert result == []
 
+    def test_convert_classification_sample_with_label_mapping(
+        self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
+    ):
+        """Test converting a classification sample with label mapping."""
+        sample = ClassificationSample(label=0, confidence=0.9)
+        result = fxt_converter_with_mapping.convert_sample(sample)
+
+        assert result is not None
+        assert len(result) == 1
+        assert result[0].labels[0].id == fxt_project_labels_for_mapping[0].id
+
+    def test_convert_with_label_filtering_success(self, fxt_project_labels, fxt_label_categories):
+        """Test label name mapped to None during conversion."""
+        label_mapping: dict[str, str | None] = {"bird": None}
+        project_labels = fxt_project_labels[:2]  # Only "cat" and "dog" labels in project
+        converter = DatumaroSampleToGetiAnnotationConverter(project_labels, fxt_label_categories, label_mapping)
+
+        sample = ClassificationSample(label=2, confidence=0.9)
+        result = converter.convert_sample(sample)
+
+        assert result == []  # Label should be filtered out and no annotations returned
+
 
 class TestMultilabelConversion:
     def test_convert_multilabel_sample_with_confidences(self, fxt_converter, fxt_project_labels):
         """Test converting a multilabel sample with confidence scores."""
-        labels = np.array([0, 1, 2], dtype=pl.UInt8)
-        confidences = np.array([0.9, 0.85, 0.8], dtype=pl.Float32)
+        labels = np.array([0, 1, 2])
+        confidences = np.array([0.9, 0.85, 0.8])
         sample = MultilabelClassificationSample(label=labels, confidence=confidences)
 
         result = fxt_converter.convert_sample(sample)
@@ -97,7 +143,7 @@ class TestMultilabelConversion:
 
     def test_convert_multilabel_sample_without_confidences(self, fxt_converter):
         """Test converting a multilabel sample without confidences."""
-        labels = np.array([1], dtype=pl.UInt8)
+        labels = np.array([1])
         sample = MultilabelClassificationSample(label=labels, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
@@ -106,13 +152,24 @@ class TestMultilabelConversion:
         assert len(result[0].labels) == 1
         assert result[0].confidences is None
 
+    def test_convert_multilabel_sample_with_label_mapping(
+        self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
+    ):
+        """Test converting a multilabel sample with label mapping."""
+        sample = MultilabelClassificationSample(label=np.array([0, 1]), confidence=np.array([0.9] * 2))
+        result = fxt_converter_with_mapping.convert_sample(sample)
+
+        assert result is not None
+        assert len(result) == 1
+        assert result[0].labels[0].id == fxt_project_labels_for_mapping[0].id
+
 
 class TestDetectionConversion:
     def test_convert_detection_sample(self, fxt_converter, fxt_project_labels):
         """Test converting a detection sample with bounding boxes."""
-        labels = np.array([0, 1], dtype=pl.UInt8)
-        bboxes = np.array([[10, 20, 50, 60], [100, 150, 200, 250]], dtype=pl.UInt32)
-        confidences = np.array([0.95, 0.88], dtype=pl.Float32)
+        labels = np.array([0, 1])
+        bboxes = np.array([[10, 20, 50, 60], [100, 150, 200, 250]])
+        confidences = np.array([0.95, 0.88])
         sample = DetectionSample(label=labels, bboxes=bboxes, confidence=confidences)
 
         result = fxt_converter.convert_sample(sample)
@@ -132,8 +189,8 @@ class TestDetectionConversion:
 
     def test_convert_detection_sample_without_confidences(self, fxt_converter):
         """Test converting a detection sample without confidences."""
-        labels = np.array([2], dtype=pl.UInt8)
-        bboxes = np.array([[5, 10, 15, 20]], dtype=pl.UInt32)
+        labels = np.array([2])
+        bboxes = np.array([[5, 10, 15, 20]])
         sample = DetectionSample(label=labels, bboxes=bboxes, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
@@ -141,13 +198,28 @@ class TestDetectionConversion:
         assert len(result) == 1
         assert result[0].confidences is None
 
+    def test_convert_detection_with_label_mapping_success(
+        self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
+    ):
+        """Test converting a detection sample with label mapping and multiple bounding boxes."""
+        labels = np.array([1, 2, 0])
+        bboxes = np.array([[10, 20, 50, 60]] * 3)
+        confidences = np.array([0.92] * 3)
+        sample = DetectionSample(label=labels, bboxes=bboxes, confidence=confidences)
+        result = fxt_converter_with_mapping.convert_sample(sample)
+
+        assert result is not None
+        assert len(result) == 2
+        assert result[0].labels[0].id == fxt_project_labels_for_mapping[1].id
+        assert result[1].labels[0].id == fxt_project_labels_for_mapping[0].id
+
 
 class TestSegmentationConversion:
     def test_convert_segmentation_sample(self, fxt_converter, fxt_project_labels):
         """Test converting an instance segmentation sample."""
-        labels = np.array([0], dtype=pl.UInt8)
-        polygons = np.array([[[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]]], dtype=object)
-        confidences = np.array([0.92], dtype=pl.Float32)
+        labels = np.array([0])
+        polygons = np.array([[[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]]])
+        confidences = np.array([0.92])
         sample = InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences)
 
         result = fxt_converter.convert_sample(sample)
@@ -162,7 +234,7 @@ class TestSegmentationConversion:
 
     def test_convert_segmentation_sample_multiple_polygons(self, fxt_converter):
         """Test converting multiple instance segmentation polygons."""
-        labels = np.array([1, 2], dtype=pl.UInt8)
+        labels = np.array([1, 2])
         polygons = np.array([[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]], [[20.0, 20.0], [30.0, 30.0]]], dtype=object)
         sample = InstanceSegmentationSample(label=labels, polygons=polygons, confidence=None)
 
@@ -172,36 +244,23 @@ class TestSegmentationConversion:
         assert len(result[0].shape.points) == 3
         assert len(result[1].shape.points) == 2
 
-
-class TestLabelMapping:
-    def test_convert_with_label_mapping_success(self, fxt_label_categories):
-        """Test label name mapping during conversion."""
-        label_mapping: dict[str, str | None] = {"cat": "feline", "dog": "canine"}
-        # Update project labels to match mapped names
-        mapped_labels = [
-            Label(id=uuid4(), name="feline", color="#FF0000", hotkey=None),
-            Label(id=uuid4(), name="canine", color="#00FF00", hotkey=None),
-            Label(id=uuid4(), name="bird", color="#0000FF", hotkey=None),
-        ]
-        converter = DatumaroSampleToGetiAnnotationConverter(mapped_labels, fxt_label_categories, label_mapping)
-
-        sample = ClassificationSample(label=0, confidence=0.9)
-        result = converter.convert_sample(sample)
+    def test_convert_segmentation_with_label_mapping_success(
+        self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
+    ):
+        """Test converting a segmentation sample with label mapping and multiple polygons."""
+        labels = np.array([1, 2, 0])
+        polygons = np.array([[[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]]] * 3)
+        confidences = np.array([0.92] * 3)
+        sample = InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences)
+        result = fxt_converter_with_mapping.convert_sample(sample)
 
         assert result is not None
-        assert result[0].labels[0].id == mapped_labels[0].id
+        assert len(result) == 2
+        assert result[0].labels[0].id == fxt_project_labels_for_mapping[1].id
+        assert result[1].labels[0].id == fxt_project_labels_for_mapping[0].id
 
-    def test_convert_with_label_filtering_success(self, fxt_project_labels, fxt_label_categories):
-        """Test label name mapped to None during conversion."""
-        label_mapping: dict[str, str | None] = {"bird": None}
-        project_labels = fxt_project_labels[:2]  # Only "cat" and "dog" labels in project
-        converter = DatumaroSampleToGetiAnnotationConverter(project_labels, fxt_label_categories, label_mapping)
 
-        sample = ClassificationSample(label=2, confidence=0.9)
-        result = converter.convert_sample(sample)
-
-        assert result == []  # Label should be filtered out and no annotations returned
-
+class TestLabelMapping:
     def test_converter_with_labels_not_in_project(self, fxt_label_categories, fxt_project_labels):
         """Test raises error when instantiating converter with labels not found in project."""
         project_labels = [fxt_project_labels[0]]  # Only "cat" label in project

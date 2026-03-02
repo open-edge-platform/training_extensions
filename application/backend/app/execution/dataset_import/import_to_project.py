@@ -86,8 +86,6 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
         if not staged_dataset_path.exists() or not staged_dataset_path.is_dir():
             raise ValueError(f"Staged dataset directory does not exist: {staged_dataset_path}")
         dataset = import_dataset(str(staged_dataset_path))
-        if not dataset:
-            raise ValueError(f"Failed to import dataset from {staged_dataset_path}")
         target_type = self.__get_sample_by_task(task=task)
         if target_type and target_type != dataset.dtype:
             dataset = dataset.convert_to_schema(target_type)
@@ -107,12 +105,10 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                 label_categories=cast(LabelCategories, label_attr.categories),
                 label_mapping=params.labels_mapping,
             )
-            logger.info("Found {} labels for project {}", labels, params.project_id)
+            logger.info("Found {} labels for project {}", (label.name for label in labels), params.project_id)
             size, min_p, max_p = len(dataset), 10, 100
             progress_interval = max(1, size // self.BATCH_PROGRESS_INTERVAL)
             for idx, item in enumerate(dataset):
-                if (idx > 0 and idx % progress_interval == 0) or idx == size - 1:
-                    self.update_progress(min_p + (idx / size) * (max_p - min_p))
                 media = self._media_service.create_image(
                     project_id=params.project_id,
                     name=str(idx).zfill(len(str(size))),
@@ -132,6 +128,8 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                     annotations=annotations,
                     subset=DatasetItemSubset(item.subset.name.lower()),
                 )
+                if (idx > 0 and idx % progress_interval == 0) or idx == size - 1:
+                    self.update_progress(min_p + ((idx + 1) / size) * (max_p - min_p))
 
     def execute(self, params: ImportDatasetToProjectJobParams) -> None:
         dataset = self.prepare_dataset(staged_dataset_id=params.staged_dataset_id, task=params.task)

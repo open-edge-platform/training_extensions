@@ -102,6 +102,8 @@ class Execution(Runnable, ABC, Generic[JobParamsT]):
 
     def update_progress(self, percent: float) -> None:
         """Update the current progress percentage without changing the message."""
+        if percent <= 0.0 or percent > 100.0:
+            raise ValueError(f"Progress percentage must be in (0; 100], got {percent}")
         self._report_progress(percent=percent)
 
     def update_metadata(self, metadata: dict[str, Any]) -> None:
