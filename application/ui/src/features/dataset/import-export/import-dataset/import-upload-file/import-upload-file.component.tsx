@@ -24,8 +24,8 @@ import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from 
 import classes from './import-upload-file.module.scss';
 
 export const ImportUploadFile = () => {
-    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
     const { appendImportEntry } = useImportDatasetToProject();
+    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
 
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
     const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
@@ -72,6 +72,7 @@ export const ImportUploadFile = () => {
             size: file.size,
             step: 'preparing',
             fileName: file.name,
+            importJobId: null,
             prepareJobId: prepareImportJob.job_id,
             stagedDatasetId: stagedDataset.id,
         });

@@ -8,57 +8,54 @@ import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text
 import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
 import { useProject } from '../../../../../hooks/api/project.hook';
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { isNonEmptyString } from '../../../../../shared/util';
-import { IMPORT_DATASET_FORM_ID } from './util';
+import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
+import { IMPORT_DATASET_FORM_ID, mapProjectLabels } from './util';
 
 type LabelMappingProps = {
     stagedDatasetId: string;
 };
 
-type LabelsMapping = Record<string, string>;
-
 export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const { data: selectedProject } = useProject();
+    const { updateImportEntry } = useImportDatasetToProject();
+    const { datasetImportDialogState } = useImportDatasetDialogState();
 
     const { data } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
-        params: { path: { staged_dataset_id: String(stagedDatasetId) } },
+        params: { path: { staged_dataset_id: stagedDatasetId } },
         enabled: isNonEmptyString(stagedDatasetId),
     });
+
+    const importDatasetJobMutation = $api.useMutation('post', '/api/jobs');
 
     const datasetLabels = data?.metadata?.labels ?? [];
     const projectLabels = selectedProject?.task?.labels ?? [];
     const totalDatasetItems = data?.metadata?.num_items ?? 0;
-    /* 
-        Todo: update with totalAnnotatedImages 
-        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
-    */
     const totalAnnotatedItems = data?.metadata?.num_annotations ?? 0;
 
     const [_labelsMapping, submitAction] = useActionState<unknown, FormData>(async (_prevState, formData) => {
-        const mapping = datasetLabels.reduce<LabelsMapping>((acc, sourceLabel, index) => {
-            const targetLabel = formData.get(`targetLabel-${index}`);
-
-            if (isNonEmptyString(targetLabel)) {
-                acc[sourceLabel] = targetLabel;
-            }
-            return acc;
-        }, {});
-        /* 
-         Todo: to implement once the backend support "import_dataset_to_project" jobs
-
-         const response = await importDatasetJobMutation.mutateAsync({
-            body: {
-                job_type: 'import_dataset_to_project',
-                project_id: String(selectedProject?.id),
-                staged_dataset_id: String(stagedDatasetId),
-                parameters: {
-                    filters: { include_unannotated: formData.get('include_unannotated') === 'on' },
-                    labels_mapping: mapping,
+        await importDatasetJobMutation.mutateAsync(
+            {
+                body: {
+                    job_type: 'import_dataset_to_project',
+                    project_id: String(selectedProject?.id),
+                    staged_dataset_id: stagedDatasetId,
+                    parameters: {
+                        filters: { include_unannotated: formData.get('include_unannotated') === 'on' },
+                        labels_mapping: mapProjectLabels(datasetLabels, formData),
+                    },
                 },
             },
-        }); */
-
-        return mapping;
+            {
+                onSuccess: ({ job_id }) => {
+                    updateImportEntry(stagedDatasetId, { importJobId: job_id, step: 'importing' });
+                },
+                onSettled: () => {
+                    datasetImportDialogState.close();
+                },
+            }
+        );
     }, {});
 
     return (
