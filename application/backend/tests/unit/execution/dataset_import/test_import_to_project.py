@@ -52,7 +52,7 @@ def fxt_import_params() -> ImportDatasetToProjectJobParams:
     )
 
 
-def create_mock_jpeg(width: int = 10, height: int = 10) -> bytes:
+def create_mock_img_bytes(width: int = 10, height: int = 10, image_format: str = "JPEG") -> bytes:
     """Create a minimal valid JPEG image for testing."""
     import io
     import secrets
@@ -63,7 +63,7 @@ def create_mock_jpeg(width: int = 10, height: int = 10) -> bytes:
         "RGB", (width, height), color=(secrets.randbelow(256), secrets.randbelow(256), secrets.randbelow(256))
     )
     buffer = io.BytesIO()
-    img.save(buffer, format="JPEG")
+    img.save(buffer, format=image_format)
     return buffer.getvalue()
 
 
@@ -107,8 +107,8 @@ class TestImportDatasetToProject:
         """Test complete item creation flow: media, annotations, and dataset items."""
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
         dataset = Dataset(ClassificationSample, categories=label_categories)
-        (tmp_path / "image1.jpg").write_bytes(create_mock_jpeg())
-        (tmp_path / "image2.jpg").write_bytes(create_mock_jpeg())
+        (tmp_path / "image1.jpg").write_bytes(create_mock_img_bytes())
+        (tmp_path / "image2.bmp").write_bytes(create_mock_img_bytes(image_format="BMP"))
         dataset.append(
             ClassificationSample(
                 id=None,
@@ -123,7 +123,7 @@ class TestImportDatasetToProject:
         dataset.append(
             ClassificationSample(
                 id=None,
-                image=LazyImage(tmp_path / "image2.jpg"),
+                image=LazyImage(tmp_path / "image2.bmp"),
                 image_info=ImageInfo(10, 10),
                 label=0,
                 user_reviewed=True,
@@ -150,6 +150,10 @@ class TestImportDatasetToProject:
         assert calls[0].kwargs["name"] == "0"
         assert calls[0].kwargs["format"] == ImageFormat.JPG
         assert calls[0].kwargs["data"] is not None
+        assert calls[1].kwargs["project_id"] == fxt_import_params.project_id
+        assert calls[1].kwargs["name"] == "1"
+        assert calls[1].kwargs["format"] == ImageFormat.BMP
+        assert calls[1].kwargs["data"] is not None
 
         # Verify dataset item creation
         assert fxt_dataset_service.create_dataset_item.call_count == 2
@@ -175,11 +179,11 @@ class TestImportDatasetToProject:
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
         dataset = Dataset(ClassificationSample, categories=label_categories)
         for i in range(items_count):
-            (tmp_path / f"image{i}.jpg").write_bytes(create_mock_jpeg())
+            (tmp_path / f"image{i}.png").write_bytes(create_mock_img_bytes(image_format="PNG"))
             dataset.append(
                 ClassificationSample(
                     id=None,
-                    image=LazyImage(tmp_path / f"image{i}.jpg"),
+                    image=LazyImage(tmp_path / f"image{i}.png"),
                     image_info=ImageInfo(10, 10),
                     label=0,
                     user_reviewed=True,

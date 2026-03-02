@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
-from datumaro.experimental import Dataset, Sample
+from datumaro.experimental import Dataset, LazyImage, Sample
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.export_import import import_dataset
 from loguru import logger
@@ -112,7 +112,7 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                 media = self._media_service.create_image(
                     project_id=params.project_id,
                     name=str(idx).zfill(len(str(size))),
-                    format=ImageFormat.JPG,
+                    format=self.__detect_image_format(item.image),
                     data=item.image.data,
                 )
                 annotations = converter.convert_sample(item) or None
@@ -134,6 +134,14 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
     def execute(self, params: ImportDatasetToProjectJobParams) -> None:
         dataset = self.prepare_dataset(staged_dataset_id=params.staged_dataset_id, task=params.task)
         self.create_items(dataset=dataset, params=params)
+
+    @staticmethod
+    def __detect_image_format(image: LazyImage) -> ImageFormat:
+        try:
+            ext = Path(image.path).suffix.lstrip(".").lower()
+            return ImageFormat(ext)
+        except (ValueError, AttributeError):
+            return ImageFormat.JPG
 
     @staticmethod
     def __get_sample_by_task(task: Task) -> type[Sample] | None:
