@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Annotation } from '../../../../shared/types';
-import { useSelectDatasetItem } from '../../../dataset/gallery/hooks/use-select-dataset-item.hook';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { getFormattedPoints, isPrediction } from '../utils';
 
 type FullImageShapeProps = {
@@ -12,15 +12,15 @@ type FullImageShapeProps = {
 };
 
 const FullImageShape = ({ color, ariaLabel, strokeDasharray }: FullImageShapeProps) => {
-    const { selectedMediaItem } = useSelectDatasetItem();
+    const { mediaItem } = useSelectedMediaItem();
 
     return (
         <rect
             fill={'none'}
             stroke={color}
             aria-label={ariaLabel}
-            width={selectedMediaItem?.width}
-            height={selectedMediaItem?.height}
+            width={mediaItem?.width}
+            height={mediaItem?.height}
             strokeDasharray={strokeDasharray}
         />
     );
