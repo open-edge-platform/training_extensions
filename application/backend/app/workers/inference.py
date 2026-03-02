@@ -55,32 +55,42 @@ class InferenceWorker(BaseProcessWorker):
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
+        # To ensure broadcasting frames in order
+        self._frame_index = 0
+        self._next_to_broadcast = 0
+        self._result_buffer = {}
+
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
         self._model_service = ActiveModelService(get_settings().data_dir)
 
     def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
-        start_time = float(userdata["inference_start_time"])
-        model_id = userdata["model_id"]
-        self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
+        frame_index = userdata["frame_index"]
+        self._result_buffer[frame_index] = (inf_result, userdata)
+        while self._next_to_broadcast in self._result_buffer:
+            result, ud = self._result_buffer.pop(self._next_to_broadcast)
+            start_time = float(ud["inference_start_time"])
+            model_id = ud["model_id"]
+            self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
 
-        stream_data: StreamData = userdata["stream_data"]
-        frame_with_predictions = Visualizer.overlay_predictions(
-            original_image=stream_data.frame_data, predictions=inf_result
-        )
-        inference_data = InferenceData(
-            prediction=inf_result,
-            visualized_prediction=frame_with_predictions,
-            model_id=model_id,
-        )
-        stream_data.inference_data = inference_data
-        while not self.should_stop():
-            try:
-                self._pred_queue.put(stream_data, timeout=1)
-                break
-            except queue.Full:
-                logger.debug("Prediction queue is full, retrying...")
+            stream_data: StreamData = ud["stream_data"]
+            frame_with_predictions = Visualizer.overlay_predictions(
+                original_image=stream_data.frame_data, predictions=result
+            )
+            inference_data = InferenceData(
+                prediction=result,
+                visualized_prediction=frame_with_predictions,
+                model_id=model_id,
+            )
+            stream_data.inference_data = inference_data
+            while not self.should_stop():
+                try:
+                    self._pred_queue.put(stream_data, timeout=1)
+                    break
+                except queue.Full:
+                    logger.debug("Prediction queue is full, retrying...")
+            self._next_to_broadcast += 1
 
     def _install_callback_if_needed(self, model: Model) -> None:
         """Install inference completion callback once per model object instance."""
@@ -132,8 +142,10 @@ class InferenceWorker(BaseProcessWorker):
                             "stream_data": item,
                             "model_id": self._loaded_model.id,
                             "inference_start_time": inference_start_time,
+                            "frame_index": self._frame_index,
                         },
                     )
+                    self._frame_index += 1
                 else:
                     model.inference_adapter.await_any()
             except Exception:
