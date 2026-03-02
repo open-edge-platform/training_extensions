@@ -15,7 +15,7 @@ import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-ca
 import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { getNextItem, useNextMedia } from './secondary-toolbar/util';
+import { useNextMedia } from './secondary-toolbar/util';
 
 type AnnotatorProps = {
     image: ImageData;
