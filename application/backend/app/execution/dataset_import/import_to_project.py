@@ -105,7 +105,7 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                 label_categories=cast(LabelCategories, label_attr.categories),
                 label_mapping=params.labels_mapping,
             )
-            logger.info("Found {} labels for project {}", (label.name for label in labels), params.project_id)
+            logger.info("Found {} labels for project {}", [label.name for label in labels], params.project_id)
             size, min_p, max_p = len(dataset), 10, 100
             progress_interval = max(1, size // self.BATCH_PROGRESS_INTERVAL)
             for idx, item in enumerate(dataset):

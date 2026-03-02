@@ -56,24 +56,22 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         with self._db_session_factory() as session:
             if export_params.dataset_id is None:
                 self._dataset_service.set_db_session(session)
-                annotation_status = (
-                    DatasetItemAnnotationStatus.REVIEWED_OR_UNANNOTATED
-                    if export_params.include_unannotated
-                    else DatasetItemAnnotationStatus.REVIEWED
-                )
                 dataset = self._dataset_service.get_dm_dataset(
                     project_id=export_params.project_id,
                     task=export_params.task,
-                    annotation_status=annotation_status,
-                    label_names=export_params.labels,
+                    annotation_status=DatasetItemAnnotationStatus.REVIEWED,
                 )
             else:
                 self._dataset_revision_service.set_db_session(session)
                 dataset = self._dataset_revision_service.load_revision(
                     project_id=export_params.project_id, dataset_revision_id=export_params.dataset_id
                 )
-            if dataset and export_params.subsets:
+            if len(dataset) > 0 and export_params.subsets:
                 dataset = dataset.filter_by_subset(subset=[Subset[subset.name] for subset in export_params.subsets])
+            if len(dataset) > 0 and export_params.labels:
+                dataset = dataset.filter_by_labels(
+                    labels=export_params.labels, keep_empty_samples=export_params.include_unannotated
+                )
             return uuid4(), dataset
 
     @step("Export dataset", 100)

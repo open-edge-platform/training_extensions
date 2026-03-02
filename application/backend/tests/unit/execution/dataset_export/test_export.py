@@ -3,7 +3,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
@@ -60,18 +60,28 @@ def fxt_export_params() -> ExportDatasetJobParams:
 
 class TestDatasetExporter:
     @pytest.mark.parametrize(
-        "subsets", [[DatasetItemSubset.TESTING], [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], None]
+        "subsets, labels",
+        [
+            ([DatasetItemSubset.TESTING], ["label1"]),
+            ([DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], ["label1", "label2"]),
+            (None, None),
+        ],
     )
-    def test_prepare_dataset_project(
+    def test_prepare_project_dataset(
         self,
         subsets: list[DatasetItemSubset],
+        labels: list[str],
         fxt_export: ExportDataset,
         fxt_dataset_service: Mock,
         fxt_export_params: ExportDatasetJobParams,
     ):
-        dataset = Mock(spec=Dataset)
+        dataset = MagicMock(spec=Dataset)
+        dataset.__len__.return_value = 10
+        dataset.filter_by_subset.return_value = dataset
+        dataset.filter_by_labels.return_value = dataset
         fxt_dataset_service.get_dm_dataset.return_value = dataset
         fxt_export_params.subsets = subsets
+        fxt_export_params.labels = labels
 
         fxt_export.prepare_dataset(fxt_export_params)
 
@@ -79,25 +89,38 @@ class TestDatasetExporter:
             project_id=fxt_export_params.project_id,
             task=fxt_export_params.task,
             annotation_status=DatasetItemAnnotationStatus.REVIEWED,
-            label_names=fxt_export_params.labels,
         )
         if subsets:
             dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])
+        if labels:
+            dataset.filter_by_labels.assert_called_once_with(
+                labels=labels, keep_empty_samples=fxt_export_params.include_unannotated
+            )
 
     @pytest.mark.parametrize(
-        "subsets", [[DatasetItemSubset.TESTING], [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], None]
+        "subsets, labels",
+        [
+            ([DatasetItemSubset.TESTING], ["label1"]),
+            ([DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], ["label1", "label2"]),
+            (None, None),
+        ],
     )
     def test_prepare_dataset_revision(
         self,
         subsets: list[DatasetItemSubset],
+        labels: list[str],
         fxt_export: ExportDataset,
         fxt_dataset_revision_service: Mock,
         fxt_export_params: ExportDatasetJobParams,
     ):
+        dataset = MagicMock(spec=Dataset)
+        dataset.__len__.return_value = 10
+        dataset.filter_by_subset.return_value = dataset
+        dataset.filter_by_labels.return_value = dataset
+        fxt_dataset_revision_service.load_revision.return_value = dataset
         fxt_export_params.dataset_id = uuid4()
         fxt_export_params.subsets = subsets
-        dataset = Mock(spec=Dataset)
-        fxt_dataset_revision_service.load_revision.return_value = dataset
+        fxt_export_params.labels = labels
 
         dataset_id, _ = fxt_export.prepare_dataset(fxt_export_params)
 
@@ -108,6 +131,10 @@ class TestDatasetExporter:
         )
         if subsets:
             dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])
+        if labels:
+            dataset.filter_by_labels.assert_called_once_with(
+                labels=labels, keep_empty_samples=fxt_export_params.include_unannotated
+            )
 
     @pytest.mark.parametrize(
         "export_format, data_format",
