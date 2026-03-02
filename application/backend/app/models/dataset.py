@@ -4,9 +4,7 @@
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import Field, model_validator
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import BaseRequiredIDModel
 from app.models.base import BaseEntity
