@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.api.schemas.dataset import DatasetFilters
 from app.core.jobs.models import JobType
 from app.models import DatasetItemSubset, TaskType
+from app.models.jobs import PrepareDatasetForImportJob
 
 from .base import BaseJobRequest
 
@@ -186,5 +187,9 @@ class ImportDatasetMetadata(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def populate_metadata(cls, data: object) -> object:
-        # TODO: Implement validator when service layer models added
+        if isinstance(data, PrepareDatasetForImportJob):
+            return {
+                "staged_dataset_id": data.params.staged_dataset_id,
+            }
+
         return data

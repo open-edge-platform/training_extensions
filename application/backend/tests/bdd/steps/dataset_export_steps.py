@@ -2,27 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import ast
-import json
 import random
 import secrets
-import zipfile
 from pathlib import Path
 from typing import cast
 
 import requests
 from behave import given, then, when
 from behave.runner import Context
-from datumaro.experimental.data_formats.base import load_dataset
-from datumaro.experimental.export_import import import_dataset
 
 from app.api.schemas import ProjectView
-from app.api.schemas.jobs import JobView
 from app.api.schemas.jobs.dataset_export import ExportDatasetMetadata
-from app.core.jobs.models import JobStatus, JobType
-from app.execution.dataset_export import get_dm_format
 from app.models import DatasetFormat, TaskType
-from tests.bdd.images import generate_random_image
-from tests.bdd.parsers import parse_sse_events
+from tests.bdd.utils import export_dataset, generate_random_image, import_dataset_by_format
 
 
 @given('A "{task_type}" project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
@@ -132,77 +124,22 @@ def step_dataset_has_annotated_images(context: Context, count: int, subset: str)
 @when("I export the project dataset in {export_format} format with filters={filters}")  # pyrefly: ignore
 def step_export_dataset(context: Context, export_format: str, filters: str) -> None:
     project = cast(ProjectView, context.project)
-    job_body = {
-        "job_type": JobType.EXPORT_DATASET,
-        "project_id": str(project.id),
-        "parameters": {
-            "export_format": DatasetFormat(export_format.lower()),
-            "filters": json.loads(filters),
-        },
-    }
-    response = requests.post(f"{context.base_url}/api/jobs", json=job_body)
-    job = JobView.model_validate(response.json())
-    context.export_format = DatasetFormat(export_format.lower())
-
-    with requests.get(
-        f"{context.base_url}/api/jobs/{job.job_id}/status", stream=True, headers={"Accept": "text/event-stream"}
-    ) as stream_response:
-        for job_data in parse_sse_events(stream_response):
-            job = JobView.model_validate(job_data)
-            if job.status in (JobStatus.DONE.name, JobStatus.FAILED.name):
-                context.job = job
-                break
-
-    job = cast(JobView, context.job)
-    assert job.status == JobStatus.DONE.name, f"Expected job to be DONE, but got {job.status}, error: {job.error}"
+    export_format = DatasetFormat(export_format.lower())
+    context.export_format = export_format
+    job = export_dataset(str(context.base_url), str(project.id), export_format, filters)
     context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
 
 
 @then("the staged dataset archive {archive_name} should exist")  # pyrefly: ignore
 def step_staged_dataset_archive_exists(context: Context, archive_name: str) -> None:
     response = requests.get(f"{context.base_url}/api/staged_datasets/{context.dataset_id}")
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
 
 
-@then("the exported dataset has {count:d} images")  # pyrefly: ignore
-def step_exported_dataset_has_items(context: Context, count: int) -> None:
-    dataset = None
-    export_format = context.export_format
-    dataset_path = (
-        cast(Path, context.tmp_path)
-        / "data"
-        / "staged_datasets"
-        / str(context.dataset_id)
-        / f"dataset-{str(export_format)}.zip"
-    )
-    match export_format:
-        case DatasetFormat.GETI:
-            dataset = import_dataset(dataset_path)
-        case DatasetFormat.YOLO:
-            extract_dir = dataset_path.with_suffix("")
-            extract_dir.mkdir(parents=True, exist_ok=True)
-
-            with zipfile.ZipFile(dataset_path, "r") as zip_ref:
-                zip_ref.extractall(extract_dir)
-
-            dataset = load_dataset(
-                data_format=get_dm_format(export_format),
-                root_dir=str(extract_dir),
-            )
-        case DatasetFormat.COCO:
-            extract_dir = dataset_path.with_suffix("")
-            extract_dir.mkdir(parents=True, exist_ok=True)
-
-            with zipfile.ZipFile(dataset_path, "r") as zip_ref:
-                zip_ref.extractall(extract_dir)
-
-            dataset = load_dataset(
-                data_format=get_dm_format(export_format),
-                images_dir_path=str(extract_dir / "images"),
-                annotations_path=str(extract_dir / "annotations.json"),
-            )
-        case _:
-            raise Exception(f"Unknown export format: {export_format}")
-
+@then("the staged dataset with name={dataset_name} has {count:d} images")  # pyrefly: ignore
+def step_staged_dataset_has_items(context: Context, dataset_name: str, count: int) -> None:
+    dataset_format = cast(DatasetFormat, context.export_format)
+    dataset_path = cast(Path, context.tmp_path) / "data" / "staged_datasets" / str(context.dataset_id) / dataset_name
+    dataset = import_dataset_by_format(dataset_path, dataset_format)
     actual_count = len(dataset)
     assert actual_count == count, f"Expected {count} images in dataset, but found {actual_count}"

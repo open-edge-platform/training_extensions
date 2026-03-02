@@ -9,7 +9,7 @@ from .data_collection_policy import (
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
 )
-from .dataset import DatasetFormat, StagedDataset
+from .dataset import AnnotationType, DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
@@ -45,6 +45,7 @@ from .source import (
 from .task import Task, TaskType
 
 __all__ = [
+    "AnnotationType",
     "BaseEntity",
     "ConfidenceThresholdDataCollectionPolicy",
     "DataCollectionConfig",

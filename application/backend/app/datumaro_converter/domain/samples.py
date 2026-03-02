@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import polars as pl
-from datumaro.experimental import Sample
+from datumaro.experimental import Sample, register_sample
 from datumaro.experimental.fields import (
     ImageInfo,
     Subset,
@@ -17,6 +17,7 @@ from datumaro.experimental.fields import (
     subset_field,
 )
 
+from app.models import AnnotationType
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 
@@ -39,6 +40,7 @@ class BaseSample(Sample):
     user_reviewed: bool = bool_field(semantic="user_reviewed")
 
 
+@register_sample
 class ClassificationSample(BaseSample):
     """
     Sample for multiclass classification datasets.
@@ -51,7 +53,16 @@ class ClassificationSample(BaseSample):
     label: int | None = label_field(dtype=pl.UInt8(), is_list=False)
     confidence: float | None = numeric_field(dtype=pl.Float32(), semantic="confidence")
 
+    @staticmethod
+    def annotation_type() -> AnnotationType:
+        return AnnotationType.LABEL
 
+    @property
+    def annotations(self) -> int:
+        return 1 if self.label is not None and self.user_reviewed else 0
+
+
+@register_sample
 class MultilabelClassificationSample(BaseSample):
     """
     Sample for multilabel classification datasets.
@@ -64,7 +75,16 @@ class MultilabelClassificationSample(BaseSample):
     label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
+    @staticmethod
+    def annotation_type() -> AnnotationType:
+        return AnnotationType.LABEL
 
+    @property
+    def annotations(self) -> int:
+        return self.label.size if self.user_reviewed else 0
+
+
+@register_sample
 class DetectionSample(BaseSample):
     """
     Sample for object detection datasets.
@@ -79,7 +99,16 @@ class DetectionSample(BaseSample):
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
+    @staticmethod
+    def annotation_type() -> AnnotationType:
+        return AnnotationType.BOUNDING_BOX
 
+    @property
+    def annotations(self) -> int:
+        return self.bboxes.size if self.user_reviewed else 0
+
+
+@register_sample
 class InstanceSegmentationSample(BaseSample):
     """
     Sample for instance segmentation datasets.
@@ -93,3 +122,11 @@ class InstanceSegmentationSample(BaseSample):
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
+
+    @staticmethod
+    def annotation_type() -> AnnotationType:
+        return AnnotationType.POLYGON
+
+    @property
+    def annotations(self) -> int:
+        return self.polygons.size if self.user_reviewed else 0

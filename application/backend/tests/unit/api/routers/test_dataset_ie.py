@@ -20,7 +20,7 @@ from app.services import StagedDatasetService
 def fxt_staged_dataset(tmp_path: Path) -> StagedDataset:
     return StagedDataset(
         id=uuid4(),
-        filename=str(tmp_path / "dataset.zip"),
+        filename=str(tmp_path / "dataset-coco.zip"),
         compressed=True,
         format=DatasetFormat.GETI,
         size=2048,
@@ -40,13 +40,13 @@ class TestDatasetIEEndpoints:
     ) -> None:
         fxt_staged_dataset_service.upload.return_value = fxt_staged_dataset
         file_content = b"some-bytes"
-        files = {"file": ("dataset_coco.zip", io.BytesIO(file_content), "application/zip")}
+        files = {"file": ("dataset-coco.zip", io.BytesIO(file_content), "application/zip")}
 
         response = fxt_client.post("/api/staged_datasets", files=files)
 
         assert response.status_code == status.HTTP_201_CREATED
         fxt_staged_dataset_service.upload.assert_called_once()
-        assert fxt_staged_dataset_service.upload.call_args.kwargs["filename"] == "dataset.zip"
+        assert fxt_staged_dataset_service.upload.call_args.kwargs["filename"] == "dataset-coco.zip"
         response_data = response.json()
         assert response_data["id"] == str(fxt_staged_dataset.id)
         assert response_data["compressed"] == fxt_staged_dataset.compressed
@@ -116,7 +116,7 @@ class TestDatasetIEEndpoints:
         fxt_staged_dataset: StagedDataset,
         fxt_client: TestClient,
     ):
-        file_path = tmp_path / "dataset.zip"
+        file_path = tmp_path / "dataset-coco.zip"
         file_content = b"zip-binary-content"
         file_path.write_bytes(file_content)
         fxt_staged_dataset_service.find_by_id.return_value = fxt_staged_dataset

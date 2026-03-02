@@ -6,7 +6,7 @@ import numpy as np
 from datumaro.experimental.fields import ImageInfo
 from loguru import logger
 
-from app.datumaro_converter.samples import DetectionSample
+from app.datumaro_converter.domain import DetectionSample
 from app.datumaro_converter.utils import ShapeConverter, SubsetConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Rectangle
 
@@ -68,7 +68,7 @@ class DetectionSampleFactory(SampleFactory):
         indices = self._label_index.get_indices(label_ids)
 
         if indices is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
 
         return indices
 

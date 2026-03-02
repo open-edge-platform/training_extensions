@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 from datumaro.experimental import Sample
 
-from app.datumaro_converter.label_index import LabelIndex
+from app.datumaro_converter.domain import LabelIndex
 from app.models import DatasetItem, Label, Media
 
 
