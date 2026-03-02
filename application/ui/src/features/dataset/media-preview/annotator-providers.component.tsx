@@ -9,9 +9,46 @@ import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorLabelsProvider } from '../../annotator/annotator-labels-provider.component';
-import { SelectedMediaItemProvider } from '../../annotator/selected-media-item-provider.component';
+import {
+    SelectedMediaItemProvider,
+    useSelectedMediaItem,
+} from '../../annotator/selected-media-item-provider.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
 import type { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
+
+type AnnotationActionsWrapperProviderProps = {
+    initialAnnotationsDTO: AnnotationDTO[];
+    initialPredictionsDTO: AnnotationDTO[];
+    isUserReviewed: boolean;
+    mode: AnnotatorMode;
+    isReadOnly?: boolean;
+    children: ReactNode;
+};
+
+const AnnotationActionsWrapperProvider = ({
+    children,
+    initialAnnotationsDTO,
+    initialPredictionsDTO,
+    isUserReviewed,
+    mode,
+    isReadOnly,
+}: AnnotationActionsWrapperProviderProps) => {
+    const { mediaItem } = useSelectedMediaItem();
+
+    return (
+        <AnnotationActionsProvider
+            key={mediaItem.id}
+            mediaItem={mediaItem}
+            initialAnnotationsDTO={initialAnnotationsDTO}
+            initialPredictionsDTO={initialPredictionsDTO}
+            isUserReviewed={isUserReviewed}
+            mode={mode}
+            isReadOnly={isReadOnly}
+        >
+            {children}
+        </AnnotationActionsProvider>
+    );
+};
 
 type AnnotatorProvidersProps = {
     mediaItem: Media;
@@ -50,9 +87,7 @@ export const AnnotatorProviders = ({
                     <CanvasSettingsProvider>
                         <AnnotatorLabelsProvider>
                             <SelectedMediaItemProvider mediaItem={mediaItem}>
-                                <AnnotationActionsProvider
-                                    key={mediaItem.id}
-                                    mediaItem={mediaItem}
+                                <AnnotationActionsWrapperProvider
                                     initialAnnotationsDTO={initialAnnotationsDTO}
                                     initialPredictionsDTO={initialPredictionsDTO}
                                     isUserReviewed={isUserReviewed}
@@ -60,7 +95,7 @@ export const AnnotatorProviders = ({
                                     isReadOnly={isReadOnly}
                                 >
                                     {children}
-                                </AnnotationActionsProvider>
+                                </AnnotationActionsWrapperProvider>
                             </SelectedMediaItemProvider>
                         </AnnotatorLabelsProvider>
                     </CanvasSettingsProvider>
