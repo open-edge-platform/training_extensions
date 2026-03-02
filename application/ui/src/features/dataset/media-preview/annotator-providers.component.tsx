@@ -22,17 +22,6 @@ type AnnotatorProvidersProps = {
     children: ReactNode;
 };
 
-/**
- * Provider tree for the annotator.
- *
- * Stable providers (Zoom, SelectAnnotation, Visibility, CanvasSettings, Labels,
- * SelectedMediaItem, AnnotationActions) are placed OUTSIDE the Suspense boundary
- * so that toolbars and annotation state remain mounted while a new image loads.
- *
- * MediaItemImageLoader (media-preview.component.tsx) is the only suspending provider and lives INSIDE the
- * Suspense boundary — meaning only the canvas area shows a loading state during
- * image fetching.
- */
 export const AnnotatorProviders = ({
     mediaItem,
     initialAnnotationsDTO,
