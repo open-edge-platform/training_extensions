@@ -16,9 +16,6 @@ type ModelMetricsProps = {
 export const ModelMetrics = ({ modelId, evaluations }: ModelMetricsProps) => {
     const { data: trainingMetrics, isPending, isError } = useGetModelTrainingMetrics(modelId);
 
-    const testingEvaluations = evaluations.find(({ subset }) => subset === 'testing');
-    const testingMetrics = testingEvaluations?.metrics ?? [];
-
     return (
         <Flex direction='column' gap={'size-300'}>
             {isPending ? (
@@ -31,7 +28,7 @@ export const ModelMetrics = ({ modelId, evaluations }: ModelMetricsProps) => {
                 </Flex>
             ) : (
                 <>
-                    <ModelEvaluations metrics={testingMetrics} />
+                    <ModelEvaluations evaluations={evaluations} />
                     <ModelMetricsGraphs trainingMetrics={trainingMetrics?.training_metrics ?? []} />
                 </>
             )}
