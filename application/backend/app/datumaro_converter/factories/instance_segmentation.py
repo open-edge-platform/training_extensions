@@ -8,7 +8,7 @@ from datumaro.experimental.fields import ImageInfo
 from loguru import logger
 from numpy import ndarray
 
-from app.datumaro_converter.samples import InstanceSegmentationSample
+from app.datumaro_converter.domain import InstanceSegmentationSample
 from app.datumaro_converter.utils import ShapeConverter, SubsetConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Polygon
 
@@ -84,7 +84,7 @@ class InstanceSegmentationSampleFactory(SampleFactory):
         indices = self._label_index.get_indices(label_ids)
 
         if indices is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
 
         return indices
 

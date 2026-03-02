@@ -18,6 +18,7 @@ from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
 from app.models import DatasetFormat, ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
+from app.models.jobs import PrepareDatasetForImportJob, PrepareDatasetForImportJobParams
 from app.services import ProjectService, SystemService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
@@ -69,7 +70,12 @@ async def submit_job(
                     ),
                 )
             case JobType.PREPARE_DATASET_FOR_IMPORT:
-                raise NotImplementedError
+                job = PrepareDatasetForImportJob(
+                    id=job_id,
+                    params=PrepareDatasetForImportJobParams(
+                        staged_dataset_id=job_request.staged_dataset_id,
+                    ),
+                )
             case JobType.IMPORT_DATASET_AS_NEW_PROJECT:
                 raise NotImplementedError
             case JobType.IMPORT_DATASET_TO_PROJECT:

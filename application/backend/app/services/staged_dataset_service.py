@@ -6,7 +6,39 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from app.models import DatasetFormat, StagedDataset
+from datumaro.experimental import Dataset, import_dataset
+
+from app.models import AnnotationType, DatasetFormat, StagedDataset
+from app.models.dataset import DatasetMetadata
+
+
+def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
+    labels = []
+    label_attr_name = "label" if "label" in dataset.schema.attributes else "labels"
+    label_attr = dataset.schema.attributes[label_attr_name]
+    if label_attr and label_attr.categories and hasattr(label_attr.categories, "labels"):
+        labels = label_attr.categories.labels
+    annotation_type, num_annotations = AnnotationType.UNKNOWN, 0
+    if len(dataset) > 0:
+        item = dataset[0]
+        if hasattr(item, "annotation_type") and callable(getattr(item, "annotation_type")):
+            annotation_type = item.annotation_type()
+            num_annotations = sum(item.annotations for item in dataset)
+        elif hasattr(item, "labels") and item.labels is not None:
+            annotation_type = AnnotationType.LABEL
+            num_annotations = len(item.labels)
+        elif hasattr(item, "bboxes") and item.bboxes is not None:
+            annotation_type = AnnotationType.BOUNDING_BOX
+            num_annotations = len(item.bboxes)
+        elif hasattr(item, "polygons") and item.polygons is not None:
+            annotation_type = AnnotationType.POLYGON
+            num_annotations = len(item.polygons)
+    return DatasetMetadata(
+        num_items=len(dataset),
+        annotation_type=annotation_type,
+        num_annotations=num_annotations,
+        labels=sorted(labels),
+    )
 
 
 def _infer_format_from_filename(filename: str) -> DatasetFormat:
@@ -94,24 +126,12 @@ class StagedDatasetService:
                 dataset_id = UUID(item.name)
             except ValueError:
                 continue
-            files = [p for p in item.iterdir() if p.is_file()]
+            files = [p for p in item.iterdir() if p.is_dir() or (p.is_file() and p.suffix.lower() == ".zip")]
             if not files:
                 continue
 
-            archive_path = files[0]
-            size = archive_path.stat().st_size
-            compressed = archive_path.is_file() and archive_path.suffix == ".zip"
-            dataset_format = _infer_format_from_filename(archive_path.name)
-            # TODO: extract datumaro dataset metadata when uncompressed
-            staged_datasets.append(
-                StagedDataset(
-                    compressed=compressed,
-                    filename=str(archive_path),
-                    format=dataset_format,
-                    id=dataset_id,
-                    size=size,
-                )
-            )
+            dataset_path = files[0]
+            staged_datasets.append(self._get_staged_dataset_from_path(dataset_id, dataset_path))
         return staged_datasets
 
     def find_by_id(self, dataset_id: UUID) -> StagedDataset | None:
@@ -131,22 +151,12 @@ class StagedDatasetService:
         if not dataset_dir.is_dir():
             return None
 
-        files = [p for p in dataset_dir.iterdir() if p.is_file()]
+        files = [p for p in dataset_dir.iterdir() if p.is_dir() or (p.is_file() and p.suffix.lower() == ".zip")]
         if not files:
             return None
 
-        archive_path = files[0]
-        size = archive_path.stat().st_size
-        compressed = archive_path.is_file() and archive_path.suffix == ".zip"
-        # TODO: extract datumaro dataset metadata when uncompressed
-
-        return StagedDataset(
-            id=dataset_id,
-            filename=str(archive_path),
-            format=_infer_format_from_filename(archive_path.name),
-            compressed=compressed,
-            size=size,
-        )
+        dataset_path = files[0]
+        return self._get_staged_dataset_from_path(dataset_id, dataset_path)
 
     def delete_by_id(self, dataset_id: UUID) -> bool:
         """
@@ -160,3 +170,28 @@ class StagedDatasetService:
 
         shutil.rmtree(dataset_dir)
         return True
+
+    @staticmethod
+    def _calculate_path_size(path: Path) -> int:
+        """Calculate total size of a file or directory in bytes."""
+        if path.is_file():
+            return path.stat().st_size
+        return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
+
+    def _get_staged_dataset_from_path(self, dataset_id: UUID, dataset_path: Path) -> StagedDataset:
+        size = self._calculate_path_size(dataset_path)
+        compressed = dataset_path.is_file() and dataset_path.suffix == ".zip"
+        dataset_format = _infer_format_from_filename(dataset_path.name) if compressed else DatasetFormat.GETI
+
+        metadata = None
+        if not compressed and dataset_format == DatasetFormat.GETI:
+            metadata = _get_dataset_metadata(import_dataset(dataset_path))
+
+        return StagedDataset(
+            compressed=compressed,
+            filename=str(dataset_path),
+            format=dataset_format,
+            id=dataset_id,
+            size=size,
+            metadata=metadata,
+        )

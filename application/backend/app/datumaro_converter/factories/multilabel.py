@@ -6,7 +6,7 @@ import numpy as np
 from datumaro.experimental.fields import ImageInfo
 from loguru import logger
 
-from app.datumaro_converter.samples import MultilabelClassificationSample
+from app.datumaro_converter.domain import MultilabelClassificationSample
 from app.datumaro_converter.utils import SubsetConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media
 
@@ -60,7 +60,7 @@ class MultilabelClassificationSampleFactory(SampleFactory):
         indices = self._label_index.get_indices(label_ids)
 
         if indices is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
 
         return indices
 

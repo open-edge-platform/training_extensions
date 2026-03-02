@@ -4,7 +4,7 @@
 from datumaro.experimental.fields import ImageInfo
 from loguru import logger
 
-from app.datumaro_converter.samples import ClassificationSample
+from app.datumaro_converter.domain import ClassificationSample
 from app.datumaro_converter.utils import SubsetConverter
 from app.models import DatasetItem, Media
 
@@ -39,7 +39,7 @@ class ClassificationSampleFactory(SampleFactory):
         label_index = self._label_index.get_index(annotation.labels[0].id)
 
         if label_index is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
             return None
 
         return ClassificationSample(
