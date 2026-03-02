@@ -7,7 +7,7 @@ import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../../constants/shared-types';
-import { useSelectedData } from '../../selected-data-provider.component';
+import { useGetDatasetItemsById } from '../../../../hooks/use-get-dataset-items-by-id.hook';
 import { SIDEBAR_MEDIA_SIZE } from '../constants';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
@@ -39,7 +39,7 @@ export const SidebarItems = ({
 }: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const { mediaState } = useSelectedData();
+    const { datasetItemsById } = useGetDatasetItemsById({ limit: Math.max(items.length, 1) });
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -56,13 +56,23 @@ export const SidebarItems = ({
                 items={items}
                 ariaLabel='sidebar-items'
                 selectionMode='single'
-                mediaState={mediaState}
                 selectedKeys={new Set([String(mediaItem.id)])}
                 layoutOptions={layoutOptions}
                 isLoadingMore={isFetchingNextPage}
                 scrollToIndex={selectedIndex}
                 onLoadMore={() => hasNextPage && fetchNextPage()}
-                contentItem={(item) => <SidebarMediaItem item={item} onSelectedMediaItem={onSelectedMediaItem} />}
+                contentItem={(item) => {
+                    const itemId = String(item.id);
+                    const isUserReviewed = datasetItemsById.get(itemId) ?? false;
+
+                    return (
+                        <SidebarMediaItem
+                            item={item}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                            isUserReviewed={isUserReviewed}
+                        />
+                    );
+                }}
             />
         </View>
     );

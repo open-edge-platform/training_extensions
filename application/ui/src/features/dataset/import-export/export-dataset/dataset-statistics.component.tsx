@@ -1,24 +1,12 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-
-import { $api } from '../../../../api/client';
 import { DatasetStatistics } from '../../../../components/dataset-statistics/dataset-statistics.component';
+import { useGetDatasetItems } from '../../../../hooks/use-get-dataset-items.hook';
 
 export const MainDatasetStatistics = () => {
-    const projectId = useProjectIdentifier();
-
-    const { data: annotatedItems } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
-        params: {
-            path: { project_id: projectId },
-            query: { limit: 1, annotation_status: 'reviewed' },
-        },
-    });
-
-    const { data: mediaItems } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
-        params: { path: { project_id: projectId } },
-    });
+    const { data: annotatedItems } = useGetDatasetItems({ annotationStatus: 'reviewed' });
+    const { data: mediaItems } = useGetDatasetItems();
 
     const totalMediaItems = mediaItems?.pagination.total ?? 0;
     const totalAnnotatedItems = annotatedItems?.pagination.total ?? 0;

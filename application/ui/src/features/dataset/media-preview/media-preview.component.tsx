@@ -14,7 +14,6 @@ import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canv
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
-import { useSelectedData } from '../selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -48,7 +47,6 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 };
 
 type AnnotatorProps = {
-    isUserReviewed: boolean;
     mode: AnnotatorMode;
     changeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
@@ -58,7 +56,6 @@ type AnnotatorProps = {
 };
 
 const Annotator = ({
-    isUserReviewed,
     mode,
     changeAnnotatorMode,
     onClose,
@@ -82,7 +79,6 @@ const Annotator = ({
                 <ReadOnlyAnnotator
                     image={image}
                     mediaItem={mediaItem}
-                    isUserReviewed={isUserReviewed}
                     onModeChange={changeAnnotatorMode}
                     onClose={onClose}
                     onAcceptPrediction={onSubmitAnnotations}
@@ -112,7 +108,7 @@ const Annotator = ({
                     )}
 
                     <View gridArea={'bottom'}>
-                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                        <BottomToolbar mediaItem={mediaItem} />
                     </View>
 
                     <View gridArea={'canvas'} overflow={'hidden'}>
@@ -133,19 +129,10 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const queryClient = useQueryClient();
-    const { setMediaState } = useSelectedData();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmitAnnotations = async () => {
-        setMediaState((prev) => {
-            const newState = new Map(prev);
-
-            newState.set(String(mediaItem.id), 'accepted');
-
-            return newState;
-        });
-
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
 
@@ -175,7 +162,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                     items={items}
                     onClose={onClose}
                     changeAnnotatorMode={setMode}
-                    isUserReviewed={isUserReviewed}
                     onSelectedMediaItem={onSelectedMediaItem}
                     onSubmitAnnotations={handleSubmitAnnotations}
                 />
