@@ -69,8 +69,8 @@ class TestDatasetExporter:
     )
     def test_prepare_project_dataset(
         self,
-        subsets: list[DatasetItemSubset],
-        labels: list[str],
+        subsets: list[DatasetItemSubset] | None,
+        labels: list[str] | None,
         fxt_export: ExportDataset,
         fxt_dataset_service: Mock,
         fxt_export_params: ExportDatasetJobParams,
@@ -107,8 +107,8 @@ class TestDatasetExporter:
     )
     def test_prepare_dataset_revision(
         self,
-        subsets: list[DatasetItemSubset],
-        labels: list[str],
+        subsets: list[DatasetItemSubset] | None,
+        labels: list[str] | None,
         fxt_export: ExportDataset,
         fxt_dataset_revision_service: Mock,
         fxt_export_params: ExportDatasetJobParams,

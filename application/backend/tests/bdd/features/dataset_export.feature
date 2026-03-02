@@ -18,16 +18,16 @@ Feature: Dataset Export
     And the staged dataset with name=<archive name> has <expected images> images
 
     Examples:
-     | export format | archive name     | filters                                                    | expected images |
-     | YOLO          | dataset-yolo.zip | { }                                                        | 30              |
-     | YOLO          | dataset-yolo.zip | { "subsets": ["training", "testing"] }                     | 24              |
-     | YOLO          | dataset-yolo.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
-     | GETI          | dataset-geti.zip | { }                                                        | 30              |
-     | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }                     | 24              |
-     | GETI          | dataset-geti.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
-     | COCO          | dataset-coco.zip | { }                                                        | 30              |
-     | COCO          | dataset-coco.zip | { "subsets": ["training", "testing"] }                     | 24              |
-     | COCO          | dataset-coco.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
+      | export format | archive name     | filters                                                    | expected images |
+      | YOLO          | dataset-yolo.zip | { }                                                        | 30              |
+      | YOLO          | dataset-yolo.zip | { "subsets": ["training", "testing"] }                     | 24              |
+      | YOLO          | dataset-yolo.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
+      | GETI          | dataset-geti.zip | { }                                                        | 30              |
+      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }                     | 24              |
+      | GETI          | dataset-geti.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
+      | COCO          | dataset-coco.zip | { }                                                        | 30              |
+      | COCO          | dataset-coco.zip | { "subsets": ["training", "testing"] }                     | 24              |
+      | COCO          | dataset-coco.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
 
   @export @classification
   Scenario Outline: Export classification project dataset
@@ -41,10 +41,10 @@ Feature: Dataset Export
     And the staged dataset with name=<archive name> has <expected images> images
 
     Examples:
-     | export format | archive name     | filters                                             | expected images |
-     | GETI          | dataset-geti.zip | { }                                                 | 30              |
-     | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }              | 20              |
-     | GETI          | dataset-geti.zip | { "labels": ["cat"], "include_unannotated": false } | 15              |
+      | export format | archive name     | filters                                             | expected images |
+      | GETI          | dataset-geti.zip | { }                                                 | 30              |
+      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }              | 20              |
+      | GETI          | dataset-geti.zip | { "labels": ["cat"], "include_unannotated": false } | 15              |
 #     | VOC    | dataset-voc.zip      | { }                                                 | 30              |
 #     | VOC    | dataset-voc.zip      | { "subsets": ["training", "testing"] }              | 20              |
 #     | VOC    | dataset-voc.zip      | { "labels": ["cat"], "include_unannotated": false } | 15              |
@@ -61,10 +61,10 @@ Feature: Dataset Export
     And the staged dataset with name=<archive name> has <expected images> images
 
     Examples:
-     | export format | archive name     | filters                       | expected images |
-     | GETI          | dataset-geti.zip | { }                           | 30              |
-     | GETI          | dataset-geti.zip | { "subsets": ["validation"] } | 10              |
-     | GETI          | dataset-geti.zip | { "labels": ["person"] }      | 30              |
-     | COCO          | dataset-coco.zip | { }                           | 30              |
-     | COCO          | dataset-coco.zip | { "subsets": ["validation"] } | 10              |
-     | COCO          | dataset-coco.zip | { "labels": ["person"] }      | 30              |
+      | export format | archive name     | filters                       | expected images |
+      | GETI          | dataset-geti.zip | { }                           | 30              |
+      | GETI          | dataset-geti.zip | { "subsets": ["validation"] } | 10              |
+      | GETI          | dataset-geti.zip | { "labels": ["person"] }      | 30              |
+      | COCO          | dataset-coco.zip | { }                           | 30              |
+      | COCO          | dataset-coco.zip | { "subsets": ["validation"] } | 10              |
+      | COCO          | dataset-coco.zip | { "labels": ["person"] }      | 30              |

@@ -18,7 +18,7 @@ class LabelRepository(BaseRepository[LabelDB]):
         self.project_id = project_id
 
     def list_all(self) -> Sequence[LabelDB]:
-        """Get labels by project ID. Optionally filter by names."""
+        """Get all labels by project ID."""
         stmt = select(LabelDB).where(LabelDB.project_id == self.project_id)
         return self.db.execute(stmt).scalars().all()
 

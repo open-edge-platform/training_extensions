@@ -19,10 +19,10 @@ Feature: Prepare Dataset For Import
     And the staged dataset with name=dataset has <expected images> images
 
     Examples:
-     | export format | expected images |
-     | YOLO          | 45              |
-     | GETI          | 45              |
-     | COCO          | 45              |
+      | export format | expected images |
+      | YOLO          | 45              |
+      | GETI          | 45              |
+      | COCO          | 45              |
 
   @prepare @classification
   Scenario Outline: Prepare classification dataset for import
@@ -37,8 +37,8 @@ Feature: Prepare Dataset For Import
     And the staged dataset with name=dataset has <expected images> images
 
     Examples:
-     | export format | expected images |
-     | GETI          | 30              |
+      | export format | expected images |
+      | GETI          | 30              |
 #     | VOC           | 30              |
 
   @prepare @segmentation
@@ -54,6 +54,6 @@ Feature: Prepare Dataset For Import
     And the staged dataset with name=dataset has <expected images> images
 
     Examples:
-     | export format | expected images |
-     | COCO          | 30              |
-     | GETI          | 30              |
+      | export format | expected images |
+      | COCO          | 30              |
+      | GETI          | 30              |
