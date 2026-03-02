@@ -8,6 +8,10 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
+import {
+    SelectedMediaItemProvider,
+    useSelectedMediaItem,
+} from '../../annotator/selected-media-item-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { AnnotatorContainer } from './annotator.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
@@ -23,14 +27,14 @@ type MediaPreviewProps = {
 };
 
 type MediaPreviewContentProps = {
-    mediaItem: Media;
     items: Media[];
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
 };
 
-const MediaPreviewContent = ({ mediaItem, items, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
+const MediaPreviewContent = ({ items, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
+    const { mediaItem } = useSelectedMediaItem();
 
     const { data: annotationsData } = useAnnotationsQuery(mediaItem);
 
@@ -90,12 +94,9 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                         'toolbar bottom aside',
                     ]}
                 >
-                    <MediaPreviewContent
-                        mediaItem={mediaItem}
-                        items={items}
-                        onClose={close}
-                        onSelectedMediaItem={onSelectedMediaItem}
-                    />
+                    <SelectedMediaItemProvider mediaItem={mediaItem}>
+                        <MediaPreviewContent items={items} onClose={close} onSelectedMediaItem={onSelectedMediaItem} />
+                    </SelectedMediaItemProvider>
 
                     <View gridArea={'aside'}>
                         <SidebarItems
