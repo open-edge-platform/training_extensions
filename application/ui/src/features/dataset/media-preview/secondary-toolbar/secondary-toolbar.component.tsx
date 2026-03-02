@@ -4,51 +4,30 @@
 import { ActionButton, Button, ButtonGroup, Flex, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
-import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { isClassificationTask } from '../../../project/task-type-guards';
-import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from '../use-submit-predictions.hook';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
-import { getNextItem } from './util';
 
 import classes from './secondary-toolbar.module.scss';
 
 type SecondaryToolbarProps = {
-    items: Media[];
-    mediaItem: Media;
     mode: AnnotatorMode;
     onClose: () => void;
-    onSelectedMediaItem: (item: Media) => void;
     onModeChange: (mode: AnnotatorMode) => void;
     onAcceptPrediction: () => void;
 };
 
-export const SecondaryToolbar = ({
-    items,
-    mediaItem,
-    mode,
-    onClose,
-    onSelectedMediaItem,
-    onModeChange,
-    onAcceptPrediction,
-}: SecondaryToolbarProps) => {
+export const SecondaryToolbar = ({ mode, onClose, onModeChange, onAcceptPrediction }: SecondaryToolbarProps) => {
     const { data: selectedProject } = useProject();
 
     const { canSubmit, isSaving, submit } = useSubmitPredictions({ onSuccess: onAcceptPrediction });
 
     const isMultiLabel = selectedProject.task.exclusive_labels === false;
     const isClassification = isClassificationTask(selectedProject.task.task_type);
-
-    const handleDeleteItem = ([deletedItem]: string[], totalItems: number) => {
-        const deletedIndex = items.findIndex((item) => item.id === deletedItem);
-        const nextItem = getNextItem(totalItems - 1, deletedIndex);
-
-        onSelectedMediaItem(items[nextItem]);
-    };
 
     return (
         <Flex
@@ -71,10 +50,6 @@ export const SecondaryToolbar = ({
             <Toolbar.Container>
                 <Toolbar.Section>
                     <ButtonGroup>
-                        <DeleteMediaItem
-                            itemsIds={[String(mediaItem.id)]}
-                            onDeleted={([deletedItem]: string[]) => handleDeleteItem([deletedItem], items.length - 1)}
-                        />
                         <Button
                             variant='accent'
                             onPress={submit}
