@@ -11,6 +11,9 @@ export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
 export type ModelFormat = components['schemas']['ModelFormat'];
 export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
+export type Evaluation = components['schemas']['EvaluationView'];
+export type Metric = components['schemas']['MetricView'];
+export type LineMetric = components['schemas']['LineMetric'];
 
 export type Job = components['schemas']['JobView'];
 export type ExportDatasetJob = Job & {
@@ -70,6 +73,3 @@ export type SourceConfig =
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
 
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
-export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
-
-export type LineMetric = components['schemas']['LineMetric'];

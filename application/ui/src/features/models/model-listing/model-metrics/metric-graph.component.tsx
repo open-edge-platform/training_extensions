@@ -3,7 +3,7 @@
 
 import { ActionButton, dimensionValue, Flex, Heading, Item, Menu, MenuTrigger, View } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
-import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
 
 type MetricGraphProps<T extends Record<string, unknown>> = {
     title: string;
@@ -30,7 +30,7 @@ export const MetricGraph = <T extends Record<string, unknown>>({
     xAxisTicks = DEFAULT_TICKS,
 }: MetricGraphProps<T>) => {
     return (
-        <Flex flex={1} direction={'column'}>
+        <Flex flex={1} direction={'column'} minWidth={'size-4600'}>
             <Flex
                 justifyContent={'space-between'}
                 alignItems={'center'}
@@ -50,17 +50,11 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                     </Menu>
                 </MenuTrigger>
             </Flex>
-            <View
-                flex={1}
-                paddingY={'size-200'}
-                paddingX={'size-550'}
-                backgroundColor={'gray-50'}
-                minHeight={'size-3400'}
-            >
-                <AreaChart
+            <View paddingY={'size-200'} paddingX={'size-550'} backgroundColor={'gray-50'} minHeight={'size-3400'}>
+                <LineChart
                     responsive
-                    height={'100%'}
                     width={'100%'}
+                    style={{ aspectRatio: 1.8 }}
                     data={data}
                     margin={{ top: 35, bottom: 35, left: 20 }}
                 >
@@ -81,16 +75,15 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                         contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
                         labelStyle={{ color: '#333' }}
                     />
-                    <Area
+                    <Line
                         type='linear'
                         dataKey={dataKey}
                         name={yAxisLabel}
                         stroke='var(--energy-blue)'
                         strokeWidth={2}
-                        fill='var(--energy-blue)'
-                        fillOpacity={0.3}
+                        dot={false}
                     />
-                </AreaChart>
+                </LineChart>
             </View>
         </Flex>
     );
