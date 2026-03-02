@@ -5,13 +5,32 @@ import type { Annotation } from '../../../../shared/types';
 import { useSelectDatasetItem } from '../../../dataset/gallery/hooks/use-select-dataset-item.hook';
 import { getFormattedPoints, isPrediction } from '../utils';
 
+type FullImageShapeProps = {
+    color: string;
+    ariaLabel: string;
+    strokeDasharray: string | undefined;
+};
+
+const FullImageShape = ({ color, ariaLabel, strokeDasharray }: FullImageShapeProps) => {
+    const { selectedMediaItem } = useSelectDatasetItem();
+
+    return (
+        <rect
+            fill={'none'}
+            stroke={color}
+            aria-label={ariaLabel}
+            width={selectedMediaItem?.width}
+            height={selectedMediaItem?.height}
+            strokeDasharray={strokeDasharray}
+        />
+    );
+};
+
 type AnnotationShapeProps = {
     annotation: Annotation;
 };
 
 export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
-    const { selectedMediaItem } = useSelectDatasetItem();
-
     const { shape, labels } = annotation;
     const hasMultipleLabels = labels.length > 1;
     const color = hasMultipleLabels ? 'white' : labels.length ? labels[0].color : '--annotation-fill';
@@ -20,13 +39,10 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
 
     if (shape.type === 'full_image') {
         return (
-            <rect
-                fill={'none'}
-                stroke={color}
-                aria-label={`${hasPredictionLabel ? 'prediction' : 'annotation'} full image`}
-                width={selectedMediaItem?.width}
-                height={selectedMediaItem?.height}
+            <FullImageShape
+                color={color}
                 strokeDasharray={strokeDasharray}
+                ariaLabel={`${hasPredictionLabel ? 'prediction' : 'annotation'} rect`}
             />
         );
     }
