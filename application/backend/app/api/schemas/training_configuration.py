@@ -191,7 +191,7 @@ class TrainingConfigurationView(BaseModel):
 
             value = getattr(model, field_name)
 
-            # Skip parameters with null values
+            # Skip parameters with None values
             if value is None:
                 continue
 
@@ -199,7 +199,7 @@ class TrainingConfigurationView(BaseModel):
                 # Nested model -> create a nested parameter group
                 default_child = getattr(default_model, field_name) if default_model is not None else None
                 nested_group = cls._model_to_parameter_group(field_name, value, default_child, child_field_info)
-                # Only add the group if it has parameters (not empty due to null filtering)
+                # Only add the group if it has parameters (not empty due to None filtering)
                 if nested_group.parameters:
                     parameters.append(nested_group)
             else:
@@ -316,3 +316,817 @@ class TrainingConfigurationView(BaseModel):
 
         # Return with direct list of parameter groups
         return cls(parameters=[merged_dataset_prep, training_group, evaluation_group])
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "parameters": [
+                    {
+                        "type": "parameter_group",
+                        "key": "dataset_preparation",
+                        "name": "Dataset preparation",
+                        "description": (
+                            "Configurable parameters related to the training data, such as augmentations and filters."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter_group",
+                                "key": "subset_split",
+                                "name": "Subset split",
+                                "description": (
+                                    "Subset split parameters define how the dataset is divided into training, "
+                                    "validation, and test subsets. The training subset is used to fit the model, "
+                                    "the validation subset is used to estimate the prediction error during training "
+                                    "and the test subset is used to evaluate the final performance of the model. "
+                                    "The percentages for training, validation, and test subsets must sum to 100."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "training",
+                                        "name": "Training percentage",
+                                        "description": "Percentage of data to use for training",
+                                        "value": 70,
+                                        "default_value": 70,
+                                        "value_type": "int",
+                                        "min_value": 1,
+                                        "max_value": 100,
+                                        "allowed_values": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "validation",
+                                        "name": "Validation percentage",
+                                        "description": "Percentage of data to use for validation",
+                                        "value": 20,
+                                        "default_value": 20,
+                                        "value_type": "int",
+                                        "min_value": 1,
+                                        "max_value": 100,
+                                        "allowed_values": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "test",
+                                        "name": "Test percentage",
+                                        "description": "Percentage of data to use for testing",
+                                        "value": 10,
+                                        "default_value": 10,
+                                        "value_type": "int",
+                                        "min_value": 1,
+                                        "max_value": 100,
+                                        "allowed_values": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "filtering",
+                                "name": "Filtering",
+                                "description": (
+                                    "Filtering parameters define criteria for including or excluding annotations "
+                                    "from the dataset. Depending on the scenario, an appropriate filter configuration "
+                                    "can speed up the training process and/or improve the model performance by "
+                                    "removing noisy annotations."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "min_annotation_pixels",
+                                        "name": "Minimum annotation pixels",
+                                        "description": "Minimum number of pixels in an annotation",
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable minimum annotation pixels filtering",
+                                                "description": "Whether to apply minimum annotation pixels filtering",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "value",
+                                                "name": "Minimum annotation pixels",
+                                                "description": "Minimum number of pixels in an annotation",
+                                                "value": 1,
+                                                "default_value": 1,
+                                                "value_type": "int",
+                                                "min_value": 0,
+                                                "max_value": 200000000,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "min_annotation_objects",
+                                        "name": "Minimum annotation objects",
+                                        "description": "Minimum number of objects in an annotation",
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable minimum annotation objects filtering",
+                                                "description": "Whether to apply minimum annotation objects filtering",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "value",
+                                                "name": "Minimum annotation objects",
+                                                "description": "Minimum number of objects in an annotation",
+                                                "value": 1,
+                                                "default_value": 1,
+                                                "value_type": "int",
+                                                "min_value": 0,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "max_annotation_objects",
+                                        "name": "Maximum annotation objects",
+                                        "description": "Maximum number of objects in an annotation",
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable maximum annotation objects filtering",
+                                                "description": "Whether to apply maximum annotation objects filtering",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "value",
+                                                "name": "Maximum annotation objects",
+                                                "description": "Maximum number of objects in an annotation",
+                                                "value": 10000,
+                                                "default_value": 10000,
+                                                "value_type": "int",
+                                                "min_value": 0,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "augmentation",
+                                "name": "Data augmentation",
+                                "description": (
+                                    "Data augmentation is a technique used in machine learning to artificially expand "
+                                    "a training dataset by applying transformations (e.g., rotation, scaling, noise) "
+                                    "to existing data. It improves model generalization and reduces overfitting "
+                                    "by increasing data variability without collecting new samples."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "iou_random_crop",
+                                        "name": "IoU random crop",
+                                        "description": (
+                                            "Randomly crop images based on Intersection over Union (IoU) criteria. "
+                                            "Note: this augmentation is not supported when Tiling algorithm is enabled."
+                                        ),
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": True,
+                                                "default_value": True,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "random_affine",
+                                        "name": "Random affine",
+                                        "description": (
+                                            "Apply random affine transformations (rotation, translation, scaling, "
+                                            "shear) to the image."
+                                        ),
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "max_rotate_degree",
+                                                "name": "Rotation degrees",
+                                                "description": (
+                                                    "Maximum rotation angle in degrees for affine transformation. "
+                                                    "A random angle in the range [-max_rotate_degree, "
+                                                    "max_rotate_degree] will be applied. For example, "
+                                                    "max_rotate_degree=10 allows up to ±10 degrees rotation."
+                                                ),
+                                                "value": 10.0,
+                                                "default_value": 10.0,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "max_translate_ratio",
+                                                "name": "Horizontal translation",
+                                                "description": (
+                                                    "Maximum translation as a fraction of image width or height. "
+                                                    "A random translation in the range [-max_translate_ratio, "
+                                                    "max_translate_ratio] will be applied along both axes. "
+                                                    "For example, 0.1 allows up to ±10% translation."
+                                                ),
+                                                "value": 0.1,
+                                                "default_value": 0.1,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "scaling_ratio_range",
+                                                "name": "Scaling ratio range",
+                                                "description": (
+                                                    "Range (min, max) of scaling factors to apply during affine "
+                                                    "transformation. Both values should be > 0.0. For example, "
+                                                    "(0.8, 1.2) will randomly scale the image between 80% and 120% "
+                                                    "of its original size."
+                                                ),
+                                                "value": [0.5, 1.5],
+                                                "default_value": [0.5, 1.5],
+                                                "value_type": "float_range",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "max_shear_degree",
+                                                "name": "Maximum shear degree",
+                                                "description": (
+                                                    "Maximum absolute shear angle in degrees to apply "
+                                                    "during affine transformation. A random shear in the range "
+                                                    "[-max_shear_degree, max_shear_degree] will be applied."
+                                                ),
+                                                "value": 2.0,
+                                                "default_value": 2.0,
+                                                "value_type": "float",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "random_horizontal_flip",
+                                        "name": "Random horizontal flip",
+                                        "description": (
+                                            "Randomly flip images horizontally along the vertical axis "
+                                            "(swap left and right)."
+                                        ),
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": True,
+                                                "default_value": True,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "probability",
+                                                "name": "Probability",
+                                                "description": (
+                                                    "Probability of applying horizontal flip. "
+                                                    "A value of 0.5 means each image has a 50% chance to be "
+                                                    "flipped horizontally."
+                                                ),
+                                                "value": 0.5,
+                                                "default_value": 0.5,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "random_vertical_flip",
+                                        "name": "Random vertical flip",
+                                        "description": (
+                                            "Randomly flip images vertically along the "
+                                            "horizontal axis (swap top and bottom)."
+                                        ),
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "probability",
+                                                "name": "Probability",
+                                                "description": (
+                                                    "Probability of applying vertical flip. A value of 0.5 means "
+                                                    "each image has a 50% chance to be flipped vertically."
+                                                ),
+                                                "value": 0.5,
+                                                "default_value": 0.5,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "color_jitter",
+                                        "name": "Color jitter",
+                                        "description": (
+                                            "Randomly adjust brightness, contrast, saturation, and hue of the image."
+                                        ),
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "brightness",
+                                                "name": "Brightness range",
+                                                "description": (
+                                                    "Range (min, max) of brightness adjustment factors. "
+                                                    "A random factor from this range will be multiplied with the "
+                                                    "image brightness. For example, (0.8, 1.2) means "
+                                                    "brightness can be reduced by 20% or increased by 20%."
+                                                ),
+                                                "value": [0.875, 1.125],
+                                                "default_value": [0.875, 1.125],
+                                                "value_type": "float_range",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "contrast",
+                                                "name": "Contrast range",
+                                                "description": (
+                                                    "Range (min, max) of contrast adjustment factors. "
+                                                    "A random factor from this range will be multiplied with the "
+                                                    "image contrast. For example, (0.5, 1.5) means contrast "
+                                                    "can be halved or increased by up to 50%."
+                                                ),
+                                                "value": [0.5, 1.5],
+                                                "default_value": [0.5, 1.5],
+                                                "value_type": "float_range",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "saturation",
+                                                "name": "Saturation range",
+                                                "description": (
+                                                    "Range (min, max) of saturation adjustment factors. "
+                                                    "A random factor from this range will be multiplied with the "
+                                                    "image saturation. For example, (0.5, 1.5) means saturation "
+                                                    "can be halved or increased by up to 50%."
+                                                ),
+                                                "value": [0.5, 1.5],
+                                                "default_value": [0.5, 1.5],
+                                                "value_type": "float_range",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "hue",
+                                                "name": "Hue range",
+                                                "description": (
+                                                    "Range (min, max) of hue adjustment values. "
+                                                    "A random value from this range will be added to the image hue. "
+                                                    "For example, (-0.05, 0.05) means hue can be shifted "
+                                                    "by up to ±0.05."
+                                                ),
+                                                "value": [-0.05, 0.05],
+                                                "default_value": [-0.05, 0.05],
+                                                "value_type": "float_range",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "probability",
+                                                "name": "Probability",
+                                                "description": (
+                                                    "Probability of applying color jitter. A value of 0.5 means each "
+                                                    "image has a 50% chance to be color jittered."
+                                                ),
+                                                "value": 0.5,
+                                                "default_value": 0.5,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "gaussian_blur",
+                                        "name": "Gaussian blur",
+                                        "description": "Apply Gaussian blur to the image.",
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "kernel_size",
+                                                "name": "Kernel size",
+                                                "description": (
+                                                    "Size of the Gaussian kernel. Larger kernel sizes result in "
+                                                    "stronger blurring. Must be a positive odd integer."
+                                                ),
+                                                "value": 5,
+                                                "default_value": 5,
+                                                "value_type": "int",
+                                                "min_value": 0,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "sigma",
+                                                "name": "Sigma range",
+                                                "description": (
+                                                    "Range (min, max) of sigma values for Gaussian blur. "
+                                                    "Sigma controls the amount of blurring. "
+                                                    "A random value from this range will be used for each image."
+                                                ),
+                                                "value": [0.1, 2.0],
+                                                "default_value": [0.1, 2.0],
+                                                "value_type": "float_range",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "probability",
+                                                "name": "Probability",
+                                                "description": (
+                                                    "Probability of applying Gaussian blur. A value of 0.5 means "
+                                                    "each image has a 50% chance to be blurred."
+                                                ),
+                                                "value": 0.5,
+                                                "default_value": 0.5,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "gaussian_noise",
+                                        "name": "Gaussian noise",
+                                        "description": "Add Gaussian noise to the image.",
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "mean",
+                                                "name": "Mean",
+                                                "description": (
+                                                    "Mean of the Gaussian noise to be added to the image. "
+                                                    "Typically set to 0.0 for zero-mean noise."
+                                                ),
+                                                "value": 0.0,
+                                                "default_value": 0.0,
+                                                "value_type": "float",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "sigma",
+                                                "name": "Standard deviation",
+                                                "description": (
+                                                    "Standard deviation of the Gaussian noise. Controls the intensity "
+                                                    "of the noise. Higher values result in noisier images."
+                                                ),
+                                                "value": 0.1,
+                                                "default_value": 0.1,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "probability",
+                                                "name": "Probability",
+                                                "description": (
+                                                    "Probability of applying Gaussian noise. A value of 0.5 means "
+                                                    "each image has a 50% chance to have noise added."
+                                                ),
+                                                "value": 0.5,
+                                                "default_value": 0.5,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "type": "parameter_group",
+                                        "key": "tiling",
+                                        "name": "Tiling",
+                                        "description": (
+                                            "Split images into overlapping tiles for processing, "
+                                            "useful for detecting small objects."
+                                        ),
+                                        "parameters": [
+                                            {
+                                                "type": "parameter",
+                                                "key": "enable",
+                                                "name": "Enable",
+                                                "description": "Toggle to apply this augmentation.",
+                                                "value": False,
+                                                "default_value": False,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "adaptive_tiling",
+                                                "name": "Adaptive tiling",
+                                                "description": "Whether to use adaptive tiling based on image content",
+                                                "value": True,
+                                                "default_value": True,
+                                                "value_type": "bool",
+                                                "min_value": None,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "tile_size",
+                                                "name": "Tile size",
+                                                "description": (
+                                                    "Size of each tile in pixels. Decreasing the tile size typically "
+                                                    "results in higher accuracy, but it is also more computationally "
+                                                    "expensive due to the higher number of tiles. In any case, the "
+                                                    "tile must be large enough to capture the entire object and its "
+                                                    "surrounding context, so choose a value larger than the size "
+                                                    "of most annotations."
+                                                ),
+                                                "value": 400,
+                                                "default_value": 400,
+                                                "value_type": "int",
+                                                "min_value": 0,
+                                                "max_value": None,
+                                                "allowed_values": None,
+                                            },
+                                            {
+                                                "type": "parameter",
+                                                "key": "tile_overlap",
+                                                "name": "Tile overlap",
+                                                "description": (
+                                                    "Overlap between adjacent tiles as a fraction of tile size"
+                                                ),
+                                                "value": 0.2,
+                                                "default_value": 0.2,
+                                                "value_type": "float",
+                                                "min_value": 0.0,
+                                                "max_value": 1.0,
+                                                "allowed_values": None,
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "training",
+                        "name": "Training",
+                        "description": "Configurable parameters related to the learning phase (hyperparameters).",
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "max_epochs",
+                                "name": "Maximum epochs",
+                                "description": (
+                                    "Maximum number of epochs to train the model. "
+                                    "An epoch is one complete pass through the training dataset."
+                                ),
+                                "value": 200,
+                                "default_value": 200,
+                                "value_type": "int",
+                                "min_value": 0,
+                                "max_value": None,
+                                "allowed_values": None,
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "early_stopping",
+                                "name": "Early stopping",
+                                "description": (
+                                    "Early stopping is a technique to prevent overfitting by stopping training "
+                                    "when performance on a validation set stops improving."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Toggle early stopping",
+                                        "description": (
+                                            "Whether to stop training early when performance stops improving"
+                                        ),
+                                        "value": True,
+                                        "default_value": True,
+                                        "value_type": "bool",
+                                        "min_value": None,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "patience",
+                                        "name": "Patience",
+                                        "description": (
+                                            "Number of epochs with no improvement after which training will be stopped"
+                                        ),
+                                        "value": 10,
+                                        "default_value": 10,
+                                        "value_type": "int",
+                                        "min_value": 0,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "learning_rate",
+                                "name": "Learning rate",
+                                "description": (
+                                    "Learning rate for the optimizer, controlling the step size during model weight "
+                                    "updates. A smaller learning rate may lead to more stable convergence, while a "
+                                    "larger learning rate may speed up training but risk overshooting minima in "
+                                    "the loss landscape."
+                                ),
+                                "value": 0.004,
+                                "default_value": 0.004,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": 1,
+                                "allowed_values": None,
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "input_size_width",
+                                "name": "Input size width",
+                                "description": (
+                                    "Width size in pixels for model input images. "
+                                    "Determines the horizontal resolution at which images are processed."
+                                ),
+                                "value": 992,
+                                "default_value": 992,
+                                "value_type": "int",
+                                "min_value": 0,
+                                "max_value": None,
+                                "allowed_values": [128, 256, 384, 512, 640, 800, 992, 1024],
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "input_size_height",
+                                "name": "Input size height",
+                                "description": (
+                                    "Height size in pixels for model input images. "
+                                    "Determines the vertical resolution at which images are processed."
+                                ),
+                                "value": 800,
+                                "default_value": 800,
+                                "value_type": "int",
+                                "min_value": 0,
+                                "max_value": None,
+                                "allowed_values": [128, 256, 384, 512, 640, 800, 992, 1024],
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "evaluation",
+                        "name": "Evaluation parameters",
+                        "description": "Configurable parameters related to the model evaluation.",
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "validation_metric",
+                                "name": "Validation metric",
+                                "description": "Metric used to evaluate model performance during validation.",
+                                "value": "default",
+                                "default_value": "default",
+                                "value_type": "str",
+                                "min_value": None,
+                                "max_value": None,
+                                "allowed_values": ["default"],
+                            }
+                        ],
+                    },
+                ]
+            }
+        }
+    }

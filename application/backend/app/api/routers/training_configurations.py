@@ -3,7 +3,8 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi.openapi.models import Example
 
 from app.api.dependencies import get_training_configuration_service
 from app.api.schemas import TrainingConfigurationView
@@ -12,6 +13,39 @@ from app.services.model_manifest_service import ManifestNotFoundException
 from app.services.training_configuration_service import TrainingConfigurationService
 
 router = APIRouter(prefix="/api/projects/{project_id}/training_configuration", tags=["Training Configuration"])
+
+UPDATE_TRAINING_CONFIG_EXAMPLES = {
+    "reconfigure_subset_split": Example(
+        summary="Change the training/validation/testing subset split",
+        value={
+            "dataset_preparation.subset_split.training": 60,
+            "dataset_preparation.subset_split.validation": 25,
+            "dataset_preparation.subset_split.testing": 15,
+        },
+    ),
+    "reconfigure_max_epochs": Example(
+        summary="Set max number of epochs",
+        value={
+            "training.max_epochs": 50,
+        },
+    ),
+    "reconfigure_learning_rate": Example(
+        summary="Set learning rate",
+        value={
+            "training.learning_rate": 0.003,
+        },
+    ),
+    "enable_color_jitter_augmentation": Example(
+        summary=(
+            "Enable color jitter as a data augmentation technique, "
+            "customizing the range of brightness adjustment (90% to 110% of original brightness in this example)"
+        ),
+        value={
+            "data_augmentation.color_jitter.enable": True,
+            "data_augmentation.color_jitter.brightness": [0.9, 1.1],
+        },
+    ),
+}
 
 
 @router.get("")
@@ -49,7 +83,7 @@ def update_training_configuration_for_model_architecture(
     ],
     project_id: ProjectID,
     model_architecture_id: Annotated[str, Query()],
-    training_config_update: dict,
+    training_config_update: Annotated[dict, Body(openapi_examples=UPDATE_TRAINING_CONFIG_EXAMPLES)],
 ) -> TrainingConfigurationView:
     """
     Update the training configuration, or parts of it, for a given project and model architecture.
