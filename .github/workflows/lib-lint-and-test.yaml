@@ -58,13 +58,9 @@ jobs:
           uv-cache-dependency-glob: "library/uv.lock"
           python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
 
-      - name: Check formatting with ruff
+      - name: Run linters
         working-directory: library
-        run: just ruff
-
-      - name: Check source code with Pyrefly
-        working-directory: library
-        run: just pyrefly
+        run: just lint
 
   unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]

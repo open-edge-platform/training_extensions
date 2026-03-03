@@ -62,11 +62,11 @@ style-fix: venv
     uv run ruff check --config pyproject.toml --fix
     uv run ruff format --config pyproject.toml
 
-lint: venv ruff mypy
+lint: venv ruff pyrefly
 
 ruff:
     uv run ruff check --config pyproject.toml --output-format=github .
     uv run ruff format --check --config pyproject.toml .
 
-mypy:
-    uv run mypy src/otx --config-file=pyproject.toml
+pyrefly:
+    uv run pyrefly check --baseline=pyrefly-baseline.json

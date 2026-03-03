@@ -66,8 +66,8 @@ style-fix: _venv
     uv run ruff check --config pyproject.toml --fix
     uv run ruff format --config pyproject.toml
 
-# Run linters (ruff + mypy)
-lint: _venv ruff mypy
+# Run linters (ruff + lint-imports + pyrefly)
+lint: _venv ruff lint-imports pyrefly
 
 ruff:
     uv run ruff check --config pyproject.toml --output-format=github .
@@ -76,8 +76,8 @@ ruff:
 lint-imports:
     uv run lint-imports
 
-mypy:
-    uv run mypy . --config-file=pyproject.toml
+pyrefly:
+    uv run pyrefly check
 
 # -------------------------------------------------------------------------------------------------
 # Installer

@@ -69,21 +69,10 @@ jobs:
             libgl1 \
             libglib2.0-0
 
-      - name: Check formatting with ruff
+      - name: Run linters and type-checkers
         if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
-        run: |
-          just ruff
-
-      - name: Check imports with import-linter
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: application/backend
-        run: just lint-imports
-
-      - name: Check source code with Pyrefly
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: application/backend
-        run: just pyrefly
+        run: just lint
 
       - name: Run unit tests
         working-directory: application/backend
