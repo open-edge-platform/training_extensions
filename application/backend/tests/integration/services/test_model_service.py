@@ -95,6 +95,24 @@ def fxt_model_with_dataset_revision_db(tmp_path: Path, db_session: Session, fxt_
 class TestModelServiceIntegration:
     """Integration tests for ModelService."""
 
+    def test_get_model_revision_architecture(
+        self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
+    ):
+        """Test retrieving the architecture ID of a model revision."""
+        architecture = fxt_model_service.get_model_revision_architecture(fxt_project_id, fxt_model_id)
+
+        assert architecture is not None
+        assert isinstance(architecture, str)
+
+    def test_get_model_revision_architecture_not_found(self, fxt_project_id: UUID, fxt_model_service: ModelService):
+        """Test retrieving architecture for a non-existent model raises error."""
+        model_id = uuid4()
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_model_service.get_model_revision_architecture(fxt_project_id, model_id)
+
+        assert excinfo.value.resource_type == ResourceType.MODEL
+        assert excinfo.value.resource_id == str(model_id)
+
     def test_list_models(
         self, fxt_project_id: UUID, fxt_db_models: list[ModelRevisionDB], fxt_model_service: ModelService
     ):

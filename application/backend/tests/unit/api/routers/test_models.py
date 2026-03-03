@@ -1,18 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 from uuid import uuid4
 
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_model_service
+from app.api.dependencies import get_model_service, get_training_configuration_service
+from app.api.schemas import TrainingConfigurationView
 from app.api.schemas.model import ModelVariant
 from app.main import app
 from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingInfo, TrainingStatus
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services.training_configuration_service import TrainingConfigurationService
 
 
 @pytest.fixture
@@ -29,7 +31,6 @@ def fxt_model() -> ModelRevision:
             label_schema_revision={"labels": [{"name": "dog", "id": "05db02c9-6a54-4089-bd8e-b85dfe3bec03"}]},
             dataset_revision_id=dataset_revision_id,
         ),
-        training_configuration={"learning_rate": 0.001, "batch_size": 16},
         evaluations=[
             EvaluationResult(
                 model_revision_id=model_revision_id,
@@ -56,6 +57,13 @@ def fxt_model_service() -> MagicMock:
     model_service = MagicMock(spec=ModelService)
     app.dependency_overrides[get_model_service] = lambda: model_service
     return model_service
+
+
+@pytest.fixture
+def fxt_training_configuration_service() -> MagicMock:
+    training_configuration_service = MagicMock(spec=TrainingConfigurationService)
+    app.dependency_overrides[get_training_configuration_service] = lambda: training_configuration_service
+    return training_configuration_service
 
 
 class TestModelEndpoints:
@@ -125,7 +133,6 @@ class TestModelEndpoints:
         assert response_data["training_info"]["status"] == fxt_model.training_info.status.value
         assert response_data["training_info"]["label_schema_revision"] == fxt_model.training_info.label_schema_revision
         assert response_data["training_info"]["dataset_revision_id"] == str(fxt_model.training_info.dataset_revision_id)
-        assert response_data["training_configuration"] == fxt_model.training_configuration
         assert response_data["evaluations"] == [
             {
                 "dataset_revision_id": str(fxt_model.evaluations[0].dataset_revision_id),
@@ -428,3 +435,60 @@ class TestModelEndpoints:
         fxt_model_service.get_logs.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=fxt_model.id, as_text=False
         )
+
+    def test_get_model_training_configuration_success(
+        self, fxt_model, fxt_get_project, fxt_model_service, fxt_training_configuration_service, fxt_client
+    ):
+        mock_training_config = MagicMock()
+        fxt_training_configuration_service.get_by_model_revision.return_value = mock_training_config
+        fxt_model_service.get_model_revision_architecture.return_value = "object-detection-yolox-x"
+
+        mock_default_config = MagicMock()
+        mock_view = MagicMock(spec=TrainingConfigurationView)
+        mock_view.model_dump.return_value = {"parameters": []}
+
+        with (
+            patch.object(
+                TrainingConfigurationService,
+                "get_default_by_model_architecture",
+                return_value=mock_default_config,
+            ) as mock_get_default,
+            patch.object(TrainingConfigurationView, "from_training_configuration", return_value=mock_view) as mock_from,
+        ):
+            response = fxt_client.get(
+                f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/training_configuration"
+            )
+
+            fxt_training_configuration_service.get_by_model_revision.assert_called_once_with(
+                project_id=fxt_get_project.id, model_revision_id=fxt_model.id
+            )
+            fxt_model_service.get_model_revision_architecture.assert_called_once_with(
+                project_id=fxt_get_project.id, model_id=fxt_model.id
+            )
+            mock_get_default.assert_called_once_with(model_architecture_id="object-detection-yolox-x")
+            mock_from.assert_called_once_with(config=mock_training_config, default_config=mock_default_config)
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_get_model_training_configuration_model_not_found(
+        self, fxt_get_project, fxt_model_service, fxt_training_configuration_service, fxt_client
+    ):
+        model_id = uuid4()
+        fxt_training_configuration_service.get_by_model_revision.side_effect = ResourceNotFoundError(
+            ResourceType.MODEL, str(model_id)
+        )
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/training_configuration")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_training_configuration_service.get_by_model_revision.assert_called_once_with(
+            project_id=fxt_get_project.id, model_revision_id=model_id
+        )
+
+    def test_get_model_training_configuration_invalid_id(
+        self, fxt_get_project, fxt_training_configuration_service, fxt_client
+    ):
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/training_configuration")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_training_configuration_service.get_by_model_revision.assert_not_called()

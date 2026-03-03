@@ -16,6 +16,7 @@ from .evaluation import EvaluationResult
 from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from .label import Label, LabelReference
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
+from .model_manifest import ModelManifest
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
@@ -72,6 +73,7 @@ __all__ = [
     "Media",
     "MediaFormat",
     "MediaType",
+    "ModelManifest",
     "ModelRevision",
     "MqttSinkConfig",
     "OutputFormat",

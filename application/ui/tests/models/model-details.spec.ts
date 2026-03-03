@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
-import { getMockedExtendedModel, getMockedModel } from 'mocks/mock-model';
+import { getMockedModel } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
@@ -53,8 +53,6 @@ const mockedDatasetRevision = getMockedDatasetRevision({
     },
 });
 
-const mockedExtendedModel = getMockedExtendedModel(mockedModel);
-
 test.describe('Model Details', () => {
     test.beforeEach(({ network }) => {
         network.use(
@@ -63,7 +61,7 @@ test.describe('Model Details', () => {
             }),
             http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
                 if (params.model_id === 'model-1') {
-                    return HttpResponse.json(mockedExtendedModel);
+                    return HttpResponse.json(mockedModel);
                 }
 
                 return new HttpResponse(null, { status: 404 });
@@ -147,7 +145,7 @@ test.describe('Model Details', () => {
                 }),
                 http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
                     if (params.model_id === 'model-1') {
-                        return HttpResponse.json(getMockedExtendedModel(modelWithoutVariants));
+                        return HttpResponse.json(getMockedModel(modelWithoutVariants));
                     }
 
                     return new HttpResponse(null, { status: 404 });

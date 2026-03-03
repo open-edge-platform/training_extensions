@@ -3,7 +3,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 from uuid import uuid4
 
 import pytest
@@ -14,18 +14,13 @@ from otx.metrics.types import MetricCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
+from otx.types.task import OTXTaskType
 
 from app.core.run import ExecutionContext
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingJobParams, TrainingStatus
 from app.models.system import DeviceInfo, DeviceType
-from app.models.training_configuration.configuration import (
-    GlobalDatasetPreparationParameters,
-    PartialGlobalParameters,
-    PartialTrainingConfiguration,
-    SubsetSplit,
-    TrainingConfiguration,
-)
+from app.models.training_configuration import AlgoLevelParameters, TaskLevelParameters, TrainingConfiguration
 from app.services import ModelRevisionMetadata, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.subset_assignment import (
@@ -210,9 +205,11 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             job_id=uuid4(),
         )
         otx_trainer = fxt_otx_trainer()
-        mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_training_config.model_dump.return_value = {"key1": "value1", "hyperparameters": {"lr": 0.001}}
-        otx_trainer._training_configuration_service.get_training_configuration.return_value = mock_training_config  # type: ignore[attr-defined]
+        mock_training_config = TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
+        )
+        otx_trainer._training_configuration_service.get_by_model_architecture.return_value = mock_training_config  # type: ignore[attr-defined]
         mock_otx_training_config = {"key2": "value2"}
         with patch.object(GetiConfigConverter, "convert", return_value=mock_otx_training_config) as mock_convert:
             # Act
@@ -221,13 +218,15 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             )
 
         # Assert
-        otx_trainer._training_configuration_service.get_training_configuration.assert_called_once_with(  # type: ignore[attr-defined]
+        otx_trainer._training_configuration_service.get_by_model_architecture.assert_called_once_with(  # type: ignore[attr-defined]
             project_id=training_params.project_id,
             model_architecture_id=training_params.model_architecture_id,
         )
-        mock_convert.assert_called_once_with(
-            {"key1": "value1", "hyper_parameters": {"lr": 0.001}, "sub_task_type": "DETECTION"}
-        )
+        expected_otx_training_config = mock_training_config.model_dump(mode="json")
+        expected_otx_training_config["hyper_parameters"] = expected_otx_training_config.pop("algo_level_parameters")
+        expected_otx_training_config["model_manifest_id"] = training_params.model_architecture_id
+        expected_otx_training_config["sub_task_type"] = OTXTaskType.DETECTION
+        mock_convert.assert_called_once_with(expected_otx_training_config)
         assert training_config == mock_training_config
         assert otx_training_config == mock_otx_training_config
 
@@ -256,10 +255,9 @@ class TestOTXTrainerAssignSubsets:
         fxt_subset_service.get_unassigned_items_with_labels.return_value = unassigned_items
 
         # Mock configuration
-        training_config = PartialTrainingConfiguration(  # type: ignore[call-arg]
-            global_parameters=PartialGlobalParameters(
-                dataset_preparation=GlobalDatasetPreparationParameters(subset_split=SubsetSplit())
-            ),
+        training_config = TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
         )
 
         # Mock current distribution
@@ -531,8 +529,7 @@ class TestOTXTrainerPrepareModel:
         )
         dataset_revision_id = uuid4()
         otx_trainer = fxt_otx_trainer()
-
-        training_config = PartialTrainingConfiguration(model_manifest_id=model_architecture_id)  # type: ignore
+        training_config = Mock(spec=TrainingConfiguration)
 
         # Act
         otx_trainer.prepare_model(training_params, dataset_revision_id, training_config)

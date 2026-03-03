@@ -9,7 +9,7 @@ import pytest
 
 from app.models import TaskType
 from app.services.base_weights_service import BaseWeightsService
-from app.supported_models.supported_models import ManifestNotFoundException
+from app.services.model_manifest_service import ManifestNotFoundException
 
 DETECTION_MODEL_MANIFEST_ID = "object-detection-ssd-mobilenet-v2"
 DETECTION_WEIGHTS_FILENAME = "mobilenet_v2-2s_ssd-992x736.pth"
@@ -45,7 +45,7 @@ class TestBaseWeightsService:
 
     def test_get_remote_weights_path_model_not_found(self, fxt_base_weights_service):
         """Test error when model manifest is not found."""
-        with pytest.raises(ManifestNotFoundException, match="Model manifest with ID unknown_model not found."):
+        with pytest.raises(ManifestNotFoundException, match="Model architecture with ID 'unknown_model' not found."):
             fxt_base_weights_service.get_remote_weights_path(task=TaskType.DETECTION, model_manifest_id="unknown_model")
 
     def test_get_remote_weights_path_task_mismatch(self, fxt_base_weights_service):
