@@ -7,7 +7,7 @@ on:
         type: string
         required: true
       device:
-        description: "Specifies the device to build the backend for (cpu, xpu, gpu)"
+        description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         type: string
         required: true
         default: "xpu"
@@ -25,12 +25,12 @@ on:
         type: string
         required: true
       device:
-        description: "Specifies the device to build the backend for (cpu, xpu, gpu)"
+        description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         required: true
         options:
           - xpu
           - cpu
-          - gpu
+          - cuda
         default: "xpu"
       debug_build:
         description: "If the debug build should be produced"
