@@ -41,6 +41,10 @@ const Annotator = ({
     const handleSubmitAnnotations = async () => {
         const nextMediaItem = getNextMediaItem();
 
+        if (nextMediaItem === undefined) {
+            return;
+        }
+
         onSelectedMediaItem(nextMediaItem);
     };
 

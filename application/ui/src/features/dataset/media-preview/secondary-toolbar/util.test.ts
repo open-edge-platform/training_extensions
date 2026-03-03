@@ -61,10 +61,10 @@ describe('secondary toolbar utils', () => {
                 expect(result).toEqual(items[1]);
             });
 
-            it('returns the last item when current item is the last one', () => {
+            it('returns undefined when current item is the last one', () => {
                 const items = getMultipleMockedMediaImage(3);
                 const result = getNextMediaItem(items[2], items, 1);
-                expect(result).toEqual(items[2]);
+                expect(result).toBeUndefined();
             });
 
             it('returns the first item when current item is not found in the list', () => {
@@ -95,10 +95,10 @@ describe('secondary toolbar utils', () => {
                 expect(result).toEqual(nextImage);
             });
 
-            it('stays on the same video when it is the last media item and already at the last frame', () => {
+            it('returns undefined when it is the last media item and already at the last frame', () => {
                 const frame = getMockedVideoFrame({ id: 'video-1', frame_number: 9, frame_count: 10 });
                 const result = getNextMediaItem(frame, [frame], 1);
-                expect(result).toEqual(frame);
+                expect(result).toBeUndefined();
             });
 
             it('advances to the next media item when at the last frame', () => {

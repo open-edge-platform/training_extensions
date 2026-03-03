@@ -21,7 +21,7 @@ export const getNextItem = (totalItems: number, newIndex: number) => {
     return Math.min(totalItems, newIndex + 1);
 };
 
-export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[], step: number) => {
+export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[], step: number): Media | undefined => {
     if (isVideoFrame(currentMediaItem)) {
         const videoFrames = range(0, currentMediaItem.frame_count, step);
         const currentIndex = videoFrames.findIndex((frame) => frame === currentMediaItem.frame_number);
@@ -49,9 +49,11 @@ export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[]
         return allMediaItems[0];
     }
 
-    const nextIndex = Math.min(currentIndex + 1, allMediaItems.length - 1);
+    if (currentIndex >= allMediaItems.length - 1) {
+        return undefined;
+    }
 
-    return allMediaItems[nextIndex];
+    return allMediaItems[currentIndex + 1];
 };
 
 export const isSameMediaItem = (firstItem: Media, secondItem: Media): boolean => {
