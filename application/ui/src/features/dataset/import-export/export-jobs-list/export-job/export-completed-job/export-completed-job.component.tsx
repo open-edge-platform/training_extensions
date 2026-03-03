@@ -44,7 +44,7 @@ export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps
 
     return (
         <View padding='size-150'>
-            <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
+            <Flex justifyContent='space-between' alignItems='end' gap='size-250' marginBottom='size-125'>
                 <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
 
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
