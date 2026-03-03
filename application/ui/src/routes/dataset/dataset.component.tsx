@@ -20,9 +20,10 @@ export const Dataset = () => {
         annotationStatus: filterStatus ?? undefined,
     });
 
-    const handleFilterByStatusChange = (status: FilterByStatusKey | null) => {
-        if (status === null || status === 'all') {
+    const handleFilterByStatusChange = (status: FilterByStatusKey) => {
+        if (status === 'all') {
             setFilterStatus(null);
+
             return;
         }
 

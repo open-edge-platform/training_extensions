@@ -35,7 +35,7 @@ type ToolbarProps = {
     items: Media[];
     viewMode: ViewModes;
     setViewMode: Dispatch<SetStateAction<ViewModes>>;
-    onFilter: (status: FilterByStatusKey | null) => void;
+    onFilter: (status: FilterByStatusKey) => void;
 };
 
 type AnnotateButtonProps = {
