@@ -1,31 +1,22 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Content, Dialog, Grid, View } from '@geti/ui';
-import { useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
-import { isVideoFrame } from '../../../shared/media-item-utils';
-import { loadImageQueryOptions } from '../../annotator/hooks/use-load-image-query.hook';
 import {
     SelectedMediaItemProvider,
     useSelectedMediaItem,
 } from '../../annotator/selected-media-item-provider.component';
-import {
-    segmentAnythingEncodingQueryOptions,
-    segmentAnythingWorkerQueryOptions,
-} from '../../annotator/tools/segment-anything-tool/use-segment-anything.hook';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { AnnotatorContainer } from './annotator.component';
-import { annotationsQueryOptions, useAnnotationsQuery } from './api/use-annotations-query';
+import { useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
-import { getNextMediaItem } from './secondary-toolbar/util';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
@@ -41,56 +32,9 @@ type MediaPreviewContentProps = {
     onSelectedMediaItem: (item: Media) => void;
 };
 
-const getNextMediaItemForPrefetch = (selectedItem: Media, items: Media[]): Media | undefined => {
-    const step = isVideoFrame(selectedItem) ? selectedItem.frame_stride : 1;
-
-    return getNextMediaItem(selectedItem, items, step);
-};
-
-// When the user navigates to next media, the most expensive data, like the SAM encoding,
-// along with image data and annotations, will be already in React Query cache, so the UI will feel smoother
-// whenever the user switches image. Unless he/she changes to a random or item. We could also consider
-// those cases but I feel like it's overkill. Let's see how this improvement performs and then we can iterate on it.
-//
-// ensureQueryData will get the data from cache if it's there, or call the queryFn and cache the result if it's not.
-// prefetchQuery will fetch the data and cache it
-const prefetchNextMediaItemData = ({
-    queryClient,
-    projectId,
-    items,
-    selectedItem,
-}: {
-    queryClient: ReturnType<typeof useQueryClient>;
-    projectId: string;
-    items: Media[];
-    selectedItem: Media;
-}) => {
-    const prefetch = async () => {
-        const nextItem = getNextMediaItemForPrefetch(selectedItem, items);
-
-        if (nextItem === undefined) {
-            return;
-        }
-
-        const nextImage = await queryClient.ensureQueryData(loadImageQueryOptions(projectId, nextItem));
-
-        queryClient.prefetchQuery(annotationsQueryOptions(projectId, nextItem));
-
-        const encoderModel = await queryClient.ensureQueryData(
-            segmentAnythingWorkerQueryOptions('SEGMENT_ANYTHING_ENCODER')
-        );
-
-        queryClient.prefetchQuery(segmentAnythingEncodingQueryOptions(nextItem, encoderModel, nextImage));
-    };
-
-    prefetch();
-};
-
 const MediaPreviewContent = ({ items, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
     const { mediaItem } = useSelectedMediaItem();
-    const queryClient = useQueryClient();
-    const projectId = useProjectIdentifier();
 
     const { data: annotationsData } = useAnnotationsQuery(mediaItem);
 
@@ -103,15 +47,6 @@ const MediaPreviewContent = ({ items, onSelectedMediaItem, onClose }: MediaPrevi
     const initialPredictions = useMemo(() => {
         return getInitialPredictions(isUserReviewed, annotationsData?.annotations ?? []);
     }, [isUserReviewed, annotationsData?.annotations]);
-
-    useEffect(() => {
-        prefetchNextMediaItemData({
-            queryClient,
-            projectId,
-            items,
-            selectedItem: mediaItem,
-        });
-    }, [items, mediaItem, projectId, queryClient]);
 
     return (
         <ToolProvider mode={mode}>

@@ -1,7 +1,11 @@
-// Copyright (C) 2025-2026 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useEffect } from 'react';
+
 import { View } from '@geti/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
@@ -16,6 +20,7 @@ import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { useNextMedia } from './secondary-toolbar/util';
+import { prefetchNextMediaItemData } from './utils';
 
 type AnnotatorProps = {
     image: ImageData;
@@ -37,6 +42,16 @@ const Annotator = ({
     onClose,
 }: AnnotatorProps) => {
     const getNextMediaItem = useNextMedia(mediaItem, items);
+    const queryClient = useQueryClient();
+    const projectId = useProjectIdentifier();
+
+    useEffect(() => {
+        prefetchNextMediaItemData({
+            queryClient,
+            projectId,
+            getNextMediaItem,
+        });
+    }, [getNextMediaItem, projectId, queryClient]);
 
     const handleSubmitAnnotations = async () => {
         const nextMediaItem = getNextMediaItem();
