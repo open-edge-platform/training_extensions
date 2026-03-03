@@ -7,7 +7,7 @@ import secrets
 from PIL import Image
 
 
-def generate_random_image(width: int = 640, height: int = 480) -> tuple[io.BytesIO, str, str]:
+def generate_random_image(width: int = 640, height: int = 480) -> tuple[io.BytesIO, str]:
     """Generate a random test image.
 
     Returns:
@@ -26,4 +26,4 @@ def generate_random_image(width: int = 640, height: int = 480) -> tuple[io.Bytes
     # Generate random filename
     filename = f"test_image_{secrets.token_hex(8)}.jpg"
 
-    return buffer, filename, "jpg"
+    return buffer, filename

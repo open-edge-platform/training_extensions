@@ -10,6 +10,9 @@ export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
 export type ModelFormat = components['schemas']['ModelFormat'];
 export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
+export type Evaluation = components['schemas']['EvaluationView'];
+export type Metric = components['schemas']['MetricView'];
+export type LineMetric = components['schemas']['LineMetric'];
 
 export type Job = components['schemas']['JobView'];
 export type ExportDatasetJob = Job & {
@@ -21,6 +24,11 @@ export type ExportDatasetMetadata = ExportDatasetJob['metadata'];
 export type PrepareImportDatasetJob = Job & {
     type: 'prepare_dataset_for_import';
     metadata: components['schemas']['PrepareDatasetForImportRequest'];
+};
+
+export type ImportDatasetToProjectJob = Job & {
+    type: 'import_dataset_to_project';
+    metadata: components['schemas']['ImportDatasetToProjectRequest'];
 };
 
 export type MediaImage = components['schemas']['ImageView'];

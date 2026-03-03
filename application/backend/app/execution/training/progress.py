@@ -10,8 +10,8 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 
 
 class TrainingProgressCallback(Callback):
-    def __init__(self, report_progress: Callable[[str, float], None], min_p: float = 0, max_p: float = 100.0):
-        self._report_progress = report_progress
+    def __init__(self, on_progress_update: Callable[[float], None], min_p: float = 0, max_p: float = 100.0):
+        self._on_progress_update = on_progress_update
         self._min_p = min_p
         self._max_p = max_p
         self._total_steps: int | None = None
@@ -29,7 +29,7 @@ class TrainingProgressCallback(Callback):
             return
         ratio = self._current_step / self._total_steps
         progress = self._min_p + ratio * (self._max_p - self._min_p)
-        self._report_progress("", progress)
+        self._on_progress_update(progress)
 
     def on_train_batch_end(
         self,

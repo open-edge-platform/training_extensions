@@ -4,7 +4,8 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { paths } from './constants/paths';
-import { SelectedDataProvider } from './features/dataset/selected-data-provider.component';
+import { ImportDatasetDialogStateProvider } from './features/dataset/providers/export-import-dataset-dialog-provider.component';
+import { SelectedDataProvider } from './features/dataset/providers/selected-data-provider.component';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
 import { useProjects } from './hooks/api/project.hook';
@@ -83,9 +84,11 @@ export const router = createBrowserRouter([
                     {
                         path: paths.project.dataset.index.pattern,
                         element: (
-                            <SelectedDataProvider>
-                                <Outlet />
-                            </SelectedDataProvider>
+                            <ImportDatasetDialogStateProvider>
+                                <SelectedDataProvider>
+                                    <Outlet />
+                                </SelectedDataProvider>
+                            </ImportDatasetDialogStateProvider>
                         ),
                         children: [
                             {

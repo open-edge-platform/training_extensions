@@ -249,7 +249,7 @@ class TestProjectServiceIntegration:
         dummy_image = Image.fromarray(np.zeros((10, 10, 3), dtype=np.uint8))
         # Create media using the service
         media = fxt_media_service.create_image(
-            project=project,
+            project_id=project.id,
             name="test_image.jpg",
             format=ImageFormat.JPG,
             data=dummy_image,

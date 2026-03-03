@@ -23,7 +23,7 @@ class ExportDatasetJobParams(JobParams):
     export_format: DatasetFormat
     labels: list[str] | None = None
     subsets: list[DatasetItemSubset] | None = None
-    include_unannotated: bool = False
+    include_unannotated: bool = True
 
     @model_validator(mode="after")
     def validate_format(self) -> "ExportDatasetJobParams":

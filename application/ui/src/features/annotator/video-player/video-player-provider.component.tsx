@@ -8,6 +8,7 @@ import {
     RefObject,
     SetStateAction,
     use,
+    useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
@@ -40,10 +41,17 @@ type VideoPlayerContextProps = {
     changeStep: Dispatch<SetStateAction<number>>;
 };
 
-const useSynchronizeVideoTimeWithInitialFrame = (
-    videoRef: RefObject<HTMLVideoElement | null>,
-    videoFrame: MediaVideoFrame | undefined
-) => {
+const useSynchronizeVideoTimeWithVideoFrame = ({
+    videoFrame,
+    videoRef,
+    onUpdateCurrentFrameIndex,
+}: {
+    videoRef: RefObject<HTMLVideoElement | null>;
+    videoFrame: MediaVideoFrame | undefined;
+    onUpdateCurrentFrameIndex: (index: number) => void;
+}) => {
+    const previousVideoFrame = usePreviousVideoFrame(videoFrame);
+
     /*
      * This part is responsible for updating video time on the initial load when the frame number is not 0.
      * In that case we need to move the video to the correct frame number.
@@ -81,6 +89,28 @@ const useSynchronizeVideoTimeWithInitialFrame = (
             videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
         };
     }, [videoFrame?.frame_number, videoFrame?.fps, videoRef]);
+
+    useEffect(() => {
+        if (videoFrame === undefined || videoRef.current === null) {
+            return;
+        }
+
+        if (previousVideoFrame?.id === videoFrame.id && previousVideoFrame?.frame_number !== videoFrame.frame_number) {
+            onUpdateCurrentFrameIndex(videoFrame.frame_number);
+
+            videoRef.current.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
+        }
+    }, [videoFrame, previousVideoFrame, videoRef, onUpdateCurrentFrameIndex]);
+};
+
+const usePreviousVideoFrame = (videoFrame: MediaVideoFrame | undefined) => {
+    const previousVideoFrameRef = useRef<MediaVideoFrame | undefined>(videoFrame);
+
+    useEffect(() => {
+        previousVideoFrameRef.current = videoFrame;
+    }, [videoFrame]);
+
+    return previousVideoFrameRef.current;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
@@ -98,7 +128,11 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
     const [playbackRate, setPlaybackRate] = useState<number>(1);
     const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(videoFrame?.frame_number ?? 0);
 
-    useSynchronizeVideoTimeWithInitialFrame(videoRef, videoFrame);
+    useSynchronizeVideoTimeWithVideoFrame({
+        videoRef,
+        videoFrame,
+        onUpdateCurrentFrameIndex: setCurrentFrameIndex,
+    });
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
         if (videoFrame === undefined) {

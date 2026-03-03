@@ -7,9 +7,9 @@ Feature: Prepare Dataset For Import
 
   @prepare @detection
   Scenario Outline: Prepare detection dataset for import
-    Given A "detection" project "grapes" with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
-    And the project dataset has 10 images with annotations in subset "training"
-    And the project dataset has 2 images with annotations in subset "validation"
+    Given A detection project "grapes" with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
+    And the project dataset has 10 annotated training images
+    And the project dataset has 2 annotated validation images
     And the project dataset is exported in <export format> format
     When I prepare the staged dataset archive for import
     Then the staged dataset is ready for import
@@ -23,9 +23,9 @@ Feature: Prepare Dataset For Import
 
   @prepare @classification
   Scenario Outline: Prepare classification dataset for import
-    Given A "classification" project "animals" with labels ["cat", "dog"] exists
-    And the project dataset has 5 images with annotations in subset "training"
-    And the project dataset has 5 images with annotations in subset "validation"
+    Given A classification project "animals" with labels ["cat", "dog"] exists
+    And the project dataset has 5 annotated training images
+    And the project dataset has 5 annotated validation images
     And the project dataset is exported in <export format> format
     When I prepare the staged dataset archive for import
     Then the staged dataset is ready for import
@@ -38,9 +38,9 @@ Feature: Prepare Dataset For Import
 
   @prepare @segmentation
   Scenario Outline: Prepare segmentation dataset for import
-    Given An "instance_segmentation" project "traffic" with labels ["car", "person"] exists
-    And the project dataset has 6 images with annotations in subset "training"
-    And the project dataset has 3 images with annotations in subset "validation"
+    Given An instance_segmentation project "traffic" with labels ["car", "person"] exists
+    And the project dataset has 6 annotated training images
+    And the project dataset has 3 annotated validation images
     And the project dataset is exported in <export format> format
     When I prepare the staged dataset archive for import
     Then the staged dataset is ready for import

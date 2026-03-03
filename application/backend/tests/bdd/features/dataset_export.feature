@@ -7,11 +7,11 @@ Feature: Dataset Export
 
   @export @detection
   Scenario Outline: Export detection project dataset
-    Given A "detection" project "grapes" with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
-    And the project dataset has 10 images with annotations in subset "training"
-    And the project dataset has 2 images with annotations in subset "validation"
-    And the project dataset has 2 images with annotations in subset "testing"
-    And the project dataset has 2 unannotated images in subset "training"
+    Given A detection project "grapes" with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
+    And the project dataset has 10 annotated training images
+    And the project dataset has 2 annotated validation images
+    And the project dataset has 2 annotated testing images
+    And the project dataset has 2 unannotated training images
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
     And the staged dataset with name=<archive name> has <expected images> images
@@ -30,11 +30,11 @@ Feature: Dataset Export
 
   @export @classification
   Scenario Outline: Export classification project dataset
-    Given A "classification" project "animals" with labels ["cat", "dog"] exists
-    And the project dataset has 5 images with annotations in subset "training"
-    And the project dataset has 5 images with annotations in subset "validation"
-    And the project dataset has 5 images with annotations in subset "testing"
-    And the project dataset has 5 unannotated images in subset "training"
+    Given A classification project "animals" with labels ["cat", "dog"] exists
+    And the project dataset has 5 annotated training images
+    And the project dataset has 5 annotated validation images
+    And the project dataset has 5 annotated testing images
+    And the project dataset has 5 unannotated training images
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
     And the staged dataset with name=<archive name> has <expected images> images
@@ -52,11 +52,11 @@ Feature: Dataset Export
 
   @export @segmentation
   Scenario Outline: Export segmentation project dataset
-    Given An "instance_segmentation" project "traffic" with labels ["car", "person"] exists
-    And the project dataset has 6 images with annotations in subset "training"
-    And the project dataset has 3 images with annotations in subset "validation"
-    And the project dataset has 3 images with annotations in subset "testing"
-    And the project dataset has 3 unannotated images in subset "testing"
+    Given An instance_segmentation project "traffic" with labels ["car", "person"] exists
+    And the project dataset has 6 annotated training images
+    And the project dataset has 3 annotated validation images
+    And the project dataset has 3 annotated testing images
+    And the project dataset has 3 unannotated testing images
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
     And the staged dataset with name=<archive name> has <expected images> images

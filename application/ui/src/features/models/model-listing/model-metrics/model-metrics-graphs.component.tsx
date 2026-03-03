@@ -3,26 +3,41 @@
 
 import { Flex } from '@geti/ui';
 
-import { MetricGraph } from './metric-graph.component';
+import type { LineMetric } from '../../../../constants/shared-types';
+import { MetricGraph, type MetricGraphPoint } from './metric-graph.component';
 
 type ModelMetricsGraphsProps = {
-    // TODO: update types
-    lossData?: { epoch: number; trainLoss: number }[];
-    accuracyData?: { epoch: number; trainAccuracy: number }[];
+    trainingMetrics: LineMetric[];
 };
 
-export const ModelMetricsGraphs = ({ lossData, accuracyData }: ModelMetricsGraphsProps) => {
+type GraphData = {
+    key: string;
+    title: string;
+    xAxisLabel: string;
+    yAxisLabel: string;
+    data: MetricGraphPoint[];
+};
+
+export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps) => {
+    const graphs: GraphData[] = trainingMetrics.map((metric) => ({
+        key: metric.key,
+        title: metric.header,
+        xAxisLabel: metric.value.x_axis_label,
+        yAxisLabel: metric.value.y_axis_label,
+        data: metric.value.line_data.flatMap((line) => line.points.map((point) => ({ x: point.x, y: point.y }))),
+    }));
+
     return (
-        <Flex width={'100%'} direction={'row'} gap={'size-300'}>
-            <MetricGraph
-                title='ACCURACY'
-                data={accuracyData}
-                dataKey='trainAccuracy'
-                yAxisLabel='train accuracy'
-                yAxisDomain={[0, 1]}
-                yAxisTicks={[0, 0.2, 0.4, 0.6, 0.8, 1.0]}
-            />
-            <MetricGraph title='LOSS' data={lossData} dataKey='trainLoss' yAxisLabel='train loss' />
+        <Flex width={'100%'} direction={'row'} gap={'size-300'} wrap>
+            {graphs.map((graph) => (
+                <MetricGraph
+                    key={graph.key}
+                    title={graph.title}
+                    data={graph.data}
+                    xAxisLabel={graph.xAxisLabel}
+                    yAxisLabel={graph.yAxisLabel}
+                />
+            ))}
         </Flex>
     );
 };

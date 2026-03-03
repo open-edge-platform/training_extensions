@@ -14,7 +14,7 @@ import type { Media } from '../../../constants/shared-types';
 import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
-import { useSelectedData } from '../selected-data-provider.component';
+import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 import { MediaItemActions } from './media-item-actions/media-item-actions.component';

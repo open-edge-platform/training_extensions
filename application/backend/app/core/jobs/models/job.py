@@ -67,11 +67,9 @@ class Job(BaseIDModel, Generic[JobParamsT]):
         self.started_at = now_utc_ts()
         self.updated_at = now_utc_ts()
 
-    def advance(
-        self, percent: float | None = None, msg: str | None = None, metadata: dict[str, Any] | None = None
-    ) -> None:
-        if percent:
-            self.progress = max(0.0, min(100.0, percent))
+    def advance(self, percent: float, msg: str | None = None, metadata: dict[str, Any] | None = None) -> None:
+        if percent > 0.0:
+            self.progress = min(100.0, percent)
         if msg:
             self.message = msg
         if metadata:

@@ -3,22 +3,21 @@
 from collections.abc import Sequence
 
 import numpy as np
-from datumaro.experimental.fields import ImageInfo
+from datumaro.experimental import LazyImage
+from datumaro.experimental.fields import ImageInfo, Subset
 from loguru import logger
 
 from app.datumaro_converter.domain import MultilabelClassificationSample
-from app.datumaro_converter.utils import SubsetConverter, validate_confidence_consistency
+from app.datumaro_converter.utils import validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media
 
 from .sample_factory import SampleFactory
 
 
-class MultilabelClassificationSampleFactory(SampleFactory):
+class MultilabelClassificationSampleFactory(SampleFactory[MultilabelClassificationSample]):
     """Knows how to create multilabel classification samples."""
 
-    @property
-    def sample_type(self) -> type[MultilabelClassificationSample]:
-        return MultilabelClassificationSample
+    sample_type = MultilabelClassificationSample
 
     def create_sample(
         self, dataset_item: DatasetItem, media: Media, image_path: str
@@ -26,9 +25,9 @@ class MultilabelClassificationSampleFactory(SampleFactory):
         if dataset_item.annotation_data is None:
             return MultilabelClassificationSample(
                 id=str(dataset_item.id),
-                image=image_path,
+                image=LazyImage(image_path),
                 image_info=ImageInfo(width=media.width, height=media.height),
-                subset=SubsetConverter.to_datumaro(dataset_item.subset),
+                subset=Subset[dataset_item.subset.name],
                 label=np.array([]),
                 confidence=None,
                 user_reviewed=False,
@@ -45,11 +44,11 @@ class MultilabelClassificationSampleFactory(SampleFactory):
 
         return MultilabelClassificationSample(
             id=str(dataset_item.id),
-            image=image_path,
+            image=LazyImage(image_path),
             image_info=ImageInfo(width=media.width, height=media.height),
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
-            subset=SubsetConverter.to_datumaro(dataset_item.subset),
+            subset=Subset[dataset_item.subset.name],
             user_reviewed=True,
         )
 

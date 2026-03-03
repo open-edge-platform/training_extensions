@@ -3,6 +3,5 @@
 
 from .confidence import validate_confidence_consistency
 from .shape import ShapeConverter
-from .subset import SubsetConverter
 
-__all__ = ["ShapeConverter", "SubsetConverter", "validate_confidence_consistency"]
+__all__ = ["ShapeConverter", "validate_confidence_consistency"]
