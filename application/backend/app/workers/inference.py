@@ -3,6 +3,7 @@
 
 import multiprocessing as mp
 import queue
+from collections.abc import Generator
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
@@ -33,6 +34,51 @@ class InferenceWorkerConfig:
     logger_: LoguruLogger
 
 
+class PredictionBuffer:
+    """Buffers predictions to ensure async generated predictions are fed to the prediction queue in order"""
+
+    def __init__(self, max_size: int = 10):
+        self._buffer: dict[float, StreamData] = {}
+        self._expected_timestamps: list[float] = []
+        self._max_size = max_size
+        self._lock = mp.Lock()
+
+    def append_expected_timestamp(self, timestamp: float) -> None:
+        with self._lock:
+            self._expected_timestamps.append(timestamp)
+            if len(self._expected_timestamps) > self._max_size:
+                oldest_timestamp = self._expected_timestamps.pop(0)
+                if oldest_timestamp in self._buffer:
+                    del self._buffer[oldest_timestamp]
+
+    def add_to_buffer(self, timestamp: float, stream_data: StreamData) -> None:
+        with self._lock:
+            if timestamp in self._expected_timestamps:
+                self._buffer[timestamp] = stream_data
+            else:
+                logger.warning(
+                    "Received prediction for buffering with unexpected timestamp: "
+                    "expected timestamps: {}, received timestamp {}",
+                    self._expected_timestamps,
+                    timestamp,
+                )
+
+    def get_ready_predictions(self) -> Generator[StreamData]:
+        with self._lock:
+            if not self._expected_timestamps:
+                return
+            while self._expected_timestamps[0] in self._buffer:
+                timestamp = self._expected_timestamps.pop(0)
+                yield self._buffer.pop(timestamp)
+                if not self._expected_timestamps:
+                    return
+
+    def clear(self) -> None:
+        with self._lock:
+            self._expected_timestamps = []
+            self._buffer = {}
+
+
 class InferenceWorker(BaseProcessWorker):
     """A process that pulls frames from the frame queue, runs inference, and pushes results to the prediction queue."""
 
@@ -56,6 +102,7 @@ class InferenceWorker(BaseProcessWorker):
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
         # To ensure broadcasting frames in order
+        self._prediction_buffer = PredictionBuffer()
         self._frame_index = 0
         self._next_to_broadcast = 0
         self._result_buffer = {}
@@ -66,31 +113,31 @@ class InferenceWorker(BaseProcessWorker):
         self._model_service = ActiveModelService(get_settings().data_dir)
 
     def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
-        frame_index = userdata["frame_index"]
-        self._result_buffer[frame_index] = (inf_result, userdata)
-        while self._next_to_broadcast in self._result_buffer:
-            result, ud = self._result_buffer.pop(self._next_to_broadcast)
-            start_time = float(ud["inference_start_time"])
-            model_id = ud["model_id"]
-            self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
+        start_time = float(userdata["inference_start_time"])
+        model_id = userdata["model_id"]
+        self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
 
-            stream_data: StreamData = ud["stream_data"]
-            frame_with_predictions = Visualizer.overlay_predictions(
-                original_image=stream_data.frame_data, predictions=result
-            )
-            inference_data = InferenceData(
-                prediction=result,
-                visualized_prediction=frame_with_predictions,
-                model_id=model_id,
-            )
-            stream_data.inference_data = inference_data
+        stream_data: StreamData = userdata["stream_data"]
+        frame_with_predictions = Visualizer.overlay_predictions(
+            original_image=stream_data.frame_data, predictions=inf_result
+        )
+        inference_data = InferenceData(
+            prediction=inf_result,
+            visualized_prediction=frame_with_predictions,
+            model_id=model_id,
+        )
+        stream_data.inference_data = inference_data
+
+        # Predictions are generated async, first add to buffer,
+        # then check if next expected predictions are ready to be queued
+        self._prediction_buffer.add_to_buffer(timestamp=start_time, stream_data=stream_data)
+        for stream_data in self._prediction_buffer.get_ready_predictions():
             while not self.should_stop():
                 try:
                     self._pred_queue.put(stream_data, timeout=1)
                     break
                 except queue.Full:
                     logger.debug("Prediction queue is full, retrying...")
-            self._next_to_broadcast += 1
 
     def _install_callback_if_needed(self, model: Model) -> None:
         """Install inference completion callback once per model object instance."""
@@ -116,6 +163,10 @@ class InferenceWorker(BaseProcessWorker):
         while self._model_reload_event.is_set():
             self._model_reload_event.clear()
             loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
+
+        # Clear prediction buffer
+        self._prediction_buffer.clear()
+
         return loaded_model
 
     def run_loop(self) -> None:
@@ -136,16 +187,15 @@ class InferenceWorker(BaseProcessWorker):
                         continue
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
+                    self._prediction_buffer.append_expected_timestamp(inference_start_time)
                     model.infer_async(
                         cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB),  # models expect RGB input
                         user_data={
                             "stream_data": item,
                             "model_id": self._loaded_model.id,
                             "inference_start_time": inference_start_time,
-                            "frame_index": self._frame_index,
                         },
                     )
-                    self._frame_index += 1
                 else:
                     model.inference_adapter.await_any()
             except Exception:
