@@ -484,125 +484,137 @@ def fxt_project_with_rich_dataset_items(fxt_project_with_pipeline, db_session) -
     label_1_id = str(project.task.labels[0].id)
     label_2_id = str(project.task.labels[1].id)
 
+    db_media_items = []
+    db_frame_items = []
     db_dataset_items = []
 
+    default_media_values = {
+        "size": 1024,
+        "width": 1024,
+        "height": 768,
+        "project_id": str(project.id),
+        "created_at": datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    }
+    default_item_values = {
+        "project_id": str(project.id),
+        "subset": "training",
+        "created_at": datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    }
+    annotation_data_1 = {
+        "labels": [{"id": label_1_id}],
+        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+    }
+    annotation_data_2 = {
+        "labels": [{"id": label_2_id}],
+        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+    }
+
     # Image (unannotated)
-    media_img = MediaDB(
+    unannotated_image = MediaDB(
+        id=str(uuid4()),
         type="image",
         name="img1",
         format="jpg",
-        size=1024,
-        width=1024,
-        height=768,
-        project_id=str(project.id),
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        **default_media_values,
     )
-    db_session.add(media_img)
-    db_session.flush()
-    item_img = DatasetItemDB(
-        id=str(media_img.id),
-        project_id=str(project.id),
-        subset="unassigned",
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    item_unannotated_image = DatasetItemDB(
+        id=str(unannotated_image.id),
+        **default_item_values,
     )
-    db_session.add(item_img)
-    db_dataset_items.append(item_img)
-    db_session.flush()
+    db_media_items.append(unannotated_image)
+    db_dataset_items.append(item_unannotated_image)
 
-    # Video (unannotated)
-    media_vid = MediaDB(
-        type="video",
-        name="vid1",
-        format="mp4",
-        size=2048,
-        width=1920,
-        height=1080,
-        fps=30.0,
-        frame_count=2,
-        project_id=str(project.id),
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-    )
-    db_session.add(media_vid)
-    db_session.flush()
-    item_vid = DatasetItemDB(
-        id=str(media_vid.id),
-        project_id=str(project.id),
-        subset="unassigned",
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-    )
-    db_session.add(item_vid)
-    db_dataset_items.append(item_vid)
-    db_session.flush()
-
-    # Video frame (annotated with label_1)
-    media_vf = MediaDB(
-        type="video_frame",
-        name="vf1",
-        format="jpg",
-        size=512,
-        width=1920,
-        height=1080,
-        fps=30.0,
-        frame_count=None,
-        video_id=str(media_vid.id),
-        frame_index=0,
-        project_id=str(project.id),
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-    )
-    db_session.add(media_vf)
-    db_session.flush()
-    item_vf = DatasetItemDB(
-        id=str(media_vf.id),
-        project_id=str(project.id),
-        subset="unassigned",
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        annotation_data=[
-            {"labels": [{"id": label_1_id}], "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10}}
-        ],
-        user_reviewed=True,
-    )
-    db_session.add(item_vf)
-    db_session.flush()
-    db_dataset_items.append(item_vf)
-    db_session.add(DatasetItemLabelDB(dataset_item_id=item_vf.id, label_id=label_1_id))
-    db_session.flush()
-
-    # Dataset item with multiple annotations (2 with label_1, 1 with label_2)
-    media_multi = MediaDB(
+    # Image (annotated with multiple annotations (2 with label_1, 1 with label_2)
+    annotated_image = MediaDB(
+        id=str(uuid4()),
         type="image",
         name="multi_ann",
         format="jpg",
-        size=1024,
-        width=1024,
-        height=768,
-        project_id=str(project.id),
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        **default_media_values,
     )
-    db_session.add(media_multi)
-    db_session.flush()
-    item_multi = DatasetItemDB(
-        id=str(media_multi.id),
-        project_id=str(project.id),
-        subset="training",
-        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        annotation_data=[
-            {"labels": [{"id": label_1_id}], "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10}},
-            {
-                "labels": [{"id": label_1_id}],
-                "shape": {"type": "rectangle", "x": 20, "y": 20, "width": 10, "height": 10},
-            },
-            {
-                "labels": [{"id": label_2_id}],
-                "shape": {"type": "rectangle", "x": 40, "y": 40, "width": 10, "height": 10},
-            },
-        ],
+    item_annotated_image = DatasetItemDB(
+        id=str(annotated_image.id),
+        **default_item_values,
+        annotation_data=[annotation_data_1, annotation_data_1, annotation_data_2],
         user_reviewed=True,
     )
-    db_session.add(item_multi)
+    db_media_items.append(annotated_image)
+    db_dataset_items.append(item_annotated_image)
+
+    # Video (annotated frames)
+    annotated_video = MediaDB(
+        id=str(uuid4()),
+        type="video",
+        name="vid1",
+        format="mp4",
+        fps=30.0,
+        frame_count=20,
+        **default_media_values,
+    )
+    db_media_items.append(annotated_video)
+
+    # Video frame (annotated with label_1)
+    annotated_video_frame_1 = MediaDB(
+        id=str(uuid4()),
+        type="video_frame",
+        name="vf1",
+        format="jpg",
+        video_id=str(annotated_video.id),
+        frame_index=3,
+        **default_media_values,
+    )
+    item_annotated_video_frame_1 = DatasetItemDB(
+        id=str(annotated_video_frame_1.id),
+        **default_item_values,
+        annotation_data=[annotation_data_1],
+        user_reviewed=True,
+    )
+    db_frame_items.append(annotated_video_frame_1)
+    db_dataset_items.append(item_annotated_video_frame_1)
+
+    # Video frame (annotated with label_2)
+    annotated_video_frame_2 = MediaDB(
+        id=str(uuid4()),
+        type="video_frame",
+        name="vf2",
+        format="jpg",
+        video_id=str(annotated_video.id),
+        frame_index=8,
+        **default_media_values,
+    )
+    item_annotated_video_frame_2 = DatasetItemDB(
+        id=str(annotated_video_frame_2.id),
+        **default_item_values,
+        annotation_data=[annotation_data_2],
+        user_reviewed=True,
+    )
+    db_frame_items.append(annotated_video_frame_2)
+    db_dataset_items.append(item_annotated_video_frame_2)
+
+    # Video (no annotated frames)
+    unannotated_video = MediaDB(
+        id=str(uuid4()),
+        type="video",
+        name="vid2",
+        format="mp4",
+        fps=30.0,
+        frame_count=15,
+        **default_media_values,
+    )
+    db_media_items.append(unannotated_video)
+
+    [db_session.add(item) for item in db_media_items]
     db_session.flush()
-    db_dataset_items.append(item_multi)
-    db_session.add(DatasetItemLabelDB(dataset_item_id=item_multi.id, label_id=label_1_id))
-    db_session.add(DatasetItemLabelDB(dataset_item_id=item_multi.id, label_id=label_2_id))
+    db_session.commit()
+    [db_session.add(item) for item in db_frame_items]
+    db_session.flush()
+    [db_session.add(item) for item in db_dataset_items]
+    db_session.flush()
+
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_video_frame_1.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_video_frame_2.id, label_id=label_2_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_image.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_image.id, label_id=label_2_id))
     db_session.flush()
 
     return project, db_dataset_items
@@ -1441,19 +1453,19 @@ class TestDatasetServiceIntegration:
 
         statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
 
-        # There are 2 images, 1 video, 1 video_frame
+        # Media counts
         assert statistics.media_counts.images == 2
-        assert statistics.media_counts.videos == 1
-        assert statistics.media_counts.video_frames == 2
+        assert statistics.media_counts.videos == 2
+        assert statistics.media_counts.video_frames == 35
 
-        # Only item_multi is in training subset and annotated, item_vf is annotated video_frame
-        assert statistics.annotations_counts.annotated_images == 1  # item_multi
+        # Annotation counts
+        assert statistics.annotations_counts.annotated_images == 1
         assert statistics.annotations_counts.annotated_videos == 1
-        assert statistics.annotations_counts.annotated_video_frames == 1  # item_vf
+        assert statistics.annotations_counts.annotated_video_frames == 2
 
-        # item_multi: 2 instances label_1, 1 instance label_2; item_vf: 1 instance label_1
-        assert statistics.annotations_counts.instances == 4
+        # Instances counts
+        assert statistics.annotations_counts.instances == 5
         assert len(statistics.annotations_counts.instances_per_label) == 2
         label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
         assert label_counts[str(project.task.labels[0].id)] == 3
-        assert label_counts[str(project.task.labels[1].id)] == 1
+        assert label_counts[str(project.task.labels[1].id)] == 2

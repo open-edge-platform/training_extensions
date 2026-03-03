@@ -251,7 +251,7 @@ class DatasetItemRepository:
 
         # Annotation Counts (annotated videos)
         annotated_video_stmt = (
-            select(func.count(func.distinct(MediaDB.id)).label("count"))
+            select(func.count(func.distinct(MediaDB.video_id)).label("count"))
             .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
             .where(
                 DatasetItemDB.project_id == self.project_id,
