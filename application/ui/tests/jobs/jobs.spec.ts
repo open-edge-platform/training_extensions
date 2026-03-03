@@ -36,9 +36,6 @@ test.describe('Jobs - Current Training', () => {
             })
         );
 
-    test('displays current training section with architecture, tags and logs button for a running job', async ({
-        jobsPage,
-    }) => {
         await jobsPage.goto();
 
         await expect(jobsPage.getCurrentTrainingSection()).toBeVisible();
@@ -90,7 +87,13 @@ test.describe('Jobs - Current Training', () => {
         await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
     });
 
-    test('opens and closes training logs dialog when "View logs" button is clicked', async ({ jobsPage }) => {
+    test('opens and closes training logs dialog when "Logs" button is clicked', async ({ jobsPage, network }) => {
+        network.use(
+            http.get('/api/jobs', () => {
+                return HttpResponse.json([mockedTrainingJob]);
+            })
+        );
+
         await jobsPage.goto();
 
         await jobsPage.openLogsDialog();
