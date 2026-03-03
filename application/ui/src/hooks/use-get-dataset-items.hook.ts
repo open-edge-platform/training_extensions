@@ -19,6 +19,7 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
                 project_id,
             },
             query: {
+                limit: options?.limit,
                 annotation_status: options?.annotationStatus,
             },
         },
