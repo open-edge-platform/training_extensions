@@ -21,14 +21,11 @@ export const LoadingImportDataset = ({ stagedDatasetId }: LoadingImportDatasetPr
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
 
-    const { getImportEntry, deleteImportEntry } = useImportDatasetToProject();
+    const { getImportEntry } = useImportDatasetToProject();
     const importLsEntry = getImportEntry(stagedDatasetId);
 
     const { data: job } = useImportJobStatus({
         jobId: importLsEntry?.importJobId,
-        onError: () => {
-            deleteImportEntry(stagedDatasetId);
-        },
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: getQueryKey([
