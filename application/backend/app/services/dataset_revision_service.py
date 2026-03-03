@@ -27,7 +27,7 @@ from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 from .media_service import InvalidImageError
 
 # Thumbnails for dataset revisions are generated on the fly and need to be smaller than pregenerated thumbnails
-DS_REV_THUMBNAIL_SIZE = 128
+DATASET_REVISION_ITEM_THUMBNAIL_SIZE = 128
 
 
 class DatasetRevisionService(BaseSessionManagedService):
@@ -455,7 +455,9 @@ class DatasetRevisionService(BaseSessionManagedService):
         try:
             with Image.open(binary_path) as image:
                 thumbnail = crop_to_thumbnail(
-                    image=image, target_width=DS_REV_THUMBNAIL_SIZE, target_height=DS_REV_THUMBNAIL_SIZE
+                    image=image,
+                    target_width=DATASET_REVISION_ITEM_THUMBNAIL_SIZE,
+                    target_height=DATASET_REVISION_ITEM_THUMBNAIL_SIZE,
                 )
             # Ensure thumbnail is in a JPEG-compatible mode before it is encoded downstream.
             if thumbnail.mode not in ("RGB", "L"):
