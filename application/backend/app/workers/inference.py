@@ -3,7 +3,7 @@
 
 import multiprocessing as mp
 import queue
-from collections.abc import Generator
+import threading
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
@@ -34,16 +34,16 @@ class InferenceWorkerConfig:
     logger_: LoguruLogger
 
 
-class PredictionBuffer:
+class PredictionReorderBuffer:
     """Buffers predictions to ensure async generated predictions are fed to the prediction queue in order"""
 
     def __init__(self, max_size: int = 10):
         self._buffer: dict[float, StreamData] = {}
         self._expected_timestamps: list[float] = []
         self._max_size = max_size
-        self._lock = mp.Lock()
+        self._lock = threading.Lock()
 
-    def append_expected_timestamp(self, timestamp: float) -> None:
+    def register_expected_timestamp(self, timestamp: float) -> None:
         with self._lock:
             self._expected_timestamps.append(timestamp)
             if len(self._expected_timestamps) > self._max_size:
@@ -51,7 +51,7 @@ class PredictionBuffer:
                 if oldest_timestamp in self._buffer:
                     del self._buffer[oldest_timestamp]
 
-    def add_to_buffer(self, timestamp: float, stream_data: StreamData) -> None:
+    def add_prediction_for_timestamp(self, timestamp: float, stream_data: StreamData) -> None:
         with self._lock:
             if timestamp in self._expected_timestamps:
                 self._buffer[timestamp] = stream_data
@@ -63,15 +63,14 @@ class PredictionBuffer:
                     timestamp,
                 )
 
-    def get_ready_predictions(self) -> Generator[StreamData]:
+    def get_ready_predictions(self) -> list[StreamData]:
+        result = []
         with self._lock:
-            if not self._expected_timestamps:
-                return
-            while self._expected_timestamps[0] in self._buffer:
-                timestamp = self._expected_timestamps.pop(0)
-                yield self._buffer.pop(timestamp)
-                if not self._expected_timestamps:
-                    return
+            while self._expected_timestamps and self._expected_timestamps[0] in self._buffer:
+                timestamp = self._expected_timestamps[0]
+                stream_data = self._buffer.pop(timestamp)
+                result.append(stream_data)
+        return result
 
     def clear(self) -> None:
         with self._lock:
@@ -102,7 +101,7 @@ class InferenceWorker(BaseProcessWorker):
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
         # To ensure broadcasting frames in order
-        self._prediction_buffer = PredictionBuffer()
+        self._prediction_buffer = PredictionReorderBuffer()
 
     def setup(self) -> None:
         super().setup()
@@ -127,7 +126,7 @@ class InferenceWorker(BaseProcessWorker):
 
         # Predictions are generated async, first add to buffer,
         # then check if next expected predictions are ready to be queued
-        self._prediction_buffer.add_to_buffer(timestamp=start_time, stream_data=stream_data)
+        self._prediction_buffer.add_prediction_for_timestamp(timestamp=start_time, stream_data=stream_data)
         for stream_data in self._prediction_buffer.get_ready_predictions():
             while not self.should_stop():
                 try:
@@ -161,8 +160,9 @@ class InferenceWorker(BaseProcessWorker):
             self._model_reload_event.clear()
             loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
 
-        # Clear prediction buffer
-        self._prediction_buffer.clear()
+        if loaded_model is not None:
+            # Clear prediction buffer
+            self._prediction_buffer.clear()
 
         return loaded_model
 
@@ -184,7 +184,7 @@ class InferenceWorker(BaseProcessWorker):
                         continue
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
-                    self._prediction_buffer.append_expected_timestamp(inference_start_time)
+                    self._prediction_buffer.register_expected_timestamp(inference_start_time)
                     model.infer_async(
                         cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB),  # models expect RGB input
                         user_data={
