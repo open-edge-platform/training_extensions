@@ -1,7 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections import Counter
 from datetime import UTC, datetime
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 from sqlalchemy import CursorResult, Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
@@ -219,3 +220,74 @@ class DatasetItemRepository:
         )
         result = self.db.execute(stmt)
         return {row.subset: row.count for row in result}  # type: ignore[misc]
+
+    def get_statistics(self) -> dict[str, Any]:
+        # Media Counts (images, videos, video frames):
+        media_counts_stmt = (
+            select(
+                MediaDB.type, func.count(MediaDB.id).label("count"), func.sum(MediaDB.frame_count).label("frame_count")
+            )
+            .where(MediaDB.project_id == self.project_id)
+            .group_by(MediaDB.type)
+        )
+        result = self.db.execute(media_counts_stmt)
+        rows = list(result)
+        statistics: dict[str, Any] = {f"{row.type}s": cast(int, row.count) for row in rows}
+        statistics["video_frames"] = int(sum(row.frame_count or 0 for row in rows))
+
+        # Annotation Counts (annotated images and video frames):
+        annotated_images_frames_stmt = (
+            select(MediaDB.type, func.count(DatasetItemDB.id).label("count"))
+            .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.annotation_data.isnot(None),
+                DatasetItemDB.user_reviewed,
+            )
+            .group_by(MediaDB.type)
+        )
+        result = self.db.execute(annotated_images_frames_stmt)
+        annotated_counts: dict[str, Any] = {f"annotated_{row.type}s": row.count for row in result}
+
+        # Annotation Counts (annotated videos)
+        annotated_video_stmt = (
+            select(func.count(func.distinct(MediaDB.video_id)).label("count"))
+            .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.annotation_data.isnot(None),
+                DatasetItemDB.user_reviewed,
+                MediaDB.type == "video_frame",
+            )
+        )
+        annotated_video_count = self.db.execute(annotated_video_stmt).scalar()
+        annotated_counts["annotated_videos"] = annotated_video_count or 0
+
+        # Total instances:
+        annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
+            DatasetItemDB.project_id == self.project_id,
+            DatasetItemDB.annotation_data.isnot(None),
+            DatasetItemDB.user_reviewed,
+        )
+        annotated_counts["instances"] = sum(
+            len(item.annotation_data) for item in self.db.execute(annotated_dataset_items_stmt)
+        )
+
+        # instances_per_label
+        annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
+            DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
+        )
+
+        labels_counts = Counter(
+            label["id"]
+            for item in self.db.execute(annotated_dataset_items_stmt)
+            for annotation in item.annotation_data
+            for label in annotation["labels"]
+        )
+        annotated_counts["instances_per_label"] = [
+            {"label_id": label_id, "instances": count} for label_id, count in labels_counts.items()
+        ]
+
+        statistics.update(annotated_counts)
+
+        return statistics

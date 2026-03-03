@@ -12,6 +12,7 @@ from app.api.dependencies import get_dataset_service
 from app.api.schemas.dataset_item import DatasetItemAssignSubset, DatasetItemSubset, DatasetItemView
 from app.main import app
 from app.models import DatasetItem, DatasetItemAnnotationStatus
+from app.models.dataset import DatasetStatistics
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import DatasetItemFilters, SubsetAlreadyAssignedError
 
@@ -304,3 +305,42 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_service.assign_dataset_item_subset.assert_not_called()
+
+    def test_get_dataset_statistics(self, fxt_get_project, fxt_dataset_service, fxt_client):
+        statistics_dict = {
+            "images": 5,
+            "videos": 2,
+            "video_frames": 10,
+            "annotated_images": 3,
+            "annotated_videos": 1,
+            "annotated_video_frames": 4,
+            "instances": 7,
+            "instances_per_label": [
+                {"label_id": "11111111-1111-1111-1111-111111111111", "instances": 5},
+                {"label_id": "22222222-2222-2222-2222-222222222222", "instances": 2},
+            ],
+        }
+        # Patch the service to return a DatasetStatistics model with the correct fields
+        fxt_dataset_service.get_dataset_statistics.return_value = DatasetStatistics.model_validate(statistics_dict)
+
+        response = fxt_client.get(f"/api/projects/{str(fxt_get_project.id)}/dataset/statistics")
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "media_counts": {
+                "images": 5,
+                "videos": 2,
+                "video_frames": 10,
+            },
+            "annotations_counts": {
+                "annotated_images": 3,
+                "annotated_videos": 1,
+                "annotated_video_frames": 4,
+                "instances": 7,
+                "instances_per_label": [
+                    {"label_id": "11111111-1111-1111-1111-111111111111", "instances": 5},
+                    {"label_id": "22222222-2222-2222-2222-222222222222", "instances": 2},
+                ],
+            },
+        }
+        fxt_dataset_service.get_dataset_statistics.assert_called_once_with(project_id=fxt_get_project.id)
