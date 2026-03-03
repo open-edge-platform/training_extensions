@@ -95,6 +95,13 @@ export const AnnotationActionsProvider = ({
                     '/api/projects/{project_id}/dataset/items/{dataset_item_id}',
                     { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
                 ],
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/media/{media_id}/frames',
+                    {
+                        params: { path: { project_id: projectId, media_id: mediaItem.id } },
+                    },
+                ],
             ],
         },
     });
@@ -170,6 +177,8 @@ export const AnnotationActionsProvider = ({
             params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
             body: { annotations: annotationsDTO },
         });
+
+        undoRedoActions.reset([]);
     };
 
     const submitPredictions = async () => {
