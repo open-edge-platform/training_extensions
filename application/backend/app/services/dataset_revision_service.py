@@ -452,6 +452,9 @@ class DatasetRevisionService(BaseSessionManagedService):
         try:
             with Image.open(binary_path) as image:
                 thumbnail = crop_to_thumbnail(image=image, target_width=128, target_height=128)
+            # Ensure thumbnail is in a JPEG-compatible mode before it is encoded downstream.
+            if thumbnail.mode not in ("RGB", "L"):
+                thumbnail = thumbnail.convert("RGB")
         except UnidentifiedImageError:
             logger.error("Failed to open image {} for thumbnail generation", binary_path)
             raise InvalidImageError("Failed to open image for thumbnail generation.")
