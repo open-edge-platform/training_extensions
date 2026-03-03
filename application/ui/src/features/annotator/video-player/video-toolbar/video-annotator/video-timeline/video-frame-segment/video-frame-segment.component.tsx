@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNumberFormatter } from 'react-aria';
 
-import { $api } from '../../../../../../../api/client';
 import { AnnotatedVideoFrame, Label } from '../../../../../../../constants/shared-types';
 import { useVideoFramesAnnotations } from '../../../../api/use-vide-frames-annotations';
 import { useVideoPlayer } from '../../../../video-player-provider.component';
