@@ -149,6 +149,20 @@ def upgrade() -> None:
         "idx_model_revisions_project_status", "model_revisions", ["project_id", "training_status"], unique=False
     )
     op.create_table(
+        "model_variants",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("model_revision_id", sa.Text(), nullable=False),
+        sa.Column("format", sa.String(length=50), nullable=False),
+        sa.Column("precision", sa.String(length=20), nullable=False),
+        sa.Column("quantization_info", sa.JSON(), nullable=True),
+        sa.Column("files_deleted", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["model_revision_id"], ["model_revisions.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("idx_model_variants_model_revision", "model_variants", ["model_revision_id"], unique=False)
+    op.create_table(
         "dataset_items",
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.Text(), nullable=False),
@@ -167,14 +181,14 @@ def upgrade() -> None:
     op.create_index("idx_dataset_items_user_reviewed", "dataset_items", ["project_id", "user_reviewed"], unique=False)
     op.create_table(
         "evaluations",
-        sa.Column("model_revision_id", sa.Text(), nullable=False),
+        sa.Column("model_variant_id", sa.Text(), nullable=False),
         sa.Column("dataset_revision_id", sa.Text(), nullable=False),
         sa.Column("subset", sa.String(length=20), nullable=False),
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["dataset_revision_id"], ["dataset_revisions.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["model_revision_id"], ["model_revisions.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["model_variant_id"], ["model_variants.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -229,6 +243,8 @@ def downgrade() -> None:
     op.drop_table("evaluations")
     op.drop_index("idx_dataset_items_user_reviewed", table_name="dataset_items")
     op.drop_table("dataset_items")
+    op.drop_index("idx_model_variants_model_revision", table_name="model_variants")
+    op.drop_table("model_variants")
     op.drop_index("idx_model_revisions_project_status", table_name="model_revisions")
     op.drop_index("idx_model_revisions_architecture", table_name="model_revisions")
     op.drop_table("model_revisions")

@@ -95,10 +95,13 @@ class ActiveModelService:
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
-        file_path = self.projects_dir / f"{project_id}/models/{model_id}/model.{extension}"
-        if not file_path.is_file():
-            raise FileNotFoundError(f"Model file not found: {file_path}")
-        return file_path
+        variants_dir = self.projects_dir / f"{project_id}/models/{model_id}/variants"
+        if variants_dir.exists():
+            for variant_dir in variants_dir.iterdir():
+                file_path = variant_dir / f"model.{extension}"
+                if file_path.is_file():
+                    return file_path
+        raise FileNotFoundError(f"Model file not found for extension: {extension}")
 
     def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
         """

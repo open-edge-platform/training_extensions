@@ -720,6 +720,7 @@ class TestOTXTrainerEvaluateModel:
         otx_trainer = fxt_otx_trainer()
         project_id = uuid4()
         model_id = uuid4()
+        model_variant_id = uuid4()
         dataset_revision_id = uuid4()
         mock_otx_engine = Mock()
         mock_otx_engine.test.return_value = {
@@ -744,7 +745,7 @@ class TestOTXTrainerEvaluateModel:
             otx_engine=mock_otx_engine,
             model_checkpoint_path=model_checkpoint_path,
             task=training_params.task,
-            model_revision_id=model_id,
+            model_variant_id=model_variant_id,
             dataset_revision_id=dataset_revision_id,
         )
 
@@ -753,7 +754,7 @@ class TestOTXTrainerEvaluateModel:
         fxt_model_service.set_db_session.assert_called_once()
         actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
 
-        assert actual_call.model_revision_id == model_id
+        assert actual_call.model_variant_id == model_variant_id
         assert actual_call.dataset_revision_id == dataset_revision_id
         assert actual_call.subset == DatasetItemSubset.TESTING
         assert actual_call.metrics == pytest.approx(
@@ -816,6 +817,7 @@ class TestOTXTrainerStoreModelArtifacts:
     def test_store_model_artifacts(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_model_service: Mock,
         tmp_path: Path,
     ):
         """Test successful storing of model artifacts and cleanup."""
@@ -823,6 +825,19 @@ class TestOTXTrainerStoreModelArtifacts:
         otx_trainer = fxt_otx_trainer()
         project_id = uuid4()
         model_id = uuid4()
+
+        from app.models.model_revision import ModelFormat
+
+        pytorch_variant_id = uuid4()
+        openvino_variant_id = uuid4()
+        onnx_variant_id = uuid4()
+
+        # Pre-built mapping as returned by create_model_variants
+        created_variants = {
+            ModelFormat.PYTORCH: pytorch_variant_id,
+            ModelFormat.OPENVINO: openvino_variant_id,
+            ModelFormat.ONNX: onnx_variant_id,
+        }
 
         # Create model directory structure
         model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
@@ -861,22 +876,34 @@ class TestOTXTrainerStoreModelArtifacts:
             otx_work_dir=otx_work_dir,
             trained_model_path=trained_model_path,
             exported_model_paths=exported_model_paths,
+            created_variants=created_variants,
         )
 
         # Assert
-        # Check checkpoint was copied
-        assert (model_dir / "model.ckpt").exists()
-        assert (model_dir / "model.ckpt").read_text() == "checkpoint content"
 
-        # Check OpenVINO files were copied
-        assert (model_dir / "model.xml").exists()
-        assert (model_dir / "model.xml").read_text() == "xml content"
-        assert (model_dir / "model.bin").exists()
-        assert (model_dir / "model.bin").read_text() == "bin content"
+        # Check variant directories and files
+        variants_dir = model_dir / "variants"
+        assert variants_dir.exists()
 
-        # Check ONNX file was copied
-        assert (model_dir / "model.onnx").exists()
-        assert (model_dir / "model.onnx").read_text() == "onnx content"
+        # Check PyTorch variant
+        pytorch_dir = variants_dir / str(pytorch_variant_id)
+        assert pytorch_dir.exists()
+        assert (pytorch_dir / "model.ckpt").exists()
+        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
+
+        # Check OpenVINO variant
+        openvino_dir = variants_dir / str(openvino_variant_id)
+        assert openvino_dir.exists()
+        assert (openvino_dir / "model.xml").exists()
+        assert (openvino_dir / "model.xml").read_text() == "xml content"
+        assert (openvino_dir / "model.bin").exists()
+        assert (openvino_dir / "model.bin").read_text() == "bin content"
+
+        # Check ONNX variant
+        onnx_dir = variants_dir / str(onnx_variant_id)
+        assert onnx_dir.exists()
+        assert (onnx_dir / "model.onnx").exists()
+        assert (onnx_dir / "model.onnx").read_text() == "onnx content"
 
         # Check metrics were moved
         assert (model_dir / "metrics").exists()
