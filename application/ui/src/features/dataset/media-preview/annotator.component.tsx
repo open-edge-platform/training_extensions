@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 
 import { View } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
+import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
@@ -13,6 +14,7 @@ import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canv
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
+import { isPrefetchEnabledForTask } from '../../project/task-type-guards';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
@@ -44,14 +46,21 @@ const Annotator = ({
     const getNextMediaItem = useNextMedia(mediaItem, items);
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
+    const { data: project } = useProject();
+
+    const isPrefetchEnabled = project !== undefined && isPrefetchEnabledForTask(project.task.task_type);
 
     useEffect(() => {
+        if (!isPrefetchEnabled) {
+            return;
+        }
+
         prefetchNextMediaItemData({
             queryClient,
             projectId,
             getNextMediaItem,
         });
-    }, [getNextMediaItem, projectId, queryClient]);
+    }, [getNextMediaItem, isPrefetchEnabled, projectId, queryClient]);
 
     const handleSubmitAnnotations = async () => {
         const nextMediaItem = getNextMediaItem();
