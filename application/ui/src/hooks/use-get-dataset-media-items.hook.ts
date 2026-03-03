@@ -6,12 +6,13 @@ import { useMemo } from 'react';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../api/client';
-import { DatasetSubset, Media, MediaDTO } from '../constants/shared-types';
+import { DatasetItemAnnotationStatus, DatasetSubset, Media, MediaDTO } from '../constants/shared-types';
 
 const DATASET_ITEMS_LIMIT = 20;
 
 interface UseGetDatasetMediaItemsOptions {
     subset?: DatasetSubset;
+    annotationStatus?: DatasetItemAnnotationStatus;
 }
 
 const getMediaEntities = (items: MediaDTO[]): Media[] => {
@@ -35,11 +36,24 @@ const getMediaEntities = (items: MediaDTO[]): Media[] => {
 
 export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions) => {
     const project_id = useProjectIdentifier();
-    const subset = options?.subset;
 
-    const query = subset
-        ? { offset: 0, limit: DATASET_ITEMS_LIMIT, subset }
-        : { offset: 0, limit: DATASET_ITEMS_LIMIT };
+    const query: {
+        offset: number;
+        limit: number;
+        subset?: DatasetSubset;
+        annotation_status?: DatasetItemAnnotationStatus;
+    } = {
+        offset: 0,
+        limit: DATASET_ITEMS_LIMIT,
+    };
+
+    if (options?.subset !== undefined) {
+        query.subset = options.subset;
+    }
+
+    if (options?.annotationStatus !== undefined) {
+        query.annotation_status = options.annotationStatus;
+    }
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
@@ -70,6 +84,7 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
 
     const items = useMemo(() => {
         const mediaItems = data?.pages.flatMap((page) => page.items) ?? [];
+
         return getMediaEntities(mediaItems);
     }, [data?.pages]);
     const totalCount = data?.pages[0]?.pagination?.total ?? 0;

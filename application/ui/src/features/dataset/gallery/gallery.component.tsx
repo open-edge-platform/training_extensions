@@ -23,6 +23,7 @@ type GalleryProps = {
     items: Media[];
     viewMode: ViewModes;
     isPending: boolean;
+    hasActiveFilter: boolean;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
@@ -39,6 +40,7 @@ export const Gallery = ({
     items,
     viewMode,
     isPending,
+    hasActiveFilter,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -54,7 +56,11 @@ export const Gallery = ({
         return (
             <Flex direction={'column'} gap={'size-200'} alignItems={'center'} justifyContent={'center'} height={'100%'}>
                 <EmptyDataset />
-                <Heading level={2}>Your dataset is empty. Upload your first media item to get started.</Heading>
+                <Heading level={2}>
+                    {hasActiveFilter
+                        ? 'No media items match your filter. Remove or select a new filter.'
+                        : 'Your dataset is empty. Upload your first media item to get started.'}
+                </Heading>
             </Flex>
         );
     }
