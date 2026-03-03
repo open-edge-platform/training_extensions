@@ -11,7 +11,6 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
-import { isVideoFrame } from '../../../shared/media-item-utils';
 import { getLoadImageQueryKey, loadImageQueryFn } from '../../annotator/hooks/use-load-image-query.hook';
 import {
     SelectedMediaItemProvider,
@@ -29,7 +28,7 @@ import { AnnotatorContainer } from './annotator.component';
 import { annotationsQueryFn, getAnnotationsQueryKey, useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
-import { getNextMediaItem } from './secondary-toolbar/util';
+import { getNextMediaItem, isSameMediaItem } from './secondary-toolbar/util';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
@@ -45,20 +44,12 @@ type MediaPreviewContentProps = {
     onSelectedMediaItem: (item: Media) => void;
 };
 
-const isSameMediaItem = (firstItem: Media, secondItem: Media): boolean => {
-    if (isVideoFrame(firstItem) && isVideoFrame(secondItem)) {
-        return firstItem.id === secondItem.id && firstItem.frame_number === secondItem.frame_number;
-    }
-
-    return firstItem.id === secondItem.id;
-};
-
 const getNextMediaItemForPrefetch = (selectedItem: Media, items: Media[]): Media | undefined => {
-    const nextItem = getNextMediaItem(selectedItem, items, 1);
+    const step = selectedItem.type === 'video_frame' ? selectedItem.frame_stride : 1;
+    const nextItem = getNextMediaItem(selectedItem, items, step);
 
     // getNextMediaItem never returns undefined. When there is no next item, it returns the same item.
     // We want to avoid prefetching data for the same item, so in that case we return undefined.
-
     return isSameMediaItem(nextItem, selectedItem) ? undefined : nextItem;
 };
 
