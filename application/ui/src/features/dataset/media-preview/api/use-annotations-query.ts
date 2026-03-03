@@ -86,7 +86,5 @@ export const annotationsQueryFn = async (projectId: string, media: Media) => {
 export const useAnnotationsQuery = (media: Media) => {
     const projectId = useProjectIdentifier();
 
-    return useQuery({
-        ...annotationsQueryOptions(projectId, media),
-    });
+    return useQuery(annotationsQueryOptions(projectId, media));
 };
