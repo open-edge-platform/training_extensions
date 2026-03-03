@@ -11,6 +11,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
+import { isVideoFrame } from '../../../shared/media-item-utils';
 import { getLoadImageQueryKey, loadImageQueryFn } from '../../annotator/hooks/use-load-image-query.hook';
 import {
     SelectedMediaItemProvider,
@@ -28,6 +29,7 @@ import { AnnotatorContainer } from './annotator.component';
 import { annotationsQueryFn, getAnnotationsQueryKey, useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
+import { getNextMediaItem } from './secondary-toolbar/util';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
@@ -41,6 +43,23 @@ type MediaPreviewContentProps = {
     items: Media[];
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+};
+
+const isSameMediaItem = (firstItem: Media, secondItem: Media): boolean => {
+    if (isVideoFrame(firstItem) && isVideoFrame(secondItem)) {
+        return firstItem.id === secondItem.id && firstItem.frame_number === secondItem.frame_number;
+    }
+
+    return firstItem.id === secondItem.id;
+};
+
+const getNextMediaItemForPrefetch = (selectedItem: Media, items: Media[]): Media | undefined => {
+    const nextItem = getNextMediaItem(selectedItem, items, 1);
+
+    // getNextMediaItem never returns undefined. When there is no next item, it returns the same item.
+    // We want to avoid prefetching data for the same item, so in that case we return undefined.
+
+    return isSameMediaItem(nextItem, selectedItem) ? undefined : nextItem;
 };
 
 // When the user navigates to next media, the most expensive data, like the SAM encoding,
@@ -62,8 +81,7 @@ const prefetchNextMediaItemData = ({
     selectedItem: Media;
 }) => {
     const prefetch = async () => {
-        const selectedIndex = items.findIndex((item) => item.id === selectedItem.id);
-        const nextItem = selectedIndex >= 0 ? items[selectedIndex + 1] : undefined;
+        const nextItem = getNextMediaItemForPrefetch(selectedItem, items);
 
         if (nextItem === undefined) {
             return;
