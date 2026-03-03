@@ -5,8 +5,8 @@ import { DatasetStatistics } from '../../../../components/dataset-statistics/dat
 import { useGetDatasetItems } from '../../../../hooks/use-get-dataset-items.hook';
 
 export const MainDatasetStatistics = () => {
-    const { data: annotatedItems } = useGetDatasetItems({ annotationStatus: 'reviewed' });
-    const { data: mediaItems } = useGetDatasetItems();
+    const { data: annotatedItems } = useGetDatasetItems({ annotationStatus: 'reviewed', limit: 1 });
+    const { data: mediaItems } = useGetDatasetItems({ limit: 1 });
 
     const totalMediaItems = mediaItems?.pagination.total ?? 0;
     const totalAnnotatedItems = annotatedItems?.pagination.total ?? 0;

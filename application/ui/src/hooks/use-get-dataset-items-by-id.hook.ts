@@ -5,8 +5,12 @@ import { useMemo } from 'react';
 
 import { useGetDatasetItems } from './use-get-dataset-items.hook';
 
-export const useGetDatasetItemsById = (options?: Parameters<typeof useGetDatasetItems>[0]) => {
-    const { data } = useGetDatasetItems(options);
+type UseGetDatasetItemsByIdOptions = {
+    limit?: number;
+};
+
+export const useGetDatasetItemsById = (options?: UseGetDatasetItemsByIdOptions) => {
+    const { data } = useGetDatasetItems({ limit: options?.limit });
 
     const datasetItemsById = useMemo(() => {
         const datasetItems = data?.items ?? [];
