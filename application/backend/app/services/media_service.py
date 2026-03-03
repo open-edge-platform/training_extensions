@@ -79,7 +79,7 @@ class MediaService(BaseSessionManagedService):
 
     def create_image(
         self,
-        project: Project,
+        project_id: UUID,
         name: str,
         format: ImageFormat,
         data: Image.Image | np.ndarray | BinaryIO | BytesIO,
@@ -95,7 +95,7 @@ class MediaService(BaseSessionManagedService):
             case _:
                 image = self._read_image_from_binary(data)
 
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{format}"
         image.save(binary_path)
@@ -105,7 +105,7 @@ class MediaService(BaseSessionManagedService):
 
             media = MediaDB(
                 id=str(media_id),
-                project_id=str(project.id),
+                project_id=str(project_id),
                 type=MediaType.IMAGE,
                 name=name,
                 format=str(format),
@@ -115,7 +115,7 @@ class MediaService(BaseSessionManagedService):
                 source_id=str(source_id) if source_id is not None else None,
             )
 
-            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            repo = MediaRepository(project_id=str(project_id), db=self.db_session)
             db_media = repo.save(media)
         except Exception as e:
             binary_path.unlink(missing_ok=True)
@@ -124,7 +124,7 @@ class MediaService(BaseSessionManagedService):
 
     def create_video(
         self,
-        project: Project,
+        project_id: UUID,
         name: str,
         format: VideoFormat,
         data: BinaryIO,
@@ -133,7 +133,7 @@ class MediaService(BaseSessionManagedService):
         """Creates a new media (video)"""
         media_id = uuid4()
 
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{format}"
 
@@ -147,7 +147,7 @@ class MediaService(BaseSessionManagedService):
             video_metadata = get_video_metadata(video_path=binary_path)
             media = MediaDB(
                 id=str(media_id),
-                project_id=str(project.id),
+                project_id=str(project_id),
                 type=MediaType.VIDEO,
                 name=name,
                 format=str(format),
@@ -164,7 +164,7 @@ class MediaService(BaseSessionManagedService):
             )
             MediaService._generate_and_save_thumbnail(image=video_frame, path=dataset_dir / f"{media_id}-thumb.jpg")
 
-            repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+            repo = MediaRepository(project_id=str(project_id), db=self.db_session)
             db_media = repo.save(media)
         except Exception as e:
             binary_path.unlink(missing_ok=True)

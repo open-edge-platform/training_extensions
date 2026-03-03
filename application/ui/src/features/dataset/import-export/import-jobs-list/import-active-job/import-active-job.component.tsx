@@ -2,24 +2,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
-import { usePrepareImportDataset } from 'hooks/localStorage/use-prepare-import-dataset.hook';
 
-import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { $api } from '../../../../../api/client';
+import { Job } from '../../../../../constants/shared-types';
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
-import { getJobProgress, isJobRunning } from '../../util';
+import { getJobProgress, isInvalidStagedFile, isJobRunning } from '../../util';
 
 type ImportActiveJobProps = {
+    job: Job;
     size: number;
     fileName: string;
-    job: PrepareImportDatasetJob;
+    stagedDatasetId: string;
 };
 
-export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) => {
+export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId }: ImportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
-    const { removeLsPreparingImport } = usePrepareImportDataset();
+    const { deleteImportEntry } = useImportDatasetToProject();
+    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+
+    const handleRemove = () => {
+        return deleteFileMutation.mutateAsync(
+            { params: { path: { staged_dataset_id: stagedDatasetId } } },
+            {
+                onSuccess: () => deleteImportEntry(stagedDatasetId),
+                onError: (error) => {
+                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
+                },
+            }
+        );
+    };
 
     return (
         <BottomProgressBar progress={progress}>
@@ -29,7 +44,7 @@ export const ImportActiveJob = ({ job, fileName, size }: ImportActiveJobProps) =
                         Import dataset - {fileName} - {formatBytes(size)}
                     </Text>
 
-                    <CancelJobConfirmation jobId={job.job_id} onRemove={removeLsPreparingImport} />
+                    <CancelJobConfirmation jobId={job.job_id} onRemove={handleRemove} />
                 </Flex>
 
                 <Text>{fileName} file is being processed for import</Text>

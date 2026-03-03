@@ -3,7 +3,7 @@
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedLogEntryJson } from 'mocks/mock-log-entry';
-import { getMockedExtendedModel, getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
+import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -74,7 +74,7 @@ test.describe('Models', () => {
                 const foundModel = mockedModels.find((model) => model.id === params.model_id);
 
                 if (foundModel) {
-                    return HttpResponse.json(getMockedExtendedModel(foundModel));
+                    return HttpResponse.json(getMockedModel(foundModel));
                 }
 
                 return new HttpResponse(null, { status: 404 });

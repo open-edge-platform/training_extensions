@@ -11,9 +11,11 @@ import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../constants/shared-types';
+import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
-import { useSelectedData } from '../selected-data-provider.component';
+import { useSelectedData } from '../providers/selected-data-provider.component';
+import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 import { MediaItemActions } from './media-item-actions/media-item-actions.component';
 
@@ -27,7 +29,7 @@ type GalleryProps = {
 };
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
-export const VIEW_MODE_SETTINGS = {
+const VIEW_MODE_SETTINGS = {
     [ViewModes.LARGE]: { minItemSize: new Size(300, 300), minSpace: new Size(10, 10), preserveAspectRatio: true },
     [ViewModes.MEDIUM]: { minItemSize: new Size(200, 200), minSpace: new Size(6, 6), preserveAspectRatio: true },
     [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
@@ -43,7 +45,8 @@ export const Gallery = ({
 }: GalleryProps) => {
     const projectId = useProjectIdentifier();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
-    const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
+    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
+    const { datasetItemsById } = useGetDatasetItemsById();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
@@ -62,7 +65,6 @@ export const Gallery = ({
                 items={items}
                 ariaLabel='data-collection-grid'
                 selectionMode='multiple'
-                mediaState={mediaState}
                 selectedKeys={selectedKeys}
                 layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
                 isLoadingMore={isFetchingNextPage}
@@ -106,6 +108,12 @@ export const Gallery = ({
                                     onAnnotate={() => onSelectedMediaItemChange(item)}
                                 />
                             )}
+                            bottomRightElement={() => {
+                                const mediaItemId = String(item.id);
+                                const isUserReviewed = datasetItemsById.get(mediaItemId) ?? false;
+
+                                return <AnnotationStatusIcon state={isUserReviewed ? 'accepted' : undefined} />;
+                            }}
                         />
                     );
                 }}

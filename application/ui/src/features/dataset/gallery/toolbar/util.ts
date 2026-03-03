@@ -3,8 +3,6 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import type { MediaItemState, MediaStateMap } from '../../../../constants/shared-types';
-
 export const toggleMultipleSelection =
     (items: Key[]) =>
     (selectedItems: Selection): Selection => {
@@ -20,17 +18,4 @@ export const toggleMultipleSelection =
         }
 
         return new Set();
-    };
-
-export const updateSelectedKeysTo =
-    (selectedKeys: Selection, mediaItemState: MediaItemState) => (map: MediaStateMap) => {
-        const newMap = new Map(map.entries());
-
-        if (selectedKeys === 'all') {
-            return newMap;
-        }
-
-        selectedKeys.forEach((mediaId) => newMap.set(String(mediaId), mediaItemState));
-
-        return newMap;
     };

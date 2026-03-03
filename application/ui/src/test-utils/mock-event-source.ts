@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-export type MockEventSource = {
+type MockEventSource = {
     onopen: ((event: Event) => void) | null;
     onmessage: ((event: MessageEvent) => void) | null;
     onerror: ((event: Event) => void) | null;
@@ -10,7 +10,7 @@ export type MockEventSource = {
     readyState: number;
 };
 
-export let mockEventSourceInstances: MockEventSource[] = [];
+let mockEventSourceInstances: MockEventSource[] = [];
 
 export const MockEventSourceConstructor = vi.fn().mockImplementation((url: string) => {
     const instance: MockEventSource = {

@@ -16,13 +16,13 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { paths } from '../constants/paths';
 import { createQueryClient } from '../query-client/query-client';
 
-export interface RenderOptions extends RTLRenderOptions {
+type RenderOptions = RTLRenderOptions & {
     route?: string;
     path?: string;
     queryClient?: QueryClient;
-}
+};
 
-export const TestProviders = ({ children, queryClient }: { children: ReactNode; queryClient: QueryClient }) => {
+const TestProviders = ({ children, queryClient }: { children: ReactNode; queryClient: QueryClient }) => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>

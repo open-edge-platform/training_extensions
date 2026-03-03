@@ -26,9 +26,9 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { ImportExport } from '../../import-export/import-export.component';
-import { useSelectedData } from '../../selected-data-provider.component';
+import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
-import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
+import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
     items: Media[];
@@ -54,7 +54,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const queryClient = useQueryClient();
 
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
-    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
+    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
 
@@ -65,16 +65,6 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
     const handleToggleManyItemSelection = () => {
         const images = items.map((item) => String(item.id));
         setSelectedKeys(toggleMultipleSelection(images));
-    };
-
-    const handleAccept = () => {
-        setSelectedKeys(new Set());
-        setMediaState(updateSelectedKeysTo(selectedKeys, 'accepted'));
-    };
-
-    const handleReject = () => {
-        setSelectedKeys(new Set());
-        setMediaState(updateSelectedKeysTo(selectedKeys, 'rejected'));
     };
 
     const handleAddMediaItem = async (files: File[]) => {
@@ -157,12 +147,17 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
                                 onDeleted={toggleSelectedKeys}
                             />
 
-                            <Button variant={'accent'} onPress={handleAccept}>
+                            {/* 
+                                TODO: In the future we will have a single endpoint to accept/decline
+                                    multiple media items at once instead of sending multiple requests in a loop.
+                                    Once we have that, we can reenable these buttons.
+                            */}
+                            {/* <Button variant={'accent'} onPress={handleAccept}>
                                 Accept
                             </Button>
                             <Button variant={'secondary'} onPress={handleReject}>
                                 Decline
-                            </Button>
+                            </Button> */}
                         </>
                     )}
                 </Flex>

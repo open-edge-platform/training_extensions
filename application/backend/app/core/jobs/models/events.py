@@ -18,7 +18,7 @@ class Started(ExecutionEvent):
 @dataclass(frozen=True, slots=True)
 class Progress(ExecutionEvent):
     message: str
-    value: float  # percentage of completion [0.0, 100.0]
+    value: float  # percentage of completion (0.0, 100.0]
     metadata: dict[str, Any] | None = None
 
 

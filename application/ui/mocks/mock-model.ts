@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ExtendedModel, Model, ModelArchitectureWithPerformanceCategory } from '../src/constants/shared-types';
+import { Model, ModelArchitectureWithPerformanceCategory } from '../src/constants/shared-types';
 
 export const getMockedModel = (overrides: Partial<Model> = {}): Model => ({
     id: '76e07d18-196e-4e33-bf98-ac1d35dca4cb',
@@ -21,14 +21,6 @@ export const getMockedModel = (overrides: Partial<Model> = {}): Model => ({
         end_time: '2025-01-10T12:30:00.000000+00:00',
         dataset_revision_id: '3c6c6d38-1cd8-4458-b759-b9880c048b78',
     },
-    evaluations: [],
-    variants: [],
-    files_deleted: false,
-    ...overrides,
-});
-
-export const getMockedExtendedModel = (overrides: Partial<ExtendedModel> = {}): ExtendedModel => ({
-    ...getMockedModel(overrides),
     evaluations: [
         {
             dataset_revision_id: '3c6c6d38-1cd8-4458-b759-b9880c048b78',
@@ -40,6 +32,8 @@ export const getMockedExtendedModel = (overrides: Partial<ExtendedModel> = {}): 
             ],
         },
     ],
+    variants: [],
+    files_deleted: false,
     ...overrides,
 });
 

@@ -72,7 +72,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
                     <ModelVariantsTabs model={model} />
                 </Item>
                 <Item key='metrics'>
-                    <ModelMetrics />
+                    <ModelMetrics modelId={model.id} evaluations={model.evaluations} />
                 </Item>
                 <Item key='parameters'>
                     <ModelTrainingParameters />

@@ -167,6 +167,9 @@ class TrainingConfigurationDB(BaseID):
     __tablename__ = "training_configurations"
     __table_args__ = (UniqueConstraint("project_id", "model_architecture_id", name="uq_project_model_config"),)
 
+    # Rows with 'model_architecture = null' store the task-level configuration
+    # Rows with 'model_architecture != null' store the algo-level configuration
+    # Missing rows imply that the configuration is default, with values derived from the model manifest
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     model_architecture_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # NULL for general config
     configuration_data: Mapped[dict] = mapped_column(JSON, nullable=False)

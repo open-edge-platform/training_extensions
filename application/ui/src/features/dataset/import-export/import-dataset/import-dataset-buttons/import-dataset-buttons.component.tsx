@@ -2,46 +2,38 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
-import { useCancelJob } from 'hooks/api/jobs.hook';
-import { usePrepareImportDataset } from 'hooks/localStorage/use-prepare-import-dataset.hook';
 
+import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { ImportProcessButtons } from '../import-process/import-process-buttons.component';
+import { LabelMappingButtons } from '../label-mapping/label-mapping-buttons.component';
 import { ImportDatasetState } from '../util';
 
 type ImportDatasetButtonsProps = {
     onClose: () => void;
-    currentState: ImportDatasetState;
+    stagedDatasetId: string | null;
+    currentStep: ImportDatasetState;
 };
 
-export const ImportDatasetButtons = ({ currentState, onClose }: ImportDatasetButtonsProps) => {
-    const cancelJobMutation = useCancelJob();
-    const { getLsPreparingImport } = usePrepareImportDataset();
-    const preparingImportId = getLsPreparingImport();
+export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: ImportDatasetButtonsProps) => {
+    const { getImportEntry } = useImportDatasetToProject();
+    const { prepareJobId } = getImportEntry(stagedDatasetId ?? '') ?? { prepareJobId: null };
 
-    const handleCancelJob = (jobId: string) => {
-        cancelJobMutation.mutate({ params: { path: { job_id: jobId } } }, { onSuccess: onClose });
-    };
-
-    if (currentState === 'preparing' && preparingImportId !== null) {
+    if (stagedDatasetId === null || prepareJobId === null) {
         return (
             <ButtonGroup>
-                <Button
-                    variant='negative'
-                    isPending={cancelJobMutation.isPending}
-                    isDisabled={cancelJobMutation.isPending}
-                    onPress={() => handleCancelJob(preparingImportId.id)}
-                >
+                <Button onPress={onClose} variant='secondary'>
                     Cancel
-                </Button>
-                <Button
-                    onPress={onClose}
-                    variant='secondary'
-                    isPending={cancelJobMutation.isPending}
-                    isDisabled={cancelJobMutation.isPending}
-                >
-                    Hide
                 </Button>
             </ButtonGroup>
         );
+    }
+
+    if (currentStep === 'preparing') {
+        return <ImportProcessButtons onClose={onClose} prepareJobId={prepareJobId} stagedDatasetId={stagedDatasetId} />;
+    }
+
+    if (currentStep === 'labelMapping') {
+        return <LabelMappingButtons stagedDatasetId={stagedDatasetId} onClose={onClose} />;
     }
 
     return (

@@ -95,6 +95,24 @@ def fxt_model_with_dataset_revision_db(tmp_path: Path, db_session: Session, fxt_
 class TestModelServiceIntegration:
     """Integration tests for ModelService."""
 
+    def test_get_model_revision_architecture(
+        self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
+    ):
+        """Test retrieving the architecture ID of a model revision."""
+        architecture = fxt_model_service.get_model_revision_architecture(fxt_project_id, fxt_model_id)
+
+        assert architecture is not None
+        assert isinstance(architecture, str)
+
+    def test_get_model_revision_architecture_not_found(self, fxt_project_id: UUID, fxt_model_service: ModelService):
+        """Test retrieving architecture for a non-existent model raises error."""
+        model_id = uuid4()
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_model_service.get_model_revision_architecture(fxt_project_id, model_id)
+
+        assert excinfo.value.resource_type == ResourceType.MODEL
+        assert excinfo.value.resource_id == str(model_id)
+
     def test_list_models(
         self, fxt_project_id: UUID, fxt_db_models: list[ModelRevisionDB], fxt_model_service: ModelService
     ):
@@ -497,17 +515,17 @@ class TestModelServiceIntegration:
             assert metric["type"] == "line"
             assert metric["key"] in ["Training total loss", "Validation F1 score"]
             assert metric.get("value")
-            # Check that x_axis_label is set correctly (should be "Step" since steps are consecutive)
-            assert metric["value"]["x_axis_label"] == "Step"
+            # Check that x_axis_label is set correctly
+            assert metric["value"]["x_axis_label"] in ["Step", "Epoch"]
 
-    def test_get_training_metrics_epoch_based(
+    def test_get_training_metrics_epoch_step_based(
         self,
         tmp_path: Path,
         fxt_project_id: UUID,
         fxt_model_id: UUID,
         fxt_model_service: ModelService,
     ):
-        """Test retrieving training metrics when steps are not consecutive (epoch-based)."""
+        """Test retrieving training metrics when steps are not consecutive."""
         # Create a model directory with a metrics.csv file in the correct path
         metrics_dir = (
             tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "metrics" / "version_0"
@@ -516,9 +534,9 @@ class TestModelServiceIntegration:
 
         # Steps are not consecutive (1, 5, 9) so metric should be epoch-based
         csv_content = """epoch,step,train/total_loss,val/f1-score
-        1,1,0.1,0.95
-        2,5,0.2,0.89
-        3,9,0.3,0.92
+        ,1,0.1,0.95
+        1,5,0.2,0.89
+        2,9,0.3,0.92
         """.replace(" ", "")  # Remove leading tabs for correct CSV formatting
         (metrics_dir / "metrics.csv").write_text(csv_content)
 
@@ -528,8 +546,14 @@ class TestModelServiceIntegration:
         for metric in metrics:
             assert metric["header"] in ["Training total loss", "Validation F1 score"]
             assert metric["type"] == "line"
-            # Check that x_axis_label is "Epoch" since steps are NOT consecutive
-            assert metric["value"]["x_axis_label"] == "Epoch"
+            # This test requires the metrics to be correctly identified
+            # Even though the steps are not consecutive,
+            # the x_axis_label should still be "Step" for train/total_loss and "Epoch" for val/f1-score.
+            # This can happen when the user sets log_n_steps = 4 (>1)
+            if metric["header"] == "Training total loss":
+                assert metric["value"]["x_axis_label"] == "Step"
+            elif metric["header"] == "Validation F1 score":
+                assert metric["value"]["x_axis_label"] == "Epoch"
 
     def test_get_training_metrics_file_not_found(
         self,

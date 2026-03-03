@@ -9,13 +9,14 @@ from .data_collection_policy import (
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
 )
-from .dataset import DatasetFormat, StagedDataset
+from .dataset import AnnotationType, DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
 from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from .label import Label, LabelReference
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
+from .model_manifest import ModelManifest
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
@@ -44,6 +45,7 @@ from .source import (
 from .task import Task, TaskType
 
 __all__ = [
+    "AnnotationType",
     "BaseEntity",
     "ConfidenceThresholdDataCollectionPolicy",
     "DataCollectionConfig",
@@ -71,6 +73,7 @@ __all__ = [
     "Media",
     "MediaFormat",
     "MediaType",
+    "ModelManifest",
     "ModelRevision",
     "MqttSinkConfig",
     "OutputFormat",

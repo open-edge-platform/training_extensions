@@ -6,7 +6,6 @@ import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { render } from 'test-utils/render';
 
 import type { Annotation, Polygon, Rect } from '../../../../shared/types';
-import { SelectedDataProvider } from '../../../dataset/selected-data-provider.component';
 import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };
@@ -15,11 +14,7 @@ type AnnotationPolygon = Annotation & { shape: Polygon };
 describe('AnnotationShape', () => {
     it('bounding box as a rect', () => {
         const annotation = getMockedAnnotation() as AnnotationRect;
-        render(
-            <SelectedDataProvider>
-                <AnnotationShape annotation={annotation} />
-            </SelectedDataProvider>
-        );
+        render(<AnnotationShape annotation={annotation} />);
 
         const rect = screen.getByLabelText('annotation rect');
 
@@ -38,11 +33,7 @@ describe('AnnotationShape', () => {
         ];
         const annotation = getMockedAnnotation({ shape: { type: 'polygon', points } }) as AnnotationPolygon;
 
-        render(
-            <SelectedDataProvider>
-                <AnnotationShape annotation={annotation} />
-            </SelectedDataProvider>
-        );
+        render(<AnnotationShape annotation={annotation} />);
         const polygon = screen.getByLabelText('annotation polygon');
 
         expect(polygon).toHaveAttribute('points', '1,2 3,4 5,6');

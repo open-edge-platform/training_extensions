@@ -12,6 +12,7 @@ import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import { isVideoFrame } from '../media-item-utils';
 import type { Annotation, Shape } from '../types';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
@@ -51,6 +52,7 @@ interface AnnotationsContextValue {
     submitAnnotations: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
+    isReadOnlyMode: boolean;
 }
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
@@ -62,6 +64,7 @@ type AnnotationActionsProviderProps = {
     isUserReviewed?: boolean;
     mediaItem: Media;
     mode: AnnotatorMode;
+    isReadOnly?: boolean;
 };
 
 const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotation[] => {
@@ -75,6 +78,7 @@ export const AnnotationActionsProvider = ({
     isUserReviewed = false,
     mediaItem,
     mode,
+    isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
@@ -86,6 +90,11 @@ export const AnnotationActionsProvider = ({
                     { params: { path: { project_id: projectId, media_id: mediaItem.id } } },
                 ],
                 ['get', '/api/projects/{project_id}/dataset/items', { params: { path: { project_id: projectId } } }],
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/items/{dataset_item_id}',
+                    { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
+                ],
             ],
         },
     });
@@ -151,8 +160,14 @@ export const AnnotationActionsProvider = ({
     };
 
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
+        const query = isVideoFrame(mediaItem)
+            ? {
+                  frame_index: mediaItem.frame_number,
+              }
+            : undefined;
+
         await saveMutation.mutateAsync({
-            params: { path: { media_id: mediaItem.id, project_id: projectId } },
+            params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
             body: { annotations: annotationsDTO },
         });
     };
@@ -177,6 +192,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+    const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
     return (
         <AnnotationsContext.Provider
@@ -194,6 +210,7 @@ export const AnnotationActionsProvider = ({
                 submitAnnotations,
 
                 isSaving: saveMutation.isPending,
+                isReadOnlyMode,
             }}
         >
             <UndoRedoProvider state={undoRedoActions}>{children}</UndoRedoProvider>

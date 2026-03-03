@@ -7,11 +7,10 @@ from uuid import UUID, uuid4
 
 from datumaro.experimental.data_formats.base import DataFormat, Dataset, save_dataset
 from datumaro.experimental.export_import import export_dataset
+from datumaro.experimental.fields import Subset
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.core.run import ExecutionContext
-from app.datumaro_converter.utils import SubsetConverter
 from app.execution.base import Execution, step
 from app.models import DatasetFormat, DatasetItemAnnotationStatus, ExportDatasetJobParams
 from app.services import DatasetRevisionService, DatasetService
@@ -36,7 +35,9 @@ def get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
     return format_mapping[dataset_format]
 
 
-class DatasetExport(Execution):
+class ExportDataset(Execution[ExportDatasetJobParams]):
+    params_type = ExportDatasetJobParams
+
     def __init__(
         self,
         staged_datasets_dir: Path,
@@ -72,10 +73,8 @@ class DatasetExport(Execution):
                     project_id=export_params.project_id, dataset_revision_id=export_params.dataset_id
                 )
             if dataset and export_params.subsets:
-                dataset = dataset.filter_by_subset(
-                    subset=[SubsetConverter.to_datumaro(subset) for subset in export_params.subsets]
-                )
-            return export_params.dataset_id or uuid4(), dataset
+                dataset = dataset.filter_by_subset(subset=[Subset[subset.name] for subset in export_params.subsets])
+            return uuid4(), dataset
 
     @step("Export dataset", 100)
     def export_dataset(self, dataset_id: UUID, dataset: Dataset, export_format: DatasetFormat) -> Path | None:
@@ -104,16 +103,14 @@ class DatasetExport(Execution):
                 raise ValueError(f"Unsupported dataset format for export: {export_format}")
         return target_dir
 
-    def run(self, ctx: ExecutionContext) -> None:
-        self._ctx = ctx
-        export_params = ExportDatasetJobParams.model_validate_json(ctx.payload)
-        dataset_id, dataset = self.prepare_dataset(export_params)
+    def execute(self, params: ExportDatasetJobParams) -> None:
+        dataset_id, dataset = self.prepare_dataset(params)
         if not dataset:
             logger.warning(
                 "Dataset {} for project {} is empty after applying filters. Nothing to export.",
-                export_params.dataset_id,
-                export_params.project_id,
+                dataset_id,
+                params.project_id,
             )
             return
-        self.report_progress(metadata={"dataset_id": dataset_id})
-        self.export_dataset(dataset_id, dataset, export_params.export_format)
+        self.update_metadata({"dataset_id": dataset_id})
+        self.export_dataset(dataset_id, dataset, params.export_format)
