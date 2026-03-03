@@ -6,9 +6,9 @@ import { isNil } from 'lodash-es';
 
 import { $api, API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
+import { isInvalidStagedFile } from '../../../../../../hooks/api/util';
 import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
 import { downloadFile } from '../../../../../../shared/util';
-import { isInvalidStagedFile } from '../../../util';
 import { ExportJobDetails } from '../export-details/export-details.component';
 
 type ExportCompletedJobProps = {
