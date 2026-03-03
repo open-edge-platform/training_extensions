@@ -5,6 +5,7 @@ import { Flex } from '@geti/ui';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 import { partition } from 'lodash-es';
 
+import { LoadingImportDataset } from './loading-import-dataset/loading-import-dataset.component';
 import { PrepareImportDataset } from './prepare-import-dataset.component';
 import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
 
@@ -13,8 +14,9 @@ export const ImportJobsList = () => {
     const importEntries = getAllImportEntries();
 
     const [preparingImports, otherItems] = partition(importEntries, ({ step }) => step === 'preparing');
-    const stagedImports = otherItems.filter(({ step }) => step === 'labelMapping');
+    const [stagedImports, loadingItems] = partition(otherItems, ({ step }) => step === 'labelMapping');
 
+    const loadingItemsQueue = loadingItems.reverse();
     const stagedImportsQueue = stagedImports.reverse();
     const preparingImportsQueue = preparingImports.reverse();
 
@@ -36,6 +38,10 @@ export const ImportJobsList = () => {
                     fileName={String(fileName)}
                     stagedDatasetId={String(stagedDatasetId)}
                 />
+            ))}
+
+            {loadingItemsQueue.map(({ stagedDatasetId }) => (
+                <LoadingImportDataset key={`loading-${stagedDatasetId}`} stagedDatasetId={String(stagedDatasetId)} />
             ))}
         </Flex>
     );

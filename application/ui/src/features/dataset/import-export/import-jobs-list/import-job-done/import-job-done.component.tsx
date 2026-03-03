@@ -2,21 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
+import { CheckCircleOutlined } from '@geti/ui/icons';
 
 import { $api } from '../../../../../api/client';
-import { Job } from '../../../../../constants/shared-types';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { isInvalidStagedFile } from '../../util';
 
-type ImportFailedJobProps = {
+import classes from './import-job-done.module.scss';
+
+type ImportJobDoneProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    job: Job;
 };
 
-export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: ImportFailedJobProps) => {
+export const ImportJobDone = ({ fileName, size, stagedDatasetId }: ImportJobDoneProps) => {
     const { deleteImportEntry } = useImportDatasetToProject();
     const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
 
@@ -53,9 +54,14 @@ export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: Import
                 </Flex>
             </Flex>
 
-            <Text>{job.message}</Text>
+            <Text>{fileName} file has been imported successfully</Text>
             <Divider size='S' marginY='size-150' />
-            <Text>{job.error}</Text>
+
+            <Flex alignItems='center' gap='size-100'>
+                <CheckCircleOutlined className={classes.checkIcon} width={16} height={16} />
+
+                <Text>Ready</Text>
+            </Flex>
         </View>
     );
 };

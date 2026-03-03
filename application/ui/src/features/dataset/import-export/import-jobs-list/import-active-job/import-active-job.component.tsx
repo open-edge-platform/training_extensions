@@ -4,7 +4,7 @@
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
 
 import { $api } from '../../../../../api/client';
-import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
+import { Job } from '../../../../../constants/shared-types';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
@@ -12,7 +12,7 @@ import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-
 import { getJobProgress, isInvalidStagedFile, isJobRunning } from '../../util';
 
 type ImportActiveJobProps = {
-    job: PrepareImportDatasetJob;
+    job: Job;
     size: number;
     fileName: string;
     stagedDatasetId: string;

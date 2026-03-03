@@ -23,6 +23,7 @@ describe('ImportDatasetToProject', () => {
             deleteImportEntry: vi.fn(),
             updateImportEntryStep: vi.fn(),
             getLastImportEntry: vi.fn(),
+            updateImportEntry: vi.fn(),
         });
 
         const App = () => {
