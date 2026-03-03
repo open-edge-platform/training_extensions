@@ -103,9 +103,6 @@ class InferenceWorker(BaseProcessWorker):
 
         # To ensure broadcasting frames in order
         self._prediction_buffer = PredictionBuffer()
-        self._frame_index = 0
-        self._next_to_broadcast = 0
-        self._result_buffer = {}
 
     def setup(self) -> None:
         super().setup()
