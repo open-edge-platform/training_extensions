@@ -87,7 +87,6 @@ export const useAnnotationsQuery = (media: Media) => {
     const projectId = useProjectIdentifier();
 
     return useQuery({
-        queryKey: getAnnotationsQueryKey(projectId, media),
-        queryFn: () => annotationsQueryFn(projectId, media),
+        ...annotationsQueryOptions(projectId, media),
     });
 };

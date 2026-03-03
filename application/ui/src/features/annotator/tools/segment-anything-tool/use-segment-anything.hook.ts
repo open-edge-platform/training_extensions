@@ -44,17 +44,10 @@ export const segmentAnythingWorkerQueryOptions = (
         enabled,
     });
 
-export const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
+const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
     return isVideoFrame(mediaItem)
         ? ['segment-anything-model', 'encoding', mediaItem.id, mediaItem.frame_number]
         : ['segment-anything-model', 'encoding', mediaItem.id];
-};
-
-export const segmentAnythingEncodingQueryFn = (
-    model: SegmentAnythingRemoteModel,
-    image: ImageData
-): Promise<EncodingOutput> => {
-    return model.processEncoder(image);
 };
 
 export const segmentAnythingEncodingQueryOptions = (
@@ -70,7 +63,7 @@ export const segmentAnythingEncodingQueryOptions = (
                 throw new Error('Model not yet initialized');
             }
 
-            return segmentAnythingEncodingQueryFn(model, image);
+            return model.processEncoder(image);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,

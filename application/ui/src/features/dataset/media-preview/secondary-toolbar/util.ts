@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useCallback } from 'react';
+
 import { range } from 'lodash-es';
 
 import { Label, Media } from '../../../../constants/shared-types';
@@ -66,6 +68,9 @@ export const isSameMediaItem = (firstItem: Media, secondItem: Media): boolean =>
 
 export const useNextMedia = (currentMediaItem: Media, allMediaItems: Media[]) => {
     const context = useVideoPlayerContext();
+    const step = context?.step ?? 1;
 
-    return () => getNextMediaItem(currentMediaItem, allMediaItems, context?.step ?? 1);
+    return useCallback(() => {
+        return getNextMediaItem(currentMediaItem, allMediaItems, step);
+    }, [allMediaItems, currentMediaItem, step]);
 };
