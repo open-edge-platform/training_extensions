@@ -4,7 +4,9 @@
 import { Flex, View } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
-import { Label } from '../../../../../../../constants/shared-types';
+import { AnnotatedVideoFrame, Label } from '../../../../../../../constants/shared-types';
+import { useVideoFramesAnnotations } from '../../../../api/use-video-frames-annotations';
+import { useVideoPlayer } from '../../../../video-player-provider.component';
 
 import classes from './video-frame-segment.module.scss';
 
@@ -64,14 +66,30 @@ const SelectedFrameOverlay = () => {
     );
 };
 
+const selectAnnotationsForFrame = (frameNumber: number) => (data: AnnotatedVideoFrame[]) =>
+    data.find(({ frame_index }) => frame_index === frameNumber);
+
 // TODO: Implement this properly.
 // This hook should return the annotations and predictions for the current frame. Moreover we should fetch annotations
 // and predictions for the previous and next frames as well (using start-end frame).
-const useVideoTimelineQueries = () => {
+const useVideoTimelineQueries = ({ frameNumber }: { frameNumber: number }) => {
+    const { step } = useVideoPlayer();
+    const { data: videoFramesAnnotations, isPending: isVideoFramesAnnotationsPending } = useVideoFramesAnnotations({
+        frameNumber,
+        frameSkip: step,
+        selector: selectAnnotationsForFrame(frameNumber),
+    });
+
+    const annotatedLabels =
+        videoFramesAnnotations?.annotation_data?.annotations.flatMap((annotation) =>
+            annotation.labels.map(({ id }) => id)
+        ) ?? [];
+
     return {
-        annotatedLabels: [] as string[],
+        annotatedLabels,
+        isAnnotationLoading: isVideoFramesAnnotationsPending,
+
         predictedLabels: [] as string[],
-        isAnnotationLoading: false,
         isPredictionLoading: false,
     };
 };
@@ -109,7 +127,9 @@ export const VideoFrameSegment = ({
         right: isLastFrame ? '0%' : 'initial',
     };
 
-    const { annotatedLabels, predictedLabels, isAnnotationLoading, isPredictionLoading } = useVideoTimelineQueries();
+    const { annotatedLabels, predictedLabels, isAnnotationLoading, isPredictionLoading } = useVideoTimelineQueries({
+        frameNumber,
+    });
 
     return (
         <div
