@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EncodingOutput } from '@geti/smart-tools/segment-anything';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { isDetectionTask } from '../../../project/task-type-guards';
+import { loadImageQueryOptions } from '../../hooks/use-load-image-query.hook';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import type {
     SegmentAnythingWorkerApi,
@@ -82,6 +83,33 @@ const useSegmentAnythingWorker = (
 export const usePreloadSAMWorkers = (enabled = true) => {
     useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER', enabled);
     useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', enabled);
+};
+
+export const prefetchNextSAMEncodingData = ({
+    queryClient,
+    projectId,
+    getNextMediaItem,
+}: {
+    queryClient: ReturnType<typeof useQueryClient>;
+    projectId: string;
+    getNextMediaItem: () => Media | undefined;
+}) => {
+    const prefetch = async () => {
+        const nextItem = getNextMediaItem();
+
+        if (nextItem === undefined) {
+            return;
+        }
+
+        const nextImage = await queryClient.ensureQueryData(loadImageQueryOptions(projectId, nextItem));
+        const encoderModel = await queryClient.ensureQueryData(
+            segmentAnythingWorkerQueryOptions('SEGMENT_ANYTHING_ENCODER')
+        );
+
+        queryClient.prefetchQuery(segmentAnythingEncodingQueryOptions(nextItem, encoderModel, nextImage));
+    };
+
+    prefetch();
 };
 
 const useEncodingQuery = (
