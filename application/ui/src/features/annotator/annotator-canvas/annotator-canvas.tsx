@@ -10,9 +10,11 @@ import { useAnnotationVisibility } from '../../../shared/annotator/annotation-vi
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
+import { VideoAnnotations } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
 import { ToolManager } from '../tools/tool-manager.component';
 import { VideoFrame } from '../video-player/video-frame.component';
+import { useVideoPlayerContext } from '../video-player/video-player-provider.component';
 
 import classes from './annotator-canvas.module.scss';
 
@@ -48,6 +50,42 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
     );
 };
 
+type ImageAnnotationsProps = {
+    mediaItem: Media;
+};
+
+const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
+    const { isFocussed } = useAnnotationVisibility();
+    const { annotations } = useAnnotationActions();
+    const { selectedAnnotations } = useSelectedAnnotations();
+
+    // Order annotations by selection. Selected annotation should always be on top.
+    const orderedAnnotations = [
+        ...annotations.filter((a) => !selectedAnnotations.has(a.id)),
+        ...annotations.filter((a) => selectedAnnotations.has(a.id)),
+    ];
+
+    const size = { width: mediaItem.width, height: mediaItem.height };
+
+    return (
+        <Annotations width={size.width} height={size.height} isFocussed={isFocussed} annotations={orderedAnnotations} />
+    );
+};
+
+type AnnotationsFactoryProps = {
+    mediaItem: Media;
+};
+
+const AnnotationsFactory = ({ mediaItem }: AnnotationsFactoryProps) => {
+    const videoPlayerContext = useVideoPlayerContext();
+
+    if (isVideoFrame(mediaItem) && videoPlayerContext?.videoControls?.isPlaying) {
+        return <VideoAnnotations videoFrame={mediaItem} />;
+    }
+
+    return <ImageAnnotations mediaItem={mediaItem} />;
+};
+
 type AnnotatorCanvasProps = {
     mediaItem: Media;
     image: ImageData;
@@ -55,18 +93,9 @@ type AnnotatorCanvasProps = {
 };
 
 export const AnnotatorCanvas = ({ mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
-    const { annotations } = useAnnotationActions();
-    const { selectedAnnotations } = useSelectedAnnotations();
-    const { isFocussed } = useAnnotationVisibility();
     const isSceneBusy = useIsAnnotatorSceneBusy();
 
     const areToolsDisabled = isSceneBusy || isReadOnly;
-
-    // Order annotations by selection. Selected annotation should always be on top.
-    const orderedAnnotations = [
-        ...annotations.filter((a) => !selectedAnnotations.has(a.id)),
-        ...annotations.filter((a) => selectedAnnotations.has(a.id)),
-    ];
 
     const size = { width: mediaItem.width, height: mediaItem.height };
 
@@ -78,12 +107,8 @@ export const AnnotatorCanvas = ({ mediaItem, image, isReadOnly = false }: Annota
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
 
-                <Annotations
-                    width={size.width}
-                    height={size.height}
-                    isFocussed={isFocussed}
-                    annotations={orderedAnnotations}
-                />
+                <AnnotationsFactory mediaItem={mediaItem} />
+
                 {!areToolsDisabled && <ToolManager />}
             </div>
         </ZoomTransform>
