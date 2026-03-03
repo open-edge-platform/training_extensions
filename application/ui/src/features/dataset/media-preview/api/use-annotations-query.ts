@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery, type QueryKey } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
@@ -23,7 +23,13 @@ const getAnnotationsQueryParams = (media: Media) => {
         : undefined;
 };
 
-export const getAnnotationsQueryKey = (projectId: string, media: Media) => {
+export const annotationsQueryOptions = (projectId: string, media: Media) =>
+    queryOptions({
+        queryKey: getAnnotationsQueryKey(projectId, media),
+        queryFn: () => annotationsQueryFn(projectId, media),
+    });
+
+export const getAnnotationsQueryKey = (projectId: string, media: Media): QueryKey => {
     return getQueryKey([
         'get',
         `/api/projects/{project_id}/dataset/media/{media_id}/annotations`,

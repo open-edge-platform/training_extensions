@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EncodingOutput } from '@geti/smart-tools/segment-anything';
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 
@@ -23,18 +23,26 @@ export const getSegmentAnythingWorkerQueryKey = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER'
 ) => ['workers', algorithmType] as const;
 
-export const segmentAnythingWorkerQueryFn =
-    (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') => async () => {
-        const baseWorker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
-            type: 'module',
-        });
-        const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
-        const model = await samWorker.build();
+export const segmentAnythingWorkerQueryOptions = (
+    algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
+    enabled = true
+) =>
+    queryOptions({
+        queryKey: getSegmentAnythingWorkerQueryKey(algorithmType),
+        queryFn: async () => {
+            const baseWorker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
+                type: 'module',
+            });
+            const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
+            const model = await samWorker.build();
 
-        await model.init(algorithmType);
+            await model.init(algorithmType);
 
-        return model;
-    };
+            return model;
+        },
+        staleTime: Infinity,
+        enabled,
+    });
 
 export const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
     return isVideoFrame(mediaItem)
@@ -49,16 +57,31 @@ export const segmentAnythingEncodingQueryFn = (
     return model.processEncoder(image);
 };
 
+export const segmentAnythingEncodingQueryOptions = (
+    mediaItem: Media,
+    model: SegmentAnythingRemoteModel | undefined,
+    image: ImageData,
+    enabled = true
+) =>
+    queryOptions({
+        queryKey: getSegmentAnythingEncodingQueryKey(mediaItem),
+        queryFn: async () => {
+            if (model === undefined) {
+                throw new Error('Model not yet initialized');
+            }
+
+            return segmentAnythingEncodingQueryFn(model, image);
+        },
+        staleTime: Infinity,
+        gcTime: 3600 * 15,
+        enabled,
+    });
+
 const useSegmentAnythingWorker = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
     enabled = true
 ) => {
-    const { data } = useQuery<SegmentAnythingRemoteModel>({
-        queryKey: getSegmentAnythingWorkerQueryKey(algorithmType),
-        queryFn: segmentAnythingWorkerQueryFn(algorithmType),
-        staleTime: Infinity,
-        enabled,
-    });
+    const { data } = useQuery(segmentAnythingWorkerQueryOptions(algorithmType, enabled));
 
     return data;
 };
@@ -74,19 +97,7 @@ const useEncodingQuery = (
     image: ImageData,
     isImageReady: boolean
 ) => {
-    return useQuery({
-        queryKey: getSegmentAnythingEncodingQueryKey(mediaItem),
-        queryFn: async () => {
-            if (model === undefined) {
-                throw new Error('Model not yet initialized');
-            }
-
-            return await segmentAnythingEncodingQueryFn(model, image);
-        },
-        staleTime: Infinity,
-        gcTime: 3600 * 15,
-        enabled: model !== undefined && isImageReady,
-    });
+    return useQuery(segmentAnythingEncodingQueryOptions(mediaItem, model, image, model !== undefined && isImageReady));
 };
 
 const useDecoderOutputType = () => {

@@ -5,30 +5,27 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Content, Dialog, Grid, View } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { Remote } from 'comlink';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
-import { getLoadImageQueryKey, loadImageQueryFn } from '../../annotator/hooks/use-load-image-query.hook';
+import { isVideoFrame } from '../../../shared/media-item-utils';
+import { loadImageQueryOptions } from '../../annotator/hooks/use-load-image-query.hook';
 import {
     SelectedMediaItemProvider,
     useSelectedMediaItem,
 } from '../../annotator/selected-media-item-provider.component';
 import {
-    getSegmentAnythingEncodingQueryKey,
-    getSegmentAnythingWorkerQueryKey,
-    segmentAnythingEncodingQueryFn,
-    segmentAnythingWorkerQueryFn,
+    segmentAnythingEncodingQueryOptions,
+    segmentAnythingWorkerQueryOptions,
 } from '../../annotator/tools/segment-anything-tool/use-segment-anything.hook';
-import type { SegmentAnythingWorkerModel } from '../../annotator/webworkers/segment-anything.worker.interface';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { AnnotatorContainer } from './annotator.component';
-import { annotationsQueryFn, getAnnotationsQueryKey, useAnnotationsQuery } from './api/use-annotations-query';
+import { annotationsQueryOptions, useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
-import { getNextMediaItem, isSameMediaItem } from './secondary-toolbar/util';
+import { getNextMediaItem } from './secondary-toolbar/util';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
@@ -45,12 +42,9 @@ type MediaPreviewContentProps = {
 };
 
 const getNextMediaItemForPrefetch = (selectedItem: Media, items: Media[]): Media | undefined => {
-    const step = selectedItem.type === 'video_frame' ? selectedItem.frame_stride : 1;
-    const nextItem = getNextMediaItem(selectedItem, items, step);
+    const step = isVideoFrame(selectedItem) ? selectedItem.frame_stride : 1;
 
-    // getNextMediaItem never returns undefined. When there is no next item, it returns the same item.
-    // We want to avoid prefetching data for the same item, so in that case we return undefined.
-    return isSameMediaItem(nextItem, selectedItem) ? undefined : nextItem;
+    return getNextMediaItem(selectedItem, items, step);
 };
 
 // When the user navigates to next media, the most expensive data, like the SAM encoding,
@@ -78,30 +72,15 @@ const prefetchNextMediaItemData = ({
             return;
         }
 
-        const nextImage = await queryClient.ensureQueryData({
-            queryKey: getLoadImageQueryKey(projectId, nextItem),
-            queryFn: () => loadImageQueryFn(projectId, nextItem),
-            staleTime: Infinity,
-            retry: 0,
-        });
+        const nextImage = await queryClient.ensureQueryData(loadImageQueryOptions(projectId, nextItem));
 
-        queryClient.prefetchQuery({
-            queryKey: getAnnotationsQueryKey(projectId, nextItem),
-            queryFn: () => annotationsQueryFn(projectId, nextItem),
-        });
+        queryClient.prefetchQuery(annotationsQueryOptions(projectId, nextItem));
 
-        const encoderModel = await queryClient.ensureQueryData<Remote<SegmentAnythingWorkerModel>>({
-            queryKey: getSegmentAnythingWorkerQueryKey('SEGMENT_ANYTHING_ENCODER'),
-            queryFn: segmentAnythingWorkerQueryFn('SEGMENT_ANYTHING_ENCODER'),
-            staleTime: Infinity,
-        });
+        const encoderModel = await queryClient.ensureQueryData(
+            segmentAnythingWorkerQueryOptions('SEGMENT_ANYTHING_ENCODER')
+        );
 
-        queryClient.prefetchQuery({
-            queryKey: getSegmentAnythingEncodingQueryKey(nextItem),
-            queryFn: () => segmentAnythingEncodingQueryFn(encoderModel, nextImage),
-            staleTime: Infinity,
-            gcTime: 3600 * 15,
-        });
+        queryClient.prefetchQuery(segmentAnythingEncodingQueryOptions(nextItem, encoderModel, nextImage));
     };
 
     prefetch();
