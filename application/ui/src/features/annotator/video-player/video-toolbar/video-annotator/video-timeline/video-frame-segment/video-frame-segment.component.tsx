@@ -6,7 +6,8 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNumberFormatter } from 'react-aria';
 
 import { $api } from '../../../../../../../api/client';
-import { Label } from '../../../../../../../constants/shared-types';
+import { AnnotatedVideoFrame, Label } from '../../../../../../../constants/shared-types';
+import { useVideoFramesAnnotations } from '../../../../api/use-vide-frames-annotations';
 import { useVideoPlayer } from '../../../../video-player-provider.component';
 
 import classes from './video-frame-segment.module.scss';
@@ -67,48 +68,18 @@ const SelectedFrameOverlay = () => {
     );
 };
 
-const CHUNK_SIZE = 30;
-
-const useVideoFramesAnnotations = ({ frameNumber }: { frameNumber: number }) => {
-    const projectId = useProjectIdentifier();
-    const { videoFrame, step } = useVideoPlayer();
-
-    const annotationChunkSize = CHUNK_SIZE * step;
-
-    const frames = videoFrame.frame_count - 1;
-
-    const startFrameIndex = Math.floor(frameNumber / annotationChunkSize) * annotationChunkSize;
-    const endFrameIndex = Math.min(startFrameIndex + annotationChunkSize - 1, frames);
-
-    return $api.useQuery(
-        'get',
-        '/api/projects/{project_id}/dataset/media/{media_id}/frames',
-        {
-            params: {
-                path: {
-                    project_id: projectId,
-                    media_id: videoFrame.id,
-                },
-                query: {
-                    frame_index_from: startFrameIndex,
-                    frame_index_to: endFrameIndex,
-                },
-            },
-        },
-        {
-            select: (data) => {
-                return data.find(({ frame_index }) => frame_index === frameNumber);
-            },
-        }
-    );
-};
+const selectAnnotationsForFrame = (frameNumber: number) => (data: AnnotatedVideoFrame[]) =>
+    data.find(({ frame_index }) => frame_index === frameNumber);
 
 // TODO: Implement this properly.
 // This hook should return the annotations and predictions for the current frame. Moreover we should fetch annotations
 // and predictions for the previous and next frames as well (using start-end frame).
 const useVideoTimelineQueries = ({ frameNumber }: { frameNumber: number }) => {
+    const { step } = useVideoPlayer();
     const { data: videoFramesAnnotations, isPending: isVideoFramesAnnotationsPending } = useVideoFramesAnnotations({
         frameNumber,
+        frameSkip: step,
+        selector: selectAnnotationsForFrame(frameNumber),
     });
 
     const annotatedLabels =
