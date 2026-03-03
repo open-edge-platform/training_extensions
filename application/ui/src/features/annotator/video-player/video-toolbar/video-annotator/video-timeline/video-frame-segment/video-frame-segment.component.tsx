@@ -5,7 +5,7 @@ import { Flex, View } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import { AnnotatedVideoFrame, Label } from '../../../../../../../constants/shared-types';
-import { useVideoFramesAnnotations } from '../../../../api/use-vide-frames-annotations';
+import { useVideoFramesAnnotations } from '../../../../api/use-video-frames-annotations';
 import { useVideoPlayer } from '../../../../video-player-provider.component';
 
 import classes from './video-frame-segment.module.scss';
@@ -87,9 +87,10 @@ const useVideoTimelineQueries = ({ frameNumber }: { frameNumber: number }) => {
 
     return {
         annotatedLabels,
+        isAnnotationLoading: isVideoFramesAnnotationsPending,
+
         predictedLabels: [] as string[],
-        isAnnotationLoading: false,
-        isPredictionLoading: isVideoFramesAnnotationsPending,
+        isPredictionLoading: false,
     };
 };
 
