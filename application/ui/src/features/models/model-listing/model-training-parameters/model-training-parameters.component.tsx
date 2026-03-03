@@ -3,9 +3,16 @@
 
 import { Grid, Text } from '@geti/ui';
 
+import { useGetModelTrainingConfiguration } from '../../hooks/api/use-get-model-training-configuration.hook';
 import { Box } from '../components/box/box.component';
 
-export const ModelTrainingParameters = () => {
+type ModelTrainingParametersProps = {
+    modelId: string;
+};
+
+export const ModelTrainingParameters = ({ modelId }: ModelTrainingParametersProps) => {
+    const { data } = useGetModelTrainingConfiguration(modelId);
+
     return (
         <Grid columns={['1fr', '1fr', '1fr', '1fr']} gap={'size-200'}>
             <Box
