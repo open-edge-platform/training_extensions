@@ -3,8 +3,6 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import { AnnotationStatus, MediaState } from '../../selected-data-provider.component';
-
 export const toggleMultipleSelection =
     (items: Key[]) =>
     (selectedItems: Selection): Selection => {
@@ -20,17 +18,4 @@ export const toggleMultipleSelection =
         }
 
         return new Set();
-    };
-
-export const updateSelectedKeysTo =
-    (selectedKeys: Selection, annotationState: AnnotationStatus) => (map: MediaState) => {
-        const newMap = new Map(map.entries());
-
-        if (selectedKeys === 'all') {
-            return newMap;
-        }
-
-        selectedKeys.forEach((mediaId) => newMap.set(String(mediaId), annotationState));
-
-        return newMap;
     };

@@ -1,0 +1,27 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { isEmpty, isString } from 'lodash-es';
+import prettyBytes from 'pretty-bytes';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type IsValidArrayType<T> = T extends any[] ? GetElementType<T> : never;
+export const isNonEmptyArray = <T>(value: T): value is IsValidArrayType<T> => Array.isArray(value) && !isEmpty(value);
+
+export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
+
+export const downloadFile = (url: string, name: string) => {
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = name;
+    link.hidden = true;
+    link.click();
+
+    URL.revokeObjectURL(url);
+};
+
+export const formatBytes = (bytes: number): string => prettyBytes(bytes);

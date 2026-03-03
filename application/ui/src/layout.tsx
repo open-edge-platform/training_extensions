@@ -4,6 +4,7 @@
 import { Suspense } from 'react';
 
 import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
+import { useProject } from 'hooks/api/project.hook';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -14,6 +15,8 @@ import { ProjectsListPanel } from './components/project-panel/projects-list-pane
 import { paths } from './constants/paths';
 import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 
+import classes from './layout.module.scss';
+
 const iconStyles = {
     width: 'var(--spectrum-global-dimension-size-200)',
     height: 'var(--spectrum-global-dimension-size-200)',
@@ -23,12 +26,12 @@ const Header = () => {
     const projectId = useProjectIdentifier();
 
     return (
-        <View backgroundColor={'gray-300'} gridArea={'header'}>
+        <View backgroundColor={'gray-200'} gridArea={'header'}>
             <Grid
                 height='100%'
                 gap={'size-200'}
-                marginX={'size-200'}
-                columns={['auto', '2fr', 'auto']}
+                marginStart={'size-200'}
+                columns={['auto', '2fr', 'size-2400']}
                 rows={'1fr'}
                 alignItems={'center'}
             >
@@ -36,31 +39,15 @@ const Header = () => {
                     <Link to={paths.project.index({})}>Geti Tune</Link>
                 </View>
 
-                <TabList
-                    height={'100%'}
-                    UNSAFE_style={{
-                        '--spectrum-tabs-rule-height': '4px',
-                        '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
-                    }}
-                >
+                <TabList height={'100%'} UNSAFE_className={classes.tabList}>
                     <Item
                         textValue='Data collection page to visualise your media items'
                         key={'dataset'}
-                        href={paths.project.dataset({ projectId })}
+                        href={paths.project.dataset.index({ projectId })}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <BuildIcon style={iconStyles} />
                             Dataset
-                        </Flex>
-                    </Item>
-                    <Item
-                        textValue='Inference page showing live inference on your project'
-                        key={'inference'}
-                        href={paths.project.inference({ projectId })}
-                    >
-                        <Flex alignItems='center' gap='size-100'>
-                            <LiveFeedIcon style={iconStyles} />
-                            Inference
                         </Flex>
                     </Item>
                     <Item
@@ -71,6 +58,16 @@ const Header = () => {
                         <Flex alignItems='center' gap='size-100'>
                             <Webhook style={iconStyles} />
                             Models
+                        </Flex>
+                    </Item>
+                    <Item
+                        textValue='Inference page showing live inference on your project'
+                        key={'inference'}
+                        href={paths.project.inference({ projectId })}
+                    >
+                        <Flex alignItems='center' gap='size-100'>
+                            <LiveFeedIcon style={iconStyles} />
+                            Inference
                         </Flex>
                     </Item>
                 </TabList>
@@ -89,14 +86,14 @@ const getFirstPathSegment = (path: string): string => {
 
 export const Layout = () => {
     const { pathname } = useLocation();
+    // We want to check if the project exists before rendering the layout. If it doesn't, error boundary will catch it.
+    useProject();
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>
             <Grid
                 areas={['header', 'content']}
-                UNSAFE_style={{
-                    gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
-                }}
+                rows={['size-800', 'minmax(0, 1fr)']}
                 minHeight={'100vh'}
                 maxHeight={'100vh'}
                 height={'100%'}

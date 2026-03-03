@@ -17,7 +17,6 @@ from app.api.schemas.source import SourceCreate, SourceCreateAdapter, SourceView
 from app.models import Source
 from app.services import (
     ResourceInUseError,
-    ResourceNotFoundError,
     ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
     SourceUpdateService,
@@ -173,16 +172,16 @@ def update_source(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
 
     try:
-        updated_source: Source = source.model_copy(update=source_config)
-        updated_source.config_data = updated_source.config_data.model_copy(update=source_config)
+        updated_source = source.model_copy(update=source_config)
+        updated_source.config_data = updated_source.config_data.model_copy(  # pyrefly: ignore[bad-assignment]
+            update=source_config
+        )
         source = source_update_service.update_source(
             source=source,
             new_name=updated_source.name,
             new_config_data=updated_source.config_data,
         )
         return SourceViewAdapter.validate_python(source, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceWithNameAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -265,7 +264,5 @@ def delete_source(
     """Remove a source"""
     try:
         source_update_service.delete_source(source)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

@@ -38,8 +38,8 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import (
     OTXBatchLossEntity,
 )
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.tile import OTXTileBatchDataEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics import MetricInput, NullMetricCallable
 from otx.types.export import OTXExportFormatType, TaskLevelExportParameters
 from otx.types.label import LabelInfo, LabelInfoTypes
@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from lightning.pytorch.utilities.types import LRSchedulerTypeUnion, OptimizerLRScheduler
+    from lightning.pytorch.utilities.types import LRSchedulerTypeUnion
     from torch.optim.lr_scheduler import LRScheduler
     from torch.optim.optimizer import Optimizer, params_t
 
@@ -194,7 +194,7 @@ class OTXModel(LightningModule):
             ignore=["optimizer", "scheduler", "metric", "label_info", "tile_config", "data_input_params"],
         )
 
-    def training_step(self, batch: OTXDataBatch, batch_idx: int) -> Tensor:
+    def training_step(self, batch: OTXSampleBatch, batch_idx: int) -> Tensor:
         """Step for model training."""
         train_loss = self.forward(inputs=batch)
         if train_loss is None:
@@ -232,7 +232,7 @@ class OTXModel(LightningModule):
 
         raise TypeError(train_loss)
 
-    def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
+    def validation_step(self, batch: OTXSampleBatch, batch_idx: int) -> OTXPredictionBatch:
         """Perform a single test step on a batch of data from the test set.
 
         Args:
@@ -240,7 +240,7 @@ class OTXModel(LightningModule):
             batch_idx: The index of the current batch.
 
         Returns:
-            OTXPredBatch: The prediction results for the batch.
+            OTXPredictionBatch: The prediction results for the batch.
 
         Raises:
             TypeError: If predictions are of type OTXBatchLossEntity or if metric inputs
@@ -268,7 +268,7 @@ class OTXModel(LightningModule):
 
         raise TypeError(metric_inputs)
 
-    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
+    def test_step(self, batch: OTXSampleBatch, batch_idx: int) -> OTXPredictionBatch:
         """Lightning hook called at the beginning of fit, validate, test, or predict stages.
 
         This hook is used for dynamic model building or model adjustments. It is called
@@ -301,10 +301,10 @@ class OTXModel(LightningModule):
 
     def predict_step(
         self,
-        batch: OTXDataBatch | OTXTileBatchDataEntity,
+        batch: OTXSampleBatch | OTXTileBatchDataEntity,
         batch_idx: int,
         dataloader_idx: int = 0,
-    ) -> OTXPredBatch:
+    ) -> OTXPredictionBatch:
         """Step function called during PyTorch Lightning Trainer's predict."""
         if self.explain_mode:
             return self.forward_explain(inputs=batch)
@@ -365,7 +365,7 @@ class OTXModel(LightningModule):
                 stacklevel=1,
             )
 
-    def configure_optimizers(self) -> OptimizerLRScheduler:
+    def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
         """Configure an optimizer and learning-rate schedulers.
 
         Configure an optimizer and learning-rate schedulers
@@ -415,8 +415,8 @@ class OTXModel(LightningModule):
     @abstractmethod
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         """Convert given inputs to a Python dictionary for the metric computation."""
         raise NotImplementedError
@@ -595,22 +595,22 @@ class OTXModel(LightningModule):
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         """Create a PyTorch model for this class."""
 
-    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXSampleBatch) -> dict[str, Any]:
         """Customize OTX input batch data entity if needed for your model."""
         raise NotImplementedError
 
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         """Customize OTX output batch data entity if needed for model."""
         raise NotImplementedError
 
     def forward(
         self,
-        inputs: OTXDataBatch | Tensor,
-    ) -> OTXPredBatch | OTXBatchLossEntity | Tensor:
+        inputs: OTXSampleBatch | Tensor,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity | Tensor:
         """Model forward function."""
         # Simple forward
         if isinstance(inputs, Tensor):
@@ -632,7 +632,7 @@ class OTXModel(LightningModule):
             else outputs
         )
 
-    def forward_explain(self, inputs: OTXDataBatch) -> OTXPredBatch:
+    def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
         """Model forward explain function."""
         msg = "Derived model class should implement this class to support the explain pipeline."
         raise NotImplementedError(msg)
@@ -652,7 +652,7 @@ class OTXModel(LightningModule):
     def forward_tiles(
         self,
         inputs: OTXTileBatchDataEntity,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         """Model forward function for tile task."""
         raise NotImplementedError
 
@@ -923,7 +923,7 @@ class OTXModel(LightningModule):
 
         self._tile_config = tile_config
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:

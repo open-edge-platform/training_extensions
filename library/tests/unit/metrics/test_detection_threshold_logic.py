@@ -12,7 +12,7 @@ from torchvision import tv_tensors
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import FMeasure
 from otx.types.label import LabelInfo
 
@@ -56,8 +56,7 @@ def detection_model():
 @pytest.fixture
 def sample_predictions():
     """Create sample prediction data."""
-    return OTXPredBatch(
-        batch_size=2,
+    return OTXPredictionBatch(
         images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
         imgs_info=[
             ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -91,8 +90,7 @@ def sample_predictions():
 @pytest.fixture
 def sample_batch():
     """Create sample input batch."""
-    return OTXDataBatch(
-        batch_size=2,
+    return OTXSampleBatch(
         images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
         imgs_info=[
             ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -213,8 +211,7 @@ class TestFilterOutputsByThreshold:
 
     def test_filtering_with_none_outputs(self, detection_model):
         """Test filtering when outputs have None values."""
-        preds_with_none = OTXPredBatch(
-            batch_size=1,
+        preds_with_none = OTXPredictionBatch(
             images=[torch.rand(3, 416, 416)],
             imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
             scores=None,
@@ -231,8 +228,7 @@ class TestFilterOutputsByThreshold:
 
     def test_filtering_empty_predictions(self, detection_model):
         """Test filtering with empty prediction lists."""
-        empty_preds = OTXPredBatch(
-            batch_size=2,
+        empty_preds = OTXPredictionBatch(
             images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
             imgs_info=[
                 ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -289,11 +285,8 @@ class TestTestStep:
 
                 # Verify call order: forward -> filter -> convert -> metric.update
                 assert mock_forward.called
-                assert mock_filter.called
+                assert not mock_filter.called
                 assert mock_convert.called
-
-                # Verify that _filter_outputs_by_threshold was called with forward output
-                mock_filter.assert_called_once_with(sample_predictions)
 
                 # Verify that _convert_pred_entity_to_compute_metric was called with filtered output
                 mock_convert.assert_called_once_with(filtered_preds, sample_batch)
@@ -301,8 +294,10 @@ class TestTestStep:
                 # Verify metric was updated
                 mock_metric.update.assert_called_once()
 
-                # Verify return value is filtered predictions
-                assert result == filtered_preds
+            result = detection_model.predict_step(sample_batch, 0)
+            assert mock_filter.called
+            mock_filter.assert_called_once_with(sample_predictions)
+            assert result == filtered_preds
 
     @patch("otx.backend.native.models.detection.base.OTXDetectionModel.forward")
     def test_test_step_with_loss_entity_raises_error(self, mock_forward, detection_model, sample_batch):
@@ -428,11 +423,10 @@ class TestIntegration:
             "_convert_pred_entity_to_compute_metric",
         ) as mock_convert:
             # Setup sample predictions with scores above and below threshold
-            test_preds = OTXPredBatch(
-                batch_size=1,
+            test_preds = OTXPredictionBatch(
                 images=[torch.rand(3, 416, 416)],
                 imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
-                scores=[torch.tensor([0.9, 0.5, 0.3])],  # Only 0.9 should remain after filtering
+                scores=[torch.tensor([0.9, 0.5, 0.3])],
                 bboxes=[
                     tv_tensors.BoundingBoxes(
                         torch.tensor([[0, 0, 10, 10], [20, 20, 30, 30], [40, 40, 50, 50]]),
@@ -458,5 +452,7 @@ class TestIntegration:
                 result = detection_model.test_step(sample_batch, 0)
 
                 # Verify that only high confidence predictions remain
-                assert len(result.scores[0]) == 1  # Only score 0.9 > 0.7
+                assert len(result.scores[0]) == 3  # No filtering applied in test_step itself
                 assert result.scores[0][0] == 0.9
+                assert result.scores[0][1] == 0.5
+                assert result.scores[0][2] == 0.3

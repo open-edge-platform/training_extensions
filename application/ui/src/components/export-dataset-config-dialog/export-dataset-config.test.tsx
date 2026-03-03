@@ -1,0 +1,64 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { screen } from '@testing-library/react';
+import { HttpResponse } from 'msw';
+import { render } from 'test-utils/render';
+
+import { getMockedProject } from '../../../mocks/mock-project';
+import { SchemaProjectView } from '../../api/openapi-spec';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
+import { ExportDatasetConfig } from './export-dataset-config.component';
+
+describe('ExportDatasetConfig', () => {
+    const mockDialogState = {
+        isOpen: true,
+        open: vi.fn(),
+        close: vi.fn(),
+        toggle: vi.fn(),
+        setOpen: vi.fn(),
+    };
+
+    const renderApp = (project: SchemaProjectView) => {
+        server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(project);
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    pagination: { total: 0, offset: 0, limit: 0, count: 0 },
+                    items: [],
+                });
+            })
+        );
+
+        render(<ExportDatasetConfig dialogState={mockDialogState} datasetId={null} statistics={undefined} />);
+    };
+
+    it('shows only GETI export option for classification task', async () => {
+        renderApp(
+            getMockedProject({
+                task: { exclusive_labels: true, task_type: 'classification' },
+            })
+        );
+
+        expect(await screen.findByText('Export dataset')).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
+        expect(screen.queryByRole('radio', { name: 'YOLO' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
+    });
+
+    it('shows GETI and YOLO export option for instance_segmentation task', async () => {
+        renderApp(
+            getMockedProject({
+                task: { exclusive_labels: true, task_type: 'instance_segmentation' },
+            })
+        );
+
+        expect(await screen.findByText('Export dataset')).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'YOLO' })).toBeVisible();
+        expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
+    });
+});

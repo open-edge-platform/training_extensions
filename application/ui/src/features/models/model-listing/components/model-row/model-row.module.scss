@@ -1,0 +1,43 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.modelName {
+    font-size: var(--spectrum-global-dimension-font-size-200);
+    font-weight: 400;
+}
+
+.secondaryText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-700);
+    font-weight: 400;
+}
+
+.dateText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    white-space: pre-line;
+    font-weight: 400;
+}
+
+.smallText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-weight: 400;
+}
+
+.datasetRevisionName {
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    font-weight: 400;
+}
+
+.datasetRevisionDate {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.modelBadge {
+    color: var(--spectrum-global-color-gray-800);
+    background-color: var(--spectrum-global-color-gray-200);
+
+    & span[class*='Badge-label'] {
+        padding-inline-end: var(--spectrum-global-dimension-size-75);
+    }
+}

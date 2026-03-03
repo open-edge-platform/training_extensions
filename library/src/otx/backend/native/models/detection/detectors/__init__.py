@@ -4,6 +4,7 @@
 """Base models classes implementations for detection task."""
 
 from .detection_transformer import DETR
+from .rfdetr import RFDETRDetector
 from .single_stage_detector import SingleStageDetector
 
-__all__ = ["DETR", "SingleStageDetector"]
+__all__ = ["DETR", "RFDETRDetector", "SingleStageDetector"]

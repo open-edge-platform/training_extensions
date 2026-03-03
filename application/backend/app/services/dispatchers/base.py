@@ -41,6 +41,10 @@ class BaseDispatcher(metaclass=ABCMeta):
         Args:
             output_config: Configuration for the output destination
         """
+        if output_config.rate_limit is not None and output_config.rate_limit <= 0:
+            raise ValueError(
+                f"Rate limit must be a positive float or unset (None), got {output_config.rate_limit} instead."
+            )
         self.output_formats = output_config.output_formats
         self.rate_limit = output_config.rate_limit
         self.min_interval = 1.0 / self.rate_limit if self.rate_limit is not None else 0.0

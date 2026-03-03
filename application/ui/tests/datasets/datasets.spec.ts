@@ -1,20 +1,33 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+import { getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
 
-const mockedItems = getMultipleMockedMediaItems(20, '1');
-const mockedItems2 = getMultipleMockedMediaItems(20, '2');
-const mockedItems3 = getMultipleMockedMediaItems(20, '3');
+const mockedItems = getMultipleMockedMediaImage(20, '1');
+const mockedItems2 = getMultipleMockedMediaImage(20, '2');
+const mockedItems3 = getMultipleMockedMediaImage(20, '3');
 const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.length;
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+const sampleImagePath = path.resolve(dirname, '../assets/candy-thumbnail.png');
+const sampleImageBuffer = fs.readFileSync(sampleImagePath);
 
 test.describe('Dataset', () => {
     test.beforeEach(({ network }) => {
         network.use(
-            http.get('/api/projects/{project_id}/dataset/items', ({ query }) => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', ({}) => {
+                return HttpResponse.arrayBuffer(sampleImageBuffer.buffer, {
+                    headers: { 'Content-Type': 'image/png' },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', ({ query }) => {
                 const offset = Number(query.get('offset') ?? 0);
                 const limit = Number(query.get('limit'));
                 const items = offset === 0 ? mockedItems : offset === 20 ? mockedItems2 : mockedItems3;
@@ -68,5 +81,17 @@ test.describe('Dataset', () => {
         await page.getByRole('listbox', { name: 'data-collection-grid' }).press('End');
 
         await expect(page.getByText(`${totalElements} images`)).toBeVisible();
+    });
+
+    test('selected media item is saved in the URL', async ({ page, annotatorPage }) => {
+        const [firstElement] = mockedItems;
+        await page.goto('projects/id-1/dataset');
+        await expect(annotatorPage.getAnnotationsList()).not.toBeInViewport();
+
+        await page.getByRole('img', { name: firstElement.name, exact: true }).dblclick();
+
+        await expect(annotatorPage.getAnnotationsList()).toBeInViewport();
+
+        expect(page.url()).toContain(`/dataset/${firstElement.id}`);
     });
 });

@@ -1,0 +1,45 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
+
+import { isNonEmptyString } from '../../../../shared/util';
+import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
+import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
+import { ImportProcess } from './import-process/import-process.component';
+import { ImportUploadFile } from './import-upload-file/import-upload-file.component';
+import { LabelMapping } from './label-mapping/label-mapping.component';
+
+export const ImportDatasetToProject = () => {
+    const { datasetImportDialogState, currentStep, currentStagedId } = useImportDatasetDialogState();
+
+    return (
+        <DialogContainer onDismiss={datasetImportDialogState.close}>
+            {datasetImportDialogState.isOpen && (
+                <Dialog aria-label={'import-dataset-dialog'} width={800}>
+                    <Heading>Import dataset</Heading>
+                    <Divider />
+                    <Content minHeight={'size-5000'}>
+                        <View height={'100%'} backgroundColor={'gray-50'}>
+                            {currentStep === 'uploading' && <ImportUploadFile />}
+
+                            {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
+                                <ImportProcess currentStagedId={currentStagedId} />
+                            )}
+
+                            {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
+                                <LabelMapping stagedDatasetId={currentStagedId} />
+                            )}
+                        </View>
+                    </Content>
+
+                    <ImportDatasetButtons
+                        currentStep={currentStep}
+                        stagedDatasetId={currentStagedId}
+                        onClose={datasetImportDialogState.close}
+                    />
+                </Dialog>
+            )}
+        </DialogContainer>
+    );
+};

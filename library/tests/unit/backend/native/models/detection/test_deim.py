@@ -10,7 +10,7 @@ import torch
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.deim import DEIMDFine
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestDEIMDFine:
@@ -132,8 +132,8 @@ class TestDEIMDFine:
         # Forward pass should return predictions
         output = model(fxt_detection_batch)
 
-        # Check that output is OTXPredBatch
-        assert isinstance(output, OTXPredBatch)
+        # Check that output is OTXPredictionBatch
+        assert isinstance(output, OTXPredictionBatch)
         assert output.batch_size == 2
 
     @pytest.mark.parametrize(

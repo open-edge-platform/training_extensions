@@ -4,21 +4,24 @@
 import { useActionState } from 'react';
 
 import { toast } from '@geti/ui';
+import { isFunction } from 'lodash-es';
 
-import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
-import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { SinkConfig } from '../utils';
 import { useSinkMutation } from './use-sink-mutation.hook';
 
 interface useSinkActionProps<T> {
     config: Awaited<T>;
     isNewSink: boolean;
+    onSaved?: (sink_id: string) => void;
     bodyFormatter: (formData: FormData) => T;
 }
 
-export const useSinkAction = <T extends SinkConfig>({ config, isNewSink, bodyFormatter }: useSinkActionProps<T>) => {
-    const projectId = useProjectIdentifier();
-    const pipeline = usePatchPipeline();
+export const useSinkAction = <T extends SinkConfig>({
+    config,
+    isNewSink,
+    onSaved,
+    bodyFormatter,
+}: useSinkActionProps<T>) => {
     const addOrUpdateSink = useSinkMutation(isNewSink);
 
     return useActionState<T, FormData>(async (_prevState: T, formData: FormData) => {
@@ -27,15 +30,12 @@ export const useSinkAction = <T extends SinkConfig>({ config, isNewSink, bodyFor
         try {
             const sink_id = await addOrUpdateSink(body);
 
-            await pipeline.mutateAsync({
-                params: { path: { project_id: projectId } },
-                body: { sink_id },
-            });
-
             toast({
                 type: 'success',
                 message: `Sink configuration ${isNewSink ? 'created' : 'updated'} successfully.`,
             });
+
+            isFunction(onSaved) && onSaved(sink_id);
 
             return { ...body, id: sink_id };
         } catch (error: unknown) {

@@ -1,36 +1,35 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os.path
 from collections.abc import Callable
 from datetime import datetime
-from io import BytesIO
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
-from PIL import Image
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
 from app.models import (
+    DatasetItem,
     DatasetItemAnnotation,
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
+    Image,
     LabelReference,
     Pipeline,
     Project,
     Rectangle,
+    Video,
+    VideoFrame,
 )
+from app.models.media import MediaAdapter
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import (
-    DatasetItemFilters,
-    DatasetService,
-    InvalidImageError,
-    SubsetAlreadyAssignedError,
-)
+from app.services.dataset_service import DatasetItemFilters, DatasetService, SubsetAlreadyAssignedError
 from app.services.event.event_bus import EventBus
+from app.services.media_service import MediaService
 
 
 @pytest.fixture
@@ -60,6 +59,15 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
+def fxt_media_service(
+    fxt_projects_dir: Path,
+    db_session: Session,
+) -> MediaService:
+    """Fixture to create a MediaService instance."""
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
+
+
+@pytest.fixture
 def fxt_project_service(
     fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
 ) -> ProjectService:
@@ -74,12 +82,12 @@ def fxt_project_service(
 
 @pytest.fixture
 def fxt_dataset_service(
-    fxt_projects_dir: Path,
     fxt_label_service: LabelService,
+    fxt_media_service: MediaService,
     db_session: Session,
 ) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService(fxt_projects_dir.parent, fxt_label_service, db_session=db_session)
+    return DatasetService(label_service=fxt_label_service, media_service=fxt_media_service, db_session=db_session)
 
 
 @pytest.fixture
@@ -122,23 +130,42 @@ def fxt_project_with_pipeline(
 def fxt_project_with_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
     project, _ = fxt_project_with_pipeline
 
-    configs = [
-        {"name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
-        {
-            "name": "test2",
-            "format": "jpg",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-            "subset": "unassigned",
-            "annotation_data": [{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
-        },
-        {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "training"},
+    configs: list[tuple[dict[str, Any], dict[str, Any]]] = [
+        (
+            {"type": "image", "name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
+            {"subset": "unassigned"},
+        ),
+        (
+            {
+                "type": "image",
+                "name": "test2",
+                "format": "jpg",
+                "size": 1024,
+                "width": 1024,
+                "height": 768,
+            },
+            {
+                "subset": "unassigned",
+                "annotation_data": [
+                    {"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}
+                ],
+            },
+        ),
+        (
+            {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
+            {"subset": "training"},
+        ),
     ]
 
     db_dataset_items = []
-    for config in configs:
-        dataset_item = DatasetItemDB(**config)
+    for media_config, dataset_item_config in configs:
+        media = MediaDB(**media_config)
+        media.project_id = str(project.id)
+        db_session.add(media)
+        db_session.flush()
+
+        dataset_item = DatasetItemDB(**dataset_item_config)
+        dataset_item.id = str(media.id)
         dataset_item.project_id = str(project.id)
         dataset_item.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
         db_dataset_items.append(dataset_item)
@@ -161,22 +188,12 @@ def fxt_project_with_annotation_status_items(
     # Unannotated items (annotation_data is null) - don't set annotation_data at all
     unannotated_items = [
         DatasetItemDB(
-            name="unannotated1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             user_reviewed=False,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="unannotated2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             user_reviewed=False,
             project_id=str(project.id),
@@ -187,11 +204,6 @@ def fxt_project_with_annotation_status_items(
     # Reviewed items (annotation_data is not null and user_reviewed is True)
     reviewed_items = [
         DatasetItemDB(
-            name="reviewed1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
             user_reviewed=True,
@@ -199,11 +211,6 @@ def fxt_project_with_annotation_status_items(
             created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="reviewed2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
             user_reviewed=True,
@@ -211,11 +218,6 @@ def fxt_project_with_annotation_status_items(
             created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="reviewed3",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
             user_reviewed=True,
@@ -227,11 +229,6 @@ def fxt_project_with_annotation_status_items(
     # To review items (annotation_data is not null and user_reviewed is False)
     to_review_items = [
         DatasetItemDB(
-            name="to_review1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
             user_reviewed=False,
@@ -239,11 +236,6 @@ def fxt_project_with_annotation_status_items(
             created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="to_review2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset="unassigned",
             annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
             user_reviewed=False,
@@ -252,7 +244,24 @@ def fxt_project_with_annotation_status_items(
         ),
     ]
 
-    db_dataset_items = [*unannotated_items, *reviewed_items, *to_review_items]
+    db_dataset_items = []
+    for list in [unannotated_items, reviewed_items, to_review_items]:
+        for idx, dataset_item in enumerate(list):
+            db_media = MediaDB(
+                type="image",
+                name=f"{dataset_item.subset}{idx + 1}",
+                format="jpg",
+                size=1024,
+                width=1024,
+                height=768,
+                project_id=str(project.id),
+                created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            )
+            db_session.add(db_media)
+            db_session.flush()
+            dataset_item.id = db_media.id
+            db_dataset_items.append(dataset_item)
+
     db_session.add_all(db_dataset_items)
     db_session.flush()
 
@@ -290,53 +299,77 @@ def fxt_project_with_labeled_dataset_items(
     label_0_id = str(project.task.labels[0].id)
     label_1_id = str(project.task.labels[1].id)
 
-    configs = [
+    configs: list[tuple[dict[str, Any], dict[str, Any]]] = [
         # Item 0: No annotations
-        {"name": "item_no_labels", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        (
+            {"type": "image", "name": "item_no_labels", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
+            {"subset": "unassigned"},
+        ),
         # Item 1: Has label_0
-        {
-            "name": "item_label_0",
-            "format": "jpg",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-            "subset": "unassigned",
-            "annotation_data": [{"labels": [{"id": label_0_id}], "shape": {"type": "full_image"}}],
-        },
+        (
+            {
+                "type": "image",
+                "name": "item_label_0",
+                "format": "jpg",
+                "size": 1024,
+                "width": 1024,
+                "height": 768,
+            },
+            {
+                "subset": "unassigned",
+                "annotation_data": [{"labels": [{"id": label_0_id}], "shape": {"type": "full_image"}}],
+            },
+        ),
         # Item 2: Has label_1
-        {
-            "name": "item_label_1",
-            "format": "jpg",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-            "subset": "unassigned",
-            "annotation_data": [{"labels": [{"id": label_1_id}], "shape": {"type": "full_image"}}],
-        },
+        (
+            {
+                "type": "image",
+                "name": "item_label_1",
+                "format": "jpg",
+                "size": 1024,
+                "width": 1024,
+                "height": 768,
+            },
+            {
+                "subset": "unassigned",
+                "annotation_data": [{"labels": [{"id": label_1_id}], "shape": {"type": "full_image"}}],
+            },
+        ),
         # Item 3: Has both label_0 and label_1
-        {
-            "name": "item_both_labels",
-            "format": "jpg",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-            "subset": "unassigned",
-            "annotation_data": [
-                {
-                    "labels": [{"id": label_0_id}],
-                    "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
-                },
-                {
-                    "labels": [{"id": label_1_id}],
-                    "shape": {"type": "rectangle", "x": 20, "y": 20, "width": 10, "height": 10},
-                },
-            ],
-        },
+        (
+            {
+                "type": "image",
+                "name": "item_both_labels",
+                "format": "jpg",
+                "size": 1024,
+                "width": 1024,
+                "height": 768,
+            },
+            {
+                "subset": "unassigned",
+                "annotation_data": [
+                    {
+                        "labels": [{"id": label_0_id}],
+                        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+                    },
+                    {
+                        "labels": [{"id": label_1_id}],
+                        "shape": {"type": "rectangle", "x": 20, "y": 20, "width": 10, "height": 10},
+                    },
+                ],
+            },
+        ),
     ]
 
     db_dataset_items = []
-    for config in configs:
-        dataset_item = DatasetItemDB(**config)
+    for index, (media_config, dataset_item_config) in enumerate(configs):
+        media = MediaDB(**media_config)
+        media.project_id = str(project.id)
+        db_session.add(media)
+        db_session.flush()
+
+        dataset_item = DatasetItemDB(**dataset_item_config)
+        dataset_item.id = str(media.id)
         dataset_item.project_id = str(project.id)
         dataset_item.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
         db_dataset_items.append(dataset_item)
@@ -361,22 +394,12 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     # Unassigned items
     unassigned_items = [
         DatasetItemDB(
-            name="unassigned1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.UNASSIGNED,
             user_reviewed=False,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="unassigned2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.UNASSIGNED,
             user_reviewed=False,
             project_id=str(project.id),
@@ -387,33 +410,18 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     # Training items
     training_items = [
         DatasetItemDB(
-            name="training1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.TRAINING,
             user_reviewed=False,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-03T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="training2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.TRAINING,
             user_reviewed=False,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-04T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="training3",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.TRAINING,
             user_reviewed=False,
             project_id=str(project.id),
@@ -424,22 +432,12 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     # Validation items
     validation_items = [
         DatasetItemDB(
-            name="validation1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.VALIDATION,
             user_reviewed=False,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-06T00:00:00Z"),
         ),
         DatasetItemDB(
-            name="validation2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.VALIDATION,
             user_reviewed=False,
             project_id=str(project.id),
@@ -450,20 +448,173 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     # Testing items
     testing_items = [
         DatasetItemDB(
-            name="testing1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
             subset=DatasetItemSubset.TESTING,
             user_reviewed=False,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
         ),
     ]
-
     db_dataset_items = [*unassigned_items, *training_items, *validation_items, *testing_items]
+    for idx, dataset_item in enumerate(db_dataset_items):
+        db_media = MediaDB(
+            type="image",
+            name=f"{dataset_item.subset}{idx + 1}",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
+        )
+        db_session.add(db_media)
+        db_session.flush()
+        dataset_item.id = db_media.id
+
     db_session.add_all(db_dataset_items)
+    db_session.flush()
+
+    return project, db_dataset_items
+
+
+@pytest.fixture
+def fxt_project_with_rich_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
+    """Fixture with images, videos, annotated video frames, and a dataset item with multiple annotations."""
+    project, _ = fxt_project_with_pipeline
+
+    label_1_id = str(project.task.labels[0].id)
+    label_2_id = str(project.task.labels[1].id)
+
+    db_media_items = []
+    db_frame_items = []
+    db_dataset_items = []
+
+    default_media_values = {
+        "size": 1024,
+        "width": 1024,
+        "height": 768,
+        "project_id": str(project.id),
+        "created_at": datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    }
+    default_item_values = {
+        "project_id": str(project.id),
+        "subset": "training",
+        "created_at": datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    }
+    annotation_data_1 = {
+        "labels": [{"id": label_1_id}],
+        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+    }
+    annotation_data_2 = {
+        "labels": [{"id": label_2_id}],
+        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+    }
+
+    # Image (unannotated)
+    unannotated_image = MediaDB(
+        id=str(uuid4()),
+        type="image",
+        name="img1",
+        format="jpg",
+        **default_media_values,
+    )
+    item_unannotated_image = DatasetItemDB(
+        id=str(unannotated_image.id),
+        **default_item_values,
+    )
+    db_media_items.append(unannotated_image)
+    db_dataset_items.append(item_unannotated_image)
+
+    # Image (annotated with multiple annotations (2 with label_1, 1 with label_2)
+    annotated_image = MediaDB(
+        id=str(uuid4()),
+        type="image",
+        name="multi_ann",
+        format="jpg",
+        **default_media_values,
+    )
+    item_annotated_image = DatasetItemDB(
+        id=str(annotated_image.id),
+        **default_item_values,
+        annotation_data=[annotation_data_1, annotation_data_1, annotation_data_2],
+        user_reviewed=True,
+    )
+    db_media_items.append(annotated_image)
+    db_dataset_items.append(item_annotated_image)
+
+    # Video (annotated frames)
+    annotated_video = MediaDB(
+        id=str(uuid4()),
+        type="video",
+        name="vid1",
+        format="mp4",
+        fps=30.0,
+        frame_count=20,
+        **default_media_values,
+    )
+    db_media_items.append(annotated_video)
+
+    # Video frame (annotated with label_1)
+    annotated_video_frame_1 = MediaDB(
+        id=str(uuid4()),
+        type="video_frame",
+        name="vf1",
+        format="jpg",
+        video_id=str(annotated_video.id),
+        frame_index=3,
+        **default_media_values,
+    )
+    item_annotated_video_frame_1 = DatasetItemDB(
+        id=str(annotated_video_frame_1.id),
+        **default_item_values,
+        annotation_data=[annotation_data_1],
+        user_reviewed=True,
+    )
+    db_frame_items.append(annotated_video_frame_1)
+    db_dataset_items.append(item_annotated_video_frame_1)
+
+    # Video frame (annotated with label_2)
+    annotated_video_frame_2 = MediaDB(
+        id=str(uuid4()),
+        type="video_frame",
+        name="vf2",
+        format="jpg",
+        video_id=str(annotated_video.id),
+        frame_index=8,
+        **default_media_values,
+    )
+    item_annotated_video_frame_2 = DatasetItemDB(
+        id=str(annotated_video_frame_2.id),
+        **default_item_values,
+        annotation_data=[annotation_data_2],
+        user_reviewed=True,
+    )
+    db_frame_items.append(annotated_video_frame_2)
+    db_dataset_items.append(item_annotated_video_frame_2)
+
+    # Video (no annotated frames)
+    unannotated_video = MediaDB(
+        id=str(uuid4()),
+        type="video",
+        name="vid2",
+        format="mp4",
+        fps=30.0,
+        frame_count=15,
+        **default_media_values,
+    )
+    db_media_items.append(unannotated_video)
+
+    [db_session.add(item) for item in db_media_items]
+    db_session.flush()
+    db_session.commit()
+    [db_session.add(item) for item in db_frame_items]
+    db_session.flush()
+    [db_session.add(item) for item in db_dataset_items]
+    db_session.flush()
+
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_video_frame_1.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_video_frame_2.id, label_id=label_2_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_image.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_image.id, label_id=label_2_id))
     db_session.flush()
 
     return project, db_dataset_items
@@ -473,34 +624,39 @@ class TestDatasetServiceIntegration:
     """Integration tests for DatasetService."""
 
     @pytest.mark.parametrize("use_pipeline_model", [True, False])
-    @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("user_reviewed", [True, False])
-    @pytest.mark.parametrize("format", ["jpg", "png"])
     def test_create_dataset_item(
         self,
-        tmp_path: Path,
         fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
-        format: DatasetItemSubset,
         user_reviewed: bool,
-        use_pipeline_source: bool,
         use_pipeline_model: bool,
     ) -> None:
         """Test creating a dataset item."""
-        image = Image.new("RGB", (1024, 768))
-
         project, pipeline = fxt_project_with_pipeline
         label_id = project.task.labels[0].id
 
-        created_dataset_item = fxt_dataset_service.create_dataset_item(
-            project=project,
+        db_media = MediaDB(
+            type="image",
             name="test",
-            format=format,
-            data=image,
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+        )
+        db_session.add(db_media)
+        db_session.flush()
+        media = MediaAdapter.validate_python(db_media, from_attributes=True)
+
+        created_dataset_item = fxt_dataset_service.create_dataset_item(
+            project_id=project.id,
+            task=project.task,
+            media=media,
             user_reviewed=user_reviewed,
-            source_id=pipeline.source_id if use_pipeline_source else None,
             prediction_model_id=pipeline.model_id if use_pipeline_model else None,
             annotations=fxt_annotations(label_id) if not user_reviewed else None,
         )
@@ -510,18 +666,11 @@ class TestDatasetServiceIntegration:
         assert (
             dataset_item.id == str(created_dataset_item.id)
             and dataset_item.project_id == str(project.id)
-            and dataset_item.name == "test"
-            and dataset_item.format == format
-            and dataset_item.width == 1024
-            and dataset_item.height == 768
+            and dataset_item.id == str(media.id)
             and dataset_item.user_reviewed == user_reviewed
             and dataset_item.subset == DatasetItemSubset.UNASSIGNED
             and dataset_item.subset_assigned_at is None
         )
-        if use_pipeline_source:
-            assert dataset_item.source_id == str(pipeline.source_id)
-        else:
-            assert dataset_item.source_id is None
         if use_pipeline_model:
             assert dataset_item.prediction_model_id == str(pipeline.model_id)
         else:
@@ -537,31 +686,6 @@ class TestDatasetServiceIntegration:
             assert db_session.get(DatasetItemLabelDB, (str(created_dataset_item.id), str(label_id))) is not None
         else:
             assert dataset_item.annotation_data is None
-
-        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_dataset_item.id}.{format}"
-        assert os.path.exists(binary_file_path)
-        assert created_dataset_item.size == os.path.getsize(binary_file_path)
-
-        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_dataset_item.id}-thumb.jpg"
-        assert os.path.exists(thumbnail_file_path)
-
-    def test_create_dataset_item_invalid_image(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_pipeline: tuple[Project, Pipeline],
-        db_session: Session,
-    ) -> None:
-        """Test creating a dataset item with invalid image."""
-        project, _ = fxt_project_with_pipeline
-
-        with pytest.raises(InvalidImageError):
-            fxt_dataset_service.create_dataset_item(
-                project=project,
-                name="test",
-                format="jpg",
-                data=BytesIO(b"123"),
-                user_reviewed=True,
-            )
 
     @pytest.mark.parametrize(
         "start_date, start_date_out_of_range",
@@ -646,6 +770,58 @@ class TestDatasetServiceIntegration:
             else len(db_dataset_items)
         )
 
+    @pytest.mark.parametrize("limit, limit_out_of_range", [(10, False), (0, True)])
+    @pytest.mark.parametrize("offset, offset_out_of_range", [(0, False), (10, True)])
+    @pytest.mark.parametrize(
+        "start_date, start_date_out_of_range",
+        [
+            (None, False),
+            (datetime.fromisoformat("2025-01-01T00:00:00Z"), False),
+            (datetime.fromisoformat("2025-02-02T00:00:00Z"), True),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "end_date, end_date_out_of_range",
+        [
+            (None, False),
+            (datetime.fromisoformat("2025-02-02T00:00:00Z"), False),
+            (datetime.fromisoformat("2025-01-01T00:00:00Z"), True),
+        ],
+    )
+    def test_list_dataset_items_with_media(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+        limit,
+        limit_out_of_range,
+        offset,
+        offset_out_of_range,
+        start_date,
+        start_date_out_of_range,
+        end_date,
+        end_date_out_of_range,
+    ) -> None:
+        """Test listing dataset items with corresponding media."""
+        project, db_dataset_items = fxt_project_with_dataset_items
+
+        list = fxt_dataset_service.list_dataset_items_with_media(
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=limit,
+                offset=offset,
+                start_date=start_date,
+                end_date=end_date,
+            ),
+        )
+
+        assert (
+            len(list) == 0
+            if start_date_out_of_range or end_date_out_of_range or limit_out_of_range or offset_out_of_range
+            else len(db_dataset_items)
+        )
+        for dataset_item, media in list:
+            assert isinstance(dataset_item, DatasetItem) and isinstance(media, Image | Video | VideoFrame)
+
     def test_get_dataset_item_by_id(
         self,
         fxt_dataset_service: DatasetService,
@@ -658,10 +834,7 @@ class TestDatasetServiceIntegration:
             project_id=project.id, dataset_item_id=UUID(db_dataset_items[0].id)
         )
 
-        assert (
-            str(fetched_dataset_item.id) == db_dataset_items[0].id
-            and fetched_dataset_item.name == db_dataset_items[0].name
-        )
+        assert str(fetched_dataset_item.id) == db_dataset_items[0].id
 
     def test_get_dataset_item_by_id_not_found(
         self,
@@ -674,117 +847,6 @@ class TestDatasetServiceIntegration:
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_get_dataset_item_binary_path_by_id(
-        self,
-        tmp_path: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test retrieving a dataset item binary path by ID."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        dataset_item_binary_path = fxt_dataset_service.get_dataset_item_binary_path_by_id(
-            project_id=project.id, dataset_item_id=UUID(db_dataset_items[0].id)
-        )
-
-        assert (
-            dataset_item_binary_path
-            == tmp_path / f"projects/{str(project.id)}/dataset/{db_dataset_items[0].id}.{db_dataset_items[0].format}"
-        )
-
-    def test_get_dataset_item_binary_path_by_id_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test retrieving a non-existent dataset item binary path raises error."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_binary_path_by_id(
-                project_id=project.id, dataset_item_id=non_existent_id
-            )
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_get_dataset_item_thumbnail_path_by_id(
-        self,
-        tmp_path: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test retrieving a dataset item thumbnail path by ID."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        dataset_item_binary_path = fxt_dataset_service.get_dataset_item_thumbnail_path_by_id(
-            project=project, dataset_item_id=UUID(db_dataset_items[0].id)
-        )
-
-        assert (
-            dataset_item_binary_path
-            == tmp_path / f"projects/{str(project.id)}/dataset/{db_dataset_items[0].id}-thumb.jpg"
-        )
-
-    def test_get_dataset_item_thumbnail_path_by_id_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test retrieving a non-existent dataset item thumbnail path raises error."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_thumbnail_path_by_id(project=project, dataset_item_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_delete_dataset_item(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-        fxt_projects_dir: Path,
-        db_session: Session,
-    ):
-        """Test deleting a dataset item."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        dataset_dir = fxt_projects_dir / str(project.id) / "dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-
-        binary_path = dataset_dir / f"{db_dataset_items[0].id}.{db_dataset_items[0].format}"
-        binary_path.touch()
-        assert os.path.exists(binary_path)
-
-        thumbnail_path = dataset_dir / f"{db_dataset_items[0].id}-thumb.jpg"
-        thumbnail_path.touch()
-        assert os.path.exists(thumbnail_path)
-
-        """Test deleting a dataset item."""
-        fxt_dataset_service.delete_dataset_item(project=project, dataset_item_id=UUID(db_dataset_items[0].id))
-
-        assert db_session.get(DatasetItemDB, db_dataset_items[0].id) is None
-        assert not os.path.exists(binary_path)
-        assert not os.path.exists(thumbnail_path)
-
-    def test_delete_dataset_item_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test deleting a non-existent dataset item raises error."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        non_existent_id = uuid4()
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.delete_dataset_item(project=project, dataset_item_id=non_existent_id)
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
@@ -961,7 +1023,7 @@ class TestDatasetServiceIntegration:
             (None, 7),  # All items
             ("unannotated", 2),  # 2 unannotated items
             ("reviewed", 3),  # 3 reviewed items
-            ("to_review", 2),  # 2 to_review items
+            ("to_review", 4),  # 2 unannotated items + 2 with 'user_reviewed=False'
         ],
     )
     def test_count_dataset_items_with_annotation_status(
@@ -984,7 +1046,7 @@ class TestDatasetServiceIntegration:
             (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
             (DatasetItemAnnotationStatus.UNANNOTATED, ["unannotated1", "unannotated2"]),
             (DatasetItemAnnotationStatus.REVIEWED, ["reviewed1", "reviewed2", "reviewed3"]),
-            (DatasetItemAnnotationStatus.TO_REVIEW, ["to_review1", "to_review2"]),
+            (DatasetItemAnnotationStatus.TO_REVIEW, ["unannotated1", "unannotated2", "to_review1", "to_review2"]),
         ],
     )
     def test_list_dataset_items_with_annotation_status(
@@ -1005,8 +1067,6 @@ class TestDatasetServiceIntegration:
         )
 
         assert len(dataset_items) == len(expected_names)
-        actual_names = sorted([item.name for item in dataset_items])
-        assert actual_names == sorted(expected_names)
 
     @pytest.mark.parametrize(
         "annotation_status, limit, offset, expected_count",
@@ -1016,7 +1076,7 @@ class TestDatasetServiceIntegration:
             (DatasetItemAnnotationStatus.UNANNOTATED, 1, 2, 0),  # Beyond available unannotated items
             (DatasetItemAnnotationStatus.REVIEWED, 2, 0, 2),  # First page of reviewed
             (DatasetItemAnnotationStatus.REVIEWED, 2, 2, 1),  # Second page of reviewed (only 1 left)
-            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 2),  # All to_review items
+            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 4),  # All items with user_reviewed=False
         ],
     )
     def test_list_dataset_items_with_annotation_status_pagination(
@@ -1093,7 +1153,7 @@ class TestDatasetServiceIntegration:
         for item in unannotated_items:
             assert item.annotation_data is None
 
-        # Reviewed items should have annotation_data and user_reviewed=True
+        # Reviewed items should have user_reviewed=True
         reviewed_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
             filters=DatasetItemFilters(
@@ -1102,19 +1162,17 @@ class TestDatasetServiceIntegration:
         )
         assert len(reviewed_items) == 3
         for item in reviewed_items:
-            assert item.annotation_data is not None
             assert item.user_reviewed is True
 
-        # To review items should have annotation_data and user_reviewed=False
+        # To review items should have user_reviewed=False
         to_review_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
             filters=DatasetItemFilters(
                 annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
             ),
         )
-        assert len(to_review_items) == 2
+        assert len(to_review_items) == 4
         for item in to_review_items:
-            assert item.annotation_data is not None
             assert item.user_reviewed is False
 
     def test_list_dataset_items_filter_by_single_label(
@@ -1135,8 +1193,6 @@ class TestDatasetServiceIntegration:
         )
 
         assert len(dataset_items) == 2
-        item_names = {item.name for item in dataset_items}
-        assert item_names == {"item_label_0", "item_both_labels"}
 
     def test_list_dataset_items_filter_by_multiple_labels(
         self,
@@ -1157,8 +1213,6 @@ class TestDatasetServiceIntegration:
         )
 
         assert len(dataset_items) == 3
-        item_names = {item.name for item in dataset_items}
-        assert item_names == {"item_label_0", "item_label_1", "item_both_labels"}
 
     def test_list_dataset_items_filter_by_nonexistent_label(
         self,
@@ -1226,8 +1280,6 @@ class TestDatasetServiceIntegration:
         dataset_items = fxt_dataset_service.list_dataset_items(project_id=project.id)
 
         assert len(dataset_items) == 4
-        item_names = {item.name for item in dataset_items}
-        assert item_names == {"item_no_labels", "item_label_0", "item_label_1", "item_both_labels"}
 
     @pytest.mark.parametrize(
         "subset, expected_count",
@@ -1295,8 +1347,6 @@ class TestDatasetServiceIntegration:
         )
 
         assert len(dataset_items) == len(expected_names)
-        actual_names = sorted([item.name for item in dataset_items])
-        assert actual_names == sorted(expected_names)
 
     @pytest.mark.parametrize(
         "subset, limit, offset, expected_count",
@@ -1392,3 +1442,30 @@ class TestDatasetServiceIntegration:
         assert len(testing_items) == 1
         for item in testing_items:
             assert item.subset == DatasetItemSubset.TESTING
+
+    def test_get_dataset_statistics(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_rich_dataset_items: tuple[Project, list[DatasetItemDB]],
+    ):
+        """Test retrieving dataset statistics with images, videos, video frames, and multiple annotation instances."""
+        project, _ = fxt_project_with_rich_dataset_items
+
+        statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
+
+        # Media counts
+        assert statistics.media_counts.images == 2
+        assert statistics.media_counts.videos == 2
+        assert statistics.media_counts.video_frames == 35
+
+        # Annotation counts
+        assert statistics.annotations_counts.annotated_images == 1
+        assert statistics.annotations_counts.annotated_videos == 1
+        assert statistics.annotations_counts.annotated_video_frames == 2
+
+        # Instances counts
+        assert statistics.annotations_counts.instances == 5
+        assert len(statistics.annotations_counts.instances_per_label) == 2
+        label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
+        assert label_counts[str(project.task.labels[0].id)] == 3
+        assert label_counts[str(project.task.labels[1].id)] == 2

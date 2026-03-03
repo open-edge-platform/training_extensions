@@ -12,7 +12,7 @@ from torch._dynamo.testing import CompileCounter
 from otx.backend.native.exporter.native import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection import SSD
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.types.export import TaskLevelExportParameters
 
 
@@ -49,9 +49,7 @@ class TestSSD:
 
     def test_save_and_load_anchors(self, fxt_checkpoint) -> None:
         loaded_model = SSD.load_from_checkpoint(
-            checkpoint_path=fxt_checkpoint,
-            model_name="ssd_mobilenetv2",
-            label_info=3,
+            checkpoint_path=fxt_checkpoint, model_name="ssd_mobilenetv2", label_info=3, weights_only=False
         )
 
         assert loaded_model.model.bbox_head.anchor_generator.widths[0][0] == 40
@@ -88,7 +86,7 @@ class TestSSD:
     def test_predict(self, fxt_model, fxt_detection_batch):
         fxt_model.eval()
         output = fxt_model(fxt_detection_batch)
-        assert isinstance(output, OTXPredBatch)
+        assert isinstance(output, OTXPredictionBatch)
 
     def test_export(self, fxt_model):
         fxt_model.eval()

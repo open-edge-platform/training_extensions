@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.models import DataCollectionPolicy, ModelRevision, PipelineStatus
+from app.models import DataCollectionConfig, ModelRevision, PipelineStatus
 
 from .sink import SinkView
 from .source import SourceView
@@ -17,7 +17,7 @@ class PipelineView(BaseModel):
     sink: SinkView | None = None  # None if disconnected
     model_revision: ModelRevision | None = Field(default=None, serialization_alias="model")
     status: PipelineStatus = PipelineStatus.IDLE
-    data_collection_policies: list[DataCollectionPolicy] = Field(default_factory=list)
+    data_collection: DataCollectionConfig = Field(default_factory=DataCollectionConfig)
     device: str = Field(default="cpu", description="Inference device (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')")
 
     model_config = {
@@ -40,7 +40,7 @@ class PipelineView(BaseModel):
                 },
                 "model": {
                     "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                    "architecture": "Object_Detection_YOLOX_X",
+                    "architecture": "object-detection-yolox-x",
                     "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
                     "training_info": {
                         "status": "in_progress",
@@ -54,19 +54,22 @@ class PipelineView(BaseModel):
                 },
                 "status": "running",
                 "device": "cpu",
-                "data_collection_policies": [
-                    {
-                        "type": "fixed_rate",
-                        "enabled": "true",
-                        "rate": 0.02,
-                    },
-                    {
-                        "type": "confidence_threshold",
-                        "enabled": "true",
-                        "confidence_threshold": 0.2,
-                        "min_sampling_interval": 2.5,
-                    },
-                ],
+                "data_collection": {
+                    "max_dataset_size": 500,
+                    "policies": [
+                        {
+                            "type": "fixed_rate",
+                            "enabled": True,
+                            "rate": 0.02,
+                        },
+                        {
+                            "type": "confidence_threshold",
+                            "enabled": True,
+                            "confidence_threshold": 0.2,
+                            "min_sampling_interval": 2.5,
+                        },
+                    ],
+                },
             }
         }
     }

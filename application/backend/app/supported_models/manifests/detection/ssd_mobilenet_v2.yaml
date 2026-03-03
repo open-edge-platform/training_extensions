@@ -1,0 +1,30 @@
+id: object-detection-ssd-mobilenet-v2
+name: SSD-MobileNet-V2
+
+pretrained_weights:
+  url: https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/mobilenet_v2-2s_ssd-992x736.pth
+  sha_sum: c94e3d76fb60db7de2c6fc824a692564cf7ebb2156a58ed2e0f37ff4c0089d28
+
+description: "SSD (Single Shot MultiBox Detector) is a real-time, anchor-based object detection algorithm that performs object localization and classification in a single forward pass. It uses a convolutional backbone and multiple feature maps at different scales to detect objects of various sizes. SSD balances speed and accuracy, making it efficient for deployment on resource-constrained devices."
+stats:
+  gigaflops: 9.4
+  trainable_parameters: 7.6
+  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
+    accuracy: 1
+    training_time: 2
+    inference_speed: 3
+
+hyperparameters:
+  training:
+    learning_rate: 0.01
+    allowed_values_input_size:
+      - 128
+      - 256
+      - 384
+      - 512
+      - 640
+      - 864
+      - 992
+      - 1024
+    input_size_width: 864
+    input_size_height: 864

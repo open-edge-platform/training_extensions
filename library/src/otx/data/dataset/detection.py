@@ -22,7 +22,7 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
 
     This dataset handles object detection where each image contains multiple objects with
     bounding box annotations. It processes Datumaro dataset items and converts them into
-    OTXDataItem format suitable for object detection training and inference.
+    OTXSample format suitable for object detection training and inference.
 
     Args:
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
@@ -87,6 +87,11 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
                     idx_list_per_classes[label] = []
                 idx_list_per_classes[label].append(idx)
         return idx_list_per_classes
+
+    def _apply_transforms(self, entity: DetectionSample) -> DetectionSample | None:
+        if self.has_dynamic_augmentation:
+            self._apply_augmentation_switch()
+        return super()._apply_transforms(entity)
 
     @property
     def task_type(self) -> OTXTaskType:

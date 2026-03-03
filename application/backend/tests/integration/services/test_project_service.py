@@ -3,15 +3,19 @@
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import numpy as np
 import pytest
+from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
+from app.db.schema import LabelDB, MediaDB, PipelineDB, ProjectDB
 from app.models import Label, Task, TaskType
+from app.models.media import ImageFormat
 from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError, SystemService
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
 from app.services.label_service import DuplicateLabelsError
+from app.services.media_service import MediaService
 from app.services.project_service import ProjectService
 
 
@@ -39,6 +43,15 @@ def fxt_pipeline_service(
 def fxt_label_service(db_session: Session) -> LabelService:
     """Fixture to create a LabelService instance."""
     return LabelService(db_session=db_session)
+
+
+@pytest.fixture
+def fxt_media_service(
+    fxt_projects_dir: Path,
+    db_session: Session,
+) -> MediaService:
+    """Fixture to create a MediaService instance."""
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
 
 
 @pytest.fixture
@@ -188,25 +201,26 @@ class TestProjectServiceIntegration:
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert fetched_thumbnail_path is None
 
-        # Add a dataset item
-        db_dataset_item = DatasetItemDB(
+        # Add a media
+        db_media = MediaDB(
             id=str(uuid4()),
+            type="image",
             project_id=db_project.id,
             name="item1",
             format="jpg",
             width=1920,
             height=1080,
             size=1024,
-            subset="unassigned",
+            source_id=None,
         )
-        db_session.add(db_dataset_item)
+        db_session.add(db_media)
         db_session.flush()
 
         # Now it should return the path to the thumbnail
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert (
             fetched_thumbnail_path
-            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_media.id}-thumb.jpg"
         )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
@@ -219,12 +233,32 @@ class TestProjectServiceIntegration:
         assert excinfo.value.resource_id == str(non_existent_id)
 
     def test_delete_project(
-        self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
+        self,
+        fxt_project_service: ProjectService,
+        fxt_media_service: MediaService,
+        fxt_db_projects: list[ProjectDB],
+        db_session: Session,
     ):
         """Test deleting a project."""
         db_project = fxt_db_projects[0]
         db_session.add(db_project)
         db_session.flush()
+        project = fxt_project_service.get_project_by_id(UUID(db_project.id))
+
+        # Create a dummy image
+        dummy_image = Image.fromarray(np.zeros((10, 10, 3), dtype=np.uint8))
+        # Create media using the service
+        media = fxt_media_service.create_image(
+            project_id=project.id,
+            name="test_image.jpg",
+            format=ImageFormat.JPG,
+            data=dummy_image,
+            source_id=None,
+        )
+        project_folder = fxt_project_service._projects_dir / db_project.id
+        media_file = project_folder / f"dataset/{media.id}.jpg"
+        assert project_folder.exists()
+        assert media_file.exists()
 
         fxt_project_service.delete_project_by_id(UUID(db_project.id))
         db_session.expire_all()  # Clear the session cache
@@ -232,6 +266,8 @@ class TestProjectServiceIntegration:
         assert db_session.get(ProjectDB, db_project.id) is None
         # Ensure the associated pipeline is deleted
         assert db_session.get(PipelineDB, db_project.id) is None
+        # Ensure the project directory has been removed
+        assert not project_folder.exists()
 
     def test_delete_active_project(
         self,

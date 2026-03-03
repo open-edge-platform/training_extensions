@@ -21,7 +21,7 @@ from torch.autograd import Function
 from torchvision.ops import box_convert
 
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 def images_to_levels(target: list[Tensor], num_levels: list[int]) -> list[Tensor]:
@@ -52,7 +52,7 @@ def unmap(data: Tensor, count: int, inds: Tensor, fill: int = 0) -> Tensor:
     return ret
 
 
-def unpack_det_entity(entity: OTXDataBatch) -> tuple:
+def unpack_det_entity(entity: OTXSampleBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:
@@ -249,6 +249,15 @@ def generate_anchors(image_size: tuple[int, int], strides: list[int]) -> tuple[T
     all_anchors = torch.cat(anchors, dim=0)
     all_scalers = torch.cat(scaler, dim=0)
     return all_anchors, all_scalers
+
+
+def generate_scales(input_size: int, base_size_repeat: int = 3, divisior: int = 32) -> list[int]:
+    """Generates scales for multi-scale training."""
+    scale_repeat = (input_size - int(input_size * 0.75 / divisior) * divisior) // divisior
+    scales = [int(input_size * 0.75 / divisior) * divisior + i * divisior for i in range(scale_repeat)]
+    scales += [input_size] * base_size_repeat
+    scales += [int(input_size * 1.25 / divisior) * divisior - i * divisior for i in range(scale_repeat)]
+    return scales
 
 
 def set_info_into_instance(layer_dict: dict[str, Any]) -> nn.Module:

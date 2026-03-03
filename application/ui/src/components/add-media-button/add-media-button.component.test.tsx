@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render, screen } from 'test-utils/render';
+import { fireEvent, screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
-import { AddMediaButton } from './add-media-button.component';
+import { acceptedExtensions, AddMediaButton } from './add-media-button.component';
 
 describe('AddMediaButton', () => {
     it('calls onFilesSelected correctly', () => {
@@ -19,5 +20,13 @@ describe('AddMediaButton', () => {
         fireEvent.change(input, { target: { files: [mockFile] } });
 
         expect(mockOnFilesSelected).toHaveBeenCalledWith([mockFile]);
+    });
+
+    it('sets the expected accepted file extensions', () => {
+        render(<AddMediaButton onFilesSelected={vi.fn()} />);
+
+        const input = screen.getByLabelText(/Upload media files/);
+
+        expect(input).toHaveAttribute('accept', acceptedExtensions);
     });
 });

@@ -16,7 +16,7 @@ import torch
 from torch import Tensor, nn
 
 from otx.backend.native.models.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.data.utils.structures.bbox import bbox2roi
 
 if TYPE_CHECKING:
@@ -333,7 +333,7 @@ class RoIHead(nn.Module):
         self,
         x: tuple[Tensor],
         rpn_results_list: list[InstanceData],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward the roi head and predict detection results on the features of the upstream network."""
@@ -507,7 +507,7 @@ class RoIHead(nn.Module):
         self,
         x: tuple[Tensor],
         rpn_results_list: list[InstanceData],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
     ) -> tuple[dict, dict, Any, Any, Any]:
         """Perform forward propagation and prepare outputs for loss calculation.
 

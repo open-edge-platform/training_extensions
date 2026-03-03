@@ -18,44 +18,29 @@ const fillProjectForm = async ({
     task: string;
     labelNames: string[];
 }) => {
-    // Edit name
-    await page.getByRole('button', { name: /Project #1/ }).click();
-    await page.getByLabel(/edit project name/).fill(name);
-    await page.getByRole('button', { name: /Confirm/ }).click();
+    // Set the project name
+    await page.getByRole('textbox', { name: 'Project name input' }).fill(name);
 
-    // Edit task
+    // Select task
     await page.getByLabel(task, { exact: true }).click();
 
-    // Edit first label
-    await page.getByLabel('Label input for Object').fill(labelNames[0]);
-
     // Add the rest of the labels
-    for (let i = 1; i < labelNames.length; i++) {
-        await page.getByRole('button', { name: /add next object/i }).click();
-
-        await page.getByLabel('Label input for Object').fill(labelNames[i]);
+    for (let i = 0; i < labelNames.length; i++) {
+        await page.getByRole('textbox', { name: 'Create label input' }).fill(labelNames[i]);
+        await page.getByRole('button', { name: /Create label/ }).click();
     }
 };
 
 test.describe('Project', () => {
     test.beforeEach(({ network }) => {
         network.use(
-            http.get('/api/projects', () => {
-                return HttpResponse.json([
-                    getMockedProject({
-                        id: 'id-1',
-                        name: 'Project 1',
-                    }),
-                    getMockedProject({
-                        id: 'id-2',
-                        name: 'Project 2',
-                    }),
-                    getMockedProject({
-                        id: 'id-3',
-                        name: 'Project 3',
-                    }),
-                ]);
-            })
+            http.get('/api/projects', () =>
+                HttpResponse.json([
+                    getMockedProject({ id: 'id-1', name: 'Project 1' }),
+                    getMockedProject({ id: 'id-2', name: 'Project 2' }),
+                    getMockedProject({ id: 'id-3', name: 'Project 3' }),
+                ])
+            )
         );
     });
 
@@ -99,18 +84,9 @@ test.describe('Project', () => {
         network.use(
             http.get('/api/projects', () => {
                 return HttpResponse.json([
-                    getMockedProject({
-                        id: '1',
-                        name: 'Project 1',
-                    }),
-                    getMockedProject({
-                        id: '2',
-                        name: 'Project 2',
-                    }),
-                    getMockedProject({
-                        id: 'id-3',
-                        name: 'Project 3',
-                    }),
+                    getMockedProject({ id: '1', name: 'Project 1' }),
+                    getMockedProject({ id: '2', name: 'Project 2' }),
+                    getMockedProject({ id: 'id-3', name: 'Project 3' }),
                     getMockedProject({
                         id: 'new project id',
                         name: 'New Project',
@@ -127,11 +103,13 @@ test.describe('Project', () => {
             })
         );
 
+        await expect(page.getByText('Person')).toBeVisible();
+        await expect(page.getByText('Animal')).toBeVisible();
+
         await page.getByRole('button', { name: /Create project/ }).click();
 
-        // Correctly navigated to inference page
-        await page.waitForURL(/inference/);
-        expect(page.url()).toContain('/inference');
+        // Correctly navigated to dataset page
+        await page.waitForURL(/dataset/);
 
         // Go back to project list and confirm the project was created
         await page.goto('/projects');
@@ -161,6 +139,7 @@ test.describe('Project', () => {
         );
 
         await page.getByText(/Delete/).click();
+        await page.getByRole('button', { name: /Delete/ }).click();
 
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
 

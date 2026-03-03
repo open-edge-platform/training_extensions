@@ -16,14 +16,15 @@ sinks are folders on the local filesystem or messaging frameworks like MQTT or R
 After inference, the frames and their predictions are analyzed to identify potential anomalies or out-of-distribution
 samples (_model monitoring_), and these may be collected based on one or more policies (`DataCollectionPolicy`).
 
-The collected frames are stored in a _dataset_ (`Dataset`), so that the user can
+The collected frames are stored in a _dataset_ (`Dataset`) as _media_ (`Media`), so that the user can
 examine them and eventually use them, for example, to make the model more robust via fine-tuning.
-It is also possible for the user to manually upload images to a dataset, and annotate them using the built-in
-annotation tool. A dataset is therefore a collection of image-like items (`DatasetItem`), each of which may have
-some _annotation_ data (`Annotation`) that is either a _user annotation_ or a _model prediction_.
+It is also possible for the user to manually upload images or videos to a dataset, and annotate them using the built-in
+annotation tool. User cannot annotate whole video, but can annotate certain frames.
+A dataset is therefore a collection of image-like or video items (`Media`), each of which may have
+some _annotation_ data (`Annotation`) via _dataset_item_ (`DatasetItem`) that is either a _user annotation_ or a _model prediction_.
 
 In addition to annotations, which are used when training and evaluating models, it is also possible to assign
-custom _tags_ to each media. A tag is a simple label that has no effect on model training or evaluation, but can be
+custom _tags_ to each dataset item. A tag is a simple label that has no effect on model training or evaluation, but can be
 used to organize and filter the dataset items. Filtered data, based on tags and/or other properties (e.g. timestamp),
 can be used to create a _view_ in the dataset (`DatasetView`). A dataset view basically represents a subset of the
 dataset items; the user fully controls which items belong to a view.

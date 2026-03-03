@@ -1,30 +1,44 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex } from '@geti/ui';
+import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
+import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
-import { useGetDatasetItems } from '../../features/dataset/gallery/use-get-dataset-items.hook';
+import { ExportJobsList } from '../../features/dataset/import-export/export-jobs-list/export-jobs-list.component';
+import { ImportJobsList } from '../../features/dataset/import-export/import-jobs-list/import-jobs-list.component';
 
 export const Dataset = () => {
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+    const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage, isPending } = useGetDatasetMediaItems();
 
     return (
-        <Flex
-            height={'100%'}
-            gridArea={'content'}
-            direction={'column'}
+        <Grid
+            height='100%'
+            gridArea='content'
+            rows={['auto', 'auto', '1fr']}
             UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
-            <Toolbar items={items} />
+            <View gridRow='1'>
+                <ExportJobsList predicate={({ datasetId }) => datasetId === null} />
+                <ImportJobsList />
+            </View>
 
-            <Gallery
-                items={items}
-                fetchNextPage={fetchNextPage}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-            />
-        </Flex>
+            <View gridRow='2'>
+                <Toolbar items={items} viewMode={viewMode} setViewMode={setViewMode} />
+            </View>
+
+            <View gridRow='3'>
+                <Gallery
+                    items={items}
+                    viewMode={viewMode}
+                    isPending={isPending}
+                    fetchNextPage={fetchNextPage}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                />
+            </View>
+        </Grid>
     );
 };

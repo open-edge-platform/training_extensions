@@ -1,85 +1,119 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useState } from 'react';
-
-import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Heading, Loading, Text, View } from '@geti/ui';
+import {
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    Divider,
+    Flex,
+    Footer,
+    Heading,
+    InlineAlert,
+    Link,
+    Text,
+    toast,
+} from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty } from 'lodash-es';
+import { useMatch } from 'react-router';
 
-import { $api } from '../../../api/client';
-import { ModelTypesList } from './model-types-list/model-types-list.component';
+import { paths } from '../../../constants/paths';
+import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
+import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
+import { TrainModelDialogContent } from './train-model-dialog-content';
+import { useTrainModel } from './train-model-provider.component';
 
-import classes from './train-model-dialog.module.scss';
-
-interface TrainModelDialogProps {
-    isOpen: boolean;
+type TrainModelDialogProps = {
     onClose: () => void;
-}
+};
 
-export const TrainModelDialog = ({ isOpen, onClose }: TrainModelDialogProps) => {
-    const project_id = useProjectIdentifier();
-    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(null);
-    const jobMutation = $api.useMutation('post', '/api/jobs');
+export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
+    const {
+        selectedTrainingDevice,
+        selectedModelArchitectureId,
+        selectedDatasetRevisionId,
+        selectedModelRevisionId,
+        datasetRevisions,
+        modelRevisions,
+    } = useTrainModel();
+    const trainModelMutation = useTrainModelMutation();
+    const projectId = useProjectIdentifier();
+    const isModelsPage = useMatch(paths.project.models.pattern);
+    const isTrainingDisabled = useIsTrainingButtonDisabled();
 
-    const handleSubmit = async () => {
-        await jobMutation.mutateAsync({
-            body: {
-                job_type: 'train',
-                project_id,
-                parameters: {
-                    // TODO: device is hardcoded for now but once we have the train model designs updated
-                    // we will have a dropdown to pick this device so this needs to be updated
-                    device: 'cpu',
-                    model_architecture_id: String(selectedModelArchitectureId),
-                },
+    const isStartButtonDisabled =
+        isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null;
+
+    const trainModel = () => {
+        if (isStartButtonDisabled) return;
+
+        const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
+        const parentModelRevisionId = modelRevisions.find((revision) => revision.id === selectedModelRevisionId)?.value;
+
+        trainModelMutation.mutate(
+            {
+                datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
+                parentModelRevisionId: parentModelRevisionId === undefined ? null : parentModelRevisionId,
+                device: selectedTrainingDevice,
+                modelArchitectureId: selectedModelArchitectureId,
             },
-        });
-        onClose();
+            () => {
+                onClose();
+
+                toast({
+                    message: isModelsPage ? (
+                        <Text>Model training started successfully.</Text>
+                    ) : (
+                        <Flex alignItems={'center'} gap={'size-50'} wrap={'wrap'}>
+                            <Text>
+                                Model training started successfully.{' '}
+                                <Link href={paths.project.models({ projectId })} UNSAFE_style={{ color: '#fff' }}>
+                                    Open models screen to see progress.
+                                </Link>
+                            </Text>
+                        </Flex>
+                    ),
+                    type: 'success',
+                });
+            }
+        );
     };
 
     return (
-        <DialogContainer onDismiss={onClose}>
-            {isOpen && (
-                <Dialog maxWidth={'100rem'} width={'80vw'}>
-                    <Heading>
-                        <Text UNSAFE_className={classes.title}>Train model</Text>
-                    </Heading>
-                    <Divider marginBottom={'size-100'} />
-                    <Content minHeight={'size-1000'}>
-                        <View
-                            flex={1}
-                            padding={'size-250'}
-                            minHeight={0}
-                            backgroundColor={'gray-50'}
-                            overflow={'hidden auto'}
-                        >
-                            <Text UNSAFE_className={classes.subtitle} marginBottom={'size-100'}>
-                                Model type
-                            </Text>
-                            <Suspense fallback={<Loading mode='inline' />}>
-                                <ModelTypesList
-                                    selectedModelArchitectureId={selectedModelArchitectureId}
-                                    setSelectedModelArchitectureId={setSelectedModelArchitectureId}
-                                />
-                            </Suspense>
-                        </View>
-                    </Content>
-                    <ButtonGroup>
-                        <Button variant={'secondary'} onPress={onClose}>
-                            Cancel
-                        </Button>
-                        <Button
-                            variant={'accent'}
-                            onPress={handleSubmit}
-                            isPending={jobMutation.isPending}
-                            isDisabled={isEmpty(selectedModelArchitectureId) || jobMutation.isPending}
-                        >
-                            Start
-                        </Button>
-                    </ButtonGroup>
-                </Dialog>
-            )}
-        </DialogContainer>
+        <Dialog width={'clamp(800px, 50vw, 1150px)'}>
+            <Heading>Select a model to train</Heading>
+
+            <Divider size={'S'} />
+
+            <Content>
+                <TrainModelDialogContent />
+            </Content>
+
+            <Divider size={'S'} />
+
+            <Footer>
+                <Flex alignItems={'center'} marginBottom={'size-200'}>
+                    {isTrainingDisabled ? (
+                        <InlineAlert variant={'notice'}>
+                            <Heading>Why can I not start training?</Heading>
+                            <Content>
+                                In order to train a model, you need to annotate at least 3 items in your dataset,
+                                although we recommend annotating several more for better results.
+                            </Content>
+                        </InlineAlert>
+                    ) : null}
+                </Flex>
+
+                <ButtonGroup marginStart={'auto'}>
+                    <Button variant={'secondary'} onPress={onClose}>
+                        Cancel
+                    </Button>
+                    <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
+                        Start
+                    </Button>
+                </ButtonGroup>
+            </Footer>
+        </Dialog>
     );
 };

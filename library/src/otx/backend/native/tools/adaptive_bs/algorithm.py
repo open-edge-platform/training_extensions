@@ -48,7 +48,7 @@ class BsSearchAlgo:
         self._total_mem = _get_total_memory_size()
         self._mem_lower_bound = 0.75 * self._total_mem
         self._mem_upper_bound = 0.9 * self._total_mem
-        self._mp_ctx = mp.get_context("spawn")
+        self._mp_ctx = mp.get_context()
 
     def _try_batch_size(self, bs: int) -> tuple[bool, int]:
         trial_queue = self._mp_ctx.Queue()

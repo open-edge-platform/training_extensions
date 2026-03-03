@@ -1,160 +1,63 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Key, useEffect, useRef, useState } from 'react';
-
-import {
-    ActionMenu,
-    AlertDialog,
-    DialogContainer,
-    Flex,
-    Item,
-    PhotoPlaceholder,
-    Text,
-    TextField,
-    type TextFieldRef,
-} from '@geti/ui';
+import { Flex, PhotoPlaceholder, Text } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
 import type { SchemaProjectView } from '../../../api/openapi-spec';
 import { paths } from '../../../constants/paths';
+import { MenuActions } from '../../../features/project/list/menu-actions/menu-actions.component';
+import { useProjects } from '../../../hooks/api/project.hook';
 
-import styles from './project-list-item.module.scss';
-
-interface ProjectEditionProps {
-    onBlur: (newName: string) => void;
-    name: string;
-}
-
-const ProjectEdition = ({ name, onBlur }: ProjectEditionProps) => {
-    const textFieldRef = useRef<TextFieldRef>(null);
-    const [newName, setNewName] = useState<string>(name);
-
-    const handleBlur = () => {
-        onBlur(newName);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            onBlur(newName);
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            setNewName(name);
-            onBlur(name);
-        }
-    };
-
-    useEffect(() => {
-        textFieldRef.current?.select();
-    }, []);
-
-    return (
-        <TextField
-            isQuiet
-            ref={textFieldRef}
-            value={newName}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            onChange={setNewName}
-            aria-label='Edit project name'
-        />
-    );
-};
-
-const PROJECT_ACTIONS = {
-    RENAME: 'Rename',
-    DELETE: 'Delete',
-};
-
-interface ProjectActionsProps {
-    onAction: (key: Key) => void;
-}
-
-interface DeleteProjectDialogProps {
-    onDelete: () => void;
-    projectName: string;
-}
-
-const DeleteProjectDialog = ({ projectName, onDelete }: DeleteProjectDialogProps) => {
-    return (
-        <AlertDialog
-            title='Delete'
-            variant='destructive'
-            primaryActionLabel='Delete'
-            onPrimaryAction={onDelete}
-            cancelLabel={'Cancel'}
-        >
-            {`Are you sure you want to delete project "${projectName}"?`}
-        </AlertDialog>
-    );
-};
-
-const ProjectActions = ({ onAction }: ProjectActionsProps) => {
-    return (
-        <ActionMenu isQuiet onAction={onAction} aria-label={'Project actions'} UNSAFE_className={styles.actionMenu}>
-            {[PROJECT_ACTIONS.RENAME, PROJECT_ACTIONS.DELETE].map((action) => (
-                <Item key={action}>{action}</Item>
-            ))}
-        </ActionMenu>
-    );
-};
+import classes from './project-list-item.module.scss';
 
 interface ProjectListItemProps {
     project: SchemaProjectView;
-    isInEditMode: boolean;
-    onBlur: (projectId: string, newName: string) => void;
-    onRename: (projectId: string) => void;
-    onDelete: (projectId: string) => void;
 }
 
-export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDelete }: ProjectListItemProps) => {
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
+export const ProjectListItem = ({ project }: ProjectListItemProps) => {
     const navigate = useNavigate();
+    const currentProjectId = useProjectIdentifier();
+    const { data: projects } = useProjects();
 
-    const handleAction = (key: Key) => {
-        if (key === PROJECT_ACTIONS.RENAME) {
-            onRename(project.id);
-        } else if (key === PROJECT_ACTIONS.DELETE) {
-            setIsDeleteDialogOpen(true);
+    const handleNavigateToProject = () => {
+        navigate(paths.project.dataset.index({ projectId: project.id }));
+    };
+
+    const handleDeleted = () => {
+        if (project.id === currentProjectId) {
+            const remainingProjects = projects.filter((p) => p.id !== project.id);
+
+            if (remainingProjects.length > 0) {
+                navigate(paths.project.index({}));
+            } else {
+                navigate(paths.project.new({}));
+            }
         }
     };
 
-    const handleBlur = (projectId: string) => (newName: string) => {
-        onBlur(projectId, newName);
-    };
-
-    const handleDelete = () => {
-        onDelete(project.id);
-    };
-
-    const handleNavigateToProject = () => {
-        navigate(paths.project.details({ projectId: project.id }));
-    };
-
     return (
-        <>
-            <li className={styles.projectListItem} onClick={isInEditMode ? undefined : handleNavigateToProject}>
-                <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
-                    {isInEditMode ? (
-                        <ProjectEdition name={project.name} onBlur={handleBlur(project.id)} />
-                    ) : (
-                        <Flex alignItems={'center'} gap={'size-100'}>
-                            <PhotoPlaceholder
-                                name={project.name}
-                                indicator={project.id ?? project.name}
-                                height={'size-300'}
-                                width={'size-300'}
-                            />
-                            <Text>{project.name}</Text>
-                        </Flex>
-                    )}
-                    <ProjectActions onAction={handleAction} />
+        <li className={classes.projectListItem} onClick={handleNavigateToProject}>
+            <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
+                <Flex alignItems={'center'} gap={'size-100'} minWidth={0}>
+                    <PhotoPlaceholder
+                        name={project.name}
+                        indicator={project.id ?? project.name}
+                        height={'size-300'}
+                        width={'size-300'}
+                    />
+                    <Text UNSAFE_className={classes.projectName}>
+                        <span title={project.name}>{project.name}</span>
+                    </Text>
                 </Flex>
-            </li>
-            <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
-                {isDeleteDialogOpen && <DeleteProjectDialog onDelete={handleDelete} projectName={project.name} />}
-            </DialogContainer>
-        </>
+                <MenuActions
+                    projectId={project.id}
+                    projectName={project.name}
+                    isPipelineRunning={project.active_pipeline}
+                    onDeleted={handleDeleted}
+                />
+            </Flex>
+        </li>
     );
 };

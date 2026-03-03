@@ -1,3 +1,5 @@
+@use '../../../shared/styles/line-clamp' as lineClamp;
+
 .dialog {
     background-color: var(--spectrum-gray-100);
     background-image: url('./../../../assets/background.png');
@@ -24,7 +26,10 @@
 }
 
 .card {
-    border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
+    --thumbnail-size: var(--spectrum-global-dimension-size-2000);
+    --border-size: var(--spectrum-global-dimension-size-25);
+
+    border: var(--border-size) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
     height: 100%;
@@ -33,9 +38,11 @@
         border 0.2s ease-in-out;
 
     img {
-        height: 100%;
-        width: var(--spectrum-global-dimension-size-2000);
+        width: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
         object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     &:hover {
@@ -46,6 +53,12 @@
 
 .activeCard {
     border-color: var(--energy-blue);
+    background-color: var(--selection-dark-blue);
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+        background-color: hsl(from var(--selection-dark-blue) h s calc(l + 5));
+    }
 
     h3 {
         color: var(--energy-blue);
@@ -53,16 +66,19 @@
 }
 
 .tag {
-    width: fit-content;
-    color: var(--spectrum-gray-50);
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--spectrum-global-color-gray-800);
-    padding: var(--spectrum-global-dimension-size-25);
-    border-radius: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-900);
 }
 
 .activeTag {
     color: var(--spectrum-gray-50);
-
     background-color: var(--energy-blue) !important;
+}
+
+.projectName {
+    @include lineClamp.clamp(1);
+}
+
+.labelList {
+    @include lineClamp.clamp(3);
 }

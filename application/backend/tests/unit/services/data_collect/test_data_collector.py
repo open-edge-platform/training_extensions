@@ -6,19 +6,20 @@ from unittest.mock import ANY, MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
+import pydantic_core
 import pytest
 import time_machine
 
 from app.models import (
     ConfidenceThresholdDataCollectionPolicy,
     DatasetItemAnnotation,
-    DatasetItemFormat,
     FixedRateDataCollectionPolicy,
     FullImage,
     Label,
     LabelReference,
 )
-from app.services import DatasetService, LabelService
+from app.models.media import ImageFormat
+from app.services import DatasetService, LabelService, MediaService
 from app.services.data_collect.data_collector import (
     ConfidenceThresholdPolicyChecker,
     DataCollector,
@@ -28,6 +29,20 @@ from app.services.data_collect.data_collector import (
 
 class TestFixedRatePolicyCheckerUnit:
     """Unit tests for FixedRatePolicyChecker."""
+
+    def test_zero_rate_raises_error_in_policy(self):
+        # Arrange, Act and Assert
+        with pytest.raises(pydantic_core.ValidationError):
+            FixedRateDataCollectionPolicy(rate=0)  # type: ignore[bad_argument_type]
+
+    def test_zero_rate_raises_error_in_checker(self):
+        # Arrange
+        policy = FixedRateDataCollectionPolicy(rate=0.1)
+        policy.rate = 0
+
+        # Act and Assert
+        with pytest.raises(ValueError):
+            FixedRatePolicyChecker(policy)
 
     def test_should_collect_true(self):
         # Arrange
@@ -130,10 +145,13 @@ class TestDataCollectorUnit:
         """
         # Arrange
         pipeline = MagicMock()
+        pipeline.data_collection.max_dataset_size = None  # No limit
         project = MagicMock()
         label = MagicMock(spec=Label)
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
+
+        media = MagicMock()
 
         now = datetime.timestamp(datetime.now())
 
@@ -147,12 +165,14 @@ class TestDataCollectorUnit:
 
         # Act
         with (
+            patch.object(MediaService, "create_image") as mock_create_image,
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
             patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
             patch(
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
         ):
+            mock_create_image.return_value = media
             fxt_data_collector.collect(
                 timestamp=now,
                 frame_data=frame_data,
@@ -164,13 +184,18 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_called_once_with(
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
-        mock_create_dataset_item.assert_called_once_with(
-            project=project,
-            name="1735689601_0000",
-            format=DatasetItemFormat.JPG,
+        mock_create_image.assert_called_once_with(
+            project_id=project.id,
             data=ANY,
-            user_reviewed=False,
+            name="1735689601_0000",
+            format=ImageFormat.JPG,
             source_id=pipeline.source_id,
+        )
+        mock_create_dataset_item.assert_called_once_with(
+            project_id=project.id,
+            task=project.task,
+            media=media,
+            user_reviewed=False,
             prediction_model_id=inference_data.model_id,
             annotations=annotations,
         )
@@ -182,10 +207,13 @@ class TestDataCollectorUnit:
         """
         # Arrange
         pipeline = MagicMock()
+        pipeline.data_collection.max_dataset_size = None  # No limit
         project = MagicMock()
         label = MagicMock(spec=Label)
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
+
+        media = MagicMock()
 
         now = datetime.timestamp(datetime.now())
 
@@ -199,12 +227,14 @@ class TestDataCollectorUnit:
 
         # Act
         with (
+            patch.object(MediaService, "create_image") as mock_create_image,
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
             patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
             patch(
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
         ):
+            mock_create_image.return_value = media
             fxt_data_collector.collect(
                 timestamp=now,
                 frame_data=frame_data,
@@ -216,13 +246,104 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_called_once_with(
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
-        mock_create_dataset_item.assert_called_once_with(
-            project=project,
-            name="1735689601_0000",
-            format=DatasetItemFormat.JPG,
+        mock_create_image.assert_called_once_with(
+            project_id=project.id,
             data=ANY,
-            user_reviewed=False,
+            name="1735689601_0000",
+            format=ImageFormat.JPG,
             source_id=pipeline.source_id,
+        )
+        mock_create_dataset_item.assert_called_once_with(
+            project_id=project.id,
+            task=project.task,
+            media=media,
+            user_reviewed=False,
             prediction_model_id=inference_data.model_id,
             annotations=annotations,
         )
+
+    @time_machine.travel("2025-01-01 00:00:01 +0000", tick=False)
+    def test_collect_max_dataset_size_reached(self, fxt_data_collector):
+        """
+        No images should be collected if max_dataset_size limit has been reached
+        """
+        # Arrange
+        pipeline = MagicMock()
+        pipeline.data_collection.max_dataset_size = 100  # Set limit
+        project = MagicMock()
+        frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
+        inference_data = MagicMock()
+
+        now = datetime.timestamp(datetime.now())
+
+        policy_checker = MagicMock()
+        policy_checker.should_collect.return_value = True
+        fxt_data_collector.active_pipeline_data = pipeline, project
+        fxt_data_collector.policy_checkers = [policy_checker]
+        fxt_data_collector.should_collect_next_frame = False
+
+        # Act
+        with (
+            patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
+            patch.object(DatasetService, "count_dataset_items", return_value=100) as mock_count_dataset_items,
+            patch("app.services.data_collect.data_collector.convert_prediction") as mock_convert_prediction,
+        ):
+            fxt_data_collector.collect(
+                timestamp=now,
+                frame_data=frame_data,
+                inference_data=inference_data,
+            )
+
+        # Assert: should check count but not create item because limit is reached
+        mock_count_dataset_items.assert_called_once_with(project=project)
+        mock_convert_prediction.assert_not_called()
+        mock_create_dataset_item.assert_not_called()
+
+    @time_machine.travel("2025-01-01 00:00:01 +0000", tick=False)
+    def test_collect_max_dataset_size_not_reached(self, fxt_data_collector):
+        """
+        Images should be collected if max_dataset_size limit has not been reached
+        """
+        # Arrange
+        pipeline = MagicMock()
+        pipeline.data_collection.max_dataset_size = 100  # Set limit
+        project = MagicMock()
+        label = MagicMock(spec=Label)
+        frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
+        inference_data = MagicMock()
+
+        media = MagicMock()
+
+        now = datetime.timestamp(datetime.now())
+
+        policy_checker = MagicMock()
+        policy_checker.should_collect.return_value = True
+        fxt_data_collector.active_pipeline_data = pipeline, project
+        fxt_data_collector.policy_checkers = [policy_checker]
+        fxt_data_collector.should_collect_next_frame = False
+
+        annotations = [DatasetItemAnnotation(labels=[LabelReference(id=uuid4())], shape=FullImage())]
+
+        # Act
+        with (
+            patch.object(MediaService, "create_image") as mock_create_image,
+            patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
+            patch.object(DatasetService, "count_dataset_items", return_value=50) as mock_count_dataset_items,
+            patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
+            patch(
+                "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
+            ) as mock_convert_prediction,
+        ):
+            mock_create_image.return_value = media
+            fxt_data_collector.collect(
+                timestamp=now,
+                frame_data=frame_data,
+                inference_data=inference_data,
+            )
+
+        # Assert: should check count and create item because under limit
+        mock_count_dataset_items.assert_called_once_with(project=project)
+        mock_list_all.assert_called_once_with(project_id=project.id)
+        mock_convert_prediction.assert_called_once()
+        mock_create_dataset_item.assert_called_once()
+        mock_create_image.assert_called_once()

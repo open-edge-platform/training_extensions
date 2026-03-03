@@ -1,23 +1,21 @@
 name: Geti Tune UI checks
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - develop
-      - release/**
-    tags:
-      - "v*"
-  pull_request:
   merge_group:
     branches:
       - develop
       - release/**
+  push:
+    tags:
+      - "v*"
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 permissions: {} # No permissions by default on workflow level
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  group: ui-lint-and-test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,33 +26,23 @@ jobs:
     name: Check if workflow should run
     runs-on: ubuntu-latest
     outputs:
-      run_workflow: ${{ steps.run_workflow.outputs.run }}
+      run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
-      - name: Checkout repository
+      - &checkout
+        name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - name: Get all paths that should trigger the workflow
-        id: changed-files-yaml
-        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+      - name: Check paths
+        id: check_paths
+        uses: ./.github/actions/check-paths
         with:
           files_yaml: |
             test:
               - application/backend/**
               - application/ui/**
               - .github/**
-
-      - name: Set run flag
-        id: run_workflow
-        run: |
-          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          elif [ "${{ steps.changed-files-yaml.outputs.test_any_changed }}" = "true" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
 
   generate-openapi-spec:
     name: Generate OpenAPI Spec
@@ -64,10 +52,7 @@ jobs:
     permissions:
       contents: read # to checkout code
     steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
@@ -79,14 +64,15 @@ jobs:
 
       - name: Prepare venv and install Python dependencies
         working-directory: application/backend
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen --extra cpu
 
       - name: Get OpenAPI spec
         working-directory: application/backend
-        run: |
-          just gen-openapi
+        run: just gen-openapi
 
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -101,18 +87,17 @@ jobs:
     permissions:
       contents: read # to checkout code
     steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      - &setup-node
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
           package-manager-cache: false
 
-      - name: Install dependencies
+      - &install-dependencies
+        name: Install dependencies
         working-directory: "application/ui"
         run: npm ci
 
@@ -139,28 +124,21 @@ jobs:
     permissions:
       contents: read # to checkout code
     steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        id: setup-node
-        with:
-          node-version-file: application/ui/.nvmrc
-          package-manager-cache: false
+      - *setup-node
 
-      - name: Install dependencies
-        working-directory: "application/ui"
-        run: npm ci
+      - *install-dependencies
 
-      - name: Download OpenAPI spec artifact
+      - &download-openapi-spec
+        name: Download OpenAPI spec artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: openapi-spec
           path: application/ui/src/api
 
-      - name: Build OpenAPI type definitions
+      - &build-openapi-types
+        name: Build OpenAPI type definitions
         working-directory: "application/ui"
         run: npm run build:api
 
@@ -191,30 +169,15 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
+      - *checkout
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        id: setup-node
-        with:
-          node-version-file: application/ui/.nvmrc
-          package-manager-cache: false
+      - *setup-node
 
-      - name: Install dependencies
-        working-directory: "application/ui"
-        run: npm ci
+      - *install-dependencies
 
-      - name: Download OpenAPI spec artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-        with:
-          name: openapi-spec
-          path: application/ui/src/api
+      - *download-openapi-spec
 
-      - name: Build OpenAPI type definitions
-        working-directory: "application/ui"
-        run: npm run build:api
+      - *build-openapi-types
 
       - name: UI Unit tests
         working-directory: "application/ui"
@@ -301,21 +264,11 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
     steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ inputs.ref || '' }}
+      - *checkout
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
-        id: setup-node
-        with:
-          node-version-file: application/ui/.nvmrc
-          package-manager-cache: false
+      - *setup-node
 
-      - name: Install dependencies
-        working-directory: "application/ui"
-        run: npm ci
+      - *install-dependencies
 
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
@@ -326,15 +279,9 @@ jobs:
         working-directory: "application/ui"
         run: tar -xzf dist.tar.gz
 
-      - name: Download OpenAPI spec artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-        with:
-          name: openapi-spec
-          path: application/ui/src/api
+      - *download-openapi-spec
 
-      - name: Build OpenAPI type definitions
-        working-directory: "application/ui"
-        run: npm run build:api
+      - *build-openapi-types
 
       - name: Run Playwright tests
         working-directory: "application/ui"

@@ -1,9 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { screen } from '@testing-library/react';
+import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { HttpResponse } from 'msw';
+import { render } from 'test-utils/render';
 
+import { API_BASE_URL } from '../../../api/client';
+import { http } from '../../../api/utils';
+import { server } from '../../../msw-node-setup';
 import { ProjectCard } from './project-card.component';
 
 describe('ProjectCard', () => {
@@ -20,7 +26,15 @@ describe('ProjectCard', () => {
         },
     });
 
-    it('should render all elements correctly', async () => {
+    beforeEach(() => {
+        server.use(
+            http.get('/api/projects/{project_id}/pipeline', () => {
+                return HttpResponse.json(getMockedPipeline({ status: 'idle' }));
+            })
+        );
+    });
+
+    it('renders all elements correctly', async () => {
         render(<ProjectCard item={mockProject} />);
 
         expect(await screen.findByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
@@ -28,33 +42,33 @@ describe('ProjectCard', () => {
         const thumbnail = await screen.findByRole('img', { name: 'Test Project' });
         expect(thumbnail).toBeInTheDocument();
         expect(thumbnail).toHaveAttribute('alt', 'Test Project');
+        expect(thumbnail).toHaveAttribute('src', `${API_BASE_URL}/api/projects/test-project-id/thumbnail`);
 
-        expect(await screen.findByText('detection')).toBeInTheDocument();
+        expect(await screen.findByText('Detection')).toBeInTheDocument();
         expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();
-        expect(await screen.findByText('• Edited: 2025-08-07 06:05 AM')).toBeInTheDocument();
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 
-    it('should show active tag when pipeline is running', async () => {
+    it('shows active tag when pipeline is running', async () => {
         render(<ProjectCard item={{ ...mockProject, active_pipeline: true }} />);
 
-        expect(await screen.findByLabelText('Active')).toBeInTheDocument();
+        expect(await screen.findByText('Active')).toBeInTheDocument();
     });
 
-    it('should not show active tag when pipeline is idle', async () => {
+    it('does not show active tag when pipeline is idle', async () => {
         render(<ProjectCard item={mockProject} />);
 
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
     });
 
-    it('should render as a link to project inference page', async () => {
+    it('renders as a link to project dataset page', async () => {
         render(<ProjectCard item={mockProject} />);
 
         const cardLink = await screen.findByRole('link');
-        expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/inference');
+        expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/dataset');
     });
 
-    it('should display single label correctly', async () => {
+    it('displays single label correctly', async () => {
         const singleLabelProject = getMockedProject({
             task: {
                 task_type: 'classification',
@@ -68,7 +82,7 @@ describe('ProjectCard', () => {
         expect(await screen.findByText('• Labels: Person')).toBeInTheDocument();
     });
 
-    it('should display multiple labels separated by commas', async () => {
+    it('displays multiple labels separated by commas', async () => {
         const multiLabelProject = getMockedProject({
             task: {
                 task_type: 'detection',
@@ -100,33 +114,23 @@ describe('ProjectCard', () => {
         expect(await screen.findByText('• Labels:')).toBeInTheDocument();
     });
 
-    it('should display classification task type', async () => {
+    it('displays classification task type', async () => {
         const classificationProject = getMockedProject({
-            task: { ...mockProject.task, task_type: 'classification' },
+            task: { ...mockProject.task, task_type: 'classification', exclusive_labels: true },
         });
 
         render(<ProjectCard item={classificationProject} />);
 
-        expect(await screen.findByText('classification')).toBeInTheDocument();
+        expect(await screen.findByText('Classification')).toBeInTheDocument();
     });
 
-    it('should pass correct project id to menu actions', async () => {
-        render(<ProjectCard item={mockProject} />);
+    it('displays multi-label classification task type', async () => {
+        const classificationProject = getMockedProject({
+            task: { ...mockProject.task, task_type: 'classification', exclusive_labels: false },
+        });
 
-        const menuButton = await screen.findByRole('button', { name: /open project options/i });
-        expect(menuButton).toBeInTheDocument();
-    });
+        render(<ProjectCard item={classificationProject} />);
 
-    it('should handle menu actions without interfering with card click', async () => {
-        render(<ProjectCard item={mockProject} />);
-
-        const menuButton = await screen.findByRole('button', { name: /open project options/i });
-        const cardLink = await screen.findByRole('link');
-
-        // Menu button should be clickable without triggering link navigation
-        fireEvent.click(menuButton);
-
-        expect(menuButton).toBeInTheDocument();
-        expect(cardLink).toBeInTheDocument();
+        expect(await screen.findByText('Multi-label classification')).toBeInTheDocument();
     });
 });

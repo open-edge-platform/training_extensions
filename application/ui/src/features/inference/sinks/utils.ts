@@ -8,9 +8,16 @@ import type { components } from '../../../api/openapi-spec';
 export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfigView'];
 export type MqttSinkConfig = components['schemas']['MqttSinkConfigView'];
 export type WebhookSinkConfig = components['schemas']['WebhookSinkConfigView'];
+export type DisconnectedSinkConfig = components['schemas']['RosSinkConfigView'];
+export type RosSinkConfig = components['schemas']['RosSinkConfigView'];
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
-export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig;
+export type SinkConfig =
+    | LocalFolderSinkConfig
+    | MqttSinkConfig
+    | WebhookSinkConfig
+    | DisconnectedSinkConfig
+    | RosSinkConfig;
 
 export enum SinkType {
     FOLDER = 'folder',
@@ -40,16 +47,4 @@ export const getObjectFromFormData = (keys: FormDataEntryValue[], values: FormDa
     );
 
     return Object.fromEntries(validEntries);
-};
-
-export const getLocalFolderData = <T extends { sink_type: string }>(sources: T[]) => {
-    return sources.filter(({ sink_type }) => sink_type === 'folder').at(0) as unknown as LocalFolderSinkConfig;
-};
-
-export const getMqttData = <T extends { sink_type: string }>(sources: T[]) => {
-    return sources.filter(({ sink_type }) => sink_type === 'mqtt').at(0) as unknown as MqttSinkConfig;
-};
-
-export const getWebhookData = <T extends { sink_type: string }>(sources: T[]) => {
-    return sources.filter(({ sink_type }) => sink_type === 'webhook').at(0) as unknown as WebhookSinkConfig;
 };

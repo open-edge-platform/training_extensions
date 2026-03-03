@@ -3,6 +3,7 @@
 
 import { Button, Heading, IllustratedMessage, View } from '@geti/ui';
 import { NotFound } from '@geti/ui/icons';
+import { isObject, isString } from 'lodash-es';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
 import { paths } from '../../constants/paths';
@@ -39,6 +40,10 @@ const useErrorMessage = () => {
 
     if (error instanceof TypeError) {
         return error.message;
+    }
+
+    if (isObject(error) && 'detail' in error && isString(error.detail)) {
+        return error.detail;
     }
 
     return 'An unknown error occurred';

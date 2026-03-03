@@ -18,4 +18,8 @@
         background-color: var(--energy-blue);
         fill: var(--spectrum-global-color-gray-50);
     }
+
+    &.disabled {
+        opacity: 0.5;
+    }
 }

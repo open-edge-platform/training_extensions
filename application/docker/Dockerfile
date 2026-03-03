@@ -3,12 +3,14 @@
 ##############
 # Backend base
 ##############
-FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a7110a417756ba AS backend-base
+FROM python:3.13-slim@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS backend-base
 
 # uv / uvx
-COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
+COPY --from=docker.io/astral/uv:0.10.4@sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac /uv /uvx /bin/
 
-WORKDIR /application
+ENV UV_HTTP_TIMEOUT=300
+
+WORKDIR /application/backend
 
 # Build deps (for compiling / Rust-based crates)
 # TODO: remove 'git' once all dependencies are on PyPI
@@ -31,8 +33,9 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 FROM backend-base AS cpu-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
 
 ##########
@@ -41,8 +44,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM backend-base AS gpu-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cuda
 
 ##########
@@ -51,35 +55,36 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM backend-base AS xpu-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra xpu
 
 ##################
 # Geti UI packages
 ##################
-FROM node:24-alpine3.22@sha256:4f4a059445c5a6ef2b9d169d9afde176301263178141fc05ba657dab1c84f9a7 AS geti-ui-packages
+FROM node:24-alpine3.22@sha256:bb089be859f2741e5ede9d85f47dc7daca754015b50e9642a7a45c5252807d2c AS geti-ui-packages
 
-WORKDIR /home/app/web_ui/
+WORKDIR /home/application/ui/
 RUN apk add --no-cache git=2.49.1-r0
-COPY --link ./ui/package.json ./
+COPY --link application/ui/package.json ./
 RUN npm run clone-geti-ui-packages
 
 #############
 # Web UI deps
 #############
-FROM node:24-alpine3.22@sha256:4f4a059445c5a6ef2b9d169d9afde176301263178141fc05ba657dab1c84f9a7 AS web-ui-base
+FROM node:24-alpine3.22@sha256:bb089be859f2741e5ede9d85f47dc7daca754015b50e9642a7a45c5252807d2c AS web-ui-base
 
-WORKDIR /home/app/web_ui/
+WORKDIR /home/application/ui/
 
-COPY --link ui/package.json ./
-COPY --link ui/package-lock.json ./
-COPY --from=geti-ui-packages /home/app/web_ui/packages/ /home/app/web_ui/packages/
+COPY --link application/ui/package.json ./
+COPY --link application/ui/package-lock.json ./
+COPY --from=geti-ui-packages /home/application/ui/packages/ /home/application/ui/packages/
 RUN npm ci --audit=false --ignore-scripts
 
-COPY --link ui/tsconfig.json ./
-COPY --link ui/rsbuild.config.ts ./
-COPY --link ui/src/ src/
+COPY --link application/ui/tsconfig.json ./
+COPY --link application/ui/rsbuild.config.ts ./
+COPY --link application/ui/src/ src/
 
 ########
 # Web UI
@@ -88,13 +93,15 @@ FROM web-ui-base AS web-ui
 
 ARG ASSET_PREFIX=""
 ENV ASSET_PREFIX=${ASSET_PREFIX}
+ARG PUBLIC_API_BASE_URL=""
+ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 
 RUN npm run build
 
 #########################
 # Base for CPU, GPU and XPU runtime images
 #########################
-FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a7110a417756ba AS runtime-base
+FROM python:3.13-slim@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS runtime-base
 
 ARG STATIC_FILES_DIR=""
 ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
@@ -116,9 +123,9 @@ RUN apt-get update \
     && apt-get clean
 
 # Backend code + uv from backend-base
-COPY --link backend/app /application/app
+COPY --link application/backend/app /application/backend/app
 COPY --from=backend-base /bin/uv /bin/uv
-COPY --from=web-ui /home/app/web_ui/dist/ ${STATIC_FILES_DIR}
+COPY --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 
 # Make runtime directories writable for non-root user
 RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
@@ -128,8 +135,8 @@ RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
 
 EXPOSE 7860
 
-WORKDIR /application
-ENV PYTHONPATH=/application
+WORKDIR /application/backend
+ENV PYTHONPATH=/application/backend
 
 USER ${USER_NAME}
 
@@ -140,7 +147,7 @@ CMD ["uv", "run", "app/main.py"]
 ######################
 FROM runtime-base AS geti-tune-cpu
 
-COPY --from=cpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
+COPY --from=cpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 ######################
 # Server (GPU version)
@@ -151,20 +158,20 @@ USER root
 
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
-    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb \
+    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && rm -rf cuda-keyring_1.1-1_all.deb \
     && apt-get remove -y wget
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-      nvidia-open=580.105.08-1 \
+      nvidia-open=590.48.01-1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 USER ${USER_NAME}
 
-COPY --from=gpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
+COPY --from=gpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 #######################
 ## Server (XPU version)
@@ -190,4 +197,4 @@ RUN apt-get update  \
 
 USER ${USER_NAME}
 
-COPY --from=xpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
+COPY --from=xpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv

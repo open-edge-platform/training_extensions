@@ -6,7 +6,7 @@ import { MouseEvent } from 'react';
 import { isEmpty } from 'lodash-es';
 
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
-import type { Annotation as AnnotationType } from '../types';
+import type { Annotation as AnnotationType } from '../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { Annotation } from './annotation.component';
 import { MaskAnnotations } from './mask-annotations.component';
@@ -32,6 +32,7 @@ export const Annotations = ({ annotations, width, height, isFocussed }: Annotati
     return (
         <svg
             aria-label={'annotations'}
+            data-testid={'annotation-layer'}
             width={width}
             height={height}
             tabIndex={-1}
@@ -47,7 +48,7 @@ export const Annotations = ({ annotations, width, height, isFocussed }: Annotati
             {!isEmpty(annotations) && (
                 <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
                     {annotations.map((annotation) => (
-                        <Annotation annotation={annotation} key={annotation.id} />
+                        <Annotation key={annotation.id} annotation={annotation} />
                     ))}
                 </MaskAnnotations>
             )}

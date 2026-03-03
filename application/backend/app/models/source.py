@@ -25,7 +25,7 @@ class SourceType(StrEnum):
 
 
 class BaseSourceConfig(BaseRequiredIDNameModel, BaseEntity):
-    source_type: SourceType
+    pass
 
 
 class SourceConfig(BaseModel):

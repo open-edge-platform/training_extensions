@@ -8,13 +8,8 @@ import numpy as np
 from loguru import logger
 
 from app.db import get_db_session
-from app.models import (
-    ConfidenceThresholdDataCollectionPolicy,
-    DatasetItemFormat,
-    FixedRateDataCollectionPolicy,
-    Pipeline,
-    Project,
-)
+from app.models import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, Pipeline, Project
+from app.models.media import ImageFormat
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import InferenceData
@@ -49,10 +44,12 @@ class FixedRatePolicyChecker(PolicyChecker):
     """
 
     def __init__(self, policy: FixedRateDataCollectionPolicy):
+        if policy.rate is None or policy.rate <= 0:
+            raise ValueError(f"Collection rate must be a positive float, got {policy.rate} instead.")
         self.min_interval = 1.0 / policy.rate
         self.last_collect_time = 0.0
 
-    def should_collect(self, timestamp: float, confidence_scores: list[float]) -> bool:  # noqa: ARG002
+    def should_collect(self, timestamp: float, confidence_scores: list[float]) -> bool:
         time_since_last = timestamp - self.last_collect_time
         if time_since_last < self.min_interval:
             return False
@@ -124,12 +121,12 @@ class DataCollector:
 
             self.active_pipeline_data = pipeline, project
             logger.info(
-                "Dataset collection policies set to {}, source: {}",
-                pipeline.data_collection_policies,
+                "Data collection config set to {}, source: {}",
+                pipeline.data_collection,
                 pipeline.source_id,
             )
 
-            policies = [policy for policy in pipeline.data_collection_policies if policy.enabled]
+            policies = [policy for policy in pipeline.data_collection.policies if policy.enabled]
             self.policy_checkers = []
             for policy in policies:
                 checker: PolicyChecker | None = None
@@ -156,7 +153,6 @@ class DataCollector:
 
         Args:
             timestamp: Floating-point timestamp of the captured image, used for item naming.
-            confidence: Floating-point confidence of the captured image, used for item naming.
             frame_data: Image data in numpy ndarray format (expected in BGR color space).
             inference_data: Inference data containing model predictions and model identifier.
 
@@ -167,11 +163,12 @@ class DataCollector:
             Collection occurs if any policy checker returns True OR if the
             should_collect_next_frame flag is set. Timestamp is formatted to string
             with 4 decimal places for use as dataset item name.
+            Collection is skipped if max_dataset_size is set and the dataset has reached that limit.
         """
         if self.active_pipeline_data is None:
             return
         pipeline, project = self.active_pipeline_data
-        from app.services import DatasetService, LabelService
+        from app.services import DatasetService, LabelService, MediaService
 
         confidence_scores = get_confidence_scores(prediction=inference_data.prediction)
         should_collect = (
@@ -186,17 +183,38 @@ class DataCollector:
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
             label_service = LabelService(db_session=session)
+            media_service = MediaService(data_dir=self.data_dir, db_session=session)
+            dataset_service = DatasetService(
+                label_service=label_service, media_service=media_service, db_session=session
+            )
+
+            # Check if max_dataset_size limit has been reached
+            max_dataset_size = pipeline.data_collection.max_dataset_size
+            if max_dataset_size is not None:
+                current_count = dataset_service.count_dataset_items(project=project)
+                if current_count >= max_dataset_size:
+                    logger.debug(
+                        "Dataset has reached max size limit ({}/{}), skipping data collection",
+                        current_count,
+                        max_dataset_size,
+                    )
+                    return
+
             labels = label_service.list_all(project_id=project.id)
             annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
 
-            dataset_service = DatasetService(data_dir=self.data_dir, label_service=label_service, db_session=session)
-            dataset_service.create_dataset_item(
-                project=project,
-                name=f"{timestamp:.4f}".replace(".", "_"),
-                format=DatasetItemFormat.JPG,
+            media = media_service.create_image(
+                project_id=project.id,
                 data=frame_data,
-                user_reviewed=False,
+                name=f"{timestamp:.4f}".replace(".", "_"),
+                format=ImageFormat.JPG,
                 source_id=pipeline.source_id,
+            )
+            dataset_service.create_dataset_item(
+                project_id=project.id,
+                task=project.task,
+                media=media,
+                user_reviewed=False,
                 prediction_model_id=inference_data.model_id,
                 annotations=annotations,
             )

@@ -2,16 +2,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import io
+import os
 import zipfile
-from typing import Annotated
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Annotated, cast
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
+from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
+from starlette.responses import FileResponse
 
-from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView, ProjectView
-from app.api.validators import ModelID
-from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
+from app.api.dependencies import get_model_service, get_project, get_training_configuration_service
+from app.api.schemas import ModelView, ProjectView, TrainingConfigurationView, TrainingMetricsView
+from app.api.validators import DatasetRevisionID, ModelID
+from app.models.model_revision import ModelFormat
+from app.services import (
+    ModelService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceType,
+    TrainingConfigurationService,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 
@@ -28,12 +40,18 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    dataset_revision_id: Annotated[
+        DatasetRevisionID | None,
+        Query(description="Dataset revision id for optional filtering"),
+    ] = None,
 ) -> list[ModelView]:
-    """Get all models in a project."""
-    try:
-        return [ModelView.model_validate(obj, from_attributes=True) for obj in model_service.list_models(project.id)]
-    except ResourceNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    """Get all models in a project, optionally filtered by dataset revision."""
+    model_views = []
+    for model_revision in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id):
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
+        model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
+    return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
 
 
 @router.get(
@@ -51,17 +69,17 @@ def get_model(
     model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> ModelView:
     """Get a specific model by ID."""
-    try:
-        model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
-        return ModelView.model_validate(model_revision, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
+    model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+    model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+    model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+    return ModelView.model_validate(model_view, from_attributes=True)
 
 
 @router.get(
     "/{model_id}/binary",
     responses={
-        status.HTTP_200_OK: {"description": "Model weights in OpenVINO format (zip archive)"},
+        status.HTTP_200_OK: {"description": "Model weights in either OpenVINO or ONNX format (zip archive)"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
     },
@@ -70,33 +88,75 @@ def download_model_binary(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    format: Annotated[ModelFormat, Query()] = ModelFormat.OPENVINO,
 ) -> StreamingResponse:
-    """Download trained model weights in OpenVINO format as a zip archive containing model.xml and model.bin files."""
-    try:
-        # Verify the model exists and get the model directory
-        model_dir = model_service.get_model_files_path(project_id=project.id, model_id=model_id)
-
-        # Create an in-memory zip file
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
-            xml_file = model_dir / "model.xml"
-            bin_file = model_dir / "model.bin"
-
-            zip_file.write(xml_file, arcname="model.xml")
-            zip_file.write(bin_file, arcname="model.bin")
-
-        zip_buffer.seek(0)
-
-        # Assume FP16 precision by default
-        filename = f"model-{model_id}-fp16.zip"
-
-        return StreamingResponse(
-            zip_buffer,
-            media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    """Download trained model weights in a desired format as a zip archive"""
+    files_exist, paths = model_service.get_model_binary_files(project_id=project.id, model_id=model_id, format=format)
+    if not files_exist:
+        raise ResourceNotFoundError(
+            resource_type=ResourceType.MODEL,
+            resource_id=f"{model_id} with format {format.value}",
         )
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    # Create an in-memory zip file
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
+        for path in paths:
+            zip_file.write(path, arcname=os.path.split(path)[1])
+
+    zip_buffer.seek(0)
+
+    precision = "fp16" if format != ModelFormat.PYTORCH else "fp32"
+    filename = f"model-{model_id}-{format.value}-{precision}.zip"
+
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+UPDATE_MODEL_BODY_DESCRIPTION = """
+Update name of model revision.
+"""
+UPDATE_MODEL_BODY_EXAMPLES = {
+    "name": Example(
+        summary="Update model name",
+        description="Change the name of the model",
+        value={
+            "name": "new_model_name",
+        },
+    ),
+}
+
+
+@router.patch(
+    "/{model_id}",
+    response_model=ModelView,
+    responses={
+        status.HTTP_200_OK: {"description": "Model successfully renamed"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
+    },
+)
+def rename_model(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_metadata: Annotated[
+        dict,
+        Body(
+            description=UPDATE_MODEL_BODY_DESCRIPTION,
+            openapi_examples=UPDATE_MODEL_BODY_EXAMPLES,
+        ),
+    ],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> ModelView:
+    """Rename a model"""
+    model_revision = model_service.rename_model(project_id=project.id, model_id=model_id, model_metadata=model_metadata)
+    model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+    model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+    model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+    return ModelView.model_validate(model_view, from_attributes=True)
 
 
 @router.delete(
@@ -115,11 +175,123 @@ def delete_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    files_only: Annotated[bool, Query()] = False,
 ) -> None:
-    """Delete a model from a project."""
+    """
+    Delete a given model, or the files associated with it.
+
+    If `files_only` is false, the entire model revision is deleted.
+    If `files_only` is true, only the model files are deleted (weights, training logs, ...), while model metadata
+    such as name and creation date are preserved; the model continues to exist as a lightweight record in the system,
+    although operations that depend on the presence of model files (e.g., fine-tuning, inference) will no longer be
+    possible; the only purpose of this option is to free up storage space while preserving model metadata.
+    """
     try:
-        model_service.delete_model(project_id=project.id, model_id=model_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        if files_only:
+            model_service.delete_model_files(project_id=project.id, model_id=model_id)
+        else:
+            model_service.delete_model(project_id=project.id, model_id=model_id)
     except ResourceInUseError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{model_id}/training_configuration",
+    response_model=TrainingConfigurationView,
+    responses={
+        status.HTTP_200_OK: {"description": "Training configuration for the model"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
+    },
+)
+def get_model_training_configuration(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+    training_configuration_service: Annotated[
+        TrainingConfigurationService, Depends(get_training_configuration_service)
+    ],
+) -> TrainingConfigurationView:
+    """
+    Get the configuration used to train a given model, including both the task-level and algorithm-level parameters.
+    """
+    training_configuration = training_configuration_service.get_by_model_revision(
+        project_id=project.id,
+        model_revision_id=model_id,
+    )
+    model_architecture_id = model_service.get_model_revision_architecture(project_id=project.id, model_id=model_id)
+    default_config = TrainingConfigurationService.get_default_by_model_architecture(
+        model_architecture_id=model_architecture_id
+    )
+    return TrainingConfigurationView.from_training_configuration(
+        config=training_configuration, default_config=default_config
+    )
+
+
+@router.get(
+    "/{model_id}/training_metrics",
+    response_model=TrainingMetricsView,
+    responses={
+        status.HTTP_200_OK: {"description": "Training metrics for the model"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model, or metrics file not found"},
+    },
+)
+def get_training_metrics(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> TrainingMetricsView:
+    """
+    Get metrics computed at training time, such as loss over time, validation accuracy over time, etc.
+    """
+    training_metrics = model_service.get_model_training_metrics(project_id=project.id, model_id=model_id)
+    return TrainingMetricsView.model_validate({"training_metrics": training_metrics})
+
+
+@router.get(
+    "/{model_id}/logs",
+    response_model=None,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Training logs for the model",
+            "content": {
+                "application/x-ndjson": {"description": "NDJSON format (newline-delimited JSON)"},
+                "text/plain": {"description": "Plain text format (extracted from NDJSON)"},
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model or log file not found"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Logs cannot be retrieved for models in not started or in-progress state"
+        },
+    },
+)
+def get_training_logs(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+    accept: Annotated[str | None, Header(description="Accept header to specify the desired response format")] = None,
+) -> FileResponse | StreamingResponse:
+    """
+    Download the training log file for a given model.
+    Supports content negotiation via Accept header (text/plain, application/x-ndjson).
+    """
+    try:
+        as_text = accept is not None and "text/plain" in accept.lower()
+
+        training_log = model_service.get_logs(project_id=project.id, model_id=model_id, as_text=as_text)
+        if training_log is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
+
+        if as_text:
+            return StreamingResponse(
+                content=cast(Iterable, training_log),
+                media_type="text/plain",
+                headers={"Content-Disposition": f'attachment; filename="training-{model_id}.log"'},
+            )
+
+        log_file = cast(Path, training_log)
+        return FileResponse(log_file, media_type="application/x-ndjson", filename=os.path.basename(log_file))
+    except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

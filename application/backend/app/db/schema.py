@@ -47,7 +47,7 @@ class PipelineDB(Base):
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_revision_id: Mapped[str | None] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="RESTRICT"))
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
-    data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    data_collection: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     device: Mapped[str] = mapped_column(String(50), nullable=False, default="cpu")
 
     sink = relationship("SinkDB", uselist=False, lazy="joined")
@@ -86,6 +86,7 @@ class ModelRevisionDB(BaseID):
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     project = relationship("ProjectDB", back_populates="model_revisions")
+    evaluations = relationship("EvaluationDB", back_populates="model_revision")
 
 
 class DatasetRevisionDB(BaseID):
@@ -93,27 +94,51 @@ class DatasetRevisionDB(BaseID):
     __table_args__ = (Index("idx_dataset_revisions_project", "project_id"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    training_count: Mapped[int] = mapped_column(Integer, default=0)
+    validation_count: Mapped[int] = mapped_column(Integer, default=0)
+    testing_count: Mapped[int] = mapped_column(Integer, default=0)
+    total_count: Mapped[int] = mapped_column(Integer, default=0)
+    size: Mapped[int] = mapped_column(Integer, default=0)
 
 
-class DatasetItemDB(BaseID):
+class DatasetItemDB(Base):
     __tablename__ = "dataset_items"
     __table_args__ = (Index("idx_dataset_items_user_reviewed", "project_id", "user_reviewed"),)
 
+    id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), primary_key=True, nullable=False)
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    format: Mapped[str] = mapped_column(String(50), nullable=False)
-    width: Mapped[int] = mapped_column(Integer, nullable=False)
-    height: Mapped[int] = mapped_column(Integer, nullable=False)
-    size: Mapped[int] = mapped_column(Integer, nullable=False)
     annotation_data: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
         Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True
     )
-    source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
     subset: Mapped[str | None] = mapped_column(String(20), nullable=False)
     subset_assigned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class MediaDB(BaseID):
+    __tablename__ = "media"
+    __table_args__ = (
+        Index("idx_media_video_id", "video_id"),
+        UniqueConstraint("video_id", "frame_index", name="uq_video_id_frame_index"),
+    )
+
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    format: Mapped[str] = mapped_column(String(50), nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    fps: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    frame_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    video_id: Mapped[str | None] = mapped_column(
+        Text, ForeignKey("media.id", ondelete="CASCADE"), nullable=True, default=None
+    )
+    frame_index: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    size: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
 
 
 class LabelDB(BaseID):
@@ -142,8 +167,34 @@ class TrainingConfigurationDB(BaseID):
     __tablename__ = "training_configurations"
     __table_args__ = (UniqueConstraint("project_id", "model_architecture_id", name="uq_project_model_config"),)
 
+    # Rows with 'model_architecture = null' store the task-level configuration
+    # Rows with 'model_architecture != null' store the algo-level configuration
+    # Missing rows imply that the configuration is default, with values derived from the model manifest
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     model_architecture_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # NULL for general config
     configuration_data: Mapped[dict] = mapped_column(JSON, nullable=False)
 
     project = relationship("ProjectDB")
+
+
+class EvaluationDB(BaseID):
+    __tablename__ = "evaluations"
+
+    model_revision_id: Mapped[str] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="CASCADE"))
+    dataset_revision_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("dataset_revisions.id", ondelete="CASCADE"), nullable=False
+    )
+    subset: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    metric_scores = relationship("MetricScoreDB", back_populates="evaluation")
+    model_revision = relationship("ModelRevisionDB", back_populates="evaluations")
+
+
+class MetricScoreDB(BaseID):
+    __tablename__ = "metric_scores"
+
+    evaluation_id: Mapped[str] = mapped_column(Text, ForeignKey("evaluations.id", ondelete="CASCADE"))
+    metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+
+    evaluation = relationship("EvaluationDB", back_populates="metric_scores")

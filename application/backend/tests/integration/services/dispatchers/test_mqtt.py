@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 import paho.mqtt.client as mqtt
 import pytest
+from paho.mqtt.enums import CallbackAPIVersion
 from testcontainers.compose import DockerCompose
 
 from app.models import MqttSinkConfig, OutputFormat, SinkType
@@ -106,7 +107,7 @@ def mqtt_test_subscriber(mqtt_broker):
     class TestSubscriber:
         def __init__(self):
             self.received_messages = []
-            self.client = mqtt.Client(client_id="test_subscriber")
+            self.client = mqtt.Client(callback_api_version=CallbackAPIVersion.VERSION2, client_id="test_subscriber")
             self.client.on_message = self._on_message
 
         def _on_message(self, client, userdata, msg):
@@ -155,15 +156,15 @@ class TestMqttDispatcher:
     def test_init_missing_paho_mqtt(self, mqtt_config):
         """Test initialization fails when paho-mqtt is not available."""
         with (
-            patch("app.services.dispatchers.mqtt.mqtt", None),
-            pytest.raises(ImportError, match="paho-mqtt is required"),
+            patch.dict("sys.modules", {"paho.mqtt.client": None}),
+            pytest.raises(ImportError, match="'paho-mqtt' is required"),
         ):
             MqttDispatcher(mqtt_config)
 
     def test_connection_failure(self):
         """Test connection failure to invalid broker."""
         config = MqttSinkConfig(
-            sink_type="mqtt",
+            sink_type=SinkType.MQTT,
             id=uuid4(),
             name="Test MQTT Sink",
             config_data=MqttConfig(

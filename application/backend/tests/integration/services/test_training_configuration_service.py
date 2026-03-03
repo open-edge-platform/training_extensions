@@ -9,27 +9,54 @@ from sqlalchemy.orm import Session
 from app.db.schema import ModelRevisionDB, ProjectDB, TrainingConfigurationDB
 from app.models import TaskType
 from app.models.training_configuration.configuration import (
-    GlobalDatasetPreparationParameters,
-    GlobalParameters,
-    SubsetSplit,
+    AlgoLevelParameters,
+    TaskLevelParameters,
     TrainingConfiguration,
 )
-from app.models.training_configuration.hyperparameters import Hyperparameters
+from app.models.training_configuration.dataset_preparation import (
+    AlgoLevelDatasetPreparationParameters,
+    SubsetSplit,
+    TaskLevelDatasetPreparationParameters,
+)
+from app.models.training_configuration.training import AlgoLevelTrainingParameters, EarlyStopping
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
+
+
+@pytest.fixture
+def fxt_project(db_session: Session) -> ProjectDB:
+    """Create a test project."""
+    project = ProjectDB(
+        id=str(uuid4()),
+        name="Test Detection Project",
+        task_type=TaskType.DETECTION,
+        exclusive_labels=False,
+    )
+    db_session.add(project)
+    db_session.flush()
+    return project
 
 
 @pytest.fixture
 def fxt_training_configuration() -> TrainingConfiguration:
     """Create a mock training configuration."""
     return TrainingConfiguration(
-        model_manifest_id="Custom_Image_Classification_EfficientNet-B0",
-        global_parameters=GlobalParameters(
-            dataset_preparation=GlobalDatasetPreparationParameters(
-                subset_split=SubsetSplit(),
+        task_level_parameters=TaskLevelParameters(
+            dataset_preparation=TaskLevelDatasetPreparationParameters(
+                subset_split=SubsetSplit(training=65, validation=25, test=10),
             )
         ),
-        hyperparameters=Hyperparameters(),
+        algo_level_parameters=AlgoLevelParameters(
+            dataset_preparation=AlgoLevelDatasetPreparationParameters(),
+            training=AlgoLevelTrainingParameters(
+                max_epochs=100,
+                early_stopping=EarlyStopping(enable=True, patience=5),
+                learning_rate=0.001,
+                input_size_width=256,
+                input_size_height=256,
+                allowed_values_input_size=[128, 256, 512],
+            ),
+        ),
     )
 
 
@@ -39,22 +66,21 @@ def fxt_training_configuration_service(db_session: Session) -> TrainingConfigura
 
 
 class TestTrainingConfigurationService:
-    def test_get_training_configuration_by_model_revision_id(
-        self, fxt_training_configuration, fxt_training_configuration_service, db_session
+    """Tests for TrainingConfigurationService."""
+
+    def test_get_by_model_revision(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
     ):
-        """Test getting training configuration by model revision ID."""
-        project = ProjectDB(
-            id=str(uuid4()),
-            name="Test Detection Project",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=False,
-        )
-        db_session.add(project)
+        """Test retrieving training configuration from an existing model revision."""
         model = ModelRevisionDB(
             id=str(uuid4()),
-            name="Object_Detection_YOLOv5",
-            project_id=project.id,
-            architecture="Object_Detection_YOLOv5",
+            name="YOLOX-S (abc123)",
+            project_id=fxt_project.id,
+            architecture="object-detection-yolox-s",
             training_status="running",
             training_configuration=fxt_training_configuration.model_dump(),
             label_schema_revision={},
@@ -63,162 +89,307 @@ class TestTrainingConfigurationService:
         db_session.add(model)
         db_session.flush()
 
-        training_configuration = fxt_training_configuration_service.get_training_configuration(
-            project_id=UUID(project.id), model_revision_id=UUID(model.id)
+        result = fxt_training_configuration_service.get_by_model_revision(
+            project_id=UUID(fxt_project.id),
+            model_revision_id=UUID(model.id),
         )
-        assert isinstance(training_configuration, TrainingConfiguration)
-        assert training_configuration == fxt_training_configuration
 
-    def test_get_training_configuration_by_model_revision_id_not_found(self, fxt_training_configuration_service):
-        """Test getting training configuration with non-existent model revision."""
+        assert isinstance(result, TrainingConfiguration)
+        assert result == fxt_training_configuration
+
+    def test_get_by_model_revision_with_missing_revision(
+        self,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+    ):
+        """Test that ResourceNotFoundError is raised when model revision doesn't exist."""
         with pytest.raises(ResourceNotFoundError):
-            fxt_training_configuration_service.get_training_configuration(project_id=uuid4(), model_revision_id=uuid4())
-
-    def test_get_training_configuration_by_model_architecture_id_from_db(
-        self, fxt_training_configuration, fxt_training_configuration_service, db_session
-    ):
-        """Test getting training configuration by model architecture ID from database."""
-        project = ProjectDB(
-            id=str(uuid4()),
-            name="Test Detection Project",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=False,
-        )
-        db_session.add(project)
-        training_configuration = TrainingConfigurationDB(
-            id=str(uuid4()),
-            project_id=project.id,
-            model_architecture_id="Custom_Object_Detection_YOLOX",
-            configuration_data=fxt_training_configuration.model_dump(),
-        )
-        db_session.add(training_configuration)
-        db_session.flush()
-
-        training_configuration = fxt_training_configuration_service.get_training_configuration(
-            project_id=UUID(project.id), model_architecture_id="Custom_Object_Detection_YOLOX"
-        )
-        assert isinstance(training_configuration, TrainingConfiguration)
-        assert training_configuration == fxt_training_configuration
-
-    def test_get_training_configuration_by_model_architecture_id_from_manifest(
-        self, fxt_training_configuration, fxt_training_configuration_service, db_session
-    ):
-        """Test getting training configuration by model architecture ID from manifest."""
-        training_configuration = fxt_training_configuration_service.get_training_configuration(
-            project_id=uuid4(), model_architecture_id="Custom_Object_Detection_YOLOX"
-        )
-        assert isinstance(training_configuration, TrainingConfiguration)
-        assert training_configuration != fxt_training_configuration
-
-    def test_get_training_configuration_default_by_project_type(
-        self, fxt_training_configuration, fxt_training_configuration_service, db_session
-    ):
-        """Test getting general training configuration from default model."""
-        project = ProjectDB(
-            id=str(uuid4()),
-            name="Test Detection Project",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=False,
-        )
-        db_session.add(project)
-        db_session.flush()
-
-        training_configuration = fxt_training_configuration_service.get_training_configuration(
-            project_id=UUID(project.id), model_architecture_id=None
-        )
-        assert isinstance(training_configuration, TrainingConfiguration)
-        assert training_configuration != fxt_training_configuration
-
-    def test_get_training_configuration_both_ids_provided_error(self, fxt_training_configuration_service):
-        """Test error when both model_architecture_id and model_revision_id are provided."""
-        with pytest.raises(ValueError) as exc_info:
-            fxt_training_configuration_service.get_training_configuration(
-                project_id=uuid4(), model_architecture_id="test_arch", model_revision_id=uuid4()
+            fxt_training_configuration_service.get_by_model_revision(
+                project_id=UUID(fxt_project.id),
+                model_revision_id=uuid4(),
             )
 
-        assert "Only one of model_architecture_id or model_revision_id should be provided" in str(exc_info.value)
-
-    def test_update_training_configuration_new(
-        self, fxt_training_configuration, fxt_training_configuration_service, db_session
+    def test_get_default_by_model_architecture(
+        self,
+        fxt_training_configuration_service: TrainingConfigurationService,
     ):
-        """Test updating a new training configuration."""
-        project = ProjectDB(
-            id=str(uuid4()),
-            name="Test Detection Project",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=False,
+        """Test retrieving default training configuration for a model architecture."""
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+
+        result = TrainingConfigurationService.get_default_by_model_architecture(
+            model_architecture_id="object-detection-yolox-s",
         )
-        db_session.add(project)
+
+        assert isinstance(result, TrainingConfiguration)
+        # Task-level parameters should be the defaults
+        default_task_level = TaskLevelParameters()
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.training
+            == default_task_level.dataset_preparation.subset_split.training
+        )
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.validation
+            == default_task_level.dataset_preparation.subset_split.validation
+        )
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.test
+            == default_task_level.dataset_preparation.subset_split.test
+        )
+        # Algo-level parameters should be populated from the model manifest
+        assert result.algo_level_parameters is not None
+        assert result.algo_level_parameters.training.learning_rate == 0.001
+
+        TrainingConfigurationService.get_default_by_model_architecture.cache_clear()
+
+    def test_get_by_model_architecture_with_existing_config(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
+    ):
+        """Test retrieving configuration when both task-level and algo-level configs exist in DB."""
+        # Create task-level configuration
+        task_level_config = TrainingConfigurationDB(
+            id=str(uuid4()),
+            project_id=fxt_project.id,
+            model_architecture_id=None,
+            configuration_data=fxt_training_configuration.task_level_parameters.model_dump(),
+        )
+        db_session.add(task_level_config)
+
+        # Create algo-level configuration
+        algo_level_config = TrainingConfigurationDB(
+            id=str(uuid4()),
+            project_id=fxt_project.id,
+            model_architecture_id="object-detection-yolox-s",
+            configuration_data=fxt_training_configuration.algo_level_parameters.model_dump(),
+        )
+        db_session.add(algo_level_config)
         db_session.flush()
 
-        training_config_update = {
-            "model_manifest_id": "Custom_Image_Classification_EfficientNet-B0",
-            "hyperparameters": {
-                "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
-                "training": {"max_epochs": 999},
-                "evaluation": {"metric": "new_metric"},
-            },
-            "global_parameters": {
-                "dataset_preparation": {"subset_split": {"training": 70, "validation": 15, "test": 15}}
-            },
-        }
-
-        training_configuration = fxt_training_configuration_service.update_training_configuration(
-            project_id=UUID(project.id), training_config_update=training_config_update, model_architecture_id=None
+        result = fxt_training_configuration_service.get_by_model_architecture(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-s",
         )
-        assert isinstance(training_configuration, TrainingConfiguration)
-        assert training_configuration != fxt_training_configuration
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.enable is True
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.probability == 0.5
-        assert training_configuration.hyperparameters.training.max_epochs == 999
-        assert training_configuration.hyperparameters.evaluation.metric == "new_metric"
-        assert training_configuration.global_parameters.dataset_preparation.subset_split.training == 70
-        assert training_configuration.global_parameters.dataset_preparation.subset_split.validation == 15
-        assert training_configuration.global_parameters.dataset_preparation.subset_split.test == 15
 
-    def test_update_training_configuration_update(
-        self, fxt_training_configuration, fxt_training_configuration_service, db_session
+        assert isinstance(result, TrainingConfiguration)
+        assert result.task_level_parameters.dataset_preparation.subset_split.training == 65
+        assert result.algo_level_parameters.training.max_epochs == 100
+
+    def test_get_by_model_architecture_with_default_task_level_config(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
     ):
-        """Test updating an existing training configuration with new configuration."""
-        project = ProjectDB(
+        """Test that default task-level parameters are used when not found in DB."""
+        # Only create algo-level configuration
+        algo_level_config = TrainingConfigurationDB(
             id=str(uuid4()),
-            name="Test Detection Project",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=False,
+            project_id=fxt_project.id,
+            model_architecture_id="object-detection-yolox-s",
+            configuration_data=fxt_training_configuration.algo_level_parameters.model_dump(),
         )
-        db_session.add(project)
-        training_configuration = TrainingConfigurationDB(
-            id=str(uuid4()),
-            project_id=project.id,
-            model_architecture_id="Custom_Object_Detection_YOLOX",
-            configuration_data=fxt_training_configuration.model_dump(),
-        )
-        db_session.add(training_configuration)
+        db_session.add(algo_level_config)
         db_session.flush()
 
-        training_config_update = {
-            "model_manifest_id": "Custom_Image_Classification_EfficientNet-B0",
-            "hyperparameters": {
-                "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
-                "training": {"max_epochs": 999},
-                "evaluation": {"metric": "new_metric"},
-            },
-            "global_parameters": {
-                "dataset_preparation": {"subset_split": {"training": 60, "validation": 10, "test": 30}}
-            },
-        }
-
-        training_configuration = fxt_training_configuration_service.update_training_configuration(
-            project_id=UUID(project.id),
-            training_config_update=training_config_update,
-            model_architecture_id="Custom_Object_Detection_YOLOX",
+        result = fxt_training_configuration_service.get_by_model_architecture(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-s",
         )
-        assert isinstance(training_configuration, TrainingConfiguration)
-        assert training_configuration != fxt_training_configuration
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.enable is True
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.probability == 0.5
-        assert training_configuration.hyperparameters.training.max_epochs == 999
-        assert training_configuration.hyperparameters.evaluation.metric == "new_metric"
-        assert training_configuration.global_parameters.dataset_preparation.subset_split.training == 60
-        assert training_configuration.global_parameters.dataset_preparation.subset_split.validation == 10
-        assert training_configuration.global_parameters.dataset_preparation.subset_split.test == 30
+
+        assert isinstance(result, TrainingConfiguration)
+        # Should have default task-level parameters
+        default_task_level = TaskLevelParameters()
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.training
+            == default_task_level.dataset_preparation.subset_split.training
+        )
+
+    def test_get_by_model_architecture_with_default_algo_level_config(
+        self,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
+    ):
+        """Test that default algo-level parameters from model manifest are used when not found in DB."""
+        # Only create task-level configuration
+        task_level_config = TrainingConfigurationDB(
+            id=str(uuid4()),
+            project_id=fxt_project.id,
+            model_architecture_id=None,
+            configuration_data=TaskLevelParameters().model_dump(),
+        )
+        db_session.add(task_level_config)
+        db_session.flush()
+
+        # This should fetch default algo-level parameters from ModelManifestService
+        result = fxt_training_configuration_service.get_by_model_architecture(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-s",
+        )
+
+        assert isinstance(result, TrainingConfiguration)
+        # Should have default task-level parameters
+        default_task_level = TaskLevelParameters()
+        assert (
+            result.task_level_parameters.dataset_preparation.subset_split.training
+            == default_task_level.dataset_preparation.subset_split.training
+        )
+        # Should have algo-level parameters from the model manifest
+        assert result.algo_level_parameters is not None
+
+    def test_update_without_preexisting_configuration(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
+    ):
+        """Test creating new task-level and algo-level configurations."""
+        fxt_training_configuration_service.update(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-s",
+            training_configuration=fxt_training_configuration,
+        )
+
+        # Verify task-level configuration was created
+        task_level_config = (
+            db_session.query(TrainingConfigurationDB)
+            .filter(
+                TrainingConfigurationDB.project_id == fxt_project.id,
+                TrainingConfigurationDB.model_architecture_id.is_(None),
+            )
+            .first()
+        )
+        assert task_level_config is not None
+        assert task_level_config.configuration_data["dataset_preparation"]["subset_split"]["training"] == 65
+
+        # Verify algo-level configuration was created
+        algo_level_config = (
+            db_session.query(TrainingConfigurationDB)
+            .filter(
+                TrainingConfigurationDB.project_id == fxt_project.id,
+                TrainingConfigurationDB.model_architecture_id == "object-detection-yolox-s",
+            )
+            .first()
+        )
+        assert algo_level_config is not None
+        assert algo_level_config.configuration_data["training"]["max_epochs"] == 100
+
+    def test_update_with_preexisting_configuration(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
+    ):
+        """Test updating existing task-level and algo-level configurations."""
+        # Create initial configurations
+        task_level_config = TrainingConfigurationDB(
+            id=str(uuid4()),
+            project_id=fxt_project.id,
+            model_architecture_id=None,
+            configuration_data={
+                "dataset_preparation": {"subset_split": {"training": 50, "validation": 30, "test": 20}}
+            },
+        )
+        db_session.add(task_level_config)
+
+        algo_level_config = TrainingConfigurationDB(
+            id=str(uuid4()),
+            project_id=fxt_project.id,
+            model_architecture_id="object-detection-yolox-s",
+            configuration_data={"training": {"max_epochs": 50}},
+        )
+        db_session.add(algo_level_config)
+        db_session.flush()
+
+        # Update with new configuration
+        fxt_training_configuration_service.update(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-s",
+            training_configuration=fxt_training_configuration,
+        )
+
+        # Refresh from database
+        db_session.refresh(task_level_config)
+        db_session.refresh(algo_level_config)
+
+        # Verify task-level configuration was updated
+        assert task_level_config.configuration_data["dataset_preparation"]["subset_split"]["training"] == 65
+
+        # Verify algo-level configuration was updated
+        assert algo_level_config.configuration_data["training"]["max_epochs"] == 100
+
+    def test_update_with_multiple_architectures(
+        self,
+        fxt_training_configuration: TrainingConfiguration,
+        fxt_training_configuration_service: TrainingConfigurationService,
+        fxt_project: ProjectDB,
+        db_session: Session,
+    ):
+        """Test that different architectures have separate algo-level configurations."""
+        # Create configuration for first architecture
+        fxt_training_configuration_service.update(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-s",
+            training_configuration=fxt_training_configuration,
+        )
+
+        # Create configuration for second architecture with different values
+        second_config = TrainingConfiguration(
+            task_level_parameters=fxt_training_configuration.task_level_parameters,
+            algo_level_parameters=AlgoLevelParameters(
+                dataset_preparation=AlgoLevelDatasetPreparationParameters(),
+                training=AlgoLevelTrainingParameters(
+                    max_epochs=200,
+                    early_stopping=EarlyStopping(enable=True, patience=10),
+                    learning_rate=0.0005,
+                    input_size_width=200,
+                    input_size_height=100,
+                    allowed_values_input_size=[100, 200, 400],
+                ),
+            ),
+        )
+        fxt_training_configuration_service.update(
+            project_id=UUID(fxt_project.id),
+            model_architecture_id="object-detection-yolox-l",
+            training_configuration=second_config,
+        )
+
+        # Verify both algo-level configurations exist with correct values
+        yolox_s_config = (
+            db_session.query(TrainingConfigurationDB)
+            .filter(
+                TrainingConfigurationDB.project_id == fxt_project.id,
+                TrainingConfigurationDB.model_architecture_id == "object-detection-yolox-s",
+            )
+            .first()
+        )
+        assert yolox_s_config is not None
+        assert yolox_s_config.configuration_data["training"]["max_epochs"] == 100
+
+        yolox_l_config = (
+            db_session.query(TrainingConfigurationDB)
+            .filter(
+                TrainingConfigurationDB.project_id == fxt_project.id,
+                TrainingConfigurationDB.model_architecture_id == "object-detection-yolox-l",
+            )
+            .first()
+        )
+        assert yolox_l_config is not None
+        assert yolox_l_config.configuration_data["training"]["max_epochs"] == 200
+
+        # Verify only one task-level configuration exists
+        task_level_configs = (
+            db_session.query(TrainingConfigurationDB)
+            .filter(
+                TrainingConfigurationDB.project_id == fxt_project.id,
+                TrainingConfigurationDB.model_architecture_id.is_(None),
+            )
+            .all()
+        )
+        assert len(task_level_configs) == 1

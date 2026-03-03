@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,7 +18,8 @@ class Started(ExecutionEvent):
 @dataclass(frozen=True, slots=True)
 class Progress(ExecutionEvent):
     message: str
-    value: float  # percentage of completion [0.0, 100.0]
+    value: float  # percentage of completion (0.0, 100.0]
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)

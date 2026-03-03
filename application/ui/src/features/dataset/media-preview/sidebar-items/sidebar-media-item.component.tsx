@@ -1,47 +1,35 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
-import { Accept, Search } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import type { DatasetItem } from '../../../../constants/shared-types';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { MediaItem } from '../../gallery/media-item.component';
-import { MediaThumbnail } from '../../gallery/media-thumbnail.component';
-import { getThumbnailUrl } from '../../gallery/utils';
-
-import classes from './sidebar-media-item.module.scss';
+import { MediaItem } from '../../../../components/media-item/media-item.component';
+import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
+import type { Media } from '../../../../constants/shared-types';
+import { getThumbnailUrl } from '../../../../shared/media-url.utils';
+import { AnnotationStatusIcon } from '../../gallery/annotation-state-icon.component';
 
 type SidebarMediaItemProps = {
-    item: DatasetItem;
-    isSelected: boolean;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    item: Media;
+    isUserReviewed: boolean;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
-export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: SidebarMediaItemProps) => {
-    const project_id = useProjectIdentifier();
-    const { isUserReviewed } = useAnnotationActions();
+export const SidebarMediaItem = ({ item, isUserReviewed, onSelectedMediaItem }: SidebarMediaItemProps) => {
+    const projectId = useProjectIdentifier();
 
     return (
         <MediaItem
             contentElement={() => (
                 <MediaThumbnail
+                    item={item}
                     alt={item.name}
-                    url={getThumbnailUrl(project_id, String(item.id))}
+                    url={getThumbnailUrl(projectId, String(item.id))}
                     onClick={() => onSelectedMediaItem(item)}
                 />
             )}
             bottomRightElement={() => {
-                if (!isSelected) {
-                    return null;
-                }
-
-                return (
-                    <View UNSAFE_className={isUserReviewed ? classes.iconAccept : classes.iconSearch}>
-                        {isUserReviewed ? <Accept /> : <Search />}
-                    </View>
-                );
+                return <AnnotationStatusIcon state={isUserReviewed ? 'accepted' : undefined} />;
             }}
         />
     );

@@ -18,9 +18,9 @@ import {
     View,
 } from '@geti/ui';
 
-import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
-import { SinkOptions } from '../sinks/sink-options';
-import { SourceOptions } from '../sources/source-options';
+import { ReactComponent as PipelineIcon } from '../../../assets/icons/pipeline.svg';
+import { SinkActions } from '../sinks/sink-actions.component';
+import { SourceActions } from '../sources/source-actions.component';
 
 const paddingStyle = {
     '--spectrum-dialog-padding-x': dimensionValue('size-300'),
@@ -30,18 +30,18 @@ const paddingStyle = {
 export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
-            <Button width={'size-3000'} variant={'secondary'}>
-                <Camera fill='white' />
+            <Button variant={'secondary'} UNSAFE_style={{ gap: dimensionValue('size-125') }}>
+                <PipelineIcon fill='white' />
                 <Text>Pipeline configuration</Text>
             </Button>
             <Dialog minWidth={'size-6000'} UNSAFE_style={paddingStyle}>
                 <Content>
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
-                            <Item key='sources' textValue='FoR'>
+                            <Item key='sources' textValue='Sources'>
                                 <Text>Input</Text>
                             </Item>
-                            <Item key='sinks' textValue='MaR'>
+                            <Item key='sinks' textValue='Sinks'>
                                 <Text>Output</Text>
                             </Item>
                         </TabList>
@@ -49,14 +49,14 @@ export const InputOutputSetup = () => {
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
-                                        <SourceOptions />
+                                        <SourceActions />
                                     </Suspense>
                                 </View>
                             </Item>
                             <Item key='sinks'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
-                                        <SinkOptions />
+                                        <SinkActions />
                                     </Suspense>
                                 </View>
                             </Item>

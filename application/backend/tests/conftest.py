@@ -56,8 +56,8 @@ def fxt_model() -> ModelRevision:
     """Sample model data."""
     return ModelRevision(
         id=uuid4(),
-        name="Object_Detection_YoloX_1",
-        architecture="Object_Detection_YOLOX",
+        name="YOLOX-X (abc123)",
+        architecture="object-detection-yolox-x",
         training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
     )  # type: ignore
 
@@ -87,8 +87,8 @@ def fxt_running_pipeline(fxt_usb_camera_source, fxt_mqtt_sink, fxt_model) -> Pip
 
 
 @pytest.fixture
-def fxt_job(job_type: JobType = JobType.TRAIN, params: JobParams | None = None) -> Callable[[], Job]:
-    def _factory():
+def fxt_job() -> Callable[[JobType, JobParams], Job]:
+    def _factory(job_type: JobType | None = JobType.TRAIN, params: JobParams | None = None) -> Job:
         return Job(job_type=job_type, params=JobParams() if params is None else params)
 
     return _factory

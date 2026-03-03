@@ -5,27 +5,28 @@ import { useRef } from 'react';
 
 import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
-import type { DatasetItem } from '../../../../constants/shared-types';
-import { useSelectedData } from '../../selected-data-provider.component';
-import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import type { Media } from '../../../../constants/shared-types';
+import { useGetDatasetItemsById } from '../../../../hooks/use-get-dataset-items-by-id.hook';
+import { SIDEBAR_MEDIA_SIZE } from '../constants';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
 const layoutOptions = {
     maxColumns: 1,
     minSpace: new Size(8, 8),
-    minItemSize: new Size(120, 120),
-    maxItemSize: new Size(120, 120),
+    minItemSize: new Size(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
+    maxItemSize: new Size(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
     preserveAspectRatio: true,
 };
 
 type SidebarItemsProps = {
-    items: DatasetItem[];
+    items: Media[];
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
-    mediaItem: DatasetItem;
+    mediaItem: Media;
     fetchNextPage: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 export const SidebarItems = ({
@@ -38,7 +39,7 @@ export const SidebarItems = ({
 }: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const { mediaState } = useSelectedData();
+    const { datasetItemsById } = useGetDatasetItemsById();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -55,19 +56,23 @@ export const SidebarItems = ({
                 items={items}
                 ariaLabel='sidebar-items'
                 selectionMode='single'
-                mediaState={mediaState}
                 selectedKeys={new Set([String(mediaItem.id)])}
                 layoutOptions={layoutOptions}
                 isLoadingMore={isFetchingNextPage}
                 scrollToIndex={selectedIndex}
                 onLoadMore={() => hasNextPage && fetchNextPage()}
-                contentItem={(item) => (
-                    <SidebarMediaItem
-                        item={item}
-                        isSelected={mediaItem.id === item.id}
-                        onSelectedMediaItem={onSelectedMediaItem}
-                    />
-                )}
+                contentItem={(item) => {
+                    const itemId = String(item.id);
+                    const isUserReviewed = datasetItemsById.get(itemId) ?? false;
+
+                    return (
+                        <SidebarMediaItem
+                            item={item}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                            isUserReviewed={isUserReviewed}
+                        />
+                    );
+                }}
             />
         </View>
     );

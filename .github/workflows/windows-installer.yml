@@ -50,6 +50,8 @@ env:
   MAKEAPP_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\makeappx.exe"
   SIGNTOOL_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\signtool.exe"
 
+permissions: {} # No permissions by default on workflow level
+
 jobs:
   windows-installer:
     name: Build windows installer
@@ -67,7 +69,7 @@ jobs:
         run: |
           Write-Host "DEBUG_BUILD=$env:DEBUG_BUILD"
 
-          $TARGET = $(IF ($env:DEBUG_BUILD -eq "true") {"debug"} else {"release"})         
+          $TARGET = $(IF ($env:DEBUG_BUILD -eq "true") {"debug"} else {"release"})
           $UI_BUILD_PATH = $env:UI_TARGET_PATH + "\" + $TARGET
           Write-Host "UI_BUILD_PATH=$UI_BUILD_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "UI_BUILD_PATH=$UI_BUILD_PATH"
@@ -91,7 +93,7 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
-          uv-cache-dependency-glob: 'application/backend/uv.lock'
+          uv-cache-dependency-glob: "application/backend/uv.lock"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6d9817901c499d6b02debbb57edb38d33daa680b
@@ -102,8 +104,7 @@ jobs:
         uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
         with:
           save-if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'develop' }}
-          workspaces: |
-            application\ui\src-tauri -> target
+          workspaces: application\ui\src-tauri -> target
 
       # Build backend
 
@@ -111,13 +112,11 @@ jobs:
         working-directory: application/backend
         env:
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: |
-          just --shell "${{ env.GIT_SH_PATH }}" --shell-arg -c device="$env:DEVICE" gen-openapi
+        run: just --shell "${{ env.GIT_SH_PATH }}" --shell-arg -c device="$env:DEVICE" gen-openapi
 
       - name: Build executable
         working-directory: application/backend
-        run: |
-          just --shell "${{ env.GIT_SH_PATH }}" --shell-arg -c device="$env:DEVICE" pyinstaller
+        run: just --shell "${{ env.GIT_SH_PATH }}" --shell-arg -c device="$env:DEVICE" pyinstaller
 
       # Copy backend artifacts to UI
 
@@ -127,10 +126,9 @@ jobs:
           cp -r ${{ env.BACKEND_DIST_PATH }}\geti-tune-backend.exe ${{ env.UI_SRC_TAURI_PATH }}\geti-tune-backend-x86_64-pc-windows-msvc.exe
 
       - name: Copy OpenAPI spec
-        run: |
-          cp -r ${{ env.BACKEND_BUILD_PATH }}\openapi-spec.json ${{ env.UI_SRC_API_PATH }}
+        run: cp -r ${{ env.BACKEND_BUILD_PATH }}\openapi-spec.json ${{ env.UI_SRC_API_PATH }}
 
-        # Build UI with Tauri
+      # Build UI with Tauri
 
       - name: Setup Node & npm
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
@@ -157,20 +155,17 @@ jobs:
         run: npm run build:api
 
       - name: Build Tauri app
-        if: inputs.debug_build == true
         env:
           PUBLIC_API_URL: http://localhost:9100
+          DEBUG_BUILD: ${{ inputs.debug_build }}
         working-directory: application/ui
         run: |
-          cargo tauri build --debug
-
-      - name: Build Tauri app
-        if: inputs.debug_build == false
-        env:
-          PUBLIC_API_URL: http://localhost:9100
-        working-directory: application/ui
-        run: |
-          cargo tauri build
+          $OPTIONS = @()
+          if ($env:DEBUG_BUILD -eq "true") {
+            $OPTIONS += "--debug"
+          }
+          Write-Host "Building Tauri app with options: $($OPTIONS -join ' ')"
+          cargo tauri build @OPTIONS
 
       # Build MSIX bundle
 

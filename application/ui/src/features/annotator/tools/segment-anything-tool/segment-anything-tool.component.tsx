@@ -5,18 +5,21 @@ import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
+import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { Label } from '../../../../constants/shared-types';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { AnnotationShape } from '../../annotations/annotation-shape.component';
+import type { Label } from '../../../../constants/shared-types';
+import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
+import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
-import type { Annotation, RegionOfInterest, Shape } from '../../types';
+import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
+import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
+import { useWithCancel } from './use-with-cancel';
 
 import classes from './segment-anything.module.scss';
 
@@ -24,6 +27,8 @@ interface PreviewAnnotationsProps {
     previewAnnotations: Annotation[];
     image: Pick<RegionOfInterest, 'width' | 'height'>;
 }
+
+const CURSOR_OFFSET = '7 8';
 
 const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsProps) => {
     if (previewAnnotations.length === 0) return null;
@@ -37,6 +42,7 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
                     stroke={'var(--energy-blue-shade)'}
                     strokeWidth={'calc(3px / var(--zoom-scale))'}
                     fill={'transparent'}
+                    fillOpacity={'var(--annotation-fill-opacity)'}
                     className={classes.animateStroke}
                 >
                     <AnnotationShape annotation={annotation} />
@@ -52,10 +58,12 @@ export const SegmentAnythingTool = () => {
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
-    const { roi, image, selectedLabel } = useAnnotator();
-    const { addAnnotations } = useAnnotationActions();
+    const { roi, image } = useSelectedMediaItem();
+    const { selectedLabel } = useAnnotatorLabels();
+    const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
+    const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
     const canvasRef = useRef<SVGRectElement>(null);
 
@@ -74,7 +82,8 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
-        throttledDecodingQueryFn([{ ...point, positive: true }])
+        cancellableThrottledDecodingQueryFn
+            .call([{ ...point, positive: true }])
             .then((shapes) => {
                 setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
             })
@@ -86,7 +95,7 @@ export const SegmentAnythingTool = () => {
     };
 
     const handleAddAnnotations = (shapes: Shape[], label: Label) => {
-        addAnnotations(shapes, [label]);
+        addAndSelectAnnotations(shapes, [label]);
         setPreviewShapes([]);
     };
 
@@ -112,12 +121,15 @@ export const SegmentAnythingTool = () => {
         handleAddAnnotations(previewShapes, selectedLabel);
     };
 
+    const handlePointerLeave = () => {
+        cancellableThrottledDecodingQueryFn.cancel();
+        setPreviewShapes([]);
+    };
+
     const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
         return {
             shape,
-            // During preview mode (while hovering), display the annotation without label color
-            // to provide an unobscured view of the underlying image before finalizing placement.
-            labels: [],
+            labels: selectedLabel ? [selectedLabel] : [],
             id: `${idx}`,
         };
     });
@@ -134,8 +146,8 @@ export const SegmentAnythingTool = () => {
             aria-label='SAM tool canvas'
             onPointerMove={handleMouseMove}
             onPointerDown={handlePointerDown}
-            onPointerLeave={() => setPreviewShapes([])}
-            style={{ cursor: `url("/icons/selection.svg") 8 8, auto` }}
+            onPointerLeave={handlePointerLeave}
+            style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
         </SvgToolCanvas>

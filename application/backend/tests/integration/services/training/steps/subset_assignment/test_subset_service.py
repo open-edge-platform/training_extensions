@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, ProjectDB
 from app.models import DatasetItemSubset
-from app.services.training.subset_assignment import SubsetAssignment, SubsetService
+from app.services.subset_assignment import SubsetAssignment, SubsetService
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
@@ -27,7 +27,7 @@ def setup_project_with_dataset_items(
         ProjectTestDataFactory(db_session)
         .with_project(fxt_db_projects[0])
         .with_label(db_label)
-        .with_dataset_items(fxt_default_distribution)
+        .with_media_and_dataset_items(fxt_default_distribution)
         .with_item_labels(db_label)
         .build()
     )

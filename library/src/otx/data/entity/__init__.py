@@ -4,6 +4,13 @@
 """Module for OTX data entities."""
 
 from .base import ImageInfo, ImageType, Points
+from .sample import (
+    OTXPrediction,
+    OTXPredictionBatch,
+    OTXSample,
+    OTXSampleBatch,
+    collate_fn,
+)
 from .tile import (
     TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
@@ -11,15 +18,14 @@ from .tile import (
     TileDetDataEntity,
     TileSegDataEntity,
 )
-from .torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
 
 __all__ = [
     "ImageInfo",
     "ImageType",
-    "OTXDataBatch",
-    "OTXDataItem",
-    "OTXPredBatch",
-    "OTXPredItem",
+    "OTXPrediction",
+    "OTXPredictionBatch",
+    "OTXSample",
+    "OTXSampleBatch",
     "Points",
     "TileBatchDetDataEntity",
     "TileBatchInstSegDataEntity",
@@ -27,4 +33,5 @@ __all__ = [
     "TileBatchSegDataEntity",
     "TileDetDataEntity",
     "TileSegDataEntity",
+    "collate_fn",
 ]

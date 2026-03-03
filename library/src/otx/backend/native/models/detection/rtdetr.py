@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from torch import Tensor, nn
+from torch.export import Dim
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
@@ -25,7 +26,7 @@ from otx.backend.native.models.detection.necks import HybridEncoder
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.utils import stack_batch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
@@ -128,7 +129,7 @@ class RTDETR(OTXDetectionModel):
 
     def _customize_inputs(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
@@ -146,7 +147,8 @@ class RTDETR(OTXDetectionModel):
         if entity.bboxes is not None and entity.labels is not None:
             for bb, ll in zip(entity.bboxes, entity.labels):
                 # convert to cxcywh if needed
-                if len(scaled_bboxes := bb):
+                scaled_bboxes = bb
+                if len(bb):
                     converted_bboxes = (
                         box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
                     )
@@ -154,7 +156,16 @@ class RTDETR(OTXDetectionModel):
                     scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
                         converted_bboxes.device,
                     )
-                targets.append({"boxes": scaled_bboxes, "labels": ll})
+                h, w = bb.canvas_size
+                device = scaled_bboxes.device
+                targets.append(
+                    {
+                        "boxes": scaled_bboxes,
+                        "labels": ll,
+                        "size": torch.tensor([h, w], device=device),
+                        "orig_size": torch.tensor([h, w], device=device),
+                    }
+                )
 
         if self.explain_mode:
             return {"entity": entity}
@@ -167,8 +178,8 @@ class RTDETR(OTXDetectionModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -200,8 +211,7 @@ class RTDETR(OTXDetectionModel):
                 msg = "No saliency maps in the model output."
                 raise ValueError(msg)
 
-            return OTXPredBatch(
-                batch_size=len(outputs),
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -211,8 +221,7 @@ class RTDETR(OTXDetectionModel):
                 saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             )
 
-        return OTXPredBatch(
-            batch_size=len(outputs),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -304,12 +313,7 @@ class RTDETR(OTXDetectionModel):
             onnx_export_configuration={
                 "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores"],
-                "dynamic_axes": {
-                    "images": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                    "scores": {0: "batch", 1: "num_dets"},
-                },
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "autograd_inlining": False,
                 "opset_version": 18,
             },
@@ -324,7 +328,7 @@ class RTDETR(OTXDetectionModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001, PLW0211
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

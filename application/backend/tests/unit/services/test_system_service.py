@@ -197,19 +197,15 @@ class TestSystemService:
 
     def test_validate_device_invalid_type(self, fxt_system_service: SystemService):
         """Test validating invalid device types"""
-        with patch("app.services.system_service.torch") as mock_torch, pytest.raises(ValueError):
-            mock_torch.xpu.is_available.return_value = False
-            mock_torch.cuda.is_available.return_value = False
-
-            assert fxt_system_service.validate_device("cpu-cpu") is False
-            assert fxt_system_service.validate_device("cpu--1") is False
-            assert fxt_system_service.validate_device("cpu-") is False
-            assert fxt_system_service.validate_device("cpu-0.9") is False
-            assert fxt_system_service.validate_device("1") is False
-            assert fxt_system_service.validate_device("-1") is False
-            assert fxt_system_service.validate_device("gpu") is False
-            assert fxt_system_service.validate_device("tpu") is False
-            assert fxt_system_service.validate_device("invalid") is False
+        assert fxt_system_service.validate_device("cpu-cpu") is False
+        assert fxt_system_service.validate_device("cpu--1") is False
+        assert fxt_system_service.validate_device("cpu-") is False
+        assert fxt_system_service.validate_device("cpu-0.9") is False
+        assert fxt_system_service.validate_device("1") is False
+        assert fxt_system_service.validate_device("-1") is False
+        assert fxt_system_service.validate_device("gpu") is False
+        assert fxt_system_service.validate_device("tpu") is False
+        assert fxt_system_service.validate_device("invalid") is False
 
     def test_get_device_info(self, fxt_system_service: SystemService):
         """Test getting device info"""
@@ -258,5 +254,5 @@ class TestSystemService:
             camera_devices = fxt_system_service.get_camera_devices()
 
             assert len(camera_devices) == 1
-            assert camera_devices[0].name == "Integrated Camera"
+            assert camera_devices[0].name == "Integrated Camera [1400]"
             assert camera_devices[0].index == 1400

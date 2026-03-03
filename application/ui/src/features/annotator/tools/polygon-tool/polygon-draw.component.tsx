@@ -1,14 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Polygon } from '../../types';
+import { Polygon } from '../../../../shared/types';
 import { getFormattedPoints, ShapeStyle } from './utils';
 
-export interface PolygonDrawProps extends ShapeStyle<SVGPolygonElement> {
+type PolygonDrawProps = ShapeStyle<SVGPolygonElement> & {
     shape: Polygon;
     ariaLabel?: string;
     indicatorRadius?: number;
-}
+};
 
 export const PolygonDraw = ({ shape, styles, indicatorRadius, className = '', ariaLabel = '' }: PolygonDrawProps) => {
     return (

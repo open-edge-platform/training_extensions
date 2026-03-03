@@ -26,16 +26,18 @@ from pathlib import Path
 from typing import cast
 
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.api.routers import (
+    dataset_ie,
     dataset_revisions,
     datasets,
     jobs,
+    media,
     model_architectures,
     models,
     pipelines,
@@ -48,6 +50,7 @@ from app.api.routers import (
 )
 from app.core.logging import InterceptHandler
 from app.lifecycle import lifespan
+from app.services.base import ResourceNotFoundError
 from app.settings import get_settings
 
 settings = get_settings()
@@ -73,9 +76,11 @@ app.add_middleware(  # TODO restrict settings in production
 )
 
 # Include all API routers from the routers package
+app.include_router(dataset_ie.router)
 app.include_router(dataset_revisions.router)
 app.include_router(datasets.router)
 app.include_router(jobs.router)
+app.include_router(media.router)
 app.include_router(model_architectures.router)
 app.include_router(models.router)
 app.include_router(pipelines.router)
@@ -117,6 +122,15 @@ async def security_headers_middleware(
     response.headers.setdefault("Cross-Origin-Embedder-Policy", "require-corp")
     response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
     return response
+
+
+@app.exception_handler(ResourceNotFoundError)
+async def resource_not_found_exception_handler(request: Request, exc: ResourceNotFoundError) -> JSONResponse:  # noqa: ARG001
+    """Catch resource not found errors and return 404 response"""
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": str(exc)},
+    )
 
 
 static_dir = settings.static_files_dir

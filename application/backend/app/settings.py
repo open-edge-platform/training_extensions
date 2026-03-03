@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     log_dir: Path = Field(default=Path("logs"), alias="LOG_DIR")
     worker_dir: Path | None = None
     job_dir: Path | None = None
+    staged_datasets_dir: Path | None = None
 
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
@@ -63,6 +64,10 @@ class Settings(BaseSettings):
 
     gpu_slots: int = Field(default=1, alias="GPU_SLOTS", description="Number of GPU slots available for model tuning")
 
+    # WebRTC
+    ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
+    webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
+
     @property
     def database_url(self) -> str:
         """Get database URL"""
@@ -80,12 +85,14 @@ class Settings(BaseSettings):
             self.worker_dir = self.log_dir / "workers"
         if self.job_dir is None:
             self.job_dir = self.log_dir / "jobs"
+        if self.staged_datasets_dir is None:
+            self.staged_datasets_dir = self.data_dir / "staged_datasets"
 
         return self
 
     def ensure_dirs_exist(self) -> None:
         """Create all directories if they don't exist."""
-        for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir]:
+        for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir, self.staged_datasets_dir]:
             if d:
                 d.mkdir(parents=True, exist_ok=True)
 

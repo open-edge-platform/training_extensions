@@ -1,14 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections import Counter
 from datetime import UTC, datetime
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 from sqlalchemy import CursorResult, Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
+from app.models import DatasetItemSubset
+
+from .filters import _apply_annotation_status_filter, _apply_subset_filter
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
@@ -39,24 +42,6 @@ class DatasetItemRepository:
             stmt = stmt.where(DatasetItemDB.created_at < end_date)
         return stmt
 
-    @staticmethod
-    def _apply_annotation_status_filter(stmt: Select, annotation_status: str | None = None) -> Select:
-        """Apply annotation status filter to a select statement."""
-        if annotation_status == DatasetItemAnnotationStatus.UNANNOTATED:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
-        elif annotation_status == DatasetItemAnnotationStatus.REVIEWED:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(True))
-        elif annotation_status == DatasetItemAnnotationStatus.TO_REVIEW:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(False))
-        return stmt
-
-    @staticmethod
-    def _apply_subset_filter(stmt: Select, subset: str | None = None) -> Select:
-        """Apply subset filter to a select statement."""
-        if subset is not None:
-            stmt = stmt.where(DatasetItemDB.subset == subset)
-        return stmt
-
     def save(self, dataset_item_db: DatasetItemDB) -> DatasetItemDB:
         dataset_item_db.updated_at = datetime.now(UTC)
         self.db.add(dataset_item_db)
@@ -78,8 +63,8 @@ class DatasetItemRepository:
             select_fn = func.count()
         stmt = select(select_fn).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
-        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
-        stmt = self._apply_subset_filter(stmt, subset)
+        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
@@ -96,25 +81,36 @@ class DatasetItemRepository:
     ) -> list[DatasetItemDB]:
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
-        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
-        stmt = self._apply_subset_filter(stmt, subset)
+        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
-    def get_earliest(self) -> DatasetItemDB | None:
-        """
-        Get the earliest dataset item based on creation date.
-
-        This method efficiently uses the multicolumn index on (project_id, created_at)
-        for optimal query performance.
-
-        Returns:
-            The earliest DatasetItemDB instance or None if no items exist.
-        """
-        stmt = self._base_select().order_by(DatasetItemDB.created_at.asc()).limit(1)
-        return self.db.scalar(stmt)
+    def list_items_with_media(
+        self,
+        limit: int,
+        offset: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
+        subset: str | None = None,
+    ) -> list[tuple[DatasetItemDB, MediaDB]]:
+        stmt = (
+            select(DatasetItemDB, MediaDB)
+            .where(DatasetItemDB.project_id == self.project_id)
+            .join(MediaDB)
+            .where(MediaDB.id == DatasetItemDB.id, MediaDB.project_id == DatasetItemDB.project_id)
+        )
+        stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = _apply_annotation_status_filter(stmt, annotation_status)
+        stmt = _apply_subset_filter(stmt, subset)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
+        stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
+        return [(dataset_item, media) for (dataset_item, media) in self.db.execute(stmt).all()]
 
     def get_by_id(self, obj_id: str) -> DatasetItemDB | None:
         stmt = self._base_select().where(DatasetItemDB.id == obj_id)
@@ -150,7 +146,7 @@ class DatasetItemRepository:
         )
         result = self.db.execute(stmt)
         row = result.mappings().first()
-        return UpdateDatasetItemAnnotation(**row) if row else None
+        return UpdateDatasetItemAnnotation(**row) if row else None  # pyrefly: ignore[missing-argument,bad-unpacking]
 
     def delete_annotation_data(self, obj_id: str) -> bool:
         stmt = (
@@ -224,3 +220,74 @@ class DatasetItemRepository:
         )
         result = self.db.execute(stmt)
         return {row.subset: row.count for row in result}  # type: ignore[misc]
+
+    def get_statistics(self) -> dict[str, Any]:
+        # Media Counts (images, videos, video frames):
+        media_counts_stmt = (
+            select(
+                MediaDB.type, func.count(MediaDB.id).label("count"), func.sum(MediaDB.frame_count).label("frame_count")
+            )
+            .where(MediaDB.project_id == self.project_id)
+            .group_by(MediaDB.type)
+        )
+        result = self.db.execute(media_counts_stmt)
+        rows = list(result)
+        statistics: dict[str, Any] = {f"{row.type}s": cast(int, row.count) for row in rows}
+        statistics["video_frames"] = int(sum(row.frame_count or 0 for row in rows))
+
+        # Annotation Counts (annotated images and video frames):
+        annotated_images_frames_stmt = (
+            select(MediaDB.type, func.count(DatasetItemDB.id).label("count"))
+            .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.annotation_data.isnot(None),
+                DatasetItemDB.user_reviewed,
+            )
+            .group_by(MediaDB.type)
+        )
+        result = self.db.execute(annotated_images_frames_stmt)
+        annotated_counts: dict[str, Any] = {f"annotated_{row.type}s": row.count for row in result}
+
+        # Annotation Counts (annotated videos)
+        annotated_video_stmt = (
+            select(func.count(func.distinct(MediaDB.video_id)).label("count"))
+            .join(DatasetItemDB, DatasetItemDB.id == MediaDB.id)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.annotation_data.isnot(None),
+                DatasetItemDB.user_reviewed,
+                MediaDB.type == "video_frame",
+            )
+        )
+        annotated_video_count = self.db.execute(annotated_video_stmt).scalar()
+        annotated_counts["annotated_videos"] = annotated_video_count or 0
+
+        # Total instances:
+        annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
+            DatasetItemDB.project_id == self.project_id,
+            DatasetItemDB.annotation_data.isnot(None),
+            DatasetItemDB.user_reviewed,
+        )
+        annotated_counts["instances"] = sum(
+            len(item.annotation_data) for item in self.db.execute(annotated_dataset_items_stmt)
+        )
+
+        # instances_per_label
+        annotated_dataset_items_stmt = select(DatasetItemDB.annotation_data).where(
+            DatasetItemDB.project_id == self.project_id, DatasetItemDB.annotation_data.isnot(None)
+        )
+
+        labels_counts = Counter(
+            label["id"]
+            for item in self.db.execute(annotated_dataset_items_stmt)
+            for annotation in item.annotation_data
+            for label in annotation["labels"]
+        )
+        annotated_counts["instances_per_label"] = [
+            {"label_id": label_id, "instances": count} for label_id, count in labels_counts.items()
+        ]
+
+        statistics.update(annotated_counts)
+
+        return statistics

@@ -17,7 +17,6 @@ from app.api.schemas.sink import SinkCreate, SinkCreateAdapter, SinkView, SinkVi
 from app.models import Sink
 from app.services import (
     ResourceInUseError,
-    ResourceNotFoundError,
     ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
     SinkService,
@@ -159,8 +158,10 @@ def update_sink(
     if "sink_type" in sink_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'sink_type' field cannot be changed")
     try:
-        updated_sink: Sink = sink.model_copy(update=sink_config)
-        updated_sink.config_data = updated_sink.config_data.model_copy(update=sink_config)
+        updated_sink = sink.model_copy(update=sink_config)
+        updated_sink.config_data = updated_sink.config_data.model_copy(  # pyrefly: ignore[bad-assignment]
+            update=sink_config
+        )
         sink = sink_service.update_sink(
             sink=sink,
             new_name=updated_sink.name,
@@ -169,8 +170,6 @@ def update_sink(
             new_output_formats=updated_sink.output_formats,
         )
         return SinkViewAdapter.validate_python(sink, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceWithNameAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 

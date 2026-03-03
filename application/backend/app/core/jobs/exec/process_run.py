@@ -22,6 +22,7 @@ from collections.abc import Iterator
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
+from typing import Any
 
 from loguru import logger
 
@@ -81,7 +82,7 @@ class ProcessRun:
         finally:
             self._parent.close()
 
-    async def stop(self, graceful_timeout: float = 6.0, term_timeout: float = 3.0, kill_timeout: float = 1.0) -> None:
+    async def stop(self, graceful_timeout: float = 30.0, term_timeout: float = 15.0, kill_timeout: float = 1.0) -> None:
         """
         Stop the process with graceful degradation.
 
@@ -135,21 +136,17 @@ def _entrypoint(
 
     from app.core.jobs.models import Cancelled, Done, Failed, Progress
 
-    def report(msg: str, p: float) -> None:
-        conn.send(Progress(message=msg, value=p))
-
-    # alt: another possible solution is to run the heartbeat in a separate daemon thread at a set interval, so it is not
-    # coupled to the training process.
-    def heartbeat():
+    def report(msg: str, p: float, metadata: dict[str, Any] | None = None) -> None:
         if cancel_event.is_set():
             raise CancelledExc
+        conn.send(Progress(message=msg, value=p, metadata=metadata))
 
     runnable = get_runnable(JobType(job_type))
 
     try:
         conn.send(Started())
         with logging_ctx(LogConfig(log_folder=str(get_settings().job_dir), log_file=log_file)):
-            runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
+            runnable.run(ExecutionContext(payload=payload, report=report))
         conn.send(Done())
     except CancelledExc:
         conn.send(Cancelled())
