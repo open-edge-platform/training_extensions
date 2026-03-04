@@ -15,7 +15,7 @@ import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-ca
 import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { useNextMediaItem } from './utils';
+import { useNextMediaPrefetch } from './utils';
 
 type AnnotatorProps = {
     image: ImageData;
@@ -36,7 +36,7 @@ const Annotator = ({
     items,
     onClose,
 }: AnnotatorProps) => {
-    const nextMediaItem = useNextMediaItem(mediaItem, items);
+    const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
 
     const handleSubmitAnnotations = async () => {
         if (nextMediaItem === undefined) {

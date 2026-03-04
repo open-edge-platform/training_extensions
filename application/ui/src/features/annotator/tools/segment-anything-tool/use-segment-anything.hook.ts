@@ -5,10 +5,12 @@ import { EncodingOutput } from '@geti/smart-tools/segment-anything';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { isDetectionTask } from '../../../project/task-type-guards';
+import { loadImageQueryOptions } from '../../hooks/use-load-image-query.hook';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import type {
     SegmentAnythingWorkerApi,
@@ -153,27 +155,26 @@ const useDecodingFn = (model: SegmentAnythingRemoteModel | undefined, encoding: 
 
 type SegmentAnythingModelOptions = {
     nextMediaItem?: Media;
-    nextImage?: ImageData;
-    isNextImageReady?: boolean;
 };
 
-export const useSegmentAnythingModel = ({
-    nextMediaItem,
-    nextImage,
-    isNextImageReady = false,
-}: SegmentAnythingModelOptions = {}) => {
+export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelOptions = {}) => {
     const encoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER');
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
     const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
+    const projectId = useProjectIdentifier();
 
     const { mediaItem, image, isImageReady } = useSelectedMediaItem();
+    const nextImageQuery = useQuery({
+        ...loadImageQueryOptions(projectId, nextMediaItem ?? mediaItem),
+        enabled: nextMediaItem !== undefined,
+    });
 
     // First we get the encoding for the CURRENT image
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image, isImageReady);
     // At the same time we start prefetching the encoding for the NEXT image,
     // so when the user moves to the next media item the decoding will be faster.
     // We don't need to get the decoding query result for the next image, we just want to cache the encoding result.
-    useEncodingQuery(encoderModel, nextMediaItem, nextImage, isNextImageReady);
+    useEncodingQuery(encoderModel, nextMediaItem, nextImageQuery.data, nextImageQuery.isSuccess);
 
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 

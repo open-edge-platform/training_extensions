@@ -10,7 +10,7 @@ import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
-import { useNextMediaPrefetch } from '../../../dataset/media-preview/utils';
+import { useNextMediaItem } from '../../../dataset/media-preview/utils';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
@@ -62,10 +62,10 @@ export const SegmentAnythingTool = () => {
     const zoom = useZoom();
     const { roi, image, mediaItem } = useSelectedMediaItem();
     const { items } = useGetDatasetMediaItems();
-    const { nextMediaItem, nextImage, isNextImageReady } = useNextMediaPrefetch(mediaItem, items);
+    const nextMediaItem = useNextMediaItem(mediaItem, items);
     const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { isLoading, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem, nextImage, isNextImageReady });
+    const { isLoading, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
     const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
