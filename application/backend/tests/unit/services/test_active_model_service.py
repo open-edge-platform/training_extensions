@@ -104,7 +104,7 @@ class TestActiveModelServiceUnit:
             patch.object(
                 fxt_active_model_service,
                 "_get_model_file_path",
-                new=lambda project_id, model_id, ext, variant_id=None: f"model.{ext}",
+                new=lambda project_id, model_id, variant_id, extension: f"model.{extension}",
             ),
         ):
             loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
