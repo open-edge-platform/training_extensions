@@ -17,30 +17,10 @@ export const VideoAnnotations = () => {
         frameNumber: videoFrame.frame_number,
         frameSkip: step,
         selector: (data) => {
-            /*
-            TODO: Decide which approach we want to go: exact mapping or with neighboring frames fallback.
-             The fallback approach is more user-friendly, but it can lead to confusion when annotations from
-             neighboring frames are shown.
             const frameAnnotations =
                 data.find((frame) => frame.frame_index === videoFrame.frame_number)?.annotation_data?.annotations ?? [];
 
-            return mapServerAnnotationsToLocal(frameAnnotations, labels);*/
-
-            const frameIdxToAnnotationMap = new Map(
-                data.map((frame) => [frame.frame_index, frame.annotation_data?.annotations ?? []])
-            );
-
-            for (let idx = 1; idx <= Math.max(1, step / 4); idx++) {
-                const nextFrameAnnotations = frameIdxToAnnotationMap.get(videoFrame.frame_number + idx);
-                if (nextFrameAnnotations) {
-                    return mapServerAnnotationsToLocal(nextFrameAnnotations, labels);
-                }
-
-                const previousFrameAnnotations = frameIdxToAnnotationMap.get(videoFrame.frame_number - idx);
-                if (previousFrameAnnotations) {
-                    return mapServerAnnotationsToLocal(previousFrameAnnotations, labels);
-                }
-            }
+            return mapServerAnnotationsToLocal(frameAnnotations, labels);
         },
     });
 
