@@ -7,7 +7,7 @@ import { isEqual } from 'lodash-es';
 import { useParams } from 'react-router';
 
 import type { Media } from '../../constants/shared-types';
-import { isVideo } from '../../shared/media-item-utils';
+import { isVideo, isVideoFrame } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 import { getImageData } from './tools/utils';
@@ -55,7 +55,7 @@ const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
 const useMediaItem = (initialMediaItem: Media) => {
     const frameNumberFromPathParam = useVideoFrameNumberPathParam();
     const maxFrameNumber =
-        isVideo(initialMediaItem) || isVideo(initialMediaItem) ? initialMediaItem.frame_count - 1 : 0;
+        isVideo(initialMediaItem) || isVideoFrame(initialMediaItem) ? initialMediaItem.frame_count - 1 : 0;
     const frameNumber = Math.max(0, Math.min(frameNumberFromPathParam, maxFrameNumber));
 
     const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
