@@ -45,8 +45,8 @@ export const useVideoFramesAnnotations = <T>({
         },
         {
             select: selector,
-            // We invalidate cache manually when the user annotates a frame, so we can set infinite cache and stale
-            // time to avoid unnecessary refetches
+            // We invalidate cache manually when the user annotates a frame, so we can set an infinite stale time to
+            // avoid unnecessary refetches
             staleTime: Infinity,
         }
     );

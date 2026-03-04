@@ -4,7 +4,7 @@
 import { v4 as uuid } from 'uuid';
 
 import type { AnnotationDTO, Label } from '../../constants/shared-types';
-import type { Annotation } from '../types';
+import { Annotation, AnnotationLabel } from '../types';
 
 export const mapServerAnnotationsToLocal = (
     serverAnnotations: AnnotationDTO[],
@@ -15,9 +15,25 @@ export const mapServerAnnotationsToLocal = (
     return serverAnnotations.map((annotation) => {
         // We only get the ids of the labels
         const labels = (annotation.labels ?? [])
-            .map((labelRef) => labelMap.get(labelRef.id))
-            .filter((label): label is Label => label !== undefined)
-            .map((label, idx) => ({ ...label, probability: annotation.confidences?.at(idx) }));
+            .map((labelRef, idx) => {
+                const label = labelMap.get(labelRef.id);
+
+                if (label === undefined) {
+                    return undefined;
+                }
+
+                const probability = annotation.confidences?.at(idx);
+
+                if (probability === undefined) {
+                    return label;
+                }
+
+                return {
+                    ...label,
+                    probability,
+                };
+            })
+            .filter((label): label is AnnotationLabel => label !== undefined);
 
         return {
             ...annotation,
