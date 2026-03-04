@@ -14,3 +14,7 @@ export const isDetectionTask = (taskType: TaskType | null): boolean => {
 export const isSegmentationTask = (taskType: TaskType | null): boolean => {
     return taskType === 'instance_segmentation';
 };
+
+export const isPrefetchEnabledForTask = (taskType: TaskType | null): boolean => {
+    return isDetectionTask(taskType) || isSegmentationTask(taskType);
+};
