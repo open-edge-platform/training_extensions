@@ -27,7 +27,7 @@ type SelectedMediaItemProviderProps = {
     children: ReactNode;
 };
 
-const useVideoFrameNumberQueryParam = () => {
+const useVideoFrameNumberPathParam = () => {
     const { frameNumber } = useParams<{ frameNumber?: string }>();
 
     if (frameNumber === undefined) {
@@ -53,7 +53,9 @@ const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
 };
 
 const useMediaItem = (initialMediaItem: Media) => {
-    const frameNumber = useVideoFrameNumberQueryParam();
+    const frameNumberFromPathParam = useVideoFrameNumberPathParam();
+    const frames = isVideo(initialMediaItem) || isVideo(initialMediaItem) ? initialMediaItem.frame_count - 1 : 0;
+    const frameNumber = Math.max(0, Math.min(frameNumberFromPathParam, frames));
 
     const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
     const prevInitialMediaItem = useRef(initialMediaItem);
