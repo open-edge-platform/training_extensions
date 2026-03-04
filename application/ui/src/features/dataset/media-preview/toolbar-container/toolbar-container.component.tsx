@@ -1,30 +1,27 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ComponentProps } from 'react';
 
-import { View, ViewProps } from '@geti/ui';
+import { View } from '@geti/ui';
 
-interface ToolbarContainerProps extends ViewProps<5> {
-    children: ReactNode;
-    isHidden?: boolean;
-}
+type ViewProps = ComponentProps<typeof View>;
+
+type ToolbarContainerProps = Omit<ViewProps, 'borderRadius' | 'backgroundColor' | 'padding'>;
 
 const ToolbarContainer = ({ children, isHidden, ...rest }: ToolbarContainerProps) => {
     return (
-        <View borderRadius={'regular'} backgroundColor={'gray-200'} padding={'size-50'} isHidden={isHidden} {...rest}>
+        <View borderRadius={'regular'} backgroundColor={'gray-200'} padding={'size-50'} {...rest}>
             {children}
         </View>
     );
 };
 
-type ToolbarSectionProps = {
-    children: ReactNode;
-};
+type ToolbarSectionProps = Omit<ViewProps, 'borderRadius' | 'backgroundColor' | 'padding'>;
 
-const ToolbarSection = ({ children }: ToolbarSectionProps) => {
+const ToolbarSection = ({ children, ...props }: ToolbarSectionProps) => {
     return (
-        <View borderRadius={'regular'} backgroundColor={'gray-50'} padding={'size-100'}>
+        <View borderRadius={'regular'} backgroundColor={'gray-50'} padding={'size-100'} {...props}>
             {children}
         </View>
     );
