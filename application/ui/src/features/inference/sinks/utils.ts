@@ -40,6 +40,10 @@ export enum WebhookHttpMethod {
 
 const toStringAndTrim = (value: unknown) => String(value).trim();
 
+export const positiveNumberOrUndefined = (value: number | null | undefined): number | undefined => {
+    return typeof value === 'number' && value > 0 ? value : undefined;
+};
+
 export const getObjectFromFormData = (keys: FormDataEntryValue[], values: FormDataEntryValue[]) => {
     const entries = keys.map((key, index) => [key, values[index]]);
     const validEntries = entries.filter(
@@ -47,4 +51,32 @@ export const getObjectFromFormData = (keys: FormDataEntryValue[], values: FormDa
     );
 
     return Object.fromEntries(validEntries);
+};
+
+export const rateLimitFromFormData = (formData: FormData): number | null => {
+    const samplesRaw = toStringAndTrim(formData.get('rate_limit_samples'));
+    const secondsRaw = toStringAndTrim(formData.get('rate_limit_seconds'));
+
+    if (isEmpty(samplesRaw) || isEmpty(secondsRaw)) {
+        return null;
+    }
+
+    const samples = Number(samplesRaw);
+    const seconds = Number(secondsRaw);
+
+    if (samples <= 0 || seconds <= 0) {
+        return null;
+    }
+
+    return samples / seconds;
+};
+
+export const formatRateLimit = (rateLimit: number | null | undefined): string => {
+    const normalizedRateLimit = positiveNumberOrUndefined(rateLimit);
+
+    if (normalizedRateLimit === undefined) {
+        return 'Not set';
+    }
+
+    return `${normalizedRateLimit} samples every 1 second`;
 };
