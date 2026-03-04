@@ -91,17 +91,10 @@ jobs:
 
       # Install and setup build tools
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
-        with:
-          version: "0.10.4"
-          enable-cache: true
-          cache-dependency-glob: "application/backend/uv.lock"
+          uv-version-file: application/backend/pyproject.toml
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
@@ -116,23 +109,22 @@ jobs:
 
       # Build backend
 
-      - name: Build venv
+      - name: Prepare venv and install Python dependencies
         working-directory: application/backend
         env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: |
-          uv lock --check
-          uv sync --extra installer --extra $env:DEVICE --extra mqtt --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+        run: just venv --device "$env:DEVICE"
 
       - name: Build OpenAPI spec
         working-directory: application/backend
-        env:
-          PYTHONPATH: "."
-        run: uv run --no-sync app/cli.py gen-api --target-path .build/openapi-spec.json
+        run: just gen-api-spec -o .build/openapi-spec.json
 
       - name: Build executable
         working-directory: application/backend
-        run: uv run pyinstaller --noconfirm geti-tune.spec
+        env:
+          DEVICE: ${{ inputs.device || 'xpu' }}
+        run: just pyinstaller --device "$env:DEVICE"
 
       # Copy backend artifacts to UI
 

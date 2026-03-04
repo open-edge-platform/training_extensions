@@ -1,0 +1,37 @@
+name: install-common-deps
+description: Setup common tools and dependencies used across multiple workflows
+
+inputs:
+  install-just:
+    description: Install the 'just' command runner
+    required: false
+    default: "true"
+  install-uv:
+    description: Install the 'uv' package manager
+    required: false
+    default: "true"
+  uv-version-file:
+    description: Path to the file containing the 'uv' version to install if 'install-uv' is true
+    required: false
+    default: ""
+  python-version:
+    description: Python version to install with 'uv' if 'install-uv' is true
+    required: false
+    default: "3.13"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Just
+      if: ${{ inputs.install-just == 'true' }}
+      uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
+      with:
+        just-version: "1.46.0"
+
+    - name: Install uv and set the Python version
+      if: ${{ inputs.install-uv == 'true' }}
+      uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+      with:
+        version-file: ${{ inputs.uv-version-file }}
+        enable-cache: false # Cache disabled as a safety measure against cache-poisoning attacks
+        python-version: ${{ inputs.python-version }}
