@@ -12,6 +12,7 @@ import { useVideoPlayer } from '../video-player-provider.component';
 import { FrameStep } from './frame-step/frame-step.component';
 import { PlaybackSpeedSlider } from './playback-rate.component';
 import { VideoAnnotator } from './video-annotator/video-annotator.component';
+import { VideoPlayerSlider } from './video-annotator/video-timeline/video-player-slider/video-player-slider.component';
 import { VideoControls } from './video-controls.component';
 import { VideoDuration } from './video-duration.component';
 
@@ -33,22 +34,39 @@ export const VideoToolbar = () => {
 
                             <Divider orientation={'vertical'} size={'S'} />
 
-                            <FrameStep
-                                step={step}
-                                onChangeStep={changeStep}
-                                isDisabled={videoControls.isPlaying}
-                                defaultFps={videoFrame.frame_stride}
-                            />
+                            {isExpanded && (
+                                <>
+                                    <FrameStep
+                                        step={step}
+                                        onChangeStep={changeStep}
+                                        isDisabled={videoControls.isPlaying}
+                                        defaultFps={videoFrame.frame_stride}
+                                    />
 
-                            <PlaybackSpeedSlider />
+                                    <PlaybackSpeedSlider />
 
-                            <Divider orientation={'vertical'} size={'S'} />
+                                    <Divider orientation={'vertical'} size={'S'} />
+                                </>
+                            )}
                         </Flex>
 
-                        <Flex alignItems={'center'} gap={'size-100'}>
-                            <Text>
-                                Current frame: {videoFrame.frame_number} / Total frames: {videoFrame.frame_count - 1}
-                            </Text>
+                        <Flex alignItems={'center'} gap={'size-100'} flex={isExpanded ? undefined : 1}>
+                            {isExpanded ? (
+                                <Text>
+                                    Current frame: {videoFrame.frame_number} / Total frames:{' '}
+                                    {videoFrame.frame_count - 1}
+                                </Text>
+                            ) : (
+                                <View flex={1}>
+                                    <VideoPlayerSlider
+                                        videoFrame={videoFrame}
+                                        step={step}
+                                        frameNumber={videoFrame.frame_number}
+                                        selectFrame={videoControls.goto}
+                                    />
+                                </View>
+                            )}
+
                             <ActionButton
                                 isQuiet
                                 onPress={() => setIsExpanded((prev) => !prev)}
