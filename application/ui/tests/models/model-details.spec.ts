@@ -20,24 +20,36 @@ const mockedModel = getMockedModel({
     },
     variants: [
         {
+            id: 'variant-openvino-int8',
             format: 'openvino',
             precision: 'int8',
             weights_size: 52428800,
+            evaluations: [],
+            files_deleted: false,
         },
         {
+            id: 'variant-openvino-fp32',
             format: 'openvino',
             precision: 'fp32',
             weights_size: 209715200,
+            evaluations: [],
+            files_deleted: false,
         },
         {
+            id: 'variant-pytorch-fp32',
             format: 'pytorch',
             precision: 'fp32',
             weights_size: 209715200,
+            evaluations: [],
+            files_deleted: false,
         },
         {
+            id: 'variant-onnx-fp32',
             format: 'onnx',
             precision: 'fp32',
             weights_size: 209715200,
+            evaluations: [],
+            files_deleted: false,
         },
     ],
 });
