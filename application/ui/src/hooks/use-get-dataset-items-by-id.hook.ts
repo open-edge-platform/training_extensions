@@ -3,15 +3,16 @@
 
 import { useMemo } from 'react';
 
+import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
 import { useGetDatasetItems } from './use-get-dataset-items.hook';
 
 type UseGetDatasetItemsByIdOptions = {
-    limit?: number;
+    limit: number;
+    annotationStatus?: DatasetItemAnnotationStatus;
 };
 
-export const useGetDatasetItemsById = (options?: UseGetDatasetItemsByIdOptions) => {
-    const limit = options?.limit ?? 1;
-    const { data } = useGetDatasetItems({ limit: Math.max(limit, 1) });
+export const useGetDatasetItemsById = ({ limit, annotationStatus }: UseGetDatasetItemsByIdOptions) => {
+    const { data } = useGetDatasetItems({ limit, annotationStatus });
 
     const datasetItemsById = useMemo(() => {
         const datasetItems = data?.items ?? [];
