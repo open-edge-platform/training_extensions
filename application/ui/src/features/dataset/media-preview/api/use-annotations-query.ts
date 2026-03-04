@@ -23,13 +23,7 @@ const getAnnotationsQueryParams = (media: Media) => {
         : undefined;
 };
 
-export const annotationsQueryOptions = (projectId: string, media: Media) =>
-    queryOptions({
-        queryKey: getAnnotationsQueryKey(projectId, media),
-        queryFn: () => annotationsQueryFn(projectId, media),
-    });
-
-export const getAnnotationsQueryKey = (projectId: string, media: Media): QueryKey => {
+const getAnnotationsQueryKey = (projectId: string, media: Media): QueryKey => {
     return getQueryKey([
         'get',
         `/api/projects/{project_id}/dataset/media/{media_id}/annotations`,
@@ -41,6 +35,12 @@ export const getAnnotationsQueryKey = (projectId: string, media: Media): QueryKe
         },
     ]);
 };
+
+export const annotationsQueryOptions = (projectId: string, media: Media) =>
+    queryOptions({
+        queryKey: getAnnotationsQueryKey(projectId, media),
+        queryFn: () => annotationsQueryFn(projectId, media),
+    });
 
 export const annotationsQueryFn = async (projectId: string, media: Media) => {
     const queryParams = getAnnotationsQueryParams(media);

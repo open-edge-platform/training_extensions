@@ -15,7 +15,7 @@ export const ToolManager = () => {
     const { activeTool } = useTool();
     const { data: project } = useProject();
 
-    const isPreloadEnabled = project !== undefined && isPrefetchEnabledForTask(project.task.task_type);
+    const isPreloadEnabled = isPrefetchEnabledForTask(project.task.task_type);
 
     // Preload SAM workers when the tool manager is mounted, so that the tool is ready
     // to use as soon as the user selects it. Not a huge performance gain but

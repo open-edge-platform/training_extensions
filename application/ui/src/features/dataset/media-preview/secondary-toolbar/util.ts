@@ -58,14 +58,6 @@ export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[]
     return allMediaItems[currentIndex + 1];
 };
 
-export const isSameMediaItem = (firstItem: Media, secondItem: Media): boolean => {
-    if (isVideoFrame(firstItem) && isVideoFrame(secondItem)) {
-        return firstItem.id === secondItem.id && firstItem.frame_number === secondItem.frame_number;
-    }
-
-    return firstItem.id === secondItem.id;
-};
-
 export const useNextMedia = (currentMediaItem: Media, allMediaItems: Media[]) => {
     const context = useVideoPlayerContext();
     const step = context?.step ?? 1;
