@@ -1,10 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, NumberField, TextField } from '@geti/ui';
+import { Flex, TextField } from '@geti/ui';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
 import { OutputFormats } from '../output-formats/output-formats.component';
+import { RateLimitFields } from '../rate-limit/rate-limit-fields.component';
 import { LocalFolderSinkConfig } from '../utils';
 
 import classes from './local-folder.module.scss';
@@ -18,18 +19,15 @@ export const LocalFolder = ({ defaultState }: LocalFolderProps) => {
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
 
-            <Flex direction={'row'} gap='size-200'>
+            <Flex gap='size-200'>
                 <TextField isRequired label='Name' name='name' defaultValue={defaultState.name} />
-                <NumberField
-                    label='Rate Limit'
-                    name='rate_limit'
-                    minValue={0}
-                    step={0.1}
-                    defaultValue={defaultState.rate_limit ?? undefined}
-                />
             </Flex>
 
-            <Flex direction='row' gap='size-200'>
+            <Flex>
+                <RateLimitFields rateLimit={defaultState.rate_limit} />
+            </Flex>
+
+            <Flex gap='size-50'>
                 <TextField
                     isRequired
                     width={'100%'}
