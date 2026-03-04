@@ -381,7 +381,7 @@ class ModelService(BaseSessionManagedService):
         model_variant_repo = ModelVariantRepository(db=self.db_session)
         variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
         for v_db in variant_dbs:
-            if v_db.id == model_variant_id and not v_db.files_deleted:
+            if v_db.id == str(model_variant_id) and not v_db.files_deleted:
                 return self._get_variant_binary_files(project_id, model_id, UUID(v_db.id))
 
         return False, ()

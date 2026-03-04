@@ -21,6 +21,7 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 class LoadedModel:
     id: UUID
     model: Model
+    model_variant_id: UUID
     device: str
 
 
@@ -74,10 +75,12 @@ class ActiveModelService:
         with get_db_session() as db:
             active_model_repo = ActiveModelRepo(db=db)
             active_model = active_model_repo.get_active_revision()
-            if active_model is None:
+            active_variant_id = active_model_repo.get_active_model_variant_id()
+            if active_model is None or active_variant_id is None:
                 return ModelActivationState(
                     project_id=None,
                     active_model_id=None,
+                    active_model_variant_id=None,
                     available_models=[],
                     device="",
                 )
@@ -90,18 +93,16 @@ class ActiveModelService:
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
+                active_model_variant_id=UUID(active_variant_id),
                 available_models=[UUID(m.id) for m in available_models],
                 device=str(ov_device),
             )
 
-    def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
-        variants_dir = self.projects_dir / f"{project_id}/models/{model_id}/variants"
-        if variants_dir.exists():
-            for variant_dir in variants_dir.iterdir():
-                file_path = variant_dir / f"model.{extension}"
-                if file_path.is_file():
-                    return file_path
-        raise FileNotFoundError(f"Model file not found for extension: {extension}")
+    def _get_model_file_path(self, project_id: UUID, model_id: UUID, variant_id: UUID, extension: str = "xml") -> Path:
+        file_path = self.projects_dir / f"{project_id}/models/{model_id}/variants/{variant_id}/model.{extension}"
+        if file_path.is_file():
+            return file_path
+        raise FileNotFoundError(f"Model file not found: {file_path}")
 
     def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
         """
@@ -117,23 +118,41 @@ class ActiveModelService:
             self._model_activation_state = self._load_state()
             self._loaded_model = None
 
-        if self._model_activation_state.active_model_id is None or self._model_activation_state.project_id is None:
+        if (
+            self._model_activation_state.active_model_id is None
+            or self._model_activation_state.active_model_variant_id is None
+            or self._model_activation_state.project_id is None
+        ):
             return None
 
         project_id = self._model_activation_state.project_id
         active_model_id = self._model_activation_state.active_model_id
+        active_variant_id = self._model_activation_state.active_model_variant_id
         device = self._model_activation_state.device
         needs_reload = (
             self._loaded_model is None
             or self._loaded_model.id != active_model_id
+            or self._loaded_model.model_variant_id != active_variant_id
             or self._loaded_model.device != device
         )
         if needs_reload:
-            logger.info("Loading model with ID '{}' on device '{}'", active_model_id, device)
+            logger.info(
+                "Loading model with ID '{}', variant '{}', on device '{}'", active_model_id, active_variant_id, device
+            )
             try:
                 # Ensure all necessary model files exist before loading the model
-                model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
-                _ = self._get_model_file_path(project_id, active_model_id, "bin")
+                model_xml_path = self._get_model_file_path(
+                    project_id=project_id,
+                    model_id=active_model_id,
+                    variant_id=active_variant_id,
+                    extension="xml",
+                )
+                _ = self._get_model_file_path(
+                    project_id=project_id,
+                    model_id=active_model_id,
+                    variant_id=active_variant_id,
+                    extension="bin",
+                )
                 mapi_model = Model.create_model(
                     model=str(model_xml_path),
                     device=device,
@@ -146,6 +165,7 @@ class ActiveModelService:
             self._loaded_model = LoadedModel(
                 id=self._model_activation_state.active_model_id,
                 model=mapi_model,
+                model_variant_id=active_variant_id,
                 device=device,
             )
         return self._loaded_model

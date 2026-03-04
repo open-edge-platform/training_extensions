@@ -466,11 +466,11 @@ class TestModelServiceIntegration:
             tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "variants" / str(variant_id)
         )
         variant_dir.mkdir(parents=True)
-        for f in ["model.xml", "model.bin", "model.onnx", "model.ckpt"]:
+        for f in expected_files:
             (variant_dir / f).touch()
 
         files_exist, paths = fxt_model_service.get_model_binary_files(
-            project_id=fxt_project_id, model_id=fxt_model_id, model_variant_id=model_format
+            project_id=fxt_project_id, model_id=fxt_model_id, model_variant_id=variant_id
         )
         assert files_exist is True
         expected_paths = tuple(variant_dir / file for file in expected_files)

@@ -246,8 +246,9 @@ class TestModelEndpoints:
         import zipfile
         from io import BytesIO
 
+        model_variant_id = uuid4()
         # Create mock model files
-        model_dir = tmp_path / "models" / str(fxt_model.id)
+        model_dir = tmp_path / "models" / str(fxt_model.id) / "variants" / str(model_variant_id)
         model_dir.mkdir(parents=True)
         bin_content = b"binary model data"
         if model_format == ModelFormat.OPENVINO:
@@ -260,9 +261,15 @@ class TestModelEndpoints:
             (model_dir / "model.ckpt").write_bytes(bin_content)
 
         fxt_model_service.get_model_binary_files.return_value = True, tuple(model_dir.glob("*"))
+        fxt_model_service.get_variant.return_value = ModelVariant(
+            id=model_variant_id,
+            model_revision_id=fxt_model.id,
+            format=model_format,
+            precision=ModelPrecision(model_precision),
+        )
 
         response = fxt_client.get(
-            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?format={model_format.value}"
+            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?model_variant_id={model_variant_id}"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -291,18 +298,21 @@ class TestModelEndpoints:
         fxt_model_service.get_model_binary_files.assert_called_once_with(
             project_id=fxt_get_project.id,
             model_id=fxt_model.id,
-            format=model_format,
+            model_variant_id=model_variant_id,
         )
 
     def test_download_model_binary_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
         model_id = uuid4()
+        model_variant_id = uuid4()
         fxt_model_service.get_model_binary_files.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
-        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary")
+        response = fxt_client.get(
+            f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary?model_variant_id={model_variant_id}"
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_model_service.get_model_binary_files.assert_called_once_with(
-            project_id=fxt_get_project.id, model_id=model_id, format=ModelFormat.OPENVINO
+            project_id=fxt_get_project.id, model_id=model_id, model_variant_id=model_variant_id
         )
 
     def test_download_model_binary_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
