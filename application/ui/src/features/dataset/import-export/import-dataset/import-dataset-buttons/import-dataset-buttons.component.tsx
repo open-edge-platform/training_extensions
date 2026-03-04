@@ -6,12 +6,12 @@ import { Button, ButtonGroup } from '@geti/ui';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { ImportProcessButtons } from '../import-process/import-process-buttons.component';
 import { LabelMappingButtons } from '../label-mapping/label-mapping-buttons.component';
-import { ImportDatasetState } from '../util';
+import { ImportDatasetToProjectState } from '../util';
 
 type ImportDatasetButtonsProps = {
     onClose: () => void;
     stagedDatasetId: string | null;
-    currentStep: ImportDatasetState;
+    currentStep: ImportDatasetToProjectState;
 };
 
 export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: ImportDatasetButtonsProps) => {

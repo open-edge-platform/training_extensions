@@ -22,7 +22,6 @@ describe('ImportDatasetToProject', () => {
             appendImportEntry: vi.fn(),
             deleteImportEntry: vi.fn(),
             updateImportEntryStep: vi.fn(),
-            getLastImportEntry: vi.fn(),
             updateImportEntry: vi.fn(),
         });
 
