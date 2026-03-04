@@ -72,15 +72,15 @@ const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
     );
 };
 
-type AnnotationsFactoryProps = {
+type MediaAnnotationsProps = {
     mediaItem: Media;
 };
 
-const AnnotationsFactory = ({ mediaItem }: AnnotationsFactoryProps) => {
+const MediaAnnotations = ({ mediaItem }: MediaAnnotationsProps) => {
     const videoPlayerContext = useVideoPlayerContext();
 
     if (isVideoFrame(mediaItem) && videoPlayerContext?.videoControls?.isPlaying) {
-        return <VideoAnnotations videoFrame={mediaItem} />;
+        return <VideoAnnotations />;
     }
 
     return <ImageAnnotations mediaItem={mediaItem} />;
@@ -107,7 +107,7 @@ export const AnnotatorCanvas = ({ mediaItem, image, isReadOnly = false }: Annota
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
 
-                <AnnotationsFactory mediaItem={mediaItem} />
+                <MediaAnnotations mediaItem={mediaItem} />
 
                 {!areToolsDisabled && <ToolManager />}
             </div>

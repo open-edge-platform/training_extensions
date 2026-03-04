@@ -14,34 +14,8 @@ import useUndoRedoState from '../../features/dataset/media-preview/primary-toolb
 import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { isVideoFrame } from '../media-item-utils';
 import type { Annotation, Shape } from '../types';
+import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
-
-const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
-    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
-
-    return serverAnnotations.map((annotation) => {
-        // We only get the ids of the labels
-        const labels = (annotation.labels ?? [])
-            .map((labelRef) => labelMap.get(labelRef.id))
-            .filter((label): label is Label => label !== undefined)
-            .map((label, idx) => ({ ...label, probability: annotation.confidences?.at(idx) }));
-
-        return {
-            ...annotation,
-            id: uuid(),
-            labels,
-        };
-    });
-};
-
-const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): AnnotationDTO[] => {
-    return localAnnotations.map((annotation) => ({
-        // We only want to send the ids of the labels
-        labels: annotation.labels.map((label) => ({ id: label.id })),
-        shape: annotation.shape,
-        ...(annotation.confidences !== undefined && { confidences: annotation.confidences }),
-    }));
-};
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
