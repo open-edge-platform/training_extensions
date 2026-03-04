@@ -129,15 +129,18 @@ class OTXTrainer(Execution[TrainingJobParams]):
         Otherwise, it retrieves the base weights for the specified model architecture.
         """
         parent_model_revision_id = training_params.parent_model_revision_id
+        parent_model_variant_id = training_params.parent_model_variant_id
         task = training_params.task
         model_architecture_id = training_params.model_architecture_id
         project_id = training_params.project_id
-        if parent_model_revision_id is None:
+        if parent_model_revision_id is None or parent_model_variant_id is None:
             return self._base_weights_service.get_local_weights_path(
                 task=task.task_type, model_manifest_id=model_architecture_id
             )
 
-        weights_path = self.__build_model_weights_path(self._data_dir, project_id, parent_model_revision_id)
+        weights_path = self.__build_model_weights_path(
+            self._data_dir, project_id, parent_model_revision_id, parent_model_variant_id
+        )
         if not weights_path.exists():
             raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
 
@@ -609,18 +612,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
         return data_dir / "projects" / str(project_id) / "models" / str(model_id)
 
     @classmethod
-    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
+    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
         """Get the path to the PyTorch checkpoint from a model's variants directory."""
         model_dir = cls.__base_model_path(data_dir, project_id, model_id)
-        variants_dir = model_dir / "variants"
-        if variants_dir.exists():
-            # Search for model.ckpt in variant subdirectories
-            for variant_dir in variants_dir.iterdir():
-                ckpt_path = variant_dir / "model.ckpt"
-                if ckpt_path.exists():
-                    return ckpt_path
-        # Fallback to legacy flat structure for backward compatibility
-        return model_dir / "model.ckpt"
+        return model_dir / "variants" / str(model_variant) / "model.ckpt"
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

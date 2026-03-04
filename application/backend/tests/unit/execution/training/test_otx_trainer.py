@@ -140,16 +140,25 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         project_id = uuid4()
         parent_model_revision_id = uuid4()
+        parent_model_variant_id = uuid4()
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
+            parent_model_variant_id=parent_model_variant_id,
             job_id=uuid4(),
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
+            tmp_path
+            / "projects"
+            / str(project_id)
+            / "models"
+            / str(parent_model_revision_id)
+            / "variants"
+            / str(parent_model_variant_id)
+            / "model.ckpt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
@@ -170,16 +179,25 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         project_id = uuid4()
         parent_model_revision_id = uuid4()
+        parent_model_variant_id = uuid4()
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
+            parent_model_variant_id=parent_model_variant_id,
             job_id=uuid4(),
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
+            tmp_path
+            / "projects"
+            / str(project_id)
+            / "models"
+            / str(parent_model_revision_id)
+            / "variants"
+            / str(parent_model_variant_id)
+            / "model.ckpt"
         )
         otx_trainer = fxt_otx_trainer()
 

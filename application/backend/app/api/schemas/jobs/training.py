@@ -20,6 +20,11 @@ class TrainingRequestParams(BaseModel):
     parent_model_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null for training from scratch"
     )
+    parent_variant_id: UUID | None = Field(
+        None,
+        description="Parent model variant ID for fine-tuning a specific variant, "
+        "must be provided if parent_model_revision_id is provided",
+    )
     dataset_revision_id: UUID | None = Field(
         None,
         description="Dataset revision ID if reusing an existing dataset revision, "
@@ -32,6 +37,7 @@ class TrainingRequestParams(BaseModel):
                 "device": "xpu-0",
                 "model_architecture_id": "object-detection-atss-mobilenet-v2",
                 "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+                "parent_variant_id": "123e4567-e89b-12d3-a456-426614174000",
                 "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             }
         }
@@ -50,9 +56,10 @@ class TrainingRequest(BaseJobRequest):
                 "job_type": "train",
                 "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "parameters": {
+                    "device": "xpu-0",
                     "model_architecture_id": "object-detection-atss-mobilenet-v2",
                     "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
-                    "device": "xpu-0",
+                    "parent_variant_id": "123e4567-e89b-12d3-a456-426614174000",
                     "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 },
             }
