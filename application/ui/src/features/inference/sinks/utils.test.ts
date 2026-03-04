@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getObjectFromFormData } from './utils';
+import { formatRateLimit, getObjectFromFormData, rateLimitFromFormData } from './utils';
 
 describe('getObjectFromFormData', () => {
     it('return an object mapping keys to values', () => {
@@ -44,5 +44,85 @@ describe('getObjectFromFormData', () => {
         const keys = [' ', 'b', 'c'];
         const values = ['1', ' ', '3'];
         expect(getObjectFromFormData(keys, values)).toEqual({ c: '3' });
+    });
+});
+
+describe('rateLimitFromFormData', () => {
+    it('returns null when fields are missing', () => {
+        const formData = new FormData();
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+
+    it('returns null for non-numeric values', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', 'abc');
+        formData.set('rate_limit_seconds', '1');
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+
+    it('returns null when values are not finite numbers', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', 'Infinity');
+        formData.set('rate_limit_seconds', '2');
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+
+    it('returns null for non-positive values', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', '0');
+        formData.set('rate_limit_seconds', '2');
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+
+    it('returns computed rate for valid values', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', '10');
+        formData.set('rate_limit_seconds', '2');
+
+        expect(rateLimitFromFormData(formData)).toBe(5);
+    });
+
+    it('parses decimal comma values', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', '0,1');
+        formData.set('rate_limit_seconds', '1');
+
+        expect(rateLimitFromFormData(formData)).toBe(0.1);
+    });
+
+    it('returns null for invalid mixed separators', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', '1,2.3');
+        formData.set('rate_limit_seconds', '1');
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+});
+
+describe('formatRateLimit', () => {
+    it('returns "Not set" for nullish or non-positive values', () => {
+        expect(formatRateLimit(undefined)).toBe('Not set');
+        expect(formatRateLimit(null)).toBe('Not set');
+        expect(formatRateLimit(0)).toBe('Not set');
+    });
+
+    it('formats singular sample and second labels', () => {
+        expect(formatRateLimit(1)).toBe('1 sample every 1 second');
+    });
+
+    it('formats plural samples for rates above one', () => {
+        expect(formatRateLimit(2)).toBe('2 samples every 1 second');
+    });
+
+    it('formats rates below one as canonical ratio', () => {
+        expect(formatRateLimit(0.5)).toBe('1 sample every 2 seconds');
+    });
+
+    it('rounds canonical ratio seconds to two decimals', () => {
+        expect(formatRateLimit(0.3)).toBe('1 sample every 3.33 seconds');
     });
 });

@@ -39,6 +39,28 @@ export enum WebhookHttpMethod {
 }
 
 const toStringAndTrim = (value: unknown) => String(value).trim();
+const parseFiniteNumber = (value: string): number | null => {
+    const compactValue = value.replace(/\s/g, '');
+
+    if (isEmpty(compactValue)) {
+        return null;
+    }
+
+    if (compactValue.includes(',') && compactValue.includes('.')) {
+        return null;
+    }
+
+    const normalizedValue = compactValue.replace(',', '.');
+    const parsedValue = Number(normalizedValue);
+
+    return Number.isFinite(parsedValue) ? parsedValue : null;
+};
+
+const toDisplayNumber = (value: number) => {
+    const roundedValue = Number(value.toFixed(2));
+
+    return String(roundedValue);
+};
 
 export const positiveNumberOrUndefined = (value: number | null | undefined): number | undefined => {
     return typeof value === 'number' && value > 0 ? value : undefined;
@@ -54,17 +76,20 @@ export const getObjectFromFormData = (keys: FormDataEntryValue[], values: FormDa
 };
 
 export const rateLimitFromFormData = (formData: FormData): number | null => {
-    const samplesRaw = toStringAndTrim(formData.get('rate_limit_samples'));
-    const secondsRaw = toStringAndTrim(formData.get('rate_limit_seconds'));
+    const samplesValue = formData.get('rate_limit_samples');
+    const secondsValue = formData.get('rate_limit_seconds');
 
-    if (isEmpty(samplesRaw) || isEmpty(secondsRaw)) {
+    if (samplesValue === null || secondsValue === null) {
         return null;
     }
 
-    const samples = Number(samplesRaw);
-    const seconds = Number(secondsRaw);
+    const samplesRaw = toStringAndTrim(samplesValue);
+    const secondsRaw = toStringAndTrim(secondsValue);
 
-    if (samples <= 0 || seconds <= 0) {
+    const samples = parseFiniteNumber(samplesRaw);
+    const seconds = parseFiniteNumber(secondsRaw);
+
+    if (samples === null || seconds === null || samples <= 0 || seconds <= 0) {
         return null;
     }
 
@@ -78,5 +103,16 @@ export const formatRateLimit = (rateLimit: number | null | undefined): string =>
         return 'Not set';
     }
 
-    return `${normalizedRateLimit} samples every 1 second`;
+    if (normalizedRateLimit < 1) {
+        const seconds = 1 / normalizedRateLimit;
+        const normalizedSeconds = toDisplayNumber(seconds);
+        const secondsLabel = normalizedSeconds === '1' ? 'second' : 'seconds';
+
+        return `1 sample every ${normalizedSeconds} ${secondsLabel}`;
+    }
+
+    const normalizedSamples = toDisplayNumber(normalizedRateLimit);
+    const sampleLabel = normalizedSamples === '1' ? 'sample' : 'samples';
+
+    return `${normalizedSamples} ${sampleLabel} every 1 second`;
 };
