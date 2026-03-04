@@ -54,8 +54,9 @@ const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
 
 const useMediaItem = (initialMediaItem: Media) => {
     const frameNumberFromPathParam = useVideoFrameNumberPathParam();
-    const frames = isVideo(initialMediaItem) || isVideo(initialMediaItem) ? initialMediaItem.frame_count - 1 : 0;
-    const frameNumber = Math.max(0, Math.min(frameNumberFromPathParam, frames));
+    const maxFrameNumber =
+        isVideo(initialMediaItem) || isVideo(initialMediaItem) ? initialMediaItem.frame_count - 1 : 0;
+    const frameNumber = Math.max(0, Math.min(frameNumberFromPathParam, maxFrameNumber));
 
     const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
     const prevInitialMediaItem = useRef(initialMediaItem);
