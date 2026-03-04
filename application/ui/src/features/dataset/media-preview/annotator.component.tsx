@@ -1,18 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
-
 import { View } from '@geti/ui';
-import { useQueryClient } from '@tanstack/react-query';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Media } from '../../../constants/shared-types';
-import { useTool } from '../../../shared/annotator/tool-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
-import { prefetchNextSAMEncodingData } from '../../annotator/tools/segment-anything-tool/use-segment-anything.hook';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -21,8 +15,7 @@ import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-ca
 import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { useNextMedia } from './secondary-toolbar/util';
-import { prefetchNextMediaAndAnnotationsData } from './utils';
+import { useNextMediaItem } from './utils';
 
 type AnnotatorProps = {
     image: ImageData;
@@ -43,31 +36,9 @@ const Annotator = ({
     items,
     onClose,
 }: AnnotatorProps) => {
-    const { activeTool } = useTool();
-    const getNextMediaItem = useNextMedia(mediaItem, items);
-    const queryClient = useQueryClient();
-    const projectId = useProjectIdentifier();
-    const isSAMContext = activeTool === 'sam';
-
-    useEffect(() => {
-        prefetchNextMediaAndAnnotationsData({
-            queryClient,
-            projectId,
-            getNextMediaItem,
-        });
-
-        if (isSAMContext) {
-            prefetchNextSAMEncodingData({
-                queryClient,
-                projectId,
-                getNextMediaItem,
-            });
-        }
-    }, [getNextMediaItem, isSAMContext, projectId, queryClient]);
+    const nextMediaItem = useNextMediaItem(mediaItem, items);
 
     const handleSubmitAnnotations = async () => {
-        const nextMediaItem = getNextMediaItem();
-
         if (nextMediaItem === undefined) {
             return;
         }

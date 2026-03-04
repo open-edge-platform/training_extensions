@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EncodingOutput } from '@geti/smart-tools/segment-anything';
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 import { isDetectionTask } from '../../../project/task-type-guards';
-import { loadImageQueryOptions } from '../../hooks/use-load-image-query.hook';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import type {
     SegmentAnythingWorkerApi,
@@ -85,40 +84,30 @@ export const usePreloadSAMWorkers = (enabled = true) => {
     useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', enabled);
 };
 
-export const prefetchNextSAMEncodingData = ({
-    queryClient,
-    projectId,
-    getNextMediaItem,
-}: {
-    queryClient: ReturnType<typeof useQueryClient>;
-    projectId: string;
-    getNextMediaItem: () => Media | undefined;
-}) => {
-    const prefetch = async () => {
-        const nextItem = getNextMediaItem();
-
-        if (nextItem === undefined) {
-            return;
-        }
-
-        const nextImage = await queryClient.ensureQueryData(loadImageQueryOptions(projectId, nextItem));
-        const encoderModel = await queryClient.ensureQueryData(
-            segmentAnythingWorkerQueryOptions('SEGMENT_ANYTHING_ENCODER')
-        );
-
-        queryClient.prefetchQuery(segmentAnythingEncodingQueryOptions(nextItem, encoderModel, nextImage));
-    };
-
-    prefetch();
-};
-
 const useEncodingQuery = (
     model: SegmentAnythingRemoteModel | undefined,
-    mediaItem: Media,
-    image: ImageData,
+    mediaItem: Media | undefined,
+    image: ImageData | undefined,
     isImageReady: boolean
 ) => {
-    return useQuery(segmentAnythingEncodingQueryOptions(mediaItem, model, image, model !== undefined && isImageReady));
+    const isEnabled = model !== undefined && mediaItem !== undefined && image !== undefined && isImageReady;
+
+    return useQuery({
+        queryKey:
+            mediaItem === undefined
+                ? ['segment-anything-model', 'encoding', 'disabled']
+                : getSegmentAnythingEncodingQueryKey(mediaItem),
+        queryFn: async () => {
+            if (model === undefined || image === undefined) {
+                throw new Error('Model not yet initialized');
+            }
+
+            return model.processEncoder(image);
+        },
+        staleTime: Infinity,
+        gcTime: 3600 * 15,
+        enabled: isEnabled,
+    });
 };
 
 const useDecoderOutputType = () => {
@@ -162,13 +151,30 @@ const useDecodingFn = (model: SegmentAnythingRemoteModel | undefined, encoding: 
     };
 };
 
-export const useSegmentAnythingModel = () => {
+type SegmentAnythingModelOptions = {
+    nextMediaItem?: Media;
+    nextImage?: ImageData;
+    isNextImageReady?: boolean;
+};
+
+export const useSegmentAnythingModel = ({
+    nextMediaItem,
+    nextImage,
+    isNextImageReady = false,
+}: SegmentAnythingModelOptions = {}) => {
     const encoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER');
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
     const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
 
     const { mediaItem, image, isImageReady } = useSelectedMediaItem();
+
+    // First we get the encoding for the CURRENT image
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image, isImageReady);
+    // At the same time we start prefetching the encoding for the NEXT image,
+    // so when the user moves to the next media item the decoding will be faster.
+    // We don't need to get the decoding query result for the next image, we just want to cache the encoding result.
+    useEncodingQuery(encoderModel, nextMediaItem, nextImage, isNextImageReady);
+
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
     const isLoading = isLoadingWorkers || encodingQuery.isLoading;
