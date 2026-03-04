@@ -26,16 +26,16 @@ export const VideoToolbar = () => {
         <Toolbar.Container>
             <Toolbar.Section>
                 <View paddingX={'size-100'}>
-                    <Flex alignItems={'center'} justifyContent={'space-between'}>
+                    <Flex alignItems={'center'} justifyContent={'space-between'} gap={'size-200'}>
                         <Flex alignItems={'center'} gap={'size-200'}>
                             <Text>Frames</Text>
                             <VideoControls />
                             <VideoDuration />
 
-                            <Divider orientation={'vertical'} size={'S'} />
-
                             {isExpanded && (
-                                <>
+                                <Flex alignItems={'center'} gap={'size-100'}>
+                                    <Divider orientation={'vertical'} size={'S'} />
+
                                     <FrameStep
                                         step={step}
                                         onChangeStep={changeStep}
@@ -46,7 +46,7 @@ export const VideoToolbar = () => {
                                     <PlaybackSpeedSlider />
 
                                     <Divider orientation={'vertical'} size={'S'} />
-                                </>
+                                </Flex>
                             )}
                         </Flex>
 
