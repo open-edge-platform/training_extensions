@@ -5,12 +5,10 @@ import { Divider, Flex, Text } from '@geti/ui';
 import { Alert } from '@geti/ui/icons';
 import { isNil } from 'lodash-es';
 
-import { components } from '../../../../../../api/openapi-spec';
+import { AnnotationType } from '../../../../../../constants/shared-types';
 import { useProject } from '../../../../../../hooks/api/project.hook';
 
 import classes from './format-warning.module.scss';
-
-type AnnotationType = components['schemas']['AnnotationType'];
 
 type FormatWarningProps = {
     annotationType?: AnnotationType;

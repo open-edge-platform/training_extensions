@@ -34,10 +34,6 @@ vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', 
     }),
 }));
 
-vi.mock('hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => 'project-123',
-}));
-
 describe('LoadingImportDataset', () => {
     const renderApp = (job: Job) => {
         server.use(
@@ -94,7 +90,7 @@ describe('LoadingImportDataset', () => {
                 queryKey: getQueryKey([
                     'get',
                     '/api/projects/{project_id}/dataset/media',
-                    { params: { path: { project_id: 'project-123' } } },
+                    { params: { path: { project_id: '123' } } },
                 ]),
             });
         });
