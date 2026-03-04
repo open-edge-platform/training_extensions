@@ -10,7 +10,8 @@ type UseGetDatasetItemsByIdOptions = {
 };
 
 export const useGetDatasetItemsById = (options?: UseGetDatasetItemsByIdOptions) => {
-    const { data } = useGetDatasetItems({ limit: options?.limit });
+    const limit = options?.limit ?? 1;
+    const { data } = useGetDatasetItems({ limit: Math.max(limit, 1) });
 
     const datasetItemsById = useMemo(() => {
         const datasetItems = data?.items ?? [];

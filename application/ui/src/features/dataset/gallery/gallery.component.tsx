@@ -48,7 +48,7 @@ export const Gallery = ({
     const projectId = useProjectIdentifier();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { datasetItemsById } = useGetDatasetItemsById();
+    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length });
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
