@@ -39,7 +39,7 @@ export const SidebarItems = ({
 }: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const { datasetItemsById } = useGetDatasetItemsById();
+    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length });
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
