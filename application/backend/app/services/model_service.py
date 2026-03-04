@@ -356,7 +356,7 @@ class ModelService(BaseSessionManagedService):
         model_revision_repo.update_training_status(obj_id=str(model_id), training_status=training_status)
 
     def get_model_binary_files(
-        self, project_id: UUID, model_id: UUID, format: ModelFormat
+        self, project_id: UUID, model_id: UUID, model_variant_id: UUID
     ) -> tuple[bool, tuple[Path, ...]]:
         """
         Get the paths to the model binary files.
@@ -364,7 +364,7 @@ class ModelService(BaseSessionManagedService):
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
-            format (ModelFormat): The format of the model files to retrieve.
+            model_variant_id (UUID): The unique identifier of the model variant files to retrieve.
 
         Returns:
             tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
@@ -381,13 +381,13 @@ class ModelService(BaseSessionManagedService):
         model_variant_repo = ModelVariantRepository(db=self.db_session)
         variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
         for v_db in variant_dbs:
-            if v_db.format == format.value and not v_db.files_deleted:
-                return self._get_variant_binary_files(project_id, model_id, UUID(v_db.id), format)
+            if v_db.id == model_variant_id and not v_db.files_deleted:
+                return self._get_variant_binary_files(project_id, model_id, UUID(v_db.id))
 
         return False, ()
 
     def _get_variant_binary_files(
-        self, project_id: UUID, model_id: UUID, variant_id: UUID, format: ModelFormat
+        self, project_id: UUID, model_id: UUID, variant_id: UUID
     ) -> tuple[bool, tuple[Path, ...]]:
         """Get binary files for a specific variant from the filesystem."""
         variant_dir = self._get_variant_dir(project_id, model_id, variant_id)
@@ -397,11 +397,11 @@ class ModelService(BaseSessionManagedService):
         onnx_file = variant_dir / "model.onnx"
         ckpt_file = variant_dir / "model.ckpt"
 
-        if format == ModelFormat.OPENVINO and xml_file.exists() and bin_file.exists():
+        if xml_file.exists() and bin_file.exists():
             return True, (xml_file, bin_file)
-        if format == ModelFormat.ONNX and onnx_file.exists():
+        if onnx_file.exists():
             return True, (onnx_file,)
-        if format == ModelFormat.PYTORCH and ckpt_file.exists():
+        if ckpt_file.exists():
             return True, (ckpt_file,)
 
         return False, ()

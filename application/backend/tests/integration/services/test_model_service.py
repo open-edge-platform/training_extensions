@@ -470,7 +470,7 @@ class TestModelServiceIntegration:
             (variant_dir / f).touch()
 
         files_exist, paths = fxt_model_service.get_model_binary_files(
-            project_id=fxt_project_id, model_id=fxt_model_id, format=model_format
+            project_id=fxt_project_id, model_id=fxt_model_id, model_variant_id=model_format
         )
         assert files_exist is True
         expected_paths = tuple(variant_dir / file for file in expected_files)
