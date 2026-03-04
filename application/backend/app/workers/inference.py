@@ -67,7 +67,7 @@ class PredictionReorderBuffer:
         result = []
         with self._lock:
             while self._expected_timestamps and self._expected_timestamps[0] in self._buffer:
-                timestamp = self._expected_timestamps[0]
+                timestamp = self._expected_timestamps.pop(0)
                 stream_data = self._buffer.pop(timestamp)
                 result.append(stream_data)
         return result
