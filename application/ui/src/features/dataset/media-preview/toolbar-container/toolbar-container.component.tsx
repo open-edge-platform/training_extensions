@@ -9,7 +9,7 @@ type ViewProps = ComponentProps<typeof View>;
 
 type ToolbarContainerProps = Omit<ViewProps, 'borderRadius' | 'backgroundColor' | 'padding'>;
 
-const ToolbarContainer = ({ children, isHidden, ...rest }: ToolbarContainerProps) => {
+const ToolbarContainer = ({ children, ...rest }: ToolbarContainerProps) => {
     return (
         <View borderRadius={'regular'} backgroundColor={'gray-200'} padding={'size-50'} {...rest}>
             {children}
@@ -19,9 +19,9 @@ const ToolbarContainer = ({ children, isHidden, ...rest }: ToolbarContainerProps
 
 type ToolbarSectionProps = Omit<ViewProps, 'borderRadius' | 'backgroundColor' | 'padding'>;
 
-const ToolbarSection = ({ children, ...props }: ToolbarSectionProps) => {
+const ToolbarSection = ({ children, ...rest }: ToolbarSectionProps) => {
     return (
-        <View borderRadius={'regular'} backgroundColor={'gray-50'} padding={'size-100'} {...props}>
+        <View borderRadius={'regular'} backgroundColor={'gray-50'} padding={'size-100'} {...rest}>
             {children}
         </View>
     );
