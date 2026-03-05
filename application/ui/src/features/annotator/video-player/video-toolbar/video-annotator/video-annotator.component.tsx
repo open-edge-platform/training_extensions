@@ -4,10 +4,15 @@
 import { Grid, View } from '@geti/ui';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 
+import { AnnotatorMode } from '../../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { Labels } from './labels/labels.component';
 import { VideoTimeline } from './video-timeline/video-timeline.component';
 
-export const VideoAnnotator = () => {
+type VideoAnnotatorProps = {
+    mode: AnnotatorMode;
+};
+
+export const VideoAnnotator = ({ mode }: VideoAnnotatorProps) => {
     const labels = useProjectLabels();
 
     return (
@@ -22,7 +27,7 @@ export const VideoAnnotator = () => {
                 <Labels labels={labels} />
             </View>
             <View gridArea={'timeline'} UNSAFE_style={{ overflowX: 'auto' }}>
-                <VideoTimeline labels={labels} />
+                <VideoTimeline labels={labels} mode={mode} />
             </View>
         </Grid>
     );

@@ -90,7 +90,7 @@ export const ReadOnlyAnnotator = ({
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>
-                    <VideoToolbar />
+                    <VideoToolbar mode={mode} />
                 </View>
             )}
 

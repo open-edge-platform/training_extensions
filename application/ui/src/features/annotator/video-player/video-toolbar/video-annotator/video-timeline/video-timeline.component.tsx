@@ -7,6 +7,7 @@ import { useSizeHook } from 'hooks/use-size.hook';
 import useVirtual from 'react-cool-virtual';
 
 import { type Label } from '../../../../../../constants/shared-types';
+import { AnnotatorMode } from '../../../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { useVideoPlayer } from '../../../video-player-provider.component';
 import { VideoFrameSegments } from './video-frame-segment/video-frame-segments.component';
 import { VideoPlayerSlider } from './video-player-slider/video-player-slider.component';
@@ -15,11 +16,12 @@ import classes from './video-timeline.module.scss';
 
 type VideoTimelineProps = {
     labels: Label[];
+    mode: AnnotatorMode;
 };
 
 const MIN_SIZE_OF_SEGMENT = 2 * 8;
 
-export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
+export const VideoTimeline = ({ labels, mode }: VideoTimelineProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const size = useSizeHook(containerRef);
     const { videoFrame, videoControls, step } = useVideoPlayer();
@@ -60,6 +62,7 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                     />
                 </div>
                 <VideoFrameSegments
+                    mode={mode}
                     frameNumber={frameNumber}
                     ref={innerRef}
                     items={items}

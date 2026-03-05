@@ -79,7 +79,7 @@ const Annotator = ({
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>
-                    <VideoToolbar />
+                    <VideoToolbar mode={mode} />
                 </View>
             )}
 
