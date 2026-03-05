@@ -3,12 +3,12 @@
 
 import { View } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
+import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
+import { isJobDone, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { getQueryKey } from '../../../../../query-client/query-client';
-import { useImportJobStatus } from '../../import-dataset/hooks/use-import-job-status.hook';
-import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../../util';
 import { ImportActiveJob } from '../import-active-job/import-active-job.component';
 import { ImportFailedJob } from '../import-failed-job/import-failed-job.component';
 import { ImportJobDone } from '../import-job-done/import-job-done.component';

@@ -5,10 +5,10 @@ import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { renderHook } from 'test-utils/render';
 
-import { getMockedPrepareImportDatasetJob } from '../../../../../../mocks/mock-job';
-import { http } from '../../../../../api/utils';
-import { server } from '../../../../../msw-node-setup';
-import { useImportJobStatus } from './use-import-job-status.hook';
+import { getMockedPrepareImportDatasetJob } from '../../../mocks/mock-job';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
+import { useImportJobStatus } from './jobs/use-import-job-status.hook';
 
 describe('useImportJobStatus', () => {
     beforeEach(() => {

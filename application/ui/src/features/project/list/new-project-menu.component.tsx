@@ -9,7 +9,7 @@ import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useNavigate } from 'react-router-dom';
 
 import { paths } from '../../../constants/paths';
-import { ImportDatasetAsNewProject } from './Import-dataset-as-new-project/Import-dataset-as-new-project.component';
+import { ImportDatasetAsNewProject } from './import-dataset-as-new-projects/import-dataset-as-new-projects.component';
 
 import classes from './new-project-menu.module.scss';
 

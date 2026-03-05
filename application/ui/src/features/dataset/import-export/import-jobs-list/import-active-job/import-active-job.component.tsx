@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { getJobProgress, isJobRunning } from 'hooks/api/util';
 
 import { Job } from '../../../../../constants/shared-types';
 import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
-import { getJobProgress, isJobRunning } from '../../util';
 
 type ImportActiveJobProps = {
     job: Job;
