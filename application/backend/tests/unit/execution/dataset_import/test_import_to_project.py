@@ -140,31 +140,95 @@ class TestImportDatasetToProject:
         mock_media = Mock(id=uuid4())
         fxt_media_service.create_image.return_value = mock_media
 
-        # Act
-        fxt_import.create_items(dataset=dataset, params=fxt_import_params)
+        with patch.object(fxt_import, "pin_message") as mock_pin_message:
+            # Act
+            fxt_import.create_items(dataset=dataset, params=fxt_import_params)
 
-        # Verify media creation
-        assert fxt_media_service.create_image.call_count == 2
-        calls = fxt_media_service.create_image.call_args_list
-        assert calls[0].kwargs["project_id"] == fxt_import_params.project_id
-        assert calls[0].kwargs["name"] == "0"
-        assert calls[0].kwargs["format"] == ImageFormat.JPG
-        assert calls[0].kwargs["data"] is not None
-        assert calls[1].kwargs["project_id"] == fxt_import_params.project_id
-        assert calls[1].kwargs["name"] == "1"
-        assert calls[1].kwargs["format"] == ImageFormat.BMP
-        assert calls[1].kwargs["data"] is not None
+            # Verify media creation
+            assert fxt_media_service.create_image.call_count == 2
+            calls = fxt_media_service.create_image.call_args_list
+            assert calls[0].kwargs["project_id"] == fxt_import_params.project_id
+            assert calls[0].kwargs["name"] == "0"
+            assert calls[0].kwargs["format"] == ImageFormat.JPG
+            assert calls[0].kwargs["data"] is not None
+            assert calls[1].kwargs["project_id"] == fxt_import_params.project_id
+            assert calls[1].kwargs["name"] == "1"
+            assert calls[1].kwargs["format"] == ImageFormat.BMP
+            assert calls[1].kwargs["data"] is not None
 
-        # Verify dataset item creation
-        assert fxt_dataset_service.create_dataset_item.call_count == 2
-        fxt_dataset_service.create_dataset_item.assert_any_call(
-            project_id=fxt_import_params.project_id,
-            task=fxt_import_params.task,
-            media=mock_media,
-            user_reviewed=True,
-            annotations=[DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])],
-            subset=DatasetItemSubset.TRAINING,
+            # Verify dataset item creation
+            assert fxt_dataset_service.create_dataset_item.call_count == 2
+            fxt_dataset_service.create_dataset_item.assert_any_call(
+                project_id=fxt_import_params.project_id,
+                task=fxt_import_params.task,
+                media=mock_media,
+                user_reviewed=True,
+                annotations=[
+                    DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])
+                ],
+                subset=DatasetItemSubset.TRAINING,
+            )
+            mock_pin_message.assert_called_once_with("Imported 2/2 items from the dataset.", level="INFO")
+
+    def test_create_items_filter_unannotated(
+        self,
+        fxt_import: ImportDatasetToProject,
+        fxt_dataset_service: Mock,
+        fxt_label_service: Mock,
+        fxt_media_service: Mock,
+        fxt_import_params: ImportDatasetToProjectJobParams,
+        tmp_path: Path,
+    ) -> None:
+        """Test complete item creation flow: media, annotations, and dataset items."""
+        label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
+        dataset = Dataset(ClassificationSample, categories=label_categories)
+        (tmp_path / "image1.jpg").write_bytes(create_mock_img_bytes())
+        (tmp_path / "image2.bmp").write_bytes(create_mock_img_bytes(image_format="BMP"))
+        fxt_import_params.include_unannotated = False
+        # This will cause the second sample to have no annotations after label mapping
+        fxt_import_params.labels_mapping = {"dog": None}
+        dataset.append(
+            ClassificationSample(
+                id=None,
+                image=LazyImage(tmp_path / "image1.jpg"),
+                image_info=ImageInfo(10, 10),
+                label=None,
+                user_reviewed=False,
+                confidence=None,
+                subset=Subset.TRAINING,
+            )
         )
+        dataset.append(
+            ClassificationSample(
+                id=None,
+                image=LazyImage(tmp_path / "image2.bmp"),
+                image_info=ImageInfo(10, 10),
+                label=1,
+                user_reviewed=True,
+                confidence=None,
+                subset=Subset.TRAINING,
+            )
+        )
+        project_labels = [
+            Label(id=uuid4(), name="cat", color="#FF0000", hotkey=None),
+            Label(id=uuid4(), name="dog", color="#00FF00", hotkey=None),
+            Label(id=uuid4(), name="bird", color="#0000FF", hotkey=None),
+        ]
+        fxt_label_service.list_all.return_value = project_labels
+        mock_media = Mock(id=uuid4())
+        fxt_media_service.create_image.return_value = mock_media
+
+        with patch.object(fxt_import, "pin_message") as mock_pin_message:
+            # Act
+            fxt_import.create_items(dataset=dataset, params=fxt_import_params)
+
+            # Verify media and dataset item creation is not triggered for unannotated items
+            # when include_unannotated=False
+            fxt_media_service.create_image.assert_not_called()
+            fxt_dataset_service.create_dataset_item.assert_not_called()
+            mock_pin_message.assert_called_once_with(
+                "No items were imported from the dataset. This may be due to filtering options that excluded all items."
+            )
 
     def test_create_items_progress_updates(
         self,

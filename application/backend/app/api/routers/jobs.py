@@ -93,6 +93,7 @@ async def submit_job(
                         project_id=project.id,
                         task=project.task,
                         labels_mapping=job_request.parameters.labels_mapping,
+                        include_unannotated=job_request.parameters.include_unannotated,
                     ),
                 )
             case JobType.EXPORT_DATASET:

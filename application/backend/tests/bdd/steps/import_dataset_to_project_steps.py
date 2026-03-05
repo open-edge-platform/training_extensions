@@ -49,76 +49,86 @@ def step_dataset_with_labels_exists(context: Context, labels: str) -> None:
     context.dataset = dataset
 
 
-@given('the dataset containing {count:d} {subset} images labeled "{label}"')  # pyrefly: ignore
-def step_dataset_with_samples_exists(context: Context, count: int, subset: str, label: str) -> None:
+@given("the dataset contains the following image distribution:")  # pyrefly: ignore
+def step_dataset_with_samples_exists(context: Context) -> None:
     """Add multiple random annotated images to the dataset specific subset."""
     dataset = cast(Dataset, context.dataset)
     project = cast(ProjectView, context.project)
     labels = cast(LabelCategories, context.labels)
     images_dir = cast(Path, context.tmp_path) / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
-    for i in range(count):
-        buffer, filename = generate_random_image()
-        image_path = images_dir / f"{subset}_{filename}"
-        image_path.write_bytes(buffer.read())
-        label_idx, _ = labels.find(label)
-        sample = None
-        match project.task.task_type:
-            case TaskType.DETECTION:
-                x1, y1 = 10 + secrets.randbelow(50), 20 + secrets.randbelow(50)
-                x2, y2 = x1 + 80 + secrets.randbelow(100), y1 + 100 + secrets.randbelow(150)
-                sample = DetectionSample(
-                    id=None,
-                    image=LazyImage(image_path),
-                    image_info=ImageInfo(width=640, height=480),
-                    subset=Subset[subset.upper()],
-                    user_reviewed=True,
-                    label=np.array([label_idx]),
-                    bboxes=np.array([[x1, y1, x2, y2]]),
-                    confidence=None,
-                )
-            case TaskType.CLASSIFICATION:
-                if project.task.exclusive_labels:
-                    sample = ClassificationSample(
-                        id=None,
-                        image=LazyImage(image_path),
-                        image_info=ImageInfo(width=640, height=480),
-                        subset=Subset[subset.upper()],
-                        user_reviewed=True,
-                        label=label_idx,
-                        confidence=None,
-                    )
-                else:
-                    sample = MultilabelClassificationSample(
-                        id=None,
-                        image=LazyImage(image_path),
-                        image_info=ImageInfo(width=640, height=480),
-                        subset=Subset[subset.upper()],
-                        user_reviewed=True,
-                        label=np.array([label_idx]),
-                        confidence=None,
-                    )
-            case TaskType.INSTANCE_SEGMENTATION:
-                sample = InstanceSegmentationSample(
-                    id=None,
-                    image=LazyImage(image_path),
-                    image_info=ImageInfo(width=640, height=480),
-                    subset=Subset[subset.upper()],
-                    user_reviewed=True,
-                    label=np.array([label_idx]),
-                    polygons=np.array(
-                        [
-                            [
-                                [10 + secrets.randbelow(50), 20 + secrets.randbelow(50)],
-                                [60 + secrets.randbelow(50), 20 + secrets.randbelow(50)],
-                                [60 + secrets.randbelow(50), 120 + secrets.randbelow(150)],
-                                [10 + secrets.randbelow(50), 120 + secrets.randbelow(150)],
-                            ]
-                        ]
-                    ),
-                    confidence=None,
-                )
-        dataset.append(sample)
+
+    for row in cast(Table, context.table):
+        label_name = row["Label"]
+        label_idx, _ = labels.find(label_name)
+
+        if label_idx is None:
+            raise ValueError(f"Label '{label_name}' definition not found in dataset categories")
+
+        for subset in ["Training", "Validation", "Testing"]:
+            count = int(row.get(subset, "0").strip())
+
+            for i in range(count):
+                buffer, filename = generate_random_image()
+                image_path = images_dir / f"{subset}_{filename}"
+                image_path.write_bytes(buffer.read())
+                sample = None
+                match project.task.task_type:
+                    case TaskType.DETECTION:
+                        x1, y1 = 10 + secrets.randbelow(50), 20 + secrets.randbelow(50)
+                        x2, y2 = x1 + 80 + secrets.randbelow(100), y1 + 100 + secrets.randbelow(150)
+                        sample = DetectionSample(
+                            id=None,
+                            image=LazyImage(image_path),
+                            image_info=ImageInfo(width=640, height=480),
+                            subset=Subset[subset.upper()],
+                            user_reviewed=True,
+                            label=np.array([label_idx]),
+                            bboxes=np.array([[x1, y1, x2, y2]]),
+                            confidence=None,
+                        )
+                    case TaskType.CLASSIFICATION:
+                        if project.task.exclusive_labels:
+                            sample = ClassificationSample(
+                                id=None,
+                                image=LazyImage(image_path),
+                                image_info=ImageInfo(width=640, height=480),
+                                subset=Subset[subset.upper()],
+                                user_reviewed=True,
+                                label=label_idx,
+                                confidence=None,
+                            )
+                        else:
+                            sample = MultilabelClassificationSample(
+                                id=None,
+                                image=LazyImage(image_path),
+                                image_info=ImageInfo(width=640, height=480),
+                                subset=Subset[subset.upper()],
+                                user_reviewed=True,
+                                label=np.array([label_idx]),
+                                confidence=None,
+                            )
+                    case TaskType.INSTANCE_SEGMENTATION:
+                        sample = InstanceSegmentationSample(
+                            id=None,
+                            image=LazyImage(image_path),
+                            image_info=ImageInfo(width=640, height=480),
+                            subset=Subset[subset.upper()],
+                            user_reviewed=True,
+                            label=np.array([label_idx]),
+                            polygons=np.array(
+                                [
+                                    [
+                                        [10 + secrets.randbelow(50), 20 + secrets.randbelow(50)],
+                                        [60 + secrets.randbelow(50), 20 + secrets.randbelow(50)],
+                                        [60 + secrets.randbelow(50), 120 + secrets.randbelow(150)],
+                                        [10 + secrets.randbelow(50), 120 + secrets.randbelow(150)],
+                                    ]
+                                ]
+                            ),
+                            confidence=None,
+                        )
+                dataset.append(sample)
 
 
 @given("the dataset is ready for import in staging directory")  # pyrefly: ignore

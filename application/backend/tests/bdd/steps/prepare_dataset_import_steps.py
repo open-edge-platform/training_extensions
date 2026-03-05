@@ -34,7 +34,9 @@ def step_prepare_dataset_for_import(context: Context) -> None:
 @then("the staged dataset is ready for import")  # pyrefly: ignore
 def step_dataset_archive_ready(context: Context) -> None:
     response = requests.get(f"{str(context.base_url)}/api/staged_datasets/{context.dataset_id}")
-    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+    assert response.status_code == 200, (
+        f"Expected status code 200, got {response.status_code}, response: {response.text}"
+    )
     dataset_info = response.json()
     assert dataset_info, "Expected dataset info in response, got None"
     dataset_format = dataset_info["format"]
