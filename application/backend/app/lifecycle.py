@@ -20,6 +20,7 @@ from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.execution import ExportDataset, ImportDatasetToProject, OTXTrainer, PrepareDataset, TrainingDependencies
+from app.execution.dataset_import.import_as_new_project import ImportDatasetAsNewProject
 from app.scheduler import Scheduler
 from app.services import (
     DatasetRevisionService,
@@ -27,6 +28,9 @@ from app.services import (
     LabelService,
     MediaService,
     ModelService,
+    PipelineService,
+    ProjectService,
+    SystemService,
     TrainingConfigurationService,
 )
 from app.services.base_weights_service import BaseWeightsService
@@ -59,9 +63,15 @@ def setup_job_controller(
         raise ValueError("staged_datasets_dir must be provided")
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
+    label_service = LabelService()
     dataset_service = DatasetService(
-        label_service=LabelService(),
+        label_service=label_service,
         media_service=MediaService(data_dir=data_dir),
+    )
+    project_service = ProjectService(
+        data_dir=data_dir,
+        label_service=label_service,
+        pipeline_service=PipelineService(system_service=SystemService()),
     )
     dataset_revision_service = DatasetRevisionService(data_dir=data_dir)
     job_runnable_factory.register(
@@ -104,7 +114,19 @@ def setup_job_controller(
             ImportDatasetToProject,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
-            label_service=LabelService(),
+            label_service=label_service,
+            media_service=MediaService(data_dir=data_dir),
+            db_session_factory=get_db_session,
+        ),
+    )
+    job_runnable_factory.register(
+        JobType.IMPORT_DATASET_AS_NEW_PROJECT,
+        partial(
+            ImportDatasetAsNewProject,
+            staged_datasets_dir=staged_datasets_dir,
+            project_service=project_service,
+            dataset_service=dataset_service,
+            label_service=label_service,
             media_service=MediaService(data_dir=data_dir),
             db_session_factory=get_db_session,
         ),

@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.api.schemas.dataset import DatasetFilters
 from app.core.jobs.models import JobType
 from app.models import DatasetItemSubset, TaskType
-from app.models.jobs import ImportDatasetToProjectJob, PrepareDatasetForImportJob
+from app.models.jobs import ImportDatasetAsNewProjectJob, ImportDatasetToProjectJob, PrepareDatasetForImportJob
 
 from .base import BaseJobRequest
 
@@ -76,7 +76,6 @@ class ImportDatasetToProjectRequest(BaseImportRequest, BaseJobRequest):
 class NewProjectParams(BaseModel):
     name: str = Field(..., description="Name to assign to the new project")
     task_type: TaskType = Field(..., description="Type of the project to create")
-    labels: list[str] = Field(..., description="Labels to create in the new project")
     exclusive_labels: bool = Field(
         False,
         description="For classification projects: If True, multiple labels per item are allowed (multi-label); "
@@ -88,7 +87,6 @@ class NewProjectParams(BaseModel):
             "example": {
                 "name": "New Project from Imported Dataset",
                 "task_type": "object_detection",
-                "labels": ["person", "vehicle"],
             }
         }
     }
@@ -106,7 +104,6 @@ class ImportDatasetNewParams(BaseModel):
                 "project": {
                     "name": "New Project from Imported Dataset",
                     "task_type": "object_detection",
-                    "labels": ["person", "vehicle"],
                 },
                 "filters": {
                     "labels": ["person", "car", "motorcycle"],
@@ -178,6 +175,21 @@ class ImportDatasetMetadata(BaseModel):
                 "staged_dataset_id": data.params.staged_dataset_id,
                 "project_id": data.params.project_id,
                 "labels_mapping": data.params.labels_mapping,
+            }
+        if isinstance(data, ImportDatasetAsNewProjectJob):
+            return {
+                "staged_dataset_id": data.params.staged_dataset_id,
+                "project_id": data.params.project_id,
+                "filters": DatasetFilters(
+                    labels=data.params.labels,
+                    subsets=[],
+                    include_unannotated=data.params.include_unannotated,
+                ),
+                "project": NewProjectParams(
+                    name=data.params.project_name,
+                    task_type=data.params.task_type,
+                    exclusive_labels=data.params.exclusive_labels,
+                ),
             }
 
         return data
