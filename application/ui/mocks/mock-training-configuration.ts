@@ -3,7 +3,7 @@
 
 import { ConfigurableParameterGroup, TrainingConfigurationParameter } from '../src/constants/shared-types';
 
-export const getMockParameterTree = (): TrainingConfigurationParameter[] => {
+export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter[] => {
     const datasetPreparationGroup: ConfigurableParameterGroup = {
         type: 'parameter_group',
         key: 'dataset_preparation',

@@ -15,7 +15,7 @@ type BoxProps = {
 
 export const Box = ({ title, content, customClasses }: BoxProps) => {
     return (
-        <Flex direction={'column'} height={'100%'} UNSAFE_className={customClasses}>
+        <Flex direction={'column'} height={'100%'} UNSAFE_className={customClasses} data-testid={`Box-${title}`}>
             <Heading UNSAFE_className={classes.boxHeading} level={5}>
                 {title}
             </Heading>

@@ -3,7 +3,7 @@
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
-import { getMockParameterTree } from 'mocks/mock-training-configuration';
+import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
@@ -100,7 +100,7 @@ test.describe('Model Details', () => {
             http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', ({ params }) => {
                 if (params.model_id === 'model-1') {
                     return HttpResponse.json({
-                        parameters: getMockParameterTree(),
+                        parameters: getMockedTrainingConfiguration(),
                     });
                 }
 
@@ -316,16 +316,12 @@ test.describe('Model Details', () => {
             await modelsPage.expandModel('YOLOX Model v1');
             await page.getByRole('tab', { name: 'Training parameters' }).click();
 
-            const learningParametersHeading = page.getByRole('heading', { name: 'LEARNING PARAMETERS' });
-            const filtersHeading = page.getByRole('heading', { name: 'FILTERS' });
-            const augmentationsHeading = page.getByRole('heading', { name: 'AUGMENTATIONS' });
+            await expect(page.getByRole('heading', { name: 'LEARNING PARAMETERS' })).toBeVisible();
+            await expect(page.getByRole('heading', { name: 'FILTERS' })).toBeVisible();
+            await expect(page.getByRole('heading', { name: 'AUGMENTATIONS' })).toBeVisible();
 
-            await expect(learningParametersHeading).toBeVisible();
-            await expect(filtersHeading).toBeVisible();
-            await expect(augmentationsHeading).toBeVisible();
-
-            await expect(learningParametersHeading.locator('..').getByText('Maximum epochs')).toBeVisible();
-            await expect(learningParametersHeading.locator('..').getByText('200')).toBeVisible();
+            await expect(page.getByTestId('Box-LEARNING PARAMETERS').getByText('Maximum epochs')).toBeVisible();
+            await expect(page.getByTestId('Box-LEARNING PARAMETERS').getByText('200')).toBeVisible();
         });
     });
 });

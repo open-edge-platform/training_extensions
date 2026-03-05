@@ -16,7 +16,11 @@ type ModelTrainingParametersProps = {
     modelId: string;
 };
 
-const buildColumnContent = (parameters: TrainingConfigurationParameter[] | undefined) => {
+type TrainingConfigurationParametersListProps = {
+    parameters: TrainingConfigurationParameter[];
+};
+
+const TrainingConfigurationParametersList = ({ parameters }: TrainingConfigurationParametersListProps) => {
     const parameterRows = flattenParameters(parameters);
 
     if (parameterRows.length === 0) {
@@ -48,17 +52,17 @@ export const ModelTrainingParameters = ({ modelId }: ModelTrainingParametersProp
             <Box
                 customClasses={classes.box}
                 title={'LEARNING PARAMETERS'}
-                content={buildColumnContent(trainingGroup?.parameters)}
+                content={<TrainingConfigurationParametersList parameters={trainingGroup?.parameters || []} />}
             />
             <Box
                 customClasses={classes.box}
                 title={'FILTERS'}
-                content={buildColumnContent(filteringGroup?.parameters)}
+                content={<TrainingConfigurationParametersList parameters={filteringGroup?.parameters || []} />}
             />
             <Box
                 customClasses={classes.box}
                 title={'AUGMENTATIONS'}
-                content={buildColumnContent(augmentationGroup?.parameters)}
+                content={<TrainingConfigurationParametersList parameters={augmentationGroup?.parameters || []} />}
             />
         </Grid>
     );

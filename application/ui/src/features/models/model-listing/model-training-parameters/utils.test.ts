@@ -1,14 +1,14 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getMockParameterTree } from 'mocks/mock-training-configuration';
+import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 
 import { TrainingConfigurationParameter } from '../../../../constants/shared-types';
 import { findGroupByKey, flattenParameters, isParameterGroup } from './utils';
 
 describe('Training parameters utils', () => {
     it('finds a nested top-level group by key', () => {
-        const parameters = getMockParameterTree();
+        const parameters = getMockedTrainingConfiguration();
 
         const group = findGroupByKey(parameters, 'dataset_preparation');
 
@@ -16,13 +16,13 @@ describe('Training parameters utils', () => {
     });
 
     it('returns undefined when group key does not exist', () => {
-        const parameters = getMockParameterTree();
+        const parameters = getMockedTrainingConfiguration();
 
         expect(findGroupByKey(parameters, 'non_existing_key')).toBeUndefined();
     });
 
     it('identifies parameter groups correctly', () => {
-        const parameters = getMockParameterTree();
+        const parameters = getMockedTrainingConfiguration();
         const trainingGroup = findGroupByKey(parameters, 'training');
 
         expect(isParameterGroup(parameters[0])).toBe(true);
@@ -30,7 +30,7 @@ describe('Training parameters utils', () => {
     });
 
     it('flattens nested groups and formats values', () => {
-        const parameters = getMockParameterTree();
+        const parameters = getMockedTrainingConfiguration();
         const datasetPreparationGroup = findGroupByKey(parameters, 'dataset_preparation');
         const augmentationGroup = findGroupByKey(datasetPreparationGroup?.parameters, 'augmentation');
 
