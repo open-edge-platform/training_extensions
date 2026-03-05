@@ -100,13 +100,22 @@ class InferenceWorker(BaseProcessWorker):
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
-        # To ensure broadcasting frames in order
-        self._prediction_buffer = PredictionReorderBuffer()
+        # The reorder buffer ensures that frames are broadcast in order, even if inference results are produced
+        # out of order due to async processing. It is initialized in setup() to ensure it's created after the process
+        # fork, since it contains a threading.Lock that can't be pickled.
+        self.__prediction_buffer: PredictionReorderBuffer | None = None
 
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
         self._model_service = ActiveModelService(get_settings().data_dir)
+        self.__prediction_buffer = PredictionReorderBuffer()
+
+    @property
+    def _prediction_buffer(self) -> PredictionReorderBuffer:
+        if self.__prediction_buffer is None:
+            raise RuntimeError("Prediction buffer not initialized (method 'setup' not called?)")
+        return self.__prediction_buffer
 
     def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
