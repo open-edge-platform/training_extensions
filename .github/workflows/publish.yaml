@@ -10,7 +10,7 @@ permissions: {} # No permissions by default
 jobs:
   build:
     name: Build & publish package
-    runs-on: ubuntu-latest
+    runs-on: overflow
     environment: pypi
     permissions:
       contents: write # required by svenstaro/upload-release-action
