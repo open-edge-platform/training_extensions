@@ -82,3 +82,7 @@ export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnno
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
+
+export type ConfigurableParameter = components['schemas']['ConfigurableParameterView'];
+export type ConfigurableParameterGroup = components['schemas']['ConfigurableParameterGroupView'];
+export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
