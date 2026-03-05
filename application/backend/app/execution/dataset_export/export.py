@@ -52,7 +52,7 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         self._db_session_factory = db_session_factory
 
     @step("Prepare dataset for export", 20)
-    def prepare_dataset(self, export_params: ExportDatasetJobParams) -> tuple[UUID, Dataset | None]:
+    def prepare_dataset(self, export_params: ExportDatasetJobParams) -> tuple[UUID, Dataset]:
         with self._db_session_factory() as session:
             if export_params.dataset_id is None:
                 self._dataset_service.set_db_session(session)
@@ -103,12 +103,8 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
 
     def execute(self, params: ExportDatasetJobParams) -> None:
         dataset_id, dataset = self.prepare_dataset(params)
-        if not dataset:
-            logger.warning(
-                "Dataset {} for project {} is empty after applying filters. Nothing to export.",
-                dataset_id,
-                params.project_id,
-            )
+        if len(dataset) == 0:
+            self.pin_message("Dataset is empty after applying filters. Nothing to export.")
             return
         self.update_metadata({"dataset_id": dataset_id})
         self.export_dataset(dataset_id, dataset, params.export_format)

@@ -10,9 +10,7 @@ import pytest
 from datumaro.experimental import Dataset
 from datumaro.experimental.data_formats.base import DataFormat
 from datumaro.experimental.fields import Subset
-from loguru import logger
 
-from app.core.run import ExecutionContext
 from app.execution import ExportDataset
 from app.models import (
     DatasetFormat,
@@ -150,7 +148,7 @@ class TestDatasetExporter:
         fxt_export: ExportDataset,
         fxt_staged_datasets_dir: Path,
     ):
-        dataset = Mock(spec=Dataset)
+        dataset = MagicMock(spec=Dataset)
         dataset_id = uuid4()
 
         with patch("app.execution.dataset_export.export.save_dataset") as mock_save_dataset:
@@ -166,7 +164,7 @@ class TestDatasetExporter:
             )
 
     def test_export_dataset_geti(self, fxt_export: ExportDataset, fxt_staged_datasets_dir: Path):
-        dataset = Mock(spec=Dataset)
+        dataset = MagicMock(spec=Dataset)
         dataset_id = uuid4()
 
         with (
@@ -181,8 +179,9 @@ class TestDatasetExporter:
             )
 
     def test_execute(self, fxt_export: ExportDataset, fxt_export_params: ExportDatasetJobParams):
-        dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
+        dataset = MagicMock(spec=Dataset)
+        dataset.__len__.return_value = 10
 
         with (
             patch.object(fxt_export, "prepare_dataset", return_value=(dataset_id, dataset)) as mock_prepare,
@@ -195,23 +194,18 @@ class TestDatasetExporter:
             mock_update_metadata.assert_called_once_with({"dataset_id": dataset_id})
             mock_export.assert_called_once_with(dataset_id, dataset, fxt_export_params.export_format)
 
-    def test_run_empty_dataset(self, fxt_export: ExportDataset, fxt_export_params: ExportDatasetJobParams):
+    def test_execute_empty_dataset(self, fxt_export: ExportDataset, fxt_export_params: ExportDatasetJobParams):
         dataset_id = uuid4()
-        execution_context = Mock(spec=ExecutionContext)
-        execution_context.payload = fxt_export_params.model_dump_json()
-
-        log_messages = []
-        handler_id = logger.add(log_messages.append, level="WARNING", format="{message}")
+        dataset = MagicMock(spec=Dataset)
+        dataset.__len__.return_value = 0
 
         with (
-            patch.object(fxt_export, "prepare_dataset", return_value=(dataset_id, None)) as mock_prepare,
+            patch.object(fxt_export, "prepare_dataset", return_value=(dataset_id, dataset)) as mock_prepare,
             patch.object(fxt_export, "export_dataset") as mock_export,
+            patch.object(fxt_export, "pin_message") as mock_pin_message,
         ):
-            fxt_export.run(execution_context)
+            fxt_export.execute(fxt_export_params)
 
             mock_prepare.assert_called_once_with(fxt_export_params)
+            mock_pin_message.assert_called_once_with("Dataset is empty after applying filters. Nothing to export.")
             mock_export.assert_not_called()
-            assert len(log_messages) == 1
-            assert "is empty after applying filters" in log_messages[0]
-
-        logger.remove(handler_id)

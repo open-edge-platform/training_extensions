@@ -140,31 +140,35 @@ class TestImportDatasetToProject:
         mock_media = Mock(id=uuid4())
         fxt_media_service.create_image.return_value = mock_media
 
-        # Act
-        fxt_import.create_items(dataset=dataset, params=fxt_import_params)
+        with patch.object(fxt_import, "pin_message") as mock_pin_message:
+            # Act
+            fxt_import.create_items(dataset=dataset, params=fxt_import_params)
 
-        # Verify media creation
-        assert fxt_media_service.create_image.call_count == 2
-        calls = fxt_media_service.create_image.call_args_list
-        assert calls[0].kwargs["project_id"] == fxt_import_params.project_id
-        assert calls[0].kwargs["name"] == "0"
-        assert calls[0].kwargs["format"] == ImageFormat.JPG
-        assert calls[0].kwargs["data"] is not None
-        assert calls[1].kwargs["project_id"] == fxt_import_params.project_id
-        assert calls[1].kwargs["name"] == "1"
-        assert calls[1].kwargs["format"] == ImageFormat.BMP
-        assert calls[1].kwargs["data"] is not None
+            # Verify media creation
+            assert fxt_media_service.create_image.call_count == 2
+            calls = fxt_media_service.create_image.call_args_list
+            assert calls[0].kwargs["project_id"] == fxt_import_params.project_id
+            assert calls[0].kwargs["name"] == "0"
+            assert calls[0].kwargs["format"] == ImageFormat.JPG
+            assert calls[0].kwargs["data"] is not None
+            assert calls[1].kwargs["project_id"] == fxt_import_params.project_id
+            assert calls[1].kwargs["name"] == "1"
+            assert calls[1].kwargs["format"] == ImageFormat.BMP
+            assert calls[1].kwargs["data"] is not None
 
-        # Verify dataset item creation
-        assert fxt_dataset_service.create_dataset_item.call_count == 2
-        fxt_dataset_service.create_dataset_item.assert_any_call(
-            project_id=fxt_import_params.project_id,
-            task=fxt_import_params.task,
-            media=mock_media,
-            user_reviewed=True,
-            annotations=[DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])],
-            subset=DatasetItemSubset.TRAINING,
-        )
+            # Verify dataset item creation
+            assert fxt_dataset_service.create_dataset_item.call_count == 2
+            fxt_dataset_service.create_dataset_item.assert_any_call(
+                project_id=fxt_import_params.project_id,
+                task=fxt_import_params.task,
+                media=mock_media,
+                user_reviewed=True,
+                annotations=[
+                    DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])
+                ],
+                subset=DatasetItemSubset.TRAINING,
+            )
+            mock_pin_message.assert_called_once_with("Imported 2/2 items from the dataset.", level="INFO")
 
     def test_create_items_filter_unannotated(
         self,
@@ -214,12 +218,17 @@ class TestImportDatasetToProject:
         mock_media = Mock(id=uuid4())
         fxt_media_service.create_image.return_value = mock_media
 
-        # Act
-        fxt_import.create_items(dataset=dataset, params=fxt_import_params)
+        with patch.object(fxt_import, "pin_message") as mock_pin_message:
+            # Act
+            fxt_import.create_items(dataset=dataset, params=fxt_import_params)
 
-        # Verify media and dataset item creation is not triggered for unannotated items when include_unannotated=False
-        fxt_media_service.create_image.assert_not_called()
-        fxt_dataset_service.create_dataset_item.assert_not_called()
+            # Verify media and dataset item creation is not triggered for unannotated items
+            # when include_unannotated=False
+            fxt_media_service.create_image.assert_not_called()
+            fxt_dataset_service.create_dataset_item.assert_not_called()
+            mock_pin_message.assert_called_once_with(
+                "No items were imported from the dataset. This may be due to filtering options that excluded all items."
+            )
 
     def test_create_items_progress_updates(
         self,

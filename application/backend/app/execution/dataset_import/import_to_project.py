@@ -106,9 +106,9 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                 label_mapping=params.labels_mapping,
             )
             logger.info("Found {} labels for project {}", [label.name for label in labels], params.project_id)
-            size, min_p, max_p = len(dataset), 10, 100
-            progress_interval = max(1, size // self.BATCH_PROGRESS_INTERVAL)
-            total = 0
+            unfiltered_dataset_size, min_p, max_p = len(dataset), 10, 100
+            progress_interval = max(1, unfiltered_dataset_size // self.BATCH_PROGRESS_INTERVAL)
+            num_imported_media = 0
             for idx, item in enumerate(dataset):
                 annotations = converter.convert_sample(item) or None
                 user_reviewed = item.user_reviewed if item.user_reviewed is not None else True
@@ -120,7 +120,7 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
 
                 media = self._media_service.create_image(
                     project_id=params.project_id,
-                    name=str(idx).zfill(len(str(size))),
+                    name=str(idx).zfill(len(str(unfiltered_dataset_size))),
                     format=self.__detect_image_format(item.image),
                     data=item.image.data,
                 )
@@ -132,17 +132,18 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                     annotations=annotations,
                     subset=DatasetItemSubset(item.subset.name.lower()),
                 )
-                total += 1
-                if (idx > 0 and idx % progress_interval == 0) or idx == size - 1:
-                    self.update_progress(min_p + ((idx + 1) / size) * (max_p - min_p))
-            if total == 0:
-                logger.warning(
-                    "No items were imported from the dataset to project {}. "
-                    "This may be due to filtering options that excluded all items.",
-                    params.project_id,
+                num_imported_media += 1
+                if (idx > 0 and idx % progress_interval == 0) or idx == unfiltered_dataset_size - 1:
+                    self.update_progress(min_p + ((idx + 1) / unfiltered_dataset_size) * (max_p - min_p))
+            if num_imported_media == 0:
+                self.pin_message(
+                    "No items were imported from the dataset. "
+                    "This may be due to filtering options that excluded all items."
                 )
             else:
-                logger.info("Imported {}/{} items from dataset to project {}", total, size, params.project_id)
+                self.pin_message(
+                    f"Imported {num_imported_media}/{unfiltered_dataset_size} items from the dataset.", level="INFO"
+                )
 
     def execute(self, params: ImportDatasetToProjectJobParams) -> None:
         dataset = self.prepare_dataset(staged_dataset_id=params.staged_dataset_id, task=params.task)
