@@ -25,8 +25,8 @@ const buildColumnContent = (parameters: TrainingConfigurationParameter[] | undef
 
     return (
         <Grid columns={['1fr', '1fr']} gap={'size-100'}>
-            {parameterRows.map((row, index) => (
-                <Fragment key={`${row.name}-${index}`}>
+            {parameterRows.map((row) => (
+                <Fragment key={`${row.name}-${row.value}`}>
                     <Text>{row.name}</Text>
                     <Text>{row.value}</Text>
                 </Fragment>

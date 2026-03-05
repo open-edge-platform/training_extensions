@@ -3,6 +3,7 @@
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
+import { getMockParameterTree } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
@@ -99,92 +100,7 @@ test.describe('Model Details', () => {
             http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', ({ params }) => {
                 if (params.model_id === 'model-1') {
                     return HttpResponse.json({
-                        parameters: [
-                            {
-                                type: 'parameter_group',
-                                key: 'dataset_preparation',
-                                name: 'Dataset preparation',
-                                description: '',
-                                parameters: [
-                                    {
-                                        type: 'parameter_group',
-                                        key: 'filtering',
-                                        name: 'Filtering',
-                                        description: '',
-                                        parameters: [
-                                            {
-                                                type: 'parameter_group',
-                                                key: 'min_annotation_pixels',
-                                                name: 'Minimum annotation pixels',
-                                                description: '',
-                                                parameters: [
-                                                    {
-                                                        type: 'parameter',
-                                                        key: 'enable',
-                                                        name: 'Enable minimum annotation pixels filtering',
-                                                        description: '',
-                                                        value: false,
-                                                        default_value: false,
-                                                        value_type: 'bool',
-                                                        min_value: null,
-                                                        max_value: null,
-                                                        allowed_values: null,
-                                                    },
-                                                ],
-                                            },
-                                        ],
-                                    },
-                                    {
-                                        type: 'parameter_group',
-                                        key: 'augmentation',
-                                        name: 'Data augmentation',
-                                        description: '',
-                                        parameters: [
-                                            {
-                                                type: 'parameter_group',
-                                                key: 'mosaic',
-                                                name: 'Mosaic',
-                                                description: '',
-                                                parameters: [
-                                                    {
-                                                        type: 'parameter',
-                                                        key: 'enable',
-                                                        name: 'Enable',
-                                                        description: '',
-                                                        value: true,
-                                                        default_value: true,
-                                                        value_type: 'bool',
-                                                        min_value: null,
-                                                        max_value: null,
-                                                        allowed_values: null,
-                                                    },
-                                                ],
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            {
-                                type: 'parameter_group',
-                                key: 'training',
-                                name: 'Training',
-                                description: '',
-                                parameters: [
-                                    {
-                                        type: 'parameter',
-                                        key: 'max_epochs',
-                                        name: 'Maximum epochs',
-                                        description: '',
-                                        value: 200,
-                                        default_value: 200,
-                                        value_type: 'int',
-                                        min_value: 0,
-                                        max_value: null,
-                                        allowed_values: null,
-                                    },
-                                ],
-                            },
-                        ],
+                        parameters: getMockParameterTree(),
                     });
                 }
 
@@ -400,12 +316,16 @@ test.describe('Model Details', () => {
             await modelsPage.expandModel('YOLOX Model v1');
             await page.getByRole('tab', { name: 'Training parameters' }).click();
 
-            await expect(page.getByRole('heading', { name: 'LEARNING PARAMETERS' })).toBeVisible();
-            await expect(page.getByRole('heading', { name: 'FILTERS' })).toBeVisible();
-            await expect(page.getByRole('heading', { name: 'AUGMENTATIONS' })).toBeVisible();
+            const learningParametersHeading = page.getByRole('heading', { name: 'LEARNING PARAMETERS' });
+            const filtersHeading = page.getByRole('heading', { name: 'FILTERS' });
+            const augmentationsHeading = page.getByRole('heading', { name: 'AUGMENTATIONS' });
 
-            await expect(page.getByText('Maximum epochs')).toBeVisible();
-            await expect(page.getByText('200')).toBeVisible();
+            await expect(learningParametersHeading).toBeVisible();
+            await expect(filtersHeading).toBeVisible();
+            await expect(augmentationsHeading).toBeVisible();
+
+            await expect(learningParametersHeading.locator('..').getByText('Maximum epochs')).toBeVisible();
+            await expect(learningParametersHeading.locator('..').getByText('200')).toBeVisible();
         });
     });
 });
