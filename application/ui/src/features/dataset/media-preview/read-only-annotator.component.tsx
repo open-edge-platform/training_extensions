@@ -11,12 +11,14 @@ import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-t
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
+import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { Toolbar } from './toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from './use-submit-predictions.hook';
 
 import classes from './read-only-annotator.module.scss';
 
 type ReadOnlyAnnotatorProps = {
+    mode: AnnotatorMode;
     mediaItem: Media;
     image: ImageData;
     onClose: () => void;
@@ -36,6 +38,7 @@ type ReadOnlyAnnotatorProps = {
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
 export const ReadOnlyAnnotator = ({
+    mode,
     image,
     mediaItem,
     onModeChange,
@@ -81,7 +84,7 @@ export const ReadOnlyAnnotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'} UNSAFE_className={classes.readOnlyCanvas}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} />
+                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
             </View>
 

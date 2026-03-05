@@ -49,6 +49,7 @@ const Annotator = ({
     if (mode === 'prediction') {
         return (
             <ReadOnlyAnnotator
+                mode={mode}
                 image={image}
                 mediaItem={mediaItem}
                 onModeChange={changeAnnotatorMode}
@@ -88,7 +89,7 @@ const Annotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} />
+                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
             </View>
         </>

@@ -9,6 +9,7 @@ import { useAnnotationActions } from '../../../shared/annotator/annotation-actio
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { AnnotatorMode } from '../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { Annotations } from '../annotations/annotations.component';
 import { VideoAnnotations } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
@@ -74,13 +75,17 @@ const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
 
 type MediaAnnotationsProps = {
     mediaItem: Media;
+    mode: AnnotatorMode;
 };
 
-const MediaAnnotations = ({ mediaItem }: MediaAnnotationsProps) => {
+const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
     const videoPlayerContext = useVideoPlayerContext();
 
     if (isVideoFrame(mediaItem) && videoPlayerContext?.videoControls?.isPlaying) {
-        return <VideoAnnotations />;
+        if (mode === 'annotation') {
+            return <VideoAnnotations />;
+        }
+        // TODO: Render VideoPredictions
     }
 
     return <ImageAnnotations mediaItem={mediaItem} />;
@@ -90,9 +95,10 @@ type AnnotatorCanvasProps = {
     mediaItem: Media;
     image: ImageData;
     isReadOnly?: boolean;
+    mode: AnnotatorMode;
 };
 
-export const AnnotatorCanvas = ({ mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
+export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
     const isSceneBusy = useIsAnnotatorSceneBusy();
 
     const areToolsDisabled = isSceneBusy || isReadOnly;
@@ -107,7 +113,7 @@ export const AnnotatorCanvas = ({ mediaItem, image, isReadOnly = false }: Annota
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
 
-                <MediaAnnotations mediaItem={mediaItem} />
+                <MediaAnnotations mediaItem={mediaItem} mode={mode} />
 
                 {!areToolsDisabled && <ToolManager />}
             </div>
