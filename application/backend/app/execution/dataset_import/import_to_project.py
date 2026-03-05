@@ -105,21 +105,25 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                 label_categories=cast(LabelCategories, label_attr.categories),
                 label_mapping=params.labels_mapping,
             )
-            logger.info("Found {} labels for project {}", (label.name for label in labels), params.project_id)
-            size, min_p, max_p = len(dataset), 10, 100
-            progress_interval = max(1, size // self.BATCH_PROGRESS_INTERVAL)
+            logger.info("Found {} labels for project {}", [label.name for label in labels], params.project_id)
+            unfiltered_dataset_size, min_p, max_p = len(dataset), 10, 100
+            progress_interval = max(1, unfiltered_dataset_size // self.BATCH_PROGRESS_INTERVAL)
+            num_imported_media = 0
             for idx, item in enumerate(dataset):
-                media = self._media_service.create_image(
-                    project_id=params.project_id,
-                    name=str(idx).zfill(len(str(size))),
-                    format=self.__detect_image_format(item.image),
-                    data=item.image.data,
-                )
                 annotations = converter.convert_sample(item) or None
                 user_reviewed = item.user_reviewed if item.user_reviewed is not None else True
                 # If there are no annotations (due to filtering), we can consider the item as not reviewed by the user.
                 if not annotations:
                     user_reviewed = False
+                if not user_reviewed and not params.include_unannotated:
+                    continue
+
+                media = self._media_service.create_image(
+                    project_id=params.project_id,
+                    name=str(idx).zfill(len(str(unfiltered_dataset_size))),
+                    format=self.__detect_image_format(item.image),
+                    data=item.image.data,
+                )
                 self._dataset_service.create_dataset_item(
                     project_id=params.project_id,
                     task=params.task,
@@ -128,8 +132,18 @@ class ImportDatasetToProject(Execution[ImportDatasetToProjectJobParams]):
                     annotations=annotations,
                     subset=DatasetItemSubset(item.subset.name.lower()),
                 )
-                if (idx > 0 and idx % progress_interval == 0) or idx == size - 1:
-                    self.update_progress(min_p + ((idx + 1) / size) * (max_p - min_p))
+                num_imported_media += 1
+                if (idx > 0 and idx % progress_interval == 0) or idx == unfiltered_dataset_size - 1:
+                    self.update_progress(min_p + ((idx + 1) / unfiltered_dataset_size) * (max_p - min_p))
+            if num_imported_media == 0:
+                self.pin_message(
+                    "No items were imported from the dataset. "
+                    "This may be due to filtering options that excluded all items."
+                )
+            else:
+                self.pin_message(
+                    f"Imported {num_imported_media}/{unfiltered_dataset_size} items from the dataset.", level="INFO"
+                )
 
     def execute(self, params: ImportDatasetToProjectJobParams) -> None:
         dataset = self.prepare_dataset(staged_dataset_id=params.staged_dataset_id, task=params.task)

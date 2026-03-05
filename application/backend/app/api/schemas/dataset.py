@@ -21,7 +21,7 @@ class DatasetFilters(BaseModel):
         description="List of subsets to consider during import or export; any item assigned a subset not present in "
         "the list will be filtered out; if the parameter is unspecified (null), then all subsets will be considered",
     )
-    include_unannotated: bool = Field(True, description="Whether to include unannotated items to the dataset")
+    include_unannotated: bool = Field(True, description="Whether to include unannotated items from the dataset")
 
     model_config = {
         "json_schema_extra": {
