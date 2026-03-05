@@ -39,28 +39,6 @@ export enum WebhookHttpMethod {
 }
 
 const toStringAndTrim = (value: unknown) => String(value).trim();
-const parseFiniteNumber = (value: string): number | null => {
-    const compactValue = value.replace(/\s/g, '');
-
-    if (isEmpty(compactValue)) {
-        return null;
-    }
-
-    if (compactValue.includes(',') && compactValue.includes('.')) {
-        return null;
-    }
-
-    const normalizedValue = compactValue.replace(',', '.');
-    const parsedValue = Number(normalizedValue);
-
-    return Number.isFinite(parsedValue) ? parsedValue : null;
-};
-
-const toDisplayNumber = (value: number) => {
-    const roundedValue = Number(value.toFixed(2));
-
-    return String(roundedValue);
-};
 
 export const positiveNumberOrUndefined = (value: number | null | undefined): number | undefined => {
     return typeof value === 'number' && value > 0 ? value : undefined;
@@ -83,20 +61,17 @@ export const rateLimitFromFormData = (formData: FormData): number | null => {
         return null;
     }
 
-    const samplesRaw = toStringAndTrim(samplesValue);
-    const secondsRaw = toStringAndTrim(secondsValue);
+    const samples = Number(samplesValue);
+    const seconds = Number(secondsValue);
 
-    const samples = parseFiniteNumber(samplesRaw);
-    const seconds = parseFiniteNumber(secondsRaw);
-
-    if (samples === null || seconds === null || samples <= 0 || seconds <= 0) {
+    if (!Number.isFinite(samples) || !Number.isFinite(seconds) || samples <= 0 || seconds <= 0) {
         return null;
     }
 
     return samples / seconds;
 };
 
-export const formatRateLimit = (rateLimit: number | null | undefined): string => {
+export const formatRateLimit = (rateLimit?: number | null): string => {
     const normalizedRateLimit = positiveNumberOrUndefined(rateLimit);
 
     if (normalizedRateLimit === undefined) {
@@ -105,14 +80,14 @@ export const formatRateLimit = (rateLimit: number | null | undefined): string =>
 
     if (normalizedRateLimit < 1) {
         const seconds = 1 / normalizedRateLimit;
-        const normalizedSeconds = toDisplayNumber(seconds);
-        const secondsLabel = normalizedSeconds === '1' ? 'second' : 'seconds';
+        const normalizedSeconds = Math.round(seconds);
+        const secondsLabel = normalizedSeconds === 1 ? 'second' : 'seconds';
 
         return `1 sample every ${normalizedSeconds} ${secondsLabel}`;
     }
 
-    const normalizedSamples = toDisplayNumber(normalizedRateLimit);
-    const sampleLabel = normalizedSamples === '1' ? 'sample' : 'samples';
+    const normalizedSamples = Math.round(normalizedRateLimit);
+    const sampleLabel = normalizedSamples === 1 ? 'sample' : 'samples';
 
     return `${normalizedSamples} ${sampleLabel} every 1 second`;
 };

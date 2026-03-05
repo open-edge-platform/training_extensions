@@ -62,6 +62,22 @@ describe('rateLimitFromFormData', () => {
         expect(rateLimitFromFormData(formData)).toBeNull();
     });
 
+    it('returns null for NaN values', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', 'NaN');
+        formData.set('rate_limit_seconds', '1');
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+
+    it('returns null for empty string values', () => {
+        const formData = new FormData();
+        formData.set('rate_limit_samples', '');
+        formData.set('rate_limit_seconds', '2');
+
+        expect(rateLimitFromFormData(formData)).toBeNull();
+    });
+
     it('returns null when values are not finite numbers', () => {
         const formData = new FormData();
         formData.set('rate_limit_samples', 'Infinity');
@@ -86,12 +102,12 @@ describe('rateLimitFromFormData', () => {
         expect(rateLimitFromFormData(formData)).toBe(5);
     });
 
-    it('parses decimal comma values', () => {
+    it('returns null for decimal comma values', () => {
         const formData = new FormData();
         formData.set('rate_limit_samples', '0,1');
         formData.set('rate_limit_seconds', '1');
 
-        expect(rateLimitFromFormData(formData)).toBe(0.1);
+        expect(rateLimitFromFormData(formData)).toBeNull();
     });
 
     it('returns null for invalid mixed separators', () => {
@@ -108,6 +124,7 @@ describe('formatRateLimit', () => {
         expect(formatRateLimit(undefined)).toBe('Not set');
         expect(formatRateLimit(null)).toBe('Not set');
         expect(formatRateLimit(0)).toBe('Not set');
+        expect(formatRateLimit(Number.NaN)).toBe('Not set');
     });
 
     it('formats singular sample and second labels', () => {
@@ -120,9 +137,5 @@ describe('formatRateLimit', () => {
 
     it('formats rates below one as canonical ratio', () => {
         expect(formatRateLimit(0.5)).toBe('1 sample every 2 seconds');
-    });
-
-    it('rounds canonical ratio seconds to two decimals', () => {
-        expect(formatRateLimit(0.3)).toBe('1 sample every 3.33 seconds');
     });
 });
