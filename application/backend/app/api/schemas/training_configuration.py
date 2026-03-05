@@ -22,10 +22,6 @@ class _BaseConfigurableParameterView(BaseModel):
     key: str = Field(title="Key to identify the parameter")
     name: str = Field(title="User-friendly name of the parameter")
     description: str = Field(title="Extended description of the parameter", default="")
-    allowed_values: list | None = Field(
-        default=None,
-        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
-    )
 
 
 class BoolParameterView(_BaseConfigurableParameterView):
@@ -42,6 +38,10 @@ class StringParameterView(_BaseConfigurableParameterView):
     value_type: Literal["str"] = "str"
     value: str | None = Field(title="Actual value of the parameter")
     default_value: str | None = Field(title="Default value of the parameter")
+    allowed_values: list[str] | None = Field(
+        default=None,
+        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
+    )
 
 
 class IntParameterView(_BaseConfigurableParameterView):
@@ -52,6 +52,10 @@ class IntParameterView(_BaseConfigurableParameterView):
     default_value: int | None = Field(title="Default value of the parameter")
     min_value: int | float | None = Field(default=None, title="Minimum value for numeric parameters. None if unbounded")
     max_value: int | float | None = Field(default=None, title="Maximum value for numeric parameters. None if unbounded")
+    allowed_values: list[int] | None = Field(
+        default=None,
+        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
+    )
 
 
 class FloatParameterView(_BaseConfigurableParameterView):
@@ -62,6 +66,10 @@ class FloatParameterView(_BaseConfigurableParameterView):
     default_value: float | None = Field(title="Default value of the parameter")
     min_value: int | float | None = Field(default=None, title="Minimum value for numeric parameters. None if unbounded")
     max_value: int | float | None = Field(default=None, title="Maximum value for numeric parameters. None if unbounded")
+    allowed_values: list[float] | None = Field(
+        default=None,
+        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
+    )
 
 
 class FloatRangeParameterView(_BaseConfigurableParameterView):
@@ -70,6 +78,10 @@ class FloatRangeParameterView(_BaseConfigurableParameterView):
     value_type: Literal["float_range"] = "float_range"
     value: tuple[float, float] | None = Field(title="Actual value of the parameter")
     default_value: tuple[float, float] | None = Field(title="Default value of the parameter")
+    allowed_values: list[tuple[float, float]] | None = Field(
+        default=None,
+        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
+    )
 
 
 def _parameter_view_discriminator(v: dict | _BaseConfigurableParameterView) -> str:
@@ -194,20 +206,29 @@ class TrainingConfigurationView(BaseModel):
             "description": field_info.description or "",
             "value": value,
             "default_value": default_value,
-            "allowed_values": allowed_values,
         }
 
         if value_type == "int":
             min_value, max_value = cls._extract_constraints(field_info)
-            return IntParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
+            return IntParameterView(
+                **common_kwargs,  # type: ignore
+                min_value=min_value,
+                max_value=max_value,
+                allowed_values=allowed_values,
+            )
         if value_type == "float":
             min_value, max_value = cls._extract_constraints(field_info)
-            return FloatParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
+            return FloatParameterView(
+                **common_kwargs,  # type: ignore
+                min_value=min_value,
+                max_value=max_value,
+                allowed_values=allowed_values,
+            )
         if value_type == "bool":
             return BoolParameterView(**common_kwargs)  # type: ignore
         if value_type == "float_range":
-            return FloatRangeParameterView(**common_kwargs)  # type: ignore
-        return StringParameterView(**common_kwargs)  # type: ignore
+            return FloatRangeParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
+        return StringParameterView(**common_kwargs, allowed_values=allowed_values)  # type: ignore
 
     @classmethod
     def _resolve_allowed_values(cls, model: BaseModel, field_info: FieldInfo) -> list | None:
@@ -458,7 +479,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -488,7 +508,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -518,7 +537,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -564,7 +582,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": True,
                                                 "default_value": True,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             }
                                         ],
                                     },
@@ -585,7 +602,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -671,7 +687,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": True,
                                                 "default_value": True,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -708,7 +723,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -743,7 +757,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -836,7 +849,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -898,7 +910,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -964,7 +975,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -974,7 +984,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": True,
                                                 "default_value": True,
                                                 "value_type": "bool",
-                                                "allowed_values": None,
                                             },
                                             {
                                                 "type": "parameter",
@@ -1055,7 +1064,6 @@ class TrainingConfigurationView(BaseModel):
                                         "value": True,
                                         "default_value": True,
                                         "value_type": "bool",
-                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",

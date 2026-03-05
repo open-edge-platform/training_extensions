@@ -177,7 +177,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -207,7 +206,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -237,7 +235,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -282,7 +279,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "allowed_values": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -402,7 +398,6 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value": True,
                                 "default_value": False,
                                 "value_type": "bool",
-                                "allowed_values": None,
                             },
                             {
                                 "type": "parameter",
