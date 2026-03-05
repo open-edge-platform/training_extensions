@@ -23,7 +23,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: ubuntu-latest
+    runs-on: overflow
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -46,7 +46,7 @@ jobs:
   python-checks:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
+        os: ["overflow", "windows-latest"]
     name: python-${{ matrix.os }}-checks
     runs-on: ${{ matrix.os }}
     needs: check_paths
@@ -64,7 +64,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install OpenCV dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'overflow'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -80,19 +80,19 @@ jobs:
           uv sync --frozen --extra cpu --extra mqtt
 
       - name: Check formatting with ruff
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'overflow'
         working-directory: application/backend
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
       - name: Check imports with import-linter
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'overflow'
         working-directory: application/backend
         run: uv run lint-imports
 
       - name: Check source code with Pyrefly
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'overflow'
         working-directory: application/backend
         run: uv run pyrefly check
 
@@ -101,7 +101,7 @@ jobs:
         run: uv run pytest tests/unit
 
       - name: Run ubuntu integration tests
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'overflow'
         working-directory: application/backend
         run: uv run pytest tests/integration
 
@@ -112,7 +112,7 @@ jobs:
 
   # Temporarily skipping BDD tests on CI due to instability and flakiness. Will be re-enabled once the underlying issues are resolved.
   #      - name: Run bdd tests
-  #        if: matrix.os == 'ubuntu-latest'
+  #        if: matrix.os == 'overflow'
   #        working-directory: application/backend
   #        run: uv run behave tests/bdd
 
@@ -121,7 +121,7 @@ jobs:
     needs:
       - check_paths
       - python-checks
-    runs-on: ubuntu-latest
+    runs-on: overflow
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

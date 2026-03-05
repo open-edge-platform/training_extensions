@@ -10,7 +10,7 @@ permissions: {} # No permissions by default on workflow level
 
 jobs:
   Build-Docs:
-    runs-on: ubuntu-24.04
+    runs-on: overflow
     permissions:
       contents: write # needed to commit docs
     steps:
