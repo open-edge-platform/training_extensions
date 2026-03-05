@@ -13,8 +13,8 @@ otx.utils
 
    .. autosummary::
    
-      append_signal_handler
       append_main_proc_signal_handler
+      append_signal_handler
    
    
 

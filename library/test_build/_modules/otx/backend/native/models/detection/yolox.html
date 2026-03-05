@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.native.models.detection.rtmdet &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
+    <title>otx.backend.native.models.detection.yolox &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/detection/rtmdet';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/detection/yolox';</script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -252,36 +252,39 @@
             
             <article class="bd-article" role="main">
               
-  <h1>Source code for otx.backend.native.models.detection.rtmdet</h1><div class="highlight"><pre>
+  <h1>Source code for otx.backend.native.models.detection.yolox</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="sd">&quot;&quot;&quot;RTMDet model implementations.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;YOLOX model implementations.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dim</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">GIoULoss</span><span class="p">,</span> <span class="n">QualityFocalLoss</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.assigners</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynamicSoftLabelAssigner</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.coders</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistancePointBBoxCoder</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.prior_generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">MlvlPointGenerator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.samplers</span><span class="w"> </span><span class="kn">import</span> <span class="n">PseudoSampler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.backbones</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSPNeXt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">IoULoss</span><span class="p">,</span> <span class="n">L1Loss</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.backbones</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSPDarknet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDetectionModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.detectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleStageDetector</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">RTMDetSepBNHead</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">RTMDetCriterion</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.necks</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSPNeXtPAFPN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLOXHead</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLOXCriterion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.necks</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLOXPAFPN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.utils.assigners</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimOTAAssigner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXSampleBatch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskLevelExportParameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXExportFormatType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPrecisionType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
@@ -289,20 +292,22 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
 
 
-<div class="viewcode-block" id="RTMDet">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.RTMDet">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RTMDet</span><span class="p">(</span><span class="n">OTXDetectionModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Detection model class for RTMDet.</span>
+<div class="viewcode-block" id="YOLOX">
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.YOLOX">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">YOLOX</span><span class="p">(</span><span class="n">OTXDetectionModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Detection model class for YOLOX.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.</span>
-<span class="sd">        input_size_multiplier (int): Multiplier for the input size.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
-<span class="sd">        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.</span>
-<span class="sd">            If None, uses _default_preprocessing_params.</span>
-<span class="sd">        model_name (str, optional): Name of the model to use. Defaults to &quot;rtmdet_tiny&quot;.</span>
+<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.</span>
+<span class="sd">            This parameter contains image input size, mean, and std, that is used to preprocess the input image.</span>
+<span class="sd">            If None is given, default parameters for the specific model will be used.</span>
+<span class="sd">            In most cases you don&#39;t need to set this parameter unless you change the image size or pretrained weights.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        model_name (str, optional): Name of the model to use. Defaults to &quot;yolox_s&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
 <span class="sd">            Defaults to DefaultSchedulerCallable.</span>
@@ -312,7 +317,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;rtmdet_tiny&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/rtmdet_tiny.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;yolox_tiny&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/&quot;</span>
+        <span class="s2">&quot;object_detection/v2/yolox_tiny_8x8.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;yolox_s&quot;</span><span class="p">:</span> <span class="s2">&quot;https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_s_8x8_300e_coco/&quot;</span>
+        <span class="s2">&quot;yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;yolox_l&quot;</span><span class="p">:</span> <span class="s2">&quot;https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_l_8x8_300e_coco/&quot;</span>
+        <span class="s2">&quot;yolox_l_8x8_300e_coco_20211126_140236-d3bd2b23.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;yolox_x&quot;</span><span class="p">:</span> <span class="s2">&quot;https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/&quot;</span>
+        <span class="s2">&quot;yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">input_size_multiplier</span> <span class="o">=</span> <span class="mi">32</span>
@@ -321,7 +333,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;rtmdet_tiny&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;rtmdet_tiny&quot;</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;yolox_tiny&quot;</span><span class="p">,</span> <span class="s2">&quot;yolox_s&quot;</span><span class="p">,</span> <span class="s2">&quot;yolox_l&quot;</span><span class="p">,</span> <span class="s2">&quot;yolox_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;yolox_s&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span><span class="p">,</span>
@@ -341,84 +353,119 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SingleStageDetector</span><span class="p">:</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="k">if</span> <span class="n">num_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span>
-        <span class="n">train_cfg</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;assigner&quot;</span><span class="p">:</span> <span class="n">DynamicSoftLabelAssigner</span><span class="p">(</span><span class="n">topk</span><span class="o">=</span><span class="mi">13</span><span class="p">),</span>
-            <span class="s2">&quot;sampler&quot;</span><span class="p">:</span> <span class="n">PseudoSampler</span><span class="p">(),</span>
-            <span class="s2">&quot;allowed_border&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;pos_weight&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;debug&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="p">}</span>
-
+        <span class="n">train_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;assigner&quot;</span><span class="p">:</span> <span class="n">SimOTAAssigner</span><span class="p">(</span><span class="n">center_radius</span><span class="o">=</span><span class="mf">2.5</span><span class="p">)}</span>
         <span class="n">test_cfg</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;nms&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;nms&quot;</span><span class="p">,</span> <span class="s2">&quot;iou_threshold&quot;</span><span class="p">:</span> <span class="mf">0.65</span><span class="p">},</span>
-            <span class="s2">&quot;score_thr&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span>
-            <span class="s2">&quot;mask_thr_binary&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-            <span class="s2">&quot;max_per_img&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span>
-            <span class="s2">&quot;min_bbox_size&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;nms_pre&quot;</span><span class="p">:</span> <span class="mi">30000</span><span class="p">,</span>
+            <span class="s2">&quot;score_thr&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+            <span class="s2">&quot;max_per_img&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
         <span class="p">}</span>
-
-        <span class="n">backbone</span> <span class="o">=</span> <span class="n">CSPNeXt</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
-        <span class="n">neck</span> <span class="o">=</span> <span class="n">CSPNeXtPAFPN</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
-        <span class="n">bbox_head</span> <span class="o">=</span> <span class="n">RTMDetSepBNHead</span><span class="p">(</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">CSPDarknet</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">neck</span> <span class="o">=</span> <span class="n">YOLOXPAFPN</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">bbox_head</span> <span class="o">=</span> <span class="n">YOLOXHead</span><span class="p">(</span>
             <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
             <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
-            <span class="n">anchor_generator</span><span class="o">=</span><span class="n">MlvlPointGenerator</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">]),</span>
-            <span class="n">bbox_coder</span><span class="o">=</span><span class="n">DistancePointBBoxCoder</span><span class="p">(),</span>
-            <span class="n">train_cfg</span><span class="o">=</span><span class="n">train_cfg</span><span class="p">,</span>  <span class="c1"># TODO ( kirill): remove</span>
-            <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>  <span class="c1"># TODO ( kirill): remove</span>
+            <span class="n">train_cfg</span><span class="o">=</span><span class="n">train_cfg</span><span class="p">,</span>
+            <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">criterion</span> <span class="o">=</span> <span class="n">RTMDetCriterion</span><span class="p">(</span>
+        <span class="n">criterion</span> <span class="o">=</span> <span class="n">YOLOXCriterion</span><span class="p">(</span>
             <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
-            <span class="n">loss_cls</span><span class="o">=</span><span class="n">QualityFocalLoss</span><span class="p">(</span><span class="n">use_sigmoid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
-            <span class="n">loss_bbox</span><span class="o">=</span><span class="n">GIoULoss</span><span class="p">(</span><span class="n">loss_weight</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+            <span class="n">loss_cls</span><span class="o">=</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">use_sigmoid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+            <span class="n">loss_bbox</span><span class="o">=</span><span class="n">IoULoss</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;square&quot;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">5.0</span><span class="p">),</span>
+            <span class="n">loss_obj</span><span class="o">=</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">use_sigmoid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+            <span class="n">loss_l1</span><span class="o">=</span><span class="n">L1Loss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">SingleStageDetector</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span>
             <span class="n">neck</span><span class="o">=</span><span class="n">neck</span><span class="p">,</span>
             <span class="n">bbox_head</span><span class="o">=</span><span class="n">bbox_head</span><span class="p">,</span>
             <span class="n">criterion</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span>
-            <span class="n">train_cfg</span><span class="o">=</span><span class="n">train_cfg</span><span class="p">,</span>  <span class="c1"># TODO ( kirill): remove</span>
-            <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>  <span class="c1"># TODO ( kirill): remove</span>
+            <span class="n">train_cfg</span><span class="o">=</span><span class="n">train_cfg</span><span class="p">,</span>
+            <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
         <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
+        <span class="n">pad_size_divisor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="n">pad_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">114</span><span class="p">,</span>  <span class="c1"># YOLOX uses 114 as pad_value</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="p">,</span> <span class="n">pad_size_divisor</span><span class="o">=</span><span class="n">pad_size_divisor</span><span class="p">,</span> <span class="n">pad_value</span><span class="o">=</span><span class="n">pad_value</span><span class="p">)</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates OTXModelExporter object that can export the model.&quot;&quot;&quot;</span>
+        <span class="n">resize_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="s2">&quot;fit_to_window_letterbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fit_to_window_letterbox&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span><span class="p">:</span>
+            <span class="n">resize_mode</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span>
+        <span class="n">swap_rgb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">!=</span> <span class="s2">&quot;yolox_tiny&quot;</span>  <span class="c1"># only YOLOX-TINY uses RGB</span>
+
         <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
             <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
             <span class="n">data_input_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="p">,</span>
-            <span class="n">resize_mode</span><span class="o">=</span><span class="s2">&quot;fit_to_window_letterbox&quot;</span><span class="p">,</span>
+            <span class="n">resize_mode</span><span class="o">=</span><span class="n">resize_mode</span><span class="p">,</span>
             <span class="n">pad_value</span><span class="o">=</span><span class="mi">114</span><span class="p">,</span>
-            <span class="n">swap_rgb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">swap_rgb</span><span class="o">=</span><span class="n">swap_rgb</span><span class="p">,</span>
+            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">&quot;input_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;output_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;dynamic_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
-                <span class="p">},</span>
+                <span class="s2">&quot;export_params&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                 <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+                <span class="s2">&quot;dynamic_shapes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">)}},</span>
+                <span class="s2">&quot;keep_initializers_as_inputs&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="s2">&quot;autograd_inlining&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="s2">&quot;dynamo&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">optimization_config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;preset&quot;</span><span class="p">:</span> <span class="s2">&quot;mixed&quot;</span><span class="p">})</span>
+<div class="viewcode-block" id="YOLOX.export">
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.YOLOX.export">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">base_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">export_format</span><span class="p">:</span> <span class="n">OTXExportFormatType</span><span class="p">,</span>
+        <span class="n">precision</span><span class="p">:</span> <span class="n">OTXPrecisionType</span> <span class="o">=</span> <span class="n">OTXPrecisionType</span><span class="o">.</span><span class="n">FP32</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export this model to the specified output directory.</span>
+
+<span class="sd">        This is required to patch otx.algo.detection.backbones.csp_darknet.Focus.forward to export forward.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output_dir (Path): directory for saving the exported model</span>
+<span class="sd">            base_name: (str): base name for the exported model file. Extension is defined by the target export format</span>
+<span class="sd">            export_format (OTXExportFormatType): format of the output model</span>
+<span class="sd">            precision (OTXExportPrecisionType): precision of the output model</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Path: path to the exported model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># patch otx.algo.detection.backbones.csp_darknet.Focus.forward</span>
+        <span class="n">orig_focus_forward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">forward</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">forward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">export</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">base_name</span><span class="p">,</span> <span class="n">export_format</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">forward</span> <span class="o">=</span> <span class="n">orig_focus_forward</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">103.53</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">123.675</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">57.375</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">58.395</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;yolox_tiny&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span>
+                <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="c1"># TODO(@kprokofi): this looks like a bug. The image should be normalized before training.</span>
+            <span class="c1"># issue: https://github.com/open-edge-platform/training_extensions/issues/5023</span>
+            <span class="s2">&quot;yolox_s&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+            <span class="s2">&quot;yolox_l&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+            <span class="s2">&quot;yolox_x&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+        <span class="p">}</span></div>
 
 </pre></div>
 

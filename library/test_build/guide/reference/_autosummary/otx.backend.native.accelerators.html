@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>otx.backend.native.accelerators &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.backend.native.accelerators &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -264,6 +264,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/tree_path_kl_loss_hcls.html">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -285,7 +286,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/algorithms/anomaly/index.html">Anomaly Detection</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -343,7 +343,6 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.converter.html">otx.tools.converter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.tools.templates.html">otx.tools.templates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="otx.types.html">otx.types</a></li>
@@ -420,13 +419,19 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.get_parallel_devices">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_parallel_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">device</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.get_parallel_devices" title="Link to this definition">#</a></dt>
-<dd><p>Generates a list of parrallel devices.</p>
+<dd><p>Generates a list of parallel devices.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.is_available">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.is_available" title="Link to this definition">#</a></dt>
 <dd><p>Checks if XPU available.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.name">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.name" title="Link to this definition">#</a></dt>
+<dd><p>The name of the accelerator.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -530,6 +535,15 @@
      <code class="docutils literal notranslate">
       <span class="pre">
        XPUAccelerator.is_available()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.name">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.name()
       </span>
      </code>
     </a>

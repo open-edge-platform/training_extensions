@@ -18,13 +18,12 @@ otx.data
    .. autosummary::
    
       OTXDataModule
-      OTXAnomalyDataset
-      OTXMulticlassClsDataset
-      OTXHlabelClsDataset
-      OTXMultilabelClsDataset
       OTXDetectionDataset
+      OTXHlabelClsDataset
       OTXInstanceSegDataset
       OTXKeypointDetectionDataset
+      OTXMulticlassClsDataset
+      OTXMultilabelClsDataset
       OTXSegmentationDataset
       OTXTileDatasetFactory
    

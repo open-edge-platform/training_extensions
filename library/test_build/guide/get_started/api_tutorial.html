@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API Quick-Guide &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>API Quick-Guide &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -264,6 +264,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/tree_path_kl_loss_hcls.html">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -285,7 +286,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../explanation/algorithms/anomaly/index.html">Anomaly Detection</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -343,7 +343,6 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.converter.html">otx.tools.converter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.templates.html">otx.tools.templates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.types.html">otx.types</a></li>
@@ -415,31 +414,33 @@ be distinguished by OpenVINO™ Training Extensions Datumaro manager:</p>
 </div>
 <p>Now it is all set to use this dataset inside OpenVINO™ Training Extensions</p>
 </section>
-<section id="quick-start-with-auto-configuration">
-<h2>Quick Start with auto-configuration<a class="headerlink" href="#quick-start-with-auto-configuration" title="Link to this heading">#</a></h2>
-<p>Once the dataset is ready, we can immediately start training with the model and data pipeline recommended by OpenVINO™ Training Extension through auto-configuration.
-The following code snippet demonstrates how to use the auto-configuration feature:</p>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<p>Once the dataset is ready, we can immediately start training with the model and data pipeline. Simply pass the data root and model config path to the Engine class.
+The following code snippet demonstrates how to do that:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;src/otx/recipe/detection/atss_mobilenetv2.yaml&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If dataset supports multiple Task types, this will default to the Task type detected by OpenVINO™ Training Extension.
-If you want to specify a specific Task type, you need to specify it like below:</p>
+<p>It is also possible to pass constructed data and model classes</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;INSTANCE_SEGMENTATION&quot;</span><span class="p">)</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">,</span> <span class="n">data_input_params</span><span class="o">=</span><span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">)))</span>
+<span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">,</span> <span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">datamodule</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="check-available-model-recipes">
 <h2>Check Available Model Recipes<a class="headerlink" href="#check-available-model-recipes" title="Link to this heading">#</a></h2>
-<p>If you want to use other models offered by OpenVINO™ Training Extension besides the ones provided by Auto-Configuration, you can get a list of available models in OpenVINO™ Training Extension as shown below.</p>
+<p>If you want to use other models offered by OpenVINO™ Training Extension, you can get a list of available models as shown below.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
@@ -532,20 +533,6 @@ Print available configuration information</label><div class="sd-tab-content docu
 <h2>Engine<a class="headerlink" href="#engine" title="Link to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">otx.engine.Engine</span></code> class is the main entry point for using OpenVINO™ Training Extensions APIs.</p>
 <ol class="arabic simple">
-<li><p>Setting <code class="docutils literal notranslate"><span class="pre">task</span></code></p></li>
-</ol>
-<p>Specify <code class="docutils literal notranslate"><span class="pre">task</span></code>. This is the task type for that <code class="docutils literal notranslate"><span class="pre">Engine</span></code> usage.
-You can set the task by referencing the <code class="docutils literal notranslate"><span class="pre">OTXTaskType</span></code> in <code class="docutils literal notranslate"><span class="pre">otx.types.task</span></code>.
-If no task is specified, the task is detected and used via <code class="docutils literal notranslate"><span class="pre">datamodule</span></code> or <code class="docutils literal notranslate"><span class="pre">data_root</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
-
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">OTXTaskType</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">)</span>
-<span class="c1"># or</span>
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="2">
 <li><p>Setting <code class="docutils literal notranslate"><span class="pre">work_dir</span></code></p></li>
 </ol>
 <p>Specify <code class="docutils literal notranslate"><span class="pre">work_dir</span></code>. This is the workspace for that <code class="docutils literal notranslate"><span class="pre">Engine</span></code>, and where output is stored.
@@ -555,7 +542,7 @@ The default value is currently <code class="docutils literal notranslate"><span 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">work_dir</span><span class="o">=</span><span class="s2">&quot;work_dir&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<ol class="arabic simple" start="3">
+<ol class="arabic simple" start="2">
 <li><p>Setting device</p></li>
 </ol>
 <p>You can set the device by referencing the <code class="docutils literal notranslate"><span class="pre">DeviceType</span></code> in <code class="docutils literal notranslate"><span class="pre">otx.types.device</span></code>.
@@ -570,7 +557,7 @@ The current default setting is <code class="docutils literal notranslate"><span 
 </div>
 <p>In addition, the <code class="docutils literal notranslate"><span class="pre">Engine</span></code> constructor can be associated with the Trainer’s constructor arguments to control the Trainer’s functionality.
 Refer <a class="reference external" href="https://lightning.ai/docs/pytorch/stable/common/trainer.html">lightning.Trainer</a>.</p>
-<ol class="arabic simple" start="4">
+<ol class="arabic simple" start="3">
 <li><p>Using the OpenVINO™ Training Extension configuration we can configure the Engine.</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
@@ -673,24 +660,105 @@ Custom Optimizer &amp; Scheduler</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="c1"># default data module for the task</span>
+<span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">)</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">datamodule</span><span class="p">,</span> <span class="n">model</span><span class="o">=...</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If both <code class="docutils literal notranslate"><span class="pre">data_root</span></code> and <code class="docutils literal notranslate"><span class="pre">datamodule</span></code> enter <code class="docutils literal notranslate"><span class="pre">Engine</span></code> as input, <code class="docutils literal notranslate"><span class="pre">Engine</span></code> uses datamodule as the base.</p>
+<p>The command above will create a default <code class="docutils literal notranslate"><span class="pre">DataModule</span></code>. You can modify parameters for dataset constructing using <code class="docutils literal notranslate"><span class="pre">SubsetConfig</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms.v2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">v2</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+
+<span class="n">train_subset_config</span> <span class="o">=</span> <span class="n">SubsetConfig</span><span class="p">(</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">transforms</span><span class="o">=</span><span class="n">v2</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">RandomResizedCrop</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),</span> <span class="n">antialias</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">ToDtype</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">]),</span>
+    <span class="p">]),</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">,</span>
+    <span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span>
+    <span class="n">train_subset</span><span class="o">=</span><span class="n">train_subset_config</span>
+<span class="p">)</span>
+</pre></div>
 </div>
+<p>Similarly, you can modify <code class="docutils literal notranslate"><span class="pre">val_subset_config</span></code> and <code class="docutils literal notranslate"><span class="pre">test_subset_config</span></code>:</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>You can get DataModule more easily using AutoConfigurator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.tools.auto_configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoConfigurator</span>
 
+<span class="c1"># specific data pipeline for the model</span>
+<span class="n">datamodule</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">model_config</span><span class="o">=</span><span class="s2">&quot;src/otx/recipe/detection/atss_mobilenetv2.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">()</span>
+
+<span class="c1"># default for the task</span>
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<p>You can also create <code class="docutils literal notranslate"><span class="pre">OTXDataset</span></code> independently and then call  <code class="docutils literal notranslate"><span class="pre">from_otx_datasets</span></code> method to construct  <code class="docutils literal notranslate"><span class="pre">OTXDataModule</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms.v2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">v2</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDetectionDataset</span>
+
+<span class="n">train_subset_config</span> <span class="o">=</span> <span class="n">SubsetConfig</span><span class="p">(</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">val_subset_config</span> <span class="o">=</span> <span class="n">SubsetConfig</span><span class="p">(</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">transforms</span><span class="o">=</span><span class="n">v2</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">RandomResizedCrop</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),</span> <span class="n">antialias</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">ToDtype</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">v2</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">]),</span>
+    <span class="p">])</span>
+
+<span class="c1"># setup Datumaro dataset</span>
+<span class="n">dm_dataset</span> <span class="o">=</span> <span class="n">DmDataset</span><span class="o">.</span><span class="n">import_from</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
+<span class="n">train_dm_subset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span>
+<span class="n">val_dm_subset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()[</span><span class="s2">&quot;val&quot;</span><span class="p">]</span>
+<span class="n">test_dm_subset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span>
+
+<span class="c1"># setup OTX dataset</span>
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">OTXDetectionDataset</span><span class="p">(</span>
+    <span class="n">train_dm_subset</span><span class="p">,</span>
+    <span class="n">transforms</span>
+<span class="p">)</span>
+<span class="n">val_dataset</span> <span class="o">=</span> <span class="n">OTXDetectionDataset</span><span class="p">(</span>
+    <span class="n">val_dm_subset</span><span class="p">,</span>
+    <span class="n">transforms</span>
+<span class="p">)</span>
+<span class="n">test_dataset</span> <span class="o">=</span> <span class="n">OTXDetectionDataset</span><span class="p">(</span>
+    <span class="n">test_dm_subset</span><span class="p">,</span>
+    <span class="n">transforms</span>
+<span class="p">)</span>
+
+<span class="c1"># create OTXDataModule</span>
+<span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="o">.</span><span class="n">from_otx_datasets</span><span class="p">(</span>
+    <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="p">,</span>
+    <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">val_dataset</span><span class="p">,</span>
+    <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">test_dataset</span><span class="p">,</span>
+    <span class="n">train_subset</span> <span class="o">=</span> <span class="n">train_subset_config</span><span class="p">,</span>
+    <span class="n">val_subset</span> <span class="o">=</span> <span class="n">val_subset_config</span><span class="p">,</span>
+    <span class="n">test_subset</span> <span class="o">=</span> <span class="n">val_subset_config</span>
+<span class="p">)</span>
+</pre></div>
 </div>
 <ol class="arabic simple" start="5">
 <li><p>You can use train-specific arguments with <code class="docutils literal notranslate"><span class="pre">train()</span></code> function.</p></li>
@@ -976,8 +1044,8 @@ Benchmark OpenVINO™ IR model</label><div class="sd-tab-content docutils">
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#quick-start-with-auto-configuration">
-   Quick Start with auto-configuration
+  <a class="reference internal nav-link" href="#quick-start">
+   Quick Start
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">

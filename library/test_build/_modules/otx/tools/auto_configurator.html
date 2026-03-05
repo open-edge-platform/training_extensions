@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.tools.auto_configurator &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.tools.auto_configurator &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -269,7 +269,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">Namespace</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.cli.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_otx_root_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.cli.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_otx_root_path</span><span class="p">,</span> <span class="n">list_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">OTXModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplerConfig</span><span class="p">,</span> <span class="n">SubsetConfig</span><span class="p">,</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
@@ -293,10 +293,6 @@
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ROTATED_DETECTION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">SEMANTIC_SEGMENTATION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_18.yaml&quot;</span><span class="p">,</span>
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">INSTANCE_SEGMENTATION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly&quot;</span> <span class="o">/</span> <span class="s2">&quot;padim.yaml&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_CLASSIFICATION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly_classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;padim.yaml&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_SEGMENTATION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;padim.yaml&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_DETECTION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;padim.yaml&quot;</span><span class="p">,</span>
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">KEYPOINT_DETECTION</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;keypoint_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmpose_tiny.yaml&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
@@ -309,10 +305,6 @@
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ROTATED_DETECTION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.OVRotatedDetectionModel&quot;</span><span class="p">,</span>
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">INSTANCE_SEGMENTATION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.OVInstanceSegmentationModel&quot;</span><span class="p">,</span>
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">SEMANTIC_SEGMENTATION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.OVSegmentationModel&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.anomaly.OVAnomalyModel&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_CLASSIFICATION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.anomaly.OVAnomalyModel&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_DETECTION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.anomaly.OVAnomalyModel&quot;</span><span class="p">,</span>
-    <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_SEGMENTATION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.anomaly.OVAnomalyModel&quot;</span><span class="p">,</span>
     <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">KEYPOINT_DETECTION</span><span class="p">:</span> <span class="s2">&quot;otx.backend.openvino.models.OVKeypointDetectionModel&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
@@ -324,9 +316,11 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        data_root (PathLike | None, optional): The root directory for data storage. Defaults to None.</span>
-<span class="sd">        task (OTXTaskType | None, optional): The current task. Defaults to None.</span>
-<span class="sd">        model_name (str | None, optional): Name of the model to use as the default.</span>
-<span class="sd">            If None, the default model will be used. Defaults to None.</span>
+<span class="sd">        task (OTXTaskType | None, optional): The task type. If None, the task will be configured based on the model.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        model (PathLike | str | None, optional): Path to the model config file or name of the model to use.</span>
+<span class="sd">            If None, the task should be provided and the default model for the task will be used.</span>
+<span class="sd">            Defaults to None.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        The following examples show how to use the AutoConfigurator class.</span>
@@ -346,20 +340,40 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data_root</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_config_path</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_root</span> <span class="o">=</span> <span class="n">data_root</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="n">task</span>
-        <span class="k">if</span> <span class="n">model_config_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_config_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Model config path </span><span class="si">{</span><span class="n">model_config_path</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">model_config_path</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.yaml&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If model is provided as a name, task must be provided to find the model.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">recipe_list</span> <span class="o">=</span> <span class="n">list_models</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">model</span><span class="p">),</span> <span class="n">return_recipes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">recipe_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="s2">&quot;There is more than 1 model match the given name.&quot;</span>
+                        <span class="s2">&quot;It may happen with overlap of the tasks. Using the first one.&quot;</span>
+                        <span class="s2">&quot;To use the specific model, provide model config instead.&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">recipe_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Model </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">recipe_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_config_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Model config path </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">model_config_path</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_default_config</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="n">model_config_path</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="n">OTXTaskType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;task&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">task</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_default_config</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Either task or model_config_path must be provided.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Either task or model must be provided.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -497,6 +511,11 @@
             <span class="n">model_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;data_input_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_input_params</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">datamodule</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># get data_input_params info from datamodule</span>
+            <span class="k">if</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">model_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;data_input_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataInputParams</span><span class="p">(</span>
                 <span class="n">input_size</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
                 <span class="n">mean</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span>
@@ -584,14 +603,12 @@
         <span class="n">subset_config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transform_lib_type&quot;</span><span class="p">]</span>
         <span class="n">subset_config</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transforms&quot;</span><span class="p">]</span>
         <span class="n">subset_config</span><span class="o">.</span><span class="n">to_tv_image</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;to_tv_image&quot;</span><span class="p">]</span>
-        <span class="n">datamodule</span><span class="o">.</span><span class="n">image_color_channel</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="s2">&quot;image_color_channel&quot;</span><span class="p">]</span>
         <span class="n">datamodule</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;For OpenVINO IR models, Update the following </span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> transforms: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">transforms</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> transform_lib_type: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">transform_lib_type</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> batch_size: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> image_color_channel: </span><span class="si">{</span><span class="n">datamodule</span><span class="o">.</span><span class="n">image_color_channel</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;And the tiler is disabled.&quot;</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -604,8 +621,6 @@
             <span class="n">test_subset</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">test_subset</span><span class="p">,</span>
             <span class="n">input_size</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
             <span class="n">tile_config</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">tile_config</span><span class="p">,</span>
-            <span class="n">image_color_channel</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-            <span class="n">include_polygons</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">,</span>
             <span class="n">ignore_index</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">,</span>
             <span class="n">unannotated_items_ratio</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">unannotated_items_ratio</span><span class="p">,</span>
             <span class="n">auto_num_workers</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">auto_num_workers</span><span class="p">,</span>

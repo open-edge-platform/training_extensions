@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.openvino.models.multiclass_classification &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.backend.openvino.models.multiclass_classification &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -264,7 +264,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">OTXPredBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span> <span class="n">OTXSampleBatch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.accuracy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">MultiClassClsMetricCallable</span><span class="p">,</span>
@@ -322,16 +322,16 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredictionBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize the outputs of the model for OTX pipeline compatibility.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            outputs (list[ClassificationResult]): List of classification results from the model.</span>
-<span class="sd">            inputs (OTXDataBatch): Input batch containing images and metadata.</span>
+<span class="sd">            inputs (OTXSampleBatch): Input batch containing images and metadata.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            OTXPredBatch: A batch of predictions containing scores, labels,</span>
+<span class="sd">            OTXPredictionBatch: A batch of predictions containing scores, labels,</span>
 <span class="sd">                and optionally saliency maps and feature vectors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pred_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">top_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
@@ -343,8 +343,7 @@
 
             <span class="c1"># Squeeze dim 2D =&gt; 1D, (1, internal_dim) =&gt; (internal_dim)</span>
             <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="k">return</span> <span class="n">OTXPredictionBatch</span><span class="p">(</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
                 <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
@@ -353,8 +352,7 @@
                 <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">OTXPredictionBatch</span><span class="p">(</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
@@ -365,16 +363,16 @@
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVMulticlassClassificationModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredBatch</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare inputs for metric computation.</span>
 
 <span class="sd">        Converts prediction and input entities into a format suitable for metric evaluation.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            preds (OTXPredBatch): Predicted batch containing predicted labels and other metadata.</span>
-<span class="sd">            inputs (OTXDataBatch): Input batch containing ground truth labels and other metadata.</span>
+<span class="sd">            preds (OTXPredictionBatch): Predicted batch containing predicted labels and other metadata.</span>
+<span class="sd">            inputs (OTXSampleBatch): Input batch containing ground truth labels and other metadata.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            MetricInput: A dictionary containing &#39;preds&#39; and &#39;target&#39; keys corresponding to predicted and target labels.</span>

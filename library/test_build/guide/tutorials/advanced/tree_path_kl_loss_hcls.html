@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Adaptive Training &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
+    <title>Using Tree-Path KL Divergence for Hierarchical Classification &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/explanation/additional_features/adaptive_training';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/tutorials/advanced/tree_path_kl_loss_hcls';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Explainable AI (XAI)" href="xai.html" />
-    <link rel="prev" title="Models Optimization" href="models_optimization.html" />
+    <link rel="next" title="Algorithms" href="../../explanation/algorithms/index.html" />
+    <link rel="prev" title="Hierarchical Classification Metric Collection" href="hier_metric_collection.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -245,60 +245,60 @@
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/api_tutorial.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-code-square" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0 1 14.25 16H1.75A1.75 1.75 0 0 1 0 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25Zm7.47 3.97a.75.75 0 0 1 1.06 0l2 2a.75.75 0 0 1 0 1.06l-2 2a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L10.69 8 9.22 6.53a.75.75 0 0 1 0-1.06ZM6.78 6.53 5.31 8l1.47 1.47a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215l-2-2a.75.75 0 0 1 0-1.06l2-2a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042Z"></path></svg> API Quick-Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/base/index.html">Base Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/base/how_to_train/index.html">Training to deployment tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/classification.html">Classification  model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/detection.html">Object Detection model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../base/index.html">Base Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../base/how_to_train/index.html">Training to deployment tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/classification.html">Classification  model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/detection.html">Object Detection model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/base/explain.html">XAI Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/base/export.html">Deploy &amp; Demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base/explain.html">XAI Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base/export.html">Deploy &amp; Demo</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/tree_path_kl_loss_hcls.html">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">How to write OTX Configuration (recipe)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multi_gpu.html">Multi-GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch_compile.html">[BETA] Enable torch.compile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
 </ul>
 </li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../algorithms/index.html">Algorithms</a><input checked class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../algorithms/classification/index.html">Classification</a><input checked class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../algorithms/classification/multi_class_classification.html">Multi-class Classification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../algorithms/classification/multi_label_classification.html">Multi-label Classification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../algorithms/classification/hierarhical_classification.html">Hierarchical Classification</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/algorithms/index.html">Algorithms</a><input checked class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/classification/index.html">Classification</a><input checked class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/classification/multi_class_classification.html">Multi-class Classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/classification/multi_label_classification.html">Multi-label Classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/classification/hierarhical_classification.html">Hierarchical Classification</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../algorithms/object_detection/index.html">Object Detection</a><input checked class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../algorithms/object_detection/object_detection.html">Object Detection</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/object_detection/index.html">Object Detection</a><input checked class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/object_detection/object_detection.html">Object Detection</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../algorithms/segmentation/index.html">Segmentation</a><input checked class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../algorithms/segmentation/semantic_segmentation.html">Semantic Segmentation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/segmentation/index.html">Segmentation</a><input checked class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/segmentation/semantic_segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Adaptive Training</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
 
 
-<li class="toctree-l2"><a class="reference internal" href="xai.html">Explainable AI (XAI)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fast_data_loading.html">Fast Data Loading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tiling.html">Improve Small Object Detection with Image Tiling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class_incremental_sampler.html">Class-Incremental Sampler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/fast_data_loading.html">Fast Data Loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/tiling.html">Improve Small Object Detection with Image Tiling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/class_incremental_sampler.html">Class-Incremental Sampler</a></li>
 
-<li class="toctree-l2"><a class="reference internal" href="configurable_input_size.html">Configurable Input Size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/configurable_input_size.html">Configurable Input Size</a></li>
 </ul>
 </li>
 </ul>
@@ -388,127 +388,165 @@
             
             <article class="bd-article" role="main">
               
-  <section id="adaptive-training">
-<h1>Adaptive Training<a class="headerlink" href="#adaptive-training" title="Link to this heading">#</a></h1>
-<p>Adaptive-training focuses to adjust the number of iterations or interval for the validation to achieve the fast training.
-In the small data regime, we don’t need to validate the model at every epoch since there are a few iterations at a single epoch.
-To handle this, we have implemented module named <code class="docutils literal notranslate"><span class="pre">AdaptiveTrainScheduling</span></code>. This callback controls the interval of the validation to do faster training.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">AdaptiveTrainScheduling</span></code> changes the interval of the validation, evaluation and updating learning rate by checking the number of dataset.</p>
-</div>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-0">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.callbacks.adaptive_train_scheduling</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdaptiveTrainScheduling</span>
-
-<span class="n">engine</span> <span class="o">=</span> <span class="n">OTXEngine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;&lt;path_to_data_root&gt;&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;path/to/config/model.yaml&quot;</span><span class="p">)</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">AdaptiveTrainScheduling</span><span class="p">()])</span>
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-1">
-CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>path/to/config/model.yaml<span class="w"> </span>--data_root<span class="w">  </span>--callbacks<span class="w"> </span>otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-</pre></div>
-</div>
-</div>
-</div>
+  <section id="using-tree-path-kl-divergence-for-hierarchical-classification">
+<h1>Using Tree-Path KL Divergence for Hierarchical Classification<a class="headerlink" href="#using-tree-path-kl-divergence-for-hierarchical-classification" title="Link to this heading">#</a></h1>
+<p>This tutorial explains how to train hierarchical classification models in
+OpenVINO™ Training Extensions with <strong>Tree-Path KL Divergence Loss</strong>, a training-time
+regularizer that encourages consistent predictions along the taxonomy path
+from root to leaf. The method is implemented in:</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">otx.backend.native.models.classification.losses.tree_path_kl_divergence_loss.TreePathKLDivergenceLoss</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">otx.backend.native.models.classification.classifier.h_label_classifier.KLHLabelClassifier</span></code></p></li>
+</ul>
+<p>The feature is currently exposed by default in
+<code class="xref py py-class docutils literal notranslate"><span class="pre">otx.backend.native.models.classification.hlabel_models.timm_model.TimmModelHLabelCls</span></code>.
+Users may adapt other architectures with minimal modifications by adding the
+same wrapper (<code class="docutils literal notranslate"><span class="pre">KLHLabelClassifier</span></code>) in their model’s <code class="docutils literal notranslate"><span class="pre">_finalize_model()</span></code>.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Hierarchical classification models predict multiple levels of labels
+(e.g., manufacturer → family → variant). Standard cross-entropy treats each
+level independently, which means models may output <strong>inconsistent</strong>
+combinations such as:</p>
+<ul class="simple">
+<li><p>predicting a correct fine-grained leaf but an incompatible ancestor, or</p></li>
+<li><p>predicting parents and children belonging to different branches.</p></li>
+</ul>
+<p>Tree-Path KL Divergence introduces a path-consistency objective by comparing:</p>
+<ul class="simple">
+<li><p>the model’s <em>combined</em> probability distribution across all levels, and</p></li>
+<li><p>a <strong>tree-consistent target distribution</strong> that places probability mass on
+each ground-truth category along the path.</p></li>
+</ul>
+<p>This encourages smooth transitions between hierarchy levels and reduces
+structurally invalid predictions.</p>
 </section>
-<section id="auto-adapt-batch-size">
-<h1>Auto-adapt batch size<a class="headerlink" href="#auto-adapt-batch-size" title="Link to this heading">#</a></h1>
-<p>This feature adapts a batch size based on the current hardware environment.
-There are two methods available for adapting the batch size.</p>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>Tree-Path KL Divergence operates on:</p>
+<ul class="simple">
+<li><p>a <strong>list of logits</strong> from each hierarchy level (root → … → leaf), and</p></li>
+<li><p>a <strong>target index</strong> for each corresponding level.</p></li>
+</ul>
+<p>The algorithm implemented in
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TreePathKLDivergenceLoss</span></code> performs the following:</p>
 <ol class="arabic simple">
-<li><p>Prevent GPU Out of Memory (<cite>Safe</cite> mode)</p></li>
+<li><p>Concatenates all level logits and applies log-softmax.</p></li>
+<li><p>Constructs a sparse target distribution that allocates equal probability to
+the correct class at each level.</p></li>
+<li><p>Computes KL divergence between the model’s distribution and the path-aware
+target distribution.</p></li>
+<li><p>Scales the result by <code class="docutils literal notranslate"><span class="pre">loss_weight</span></code> (typically <code class="docutils literal notranslate"><span class="pre">1.0</span></code>).</p></li>
 </ol>
-<p>The first method checks if the current batch size is compatible with the available GPU devices.
-Larger batch sizes consume more GPU memory for training. Therefore, the system verifies if training is possible with the current batch size.
-If it’s not feasible, the batch size is decreased to reduce GPU memory usage.
-However, setting the batch size too low can slow down training.
-To address this, the batch size is reduced to the maximum amount that could be run safely on the current GPU resource.
-The learning rate is also adjusted based on the updated batch size accordingly.</p>
-<p>To use this feature, add the following parameter:</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-2">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
-
-<span class="n">engine</span> <span class="o">=</span> <span class="n">OTXEngine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;&lt;path_to_data_root&gt;&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;path/to/config/model.yaml&quot;</span><span class="p">)</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">adaptive_bs</span><span class="o">=</span><span class="s2">&quot;Safe&quot;</span><span class="p">)</span>
+<p>In <code class="xref py py-class docutils literal notranslate"><span class="pre">KLHLabelClassifier</span></code>, this KL term is added to the hierarchical
+cross-entropy loss:</p>
+<ul class="simple">
+<li><p>cross-entropy is averaged across all hierarchy levels,</p></li>
+<li><p>KL divergence is multiplied by <code class="docutils literal notranslate"><span class="pre">kl_weight</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kl_weight</span> <span class="pre">=</span> <span class="pre">0</span></code> disables the KL term completely.</p></li>
+</ul>
+</section>
+<section id="enabling-tree-path-kl-divergence">
+<h2>Enabling Tree-Path KL Divergence<a class="headerlink" href="#enabling-tree-path-kl-divergence" title="Link to this heading">#</a></h2>
+<p>The recommended entry point is the provided recipe:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>recipe/classification/h_label_cls/efficientnet_v2_kl.yaml
 </pre></div>
 </div>
-</div>
-<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-3">
-CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w">  </span>--adaptive_bs<span class="w"> </span>Safe
+<p>This recipe uses <code class="xref py py-class docutils literal notranslate"><span class="pre">TimmModelHLabelCls</span></code> and exposes the argument
+<code class="docutils literal notranslate"><span class="pre">kl_weight</span></code> directly in <code class="docutils literal notranslate"><span class="pre">init_args</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">H_LABEL_CLS</span>
+<span class="nt">model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.backend.native.models.classification.hlabel_models.timm_model.TimmModelHLabelCls</span>
+<span class="w">  </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">label_info</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;LABEL-TREE-INFO&gt;</span>
+<span class="w">    </span><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tf_efficientnetv2_s.in21k</span>
+<span class="w">    </span><span class="nt">kl_weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
 </pre></div>
-</div>
-</div>
-</div>
-<ol class="arabic simple" start="2">
-<li><p>Find the maximum executable batch size (<cite>Full</cite> mode)</p></li>
-</ol>
-<p>The second method aims to find a possible large batch size that reduces the overall training time.
-Increasing the batch size reduces the effective number of iterations required to sweep the whole dataset, thus speeds up the end-to-end training.
-However, it does not search for the maximum batch size as it is not efficient and may require significantly more time without providing substantial acceleration compared to a large batch size.
-Similar to the previous method, the learning rate is adjusted according to the updated batch size accordingly.</p>
-<p>To use this feature, add the following parameter:</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-4">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
-
-<span class="n">engine</span> <span class="o">=</span> <span class="n">OTXEngine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;&lt;path_to_data_root&gt;&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;path/to/config/model.yaml&quot;</span><span class="p">)</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">adaptive_bs</span><span class="o">=</span><span class="s2">&quot;Full&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-5">
-CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w">  </span>--adaptive_bs<span class="w"> </span>Full
-</pre></div>
-</div>
-</div>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>When using a fixed epoch, training with larger batch sizes is generally faster than with smaller batch sizes.
-However, if early stop is enabled, training with a lower batch size can finish early.</p>
 </div>
 </section>
-<section id="auto-adapt-num-workers">
-<h1>Auto-adapt num_workers<a class="headerlink" href="#auto-adapt-num-workers" title="Link to this heading">#</a></h1>
-<p>This feature adapts the <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> parameter based on the current hardware environment.
-The <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> parameter controls the number of subprocesses used for data loading during training.
-While increasing <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> can reduce data loading time, setting it too high can consume a significant amount of CPU memory.</p>
-<p>To simplify the process of setting <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> manually, this feature automatically determines the optimal value based on the current hardware status.</p>
-<p>To use this feature, add the following parameter:</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-6">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
-
-<span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">auto_num_workers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<section id="using-the-cli">
+<h2>Using the CLI<a class="headerlink" href="#using-the-cli" title="Link to this heading">#</a></h2>
+<p>To train a hierarchical model with Tree-Path KL Divergence, the CLI requires:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">--data_root</span></code>: a path to a directory containing an <strong>``annotations/`` folder</strong>
+whose JSON annotation files follow <strong>Datumaro format</strong>.
+See the format specification here:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/datumaro_format.html">https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/datumaro_format.html</a></p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--config</span></code>: the <strong>path to a recipe YAML file</strong>, such as
+<code class="docutils literal notranslate"><span class="pre">recipe/classification/h_label_cls/efficientnet_v2_kl.yaml</span></code>.</p></li>
+</ul>
+<p>A full training command example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--config<span class="w"> </span>recipe/classification/h_label_cls/efficientnet_v2_kl.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--data_root<span class="w"> </span>/path/to/dataset_with_annotations<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--model.kl_weight<span class="w"> </span><span class="m">1</span>.0
 </pre></div>
 </div>
-</div>
-<input id="sd-tab-item-7" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-7">
-CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.auto_num_workers<span class="w"> </span>True
+<p>To disable Tree-Path KL Divergence and train a standard hierarchical model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--config<span class="w"> </span>recipe/classification/h_label_cls/efficientnet_v2_kl.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--model.kl_weight<span class="w"> </span><span class="m">0</span>.0
 </pre></div>
 </div>
+</section>
+<section id="extending-other-architectures">
+<h2>Extending Other Architectures<a class="headerlink" href="#extending-other-architectures" title="Link to this heading">#</a></h2>
+<p>Currently, Tree-Path KL Divergence is automatically supported only by
+<code class="docutils literal notranslate"><span class="pre">TimmModelHLabelCls</span></code>. To integrate the feature into other architectures, add
+the following logic to the model’s <code class="docutils literal notranslate"><span class="pre">_finalize_model</span></code> method:</p>
+<ol class="arabic">
+<li><p>Accept a new <code class="docutils literal notranslate"><span class="pre">kl_weight</span></code> argument in the model init.</p></li>
+<li><p>After constructing the underlying model, wrap it as:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kl_weight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">KLHLabelClassifier</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">kl_weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kl_weight</span><span class="p">)</span>
+</pre></div>
 </div>
-</div>
+</li>
+<li><p>Ensure that the model returns a list of logits aligned with the hierarchy.</p></li>
+</ol>
+<p>Only a few lines are required, and this enables the same training procedure
+for any backbone (ResNet, ViT, ConvNeXt, etc.).</p>
+</section>
+<section id="when-to-use-tree-path-kl-divergence">
+<h2>When to Use Tree-Path KL Divergence<a class="headerlink" href="#when-to-use-tree-path-kl-divergence" title="Link to this heading">#</a></h2>
+<p>Tree-Path KL Divergence is most helpful when:</p>
+<ul class="simple">
+<li><p>the label space forms a strict taxonomy,</p></li>
+<li><p>incorrect parent/child combinations are undesirable,</p></li>
+<li><p>fine-grained classes are scarce and benefit from structural priors,</p></li>
+<li><p>you want improved consistency across hierarchy levels.</p></li>
+</ul>
+<p>Practically, start with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kl_weight</span> <span class="pre">=</span> <span class="pre">1.0</span></code> or <code class="docutils literal notranslate"><span class="pre">2.0</span></code> for most datasets,</p></li>
+<li><p>monitor both fine-grained and coarse-level accuracy,</p></li>
+<li><p>adjust <code class="docutils literal notranslate"><span class="pre">kl_weight</span></code> based on the trade-off between accuracy and
+hierarchical consistency.</p></li>
+</ul>
+</section>
+<section id="practical-tips">
+<h2>Practical Tips<a class="headerlink" href="#practical-tips" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Ensure that <code class="docutils literal notranslate"><span class="pre">label_info</span></code> correctly describes the hierarchy.</p></li>
+<li><p>Excessively large <code class="docutils literal notranslate"><span class="pre">kl_weight</span></code> values may over-regularize the model.</p></li>
+<li><p>For benchmarking, compare:
+- <code class="docutils literal notranslate"><span class="pre">kl_weight</span> <span class="pre">=</span> <span class="pre">0</span></code> (baseline),
+- <code class="docutils literal notranslate"><span class="pre">kl_weight</span> <span class="pre">=</span> <span class="pre">1–4</span></code> (KL-enabled variants).</p></li>
+<li><p>Tree-Path KL acts as a <em>training-time</em> consistency constraint; it does not
+modify architecture or inference cost.</p></li>
+</ul>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Supported out-of-the-box only for <code class="xref py py-class docutils literal notranslate"><span class="pre">TimmModelHLabelCls</span></code>.</p></li>
+<li><p>Requires the model to output logits for <strong>each level</strong> of the hierarchy.</p></li>
+<li><p>Not applicable to flat classification tasks.</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -519,17 +557,17 @@ CLI</label><div class="sd-tab-content docutils">
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="models_optimization.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="hier_metric_collection.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">Models Optimization</p>
+          <p class="prev-next-title">Hierarchical Classification Metric Collection</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="xai.html" title="next page">
+  <a class='right-next' id="next-link" href="../../explanation/algorithms/index.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Explainable AI (XAI)</p>
+      <p class="prev-next-title">Algorithms</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -549,19 +587,44 @@ CLI</label><div class="sd-tab-content docutils">
 </div>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   Adaptive Training
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#overview">
+   Overview
   </a>
  </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#auto-adapt-batch-size">
-   Auto-adapt batch size
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-it-works">
+   How It Works
   </a>
  </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#auto-adapt-num-workers">
-   Auto-adapt num_workers
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#enabling-tree-path-kl-divergence">
+   Enabling Tree-Path KL Divergence
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#using-the-cli">
+   Using the CLI
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#extending-other-architectures">
+   Extending Other Architectures
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#when-to-use-tree-path-kl-divergence">
+   When to Use Tree-Path KL Divergence
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#practical-tips">
+   Practical Tips
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#limitations">
+   Limitations
   </a>
  </li>
 </ul>
@@ -578,7 +641,7 @@ CLI</label><div class="sd-tab-content docutils">
   
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/open-edge-platform/training_extensions/edit/master/docs/source/guide/explanation/additional_features/adaptive_training.rst">
+    <a href="https://github.com/open-edge-platform/training_extensions/edit/master/docs/source/guide/tutorials/advanced/tree_path_kl_loss_hcls.rst">
         <i class="fa-solid fa-pencil"></i> Edit this page
     </a>
 </div>
@@ -588,7 +651,7 @@ CLI</label><div class="sd-tab-content docutils">
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../../../_sources/guide/explanation/additional_features/adaptive_training.rst.txt">
+    <a href="../../../_sources/guide/tutorials/advanced/tree_path_kl_loss_hcls.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>

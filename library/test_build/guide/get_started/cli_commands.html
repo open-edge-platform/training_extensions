@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CLI Guide &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>CLI Guide &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -264,6 +264,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/tree_path_kl_loss_hcls.html">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -285,7 +286,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../explanation/algorithms/anomaly/index.html">Anomaly Detection</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -343,7 +343,6 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.converter.html">otx.tools.converter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.templates.html">otx.tools.templates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.types.html">otx.types</a></li>
@@ -555,7 +554,6 @@ A<span class="w"> </span>better<span class="w"> </span>guide<span class="w"> </s
 <span class="w">    </span><span class="nt">mem_cache_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1GB</span>
 <span class="w">    </span><span class="nt">mem_cache_img_max_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 <span class="w">    </span><span class="nt">image_color_channel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RGB</span>
-<span class="w">    </span><span class="nt">include_polygons</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="nt">max_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 <span class="nt">deterministic</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="nt">precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
@@ -574,14 +572,14 @@ A<span class="w"> </span>better<span class="w"> </span>guide<span class="w"> </s
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>find<span class="w"> </span>--help
 ╭─<span class="w"> </span>Arguments<span class="w"> </span>───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │<span class="w"> </span>Usage:<span class="w"> </span>otx<span class="w"> </span><span class="o">[</span>options<span class="o">]</span><span class="w"> </span>find<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w">                                                                                                                                                            </span>│
-│<span class="w">                           </span><span class="o">[</span>--task<span class="w"> </span>--task<span class="w"> </span><span class="o">{</span>ANOMALY,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,<span class="w">                              </span>│
+│<span class="w">                           </span><span class="o">[</span>--task<span class="w"> </span>--task<span class="w"> </span><span class="o">{</span>MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,<span class="w">                                                                                                    </span>│
 │<span class="w">                                            </span>DETECTION,ROTATED_DETECTION,KEYPOINT_DETECTION,INSTANCE_SEGMENTATION,SEMANTIC_SEGMENTATION<span class="o">}</span><span class="w">                                                    </span>│
 │<span class="w">                           </span><span class="o">[</span>--pattern<span class="w"> </span>PATTERN<span class="o">]</span><span class="w">                                                                                                                                             </span>│
 │<span class="w">                                                                                                                                                                                           </span>│
 │<span class="w">                                                                                                                                                                                           </span>│
 │<span class="w"> </span>Options:<span class="w">                                                                                                                                                                                  </span>│
 │<span class="w">   </span>-h,<span class="w"> </span>--help<span class="w">            </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span>exit.<span class="w">                                                                                                                                  </span>│
-│<span class="w">   </span>--task<span class="w"> </span><span class="o">{</span>ANOMALY,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,<span class="w">                                                              </span>│
+│<span class="w">   </span>--task<span class="w"> </span><span class="o">{</span>MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,<span class="w">                                                                                                                                    </span>│
 │<span class="w">            </span>DETECTION,ROTATED_DETECTION,KEYPOINT_DETECTION,INSTANCE_SEGMENTATION,SEMANTIC_SEGMENTATION<span class="o">}</span>,<span class="w">                                                                                   </span>│
 │<span class="w">                         </span>Value<span class="w"> </span><span class="k">for</span><span class="w"> </span>filtering<span class="w"> </span>by<span class="w"> </span>task.<span class="w"> </span>Default<span class="w"> </span>is<span class="w"> </span>None,<span class="w"> </span>which<span class="w"> </span>shows<span class="w"> </span>all<span class="w"> </span>recipes.<span class="w"> </span><span class="o">(</span>type:<span class="w"> </span>None,<span class="w"> </span>default:<span class="w"> </span>None<span class="o">)</span><span class="w">                                                                </span>│
 │<span class="w">   </span>--pattern<span class="w"> </span>PATTERN<span class="w">     </span>This<span class="w"> </span>allows<span class="w"> </span>you<span class="w"> </span>to<span class="w"> </span>filter<span class="w"> </span>the<span class="w"> </span>model<span class="w"> </span>name<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>recipe.<span class="w"> </span>For<span class="w"> </span>example,<span class="w"> </span><span class="k">if</span><span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>all<span class="w"> </span>models<span class="w"> </span>that<span class="w"> </span>contain<span class="w"> </span>the<span class="w"> </span>word<span class="w"> </span><span class="s1">&#39;efficient&#39;</span>,<span class="w"> </span>you<span class="w"> </span>can<span class="w"> </span>use<span class="w"> </span><span class="s1">&#39;--pattern     │</span>

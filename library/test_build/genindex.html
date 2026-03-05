@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>Index &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="_static/documentation_options.js?v=477152fe"></script>
+    <script src="_static/documentation_options.js?v=ba016db8"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -278,6 +278,7 @@
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  | <a href="#X"><strong>X</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -289,6 +290,10 @@
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.OVModel.__call__">(otx.models.OVModel method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DEIMV2._pretrained_weights">_pretrained_weights (otx.models.DEIMV2 attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -347,8 +352,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.config.data.html#otx.config.data.TileConfig.clone">clone() (otx.config.data.TileConfig method)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXMulticlassClsDataset.collate_fn">collate_fn (otx.data.OTXMulticlassClsDataset property)</a>
-</li>
       <li><a href="guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVDetectionModel.compute_metrics">compute_metrics() (otx.backend.openvino.models.OVDetectionModel method)</a>
 
       <ul>
@@ -393,13 +396,19 @@
         <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.datamodule">(otx.engine.Engine property)</a>
 </li>
       </ul></li>
-      <li><a href="guide/reference/_autosummary/otx.config.device.html#otx.config.device.DeviceConfig">DeviceConfig (class in otx.config.device)</a>
+      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DEIMDFine">DEIMDFine (class in otx.models)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DEIMV2">DEIMV2 (class in otx.models)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.config.device.html#otx.config.device.DeviceConfig">DeviceConfig (class in otx.config.device)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DFine">DFine (class in otx.models)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DinoV2Seg">DinoV2Seg (class in otx.models)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset.dm_categories">dm_categories (otx.data.OTXHlabelClsDataset attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.config.html#otx.config.dtype_representer">dtype_representer() (in module otx.config)</a>
 </li>
@@ -415,10 +424,10 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.cli.cli.html#otx.cli.cli.OTXCLI.engine_subcommand_parser">engine_subcommand_parser() (otx.cli.cli.OTXCLI static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.cli.cli.html#otx.cli.cli.OTXCLI.engine_subcommands">engine_subcommands() (otx.cli.cli.OTXCLI static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.config.explain.html#otx.config.explain.ExplainConfig">ExplainConfig (class in otx.config.explain)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.export">export() (otx.backend.openvino.engine.OVEngine method)</a>
@@ -426,7 +435,11 @@
       <ul>
         <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.export">(otx.engine.Engine method)</a>
 </li>
+        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.YOLOX.export">(otx.models.YOLOX method)</a>
+</li>
       </ul></li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.extract_normalization_params">extract_normalization_params() (otx.data.OTXDataModule class method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -449,20 +462,10 @@
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.RTMDetInst.forward_for_tracing">(otx.models.RTMDetInst method)</a>
 </li>
       </ul></li>
-      <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_dm_label_groups">from_dm_label_groups() (otx.types.HLabelInfo class method)</a>
-
-      <ul>
-        <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.from_dm_label_groups">(otx.types.LabelInfo class method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_dm_label_groups_arrow">from_dm_label_groups_arrow() (otx.types.HLabelInfo class method)</a>
-
-      <ul>
-        <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.from_dm_label_groups_arrow">(otx.types.LabelInfo class method)</a>
+      <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_dm_label_groups">from_dm_label_groups() (otx.types.HLabelInfo class method)</a>
 </li>
-      </ul></li>
       <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_json">from_json() (otx.types.HLabelInfo class method)</a>
 
       <ul>
@@ -477,6 +480,8 @@
         <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.SegLabelInfo.from_num_classes">(otx.types.SegLabelInfo class method)</a>
 </li>
       </ul></li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.from_otx_datasets">from_otx_datasets() (otx.data.OTXDataModule class method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -493,6 +498,8 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.tools.auto_configurator.html#otx.tools.auto_configurator.AutoConfigurator.get_datamodule">get_datamodule() (otx.tools.auto_configurator.AutoConfigurator method)</a>
 </li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.get_default_subset_configs">get_default_subset_configs() (otx.data.OTXDataModule method)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#otx.cli.utils.jsonargparse.get_defaults_with_overrides">get_defaults_with_overrides() (in module otx.cli.utils.jsonargparse)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.backend.native.accelerators.html#otx.backend.native.accelerators.XPUAccelerator.get_device_stats">get_device_stats() (otx.backend.native.accelerators.XPUAccelerator method)</a>
@@ -501,6 +508,18 @@
 
       <ul>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.OVModel.get_dummy_input">(otx.models.OVModel method)</a>
+</li>
+      </ul></li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDetectionDataset.get_idx_list_per_classes">get_idx_list_per_classes() (otx.data.OTXDetectionDataset method)</a>
+
+      <ul>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset.get_idx_list_per_classes">(otx.data.OTXHlabelClsDataset method)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXInstanceSegDataset.get_idx_list_per_classes">(otx.data.OTXInstanceSegDataset method)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXMulticlassClsDataset.get_idx_list_per_classes">(otx.data.OTXMulticlassClsDataset method)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXMultilabelClsDataset.get_idx_list_per_classes">(otx.data.OTXMultilabelClsDataset method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -527,12 +546,10 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXSegmentationDataset.has_polygons">has_polygons (otx.data.OTXSegmentationDataset property)</a>
+      <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo">HLabelInfo (class in otx.types)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo">HLabelInfo (class in otx.types)</a>
-</li>
       <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.hparams_initial">hparams_initial (otx.data.OTXDataModule property)</a>
 </li>
   </ul></td>
@@ -541,7 +558,11 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset.id_to_name_mapping">id_to_name_mapping (otx.data.OTXHlabelClsDataset attribute)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.config.html#otx.config.ignore_aliases">ignore_aliases() (in module otx.config)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXSegmentationDataset.ignore_index">ignore_index (otx.data.OTXSegmentationDataset attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.LiteHRNet.ignore_scope">ignore_scope (otx.models.LiteHRNet property)</a>
 </li>
@@ -549,9 +570,13 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.config.data.html#otx.config.data.SubsetConfig.input_size">input_size (otx.config.data.SubsetConfig attribute)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DFine.input_size_multiplier">input_size_multiplier (otx.models.DFine attribute)</a>
+      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DEIMDFine.input_size_multiplier">input_size_multiplier (otx.models.DEIMDFine attribute)</a>
 
       <ul>
+        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DEIMV2.input_size_multiplier">(otx.models.DEIMV2 attribute)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DFine.input_size_multiplier">(otx.models.DFine attribute)</a>
+</li>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.RTDETR.input_size_multiplier">(otx.models.RTDETR attribute)</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.RTMDet.input_size_multiplier">(otx.models.RTMDet attribute)</a>
@@ -586,6 +611,8 @@
       <li><a href="guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.label_info">label_info (otx.backend.openvino.models.OVModel property)</a>
 
       <ul>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset.label_info">(otx.data.OTXHlabelClsDataset attribute)</a>
+</li>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.OVModel.label_info">(otx.models.OVModel property)</a>
 </li>
       </ul></li>
@@ -597,24 +624,14 @@
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.TVModel.list_models">(otx.models.TVModel static method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#otx.cli.utils.jsonargparse.list_override">list_override() (in module otx.cli.utils.jsonargparse)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.LiteHRNet">LiteHRNet (class in otx.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.ATSS.load_from_otx_v1_ckpt">load_from_otx_v1_ckpt() (otx.models.ATSS method)</a>
-
-      <ul>
-        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.LiteHRNet.load_from_otx_v1_ckpt">(otx.models.LiteHRNet method)</a>
+      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DFine.load_state_dict">load_state_dict() (otx.models.DFine method)</a>
 </li>
-        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.MaskRCNN.load_from_otx_v1_ckpt">(otx.models.MaskRCNN method)</a>
-</li>
-        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.SegNext.load_from_otx_v1_ckpt">(otx.models.SegNext method)</a>
-</li>
-        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.SSD.load_from_otx_v1_ckpt">(otx.models.SSD method)</a>
-</li>
-      </ul></li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.SSD.load_state_dict_pre_hook">load_state_dict_pre_hook() (otx.models.SSD method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.log_results">log_results() (otx.backend.openvino.engine.OVEngine method)</a>
@@ -703,8 +720,6 @@
 </li>
         <li><a href="guide/reference/_autosummary/otx.tools.converter.html#module-otx.tools.converter">otx.tools.converter</a>
 </li>
-        <li><a href="guide/reference/_autosummary/otx.tools.templates.html#module-otx.tools.templates">otx.tools.templates</a>
-</li>
         <li><a href="guide/reference/_autosummary/otx.types.html#module-otx.types">otx.types</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.utils.html#module-otx.utils">otx.utils</a>
@@ -716,14 +731,20 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.backend.native.accelerators.html#otx.backend.native.accelerators.XPUAccelerator.name">name() (otx.backend.native.accelerators.XPUAccelerator static method)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#otx.cli.utils.jsonargparse.namespace_override">namespace_override() (in module otx.cli.utils.jsonargparse)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.NullLabelInfo">NullLabelInfo (class in otx.types)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.num_classes">num_classes (otx.types.LabelInfo property)</a>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXMultilabelClsDataset.num_classes">num_classes (otx.data.OTXMultilabelClsDataset attribute)</a>
+
+      <ul>
+        <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.num_classes">(otx.types.LabelInfo property)</a>
 </li>
+      </ul></li>
       <li><a href="guide/reference/_autosummary/otx.config.data.html#otx.config.data.SubsetConfig.num_workers">num_workers (otx.config.data.SubsetConfig attribute)</a>
 </li>
   </ul></td>
@@ -882,6 +903,8 @@
         <li><a href="guide/reference/_autosummary/otx.engine.html#module-otx.engine">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     otx.metrics
 
@@ -889,8 +912,6 @@
         <li><a href="guide/reference/_autosummary/otx.metrics.html#module-otx.metrics">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     otx.models
 
@@ -927,13 +948,6 @@
 </li>
       </ul></li>
       <li>
-    otx.tools.templates
-
-      <ul>
-        <li><a href="guide/reference/_autosummary/otx.tools.templates.html#module-otx.tools.templates">module</a>
-</li>
-      </ul></li>
-      <li>
     otx.types
 
       <ul>
@@ -948,8 +962,6 @@
 </li>
       </ul></li>
       <li><a href="guide/reference/_autosummary/otx.config.html#otx.config.otx_str_type_representer">otx_str_type_representer() (in module otx.config)</a>
-</li>
-      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXAnomalyDataset">OTXAnomalyDataset (class in otx.data)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.cli.cli.html#otx.cli.cli.OTXCLI">OTXCLI (class in otx.cli.cli)</a>
 </li>
@@ -1029,8 +1041,6 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.Padim">Padim (class in otx.models)</a>
-</li>
       <li><a href="guide/reference/_autosummary/otx.backend.native.accelerators.html#otx.backend.native.accelerators.XPUAccelerator.parse_devices">parse_devices() (otx.backend.native.accelerators.XPUAccelerator static method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#otx.cli.utils.jsonargparse.patch_update_configs">patch_update_configs() (in module otx.cli.utils.jsonargparse)</a>
@@ -1084,6 +1094,8 @@
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.ATSS.pretrained_weights">pretrained_weights (otx.models.ATSS attribute)</a>
 
       <ul>
+        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DEIMDFine.pretrained_weights">(otx.models.DEIMDFine attribute)</a>
+</li>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.DFine.pretrained_weights">(otx.models.DFine attribute)</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.RTDETR.pretrained_weights">(otx.models.RTDETR attribute)</a>
@@ -1091,6 +1103,8 @@
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.RTMDet.pretrained_weights">(otx.models.RTMDet attribute)</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.SSD.pretrained_weights">(otx.models.SSD attribute)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.YOLOX.pretrained_weights">(otx.models.YOLOX attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1147,8 +1161,6 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.SSD">SSD (class in otx.models)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.Stfpm">Stfpm (class in otx.models)</a>
-</li>
       <li><a href="guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.CustomHelpFormatter.subcommand">subcommand (otx.cli.utils.help_formatter.CustomHelpFormatter attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.config.data.html#otx.config.data.SubsetConfig.subset_name">subset_name (otx.config.data.SubsetConfig attribute)</a>
@@ -1169,6 +1181,22 @@
         <li><a href="guide/reference/_autosummary/otx.tools.auto_configurator.html#otx.tools.auto_configurator.AutoConfigurator.task">(otx.tools.auto_configurator.AutoConfigurator property)</a>
 </li>
       </ul></li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDetectionDataset.task_type">task_type (otx.data.OTXDetectionDataset property)</a>
+
+      <ul>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset.task_type">(otx.data.OTXHlabelClsDataset property)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXInstanceSegDataset.task_type">(otx.data.OTXInstanceSegDataset property)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXKeypointDetectionDataset.task_type">(otx.data.OTXKeypointDetectionDataset property)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXMulticlassClsDataset.task_type">(otx.data.OTXMulticlassClsDataset property)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXMultilabelClsDataset.task_type">(otx.data.OTXMultilabelClsDataset property)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXSegmentationDataset.task_type">(otx.data.OTXSegmentationDataset property)</a>
+</li>
+      </ul></li>
       <li><a href="guide/reference/_autosummary/otx.backend.native.accelerators.html#otx.backend.native.accelerators.XPUAccelerator.teardown">teardown() (otx.backend.native.accelerators.XPUAccelerator method)</a>
 
       <ul>
@@ -1181,14 +1209,14 @@
         <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.test">(otx.engine.Engine method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.test_dataloader">test_dataloader() (otx.data.OTXDataModule method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.config.data.html#otx.config.data.TileConfig">TileConfig (class in otx.config.data)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.TimmModel">TimmModel (class in otx.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.to_json">to_json() (otx.types.LabelInfo method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.config.data.html#otx.config.data.SubsetConfig.to_tv_image">to_tv_image (otx.config.data.SubsetConfig attribute)</a>
@@ -1219,11 +1247,11 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.Uflow">Uflow (class in otx.models)</a>
-</li>
       <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#otx.cli.utils.jsonargparse.update">update() (in module otx.cli.utils.jsonargparse)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_augmentations">update_augmentations() (in module otx.tools.converter)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_batch_size">update_batch_size() (in module otx.tools.converter)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_early_stopping">update_early_stopping() (in module otx.tools.converter)</a>
 </li>
@@ -1278,6 +1306,14 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.backend.native.accelerators.html#otx.backend.native.accelerators.XPUAccelerator">XPUAccelerator (class in otx.backend.native.accelerators)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Y">Y</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.models.html#otx.models.YOLOX">YOLOX (class in otx.models)</a>
 </li>
   </ul></td>
 </tr></table>

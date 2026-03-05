@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.data.dataset.classification &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.data.dataset.classification &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -253,149 +253,295 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.data.dataset.classification</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="sd">&quot;&quot;&quot;Module for OTXClassificationDatasets.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Module for OTXClassificationDatasets using new Datumaro experimental Dataset.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Label</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.components.annotation</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnnotationType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_dtype</span><span class="p">,</span> <span class="n">to_image</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataItem</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">Transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ClassificationHierarchicalSample</span><span class="p">,</span>
+    <span class="n">ClassificationMultiLabelSample</span><span class="p">,</span>
+    <span class="n">ClassificationSample</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
 
 
 <div class="viewcode-block" id="OTXMulticlassClsDataset">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXMulticlassClsDataset">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXMulticlassClsDataset</span><span class="p">(</span><span class="n">OTXDataset</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTXDataset class for multi-class classification task.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Dataset for multi-class classification tasks.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-        <span class="n">roi</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;roi&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">img_data</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">img_data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">roi</span><span class="p">:</span>
-            <span class="c1"># extract labels from ROI</span>
-            <span class="n">labels_ids</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">label</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">][</span><span class="s2">&quot;_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">roi</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">label</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">][</span><span class="s2">&quot;domain&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CLASSIFICATION&quot;</span>
-            <span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
-                <span class="n">label_anns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">label_id</span> <span class="ow">in</span> <span class="n">labels_ids</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">label_anns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">label_id</span> <span class="ow">in</span> <span class="n">labels_ids</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># extract labels from annotations</span>
-            <span class="n">label_anns</span> <span class="o">=</span> <span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Label</span><span class="p">)]</span>
+<span class="sd">    This dataset handles single-label classification where each image belongs to exactly one class.</span>
+<span class="sd">    It processes Datumaro dataset items and converts them into OTXSample format suitable for</span>
+<span class="sd">    multi-class classification training and inference.</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_anns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Multi-class Classification can&#39;t use the multi-label, currently len(labels) = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">label_anns</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        dm_subset (DmDataset): Datumaro dataset subset containing the data items.</span>
+<span class="sd">        transforms (Transforms, optional): Transformations to apply to the data.</span>
+<span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
+<span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
+<span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
+<span class="sd">        data_format (str): Format of the source data (e.g., &quot;arrow&quot;, &quot;coco&quot;).</span>
 
-        <span class="n">entity</span> <span class="o">=</span> <span class="n">OTXDataItem</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">label_anns</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span>
-            <span class="n">img_info</span><span class="o">=</span><span class="n">ImageInfo</span><span class="p">(</span>
-                <span class="n">img_idx</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-            <span class="p">),</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If an image has multiple labels (multi-label case).</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from otx.data.dataset.classification import OTXMulticlassClsDataset</span>
+<span class="sd">        &gt;&gt;&gt; dataset = OTXMulticlassClsDataset(</span>
+<span class="sd">        ...     dm_subset=my_dm_subset,</span>
+<span class="sd">        ...     transforms=my_transforms,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; item = dataset[0]  # Get first item</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationSample</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
+            <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+            <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
+            <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
+            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
+            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
+            <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span>
+            <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))],</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="OTXMulticlassClsDataset.get_idx_list_per_classes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXMulticlassClsDataset.get_idx_list_per_classes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a dictionary mapping class labels (string or int) to lists of samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            use_string_label (bool): If True, use string class labels as keys.</span>
+<span class="sd">                If False, use integer indices as keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx_list_per_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">label_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_string_label</span><span class="p">:</span>
+                <span class="n">label_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">label_id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">label_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idx_list_per_classes</span><span class="p">:</span>
+                <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">idx_list_per_classes</span></div>
+
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">collate_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collection function to collect MulticlassClsDataEntity into MulticlassClsBatchDataEntity in data loader.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">OTXDataItem</span><span class="o">.</span><span class="n">collate_fn</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;OTX Task Type for the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OTXTaskType: The multi-class classification task type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">MULTI_CLASS_CLS</span></div>
 
 
 
 <div class="viewcode-block" id="OTXMultilabelClsDataset">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXMultilabelClsDataset">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXMultilabelClsDataset</span><span class="p">(</span><span class="n">OTXDataset</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTXDataset class for multi-label classification task.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Dataset for multi-label classification tasks.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">categories</span><span class="p">()[</span><span class="n">AnnotationType</span><span class="o">.</span><span class="n">label</span><span class="p">])</span>
+<span class="sd">    This dataset handles multi-label classification where each image can belong to multiple classes</span>
+<span class="sd">    simultaneously. It processes Datumaro dataset items and converts them into OTXSample format</span>
+<span class="sd">    with one-hot encoded labels suitable for multi-label classification training and inference.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-        <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># This should be assigned form item</span>
-        <span class="n">img_data</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-        <span class="n">img_data</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">img_data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        dm_subset (DmDataset): Datumaro dataset subset containing the data items.</span>
+<span class="sd">        transforms (Transforms, optional): Transform operations to apply to the data items.</span>
+<span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
+<span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
+<span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
+<span class="sd">        data_format (str): Format of the source data (e.g., &quot;arrow&quot;, &quot;coco&quot;).</span>
 
-        <span class="n">label_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-            <span class="c1"># multilabel information stored in &#39;multi_label_ids&#39; attribute when the source format is arrow</span>
-            <span class="k">if</span> <span class="s2">&quot;multi_label_ids&quot;</span> <span class="ow">in</span> <span class="n">ann</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">lbl_idx</span> <span class="ow">in</span> <span class="n">ann</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;multi_label_ids&quot;</span><span class="p">]:</span>
-                    <span class="n">label_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbl_idx</span><span class="p">)</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        num_classes (int): Number of classes in the dataset.</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Label</span><span class="p">):</span>
-                <span class="n">label_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># If the annotation is not Label, it should be converted to Label.</span>
-                <span class="c1"># For Chained Task: Detection (Bbox) -&gt; Classification (Label)</span>
-                <span class="n">label</span> <span class="o">=</span> <span class="n">Label</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-                <span class="n">label_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">label_ids</span><span class="p">))</span>
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from otx.data.dataset.classification import OTXMultilabelClsDataset</span>
+<span class="sd">        &gt;&gt;&gt; dataset = OTXMultilabelClsDataset(</span>
+<span class="sd">        ...     dm_subset=my_dm_subset,</span>
+<span class="sd">        ...     transforms=my_transforms,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; item = dataset[0]  # Get first item with one-hot encoded labels</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-        <span class="n">entity</span> <span class="o">=</span> <span class="n">OTXDataItem</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">img_data</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_onehot</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">ignored_labels</span><span class="p">),</span>
-            <span class="n">img_info</span><span class="o">=</span><span class="n">ImageInfo</span><span class="p">(</span>
-                <span class="n">img_idx</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="n">ignored_labels</span><span class="o">=</span><span class="n">ignored_labels</span><span class="p">,</span>
-            <span class="p">),</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationMultiLabelSample</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+            <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+            <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
+            <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
+            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
+            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
+            <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span>
+            <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationMultiLabelSample</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_onehot</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">)),</span> <span class="n">ignored_labels</span><span class="o">=</span><span class="p">[])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_onehot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert label to one-hot vector format.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert label to one-hot vector format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            labels: Input label tensor to convert.</span>
+<span class="sd">            ignored_labels: List of label indices to ignore.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.tensor: One-hot encoded label tensor where ignored labels are set to -1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Torch&#39;s one_hot() expects the input to be of type long</span>
         <span class="c1"># However, when labels are empty, they are of type float32</span>
         <span class="n">onehot</span> <span class="o">=</span> <span class="n">functional</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">long</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">clamp_max_</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ignored_labels</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ignore_label</span> <span class="ow">in</span> <span class="n">ignored_labels</span><span class="p">:</span>
                 <span class="n">onehot</span><span class="p">[</span><span class="n">ignore_label</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">return</span> <span class="n">onehot</span></div>
+        <span class="k">return</span> <span class="n">onehot</span>
+
+<div class="viewcode-block" id="OTXMultilabelClsDataset.get_idx_list_per_classes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXMultilabelClsDataset.get_idx_list_per_classes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a dictionary mapping class labels (string or int) to lists of samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            use_string_label (bool): If True, use string class labels as keys.</span>
+<span class="sd">                If False, use integer indices as keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx_list_per_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_string_label</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idx_list_per_classes</span><span class="p">:</span>
+                    <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">idx_list_per_classes</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;OTX Task Type for the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OTXTaskType: The multi-label classification task type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">MULTI_LABEL_CLS</span></div>
 
 
 
 <div class="viewcode-block" id="OTXHlabelClsDataset">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXHlabelClsDataset</span><span class="p">(</span><span class="n">OTXDataset</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTXDataset class for H-label classification task.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Dataset for hierarchical label classification tasks.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">categories</span><span class="p">()[</span><span class="n">AnnotationType</span><span class="o">.</span><span class="n">label</span><span class="p">]</span>
+<span class="sd">    This dataset handles hierarchical classification where labels are organized in a tree structure</span>
+<span class="sd">    with multiple classification heads. It supports both multiclass heads (where one class per head</span>
+<span class="sd">    is selected) and multilabel heads (where multiple classes can be selected simultaneously).</span>
 
-        <span class="c1"># Hlabel classification used HLabelInfo to insert the HLabelData.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
-            <span class="c1"># arrow format stores label IDs as names, have to deal with that here</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">HLabelInfo</span><span class="o">.</span><span class="n">from_dm_label_groups_arrow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">HLabelInfo</span><span class="o">.</span><span class="n">from_dm_label_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">)</span>
+<span class="sd">    The dataset processes Datumaro dataset items and converts them into OTXSample format with</span>
+<span class="sd">    hierarchical label encoding suitable for H-label classification training and inference.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dm_subset (DmDataset): Datumaro dataset subset containing the data items.</span>
+<span class="sd">        transforms (Transforms, optional): Transform operations to apply to the data items.</span>
+<span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
+<span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
+<span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
+<span class="sd">        data_format (str): Format of the source data (e.g., &quot;arrow&quot;, &quot;coco&quot;).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        dm_categories (datumaro.components.annotation.LabelCategories): Datumaro label categories for the dataset.</span>
+<span class="sd">        label_info (HLabelInfo): HLabelInfo containing hierarchical label structure information.</span>
+<span class="sd">        id_to_name_mapping (dict[str, str]): Mapping from label IDs to label names.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the number of multiclass heads is 0.</span>
+<span class="sd">        TypeError: If label_info is not of type HLabelInfo.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from otx.data.dataset.classification import OTXHlabelClsDataset</span>
+<span class="sd">        &gt;&gt;&gt; dataset = OTXHlabelClsDataset(</span>
+<span class="sd">        ...     dm_subset=my_dm_subset,</span>
+<span class="sd">        ...     transforms=my_transforms,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; item = dataset[0]  # Get first item with hierarchical labels</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationHierarchicalSample</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
+            <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+            <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
+            <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
+            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
+            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">HLabelInfo</span><span class="o">.</span><span class="n">from_dm_label_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -404,105 +550,13 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The number of multiclass heads should be larger than 0.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">!=</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">dm_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_add_ancestors</span><span class="p">(</span><span class="n">dm_item</span><span class="o">.</span><span class="n">annotations</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_anns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add ancestors recursively if some label miss the ancestor information.</span>
-
-<span class="sd">        If the label tree likes below,</span>
-<span class="sd">        object - vehicle -- car</span>
-<span class="sd">                         |- bus</span>
-<span class="sd">                         |- truck</span>
-<span class="sd">        And annotation = [&#39;car&#39;], it should be [&#39;car&#39;, &#39;vehicle&#39;, &#39;object&#39;], to include the ancestor.</span>
-
-<span class="sd">        This function add the ancestors to the annotation if missing.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_label_idx_to_name</span><span class="p">(</span><span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_label_name_to_idx</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_get_label_group_idx</span><span class="p">(</span><span class="n">label_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">,</span> <span class="n">HLabelInfo</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">class_to_group_idx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">[</span><span class="n">label_name</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">class_to_group_idx</span><span class="p">[</span><span class="n">label_name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;self.label_info should have HLabelInfo type, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_find_ancestor_recursively</span><span class="p">(</span><span class="n">label_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ancestors</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">dm_label_category</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">label_name</span><span class="p">)</span>
-            <span class="n">parent_name</span> <span class="o">=</span> <span class="n">dm_label_category</span><span class="o">.</span><span class="n">parent</span> <span class="k">if</span> <span class="n">dm_label_category</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-
-            <span class="k">if</span> <span class="n">parent_name</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-                <span class="n">ancestors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent_name</span><span class="p">)</span>
-                <span class="n">_find_ancestor_recursively</span><span class="p">(</span><span class="n">parent_name</span><span class="p">,</span> <span class="n">ancestors</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">ancestors</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_get_all_label_names_in_anns</span><span class="p">(</span><span class="n">anns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">_label_idx_to_name</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">anns</span><span class="p">]</span>
-
-        <span class="n">all_label_names</span> <span class="o">=</span> <span class="n">_get_all_label_names_in_anns</span><span class="p">(</span><span class="n">label_anns</span><span class="p">)</span>
-        <span class="n">ancestor_dm_labels</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">label_anns</span><span class="p">:</span>
-            <span class="n">label_idx</span> <span class="o">=</span> <span class="n">ann</span><span class="o">.</span><span class="n">label</span>
-            <span class="n">label_name</span> <span class="o">=</span> <span class="n">_label_idx_to_name</span><span class="p">(</span><span class="n">label_idx</span><span class="p">)</span>
-            <span class="n">ancestors</span> <span class="o">=</span> <span class="n">_find_ancestor_recursively</span><span class="p">(</span><span class="n">label_name</span><span class="p">,</span> <span class="p">[])</span>
-
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ancestor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ancestors</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">ancestor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_label_names</span><span class="p">:</span>
-                    <span class="n">ancestor_dm_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="n">Label</span><span class="p">(</span>
-                            <span class="n">label</span><span class="o">=</span><span class="n">_label_name_to_idx</span><span class="p">(</span><span class="n">ancestor</span><span class="p">),</span>
-                            <span class="nb">id</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">label_anns</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
-                            <span class="n">group</span><span class="o">=</span><span class="n">_get_label_group_idx</span><span class="p">(</span><span class="n">ancestor</span><span class="p">),</span>
-                        <span class="p">),</span>
-                    <span class="p">)</span>
-        <span class="n">label_anns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ancestor_dm_labels</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationHierarchicalSample</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-        <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># This should be assigned form item</span>
-        <span class="n">img_data</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-        <span class="n">img_data</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">img_data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_label_to_hlabel_format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">),</span> <span class="p">[]))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
-        <span class="n">label_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-            <span class="c1"># in h-cls scenario multilabel information stored in &#39;multi_label_ids&#39; attribute</span>
-            <span class="k">if</span> <span class="s2">&quot;multi_label_ids&quot;</span> <span class="ow">in</span> <span class="n">ann</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">lbl_idx</span> <span class="ow">in</span> <span class="n">ann</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;multi_label_ids&quot;</span><span class="p">]:</span>
-                    <span class="n">label_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbl_idx</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Label</span><span class="p">):</span>
-                <span class="n">label_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># If the annotation is not Label, it should be converted to Label.</span>
-                <span class="c1"># For Chained Task: Detection (Bbox) -&gt; Classification (Label)</span>
-                <span class="n">label</span> <span class="o">=</span> <span class="n">Label</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-                <span class="n">label_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-
-        <span class="n">hlabel_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_label_to_hlabel_format</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">label_ids</span><span class="p">],</span> <span class="n">ignored_labels</span><span class="p">)</span>
-
-        <span class="n">entity</span> <span class="o">=</span> <span class="n">OTXDataItem</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">img_data</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">hlabel_labels</span><span class="p">),</span>
-            <span class="n">img_info</span><span class="o">=</span><span class="n">ImageInfo</span><span class="p">(</span>
-                <span class="n">img_idx</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="n">ignored_labels</span><span class="o">=</span><span class="n">ignored_labels</span><span class="p">,</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_label_to_hlabel_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_anns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span><span class="p">],</span> <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_label_to_hlabel_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_anns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert format of the label to the h-label.</span>
 
 <span class="sd">        It converts the label format to h-label format.</span>
@@ -522,6 +576,17 @@
 
 <span class="sd">        [Multilabel Head]</span>
 <span class="sd">        2, 3 indices = [1, 0] -&gt; [&quot;Lion&quot;(O), &quot;Panda&quot;(X)]</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            label_anns: List of label annotations to convert.</span>
+<span class="sd">            ignored_labels: List of label indices to ignore.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[int]: H-label formatted list where first N indices are multiclass heads</span>
+<span class="sd">                and remaining indices are multilabel classes.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If label_info is not of type HLabelInfo.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">,</span> <span class="n">HLabelInfo</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The type of label_info should be HLabelInfo, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -537,21 +602,52 @@
         <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">label_anns</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
                 <span class="c1"># skips unknown labels for instance, the empty one</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
             <span class="n">group_idx</span><span class="p">,</span> <span class="n">in_group_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">class_to_group_idx</span><span class="p">[</span><span class="n">ann_name</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="n">group_idx</span> <span class="o">&lt;</span> <span class="n">num_multiclass_heads</span><span class="p">:</span>
                 <span class="n">class_indices</span><span class="p">[</span><span class="n">group_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">in_group_idx</span>
-            <span class="k">elif</span> <span class="n">ann</span><span class="o">.</span><span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignored_labels</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">ann</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignored_labels</span><span class="p">:</span>
                 <span class="n">class_indices</span><span class="p">[</span><span class="n">num_multiclass_heads</span> <span class="o">+</span> <span class="n">in_group_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">class_indices</span><span class="p">[</span><span class="n">num_multiclass_heads</span> <span class="o">+</span> <span class="n">in_group_idx</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
-        <span class="k">return</span> <span class="n">class_indices</span></div>
+        <span class="k">return</span> <span class="n">class_indices</span>
+
+<div class="viewcode-block" id="OTXHlabelClsDataset.get_idx_list_per_classes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXHlabelClsDataset.get_idx_list_per_classes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a dictionary mapping class labels (string or int) to lists of samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            use_string_label (bool): If True, use string class labels as keys.</span>
+<span class="sd">                If False, use integer indices as keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx_list_per_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_string_label</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idx_list_per_classes</span><span class="p">:</span>
+                    <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">idx_list_per_classes</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;OTX Task Type for the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OTXTaskType: The hierarchical label classification task type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">H_LABEL_CLS</span></div>
 
 </pre></div>
 

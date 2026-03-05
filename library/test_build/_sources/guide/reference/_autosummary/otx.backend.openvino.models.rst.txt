@@ -17,14 +17,14 @@ otx.backend.openvino.models
 
    .. autosummary::
    
-      OVModel
       OVDetectionModel
-      OVMulticlassClassificationModel
-      OVMultilabelClassificationModel
-      OVSegmentationModel
       OVHlabelClassificationModel
       OVInstanceSegmentationModel
       OVKeypointDetectionModel
+      OVModel
+      OVMulticlassClassificationModel
+      OVMultilabelClassificationModel
+      OVSegmentationModel
    
    
 

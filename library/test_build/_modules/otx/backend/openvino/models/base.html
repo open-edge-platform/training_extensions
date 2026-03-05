@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.openvino.models.base &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.backend.openvino.models.base &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -277,7 +277,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ImageInfo</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">OTXPredBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span> <span class="n">OTXSampleBatch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">NullMetricCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
@@ -399,11 +399,11 @@
 
         <span class="k">return</span> <span class="n">Model</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="n">model_adapter</span><span class="p">,</span> <span class="n">model_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span> <span class="n">configuration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_api_configuration</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize the input data for the model.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            entity (OTXDataBatch): Input data batch.</span>
+<span class="sd">            entity (OTXSampleBatch): Input data batch.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict[str, Any]: Customized input data.</span>
@@ -414,34 +414,33 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Result</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredictionBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize the model outputs to OTX format.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            outputs (list[Result]): The model outputs.</span>
-<span class="sd">            inputs (OTXDataBatch): The input batch entity.</span>
+<span class="sd">            inputs (OTXSampleBatch): The input batch entity.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            OTXPredBatch: The customized prediction batch entity.</span>
+<span class="sd">            OTXPredictionBatch: The customized prediction batch entity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">OTXPredictionBatch</span><span class="p">(</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OVModel.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.forward">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">async_inference</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span> <span class="n">async_inference</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredictionBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform forward pass of the model.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (OTXDataBatch): Input data batch.</span>
+<span class="sd">            inputs (OTXSampleBatch): Input data batch.</span>
 <span class="sd">            async_inference (bool): Whether to use asynchronous inference.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            OTXPredBatch: Model predictions.</span>
+<span class="sd">            OTXPredictionBatch: Model predictions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">async_inference</span> <span class="o">=</span> <span class="n">async_inference</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_inference</span>
         <span class="n">numpy_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)[</span><span class="s2">&quot;inputs&quot;</span><span class="p">]</span>
@@ -516,11 +515,11 @@
 
 <div class="viewcode-block" id="OVModel.transform_fn">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.transform_fn">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform data for PTQ.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data_batch (OTXDataBatch): Input data batch.</span>
+<span class="sd">            data_batch (OTXSampleBatch): Input data batch.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            np.array: Transformed data.</span>
@@ -573,14 +572,14 @@
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredBatch</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare inputs for metric computation.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            preds (OTXPredBatch): Predicted batch entity.</span>
-<span class="sd">            inputs (OTXDataBatch): Input batch entity.</span>
+<span class="sd">            preds (OTXPredictionBatch): Predicted batch entity.</span>
+<span class="sd">            inputs (OTXSampleBatch): Input batch entity.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            MetricInput: Dictionary containing predictions and targets.</span>
@@ -687,14 +686,14 @@
 
 <div class="viewcode-block" id="OVModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataBatch</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXSampleBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a dummy input for the model.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            batch_size (int): Batch size for the dummy input.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            OTXDataBatch: Dummy input data.</span>
+<span class="sd">            OTXSampleBatch: Dummy input data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
         <span class="n">infos</span> <span class="o">=</span> <span class="p">[]</span>
@@ -706,7 +705,7 @@
                     <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">OTXDataBatch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">OTXSampleBatch</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OVModel.__call__">

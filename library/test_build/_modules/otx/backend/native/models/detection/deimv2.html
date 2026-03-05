@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.native.models.keypoint_detection.rtmpose &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
+    <title>otx.backend.native.models.detection.deimv2 &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/keypoint_detection/rtmpose';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/detection/deimv2';</script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -252,142 +252,169 @@
             
             <article class="bd-article" role="main">
               
-  <h1>Source code for otx.backend.native.models.keypoint_detection.rtmpose</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+  <h1>Source code for otx.backend.native.models.detection.deimv2</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="sd">&quot;&quot;&quot;RTMPose model implementations.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;DEIM-DFine model implementations.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.backbones</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSPNeXt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.keypoint_detection.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXKeypointDetectionModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.keypoint_detection.detectors.topdown</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopdownPoseEstimator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.keypoint_detection.heads.rtmcc_head</span><span class="w"> </span><span class="kn">import</span> <span class="n">RTMCCHead</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.keypoint_detection.losses.kl_discret_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">KLDiscretLoss</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.backbones.dinov3sta</span><span class="w"> </span><span class="kn">import</span> <span class="n">DINOv3STAs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.detectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">DETR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.heads.deim_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEIMTransformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.losses.deim_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEIMCriterion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.necks.dfine_hybrid_encoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">HybridEncoder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.pck</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCKMeasureCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.deim</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEIMDFine</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskLevelExportParameters</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
 
 
-<div class="viewcode-block" id="RTMPose">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.RTMPose">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RTMPose</span><span class="p">(</span><span class="n">OTXKeypointDetectionModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;RTMPose Model.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DEIMV2">
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.DEIMV2">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DEIMV2</span><span class="p">(</span><span class="n">DEIMDFine</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Detection model class for DEIMV2.</span>
+
+<span class="sd">    DEIMV2 is an improved version of DEIMV1, which introduces DINOV3 backbone and improved decoder.</span>
+
+<span class="sd">    It is based on the DEIMV2 paper: https://arxiv.org/abs/2412.04234</span>
+<span class="sd">    The original implementation is available at: https://github.com/Intellindust-AI-Lab/DEIMv2/tree/main</span>
+
+<span class="sd">    The model should be used with</span>
+<span class="sd">    :class:`~otx.backend.native.callbacks.aug_scheduler.DataAugSwitch` and</span>
+<span class="sd">    :class:`~otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback`</span>
+<span class="sd">    for dynamic augmentation scheduling.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        _pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.</span>
+<span class="sd">        input_size_multiplier (int): Multiplier for the input size.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
+<span class="sd">        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.</span>
+<span class="sd">            If None, uses _default_preprocessing_params.</span>
+<span class="sd">        model_name (literal, optional): Name of the model to use. Defaults to &quot;deim_dfine_hgnetv2_x&quot;.</span>
+<span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
+<span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
+<span class="sd">            Defaults to DefaultSchedulerCallable.</span>
+<span class="sd">        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.</span>
+<span class="sd">        multi_scale (bool, optional): Whether to use multi-scale training. Defaults to False.</span>
+<span class="sd">        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.</span>
+<span class="sd">        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;rtmpose_tiny&quot;</span><span class="p">:</span> <span class="s2">&quot;https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_x&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_x_coco.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_l&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_m&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_m_coco.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_s&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_s_coco.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="n">_default_preprocessing_params</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]</span> <span class="o">|</span> <span class="n">DataInputParams</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;rtmpose_tiny&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">)),</span>
-    <span class="p">}</span>
+    <span class="n">input_size_multiplier</span> <span class="o">=</span> <span class="mi">32</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;rtmpose_tiny&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;rtmpose_tiny&quot;</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+            <span class="s2">&quot;deimv2_x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_l&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_m&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_s&quot;</span><span class="p">,</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;deimv2_x&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">PCKMeasureCallable</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span><span class="p">,</span>
+        <span class="n">multi_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span> <span class="o">=</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="n">label_info</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
             <span class="n">data_input_params</span><span class="o">=</span><span class="n">data_input_params</span><span class="p">,</span>
-            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
             <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
             <span class="n">scheduler</span><span class="o">=</span><span class="n">scheduler</span><span class="p">,</span>
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
             <span class="n">torch_compile</span><span class="o">=</span><span class="n">torch_compile</span><span class="p">,</span>
+            <span class="n">tile_config</span><span class="o">=</span><span class="n">tile_config</span><span class="p">,</span>
+            <span class="n">multi_scale</span><span class="o">=</span><span class="n">multi_scale</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DETR</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create DEIM-DFine model.&quot;&quot;&quot;</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="k">if</span> <span class="n">num_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span>
-        <span class="n">backbone</span> <span class="o">=</span> <span class="n">CSPNeXt</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="n">RTMCCHead</span><span class="p">(</span>
-            <span class="n">out_channels</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
-            <span class="n">in_channels</span><span class="o">=</span><span class="mi">384</span><span class="p">,</span>
-            <span class="n">input_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
-            <span class="n">in_featuremap_size</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">32</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">32</span><span class="p">),</span>
-            <span class="n">simcc_split_ratio</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
-            <span class="n">final_layer_kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
-            <span class="n">loss</span><span class="o">=</span><span class="n">KLDiscretLoss</span><span class="p">(</span><span class="n">use_target_weight</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">label_softmax</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">decoder_cfg</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
-                <span class="s2">&quot;simcc_split_ratio&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
-                <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">4.9</span><span class="p">,</span> <span class="mf">5.66</span><span class="p">),</span>
-                <span class="s2">&quot;normalize&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="s2">&quot;use_dark&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">gau_cfg</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;num_token&quot;</span><span class="p">:</span> <span class="n">num_classes</span><span class="p">,</span>
-                <span class="s2">&quot;in_token_dims&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-                <span class="s2">&quot;out_token_dims&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-                <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-                <span class="s2">&quot;expansion_factor&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s2">&quot;dropout_rate&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-                <span class="s2">&quot;drop_path&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-                <span class="s2">&quot;act_fn&quot;</span><span class="p">:</span> <span class="s2">&quot;SiLU&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;use_rel_bias&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="s2">&quot;pos_enc&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="p">},</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">DINOv3STAs</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">HybridEncoder</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">decoder</span> <span class="o">=</span> <span class="n">DEIMTransformer</span><span class="p">(</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">eval_spatial_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">model</span> <span class="o">=</span> <span class="n">TopdownPoseEstimator</span><span class="p">(</span>
+        <span class="n">criterion</span> <span class="o">=</span> <span class="n">DEIMCriterion</span><span class="p">(</span>
+            <span class="n">weight_dict</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;loss_vfl&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;loss_bbox&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+                <span class="s2">&quot;loss_giou&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;loss_fgl&quot;</span><span class="p">:</span> <span class="mf">0.15</span><span class="p">,</span>
+                <span class="s2">&quot;loss_ddf&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>
+                <span class="s2">&quot;loss_mal&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+            <span class="n">reg_max</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">backbone_lr_mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;deimv2_x&quot;</span><span class="p">:</span> <span class="mf">0.00001</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_l&quot;</span><span class="p">:</span> <span class="mf">0.0000125</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_m&quot;</span><span class="p">:</span> <span class="mf">0.000025</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_s&quot;</span><span class="p">:</span> <span class="mf">0.000025</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">backbone_lr</span> <span class="o">=</span> <span class="n">backbone_lr_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported model name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+
+        <span class="n">optimizer_configuration</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
+        <span class="p">]</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="n">DETR</span><span class="p">(</span>
+            <span class="n">multi_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">multi_scale</span><span class="p">,</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span>
-            <span class="n">head</span><span class="o">=</span><span class="n">head</span><span class="p">,</span>
+            <span class="n">encoder</span><span class="o">=</span><span class="n">encoder</span><span class="p">,</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span><span class="p">,</span>
+            <span class="n">criterion</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">optimizer_configuration</span><span class="o">=</span><span class="n">optimizer_configuration</span><span class="p">,</span>
+            <span class="n">input_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
         <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">model</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates OTXModelExporter object that can export the model.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Export with explain is not supported for RTMPose model.&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
-            <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
-            <span class="n">data_input_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="p">,</span>
-            <span class="n">resize_mode</span><span class="o">=</span><span class="s2">&quot;fit_to_window&quot;</span><span class="p">,</span>
-            <span class="n">pad_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">swap_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;input_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;dynamic_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;pred_x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;pred_y&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;autograd_inlining&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;pred_x&quot;</span><span class="p">,</span> <span class="s2">&quot;pred_y&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">optimization_config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;preset&quot;</span><span class="p">:</span> <span class="s2">&quot;mixed&quot;</span><span class="p">})</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.280</span><span class="p">,</span> <span class="mf">103.530</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.120</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">))</span></div>
 
 </pre></div>
 

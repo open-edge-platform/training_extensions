@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.data.dataset.instance_segmentation &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.data.dataset.instance_segmentation &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -253,120 +253,101 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.data.dataset.instance_segmentation</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;Module for OTXInstanceSegDataset.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bbox</span><span class="p">,</span> <span class="n">Ellipse</span><span class="p">,</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Polygon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">Transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegmentationSample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataItem</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">polygon_to_bitmap</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">Transforms</span>
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
 
 
 <div class="viewcode-block" id="OTXInstanceSegDataset">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXInstanceSegDataset">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXInstanceSegDataset</span><span class="p">(</span><span class="n">OTXDataset</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTXDataset class for instance segmentation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dataset class for instance segmentation tasks in OTX.</span>
+
+<span class="sd">    This class handles loading images and their masks.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        dm_subset (DmDataset): The subset of the dataset.</span>
-<span class="sd">        transforms (Transforms): Data transformations to be applied.</span>
-<span class="sd">        include_polygons (bool): Flag indicating whether to include polygons in the dataset.</span>
-<span class="sd">            If set to False, polygons will be converted to bitmaps, and bitmaps will be used for training.</span>
-<span class="sd">        **kwargs: Additional keyword arguments passed to the base class.</span>
+<span class="sd">        dm_subset (DmDataset): The subset of the dataset to use.</span>
+<span class="sd">        transforms (Transforms, optional): Data transformations to be applied.</span>
+<span class="sd">        task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.</span>
+<span class="sd">        max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.</span>
+<span class="sd">        stack_images (bool, optional): Whether to stack images. Defaults to True.</span>
+<span class="sd">        to_tv_image (bool, optional): Whether to convert images to torchvision format. Defaults to True.</span>
+<span class="sd">        data_format (str, optional): Data format string. Defaults to &quot;&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dm_subset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span> <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span><span class="p">,</span> <span class="n">include_polygons</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dm_subset</span><span class="p">,</span> <span class="n">transforms</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span> <span class="o">=</span> <span class="n">include_polygons</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-        <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">img_data</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-
-        <span class="n">anno_collection</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">anno</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-            <span class="n">anno_collection</span><span class="p">[</span><span class="n">anno</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">anno</span><span class="p">)</span>
-
-        <span class="n">gt_bboxes</span><span class="p">,</span> <span class="n">gt_labels</span><span class="p">,</span> <span class="n">gt_masks</span><span class="p">,</span> <span class="n">gt_polygons</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-
-        <span class="c1"># TODO(Eugene): https://jira.devtools.intel.com/browse/CVS-159363</span>
-        <span class="c1"># Temporary solution to handle multiple annotation types.</span>
-        <span class="c1"># Ideally, we should pre-filter annotations during initialization of the dataset.</span>
-        <span class="k">if</span> <span class="n">Polygon</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="n">anno_collection</span><span class="p">:</span>  <span class="c1"># Polygon for InstSeg has higher priority</span>
-            <span class="k">for</span> <span class="n">poly</span> <span class="ow">in</span> <span class="n">anno_collection</span><span class="p">[</span><span class="n">Polygon</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]:</span>
-                <span class="n">bbox</span> <span class="o">=</span> <span class="n">Bbox</span><span class="p">(</span><span class="o">*</span><span class="n">poly</span><span class="o">.</span><span class="n">get_bbox</span><span class="p">())</span><span class="o">.</span><span class="n">points</span>
-                <span class="n">gt_bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>
-                <span class="n">gt_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">:</span>
-                    <span class="n">gt_polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">gt_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygon_to_bitmap</span><span class="p">([</span><span class="n">poly</span><span class="p">],</span> <span class="o">*</span><span class="n">img_shape</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">Bbox</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="n">anno_collection</span><span class="p">:</span>
-            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">anno_collection</span><span class="p">[</span><span class="n">Bbox</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>
-            <span class="n">gt_bboxes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">points</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">]</span>
-            <span class="n">gt_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">:</span>
-                <span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">box</span><span class="o">.</span><span class="n">as_polygon</span><span class="p">())</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">:</span>
-                    <span class="n">gt_polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">gt_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygon_to_bitmap</span><span class="p">([</span><span class="n">poly</span><span class="p">],</span> <span class="o">*</span><span class="n">img_shape</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">Ellipse</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="n">anno_collection</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">ellipse</span> <span class="ow">in</span> <span class="n">anno_collection</span><span class="p">[</span><span class="n">Ellipse</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]:</span>
-                <span class="n">bbox</span> <span class="o">=</span> <span class="n">Bbox</span><span class="p">(</span><span class="o">*</span><span class="n">ellipse</span><span class="o">.</span><span class="n">get_bbox</span><span class="p">())</span><span class="o">.</span><span class="n">points</span>
-                <span class="n">gt_bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>
-                <span class="n">gt_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ellipse</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-                <span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">ellipse</span><span class="o">.</span><span class="n">as_polygon</span><span class="p">(</span><span class="n">num_points</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">:</span>
-                    <span class="n">gt_polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">gt_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygon_to_bitmap</span><span class="p">([</span><span class="n">poly</span><span class="p">],</span> <span class="o">*</span><span class="n">img_shape</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No valid annotations found for image </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">gt_bboxes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">gt_bboxes</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
-        <span class="n">masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">gt_masks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">gt_masks</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">img_shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">gt_labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-
-        <span class="n">entity</span> <span class="o">=</span> <span class="n">OTXDataItem</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">img_data</span><span class="p">,</span>
-            <span class="n">img_info</span><span class="o">=</span><span class="n">ImageInfo</span><span class="p">(</span>
-                <span class="n">img_idx</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="n">ignored_labels</span><span class="o">=</span><span class="n">ignored_labels</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">bboxes</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
-                <span class="n">bboxes</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxFormat</span><span class="o">.</span><span class="n">XYXY</span><span class="p">,</span>
-                <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">masks</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">masks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span>
-            <span class="n">polygons</span><span class="o">=</span><span class="n">gt_polygons</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gt_polygons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_type</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">=</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">INSTANCE_SEGMENTATION</span><span class="p">,</span>
+        <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">InstanceSegmentationSample</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
+            <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+            <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
+            <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
+            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
+            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span></div>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
+            <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span>
+            <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_type</span> <span class="o">=</span> <span class="n">task_type</span>
+
+<div class="viewcode-block" id="OTXInstanceSegDataset.get_idx_list_per_classes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXInstanceSegDataset.get_idx_list_per_classes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a dictionary mapping class labels (string or int) to lists of samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            use_string_label (bool): If True, use string class labels as keys.</span>
+<span class="sd">                If False, use integer indices as keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx_list_per_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_string_label</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idx_list_per_classes</span><span class="p">:</span>
+                    <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">idx_list_per_classes</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;OTX Task Type for the dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OTXTaskType: The instance segmentation task type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_type</span></div>
 
 </pre></div>
 

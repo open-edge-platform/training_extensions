@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.config.data &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.config.data &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -269,6 +269,26 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.transformer_libs</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformLibType</span>
 
 
+<div class="viewcode-block" id="SamplerConfig">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.config.data.html#otx.config.data.SamplerConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SamplerConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration class for defining the sampler used in the data loading process.</span>
+
+<span class="sd">    This is passed in the form of a dataclass, which is instantiated when the dataloader is created.</span>
+
+<span class="sd">    [TODO]: Need to replace this with a proper Sampler class.</span>
+<span class="sd">    Currently, SamplerConfig, which belongs to the sampler of SubsetConfig,</span>
+<span class="sd">    belongs to the nested dataclass of dataclass, which is not easy to instantiate from the CLI.</span>
+<span class="sd">    So currently replace sampler with a corresponding dataclass that resembles the configuration of another object,</span>
+<span class="sd">    providing limited functionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;torch.utils.data.RandomSampler&quot;</span>
+    <span class="n">init_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="SubsetConfig">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.config.data.html#otx.config.data.SubsetConfig">[docs]</a>
 <span class="nd">@dataclass</span>
@@ -276,20 +296,17 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DTO for dataset subset configuration.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        batch_size (int): Batch size produced.</span>
+<span class="sd">        batch_size (int): Batch size produced by the dataloader.</span>
 <span class="sd">        subset_name (str): Datumaro Dataset&#39;s subset name for this subset config.</span>
-<span class="sd">            It can differ from the actual usage (e.g., &#39;val&#39; for the validation subset config).</span>
-<span class="sd">        transforms (list[dict[str, Any] | Transform] | Compose): List of actually used transforms.</span>
-<span class="sd">            It accepts a list of `torchvision.transforms.v2.*` Python objects</span>
-<span class="sd">            or `torchvision.transforms.v2.Compose` for `TransformLibType.TORCHVISION`.</span>
-<span class="sd">            Otherwise, it takes a Python dictionary that fits the configuration style used in mmcv</span>
-<span class="sd">            (`TransformLibType.MMCV`, `TransformLibType.MMPRETRAIN`, ...).</span>
-<span class="sd">        transform_lib_type (TransformLibType): Transform library type used by this subset.</span>
-<span class="sd">        num_workers (int): Number of workers for the dataloader of this subset.</span>
-<span class="sd">        sampler (SamplerConfig | None): Sampler configuration for the dataloader of this subset.</span>
-<span class="sd">        to_tv_image (bool): Whether to convert image to torch tensor.</span>
-<span class="sd">        input_size (int | tuple[int, int] | None) :</span>
-<span class="sd">            input size model expects. If $(input_size) exists in transforms, it will be replaced with this value.</span>
+<span class="sd">        transforms (list[dict[str, Any]] | Compose): List of transforms to apply.</span>
+<span class="sd">            For `TransformLibType.TORCHVISION`, accepts a list of `torchvision.transforms.v2.*` objects</span>
+<span class="sd">            or a `torchvision.transforms.v2.Compose` object.</span>
+<span class="sd">        transform_lib_type (TransformLibType): Specifies the transform library type used.</span>
+<span class="sd">        num_workers (int): Number of worker processes for the dataloader.</span>
+<span class="sd">        sampler (SamplerConfig): Sampler configuration for the dataloader.</span>
+<span class="sd">        to_tv_image (bool): Whether to convert images to torch tensors.</span>
+<span class="sd">        input_size (tuple[int, int] | None): Input size expected by the model.</span>
+<span class="sd">            If `$(input_size)` is present in transforms, it will be replaced with this value.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        ```python</span>
@@ -303,22 +320,19 @@
 <span class="sd">                    v2.ToDtype(torch.float32, scale=True),</span>
 <span class="sd">                    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),</span>
 <span class="sd">                ],</span>
-<span class="sd">            )</span>
+<span class="sd">            ),</span>
 <span class="sd">            transform_lib_type=TransformLibType.TORCHVISION,</span>
 <span class="sd">            num_workers=2,</span>
 <span class="sd">        )</span>
 <span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">subset_name</span><span class="p">:</span> <span class="nb">str</span>
-
-    <span class="c1"># TODO (vinnamki): Revisit data configuration objects to support a union type in structured config</span>
-    <span class="c1"># Omegaconf does not allow to have a union type, https://github.com/omry/omegaconf/issues/144</span>
-    <span class="n">transforms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">subset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;train&quot;</span>
+    <span class="n">transforms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">transform_lib_type</span><span class="p">:</span> <span class="n">TransformLibType</span> <span class="o">=</span> <span class="n">TransformLibType</span><span class="o">.</span><span class="n">TORCHVISION</span>
     <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="n">sampler</span><span class="p">:</span> <span class="n">SamplerConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">SamplerConfig</span><span class="p">())</span>
+    <span class="n">sampler</span><span class="p">:</span> <span class="n">SamplerConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">)</span>
     <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
@@ -338,7 +352,6 @@
     <span class="n">max_num_instances</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1500</span>
     <span class="n">object_tile_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.03</span>
     <span class="n">sampling_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">with_full_img</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="TileConfig.clone">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.config.data.html#otx.config.data.TileConfig.clone">[docs]</a>
@@ -346,26 +359,6 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a deep copied one of this instance.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 </div>
-
-
-
-<div class="viewcode-block" id="SamplerConfig">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.config.data.html#otx.config.data.SamplerConfig">[docs]</a>
-<span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">SamplerConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration class for defining the sampler used in the data loading process.</span>
-
-<span class="sd">    This is passed in the form of a dataclass, which is instantiated when the dataloader is created.</span>
-
-<span class="sd">    [TODO]: Need to replace this with a proper Sampler class.</span>
-<span class="sd">    Currently, SamplerConfig, which belongs to the sampler of SubsetConfig,</span>
-<span class="sd">    belongs to the nested dataclass of dataclass, which is not easy to instantiate from the CLI.</span>
-<span class="sd">    So currently replace sampler with a corresponding dataclass that resembles the configuration of another object,</span>
-<span class="sd">    providing limited functionality.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">class_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;torch.utils.data.RandomSampler&quot;</span>
-    <span class="n">init_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 </pre></div>
 

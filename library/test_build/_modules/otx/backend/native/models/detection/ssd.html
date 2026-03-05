@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.native.models.detection.ssd &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.backend.native.models.detection.ssd &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -270,7 +270,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.components.annotation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bbox</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dim</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
@@ -282,7 +282,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSDHead</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSDCriterion</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.utils.prior_generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSDAnchorGeneratorClustered</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.support_otx_v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXv1Helper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
@@ -311,7 +310,11 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.</span>
+<span class="sd">            This parameter contains image input size, mean, and std, that is used to preprocess the input image.</span>
+<span class="sd">            If None is given, default parameters for the specific model will be used.</span>
+<span class="sd">            In most cases you don&#39;t need to set this parameter unless you change the image size or pretrained weights.</span>
+<span class="sd">            Defaults to None.</span>
 <span class="sd">        model_name (str, optional): Name of the model to use. Defaults to &quot;ssd_mobilenetv2&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
@@ -321,7 +324,7 @@
 <span class="sd">        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;ssd_mobilenetv2&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/&quot;</span>
         <span class="s2">&quot;object_detection/v2/mobilenet_v2-2s_ssd-992x736.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
@@ -329,7 +332,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ssd_mobilenetv2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ssd_mobilenetv2&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -412,7 +415,7 @@
             <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>  <span class="c1"># TODO (sungchul, kirill): remove</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span>
 
@@ -491,7 +494,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_anchor_boxes</span><span class="p">(</span><span class="n">wh_stats</span><span class="p">,</span> <span class="n">group_as</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sizes_from_dataset_entity</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">target_wh</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sizes_from_dataset_entity</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">target_wh</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Function to get width and height size of items in OTXDataset.</span>
 
 <span class="sd">        Args:</span>
@@ -500,20 +503,22 @@
 <span class="sd">        Return</span>
 <span class="sd">            list[tuple[int, int]]: tuples with width and height of each instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">wh_stats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">wh_stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Bbox</span><span class="p">):</span>
-                    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">ann</span><span class="o">.</span><span class="n">points</span>
-                    <span class="n">x1</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">/</span> <span class="n">item</span><span class="o">.</span><span class="n">media</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">target_wh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">y1</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">/</span> <span class="n">item</span><span class="o">.</span><span class="n">media</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">target_wh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                    <span class="n">x2</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">/</span> <span class="n">item</span><span class="o">.</span><span class="n">media</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">target_wh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">y2</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">/</span> <span class="n">item</span><span class="o">.</span><span class="n">media</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">target_wh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                    <span class="n">wh_stats</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">))</span>
+            <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="o">.</span><span class="n">img_shape</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">y1</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">x2</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span> <span class="o">*</span> <span class="n">target_wh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span> <span class="o">/</span> <span class="n">height</span> <span class="o">*</span> <span class="n">target_wh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">wh_stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">wh_stats</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">wh_stats</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_anchor_boxes</span><span class="p">(</span><span class="n">wh_stats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">group_as</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_anchor_boxes</span><span class="p">(</span><span class="n">wh_stats</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group_as</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get new anchor box widths &amp; heights using KMeans.&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">KMeans</span>
 
@@ -610,15 +615,11 @@
             <span class="n">resize_mode</span><span class="o">=</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span>
             <span class="n">pad_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">swap_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Currently SSD should be exported through ONNX</span>
+            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">&quot;input_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;output_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;dynamic_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
-                <span class="p">},</span>
+                <span class="s2">&quot;dynamic_shapes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">)}},</span>
                 <span class="s2">&quot;autograd_inlining&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
@@ -637,12 +638,9 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_load_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SSD.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.SSD.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_ssd_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
-</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">864</span><span class="p">,</span> <span class="mi">864</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">))</span></div>
 
 </pre></div>
 

@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.native.models.instance_segmentation.rtmdet_inst &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.backend.native.models.instance_segmentation.rtmdet_inst &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -267,7 +267,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">GIoULoss</span><span class="p">,</span> <span class="n">QualityFocalLoss</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.assigners</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynamicSoftLabelAssigner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.coders</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistancePointBBoxCoder</span>
@@ -282,13 +282,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.mean_ap</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaskRLEMeanAPFMeasureCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaskRLEMeanAPFMeasureCallable</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
@@ -301,7 +300,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels used in the model.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for the data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.</span>
+<span class="sd">            If None is given, default parameters for the specific model will be used.</span>
 <span class="sd">        model_name (str, optional): Name of the model. Defaults to &quot;rtmdet_inst_tiny&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.</span>
@@ -313,7 +313,7 @@
 <span class="sd">        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;rtmdet_inst_tiny&quot;</span><span class="p">:</span> <span class="p">(</span>
             <span class="s2">&quot;https://download.openmmlab.com/mmdetection/v3.0/rtmdet/rtmdet-ins_tiny_8xb32-300e_coco/&quot;</span>
             <span class="s2">&quot;rtmdet-ins_tiny_8xb32-300e_coco_20221130_151727-ec670f7e.pth&quot;</span>
@@ -323,7 +323,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;rtmdet_inst_tiny&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;rtmdet_inst_tiny&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -406,7 +406,7 @@
         <span class="p">)</span>
 
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span>
 
@@ -425,12 +425,10 @@
                 <span class="s2">&quot;output_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;dynamic_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;masks&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;height&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;width&quot;</span><span class="p">},</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+                <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
                 <span class="s2">&quot;autograd_inlining&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;dynamo&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="c1"># TODO(Eugene): Add XAI support for RTMDetInst</span>
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
@@ -452,7 +450,11 @@
         <span class="p">}</span>
         <span class="n">meta_info_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">meta_info</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">meta_info_list</span><span class="p">,</span> <span class="n">explain_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">)</span></div>
-</div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">103.53</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">123.675</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">57.375</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">58.395</span><span class="p">))</span></div>
 
 </pre></div>
 

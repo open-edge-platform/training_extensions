@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>otx.types &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.types &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -44,7 +44,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="otx.utils" href="otx.utils.html" />
-    <link rel="prev" title="otx.tools.templates" href="otx.tools.templates.html" />
+    <link rel="prev" title="otx.tools.converter" href="otx.tools.converter.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -264,6 +264,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/tree_path_kl_loss_hcls.html">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -285,7 +286,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/algorithms/anomaly/index.html">Anomaly Detection</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -343,7 +343,6 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.converter.html">otx.tools.converter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.tools.templates.html">otx.tools.templates</a></li>
 </ul>
 </li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">otx.types</a></li>
@@ -395,26 +394,26 @@
 <p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.types.LabelInfo" title="otx.types.LabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelInfo</span></code></a>(label_names, label_ids, label_groups)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.types.HLabelInfo" title="otx.types.HLabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HLabelInfo</span></code></a>(label_names, label_ids, ...)</p></td>
+<td><p>The label information represents the hierarchy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.types.LabelInfo" title="otx.types.LabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelInfo</span></code></a>(label_names, label_ids, label_groups)</p></td>
 <td><p>Object to represent label information.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.types.HLabelInfo" title="otx.types.HLabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HLabelInfo</span></code></a>(label_names, label_ids, ...)</p></td>
-<td><p>The label information represents the hierarchy.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.types.NullLabelInfo" title="otx.types.NullLabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NullLabelInfo</span></code></a>()</p></td>
+<td><p>Represent no label information.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.types.OTXTaskType" title="otx.types.OTXTaskType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXTaskType</span></code></a>(value[, names, module, ...])</p></td>
+<td><p>OTX task type definition.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.types.SegLabelInfo" title="otx.types.SegLabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SegLabelInfo</span></code></a>(label_names, label_ids, ...[, ...])</p></td>
 <td><p>Meta information of Semantic Segmentation.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.types.NullLabelInfo" title="otx.types.NullLabelInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NullLabelInfo</span></code></a>()</p></td>
-<td><p>Represent no label information.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.types.OTXTaskType" title="otx.types.OTXTaskType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXTaskType</span></code></a>(value[, names, module, ...])</p></td>
-<td><p>OTX task type definition.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="otx.types.HLabelInfo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.types.</span></span><span class="sig-name descname"><span class="pre">HLabelInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_multiclass_heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_multilabel_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_idx_to_logits_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_single_label_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_group_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_to_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_tree_edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_multiclass_head_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/types/label.html#HLabelInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.HLabelInfo" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.types.</span></span><span class="sig-name descname"><span class="pre">HLabelInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_multiclass_heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_multilabel_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_idx_to_logits_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_single_label_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_group_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_to_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_tree_edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_multiclass_head_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/types/label.html#HLabelInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.HLabelInfo" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#otx.types.LabelInfo" title="otx.types.label.LabelInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelInfo</span></code></a></p>
 <p>The label information represents the hierarchy.</p>
 <p>All params should be kept since they’re also used at the Model API side.</p>
@@ -422,8 +421,7 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>num_multiclass_heads</strong> – The number of multiclass heads in the hierarchy.</p></li>
-<li><p><strong>num_multilabel_classes</strong> – The number of multilabel classes.</p></li>
-<li><p><strong>head_to_logits_range</strong> – The logit range for each head as a dictionary mapping
+<li><p><strong>num_multilabel_classes</strong> – The number of multilabel classes.
 head indices to (start, end) tuples.</p></li>
 <li><p><strong>num_single_label_classes</strong> – The number of single label classes.</p></li>
 <li><p><strong>class_to_group_idx</strong> – Dictionary mapping class names to (head_index, label_index)
@@ -470,19 +468,8 @@ Reference: <a class="github reference external" href="https://github.com/open-ed
 
 <dl class="py method">
 <dt class="sig sig-object py" id="otx.types.HLabelInfo.from_dm_label_groups">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dm_label_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_label_categories</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LabelCategories</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.types.HLabelInfo" title="otx.types.HLabelInfo"><span class="pre">HLabelInfo</span></a></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#HLabelInfo.from_dm_label_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.HLabelInfo.from_dm_label_groups" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dm_label_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_label_categories</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HierarchicalLabelCategories</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.types.HLabelInfo" title="otx.types.HLabelInfo"><span class="pre">HLabelInfo</span></a></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#HLabelInfo.from_dm_label_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.HLabelInfo.from_dm_label_groups" title="Link to this definition">#</a></dt>
 <dd><p>Generate HLabelData from the Datumaro LabelCategories.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dm_label_categories</strong> (<em>LabelCategories</em>) – the label categories of datumaro.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.types.HLabelInfo.from_dm_label_groups_arrow">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dm_label_groups_arrow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_label_categories</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LabelCategories</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.types.HLabelInfo" title="otx.types.HLabelInfo"><span class="pre">HLabelInfo</span></a></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#HLabelInfo.from_dm_label_groups_arrow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.HLabelInfo.from_dm_label_groups_arrow" title="Link to this definition">#</a></dt>
-<dd><p>Generate HLabelData from the Datumaro LabelCategories. Arrow-specific implementation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dm_label_categories</strong> (<em>LabelCategories</em>) – the label categories of datumaro.</p>
@@ -507,32 +494,6 @@ Reference: <a class="github reference external" href="https://github.com/open-ed
 <dt class="sig sig-object py" id="otx.types.LabelInfo.as_dict">
 <span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normalize_label_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#LabelInfo.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.LabelInfo.as_dict" title="Link to this definition">#</a></dt>
 <dd><p>Return a dictionary including all params.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.types.LabelInfo.from_dm_label_groups">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dm_label_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_label_categories</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LabelCategories</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.types.LabelInfo" title="otx.types.LabelInfo"><span class="pre">LabelInfo</span></a></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#LabelInfo.from_dm_label_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.LabelInfo.from_dm_label_groups" title="Link to this definition">#</a></dt>
-<dd><p>Create this object from the datumaro label groups.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dm_label_categories</strong> (<em>LabelCategories</em>) – The label category information from Datumaro.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>LabelInfo(</dt><dd><p>label_names=[“Heart_King”, “Heart_Queen”, “Spade_King”, “Spade_Jack”]
-label_groups=[[“Heart_King”, “Heart_Queen”], [“Spade_King”, “Spade_Jack”]]</p>
-</dd>
-</dl>
-<p>)</p>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.types.LabelInfo.from_dm_label_groups_arrow">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dm_label_groups_arrow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_label_categories</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LabelCategories</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.types.LabelInfo" title="otx.types.LabelInfo"><span class="pre">LabelInfo</span></a></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#LabelInfo.from_dm_label_groups_arrow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.LabelInfo.from_dm_label_groups_arrow" title="Link to this definition">#</a></dt>
-<dd><p>Overload to support datumaro’s arrow format.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -632,11 +593,11 @@ label_groups=[[“Background”, “label_0”, …, “label_{num_classes - 1}�
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="otx.tools.templates.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="otx.tools.converter.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">otx.tools.templates</p>
+          <p class="prev-next-title">otx.tools.converter</p>
       </div>
   </a>
   <a class='right-next' id="next-link" href="otx.utils.html" title="next page">
@@ -690,15 +651,6 @@ label_groups=[[“Background”, “label_0”, …, “label_{num_classes - 1}�
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.types.HLabelInfo.from_dm_label_groups_arrow">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       HLabelInfo.from_dm_label_groups_arrow()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#otx.types.HLabelInfo.from_json">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -723,24 +675,6 @@ label_groups=[[“Background”, “label_0”, …, “label_{num_classes - 1}�
      <code class="docutils literal notranslate">
       <span class="pre">
        LabelInfo.as_dict()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.types.LabelInfo.from_dm_label_groups">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       LabelInfo.from_dm_label_groups()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.types.LabelInfo.from_dm_label_groups_arrow">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       LabelInfo.from_dm_label_groups_arrow()
       </span>
      </code>
     </a>

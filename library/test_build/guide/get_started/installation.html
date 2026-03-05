@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>Installation &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -264,6 +264,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/hier_metric_collection.html">Hierarchical Classification Metric Collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/tree_path_kl_loss_hcls.html">Using Tree-Path KL Divergence for Hierarchical Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -285,7 +286,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../explanation/algorithms/anomaly/index.html">Anomaly Detection</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -343,7 +343,6 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.converter.html">otx.tools.converter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.templates.html">otx.tools.templates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.types.html">otx.types</a></li>
@@ -405,133 +404,88 @@
 For more information, refer to the <a class="reference external" href="https://www.intel.com/content/www/us/en/docs/onednn/developer-guide-reference/2024-1/primitive-cache-002.html">Primitive cache</a>.</p>
 </div>
 </section>
-<section id="installing-uv">
-<h2>Installing <code class="docutils literal notranslate"><span class="pre">uv</span></code><a class="headerlink" href="#installing-uv" title="Link to this heading">#</a></h2>
-<p>To use OpenVINO™ Training Extensions with <code class="docutils literal notranslate"><span class="pre">uv</span></code>, you first need to install the <code class="docutils literal notranslate"><span class="pre">uv</span></code> tool.</p>
-<p>You can install it in one of the following ways:</p>
+<section id="install-from-pypi">
+<h2>Install from pypi<a class="headerlink" href="#install-from-pypi" title="Link to this heading">#</a></h2>
+<p>The easiest way to install OpenVINO™ Training Extensions is via PyPI (<a class="reference external" href="https://pypi.org/project/otx">otx</a> package).</p>
+<p>Select the extra dependencies according to your hardware:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
-Recommended (Standalone Binary)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+CPU only</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>otx<span class="o">[</span>cpu<span class="o">]</span>
 </pre></div>
 </div>
-<p>This method installs <code class="docutils literal notranslate"><span class="pre">uv</span></code> globally as a fast and portable binary.
-After installation, make sure <code class="docutils literal notranslate"><span class="pre">uv</span></code> is available in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
 </div>
 <input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
-Via pip (Python-based)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>uv
+Intel GPU (XPU)</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>otx<span class="o">[</span>xpu<span class="o">]</span>
 </pre></div>
 </div>
-<p>This installs <code class="docutils literal notranslate"><span class="pre">uv</span></code> inside the currently active Python environment.</p>
 </div>
 <input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
-Verify Installation</label><div class="sd-tab-content docutils">
-<p>After installation, confirm it works:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>--version
+Nvidia GPU (CUDA)</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>otx<span class="o">[</span>cuda<span class="o">]</span>
 </pre></div>
 </div>
 </div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is always recommended to use a virtual environment to avoid conflicts with other packages.</p>
+</div>
+<p>After the installation, you can verify it works with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>otx<span class="w"> </span>--help
+</pre></div>
+</div>
 </section>
-<section id="install-openvino-training-extensions-for-users-cuda-cpu">
-<h2>Install OpenVINO™ Training Extensions for users (CUDA/CPU)<a class="headerlink" href="#install-openvino-training-extensions-for-users-cuda-cpu" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Install OpenVINO™ Training Extensions package:</p></li>
-</ol>
-<ul class="simple">
-<li><p>A local source in development mode</p></li>
-</ul>
+<section id="install-from-source">
+<h2>Install from source<a class="headerlink" href="#install-from-source" title="Link to this heading">#</a></h2>
+<p>If you want to install OpenVINO™ Training Extensions from source, you have to first clone the repository,
+then install the package.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
-PyPI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a virtual environment using uv</span>
-uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12<span class="w"> </span><span class="c1"># or 3.11</span>
-<span class="nb">source</span><span class="w"> </span>.otx/bin/activate
-
-<span class="c1"># Install from PyPI</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>otx<span class="o">[</span>cuda<span class="o">]</span>
+CPU only</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/open-edge-platform/training_extensions.git
+<span class="nb">cd</span><span class="w"> </span>training_extensions/library
+pip<span class="w"> </span>install<span class="w"> </span>.<span class="o">[</span>cpu<span class="o">]</span>
 </pre></div>
 </div>
 </div>
 <input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-4">
-Source</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the training_extensions repository:</span>
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/open-edge-platform/training_extensions.git
-<span class="nb">cd</span><span class="w"> </span>training_extensions
-
-<span class="c1"># Create a virtual environment with uv</span>
-uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12<span class="w"> </span><span class="c1"># or 3.11</span>
-<span class="nb">source</span><span class="w"> </span>.otx/bin/activate
-
-<span class="c1"># Install the package in editable mode with base dependencies</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>cuda<span class="o">]</span>
-
-<span class="c1"># Install OTX in development mode</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev,cuda<span class="o">]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>2. Once the package is installed in the virtual environment, you can use the full
-OpenVINO™ Training Extensions command line functionality.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>otx<span class="w"> </span>--help
-</pre></div>
-</div>
-</section>
-<section id="install-openvino-training-extensions-for-users-intel-gpus">
-<h2>Install OpenVINO™ Training Extensions for users (Intel GPUs)<a class="headerlink" href="#install-openvino-training-extensions-for-users-intel-gpus" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Install OpenVINO™ Training Extensions from source to use Intel XPU functionality:</p></li>
-</ol>
+Intel GPU (XPU)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/open-edge-platform/training_extensions.git
-<span class="nb">cd</span><span class="w"> </span>training_extensions
-
-uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12<span class="w"> </span><span class="c1"># or 3.11</span>
-<span class="nb">source</span><span class="w"> </span>.otx/bin/activate
-
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>xpu<span class="o">]</span>
+<span class="nb">cd</span><span class="w"> </span>training_extensions/library
+pip<span class="w"> </span>install<span class="w"> </span>.<span class="o">[</span>xpu<span class="o">]</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please refer to the <a class="reference external" href="https://pytorch.org/docs/stable/notes/get_start_xpu.html">PyTorch XPU installation guide</a>
-to install prerequisites and resolve any potential issues.</p>
 </div>
-<ol class="arabic simple" start="2">
-<li><p>Once installed, use the command-line interface:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>otx<span class="w"> </span>--help
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+Nvidia GPU (CUDA)</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/open-edge-platform/training_extensions.git
+<span class="nb">cd</span><span class="w"> </span>training_extensions/library
+pip<span class="w"> </span>install<span class="w"> </span>.<span class="o">[</span>cuda<span class="o">]</span>
 </pre></div>
+</div>
+</div>
 </div>
 </section>
-<section id="install-openvino-training-extensions-for-developers">
-<h2>Install OpenVINO™ Training Extensions for developers<a class="headerlink" href="#install-openvino-training-extensions-for-developers" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Install <code class="docutils literal notranslate"><span class="pre">tox</span></code> with the <code class="docutils literal notranslate"><span class="pre">tox-uv</span></code> plugin using uv’s tool system:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>tox<span class="w"> </span>--with<span class="w"> </span>tox-uv
+<section id="for-developers">
+<h2>For developers<a class="headerlink" href="#for-developers" title="Link to this heading">#</a></h2>
+<p>For developers, it is recommended to use <cite>uv</cite> to automatically manage virtual environments and dependencies.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the repo</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="nb">open</span><span class="o">-</span><span class="n">edge</span><span class="o">-</span><span class="n">platform</span><span class="o">/</span><span class="n">training_extensions</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">training_extensions</span><span class="o">/</span><span class="n">library</span>
+
+<span class="c1"># Create a virtual environment with uv and sync dependencies</span>
+<span class="n">uv</span> <span class="n">sync</span> <span class="o">--</span><span class="n">extra</span> <span class="n">cpu</span>  <span class="c1"># or &#39;xpu&#39; or &#39;cuda&#39;, depending on your hardware</span>
 </pre></div>
 </div>
-<ol class="arabic simple" start="2">
-<li><p>Create a development environment using <code class="docutils literal notranslate"><span class="pre">tox</span></code>:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace &#39;312&#39; with &#39;311&#39; if using Python 3.11</span>
-tox<span class="w"> </span>devenv<span class="w"> </span>venv/otx<span class="w"> </span>-e<span class="w"> </span>unit-test-py312
-<span class="nb">source</span><span class="w"> </span>venv/otx/bin/activate
-</pre></div>
-</div>
-<p>Now you’re ready to develop, test, and make changes — all reflected live in the editable install.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>By installing <code class="docutils literal notranslate"><span class="pre">tox</span></code> with <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">tool</span></code>, you ensure it runs in a reproducible and isolated environment,
-with <code class="docutils literal notranslate"><span class="pre">uv</span></code> used internally to manage dependencies for each test environment.</p>
-</div>
+<p>If you plan to edit the documentation, also install the <cite>docs</cite> extra.</p>
 </section>
 <section id="install-openvino-training-extensions-by-using-docker">
 <h2>Install OpenVINO™ Training Extensions by using Docker<a class="headerlink" href="#install-openvino-training-extensions-by-using-docker" title="Link to this heading">#</a></h2>
@@ -557,28 +511,26 @@ otx<span class="w">                                           </span><span class
 </section>
 <section id="run-tests">
 <h2>Run tests<a class="headerlink" href="#run-tests" title="Link to this heading">#</a></h2>
-<p>To run tests locally, install development dependencies:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.[dev]&#39;</span>
-pytest<span class="w"> </span>tests/
+<p>To run tests locally, just call <cite>pytest</cite>. <cite>uv</cite> will automatically sync all necessary dependencies.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests
 </pre></div>
 </div>
-<p>To run integration tests using <cite>tox</cite>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>tox<span class="w"> </span>--with<span class="w"> </span>tox-uv
-tox<span class="w"> </span>-e<span class="w"> </span>integration-test-all
+<p>To run integration tests:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The first time <cite>tox</cite> is run, it will create virtual environments and install all required dependencies.
-This may take several minutes before the actual tests begin.</p>
+<p>Integration tests may be slow because they involve downloading datasets and simulating training rounds.
+It is recommended to run them on a platform with GPU/XPU support.</p>
 </div>
 </section>
 <section id="troubleshooting">
 <h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p>If you encounter issues with <cite>uv pip</cite>, update uv:</p></li>
+<li><p>If you encounter issues with <cite>uv</cite>, update it:</p></li>
 </ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>uv
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>self<span class="w"> </span>update
 </pre></div>
 </div>
 <p>2. If you’re having issues installing <cite>torch</cite> or <cite>mmcv</cite>, check CUDA compatibility with your PyTorch version.
@@ -587,7 +539,6 @@ Update your CUDA toolkit and drivers if needed. See <a class="reference external
 <li><p>If you’re behind a proxy server, set your proxy environment variable:</p></li>
 </ol>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">HTTP_PROXY</span><span class="o">=</span>http://&lt;user&gt;:&lt;password&gt;@&lt;proxy&gt;:&lt;port&gt;
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>&lt;package&gt;
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
@@ -647,28 +598,18 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#installing-uv">
-   Installing
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     uv
-    </span>
-   </code>
+  <a class="reference internal nav-link" href="#install-from-pypi">
+   Install from pypi
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-openvino-training-extensions-for-users-cuda-cpu">
-   Install OpenVINO™ Training Extensions for users (CUDA/CPU)
+  <a class="reference internal nav-link" href="#install-from-source">
+   Install from source
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-openvino-training-extensions-for-users-intel-gpus">
-   Install OpenVINO™ Training Extensions for users (Intel GPUs)
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-openvino-training-extensions-for-developers">
-   Install OpenVINO™ Training Extensions for developers
+  <a class="reference internal nav-link" href="#for-developers">
+   For developers
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
