@@ -18,7 +18,16 @@ from otx.types.task import OTXTaskType
 
 from app.core.run import ExecutionContext
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingJobParams, TrainingStatus
+from app.models import (
+    DatasetItemAnnotationStatus,
+    DatasetItemSubset,
+    ModelVariant,
+    Task,
+    TaskType,
+    TrainingJobParams,
+    TrainingStatus,
+)
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration import AlgoLevelParameters, TaskLevelParameters, TrainingConfiguration
 from app.services import ModelRevisionMetadata, ModelService, TrainingConfigurationService
@@ -147,7 +156,6 @@ class TestOTXTrainerPrepareWeights:
             model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
-            parent_model_variant_id=parent_model_variant_id,
             job_id=uuid4(),
         )
         expected_weights_path = (
@@ -163,6 +171,15 @@ class TestOTXTrainerPrepareWeights:
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
         otx_trainer = fxt_otx_trainer()
+
+        otx_trainer._model_service.get_model_variants.return_value = [
+            ModelVariant(
+                id=parent_model_variant_id,
+                model_revision_id=parent_model_revision_id,
+                format=ModelFormat.PYTORCH,
+                precision=ModelPrecision.FP32,
+            )
+        ]
 
         # Act
         weights_path = otx_trainer.prepare_weights(training_params)
@@ -186,7 +203,6 @@ class TestOTXTrainerPrepareWeights:
             model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
-            parent_model_variant_id=parent_model_variant_id,
             job_id=uuid4(),
         )
         expected_weights_path = (
@@ -200,6 +216,15 @@ class TestOTXTrainerPrepareWeights:
             / "model.ckpt"
         )
         otx_trainer = fxt_otx_trainer()
+
+        otx_trainer._model_service.get_model_variants.return_value = [
+            ModelVariant(
+                id=parent_model_variant_id,
+                model_revision_id=parent_model_revision_id,
+                format=ModelFormat.PYTORCH,
+                precision=ModelPrecision.FP32,
+            )
+        ]
 
         # Act
         with pytest.raises(FileNotFoundError) as excinfo:

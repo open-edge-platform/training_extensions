@@ -18,7 +18,6 @@ class TrainingJobParams(JobParams):
     project_id: UUID
     model_architecture_id: str
     parent_model_revision_id: UUID | None = None
-    parent_model_variant_id: UUID | None = None
     task: Task
     model_id: UUID = Field(default_factory=uuid4)
     dataset_revision_id: UUID | None = None

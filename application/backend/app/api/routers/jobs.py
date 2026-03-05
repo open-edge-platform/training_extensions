@@ -68,7 +68,6 @@ async def submit_job(
                         device=device,
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
-                        parent_model_variant_id=job_request.parameters.parent_model_variant_id,
                         task=project.task,
                         project_id=project.id,
                         job_id=job_id,
