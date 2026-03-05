@@ -16,7 +16,6 @@ const FILTER_BY_STATUS_OPTIONS: { name: string; key: FilterByStatusKey }[] = [
     { name: 'Status: Unannotated', key: 'unannotated' },
     { name: 'Status: Reviewed', key: 'reviewed' },
     { name: 'Status: To Review', key: 'to_review' },
-    { name: 'Status: Reviewed or Unannotated', key: 'reviewed_or_unannotated' },
 ];
 
 export const FilterByStatus = ({ onChange }: FilterByStatusProps) => {

@@ -3,7 +3,7 @@
 
 import { Fragment, useActionState } from 'react';
 
-import { dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
+import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
 
 import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
@@ -42,6 +42,7 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                     project_id: String(selectedProject?.id),
                     staged_dataset_id: stagedDatasetId,
                     parameters: {
+                        include_unannotated: formData.get('include_unannotated') === 'on',
                         labels_mapping: mapProjectLabels(datasetLabels, formData),
                     },
                 },
@@ -94,6 +95,8 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                             </Fragment>
                         ))}
                     </Grid>
+
+                    <Checkbox name='include_unannotated'>Include media without annotations</Checkbox>
                 </Form>
             </View>
         </Flex>
