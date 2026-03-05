@@ -28,7 +28,8 @@ export const VideoToolbar = () => {
                 <View paddingX={'size-100'}>
                     <Flex alignItems={'center'} justifyContent={'space-between'} gap={'size-200'}>
                         <Flex alignItems={'center'} gap={'size-200'}>
-                            <Text>Frames</Text>
+                            {isExpanded && <Text>Frames</Text>}
+
                             <VideoControls />
                             <VideoDuration />
 
