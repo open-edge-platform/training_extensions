@@ -9,6 +9,7 @@ import {
     ImportUploadFile,
 } from '../../../../components/import-upload-file/import-upload-file.component';
 import { useImportDatasetAsNewProject } from '../../../../hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { ProgressStepper } from './ProgressStepper/progress-stepper.component';
 
 type ImportDatasetAsNewProjectProps = {
     dialogState: OverlayTriggerState;
@@ -29,7 +30,9 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
                     <Heading>Create project from a dataset - Import</Heading>
                     <Divider />
                     <Content minHeight={'size-5000'}>
-                        <View height={'100%'} backgroundColor={'gray-50'}>
+                        <ProgressStepper />
+
+                        <View backgroundColor={'gray-50'}>
                             <ImportUploadFile onFileUploaded={handleFileUploaded} />
                         </View>
                     </Content>

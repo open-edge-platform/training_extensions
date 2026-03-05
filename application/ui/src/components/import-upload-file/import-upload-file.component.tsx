@@ -85,7 +85,7 @@ export const ImportUploadFile = ({ onFileUploaded }: ImportUploadFileProps) => {
             onDrop={async (event) => handleLoadingFile(await getFilesFromDropEvent(event))}
         >
             <IllustratedMessage>
-                <EmptyDataset />
+                <EmptyDataset height={210} />
 
                 <Content>
                     {isPending && (
