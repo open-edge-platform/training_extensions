@@ -2,9 +2,9 @@
 #  SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Generic, Literal, TypeVar, Union, cast
+from typing import Annotated, Literal, Union, cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Discriminator, Field, Tag
 from pydantic.fields import FieldInfo
 
 from app.models.training_configuration import ParamValueType, TrainingConfiguration
@@ -15,32 +15,77 @@ class ConfigurableParameterViewElementType(StrEnum):
     PARAMETER_GROUP = "parameter_group"
 
 
-ParameterT = TypeVar("ParameterT", bool, int, str, float, tuple[float, float])
-
-
-class ConfigurableParameterView(BaseModel, Generic[ParameterT]):
-    """
-    A single configurable parameter that can be customized by the user. Includes metadata such as type, default value,
-    and constraints to guide user input and validation.
-    """
+class _BaseConfigurableParameterView(BaseModel):
+    """Base fields shared by all parameter view variants."""
 
     type: Literal[ConfigurableParameterViewElementType.PARAMETER] = ConfigurableParameterViewElementType.PARAMETER
     key: str = Field(title="Key to identify the parameter")
     name: str = Field(title="User-friendly name of the parameter")
     description: str = Field(title="Extended description of the parameter", default="")
-    value: ParameterT | None = Field(title="Actual value of the parameter")
-    default_value: ParameterT | None = Field(title="Default value of the parameter")
-    value_type: Literal["bool", "str", "int", "float", "float_range"] = Field(title="Type of the parameter value")
-    min_value: int | float | None = Field(
-        default=None, title="Minimum value for numeric parameters. None if unbounded or not applicable"
-    )
-    max_value: int | float | None = Field(
-        default=None, title="Maximum value for numeric parameters. None if unbounded or not applicable"
-    )
-    allowed_values: list[ParameterT] | None = Field(
+    allowed_values: list | None = Field(
         default=None,
         title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
     )
+
+
+class BoolParameterView(_BaseConfigurableParameterView):
+    """Configurable boolean parameter."""
+
+    value_type: Literal["bool"] = "bool"
+    value: bool | None = Field(title="Actual value of the parameter")
+    default_value: bool | None = Field(title="Default value of the parameter")
+
+
+class StringParameterView(_BaseConfigurableParameterView):
+    """Configurable string parameter."""
+
+    value_type: Literal["str"] = "str"
+    value: str | None = Field(title="Actual value of the parameter")
+    default_value: str | None = Field(title="Default value of the parameter")
+
+
+class IntParameterView(_BaseConfigurableParameterView):
+    """Configurable integer parameter with optional min/max bounds."""
+
+    value_type: Literal["int"] = "int"
+    value: int | None = Field(title="Actual value of the parameter")
+    default_value: int | None = Field(title="Default value of the parameter")
+    min_value: int | float | None = Field(default=None, title="Minimum value for numeric parameters. None if unbounded")
+    max_value: int | float | None = Field(default=None, title="Maximum value for numeric parameters. None if unbounded")
+
+
+class FloatParameterView(_BaseConfigurableParameterView):
+    """Configurable float parameter with optional min/max bounds."""
+
+    value_type: Literal["float"] = "float"
+    value: float | None = Field(title="Actual value of the parameter")
+    default_value: float | None = Field(title="Default value of the parameter")
+    min_value: int | float | None = Field(default=None, title="Minimum value for numeric parameters. None if unbounded")
+    max_value: int | float | None = Field(default=None, title="Maximum value for numeric parameters. None if unbounded")
+
+
+class FloatRangeParameterView(_BaseConfigurableParameterView):
+    """Configurable float range parameter."""
+
+    value_type: Literal["float_range"] = "float_range"
+    value: tuple[float, float] | None = Field(title="Actual value of the parameter")
+    default_value: tuple[float, float] | None = Field(title="Default value of the parameter")
+
+
+def _parameter_view_discriminator(v: dict | _BaseConfigurableParameterView) -> str:
+    if isinstance(v, dict):
+        return v.get("value_type", "str")
+    return getattr(v, "value_type", "str")
+
+
+ConfigurableParameterView = Annotated[
+    Annotated[BoolParameterView, Tag("bool")]
+    | Annotated[StringParameterView, Tag("str")]
+    | Annotated[IntParameterView, Tag("int")]
+    | Annotated[FloatParameterView, Tag("float")]
+    | Annotated[FloatRangeParameterView, Tag("float_range")],
+    Discriminator(_parameter_view_discriminator),
+]
 
 
 class ConfigurableParameterGroupView(BaseModel):
@@ -134,8 +179,7 @@ class TrainingConfigurationView(BaseModel):
         field_info: FieldInfo,
         allowed_values: list | None = None,
     ) -> ConfigurableParameterView:
-        """Convert a single field to ConfigurableParameterView."""
-        min_value, max_value = cls._extract_constraints(field_info)
+        """Convert a single field to the appropriate ConfigurableParameterView variant."""
         value_type = cls._get_value_type(field_info)
 
         if field_info.title is None:
@@ -144,17 +188,26 @@ class TrainingConfigurationView(BaseModel):
                 f"which is required to associate a user-friendly name to the parameter."
             )
 
-        return ConfigurableParameterView(
-            key=key,
-            name=field_info.title,
-            description=field_info.description or "",
-            value=value,
-            default_value=default_value,
-            value_type=value_type,
-            min_value=min_value,
-            max_value=max_value,
-            allowed_values=allowed_values,
-        )
+        common_kwargs = {
+            "key": key,
+            "name": field_info.title,
+            "description": field_info.description or "",
+            "value": value,
+            "default_value": default_value,
+            "allowed_values": allowed_values,
+        }
+
+        if value_type == "int":
+            min_value, max_value = cls._extract_constraints(field_info)
+            return IntParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
+        if value_type == "float":
+            min_value, max_value = cls._extract_constraints(field_info)
+            return FloatParameterView(**common_kwargs, min_value=min_value, max_value=max_value)  # type: ignore
+        if value_type == "bool":
+            return BoolParameterView(**common_kwargs)  # type: ignore
+        if value_type == "float_range":
+            return FloatRangeParameterView(**common_kwargs)  # type: ignore
+        return StringParameterView(**common_kwargs)  # type: ignore
 
     @classmethod
     def _resolve_allowed_values(cls, model: BaseModel, field_info: FieldInfo) -> list | None:
@@ -246,9 +299,10 @@ class TrainingConfigurationView(BaseModel):
         params_by_key: dict[str, list[ConfigurableParameterView | ConfigurableParameterGroupView]] = {}
         for group in groups:
             for param in group.parameters:
-                if param.key not in params_by_key:
-                    params_by_key[param.key] = []
-                params_by_key[param.key].append(param)
+                param_key = param.key if hasattr(param, "key") else ""
+                if param_key not in params_by_key:
+                    params_by_key[param_key] = []
+                params_by_key[param_key].append(param)
 
         # Merge parameters with same key, or just add unique ones
         for key, params in params_by_key.items():
@@ -404,8 +458,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -436,8 +488,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -468,8 +518,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -516,8 +564,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": True,
                                                 "default_value": True,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             }
                                         ],
@@ -539,8 +585,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -590,8 +634,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -629,8 +671,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": True,
                                                 "default_value": True,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -668,8 +708,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -705,8 +743,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -722,8 +758,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.875, 1.125],
                                                 "default_value": [0.875, 1.125],
                                                 "value_type": "float_range",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -739,8 +773,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -756,8 +788,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.5, 1.5],
                                                 "default_value": [0.5, 1.5],
                                                 "value_type": "float_range",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -773,8 +803,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [-0.05, 0.05],
                                                 "default_value": [-0.05, 0.05],
                                                 "value_type": "float_range",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -808,8 +836,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -839,8 +865,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": [0.1, 2.0],
                                                 "default_value": [0.1, 2.0],
                                                 "value_type": "float_range",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -874,8 +898,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -942,8 +964,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": False,
                                                 "default_value": False,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -954,8 +974,6 @@ class TrainingConfigurationView(BaseModel):
                                                 "value": True,
                                                 "default_value": True,
                                                 "value_type": "bool",
-                                                "min_value": None,
-                                                "max_value": None,
                                                 "allowed_values": None,
                                             },
                                             {
@@ -1037,8 +1055,6 @@ class TrainingConfigurationView(BaseModel):
                                         "value": True,
                                         "default_value": True,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -1120,8 +1136,6 @@ class TrainingConfigurationView(BaseModel):
                                 "value": "default",
                                 "default_value": "default",
                                 "value_type": "str",
-                                "min_value": None,
-                                "max_value": None,
                                 "allowed_values": ["default"],
                             }
                         ],

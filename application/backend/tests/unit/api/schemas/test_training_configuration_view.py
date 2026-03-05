@@ -177,8 +177,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -209,8 +207,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -241,8 +237,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -288,8 +282,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -305,8 +297,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.9, 1.1],
                                         "default_value": [0.8, 1.2],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -322,8 +312,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.85, 1.15],
                                         "default_value": [0.75, 1.25],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -339,8 +327,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.8, 1.2],
                                         "default_value": [0.9, 1.1],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -355,8 +341,6 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [-0.05, 0.05],
                                         "default_value": [-0.1, 0.1],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
                                         "allowed_values": None,
                                     },
                                     {
@@ -418,8 +402,6 @@ def fxt_training_configuration_view_json() -> dict:
                                 "value": True,
                                 "default_value": False,
                                 "value_type": "bool",
-                                "min_value": None,
-                                "max_value": None,
                                 "allowed_values": None,
                             },
                             {
@@ -499,8 +481,6 @@ def fxt_training_configuration_view_json() -> dict:
                         "value": "default",
                         "default_value": "default",
                         "value_type": "str",
-                        "min_value": None,
-                        "max_value": None,
                         "allowed_values": ["default"],
                     },
                 ],
