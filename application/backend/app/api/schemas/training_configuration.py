@@ -320,10 +320,9 @@ class TrainingConfigurationView(BaseModel):
         params_by_key: dict[str, list[ConfigurableParameterView | ConfigurableParameterGroupView]] = {}
         for group in groups:
             for param in group.parameters:
-                param_key = param.key if hasattr(param, "key") else ""
-                if param_key not in params_by_key:
-                    params_by_key[param_key] = []
-                params_by_key[param_key].append(param)
+                if param.key not in params_by_key:
+                    params_by_key[param.key] = []
+                params_by_key[param.key].append(param)
 
         # Merge parameters with same key, or just add unique ones
         for key, params in params_by_key.items():
