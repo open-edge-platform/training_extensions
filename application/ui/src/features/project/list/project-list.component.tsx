@@ -37,14 +37,7 @@ const ProjectGrid = () => {
 export const ProjectList = () => {
     return (
         <View UNSAFE_className={backgroundStyles.projectBackground} height={'100%'}>
-            <Content
-                height={'100%'}
-                maxWidth={'1052px'}
-                margin={'0 auto'}
-                UNSAFE_style={{
-                    padding: '40px',
-                }}
-            >
+            <Content height={'100%'} maxWidth={'1052px'} margin={'0 auto'} UNSAFE_className={classes.content}>
                 <Flex direction={'column'} height={'100%'}>
                     <Heading
                         level={1}
