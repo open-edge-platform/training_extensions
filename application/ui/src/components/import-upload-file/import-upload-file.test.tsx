@@ -6,30 +6,24 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { getMockedPrepareImportDatasetJob } from '../../../../../../mocks/mock-job';
-import { http } from '../../../../../api/utils';
-import { server } from '../../../../../msw-node-setup';
-import { ImportDatasetDialogStateProvider } from '../../../providers/export-import-dataset-dialog-provider.component';
+import { getMockedPrepareImportDatasetJob } from '../../../mocks/mock-job';
+import { http } from '../../api/utils';
+import { ImportDatasetDialogStateProvider } from '../../features/dataset/providers/export-import-dataset-dialog-provider.component';
+import { server } from '../../msw-node-setup';
 import { ImportUploadFile } from './import-upload-file.component';
-
-const mockedAppendImportEntry = vi.fn();
-
-vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', () => ({
-    useImportDatasetToProject: () => ({
-        appendImportEntry: mockedAppendImportEntry,
-    }),
-}));
 
 describe('ImportUploadFile', () => {
     const validFile = new File(['file content'], 'test.zip', { type: 'application/zip' });
     const inValidFiles = new File(['foo'], 'video.mov', { type: 'video/quicktime' });
+    const mockedStagedDatasetId = 'staged-dataset-123';
+    const mockedPrepareImportDatasetJob = getMockedPrepareImportDatasetJob({});
 
     const renderApp = () => {
         server.use(
             http.post('/api/staged_datasets', () => {
                 return HttpResponse.json(
                     {
-                        id: 'staged-dataset-123',
+                        id: mockedStagedDatasetId,
                         format: 'geti',
                         size: 123,
                         metadata: null,
@@ -41,15 +35,18 @@ describe('ImportUploadFile', () => {
                 );
             }),
             http.post('/api/jobs', () => {
-                return HttpResponse.json(getMockedPrepareImportDatasetJob({}), { status: 202 });
+                return HttpResponse.json(mockedPrepareImportDatasetJob, { status: 202 });
             })
         );
+        const mockedOnFileUploaded = vi.fn();
 
         render(
             <ImportDatasetDialogStateProvider>
-                <ImportUploadFile />
+                <ImportUploadFile onFileUploaded={mockedOnFileUploaded} />
             </ImportDatasetDialogStateProvider>
         );
+
+        return mockedOnFileUploaded;
     };
 
     beforeEach(() => {
@@ -57,7 +54,7 @@ describe('ImportUploadFile', () => {
     });
 
     it('invalid file extension', async () => {
-        renderApp();
+        const mockedOnFileUploaded = renderApp();
 
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
@@ -66,19 +63,24 @@ describe('ImportUploadFile', () => {
         expect(screen.getByText(/Unsupported file format. Please upload a valid .zip file./i)).toBeVisible();
 
         await waitFor(() => {
-            expect(mockedAppendImportEntry).not.toHaveBeenCalled();
+            expect(mockedOnFileUploaded).not.toHaveBeenCalled();
         });
     });
 
     it('valid file extension', async () => {
-        renderApp();
+        const mockedOnFileUploaded = renderApp();
 
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
         await userEvent.upload(uploadFileElement, [validFile]);
 
         await waitFor(() => {
-            expect(mockedAppendImportEntry).toHaveBeenCalledWith(expect.objectContaining({ step: 'preparing' }));
+            expect(mockedOnFileUploaded).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    stagedDatasetId: mockedStagedDatasetId,
+                    prepareJobId: mockedPrepareImportDatasetJob.job_id,
+                })
+            );
         });
     });
 });

@@ -4,7 +4,6 @@
 import { useLocalStorage } from 'usehooks-ts';
 
 import { ImportDatasetAsNewProjectState } from '../../features/dataset/import-export/import-dataset/util';
-import { useProjectIdentifier } from '../use-project-identifier.hook';
 import { getParsedLocalStorage } from './utils';
 
 type DatasetImportState = {
@@ -16,14 +15,12 @@ type DatasetImportState = {
     step: ImportDatasetAsNewProjectState;
 };
 
-const IMPORT_DATASET_AS_NEW_PROJECT_KEY = (projectId: string) => `import-dataset-as-new-project-${projectId}`;
+const IMPORT_DATASET_AS_NEW_PROJECT_KEY = `import-dataset-as-new-project`;
 
 export const useImportDatasetAsNewProject = () => {
-    const projectId = useProjectIdentifier();
-
     const [lsImportDatasetAsNewProject, setLsImportDatasetAsNewProject] = useLocalStorage<DatasetImportState[] | null>(
-        IMPORT_DATASET_AS_NEW_PROJECT_KEY(projectId),
-        () => getParsedLocalStorage<DatasetImportState[]>(IMPORT_DATASET_AS_NEW_PROJECT_KEY(projectId)) ?? null
+        IMPORT_DATASET_AS_NEW_PROJECT_KEY,
+        () => getParsedLocalStorage<DatasetImportState[]>(IMPORT_DATASET_AS_NEW_PROJECT_KEY) ?? null
     );
 
     const getAllImportEntries = (): DatasetImportState[] => {

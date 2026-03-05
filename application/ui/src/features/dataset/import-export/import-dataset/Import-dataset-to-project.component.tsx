@@ -2,16 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
+import { ImportUploadFile } from '../../../../components/import-upload-file/import-upload-file.component';
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportProcess } from './import-process/import-process.component';
-import { ImportUploadFile } from './import-upload-file/import-upload-file.component';
 import { LabelMapping } from './label-mapping/label-mapping.component';
 
 export const ImportDatasetToProject = () => {
-    const { datasetImportDialogState, currentStep, currentStagedId } = useImportDatasetDialogState();
+    const { appendImportEntry } = useImportDatasetToProject();
+    const { datasetImportDialogState, currentStep, currentStagedId, setCurrentStep, setCurrentStagedId } =
+        useImportDatasetDialogState();
+
+    const handleFileUploaded = (data: {
+        size: number;
+        fileName: string;
+        prepareJobId: string;
+        stagedDatasetId: string;
+    }) => {
+        setCurrentStep('preparing');
+        setCurrentStagedId(data.stagedDatasetId);
+        appendImportEntry({ ...data, step: 'preparing', importJobId: null });
+    };
 
     return (
         <DialogContainer onDismiss={datasetImportDialogState.close}>
@@ -21,7 +35,7 @@ export const ImportDatasetToProject = () => {
                     <Divider />
                     <Content minHeight={'size-5000'}>
                         <View height={'100%'} backgroundColor={'gray-50'}>
-                            {currentStep === 'uploading' && <ImportUploadFile />}
+                            {currentStep === 'uploading' && <ImportUploadFile onFileUploaded={handleFileUploaded} />}
 
                             {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
                                 <ImportProcess currentStagedId={currentStagedId} />

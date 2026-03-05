@@ -3,7 +3,7 @@
 
 import { type SpectrumDropZoneProps } from '@geti/ui';
 
-import { GetElementType } from '../../../../../shared/util';
+import { GetElementType } from '../../shared/util';
 
 type DropItem = GetElementType<DropEvent['items']>;
 type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
