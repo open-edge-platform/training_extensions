@@ -28,12 +28,14 @@ import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-it
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
+import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
     items: Media[];
     viewMode: ViewModes;
     setViewMode: Dispatch<SetStateAction<ViewModes>>;
+    onFilter: (status: FilterByStatusKey) => void;
 };
 
 type AnnotateButtonProps = {
@@ -49,7 +51,7 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
+export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
 
@@ -163,6 +165,7 @@ export const Toolbar = ({ items, viewMode, setViewMode }: ToolbarProps) => {
                 </Flex>
 
                 <Flex gap={'size-200'} alignItems={'center'}>
+                    <FilterByStatus onChange={onFilter} />
                     <Text>{message}</Text>
                     <MediaViewModes
                         viewMode={viewMode}

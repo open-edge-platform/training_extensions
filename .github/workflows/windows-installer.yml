@@ -7,7 +7,7 @@ on:
         type: string
         required: true
       device:
-        description: "Specifies the device to build the backend for (cpu, xpu, gpu)"
+        description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         type: string
         required: true
         default: "xpu"
@@ -25,12 +25,12 @@ on:
         type: string
         required: true
       device:
-        description: "Specifies the device to build the backend for (cpu, xpu, gpu)"
+        description: "Specifies the device to build the backend for (cpu, xpu, cuda)"
         required: true
         options:
           - xpu
           - cpu
-          - gpu
+          - cuda
         default: "xpu"
       debug_build:
         description: "If the debug build should be produced"
@@ -85,26 +85,26 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"
 
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       # Install and setup build tools
 
       - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@a02a550bdd3185dba2ebb6aa98d77047ce54ad21 # v6.2.1
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
           version: "0.10.4"
           enable-cache: true
           cache-dependency-glob: "application/backend/uv.lock"
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@6d9817901c499d6b02debbb57edb38d33daa680b
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
           toolchain: stable
 
@@ -147,7 +147,7 @@ jobs:
       # Build UI with Tauri
 
       - name: Setup Node & npm
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: application/ui/.nvmrc
           cache: "npm"
@@ -211,7 +211,7 @@ jobs:
           }
 
       - name: Upload MSIX package
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           path: ${{ env.MSIX_FILE_PATH }}
           retention-days: 20

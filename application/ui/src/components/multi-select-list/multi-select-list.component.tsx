@@ -16,11 +16,20 @@ interface MultiSelectListProps
     > {
     name: string;
     label: string;
+    allSelectedByDefault?: boolean;
     items: { id: string; name: string }[];
 }
 
-export const MultiSelectList = ({ name, label, items, ...listProps }: MultiSelectListProps) => {
-    const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
+export const MultiSelectList = ({
+    name,
+    label,
+    items,
+    allSelectedByDefault = false,
+    ...listProps
+}: MultiSelectListProps) => {
+    const [selectedLabels, setSelectedLabels] = useState<Set<string>>(
+        () => new Set(allSelectedByDefault ? items.map(({ id }) => id) : [])
+    );
 
     const allItemSelected = selectedLabels.size === items.length && items.length > 0;
 

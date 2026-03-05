@@ -3,29 +3,17 @@
 
 import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
 
-import { $api } from '../../../../api/client';
-import { useImportDatasetToProject } from '../../../../hooks/localStorage/use-import-dataset-to-project.hook';
-import { isInvalidStagedFile } from '../util';
+import { useDeleteStagedDataset } from '../../../../hooks/api/staged-file.hook';
 
 type DeleteStagedFileConfirmationProps = {
     stagedDatasetId: string;
 };
 
 export const DeleteStagedFileConfirmation = ({ stagedDatasetId }: DeleteStagedFileConfirmationProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
-
-    const removeStagedDatasetMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
 
     const handleCancel = () => {
-        removeStagedDatasetMutation.mutate(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => deleteImportEntry(stagedDatasetId),
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        deleteFileMutation.mutate();
     };
 
     return (
@@ -40,7 +28,7 @@ export const DeleteStagedFileConfirmation = ({ stagedDatasetId }: DeleteStagedFi
                 autoFocusButton='primary'
                 primaryActionLabel='Delete'
                 onPrimaryAction={handleCancel}
-                isPrimaryActionDisabled={removeStagedDatasetMutation.isPending}
+                isPrimaryActionDisabled={deleteFileMutation.isPending}
             >
                 {`Are you sure you want to delete the dataset file "${stagedDatasetId}"?`}
             </AlertDialog>
