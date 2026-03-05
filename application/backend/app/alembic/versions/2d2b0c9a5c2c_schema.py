@@ -181,14 +181,16 @@ def upgrade() -> None:
     op.create_index("idx_dataset_items_user_reviewed", "dataset_items", ["project_id", "user_reviewed"], unique=False)
     op.create_table(
         "evaluations",
+        sa.Column("model_revision_id", sa.Text(), nullable=False),
         sa.Column("model_variant_id", sa.Text(), nullable=False),
         sa.Column("dataset_revision_id", sa.Text(), nullable=False),
         sa.Column("subset", sa.String(length=20), nullable=False),
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(["dataset_revision_id"], ["dataset_revisions.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["model_revision_id"], ["model_revisions.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["model_variant_id"], ["model_variants.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["dataset_revision_id"], ["dataset_revisions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
