@@ -6,7 +6,7 @@ import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
 type UseGetDatasetItemsOptions = {
-    limit?: number;
+    limit: number;
     annotationStatus?: DatasetItemAnnotationStatus;
 };
 

@@ -35,16 +35,7 @@
   // if necessary, add supported releases branches here
   // it is possible to enable/disable specific upgrades per branch with
   // `matchBaseBranches` in specific rule
-  baseBranches: ["develop", "release/2.6"],
-
-  // https://docs.renovatebot.com/modules/manager/#disabling-managers
-  pip_requirements: {
-    // Prevent renovate from trying to update demo code
-    enabled: false,
-    managerFilePatterns: [
-      "library/src/otx/backend/native/exporter/exportable_code/demo/requirements.txt",
-    ],
-  },
+  baseBranches: ["develop"],
 
   // Set limit to 5
   ignorePresets: [":prHourlyLimit2"],
@@ -147,13 +138,6 @@
       matchDepNames: ["docker/dockerfile"],
     },
 
-    // Disable images upgrades for release/2.6 branch
-    {
-      enabled: false,
-      matchDatasources: ["docker"],
-      matchBaseBranches: ["release/2.6"],
-    },
-
     // Group GitHub Actions updates
     {
       enabled: true,
@@ -162,14 +146,6 @@
       matchManagers: ["github-actions"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1,15 * *"], // twice a month
-      matchBaseBranches: ["main"],
-    },
-
-    // Disable upgrades for non-main branches
-    {
-      enabled: false,
-      matchManagers: ["github-actions"],
-      matchBaseBranches: ["!main"],
     },
 
     // uv version used in GitHub Actions is updated manually
@@ -195,13 +171,6 @@
       matchDepTypes: ["container"],
       matchDepNames: ["mcr.microsoft.com/playwright"],
       matchUpdateTypes: ["major", "minor", "patch"],
-    },
-
-    // Disable lockFileMaintenance for release/2.6 branch
-    {
-      enabled: false,
-      matchUpdateTypes: ["lockFileMaintenance"],
-      matchBaseBranches: ["release/2.6"],
     },
   ],
 

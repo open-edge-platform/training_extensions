@@ -3,11 +3,9 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
-import { $api } from '../../../../../api/client';
 import { Job } from '../../../../../constants/shared-types';
-import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 import { formatBytes } from '../../../../../shared/util';
-import { isInvalidStagedFile } from '../../util';
 
 type ImportFailedJobProps = {
     size: number;
@@ -17,21 +15,10 @@ type ImportFailedJobProps = {
 };
 
 export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: ImportFailedJobProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
 
     const handleClose = () => {
-        deleteFileMutation.mutate(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => {
-                    deleteImportEntry(stagedDatasetId);
-                },
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        deleteFileMutation.mutate();
     };
 
     return (

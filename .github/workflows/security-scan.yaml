@@ -41,12 +41,12 @@ jobs:
     steps:
       - &checkout
         name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/zizmor@9b1ef60a8b2b802da428621e192c322960f4b3d5
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: ${{ github.event_name == 'pull_request' && 'MEDIUM' || 'LOW' }}
@@ -62,7 +62,7 @@ jobs:
       - *checkout
 
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/bandit@9b1ef60a8b2b802da428621e192c322960f4b3d5
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: "LOW"
@@ -81,7 +81,7 @@ jobs:
 
       - name: Run Trivy scan
         id: trivy
-        uses: open-edge-platform/geti-ci/actions/trivy@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/trivy@9b1ef60a8b2b802da428621e192c322960f4b3d5
         with:
           scan_type: "fs"
           scan-scope: all
@@ -101,12 +101,12 @@ jobs:
         ai-device: [xpu]
     steps:
       - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
         with:
           type: "initial"
 
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -184,7 +184,7 @@ jobs:
             --report-junit-path schemathesis-report/junit.xml
 
       - name: Upload Schemathesis report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         if: always()
         with:
           name: schemathesis-report-${{ matrix.ai-device }}
@@ -218,7 +218,7 @@ jobs:
           fi
 
       - name: Upload container logs
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         if: always()
         with:
           name: container-logs

@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { $api } from '../../../../../api/client';
 import { useCancelJob } from '../../../../../hooks/api/jobs.hook';
-import { isInvalidStagedFile } from '../../util';
+import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 
 type ImportProcessButtonsProps = {
     prepareJobId: string;
@@ -16,23 +14,11 @@ type ImportProcessButtonsProps = {
 
 export const ImportProcessButtons = ({ prepareJobId, stagedDatasetId, onClose }: ImportProcessButtonsProps) => {
     const cancelJobMutation = useCancelJob();
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, onSuccess: onClose });
 
     const handleCancelJob = async (jobId: string) => {
         await cancelJobMutation.mutateAsync({ params: { path: { job_id: jobId } } });
-        await deleteFileMutation.mutateAsync(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => {
-                    deleteImportEntry(stagedDatasetId);
-                    onClose();
-                },
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        deleteFileMutation.mutate();
     };
 
     return (
