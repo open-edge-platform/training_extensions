@@ -7,7 +7,7 @@ import { Flex } from '@geti/ui';
 import { type Item } from 'react-cool-virtual';
 
 import { type Label } from '../../../../../../../constants/shared-types';
-import { AnnotatorMode } from '../../../../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import type { AnnotatorMode } from '../../../../../../../shared/annotator/annotator-mode';
 import { VideoFrameSegment } from './video-frame-segment.component';
 
 import classes from './video-frame-segment.module.scss';

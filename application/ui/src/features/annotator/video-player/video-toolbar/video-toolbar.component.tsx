@@ -7,7 +7,7 @@ import { ActionButton, Divider, Flex, Text, View } from '@geti/ui';
 import { ChevronDownLight } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
-import { AnnotatorMode } from '../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Toolbar } from '../../../dataset/media-preview/toolbar-container/toolbar-container.component';
 import { useVideoPlayer } from '../video-player-provider.component';
 import { FrameStep } from './frame-step/frame-step.component';

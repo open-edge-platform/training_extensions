@@ -6,13 +6,13 @@ import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
+import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from '../use-submit-predictions.hook';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
-import type { AnnotatorMode } from './annotator-modes/mode';
 import { getNextItem } from './util';
 
 import classes from './secondary-toolbar.module.scss';

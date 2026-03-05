@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { Flex, View } from '@geti/ui';
 
-import { type AnnotatorMode } from './mode';
+import { type AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 
 import styles from './annotator-modes.module.scss';
 

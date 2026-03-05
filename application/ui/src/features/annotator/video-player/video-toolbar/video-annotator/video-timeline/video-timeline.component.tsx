@@ -7,7 +7,7 @@ import { useSizeHook } from 'hooks/use-size.hook';
 import useVirtual from 'react-cool-virtual';
 
 import { type Label } from '../../../../../../constants/shared-types';
-import { AnnotatorMode } from '../../../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import type { AnnotatorMode } from '../../../../../../shared/annotator/annotator-mode';
 import { useVideoPlayer } from '../../../video-player-provider.component';
 import { VideoFrameSegments } from './video-frame-segment/video-frame-segments.component';
 import { VideoPlayerSlider } from './video-player-slider/video-player-slider.component';

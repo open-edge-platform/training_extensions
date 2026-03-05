@@ -4,7 +4,7 @@
 import { Grid, View } from '@geti/ui';
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 
-import { AnnotatorMode } from '../../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import type { AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 import { Labels } from './labels/labels.component';
 import { VideoTimeline } from './video-timeline/video-timeline.component';
 

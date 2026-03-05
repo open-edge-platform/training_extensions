@@ -7,7 +7,7 @@ import { Flex, View } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import { AnnotatedVideoFrame, Label } from '../../../../../../../constants/shared-types';
-import { AnnotatorMode } from '../../../../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import type { AnnotatorMode } from '../../../../../../../shared/annotator/annotator-mode';
 import { useVideoFramesAnnotations } from '../../../../api/use-video-frames-annotations';
 import { useVideoPlayer } from '../../../../video-player-provider.component';
 

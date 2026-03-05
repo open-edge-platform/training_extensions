@@ -5,13 +5,13 @@ import { ActionButton, Button, Flex, Text, View } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
-import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { Toolbar } from './toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from './use-submit-predictions.hook';
 
