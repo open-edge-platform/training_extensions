@@ -19,9 +19,9 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 @dataclass(frozen=True)
 class LoadedModel:
-    id: UUID
-    model: Model
+    model_revision_id: UUID
     model_variant_id: UUID
+    model: Model
     device: str
 
 
@@ -131,7 +131,7 @@ class ActiveModelService:
         device = self._model_activation_state.device
         needs_reload = (
             self._loaded_model is None
-            or self._loaded_model.id != active_model_id
+            or self._loaded_model.model_revision_id != active_model_id
             or self._loaded_model.model_variant_id != active_variant_id
             or self._loaded_model.device != device
         )
@@ -163,7 +163,7 @@ class ActiveModelService:
                 return None
 
             self._loaded_model = LoadedModel(
-                id=self._model_activation_state.active_model_id,
+                model_revision_id=self._model_activation_state.active_model_id,
                 model=mapi_model,
                 model_variant_id=active_variant_id,
                 device=device,

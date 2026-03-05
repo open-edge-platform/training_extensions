@@ -195,8 +195,9 @@ class TestModelServiceIntegration:
 
         evaluation = EvaluationDB(
             id=str(uuid4()),
-            dataset_revision_id=dataset_revision.id,
+            model_revision_id=str(fxt_model_id),
             model_variant_id=str(variant_id),
+            dataset_revision_id=dataset_revision.id,
             subset=DatasetItemSubset.TESTING,
         )
         metrics = [
@@ -542,6 +543,7 @@ class TestModelServiceIntegration:
         db_session.flush()
 
         evaluation_result = EvaluationResult(
+            model_revision_id=fxt_model_id,
             model_variant_id=variant_id,
             dataset_revision_id=UUID(dataset_revision.id),
             subset=DatasetItemSubset.TESTING,

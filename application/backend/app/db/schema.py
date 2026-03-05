@@ -200,6 +200,7 @@ class ModelVariantDB(BaseID):
 class EvaluationDB(BaseID):
     __tablename__ = "evaluations"
 
+    model_revision_id: Mapped[str] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="CASCADE"))
     model_variant_id: Mapped[str] = mapped_column(Text, ForeignKey("model_variants.id", ondelete="CASCADE"))
     dataset_revision_id: Mapped[str] = mapped_column(
         Text, ForeignKey("dataset_revisions.id", ondelete="CASCADE"), nullable=False

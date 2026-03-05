@@ -154,7 +154,7 @@ class ModelService(BaseSessionManagedService):
             variant = ModelVariant.model_validate(v_db)
             # Compute weights_size from the filesystem
             variant_dir = self._get_variant_dir(project_id, model_id, UUID(v_db.id))
-            if variant_dir.exists() and not v_db.files_deleted:
+            if not v_db.files_deleted and variant_dir.exists():
                 variant.weights_size = sum(f.stat().st_size for f in variant_dir.iterdir() if f.is_file())
             variants.append(variant)
         return variants
@@ -368,7 +368,7 @@ class ModelService(BaseSessionManagedService):
 
         Returns:
             tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
-                and the second element is a tuple of Paths to the model files.
+                and the second element is a tuple of Paths to the model variant's files.
 
         Raises:
             ResourceNotFoundError: If the model has been marked as deleted.
@@ -377,7 +377,7 @@ class ModelService(BaseSessionManagedService):
         if model_revision.files_deleted:
             return False, ()
 
-        # Find the variant matching the requested format
+        # Find the variant matching the requested variant ID
         model_variant_repo = ModelVariantRepository(db=self.db_session)
         variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
         for v_db in variant_dbs:
@@ -389,7 +389,18 @@ class ModelService(BaseSessionManagedService):
     def _get_variant_binary_files(
         self, project_id: UUID, model_id: UUID, variant_id: UUID
     ) -> tuple[bool, tuple[Path, ...]]:
-        """Get binary files for a specific variant from the filesystem."""
+        """
+        Get binary files for a specific variant from the filesystem.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+            variant_id (UUID): The unique identifier of the model variant.
+
+        Returns:
+            tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
+                and the second element is a tuple of Paths to the model variant's files.
+        """
         variant_dir = self._get_variant_dir(project_id, model_id, variant_id)
 
         xml_file = variant_dir / "model.xml"
@@ -467,6 +478,7 @@ class ModelService(BaseSessionManagedService):
 
     def save_evaluation_result(self, result: EvaluationResult) -> None:
         evaluation_db = EvaluationDB(
+            model_revision_id=str(result.model_revision_id),
             model_variant_id=str(result.model_variant_id),
             dataset_revision_id=str(result.dataset_revision_id),
             subset=result.subset,

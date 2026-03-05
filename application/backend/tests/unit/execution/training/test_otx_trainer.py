@@ -763,6 +763,7 @@ class TestOTXTrainerEvaluateModel:
             otx_engine=mock_otx_engine,
             model_checkpoint_path=model_checkpoint_path,
             task=training_params.task,
+            model_revision_id=model_id,
             model_variant_id=model_variant_id,
             dataset_revision_id=dataset_revision_id,
         )

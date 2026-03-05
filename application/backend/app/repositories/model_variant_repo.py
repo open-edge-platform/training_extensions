@@ -26,7 +26,7 @@ class ModelVariantRepository(BaseRepository[ModelVariantDB]):
         stmt = select(ModelVariantDB).where(ModelVariantDB.id == obj_id)
         return self.db.execute(stmt).scalar_one_or_none()
 
-    def get_by_revision_format_precision(
+    def get_by_revision_and_format_and_precision(
         self, model_revision_id: str, format: str, precision: str
     ) -> ModelVariantDB | None:
         """Get a model variant by revision, format, and precision."""

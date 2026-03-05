@@ -39,6 +39,7 @@ def fxt_model() -> ModelRevision:
                 precision=ModelPrecision.FP16,
                 evaluations=[
                     EvaluationResult(
+                        model_revision_id=model_revision_id,
                         model_variant_id=openvino_variant_id,
                         dataset_revision_id=dataset_revision_id,
                         subset=DatasetItemSubset.TESTING,

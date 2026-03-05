@@ -54,13 +54,6 @@ class PipelineView(BaseModel):
                     },
                     "files_deleted": False,
                 },
-                "model_variant": {
-                    "id": "4c576bce-5e97-408d-a0ea-cc3801e4c453",
-                    "format": "openvino",
-                    "precision": "fp16",
-                    "weights_size": 123456,
-                    "evaluations": [],
-                },
                 "status": "running",
                 "device": "cpu",
                 "data_collection": {

@@ -14,6 +14,7 @@ class EvaluationResult(BaseEntity):
     variant against a dataset revision's particular subset (e.g., train, validation, test).
 
     Attributes:
+        model_revision_id: Unique identifier of the model revision being evaluated.
         model_variant_id: Unique identifier of the model variant being evaluated.
         dataset_revision_id: Unique identifier of the dataset revision used for evaluation.
         subset: The dataset subset used for evaluation (e.g., "training", "validation", "testing").
@@ -21,6 +22,7 @@ class EvaluationResult(BaseEntity):
                  (e.g., {"accuracy": 0.95, "f1_score": 0.87}).
     """
 
+    model_revision_id: UUID
     model_variant_id: UUID
     dataset_revision_id: UUID
     subset: DatasetItemSubset

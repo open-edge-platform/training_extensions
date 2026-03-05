@@ -20,7 +20,7 @@ class TrainingRequestParams(BaseModel):
     parent_model_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null for training from scratch"
     )
-    parent_variant_id: UUID | None = Field(
+    parent_model_variant_id: UUID | None = Field(
         None,
         description="Parent model variant ID for fine-tuning a specific variant, "
         "must be provided if parent_model_revision_id is provided",
@@ -31,13 +31,19 @@ class TrainingRequestParams(BaseModel):
         "null if training on the latest dataset",
     )
 
+    @model_validator(mode="after")
+    def validate_parent_model_fields(self) -> "TrainingRequestParams":
+        if self.parent_model_revision_id and not self.parent_model_variant_id:
+            raise ValueError("parent_model_variant_id must be provided if parent_model_revision_id is provided")
+        return self
+
     model_config = {
         "json_schema_extra": {
             "example": {
                 "device": "xpu-0",
                 "model_architecture_id": "object-detection-atss-mobilenet-v2",
                 "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
-                "parent_variant_id": "123e4567-e89b-12d3-a456-426614174000",
+                "parent_model_variant_id": "123e4567-e89b-12d3-a456-426614174000",
                 "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             }
         }
@@ -59,7 +65,7 @@ class TrainingRequest(BaseJobRequest):
                     "device": "xpu-0",
                     "model_architecture_id": "object-detection-atss-mobilenet-v2",
                     "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
-                    "parent_variant_id": "123e4567-e89b-12d3-a456-426614174000",
+                    "parent_model_variant_id": "123e4567-e89b-12d3-a456-426614174000",
                     "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 },
             }

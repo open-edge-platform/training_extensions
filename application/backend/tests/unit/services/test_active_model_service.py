@@ -109,6 +109,6 @@ class TestActiveModelServiceUnit:
         ):
             loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
             assert isinstance(loaded, LoadedModel)
-            assert loaded.id == fxt_model_activation_state.active_model_id
+            assert loaded.model_revision_id == fxt_model_activation_state.active_model_id
             assert loaded.model is dummy_model
             assert loaded.device == fxt_model_activation_state.device

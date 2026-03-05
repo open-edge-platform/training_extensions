@@ -415,6 +415,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         otx_engine: OTXEngine,
         model_checkpoint_path: Path,
         task: Task,
+        model_revision_id: UUID,
         model_variant_id: UUID,
         dataset_revision_id: UUID,
     ) -> None:
@@ -425,6 +426,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
                 EvaluationResult(
+                    model_revision_id=model_revision_id,
                     model_variant_id=model_variant_id,
                     dataset_revision_id=dataset_revision_id,
                     subset=DatasetItemSubset.TESTING,
@@ -586,6 +588,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 otx_engine=otx_engine,
                 model_checkpoint_path=trained_model_path,
                 task=task,
+                model_revision_id=params.model_id,
                 model_variant_id=created_variants[ModelFormat.OPENVINO],
                 dataset_revision_id=dataset_info.revision_id,
             )

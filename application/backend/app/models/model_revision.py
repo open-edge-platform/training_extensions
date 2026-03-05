@@ -90,10 +90,12 @@ class ModelVariant(BaseEntity):
                 "model_revision_id": data.model_revision_id,
                 "format": data.format,
                 "precision": data.precision,
+                "weights_size": 0,  # Computed at runtime
                 "quantization_info": data.quantization_info,
                 "files_deleted": data.files_deleted,
                 "evaluations": [
                     EvaluationResult(
+                        model_revision_id=UUID(data.model_revision_id),
                         model_variant_id=UUID(e.model_variant_id),
                         dataset_revision_id=UUID(e.dataset_revision_id),
                         subset=DatasetItemSubset(e.subset),
