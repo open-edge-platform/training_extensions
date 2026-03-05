@@ -17,7 +17,11 @@ export const PrepareImportDataset = ({ stagedDatasetId }: PrepareImportDatasetPr
     const { getImportEntry, deleteImportEntry, updateImportEntryStep } = useImportDatasetToProject();
     const importLsEntry = getImportEntry(stagedDatasetId);
 
-    const { data: job } = useImportJobStatus({
+    const {
+        data: job,
+        isError,
+        error,
+    } = useImportJobStatus({
         jobId: importLsEntry?.prepareJobId,
         onError: () => {
             deleteImportEntry(stagedDatasetId);
@@ -40,7 +44,23 @@ export const PrepareImportDataset = ({ stagedDatasetId }: PrepareImportDatasetPr
             borderWidth='thin'
         >
             {isJobFailed(job) && (
-                <ImportFailedJob job={job} fileName={fileName} size={size} stagedDatasetId={stagedDatasetId} />
+                <ImportFailedJob
+                    size={size}
+                    fileName={fileName}
+                    error={job.error ?? ''}
+                    message={job.message ?? ''}
+                    stagedDatasetId={stagedDatasetId}
+                />
+            )}
+
+            {isError && (
+                <ImportFailedJob
+                    size={size}
+                    fileName={fileName}
+                    error={`${error?.detail ?? 'Unknown error'}`}
+                    message={'An error occurred during import preparation.'}
+                    stagedDatasetId={stagedDatasetId}
+                />
             )}
 
             {isRunningOrPending && (

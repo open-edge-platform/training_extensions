@@ -3,7 +3,6 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
-import { Job } from '../../../../../constants/shared-types';
 import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 import { formatBytes } from '../../../../../shared/util';
 
@@ -11,10 +10,11 @@ type ImportFailedJobProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    job: Job;
+    message?: string;
+    error?: string;
 };
 
-export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: ImportFailedJobProps) => {
+export const ImportFailedJob = ({ fileName, size, stagedDatasetId, message, error }: ImportFailedJobProps) => {
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
 
     const handleClose = () => {
@@ -40,9 +40,9 @@ export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: Import
                 </Flex>
             </Flex>
 
-            <Text>{job.message}</Text>
+            <Text>{message}</Text>
             <Divider size='S' marginY='size-150' />
-            <Text>{job.error}</Text>
+            <Text>{error}</Text>
         </View>
     );
 };

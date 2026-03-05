@@ -4,7 +4,10 @@
 import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { ImportUploadFile } from '../../../../components/import-upload-file/import-upload-file.component';
+import {
+    FileUploadedResponse,
+    ImportUploadFile,
+} from '../../../../components/import-upload-file/import-upload-file.component';
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
@@ -16,21 +19,16 @@ export const ImportDatasetToProject = () => {
     const { datasetImportDialogState, currentStep, currentStagedId, setCurrentStep, setCurrentStagedId } =
         useImportDatasetDialogState();
 
-    const handleFileUploaded = (data: {
-        size: number;
-        fileName: string;
-        prepareJobId: string;
-        stagedDatasetId: string;
-    }) => {
+    const handleFileUploaded = (response: FileUploadedResponse) => {
         setCurrentStep('preparing');
-        setCurrentStagedId(data.stagedDatasetId);
-        appendImportEntry({ ...data, step: 'preparing', importJobId: null });
+        setCurrentStagedId(response.stagedDatasetId);
+        appendImportEntry({ ...response, step: 'preparing', importJobId: null });
     };
 
     return (
         <DialogContainer onDismiss={datasetImportDialogState.close}>
             {datasetImportDialogState.isOpen && (
-                <Dialog aria-label={'import-dataset-dialog'} width={800}>
+                <Dialog aria-label={'Create project from dataset'} width={800}>
                     <Heading>Import dataset</Heading>
                     <Divider />
                     <Content minHeight={'size-5000'}>

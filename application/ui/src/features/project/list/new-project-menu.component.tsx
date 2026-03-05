@@ -32,7 +32,7 @@ export const NewProjectMenu = () => {
     return (
         <>
             <MenuTrigger direction='bottom' align='end'>
-                <ActionButton UNSAFE_className={classes.link}>
+                <ActionButton UNSAFE_className={classes.menu}>
                     <AddCircle />
 
                     <Text>Create project</Text>
