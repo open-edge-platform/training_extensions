@@ -24,6 +24,7 @@ export const FilterByStatus = ({ onChange }: FilterByStatusProps) => {
             maxWidth='size-3000'
             aria-label={'media status'}
             items={FILTER_BY_STATUS_OPTIONS}
+            defaultSelectedKey={FILTER_BY_STATUS_OPTIONS[0].key}
             onSelectionChange={(status) => onChange(status as FilterByStatusKey)}
         >
             {(item) => <Item>{item.name}</Item>}
