@@ -38,6 +38,9 @@ type TrainModelContextProps = {
     modelRevisions: ModelRevisionWithValue[];
     selectedModelRevisionId: string | null;
     onSelectModelRevisionId: (modelRevisionId: string | null) => void;
+
+    isAdvancedSettingsMode: boolean;
+    onToggleAdvancedSettingsMode: (isAdvancedSettingsMode: boolean) => void;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -117,6 +120,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
     );
 
+    const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
+
     const modelRevisions = useMemo(() => {
         return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
     }, [allModelRevisions, selectedModelArchitectureId]);
@@ -147,6 +152,9 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 modelRevisions,
                 selectedModelRevisionId,
                 onSelectModelRevisionId: setSelectedModelRevisionId,
+
+                isAdvancedSettingsMode,
+                onToggleAdvancedSettingsMode: setIsAdvancedSettingsMode,
             }}
         >
             {children}

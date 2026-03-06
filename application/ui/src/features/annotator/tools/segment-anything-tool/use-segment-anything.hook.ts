@@ -14,12 +14,12 @@ import { loadImageQueryOptions } from '../../hooks/use-load-image-query.hook';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import type {
     SegmentAnythingWorkerApi,
-    SegmentAnythingWorkerModel,
+    SegmentAnythingWorkerInstance,
 } from '../../webworkers/segment-anything.worker.interface';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
-type SegmentAnythingRemoteModel = Remote<SegmentAnythingWorkerModel>;
+type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
 
 export const getSegmentAnythingWorkerQueryKey = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER'
@@ -54,7 +54,7 @@ const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
 
 export const segmentAnythingEncodingQueryOptions = (
     mediaItem: Media,
-    model: SegmentAnythingRemoteModel | undefined,
+    model: SegmentAnythingRemoteInstance | undefined,
     image: ImageData,
     enabled = true
 ) =>
@@ -87,7 +87,7 @@ export const usePreloadSAMWorkers = (enabled = true) => {
 };
 
 const useEncodingQuery = (
-    model: SegmentAnythingRemoteModel | undefined,
+    model: SegmentAnythingRemoteInstance | undefined,
     mediaItem: Media | undefined,
     image: ImageData | undefined,
     isImageReady: boolean
@@ -122,7 +122,7 @@ const useDecoderOutputType = () => {
     return 'polygon';
 };
 
-const useDecodingFn = (model: SegmentAnythingRemoteModel | undefined, encoding: EncodingOutput | undefined) => {
+const useDecodingFn = (model: SegmentAnythingRemoteInstance | undefined, encoding: EncodingOutput | undefined) => {
     const decoderOutput = useDecoderOutputType();
 
     // TODO: look into returning a new "decoder model" instance that already has the encoding data

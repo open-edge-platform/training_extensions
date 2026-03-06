@@ -1,7 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getObjectFromFormData, SinkOutputFormats, WebhookHttpMethod, WebhookSinkConfig } from '../utils';
+import {
+    getObjectFromFormData,
+    rateLimitFromFormData,
+    SinkOutputFormats,
+    WebhookHttpMethod,
+    WebhookSinkConfig,
+} from '../utils';
 
 export type Pair = Record<Fields, string>;
 
@@ -19,7 +25,7 @@ export const getWebhookInitialConfig = (): WebhookSinkConfig => ({
     name: '',
     timeout: 0,
     sink_type: 'webhook',
-    rate_limit: 0,
+    rate_limit: null,
     webhook_url: '',
     http_method: WebhookHttpMethod.POST,
     output_formats: [],
@@ -32,7 +38,7 @@ export const webhookBodyFormatter = (formData: FormData): WebhookSinkConfig => (
     headers: getObjectFromFormData(formData.getAll('headers-keys'), formData.getAll('headers-values')),
     timeout: Number(formData.get('timeout')),
     sink_type: 'webhook',
-    rate_limit: Number(formData.get('rate_limit')),
+    rate_limit: rateLimitFromFormData(formData),
     webhook_url: String(formData.get('webhook_url')),
     http_method: formData.get('http_method') as WebhookHttpMethod,
     output_formats: formData.getAll('output_formats') as SinkOutputFormats,

@@ -7,6 +7,7 @@ import { ActionButton, Divider, Flex, Text, View } from '@geti/ui';
 import { ChevronDownLight } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
+import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Toolbar } from '../../../dataset/media-preview/toolbar-container/toolbar-container.component';
 import { useVideoPlayer } from '../video-player-provider.component';
 import { FrameStep } from './frame-step/frame-step.component';
@@ -18,7 +19,11 @@ import { VideoDuration } from './video-duration.component';
 
 import classes from './video-toolbar.module.scss';
 
-export const VideoToolbar = () => {
+type VideoToolbarProps = {
+    mode: AnnotatorMode;
+};
+
+export const VideoToolbar = ({ mode }: VideoToolbarProps) => {
     const { videoFrame, step, changeStep, videoControls } = useVideoPlayer();
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -81,7 +86,7 @@ export const VideoToolbar = () => {
                             </ActionButton>
                         </Flex>
                     </Flex>
-                    {isExpanded && <VideoAnnotator />}
+                    {isExpanded && <VideoAnnotator mode={mode} />}
                 </View>
             </Toolbar.Section>
         </Toolbar.Container>

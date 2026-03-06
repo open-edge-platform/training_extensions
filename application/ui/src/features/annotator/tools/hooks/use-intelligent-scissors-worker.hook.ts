@@ -1,20 +1,25 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { IntelligentScissors } from '@geti/smart-tools';
 import { useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 
+import type {
+    IntelligentScissorsWorkerApi,
+    IntelligentScissorsWorkerInstance,
+} from '../../webworkers/intelligent-scissors.worker.interface';
+
+type IntelligentScissorsRemoteInstance = Remote<IntelligentScissorsWorkerInstance>;
+
 export const useIntelligentScissorsWorker = () => {
-    const { data, isLoading, isSuccess, isError } = useQuery<Remote<IntelligentScissors>>({
+    const { data, isLoading, isSuccess, isError } = useQuery<IntelligentScissorsRemoteInstance>({
         queryKey: ['workers', 'INTELLIGENT_SCISSORS'],
         queryFn: async () => {
             const baseWorker = new Worker(new URL('../../webworkers/intelligent-scissors.worker', import.meta.url), {
                 type: 'module',
             });
-            const intelligentScissorsWorker = wrap(baseWorker);
+            const intelligentScissorsWorker = wrap<IntelligentScissorsWorkerApi>(baseWorker);
 
-            // @ts-expect-error build exists on every worker
             return intelligentScissorsWorker.build();
         },
         staleTime: Infinity,
