@@ -4,6 +4,7 @@
 import { Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
+import { RateLimitFields } from '../rate-limit/rate-limit-fields.component';
 import { WebhookHttpMethod, WebhookSinkConfig } from '../utils';
 import { HeaderKeyValueBuilder } from './header-key-value-builder.component';
 
@@ -16,15 +17,10 @@ export const Webhook = ({ defaultState }: WebhookProps) => {
         <Flex direction='column' gap='size-200'>
             <Flex direction={'row'} gap='size-200'>
                 <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
-
                 <TextField isRequired flex='1' label='Name' name='name' defaultValue={defaultState.name} />
-                <NumberField
-                    label='Rate Limit'
-                    name='rate_limit'
-                    minValue={0}
-                    step={0.1}
-                    defaultValue={defaultState.rate_limit ?? undefined}
-                />
+            </Flex>
+            <Flex>
+                <RateLimitFields rateLimit={defaultState.rate_limit} />
             </Flex>
 
             <Flex direction={'row'} gap='size-200'>

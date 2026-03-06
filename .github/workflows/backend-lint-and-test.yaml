@@ -47,7 +47,9 @@ jobs:
     strategy:
       matrix:
         os: ["overflow", "windows-latest"]
-    name: python-${{ matrix.os }}-checks
+    # Use more descriptive job name for better visibility in CI results
+    # Overflow labeled runner is equivalent to ubuntu-latest in terms of resources
+    name: python-${{ matrix.os == 'overflow' && 'ubuntu-latest' || matrix.os }}-checks
     runs-on: ${{ matrix.os }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
@@ -109,7 +111,7 @@ jobs:
           for check in ${CHECKS}; do
             echo "::notice::check=${check}"
             if [[ "$check" != "success" && "$check" != "skipped" ]]; then
-              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              echo "::error::Required status checks failed. They must succeed before this pull request can be merged."
               exit 1
             fi
           done

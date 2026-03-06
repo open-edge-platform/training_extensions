@@ -18,6 +18,7 @@ export const ImportExport = () => {
             case 'export':
                 exportDialogState.open();
                 break;
+
             case 'import':
                 setCurrentStep('uploading');
                 datasetImportDialogState.open();

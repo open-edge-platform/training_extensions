@@ -135,10 +135,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.error("Failed to initialize database. Application cannot start.")
         raise RuntimeError("Database initialization failed")
 
+    # Worker processes are created with the "spawn" method to ensure a clean state and avoid issues with shared
+    # resources, especially when the workers involve GPU usage or complex libraries that may not be fork-safe.
+    # See https://github.com/open-edge-platform/training_extensions/issues/5701 for more details.
+    mp_ctx = mp.get_context("spawn")
+
     # Condition to notify processes about source updates
-    source_changed_condition: Condition = mp.Condition()
+    source_changed_condition: Condition = mp_ctx.Condition()
     # Event to signal that the model has to be reloaded
-    model_reload_event = mp.Event()
+    model_reload_event = mp_ctx.Event()
 
     event_bus = EventBus(source_changed_condition=source_changed_condition, model_reload_event=model_reload_event)
     app.state.event_bus = event_bus
@@ -147,7 +152,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.data_collector = data_collector
 
     # Initialize Scheduler
-    app_scheduler = Scheduler(event_bus=event_bus, data_collector=data_collector)
+    app_scheduler = Scheduler(event_bus=event_bus, data_collector=data_collector, mp_ctx=mp_ctx)
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 

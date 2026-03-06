@@ -8,7 +8,7 @@ import { SelectDatasetRevision } from './select-dataset-revision.component';
 import { SelectModelRevision } from './select-model-revision.component';
 import { SelectTrainingDevice } from './select-training-device.component';
 
-export const TrainModelDialogContent = () => {
+export const BasicTrainModelContent = () => {
     return (
         <View padding={'size-300'} backgroundColor={'gray-50'} height={'100%'}>
             <Flex height={'100%'} direction={'column'} gap={'size-300'}>

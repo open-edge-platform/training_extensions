@@ -21,7 +21,9 @@ import { useMatch } from 'react-router';
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
 import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
-import { TrainModelDialogContent } from './train-model-dialog-content';
+import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
+import { BasicTrainModelContent } from './basic-train-model-content.component';
+import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
 import { useTrainModel } from './train-model-provider.component';
 
 type TrainModelDialogProps = {
@@ -36,6 +38,8 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         selectedModelRevisionId,
         datasetRevisions,
         modelRevisions,
+        isAdvancedSettingsMode,
+        onToggleAdvancedSettingsMode,
     } = useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
@@ -81,13 +85,15 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     };
 
     return (
-        <Dialog width={'clamp(800px, 50vw, 1150px)'}>
+        <Dialog width={'clamp(800px, 50vw, 1150px)'} height={isAdvancedSettingsMode ? '80vh' : undefined}>
             <Heading>Select a model to train</Heading>
 
             <Divider size={'S'} />
 
             <Content>
-                <TrainModelDialogContent />
+                <TrainModelDialogLayout>
+                    {isAdvancedSettingsMode ? <AdvancedSettings /> : <BasicTrainModelContent />}
+                </TrainModelDialogLayout>
             </Content>
 
             <Divider size={'S'} />
@@ -108,6 +114,9 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 <ButtonGroup marginStart={'auto'}>
                     <Button variant={'secondary'} onPress={onClose}>
                         Cancel
+                    </Button>
+                    <Button variant={'primary'} onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}>
+                        {isAdvancedSettingsMode ? 'Back' : 'Advanced settings'}
                     </Button>
                     <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
                         Start

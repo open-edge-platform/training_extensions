@@ -15,18 +15,19 @@ import {
 } from '@geti/ui';
 import { LinkOut } from '@geti/ui/icons';
 
-import { $api } from '../../../../../api/client';
-import { ReactComponent as EmptyDataset } from '../../../../../assets/drop-files.svg';
-import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
-import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
+import { $api } from '../../api/client';
+import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
 import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
 
 import classes from './import-upload-file.module.scss';
 
-export const ImportUploadFile = () => {
-    const { appendImportEntry } = useImportDatasetToProject();
-    const { setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
+export type FileUploadedResponse = { size: number; fileName: string; prepareJobId: string; stagedDatasetId: string };
 
+type ImportUploadFileProps = {
+    onFileUploaded: (data: FileUploadedResponse) => void;
+};
+
+export const ImportUploadFile = ({ onFileUploaded }: ImportUploadFileProps) => {
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
     const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
 
@@ -68,16 +69,12 @@ export const ImportUploadFile = () => {
             },
         });
 
-        appendImportEntry({
+        onFileUploaded({
             size: file.size,
-            step: 'preparing',
             fileName: file.name,
-            importJobId: null,
             prepareJobId: prepareImportJob.job_id,
             stagedDatasetId: stagedDataset.id,
         });
-        setCurrentStep('preparing');
-        setCurrentStagedId(stagedDataset.id);
     };
 
     const isPending = stagedDatasetMutation.isPending || prepareImportJobMutation.isPending;

@@ -82,3 +82,19 @@ export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnno
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
+
+type BoolConfigurableParameter = components['schemas']['BoolParameterView'];
+type StringConfigurableParameter = components['schemas']['StringParameterView'];
+type IntConfigurableParameter = components['schemas']['IntParameterView'];
+type FloatConfigurableParameter = components['schemas']['FloatParameterView'];
+type FloatConfigurableRangeParameter = components['schemas']['FloatRangeParameterView'];
+
+export type ConfigurableParameter =
+    | BoolConfigurableParameter
+    | StringConfigurableParameter
+    | IntConfigurableParameter
+    | FloatConfigurableParameter
+    | FloatConfigurableRangeParameter;
+
+export type ConfigurableParameterGroup = components['schemas']['ConfigurableParameterGroupView'];
+export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;

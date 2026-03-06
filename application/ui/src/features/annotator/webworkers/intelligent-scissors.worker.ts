@@ -4,7 +4,9 @@
 import { buildIntelligentScissorsInstance } from '@geti/smart-tools';
 import { expose, proxy } from 'comlink';
 
-const WorkerApi = {
+import type { IntelligentScissorsWorkerApi } from './intelligent-scissors.worker.interface';
+
+const WorkerApi: IntelligentScissorsWorkerApi = {
     build: async () => {
         const instance = await buildIntelligentScissorsInstance();
 
