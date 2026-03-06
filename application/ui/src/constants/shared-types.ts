@@ -83,6 +83,11 @@ export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
 
-export type ConfigurableParameter = components['schemas']['ConfigurableParameterView'];
+export type ConfigurableParameter =
+    | components['schemas']['BoolParameterView']
+    | components['schemas']['StringParameterView']
+    | components['schemas']['IntParameterView']
+    | components['schemas']['FloatParameterView']
+    | components['schemas']['FloatRangeParameterView'];
 export type ConfigurableParameterGroup = components['schemas']['ConfigurableParameterGroupView'];
 export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
