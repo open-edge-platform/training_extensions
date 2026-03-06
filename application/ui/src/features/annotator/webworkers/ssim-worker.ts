@@ -4,7 +4,9 @@
 import { buildSSIMInstance } from '@geti/smart-tools';
 import { expose, proxy } from 'comlink';
 
-const WorkerApi = {
+import type { SSIMWorkerApi } from './ssim-worker.interface';
+
+const WorkerApi: SSIMWorkerApi = {
     build: async () => {
         const instance = await buildSSIMInstance();
 
