@@ -47,6 +47,9 @@ const AUTO_SEGMENTATION_HOTKEY = {
 export const TASK_HOTKEYS = {
     detection: {
         boundingBoxTool: HOTKEYS.boundingBoxTool,
+        polygonTool: HOTKEYS.polygonTool,
+        magneticLassoTool: HOTKEYS.magneticLassoTool,
+        ssimTool: HOTKEYS.ssimTool,
         ...COMMON_HOTKEYS,
         ...SELECTION_TOOL_HOTKEY,
         ...AUTO_SEGMENTATION_HOTKEY,
@@ -54,6 +57,7 @@ export const TASK_HOTKEYS = {
     instance_segmentation: {
         polygonTool: HOTKEYS.polygonTool,
         magneticLassoTool: HOTKEYS.magneticLassoTool,
+        ssimTool: HOTKEYS.ssimTool,
         ...COMMON_HOTKEYS,
         ...SELECTION_TOOL_HOTKEY,
         ...AUTO_SEGMENTATION_HOTKEY,

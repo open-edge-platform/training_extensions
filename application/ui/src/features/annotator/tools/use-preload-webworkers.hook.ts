@@ -9,5 +9,5 @@ export const usePreloadWebworkers = (enabled = true) => {
     useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER', enabled);
     useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', enabled);
     useSSIMWorker(enabled);
-    useIntelligentScissorsWorker();
+    useIntelligentScissorsWorker(enabled);
 };

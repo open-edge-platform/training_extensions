@@ -19,7 +19,7 @@ export const ToolManager = () => {
     const isPreloadEnabled = isPrefetchEnabledForTask(project.task.task_type);
 
     // Preload workers when the tool manager is mounted, so that "smart" tool is ready
-    // to use as soon as the user selects it. Not a huge performance gain but
+    // to use as soon as the user selects them. Not a huge performance gain but
     // it helps a bit.
     usePreloadWebworkers(isPreloadEnabled);
 
