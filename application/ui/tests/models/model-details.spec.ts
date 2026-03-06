@@ -3,6 +3,7 @@
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedModel } from 'mocks/mock-model';
+import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
@@ -91,6 +92,15 @@ test.describe('Model Details', () => {
                                 },
                             },
                         ],
+                    });
+                }
+
+                return new HttpResponse(null, { status: 404 });
+            }),
+            http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', ({ params }) => {
+                if (params.model_id === 'model-1') {
+                    return HttpResponse.json({
+                        parameters: getMockedTrainingConfiguration(),
                     });
                 }
 
@@ -297,6 +307,21 @@ test.describe('Model Details', () => {
             await page.getByRole('tab', { name: 'Model metrics' }).click();
 
             await expect(page.getByText('Failed to load training metrics')).toBeVisible();
+        });
+    });
+
+    test.describe('Training Parameters', () => {
+        test('shows learning parameters, filters and augmentations sections', async ({ page, modelsPage }) => {
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await page.getByRole('tab', { name: 'Training parameters' }).click();
+
+            await expect(page.getByRole('heading', { name: 'LEARNING PARAMETERS' })).toBeVisible();
+            await expect(page.getByRole('heading', { name: 'FILTERS' })).toBeVisible();
+            await expect(page.getByRole('heading', { name: 'AUGMENTATIONS' })).toBeVisible();
+
+            await expect(page.getByTestId('Box-LEARNING PARAMETERS').getByText('Maximum epochs')).toBeVisible();
+            await expect(page.getByTestId('Box-LEARNING PARAMETERS').getByText('200')).toBeVisible();
         });
     });
 });
