@@ -60,13 +60,7 @@ const useSSIMWorker = (enabled = true) => {
     return { worker: data, isLoading, isError };
 };
 
-const toToolRect = (shape: Shape): ToolRunSSIMProps['template'] => {
-    const rect = getBoundingRectFromShape(shape);
-
-    if (rect === null) {
-        throw new Error('Full-image shapes are not supported as SSIM rectangles');
-    }
-
+const toToolRect = (rect: Rect): ToolRunSSIMProps['template'] => {
     const { x, y, width, height } = rect;
 
     return {
@@ -94,7 +88,7 @@ const toToolRunSSIMProps = ({
             .filter((shape): shape is Rect => shape !== null)
             .map(toToolRect),
         autoMergeDuplicates,
-        shapeType: 'rect' as const,
+        shapeType: 'rect',
     };
 };
 
@@ -198,14 +192,10 @@ export const useSSIM = (enabled = true) => {
         },
         onSuccess: (matches, { existingAnnotations, autoMergeDuplicates, template, roi, shapeType = 'rectangle' }) => {
             const ssimMatches = convertToolMatchesToGetiMatches(matches);
-            const existingRects: Shape[] = autoMergeDuplicates
-                ? existingAnnotations
-                      .map(getBoundingRectFromShape)
-                      .filter((shape): shape is Rect => shape !== null)
-                      .map(toToolRect)
-                      .map(convertToolShapeToGetiShape)
+            const existingRects: Rect[] = autoMergeDuplicates
+                ? existingAnnotations.map(getBoundingRectFromShape).filter((shape): shape is Rect => shape !== null)
                 : [];
-            const filteredMatches = filterSSIMResults(roi, ssimMatches, template, existingRects as Rect[]);
+            const filteredMatches = filterSSIMResults(roi, ssimMatches, template, existingRects);
             const threshold = guessNumberOfItemsThreshold(filteredMatches);
 
             updateToolState(
