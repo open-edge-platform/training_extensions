@@ -30,19 +30,13 @@ export const getBoundingBoxInRoi = (boundingBox: RegionOfInterest, roi: RegionOf
     };
 };
 
-export const getBoundingRectFromShape = (shape: Shape): Rect => {
+export const getBoundingRectFromShape = (shape: Shape): Rect | null => {
     if (shape.type === 'rectangle') {
         return shape;
     }
 
     if (shape.type === 'full_image') {
-        return {
-            type: 'rectangle',
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
-        };
+        return null;
     }
 
     const xs = shape.points.map((point: { x: number; y: number }) => point.x);

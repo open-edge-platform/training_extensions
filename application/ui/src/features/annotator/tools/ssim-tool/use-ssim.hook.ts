@@ -62,7 +62,13 @@ const useSSIMWorker = (enabled = true) => {
 };
 
 const toToolRect = (shape: Shape): ToolRunSSIMProps['template'] => {
-    const { x, y, width, height } = getBoundingRectFromShape(shape);
+    const rect = getBoundingRectFromShape(shape);
+
+    if (rect === null) {
+        throw new Error('Full-image shapes are not supported as SSIM rectangles');
+    }
+
+    const { x, y, width, height } = rect;
 
     return {
         x,
@@ -78,7 +84,10 @@ const toToolRunSSIMProps = ({ imageData, roi, template, existingAnnotations, aut
         imageData,
         roi,
         template: toToolRect(template),
-        existingAnnotations: existingAnnotations.map(toToolRect),
+        existingAnnotations: existingAnnotations
+            .map(getBoundingRectFromShape)
+            .filter((shape): shape is Rect => shape !== null)
+            .map(toToolRect),
         autoMergeDuplicates,
         shapeType: 'rect' as const,
     } satisfies ToolRunSSIMProps;
@@ -181,14 +190,20 @@ export const useSSIM = (enabled = true) => {
     } = useMutation({
         mutationFn: async (runSSIMProps: RunSSIMProps) => {
             if (ssim === undefined) {
-                return [];
+                throw new Error('SSIM worker is not initialized yet');
             }
 
             return ssim.executeSSIM(toToolRunSSIMProps(runSSIMProps));
         },
         onSuccess: (matches, { existingAnnotations, autoMergeDuplicates, template, roi, shapeType = 'rectangle' }) => {
             const ssimMatches = convertToolMatchesToGetiMatches(matches);
-            const existingRects = autoMergeDuplicates ? existingAnnotations.map(toToolRect).map(toGetiRect) : [];
+            const existingRects = autoMergeDuplicates
+                ? existingAnnotations
+                      .map(getBoundingRectFromShape)
+                      .filter((shape): shape is Rect => shape !== null)
+                      .map(toToolRect)
+                      .map(toGetiRect)
+                : [];
             const filteredMatches = filterSSIMResults(roi, ssimMatches, template, existingRects);
             const threshold = guessNumberOfItemsThreshold(filteredMatches);
 
