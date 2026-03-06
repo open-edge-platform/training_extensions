@@ -21,11 +21,10 @@ import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
 
-export const getSegmentAnythingWorkerQueryKey = (
-    algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER'
-) => ['workers', algorithmType] as const;
+const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
+    ['workers', algorithmType] as const;
 
-export const segmentAnythingWorkerQueryOptions = (
+const segmentAnythingWorkerQueryOptions = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
     enabled = true
 ) =>

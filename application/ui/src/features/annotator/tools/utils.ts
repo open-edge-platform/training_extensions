@@ -30,6 +30,59 @@ export const getBoundingBoxInRoi = (boundingBox: RegionOfInterest, roi: RegionOf
     };
 };
 
+export const getBoundingRectFromShape = (shape: Shape): Rect | null => {
+    if (shape.type === 'rectangle') {
+        return shape;
+    }
+
+    if (shape.type === 'full_image') {
+        return null;
+    }
+
+    const xs = shape.points.map((point: { x: number; y: number }) => point.x);
+    const ys = shape.points.map((point: { x: number; y: number }) => point.y);
+    const x = Math.min(...xs);
+    const y = Math.min(...ys);
+    const width = Math.max(...xs) - x;
+    const height = Math.max(...ys) - y;
+
+    return {
+        type: 'rectangle',
+        x,
+        y,
+        width,
+        height,
+    };
+};
+
+export const isRectWithinRoi = (roi: RegionOfInterest, rect: Rect): boolean => {
+    return (
+        rect.x >= roi.x &&
+        rect.y >= roi.y &&
+        rect.x + rect.width <= roi.x + roi.width &&
+        rect.y + rect.height <= roi.y + roi.height
+    );
+};
+
+export const intersectionOverUnion = (a: Rect, b: Rect): number => {
+    const xMin = Math.max(a.x, b.x);
+    const yMin = Math.max(a.y, b.y);
+    const xMax = Math.min(a.x + a.width, b.x + b.width);
+    const yMax = Math.min(a.y + a.height, b.y + b.height);
+
+    const intersectionWidth = Math.max(0, xMax - xMin);
+    const intersectionHeight = Math.max(0, yMax - yMin);
+    const intersectionArea = intersectionWidth * intersectionHeight;
+
+    if (intersectionArea === 0) {
+        return 0;
+    }
+
+    const unionArea = a.width * a.height + b.width * b.height - intersectionArea;
+
+    return unionArea === 0 ? 0 : intersectionArea / unionArea;
+};
+
 interface getBoundingBoxResizePointsProps {
     gap: number;
     boundingBox: RegionOfInterest;
