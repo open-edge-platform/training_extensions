@@ -21,6 +21,7 @@ export const HOTKEYS = {
     autoSegmentation: 's',
     polygonTool: 'p',
     magneticLassoTool: 'm',
+    ssimTool: 'i',
     selectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+a`,
     deselectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
 } as const;
