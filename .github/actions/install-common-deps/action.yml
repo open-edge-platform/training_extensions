@@ -10,6 +10,10 @@ inputs:
     description: Install the 'uv' package manager
     required: false
     default: "true"
+  just-version:
+    description: Version of 'just' to install if 'install-just' is true
+    required: false
+    default: "1.46.0"
   uv-version-file:
     description: Path to the file containing the 'uv' version to install if 'install-uv' is true
     required: false
@@ -26,7 +30,7 @@ runs:
       if: ${{ inputs.install-just == 'true' }}
       uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3.1.0
       with:
-        just-version: "1.46.0"
+        just-version: ${{ inputs.just-version }}
 
     - name: Install uv and set the Python version
       if: ${{ inputs.install-uv == 'true' }}
