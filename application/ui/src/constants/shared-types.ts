@@ -98,3 +98,5 @@ export type ConfigurableParameter =
 
 export type ConfigurableParameterGroup = components['schemas']['ConfigurableParameterGroupView'];
 export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
+
+export type TrainingConfiguration = components['schemas']['TrainingConfigurationView'];
