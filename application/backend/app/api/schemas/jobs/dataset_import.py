@@ -182,7 +182,7 @@ class ImportDatasetMetadata(BaseModel):
                 "project_id": data.params.project_id,
                 "filters": DatasetFilters(
                     labels=data.params.labels,
-                    subsets=[],
+                    subsets=data.params.subsets,
                     include_unannotated=data.params.include_unannotated,
                 ),
                 "project": NewProjectParams(

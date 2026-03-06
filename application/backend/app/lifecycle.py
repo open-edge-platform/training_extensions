@@ -30,7 +30,6 @@ from app.services import (
     ModelService,
     PipelineService,
     ProjectService,
-    SystemService,
     TrainingConfigurationService,
 )
 from app.services.base_weights_service import BaseWeightsService
@@ -71,7 +70,7 @@ def setup_job_controller(
     project_service = ProjectService(
         data_dir=data_dir,
         label_service=label_service,
-        pipeline_service=PipelineService(system_service=SystemService()),
+        pipeline_service=PipelineService(),
     )
     dataset_revision_service = DatasetRevisionService(data_dir=data_dir)
     job_runnable_factory.register(

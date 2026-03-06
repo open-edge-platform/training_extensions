@@ -54,7 +54,7 @@ def fxt_import_params() -> ImportDatasetAsNewProjectJobParams:
     )
 
 
-class TestImportDatasetToProject:
+class TestImportDatasetAsNewProject:
     @pytest.mark.parametrize("labels", [["label1", "label2"], None])
     def test_create_project(
         self,

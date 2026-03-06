@@ -90,6 +90,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
         task: Task,
         labels_mapping: dict[str, str | None],
         include_unannotated: bool,
+        start_progress: float = 10.0,
     ) -> None:
         with self._db_session_factory() as session:
             self._dataset_service.set_db_session(session)
@@ -103,7 +104,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                 label_mapping=labels_mapping,
             )
             logger.info("Found {} labels for project {}", [label.name for label in project_labels], project_id)
-            unfiltered_dataset_size, min_p, max_p = len(dataset), 10, 100
+            unfiltered_dataset_size, min_p, max_p = len(dataset), start_progress, 100
             progress_interval = max(1, unfiltered_dataset_size // self.BATCH_PROGRESS_INTERVAL)
             num_imported_media = 0
             for idx, item in enumerate(dataset):

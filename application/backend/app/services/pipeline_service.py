@@ -34,11 +34,14 @@ class OtherProjectActiveError(Exception):
 
 class PipelineService(BaseSessionManagedService):
     def __init__(
-        self, system_service: SystemService, event_bus: EventBus | None = None, db_session: Session | None = None
+        self,
+        system_service: SystemService | None = None,
+        event_bus: EventBus | None = None,
+        db_session: Session | None = None,
     ) -> None:
         super().__init__(db_session)
         self._event_bus: EventBus | None = event_bus
-        self._system_service: SystemService = system_service
+        self._system_service: SystemService | None = system_service
 
     def create_pipeline(self, project_id: UUID) -> Pipeline:
         pipeline_repo = PipelineRepository(self.db_session)
@@ -50,6 +53,8 @@ class PipelineService(BaseSessionManagedService):
 
     def get_active_pipeline(self) -> Pipeline | None:
         """Retrieve an active pipeline."""
+        if self._system_service is None:
+            raise ValueError("System service is required to get active pipeline.")
         pipeline_repo = PipelineRepository(self.db_session)
         pipeline_db = pipeline_repo.get_active_pipeline()
         if pipeline_db is None:

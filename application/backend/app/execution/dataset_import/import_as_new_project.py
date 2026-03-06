@@ -104,10 +104,11 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
             task=project.task,
             labels_mapping=labels_mapping,
             include_unannotated=include_unannotated,
+            start_progress=15.0,
         )
 
     def execute(self, params: ImportDatasetAsNewProjectJobParams) -> None:
         project = self.create_project(params)
-        self.update_metadata({"project_id": str(project.id)})
+        self.update_metadata({"project_id": project.id})
         dataset = self.prepare_dataset(params=params, task=project.task)
         self.create_items(dataset=dataset, project=project, include_unannotated=params.include_unannotated)
