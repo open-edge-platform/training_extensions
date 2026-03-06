@@ -86,7 +86,7 @@ class NewProjectParams(BaseModel):
         "json_schema_extra": {
             "example": {
                 "name": "New Project from Imported Dataset",
-                "task_type": "object_detection",
+                "task_type": "detection",
             }
         }
     }
@@ -103,7 +103,7 @@ class ImportDatasetNewParams(BaseModel):
             "example": {
                 "project": {
                     "name": "New Project from Imported Dataset",
-                    "task_type": "object_detection",
+                    "task_type": "detection",
                 },
                 "filters": {
                     "labels": ["person", "car", "motorcycle"],

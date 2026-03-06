@@ -150,6 +150,7 @@ class TestImportDatasetAsNewProject:
                 task=project.task,
                 labels_mapping=expected_mapping,
                 include_unannotated=False,
+                start_progress=15.0,
             )
 
     def test_execute(

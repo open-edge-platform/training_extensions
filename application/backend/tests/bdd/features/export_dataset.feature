@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-Feature: Dataset Export
+Feature: Export Dataset
   As a user of the application
   I want to export datasets in various formats
   So that I can use the data in other applications

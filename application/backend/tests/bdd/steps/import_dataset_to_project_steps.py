@@ -4,7 +4,7 @@
 import ast
 import secrets
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import numpy as np
@@ -24,7 +24,7 @@ from app.datumaro_converter import (
     InstanceSegmentationSample,
     MultilabelClassificationSample,
 )
-from app.models import DatasetItemAnnotationStatus, TaskType
+from app.models import DatasetItemAnnotationStatus, Task, TaskType
 from tests.bdd.utils import generate_random_image, import_dataset_to_project
 
 
@@ -34,26 +34,23 @@ def step_dataset_with_labels_exists(context: Context, labels: str) -> None:
     labels_list = ast.literal_eval(labels)
     label_categories: Categories = LabelCategories(labels=labels_list)
     context.labels = label_categories
-    dataset = None
+    sample_type: Any = None
     project = cast(ProjectView, context.project)
     match project.task.task_type:
         case TaskType.DETECTION:
-            dataset = Dataset(DetectionSample, categories={"label": label_categories})
+            sample_type = DetectionSample
         case TaskType.CLASSIFICATION:
-            if project.task.exclusive_labels:
-                dataset = Dataset(ClassificationSample, categories={"label": label_categories})
-            else:
-                dataset = Dataset(MultilabelClassificationSample, categories={"label": label_categories})
+            sample_type = ClassificationSample if project.task.exclusive_labels else MultilabelClassificationSample
         case TaskType.INSTANCE_SEGMENTATION:
-            dataset = Dataset(InstanceSegmentationSample, categories={"label": label_categories})
-    context.dataset = dataset
+            sample_type = InstanceSegmentationSample
+    context.dataset = Dataset(sample_type, categories={"label": label_categories})
 
 
 @given("the dataset contains the following image distribution:")  # pyrefly: ignore
 def step_dataset_with_samples_exists(context: Context) -> None:
     """Add multiple random annotated images to the dataset specific subset."""
     dataset = cast(Dataset, context.dataset)
-    project = cast(ProjectView, context.project)
+    task = cast(Task, context.task)
     labels = cast(LabelCategories, context.labels)
     images_dir = cast(Path, context.tmp_path) / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
@@ -73,7 +70,7 @@ def step_dataset_with_samples_exists(context: Context) -> None:
                 image_path = images_dir / f"{subset}_{filename}"
                 image_path.write_bytes(buffer.read())
                 sample = None
-                match project.task.task_type:
+                match task.task_type:
                     case TaskType.DETECTION:
                         x1, y1 = 10 + secrets.randbelow(50), 20 + secrets.randbelow(50)
                         x2, y2 = x1 + 80 + secrets.randbelow(100), y1 + 100 + secrets.randbelow(150)
@@ -88,7 +85,7 @@ def step_dataset_with_samples_exists(context: Context) -> None:
                             confidence=None,
                         )
                     case TaskType.CLASSIFICATION:
-                        if project.task.exclusive_labels:
+                        if task.exclusive_labels:
                             sample = ClassificationSample(
                                 id=None,
                                 image=LazyImage(image_path),

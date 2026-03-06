@@ -30,7 +30,9 @@ def step_project_exists(context: Context, task_type: TaskType, project_name: str
         },
     }
     response = requests.post(f"{context.base_url}/api/projects", json=project_body)
-    context.project = ProjectView.model_validate(response.json())
+    project = ProjectView.model_validate(response.json())
+    context.project = project
+    context.task = project.task
 
 
 @given("the project contains the following image distribution:")  # pyrefly: ignore
