@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { RunSSIMProps as ToolRunSSIMProps, SSIMMatch as ToolSSIMMatch } from '@geti/smart-tools';
-import type { Rect as ToolRect } from '@geti/smart-tools/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 
@@ -79,7 +78,13 @@ const toToolRect = (shape: Shape): ToolRunSSIMProps['template'] => {
     };
 };
 
-const toToolRunSSIMProps = ({ imageData, roi, template, existingAnnotations, autoMergeDuplicates }: RunSSIMProps) => {
+const toToolRunSSIMProps = ({
+    imageData,
+    roi,
+    template,
+    existingAnnotations,
+    autoMergeDuplicates,
+}: RunSSIMProps): ToolRunSSIMProps => {
     return {
         imageData,
         roi,
@@ -90,18 +95,14 @@ const toToolRunSSIMProps = ({ imageData, roi, template, existingAnnotations, aut
             .map(toToolRect),
         autoMergeDuplicates,
         shapeType: 'rect' as const,
-    } satisfies ToolRunSSIMProps;
+    };
 };
 
 const convertToolMatchesToGetiMatches = (matches: ToolSSIMMatch[]): SSIMMatch[] => {
     return matches.map((match) => ({
         ...match,
-        shape: toGetiRect(match.shape),
+        shape: convertToolShapeToGetiShape(match.shape),
     }));
-};
-
-const toGetiRect = (shape: ToolRect): Rect => {
-    return convertToolShapeToGetiShape(shape);
 };
 
 const filterSSIMResults = (
@@ -197,14 +198,14 @@ export const useSSIM = (enabled = true) => {
         },
         onSuccess: (matches, { existingAnnotations, autoMergeDuplicates, template, roi, shapeType = 'rectangle' }) => {
             const ssimMatches = convertToolMatchesToGetiMatches(matches);
-            const existingRects = autoMergeDuplicates
+            const existingRects: Shape[] = autoMergeDuplicates
                 ? existingAnnotations
                       .map(getBoundingRectFromShape)
                       .filter((shape): shape is Rect => shape !== null)
                       .map(toToolRect)
-                      .map(toGetiRect)
+                      .map(convertToolShapeToGetiShape)
                 : [];
-            const filteredMatches = filterSSIMResults(roi, ssimMatches, template, existingRects);
+            const filteredMatches = filterSSIMResults(roi, ssimMatches, template, existingRects as Rect[]);
             const threshold = guessNumberOfItemsThreshold(filteredMatches);
 
             updateToolState(
