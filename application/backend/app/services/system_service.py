@@ -23,8 +23,10 @@ CV2_BACKENDS = {
 class SystemService:
     """Service to get system information"""
 
-    @staticmethod
-    def get_memory_usage() -> tuple[float, float]:
+    def __init__(self) -> None:
+        self.process = psutil.Process()
+
+    def get_memory_usage(self) -> tuple[float, float]:
         """
         Get the memory usage of the process
 
@@ -32,17 +34,16 @@ class SystemService:
             tuple[float, float]: Used memory in MB and total available memory in MB
         """
         memory_info = psutil.virtual_memory()
-        return psutil.Process().memory_info().rss / (1024 * 1024), memory_info.total / (1024 * 1024)
+        return self.process.memory_info().rss / (1024 * 1024), memory_info.total / (1024 * 1024)
 
-    @staticmethod
-    def get_cpu_usage() -> float:
+    def get_cpu_usage(self) -> float:
         """
         Get the CPU usage of the process
 
         Returns:
             float: CPU usage in percentage
         """
-        return psutil.Process().cpu_percent(interval=None)
+        return self.process.cpu_percent(interval=None)
 
     @staticmethod
     def get_devices() -> list[DeviceInfo]:
