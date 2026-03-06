@@ -11,7 +11,7 @@ import type {
 
 type IntelligentScissorsRemoteInstance = Remote<IntelligentScissorsWorkerInstance>;
 
-export const useIntelligentScissorsWorker = () => {
+export const useIntelligentScissorsWorker = (enabled = true) => {
     const { data, isLoading, isSuccess, isError } = useQuery<IntelligentScissorsRemoteInstance>({
         queryKey: ['workers', 'INTELLIGENT_SCISSORS'],
         queryFn: async () => {
@@ -23,6 +23,7 @@ export const useIntelligentScissorsWorker = () => {
             return intelligentScissorsWorker.build();
         },
         staleTime: Infinity,
+        enabled,
     });
 
     return { worker: data, isLoading, isSuccess, isError };

@@ -42,7 +42,7 @@ const INITIAL_SSIM_STATE: SSIMState = {
     threshold: 0,
 };
 
-const useSSIMWorker = (enabled = true) => {
+export const useSSIMWorker = (enabled = true) => {
     const { data, isLoading, isError } = useQuery({
         queryKey: ['workers', 'SSIM'],
         queryFn: async () => {
