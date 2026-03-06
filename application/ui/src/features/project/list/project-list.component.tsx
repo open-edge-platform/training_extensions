@@ -7,7 +7,7 @@ import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useProjects } from '../../../hooks/api/project.hook';
-import { NewProjectLink } from './new-project-link.component';
+import { NewProjectMenu } from './new-project-menu.component';
 import { ProjectCard } from './project-card.component';
 
 import backgroundStyles from '../project-background.module.scss';
@@ -26,7 +26,8 @@ const ProjectGrid = () => {
             UNSAFE_style={{ overflowY: 'auto' }}
             columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
         >
-            <NewProjectLink />
+            <NewProjectMenu />
+
             {projects.data.map((item) => (
                 <ProjectCard key={item.id} item={item} />
             ))}
