@@ -3,31 +3,60 @@
 
 import { dimensionValue, Grid, Text, View } from '@geti/ui';
 
+import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
+
 import classes from './progress-stepper.module.scss';
 
-export const ProgressStepper = () => {
+type ProgressStepperProps = {
+    currentStep: ImportDatasetAsNewProjectState;
+};
+
+const isStepOne = (step: ImportDatasetAsNewProjectState) => ['uploading', 'preparing'].includes(step);
+const isStepOneCompleted = (step: ImportDatasetAsNewProjectState) =>
+    ['taskTypeSelection', 'labelMapping'].includes(step);
+
+const isStepTwo = (step: ImportDatasetAsNewProjectState) => ['taskTypeSelection'].includes(step);
+const isStepTwoCompleted = (step: ImportDatasetAsNewProjectState) => ['labelMapping'].includes(step);
+
+const isStepThree = (step: ImportDatasetAsNewProjectState) => ['labelMapping'].includes(step);
+
+export const ProgressStepper = ({ currentStep }: ProgressStepperProps) => {
     return (
         <Grid
             gap={'size-100'}
             rows={['auto', 'auto']}
+            marginX={'size-1000'}
             alignItems={'center'}
             justifyItems={'center'}
             marginBottom={'size-200'}
-            marginX={'size-1000'}
             columns={['30px', '1fr', '30px', '1fr', '30px']}
         >
-            <div data-active className={classes.step}>
-                1
+            <div
+                aria-label='step one'
+                className={classes.step}
+                data-active={isStepOne(currentStep)}
+                data-completed={isStepOneCompleted(currentStep)}
+            >
+                {isStepOneCompleted(currentStep) ? '✓' : '1'}
             </div>
             <View UNSAFE_className={classes.stepDivider}></View>
-            <div className={classes.step}>3</div>
+            <div
+                aria-label='step two'
+                className={classes.step}
+                data-active={isStepTwo(currentStep)}
+                data-completed={isStepTwoCompleted(currentStep)}
+            >
+                {isStepTwoCompleted(currentStep) ? '✓' : '2'}
+            </div>
             <View UNSAFE_className={classes.stepDivider}></View>
-            <div className={classes.step}>5</div>
+            <div aria-label='step three' className={classes.step} data-active={isStepThree(currentStep)}>
+                3
+            </div>
 
             <Text>Dataset</Text>
-            <div></div>
+            <View></View>
             <Text UNSAFE_style={{ width: dimensionValue('size-800'), textAlign: 'center' }}>Task type</Text>
-            <div></div>
+            <View></View>
             <Text>Label</Text>
         </Grid>
     );
