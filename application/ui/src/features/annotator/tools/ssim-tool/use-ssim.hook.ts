@@ -28,7 +28,7 @@ type SSIMShapeType = Extract<Shape['type'], 'rectangle' | 'polygon'>;
 type RunSSIMProps = Omit<ToolRunSSIMProps, 'template' | 'existingAnnotations' | 'shapeType'> & {
     template: Rect;
     existingAnnotations: Shape[];
-    shapeType?: SSIMShapeType;
+    shapeType: SSIMShapeType;
 };
 
 type SSIMState = {
