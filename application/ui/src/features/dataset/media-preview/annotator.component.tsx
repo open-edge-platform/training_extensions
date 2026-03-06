@@ -4,6 +4,7 @@
 import { View } from '@geti/ui';
 
 import type { Media } from '../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
@@ -13,7 +14,6 @@ import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { ReadOnlyAnnotator } from './read-only-annotator.component';
-import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { useNextMediaPrefetch } from './utils';
 
@@ -49,6 +49,7 @@ const Annotator = ({
     if (mode === 'prediction') {
         return (
             <ReadOnlyAnnotator
+                mode={mode}
                 image={image}
                 mediaItem={mediaItem}
                 onModeChange={changeAnnotatorMode}
@@ -78,7 +79,7 @@ const Annotator = ({
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>
-                    <VideoToolbar />
+                    <VideoToolbar mode={mode} />
                 </View>
             )}
 
@@ -88,7 +89,7 @@ const Annotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} />
+                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
             </View>
         </>

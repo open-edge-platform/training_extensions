@@ -13,9 +13,9 @@ import {
 
 import type { TaskType } from '../../constants/shared-types';
 import type { ToolType } from '../../features/annotator/tools/interface';
-import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { isClassificationTask, isSegmentationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
+import type { AnnotatorMode } from './annotator-mode';
 
 type ToolContextValue = {
     activeTool: ToolType | null;
