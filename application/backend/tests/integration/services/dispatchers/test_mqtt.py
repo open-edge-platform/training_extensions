@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import sys
 import time
 from datetime import datetime
 from unittest.mock import Mock, patch
@@ -140,6 +141,7 @@ def mqtt_test_subscriber(mqtt_broker):
     subscriber.disconnect()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Docker-based tests not supported on Windows CI")
 class TestMqttDispatcher:
     """Integration tests for MqttDispatcher."""
 

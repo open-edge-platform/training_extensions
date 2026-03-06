@@ -52,30 +52,21 @@ jobs:
     steps:
       - *checkout
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
+          uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
           python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
 
-      - name: Installing dependencies
+      - name: Prepare venv and install Python dependencies
         working-directory: library
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen
+        run: just venv
 
-      - name: Check formatting with ruff
+      - name: Run linters and type-checkers
         working-directory: library
-        run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check .
-
-      - name: Check source code with Pyrefly
-        working-directory: library
-        run: uv run pyrefly check --baseline=pyrefly-baseline.json
+        run: just lint
 
   unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]
@@ -105,26 +96,23 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
+          uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
           python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen
+        run: just venv
 
       - name: Unit testing (excluding models)
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest tests/unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
+        run: just test-unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
 
       # Unit test models separately using --forked flag so that each is run in a separate process.
       # Running these models after each other from the same process can cause segfaults
@@ -132,7 +120,7 @@ jobs:
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest tests/unit/backend/native/models --cov --cov-report=xml --cov-append --forked
+        run: just test-unit-models --cov --cov-report=xml --cov-append --forked
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
@@ -174,33 +162,29 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
+          uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
           python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen --extra cuda
+        run: just venv --device cuda
 
       - name: Integration testing
         working-directory: library
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
-        run: |
-          uv run --frozen --extra cuda pytest tests/integration \
-            -ra \
-            --showlocals \
-            --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
-            --task ${{ matrix.task }} \
-            --open-subprocess \
-            --run-category-only
+        run: just test-integration \
+          -ra \
+          --showlocals \
+          --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
+          --task ${{ matrix.task }} \
+          --open-subprocess \
+          --run-category-only
 
   required-check:
     name: Required Check lib-lint-and-test
