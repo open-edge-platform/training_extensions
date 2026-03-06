@@ -4,6 +4,7 @@ import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -484,6 +485,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         logger.info("Cleaned up OTX work directory at {}", otx_work_dir)
 
     def execute(self, params: TrainingJobParams) -> None:
+        training_start_time = datetime.now()
         project_id = params.project_id
         task = params.task
         model_dir = self.__base_model_path(
@@ -506,7 +508,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
         )
         try:
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=params.model_id, status=TrainingStatus.IN_PROGRESS
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.IN_PROGRESS,
+                training_started_at=training_start_time,
             )
             trained_model_path, otx_engine = self.train_model(
                 training_config=otx_training_config,
@@ -530,12 +535,20 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 trained_model_path=trained_model_path,
                 exported_model_paths=exported_model_paths,
             )
+            training_finish_time = datetime.now()
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=params.model_id, status=TrainingStatus.SUCCESSFUL
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.SUCCESSFUL,
+                training_finished_at=training_finish_time,
             )
         except Exception:
+            training_finish_time = datetime.now()
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=params.model_id, status=TrainingStatus.FAILED
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.FAILED,
+                training_finished_at=training_finish_time,
             )
             raise
 
@@ -595,7 +608,20 @@ class OTXTrainer(Execution[TrainingJobParams]):
         except KeyError:
             raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
 
-    def __update_model_revision_training_status(self, project_id: UUID, model_id: UUID, status: TrainingStatus):
+    def __update_model_revision_training_status(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        status: TrainingStatus,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ):
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
-            self._model_service.update_revision_status(project_id=project_id, model_id=model_id, training_status=status)
+            self._model_service.update_revision_status(
+                project_id=project_id,
+                model_id=model_id,
+                training_status=status,
+                training_started_at=training_started_at,
+                training_finished_at=training_finished_at,
+            )

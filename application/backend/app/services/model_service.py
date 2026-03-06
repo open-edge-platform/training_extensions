@@ -5,6 +5,7 @@ import json
 import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from uuid import UUID
@@ -345,7 +346,14 @@ class ModelService(BaseSessionManagedService):
             )
         )
 
-    def update_revision_status(self, project_id: UUID, model_id: UUID, training_status: TrainingStatus) -> None:
+    def update_revision_status(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        training_status: TrainingStatus,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ) -> None:
         """
         Updates the training status of a model revision for the given project.
 
@@ -353,9 +361,16 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): Identifier of the project that owns the model revision.
             model_id (UUID): Identifier of the model revision to update.
             training_status (TrainingStatus): New training status to set for the model revision.
+            training_started_at (datetime): Date and time when the training was started
+            training_finished_at (datetime): Date and time when the training was finished
         """
         model_revision_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_revision_repo.update_training_status(obj_id=str(model_id), training_status=training_status)
+        model_revision_repo.update_training_status(
+            obj_id=str(model_id),
+            training_status=training_status,
+            training_started_at=training_started_at,
+            training_finished_at=training_finished_at,
+        )
 
     def get_model_binary_files(
         self, project_id: UUID, model_id: UUID, format: ModelFormat

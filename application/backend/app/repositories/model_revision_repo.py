@@ -1,7 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Sequence
-from typing import cast
+from datetime import datetime
+from typing import Any, cast
 
 from sqlalchemy import CursorResult, delete, select, update
 from sqlalchemy.orm import Session
@@ -49,17 +50,31 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
         result = cast(CursorResult, self.db.execute(stmt))
         return result.rowcount > 0
 
-    def update_training_status(self, obj_id: str, training_status: str) -> None:
+    def update_training_status(
+        self,
+        obj_id: str,
+        training_status: str,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ) -> None:
         """
-        Update the training status of a model revision.
+        Update the training status and trainig start and finish time of a model revision.
 
         Args:
             obj_id (str): Unique identifier of the model revision to update.
             training_status (str): New training status value to set.
+            training_started_at (datetime): Date and time when the training was started
+            training_finished_at (datetime): Date and time when the training was finished
         """
+        values: dict[str, Any] = {"training_status": training_status}
+        if training_started_at is not None:
+            values["training_started_at"] = training_started_at
+        if training_finished_at is not None:
+            values["training_finished_at"] = training_finished_at
+
         stmt = (
             update(ModelRevisionDB)
             .where((ModelRevisionDB.id == obj_id) & (ModelRevisionDB.project_id == self.project_id))
-            .values(training_status=training_status)
+            .values(**values)
         )
         self.db.execute(stmt)
