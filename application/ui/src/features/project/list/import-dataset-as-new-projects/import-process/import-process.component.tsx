@@ -1,19 +1,16 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
-
 import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
 import { ImportJobProcess } from '../../../../../components/import-job-process/import-job-process.component';
-import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
 
 type ImportProcessProps = {
     stagedDatasetId: string;
-    setCurrentStep: Dispatch<SetStateAction<ImportDatasetAsNewProjectState>>;
+    onFilePrepared: () => void;
 };
 
-export const ImportProcess = ({ stagedDatasetId, setCurrentStep }: ImportProcessProps) => {
+export const ImportProcess = ({ stagedDatasetId, onFilePrepared }: ImportProcessProps) => {
     const { getImportEntry, deleteImportEntry, updateImportEntryStep } = useImportDatasetAsNewProject();
     const entry = getImportEntry(stagedDatasetId);
 
@@ -25,8 +22,8 @@ export const ImportProcess = ({ stagedDatasetId, setCurrentStep }: ImportProcess
                 deleteImportEntry(stagedDatasetId);
             }}
             onSuccess={() => {
-                setCurrentStep('labelMapping');
-                updateImportEntryStep(stagedDatasetId, 'labelMapping');
+                onFilePrepared();
+                updateImportEntryStep(stagedDatasetId, 'taskTypeSelection');
             }}
             message='Prepare dataset import as new project'
         />

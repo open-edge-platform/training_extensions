@@ -3,8 +3,7 @@
 
 import { Button, ButtonGroup } from '@geti/ui';
 import { useCancelJob } from 'hooks/api/jobs/jobs.hook';
-
-import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
+import { useDeleteStagedDataset } from 'hooks/api/staged-file.hook';
 
 type ImportProcessButtonsProps = {
     prepareJobId: string;
@@ -16,6 +15,8 @@ export const ImportProcessButtons = ({ prepareJobId, stagedDatasetId, onClose }:
     const cancelJobMutation = useCancelJob();
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, onSuccess: onClose });
 
+    const isPending = cancelJobMutation.isPending || deleteFileMutation.isPending;
+
     const handleCancelJob = async (jobId: string) => {
         await cancelJobMutation.mutateAsync({ params: { path: { job_id: jobId } } });
         deleteFileMutation.mutate();
@@ -25,18 +26,13 @@ export const ImportProcessButtons = ({ prepareJobId, stagedDatasetId, onClose }:
         <ButtonGroup>
             <Button
                 variant='negative'
-                isPending={cancelJobMutation.isPending}
-                isDisabled={cancelJobMutation.isPending}
+                isPending={isPending}
+                isDisabled={isPending}
                 onPress={() => handleCancelJob(prepareJobId)}
             >
                 Cancel
             </Button>
-            <Button
-                onPress={onClose}
-                variant='secondary'
-                isPending={cancelJobMutation.isPending}
-                isDisabled={cancelJobMutation.isPending}
-            >
+            <Button onPress={onClose} variant='secondary' isPending={isPending} isDisabled={isPending}>
                 Hide
             </Button>
         </ButtonGroup>

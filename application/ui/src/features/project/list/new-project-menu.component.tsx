@@ -15,7 +15,7 @@ import classes from './new-project-menu.module.scss';
 
 export const NewProjectMenu = () => {
     const navigate = useNavigate();
-    const { datasetImportDialogState } = useImportDatasetDialog();
+    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialog();
 
     const handleAction = (key: Key) => {
         switch (key) {
@@ -24,6 +24,8 @@ export const NewProjectMenu = () => {
                 break;
 
             case 'newFromDataset':
+                setCurrentStep('uploading');
+                setCurrentStagedId(null);
                 datasetImportDialogState.open();
                 break;
         }

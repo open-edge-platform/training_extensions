@@ -17,6 +17,7 @@ export const LabelMappingButtons = ({ stagedDatasetId, onClose }: LabelMappingBu
     const handleDelete = () => {
         deleteFileMutation.mutate();
     };
+
     return (
         <ButtonGroup>
             <Button

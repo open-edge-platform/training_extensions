@@ -24,12 +24,11 @@ export const ProgressStepper = ({ currentStep }: ProgressStepperProps) => {
     return (
         <Grid
             gap={'size-100'}
-            rows={['auto', 'auto']}
-            marginX={'size-1000'}
+            width={'100%'}
+            maxWidth={'35rem'}
             alignItems={'center'}
             justifyItems={'center'}
-            marginBottom={'size-200'}
-            columns={['30px', '1fr', '30px', '1fr', '30px']}
+            columns={['1.875rem', '1fr', '1.875rem', '1fr', '1.875rem']}
         >
             <div
                 aria-label='step one'
