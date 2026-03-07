@@ -2,26 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '../../api/client';
-import { useImportDatasetToProject } from '../localStorage/use-import-dataset-to-project.hook';
 import { isInvalidStagedFile } from './util';
 
 type useDeleteStagedDatasetProps = {
-    stagedDatasetId: string;
+    stagedDatasetId: string | null | undefined;
+    deleteEntry: () => void;
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
 };
 
-export const useDeleteStagedDataset = ({ stagedDatasetId, onSuccess, onError }: useDeleteStagedDatasetProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
+export const useDeleteStagedDataset = ({
+    stagedDatasetId,
+    onError,
+    onSuccess,
+    deleteEntry,
+}: useDeleteStagedDatasetProps) => {
     const params = { params: { path: { staged_dataset_id: stagedDatasetId } } };
 
     const deleteMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}', {
         onSuccess: () => {
-            deleteImportEntry(stagedDatasetId);
+            deleteEntry();
             onSuccess?.();
         },
         onError: (error) => {
-            isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
+            isInvalidStagedFile(error) && deleteEntry();
             onError?.(error);
         },
     });
