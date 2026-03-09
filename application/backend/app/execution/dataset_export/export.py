@@ -5,7 +5,8 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from datumaro.experimental.data_formats.base import DataFormat, Dataset, save_dataset
+from datumaro.experimental import Dataset
+from datumaro.experimental.data_formats.base import DataFormat, save_dataset
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import Subset
 from loguru import logger
