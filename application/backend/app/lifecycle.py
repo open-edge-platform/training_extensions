@@ -32,6 +32,7 @@ from app.services import (
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
+from app.services.inference import InferenceServer
 from app.services.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
@@ -151,8 +152,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
     app.state.data_collector = data_collector
 
+    inference_server = InferenceServer(data_dir=settings.data_dir)
+    app.state.inference_server = inference_server
+
     # Initialize Scheduler
-    app_scheduler = Scheduler(event_bus=event_bus, data_collector=data_collector, mp_ctx=mp_ctx)
+    app_scheduler = Scheduler(
+        event_bus=event_bus, data_collector=data_collector, inference_server=inference_server, mp_ctx=mp_ctx
+    )
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 
