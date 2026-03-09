@@ -4,7 +4,7 @@ import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -485,7 +485,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         logger.info("Cleaned up OTX work directory at {}", otx_work_dir)
 
     def execute(self, params: TrainingJobParams) -> None:
-        training_start_time = datetime.now()
+        training_start_time = datetime.now(UTC)
         project_id = params.project_id
         task = params.task
         model_dir = self.__base_model_path(
@@ -535,7 +535,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 trained_model_path=trained_model_path,
                 exported_model_paths=exported_model_paths,
             )
-            training_finish_time = datetime.now()
+            training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
                 project_id=project_id,
                 model_id=params.model_id,
@@ -543,7 +543,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_finished_at=training_finish_time,
             )
         except Exception:
-            training_finish_time = datetime.now()
+            training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
                 project_id=project_id,
                 model_id=params.model_id,
