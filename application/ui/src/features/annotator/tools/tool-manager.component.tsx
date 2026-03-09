@@ -9,7 +9,8 @@ import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component
 import { MagneticLasso } from './magnetic-lasso/magnetic-lasso.component';
 import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
-import { usePreloadSAMWorkers } from './segment-anything-tool/use-segment-anything.hook';
+import { SSIMTool } from './ssim-tool/ssim-tool.component';
+import { usePreloadWebworkers } from './use-preload-webworkers.hook';
 
 export const ToolManager = () => {
     const { activeTool } = useTool();
@@ -17,10 +18,10 @@ export const ToolManager = () => {
 
     const isPreloadEnabled = isPrefetchEnabledForTask(project.task.task_type);
 
-    // Preload SAM workers when the tool manager is mounted, so that the tool is ready
-    // to use as soon as the user selects it. Not a huge performance gain but
+    // Preload workers when the tool manager is mounted, so that "smart" tool is ready
+    // to use as soon as the user selects them. Not a huge performance gain but
     // it helps a bit.
-    usePreloadSAMWorkers(isPreloadEnabled);
+    usePreloadWebworkers(isPreloadEnabled);
 
     if (activeTool === 'bounding-box') {
         return <BoundingBoxTool />;
@@ -36,6 +37,10 @@ export const ToolManager = () => {
 
     if (activeTool === 'magnetic-lasso') {
         return <MagneticLasso />;
+    }
+
+    if (activeTool === 'ssim') {
+        return <SSIMTool />;
     }
 
     return null;

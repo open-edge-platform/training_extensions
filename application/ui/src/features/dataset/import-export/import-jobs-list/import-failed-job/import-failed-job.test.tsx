@@ -34,7 +34,8 @@ describe('ImportFailedJob', () => {
 
         render(
             <ImportFailedJob
-                job={job}
+                error={job.error ?? ''}
+                message={job.message ?? ''}
                 size={1024}
                 fileName='dataset.zip'
                 stagedDatasetId={job.metadata.staged_dataset_id}

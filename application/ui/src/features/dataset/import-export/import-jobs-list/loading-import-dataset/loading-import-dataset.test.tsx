@@ -96,4 +96,23 @@ describe('LoadingImportDataset', () => {
         });
         expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
+
+    it('renders failed state when job status query fails with error', async () => {
+        const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+        server.use(
+            http.get('/api/jobs/{job_id}', () => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                return HttpResponse.json({ detail: 'Job not found' }, { status: 404 });
+            })
+        );
+
+        render(<LoadingImportDataset stagedDatasetId={stagedDatasetId} />, { queryClient });
+
+        expect(await screen.findByText('An error occurred during import.')).toBeVisible();
+        expect(await screen.findByText('Job not found')).toBeVisible();
+        expect(invalidateQueriesSpy).not.toHaveBeenCalled();
+        expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
+    });
 });

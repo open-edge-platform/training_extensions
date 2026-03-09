@@ -9,10 +9,11 @@ Feature: Import Dataset To Project
   Scenario: Import detection dataset with label mapping
     Given A detection project "grapes" with labels ["Chardonnay", "Sauvignon Blanc", "Cabernet Franc"] exists
     And a dataset with labels ["Chardonnay", "Blanc Fume", "Riesling"] exists
-    And the dataset containing 5 training images labeled "Chardonnay"
-    And the dataset containing 5 training images labeled "Blanc Fume"
-    And the dataset containing 5 training images labeled "Riesling"
-    And the dataset containing 2 validation images labeled "Chardonnay"
+    And the dataset contains the following image distribution:
+      | Label         | Training | Validation |
+      | Chardonnay    | 5        | 2          |
+      | Blanc Fume    | 5        | 0          |
+      | Riesling      | 5        | 0          |
     And the dataset is ready for import in staging directory
     When I import the dataset with label mappings:
       | Source Label | Target Label    |
@@ -26,8 +27,10 @@ Feature: Import Dataset To Project
   Scenario: Import classification dataset with label mapping
     Given A classification project "animals" with labels ["cat", "dog"] exists
     And a dataset with labels ["canine", "feline"] exists
-    And the dataset containing 3 training images labeled "canine"
-    And the dataset containing 3 training images labeled "feline"
+    And the dataset contains the following image distribution:
+      | Label  | Training |
+      | canine | 3        |
+      | feline | 3        |
     And the dataset is ready for import in staging directory
     When I import the dataset with label mappings:
       | Source Label | Target Label |
@@ -40,8 +43,10 @@ Feature: Import Dataset To Project
   Scenario: Import multilabel classification dataset
     Given A multilabel project "animals" with labels ["cat", "dog"] exists
     And a dataset with labels ["cat", "dog"] exists
-    And the dataset containing 3 training images labeled "cat"
-    And the dataset containing 3 training images labeled "dog"
+    And the dataset contains the following image distribution:
+      | Label | Training |
+      | cat   | 3        |
+      | dog   | 3        |
     And the dataset is ready for import in staging directory
     When I import the dataset
     Then the project contains 3 annotated images labeled "cat"
@@ -51,11 +56,13 @@ Feature: Import Dataset To Project
   Scenario: Import segmentation dataset with label mapping
     Given A instance_segmentation project "traffic" with labels ["car", "person"] exists
     And a dataset with labels ["voiture", "personne"] exists
-    And the dataset containing 3 training images labeled "voiture"
-    And the dataset containing 3 training images labeled "personne"
+    And the dataset contains the following image distribution:
+      | Label     | Training |
+      | voiture   | 3        |
+      | personne  | 3        |
     And the dataset is ready for import in staging directory
     When I import the dataset with label mappings:
-        | Source Label | Target Label |
-        | voiture      | none         |
-        | personne     | none         |
+      | Source Label | Target Label |
+      | voiture      | none         |
+      | personne     | none         |
     Then the project contains 6 unannotated images

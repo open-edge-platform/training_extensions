@@ -24,7 +24,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: ubuntu-latest
+    runs-on: overflow
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -47,7 +47,7 @@ jobs:
 
   build:
     name: Build and upload docker image (${{ matrix.device }})
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
@@ -204,7 +204,7 @@ jobs:
     name: Comment PR with all image sizes
     needs: build
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: overflow
     permissions:
       pull-requests: write
     continue-on-error: true
@@ -269,7 +269,7 @@ jobs:
     needs:
       - check_paths
       - build
-    runs-on: ubuntu-latest
+    runs-on: overflow
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

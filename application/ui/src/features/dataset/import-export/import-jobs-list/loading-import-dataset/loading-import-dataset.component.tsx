@@ -24,7 +24,11 @@ export const LoadingImportDataset = ({ stagedDatasetId }: LoadingImportDatasetPr
     const { getImportEntry } = useImportDatasetToProject();
     const importLsEntry = getImportEntry(stagedDatasetId);
 
-    const { data: job } = useImportJobStatus({
+    const {
+        error,
+        isError,
+        data: job,
+    } = useImportJobStatus({
         jobId: importLsEntry?.importJobId,
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -50,7 +54,23 @@ export const LoadingImportDataset = ({ stagedDatasetId }: LoadingImportDatasetPr
             borderWidth='thin'
         >
             {isJobFailed(job) && (
-                <ImportFailedJob job={job} fileName={fileName} size={size} stagedDatasetId={stagedDatasetId} />
+                <ImportFailedJob
+                    fileName={fileName}
+                    size={size}
+                    error={job.error ?? ''}
+                    message={job.message ?? ''}
+                    stagedDatasetId={stagedDatasetId}
+                />
+            )}
+
+            {isError && (
+                <ImportFailedJob
+                    size={size}
+                    fileName={fileName}
+                    error={`${error?.detail ?? 'Unknown error'}`}
+                    message={'An error occurred during import.'}
+                    stagedDatasetId={stagedDatasetId}
+                />
             )}
 
             {isRunningOrPending && (

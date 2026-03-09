@@ -24,7 +24,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: ubuntu-latest
+    runs-on: overflow
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -46,7 +46,7 @@ jobs:
 
   generate-openapi-spec:
     name: Generate OpenAPI Spec
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
@@ -54,31 +54,20 @@ jobs:
     steps:
       - *checkout
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
-          python-version: "3.13"
-
-      - name: Install OpenCV dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgl1 libglib2.0-0
+          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
 
       - name: Prepare venv and install Python dependencies
         working-directory: application/backend
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen --extra cpu
+        run: just venv
 
       - name: Get OpenAPI spec
         working-directory: application/backend
-        run: |
-          export PYTHONPATH=.
-          uv run app/cli.py gen-api --target-path openapi-spec.json
+        run: just gen-api-spec -o openapi-spec.json
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -87,7 +76,7 @@ jobs:
 
   build:
     name: Build UI
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
@@ -122,7 +111,7 @@ jobs:
 
   lint:
     name: Eslint checks
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs:
       - check_paths
       - generate-openapi-spec
@@ -166,7 +155,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs:
       - check_paths
       - generate-openapi-spec
@@ -266,7 +255,7 @@ jobs:
     permissions:
       contents: read # to checkout code
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: overflow
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
     steps:
@@ -310,7 +299,7 @@ jobs:
       - lint
       - unit-tests
       - playwright-tests
-    runs-on: ubuntu-latest
+    runs-on: overflow
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

@@ -11,10 +11,10 @@ import { $api } from '../../api/client';
 import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
-import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { isVideoFrame } from '../media-item-utils';
 import type { Annotation, Shape } from '../types';
 import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
+import type { AnnotatorMode } from './annotator-mode';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
 interface AnnotationsContextValue {

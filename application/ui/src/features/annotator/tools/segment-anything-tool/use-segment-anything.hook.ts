@@ -14,18 +14,17 @@ import { loadImageQueryOptions } from '../../hooks/use-load-image-query.hook';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import type {
     SegmentAnythingWorkerApi,
-    SegmentAnythingWorkerModel,
+    SegmentAnythingWorkerInstance,
 } from '../../webworkers/segment-anything.worker.interface';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
-type SegmentAnythingRemoteModel = Remote<SegmentAnythingWorkerModel>;
+type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
 
-export const getSegmentAnythingWorkerQueryKey = (
-    algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER'
-) => ['workers', algorithmType] as const;
+const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
+    ['workers', algorithmType] as const;
 
-export const segmentAnythingWorkerQueryOptions = (
+const segmentAnythingWorkerQueryOptions = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
     enabled = true
 ) =>
@@ -54,7 +53,7 @@ const getSegmentAnythingEncodingQueryKey = (mediaItem: Media) => {
 
 export const segmentAnythingEncodingQueryOptions = (
     mediaItem: Media,
-    model: SegmentAnythingRemoteModel | undefined,
+    model: SegmentAnythingRemoteInstance | undefined,
     image: ImageData,
     enabled = true
 ) =>
@@ -72,7 +71,7 @@ export const segmentAnythingEncodingQueryOptions = (
         enabled,
     });
 
-const useSegmentAnythingWorker = (
+export const useSegmentAnythingWorker = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
     enabled = true
 ) => {
@@ -81,13 +80,8 @@ const useSegmentAnythingWorker = (
     return data;
 };
 
-export const usePreloadSAMWorkers = (enabled = true) => {
-    useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER', enabled);
-    useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', enabled);
-};
-
 const useEncodingQuery = (
-    model: SegmentAnythingRemoteModel | undefined,
+    model: SegmentAnythingRemoteInstance | undefined,
     mediaItem: Media | undefined,
     image: ImageData | undefined,
     isImageReady: boolean
@@ -122,7 +116,7 @@ const useDecoderOutputType = () => {
     return 'polygon';
 };
 
-const useDecodingFn = (model: SegmentAnythingRemoteModel | undefined, encoding: EncodingOutput | undefined) => {
+const useDecodingFn = (model: SegmentAnythingRemoteInstance | undefined, encoding: EncodingOutput | undefined) => {
     const decoderOutput = useDecoderOutputType();
 
     // TODO: look into returning a new "decoder model" instance that already has the encoding data

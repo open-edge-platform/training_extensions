@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { removeUnderscore } from '../../../util';
-import { SinkConfig, SinkOutputFormats, WebhookSinkConfig } from '../../utils';
+import { formatRateLimit, SinkConfig, SinkOutputFormats, WebhookSinkConfig } from '../../utils';
 import { getPairsFromObject } from '../../webhook/utils';
 
 import classes from './settings-list.module.scss';
@@ -38,7 +38,7 @@ export const SettingsList = ({ sink }: SettingsListProps) => {
         return (
             <ul className={classes.list}>
                 <li>Folder path: {sink.folder_path}</li>
-                <li>Rate limit: {sink.rate_limit}</li>
+                <li>Rate limit: {formatRateLimit(sink.rate_limit)}</li>
                 <li>
                     Output formats: <OutputFormats outputFormats={sink.output_formats} />
                 </li>
@@ -49,7 +49,7 @@ export const SettingsList = ({ sink }: SettingsListProps) => {
     if (sink.sink_type === 'webhook') {
         return (
             <ul className={classes.list}>
-                <li>Rate limit: {sink.rate_limit}</li>
+                <li>Rate limit: {formatRateLimit(sink.rate_limit)}</li>
                 <li>HTTP method: {sink.http_method}</li>
                 <li>Timeout: {sink.timeout}</li>
                 <li>Webhook URL: {sink.webhook_url}</li>
@@ -67,7 +67,7 @@ export const SettingsList = ({ sink }: SettingsListProps) => {
         return (
             <ul className={classes.list}>
                 <li>Topic: {sink.topic}</li>
-                <li>Rate limit: {sink.rate_limit}</li>
+                <li>Rate limit: {formatRateLimit(sink.rate_limit)}</li>
                 <li>Auth required: {sink.auth_required ? 'Yes' : 'No'}</li>
                 <li>Broker host: {sink.broker_host}</li>
                 <li>Broker port: {sink.broker_port}</li>
@@ -82,7 +82,7 @@ export const SettingsList = ({ sink }: SettingsListProps) => {
         return (
             <ul className={classes.list}>
                 <li>Topic: {sink.topic}</li>
-                <li>Rate limit: {sink.rate_limit}</li>
+                <li>Rate limit: {formatRateLimit(sink.rate_limit)}</li>
                 <li>
                     Output formats: <OutputFormats outputFormats={sink.output_formats} />
                 </li>
