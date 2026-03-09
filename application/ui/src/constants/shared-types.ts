@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { components } from '../api/openapi-spec';
-import { NumberEnumParameterField } from '../features/models/train-model/advanced-settings/components/parameters.component';
 
 export type Label = components['schemas']['LabelView'];
 

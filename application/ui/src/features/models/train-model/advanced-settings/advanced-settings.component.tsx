@@ -5,7 +5,6 @@ import { ReactNode } from 'react';
 
 import { Item, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
 
-import { useTrainModel } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
 import { Training } from './training/training.component';
 
@@ -25,8 +24,6 @@ type TabProps = {
 };
 
 export const AdvancedSettings = () => {
-    const { trainingConfiguration, onTrainingConfigurationChange } = useTrainModel();
-
     const TABS: TabProps[] = [
         {
             name: 'Data management',

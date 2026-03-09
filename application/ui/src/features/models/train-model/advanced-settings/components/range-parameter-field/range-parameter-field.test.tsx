@@ -8,7 +8,7 @@ import { render } from 'test-utils/render';
 import { RangeParameterField } from './range-parameter-field.component';
 
 describe('RangeParameterField', () => {
-    const defaultValue = [0.5, 1.5];
+    const defaultValue: [number, number] = [0.5, 1.5];
     const name = 'Scaling ratio range';
     const onChange = vi.fn();
 
@@ -16,7 +16,13 @@ describe('RangeParameterField', () => {
         vi.clearAllMocks();
     });
 
-    const renderApp = ({ value = defaultValue, isDisabled = false }: { value?: number[]; isDisabled?: boolean }) => {
+    const renderApp = ({
+        value = defaultValue,
+        isDisabled = false,
+    }: {
+        value?: [number, number];
+        isDisabled?: boolean;
+    }) => {
         return render(
             <RangeParameterField
                 defaultValue={defaultValue}

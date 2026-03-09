@@ -55,6 +55,7 @@ export const RangeParameterField = ({
         }
     }, [value]);
 
+    // TODO: Remove this once API updates parameter's value type
     if (value === null || parameterValue === null || defaultValue === null) {
         return <>Range parameter null</>;
     }

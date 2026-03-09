@@ -6,7 +6,7 @@ import { ReactNode } from 'react';
 import { Grid, Item, minmax, Picker, Text, ToggleButtons, View } from '@geti/ui';
 import { isBoolean, isFunction } from 'lodash-es';
 
-import { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../constants/shared-types';
+import type { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../constants/shared-types';
 import { isBoolEnableParameter } from '../utils';
 import { BooleanParameterField } from './boolean-parameter-field-component.';
 import { NumberParameterField } from './number-parameter-field.component';
@@ -160,7 +160,8 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
 
             return (
                 <NumberParameterField
-                    value={parameter.value}
+                    // TODO: Remove assertion after API update
+                    value={Number(parameter.value)}
                     minValue={parameter.min_value ?? null}
                     maxValue={parameter.max_value ?? null}
                     onChange={handleChange}
@@ -201,7 +202,8 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
 
         return (
             <BooleanParameterField
-                value={parameter.value}
+                // TODO: Remove assertion after API update
+                value={Boolean(parameter.value)}
                 header={parameter.name}
                 onChange={handleChange}
                 isDisabled={isDisabled}
