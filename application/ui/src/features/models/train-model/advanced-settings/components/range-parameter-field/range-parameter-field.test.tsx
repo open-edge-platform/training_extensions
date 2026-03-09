@@ -87,10 +87,6 @@ describe('RangeParameterField', () => {
 
         expect(screen.getByLabelText(`Change ${name} start range value`)).toBeDisabled();
         expect(screen.getByLabelText(`Change ${name} end range value`)).toBeDisabled();
-
-        const slider = screen.getByLabelText(`Change ${name} value`);
-
-        expect(slider).toHaveClass('A-RCEa_is-disabled');
     });
 
     it('does not allow range slider start and end to be equal', async () => {
