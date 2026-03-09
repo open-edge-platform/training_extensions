@@ -384,7 +384,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             model=otx_model,
             data=otx_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
-            work_dir=str(Path(f"./otx-workspace-{model_id}").resolve()),
+            work_dir=f"./otx-workspace-{model_id}",
             device=otx_device_type,
         )
 
