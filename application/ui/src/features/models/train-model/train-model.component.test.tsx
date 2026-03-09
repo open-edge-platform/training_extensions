@@ -32,6 +32,9 @@ describe('TrainModel', () => {
                     model_architectures: [],
                     top_picks: null,
                 });
+            }),
+            http.get('/api/system/devices/training', () => {
+                return HttpResponse.json([{ type: 'cpu', name: 'CPU' }]);
             })
         );
     });

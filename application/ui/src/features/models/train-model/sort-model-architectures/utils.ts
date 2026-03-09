@@ -8,8 +8,8 @@ import type { ModelArchitectureWithPerformanceCategory } from '../../../../const
 export const SortingOptions = {
     NAME_ASC: 'name-asc',
     NAME_DESC: 'name-desc',
-    SIZE_ASC: 'size-asc',
-    SIZE_DESC: 'size-desc',
+    SPEED_ASC: 'speed-asc',
+    SPEED_DESC: 'speed-desc',
     ACCURACY_ASC: 'accuracy-asc',
     ACCURACY_DESC: 'accuracy-desc',
 } as const;
@@ -33,9 +33,9 @@ export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'asc'),
     [SortingOptions.NAME_DESC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'desc'),
-    [SortingOptions.SIZE_ASC]: (modelArchitectures) =>
+    [SortingOptions.SPEED_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'asc'),
-    [SortingOptions.SIZE_DESC]: (modelArchitectures) =>
+    [SortingOptions.SPEED_DESC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'desc'),
 };
 
@@ -52,12 +52,12 @@ export const SORT_OPTIONS = [
     ],
     [
         {
-            key: SortingOptions.SIZE_ASC,
-            name: 'Size (smallest first)',
+            key: SortingOptions.SPEED_ASC,
+            name: 'Speed (fastest first)',
         },
         {
-            key: SortingOptions.SIZE_DESC,
-            name: 'Size (largest first)',
+            key: SortingOptions.SPEED_DESC,
+            name: 'Speed (slowest first)',
         },
     ],
     [
