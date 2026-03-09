@@ -17,13 +17,12 @@ from app.api.schemas.media import (
     MediaView,
     MediaViewAdapter,
     MediaWithPagination,
-    NotAnnotatedFrame,
     SetMediaAnnotations,
 )
 from app.api.validators import MediaID
 from app.core.models import Pagination
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project
-from app.models.media import ImageFormat, MediaType, Video, VideoFormat
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
+from app.models.media import ImageFormat, MediaType, NotAnnotatedVideoFrame, VideoFormat
 from app.services import DatasetService, MediaService
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import InvalidImageError, MediaFilters
@@ -116,7 +115,7 @@ def _get_request_media(
     media_id: MediaID,
     media_service: Annotated[MediaService, Depends(get_media_service)],
     frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
-) -> Media | NotAnnotatedFrame:
+) -> Media | NotAnnotatedVideoFrame:
     media = media_service.get_media_by_id(project_id=project.id, media_id=media_id)
     if media.type != MediaType.VIDEO or frame_index is None:
         return media
@@ -130,7 +129,7 @@ def _get_request_media(
     video_frame = media_service.get_video_frame_by_video_id_and_index(
         project=project, video_id=media_id, frame_index=frame_index
     )
-    return video_frame if video_frame is not None else NotAnnotatedFrame(video=media, frame_index=frame_index)
+    return video_frame if video_frame is not None else NotAnnotatedVideoFrame(video=media, frame_index=frame_index)
 
 
 @router.post(
@@ -305,11 +304,11 @@ def list_video_frames(
 )
 def get_media_binary(
     project: Annotated[Project, Depends(get_project)],
-    media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
+    media: Annotated[Media | NotAnnotatedVideoFrame, Depends(_get_request_media)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> StreamingResponse | FileResponse:
     """Get media binary content"""
-    if isinstance(media, NotAnnotatedFrame):
+    if isinstance(media, NotAnnotatedVideoFrame):
         frame_binary = media_service.get_frame_binary(project=project, video=media.video, frame_index=media.frame_index)
         return write_image_to_response(
             image=frame_binary, filename=f"{media.video.name}_frame_{media.frame_index}.jpeg"
@@ -332,11 +331,11 @@ def get_media_binary(
 )
 def get_media_thumbnail(
     project: Annotated[Project, Depends(get_project)],
-    media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
+    media: Annotated[Media | NotAnnotatedVideoFrame, Depends(_get_request_media)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
 ) -> StreamingResponse | FileResponse:
     """Get media thumbnail binary content"""
-    if isinstance(media, NotAnnotatedFrame):
+    if isinstance(media, NotAnnotatedVideoFrame):
         frame_thumbnail = media_service.get_frame_thumbnail(
             project=project, video=media.video, frame_index=media.frame_index
         )
@@ -381,7 +380,7 @@ def delete_media(
 )
 def set_media_annotations(
     project: Annotated[Project, Depends(get_project)],
-    media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
+    media: Annotated[Media | NotAnnotatedVideoFrame, Depends(_get_request_media)],
     media_annotations: Annotated[SetMediaAnnotations, Body(openapi_examples=SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES)],
     media_service: Annotated[MediaService, Depends(get_media_service)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
@@ -390,9 +389,10 @@ def set_media_annotations(
     """Set media annotations"""
     if isinstance(media, Video) and not frame_index:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
-    if isinstance(media, NotAnnotatedFrame):
-        video_frame = media_service.extract_video_frame(
-            project=project, video=media.video, frame_index=media.frame_index
+    if isinstance(media, NotAnnotatedVideoFrame):
+        frame_binary = media_service.get_frame_binary(project=project, video=media.video, frame_index=media.frame_index)
+        video_frame = media_service.save_video_frame(
+            project=project, video=media.video, frame_index=media.frame_index, frame_image=frame_binary
         )
         dataset_service.create_dataset_item(
             project_id=project.id,
@@ -410,6 +410,7 @@ def set_media_annotations(
             annotations=media_annotations.annotations,
             # Annotations submitted via API are considered user-reviewed, unlike auto-generated predictions
             user_reviewed=True,
+            prediction_model_id=None,
         )
         return MediaAnnotations(
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
@@ -433,14 +434,14 @@ def set_media_annotations(
 )
 def get_media_annotations(
     project: Annotated[Project, Depends(get_project)],
-    media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
+    media: Annotated[Media | NotAnnotatedVideoFrame, Depends(_get_request_media)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
 ) -> MediaAnnotations:
     """Get the media annotations"""
     if isinstance(media, Video) and not frame_index:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
-    if isinstance(media, NotAnnotatedFrame):
+    if isinstance(media, NotAnnotatedVideoFrame):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index.")
     # Dataset item has the same ID as media
     dataset_item_id = media.id
@@ -465,14 +466,14 @@ def get_media_annotations(
 )
 def delete_media_annotation(
     project: Annotated[Project, Depends(get_project)],
-    media: Annotated[Media | NotAnnotatedFrame, Depends(_get_request_media)],
+    media: Annotated[Media | NotAnnotatedVideoFrame, Depends(_get_request_media)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     frame_index: Annotated[int | None, Query(description="Video frame index", ge=0)] = None,
 ) -> None:
     """Delete media annotations"""
     if isinstance(media, Video) and not frame_index:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video frame index is not provided.")
-    if isinstance(media, NotAnnotatedFrame):
+    if isinstance(media, NotAnnotatedVideoFrame):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video frame not found for the given index.")
     # Dataset item has the same ID as media
     dataset_item_id = media.id
