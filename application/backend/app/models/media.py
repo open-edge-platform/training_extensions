@@ -106,6 +106,10 @@ class Video(BaseMedia):
 
 
 class NotAnnotatedVideoFrame(BaseModel):
+    """
+    Video frame that is not annotated yet. It contains the video information and the frame index.
+    """
+
     model_config = ConfigDict(frozen=True)
     video: Video
     frame_index: int

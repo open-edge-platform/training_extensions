@@ -782,7 +782,7 @@ class TestMediaServiceIntegration:
         fxt_media_service: MediaService,
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ):
-        """Test retrieving a media by ID."""
+        """Test retrieving multiple media items by their IDs."""
         project, db_media_list = fxt_project_with_media
         media_ids = [UUID(media.id) for media in db_media_list[:2]]
 
