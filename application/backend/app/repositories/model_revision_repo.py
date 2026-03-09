@@ -58,7 +58,7 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
         training_finished_at: datetime | None = None,
     ) -> None:
         """
-        Update the training status and trainig start and finish time of a model revision.
+        Update the training status and training start and finish time of a model revision.
 
         Args:
             obj_id (str): Unique identifier of the model revision to update.
