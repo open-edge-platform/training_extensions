@@ -11,7 +11,8 @@ from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.models.model_activation import ModelActivationState
-from app.repositories import ModelRevisionRepository
+from app.models.model_revision import ModelFormat, ModelPrecision
+from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
@@ -75,8 +76,7 @@ class ActiveModelService:
         with get_db_session() as db:
             active_model_repo = ActiveModelRepo(db=db)
             active_model = active_model_repo.get_active_revision()
-            active_variant_id = active_model_repo.get_active_model_variant_id()
-            if active_model is None or active_variant_id is None:
+            if active_model is None:
                 return ModelActivationState(
                     project_id=None,
                     active_model_id=None,
@@ -86,6 +86,11 @@ class ActiveModelService:
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all()
+            model_variants_repo = ModelVariantRepository(db=db)
+            model_variants = model_variants_repo.list_by_model_revision(str(active_model.id))
+            active_variant_id = next(
+                v.id for v in model_variants if v.format == ModelFormat.OPENVINO and v.precision == ModelPrecision.FP16
+            )
             pipeline_device = active_model_repo.get_active_pipeline_device()
             if pipeline_device is None:
                 raise RuntimeError("Active pipeline must have a device configured")

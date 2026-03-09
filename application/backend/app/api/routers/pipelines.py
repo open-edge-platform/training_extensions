@@ -26,10 +26,10 @@ Partial pipeline configuration update. May contain any subset of fields includin
 UPDATE_PIPELINE_BODY_EXAMPLES = {
     "switch_model": Example(
         summary="Switch active model",
-        description="Change the active model and variant of the pipeline",
+        description="Change the active model of the pipeline",
         value={
             "model_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
-            "model_variant_id": "4c576bce-5e97-408d-a0ea-cc3801e4c453",
+            # "model_variant_id": "4c576bce-5e97-408d-a0ea-cc3801e4c453", # Disabled for now, see:
         },
     ),
     "reconfigure": Example(

@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
 from app.models import Pipeline, PipelineStatus
-from app.models.model_revision import ModelFormat
-from app.repositories import ModelVariantRepository, PipelineRepository
+from app.repositories import PipelineRepository
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
 from app.services.parent_process_guard import parent_process_only
@@ -77,7 +76,7 @@ class PipelineService:
         return pipeline_repo.is_running(str(project_id))
 
     @parent_process_only
-    def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:  # noqa: C901
+    def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
         base = pipeline.model_dump()
@@ -100,10 +99,6 @@ class PipelineService:
                 raise OtherProjectActiveError(
                     requested_project_id=to_update_db.project_id, active_project_id=active_pipeline_db.project_id
                 )
-        if to_update_db.model_variant_id:
-            model_variant_db = ModelVariantRepository(self._db_session).get_by_id(to_update_db.model_variant_id)
-            if model_variant_db and model_variant_db.format != ModelFormat.OPENVINO:
-                raise ValueError("Only OpenVINO model variants are supported for inference pipelines.")
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
@@ -116,7 +111,7 @@ class PipelineService:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
                 self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
-            if pipeline.model_id != updated.model_revision.id or pipeline.model_variant_id != updated.model_variant_id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
+            if pipeline.model_id != updated.model_revision.id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
                 self._event_bus.emit_event(EventType.MODEL_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
