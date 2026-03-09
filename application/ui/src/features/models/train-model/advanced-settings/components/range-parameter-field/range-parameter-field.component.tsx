@@ -95,7 +95,7 @@ export const RangeParameterField = ({
                 value={parameterValue?.start}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
-                onChange={(start) => handleNumberChange(start, parameterValue?.end)}
+                onChange={(start) => handleNumberChange(start, parameterValue.end)}
                 isDisabled={isDisabled}
                 aria-label={`Change ${name} start range value`}
                 formatOptions={{ maximumFractionDigits: decimalPlaces }}

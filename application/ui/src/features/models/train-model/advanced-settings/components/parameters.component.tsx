@@ -8,7 +8,7 @@ import { isBoolean, isFunction } from 'lodash-es';
 
 import type { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../constants/shared-types';
 import { isBoolEnableParameter } from '../utils';
-import { BooleanParameterField } from './boolean-parameter-field-component.';
+import { BooleanParameterField } from './boolean-parameter-field.component';
 import { NumberParameterField } from './number-parameter-field.component';
 import { RangeParameterField } from './range-parameter-field/range-parameter-field.component';
 import { ResetButton } from './reset-button.component';
@@ -210,6 +210,8 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
             />
         );
     }
+
+    return null;
 };
 
 export const Parameter = ({ parameter, onChange, isDisabled, marginStart, isReadOnly }: ParameterProps) => {

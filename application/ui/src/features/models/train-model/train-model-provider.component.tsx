@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, use, useMemo, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, use, useMemo, useState } from 'react';
 
 import {
     DatasetRevision,
@@ -46,9 +46,7 @@ type TrainModelContextProps = {
 
     trainingConfiguration: TrainingConfiguration | undefined;
     defaultTrainingConfiguration: TrainingConfiguration | undefined;
-    onTrainingConfigurationChange: (
-        fn: (trainingConfiguration: TrainingConfiguration | undefined) => TrainingConfiguration | undefined
-    ) => void;
+    onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
