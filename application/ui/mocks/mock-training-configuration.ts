@@ -1,7 +1,13 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ConfigurableParameterGroup, TrainingConfigurationParameter } from '../src/constants/shared-types';
+import type {
+    BoolConfigurableParameter,
+    ConfigurableParameter,
+    ConfigurableParameterGroup,
+    NumberConfigurableParameter,
+    TrainingConfigurationParameter,
+} from '../src/constants/shared-types';
 
 export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter[] => {
     const datasetPreparationGroup: ConfigurableParameterGroup = {
@@ -118,3 +124,43 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
 
     return [datasetPreparationGroup, trainingGroup];
 };
+
+export function getMockedConfigurationParameter(
+    parameter: Partial<NumberConfigurableParameter> & Required<Pick<NumberConfigurableParameter, 'value_type'>>
+): ConfigurableParameter;
+export function getMockedConfigurationParameter(
+    parameter: Partial<BoolConfigurableParameter> & Required<Pick<BoolConfigurableParameter, 'value_type'>>
+): ConfigurableParameter;
+export function getMockedConfigurationParameter(
+    parameter: Partial<ConfigurableParameter> & Required<Pick<ConfigurableParameter, 'value_type'>> = {
+        value_type: 'float',
+    }
+): ConfigurableParameter {
+    if (parameter.value_type === 'float' || parameter.value_type === 'int') {
+        return {
+            type: 'parameter',
+            value: 0,
+            key: 'mocked_parameter',
+            name: 'Mocked Parameter',
+            max_value: 100,
+            min_value: 0,
+            description: 'This is a mocked configuration parameter',
+            default_value: 50,
+            ...parameter,
+        };
+    }
+
+    if (parameter.value_type === 'bool') {
+        return {
+            type: 'parameter',
+            value: false,
+            key: 'mocked_bool_parameter',
+            name: 'Mocked Bool Parameter',
+            description: 'This is a mocked boolean configuration parameter',
+            default_value: false,
+            ...parameter,
+        };
+    }
+
+    throw new Error(`Unsupported parameter type: ${parameter.type}`);
+}
