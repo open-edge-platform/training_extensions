@@ -10,11 +10,12 @@ import requests
 from behave import given, then, when
 from behave.model import Table
 from behave.runner import Context
+from datumaro.experimental.export_import import import_dataset
 
 from app.api.schemas import ProjectView
 from app.api.schemas.jobs.dataset_export import ExportDatasetMetadata
 from app.models import DatasetFormat, TaskType
-from tests.bdd.utils import export_dataset, generate_random_image, import_dataset_by_format
+from tests.bdd.utils import export_dataset, generate_random_image
 
 
 @given('A {task_type} project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
@@ -130,9 +131,7 @@ def step_project_dataset_has_images(context: Context) -> None:
 @when("I export the project dataset in {export_format} format with filters={filters}")  # pyrefly: ignore
 def step_export_dataset(context: Context, export_format: str, filters: str) -> None:
     project = cast(ProjectView, context.project)
-    export_format = DatasetFormat(export_format.lower())
-    context.export_format = export_format
-    job = export_dataset(str(context.base_url), str(project.id), export_format, filters)
+    job = export_dataset(str(context.base_url), str(project.id), DatasetFormat(export_format.lower()), filters)
     context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
 
 
@@ -146,8 +145,7 @@ def step_staged_dataset_archive_exists(context: Context, archive_name: str) -> N
 
 @then("the staged dataset with name={dataset_name} has {count:d} images")  # pyrefly: ignore
 def step_staged_dataset_has_items(context: Context, dataset_name: str, count: int) -> None:
-    dataset_format = cast(DatasetFormat, context.export_format)
     dataset_path = cast(Path, context.tmp_path) / "data" / "staged_datasets" / str(context.dataset_id) / dataset_name
-    dataset = import_dataset_by_format(dataset_path, dataset_format)
+    dataset = import_dataset(dataset_path)
     actual_count = len(dataset)
     assert actual_count == count, f"Expected {count} images in dataset, but found {actual_count}"
