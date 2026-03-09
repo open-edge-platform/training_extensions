@@ -71,18 +71,13 @@ export const segmentAnythingEncodingQueryOptions = (
         enabled,
     });
 
-const useSegmentAnythingWorker = (
+export const useSegmentAnythingWorker = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
     enabled = true
 ) => {
     const { data } = useQuery(segmentAnythingWorkerQueryOptions(algorithmType, enabled));
 
     return data;
-};
-
-export const usePreloadSAMWorkers = (enabled = true) => {
-    useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER', enabled);
-    useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER', enabled);
 };
 
 const useEncodingQuery = (
