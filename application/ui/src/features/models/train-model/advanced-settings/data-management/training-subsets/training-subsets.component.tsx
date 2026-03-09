@@ -168,6 +168,42 @@ const TrainingSubsetsChangedDistributionWarning = () => {
     );
 };
 
+const updateSubsetSplitValues = (
+    config: TrainingConfiguration,
+    getValueForKey: (parameter: ConfigurableParameter) => number
+): TrainingConfiguration => ({
+    parameters: config.parameters.map((parameterGroup) => {
+        if (parameterGroup.key !== 'dataset_preparation' || !isParameterGroup(parameterGroup)) {
+            return parameterGroup;
+        }
+        return {
+            ...parameterGroup,
+            parameters: parameterGroup.parameters.map((parameter) => {
+                if (parameter.key !== 'subset_split' || !isParameterGroup(parameter)) {
+                    return parameter;
+                }
+                return {
+                    ...parameter,
+                    parameters: parameter.parameters.map((subsetSplitParameter) => {
+                        if (
+                            isParameterGroup(subsetSplitParameter) ||
+                            ![TRAINING_SUBSET_KEY, VALIDATION_SUBSET_KEY, TEST_SUBSET_KEY].includes(
+                                subsetSplitParameter.key
+                            )
+                        ) {
+                            return subsetSplitParameter;
+                        }
+                        return {
+                            ...subsetSplitParameter,
+                            value: getValueForKey(subsetSplitParameter),
+                        } as ConfigurableParameter;
+                    }),
+                };
+            }),
+        };
+    }),
+});
+
 export const TrainingSubsets = ({
     defaultSubsetParameters,
     subsetsParameters,
@@ -188,53 +224,19 @@ export const TrainingSubsets = ({
     const testSubsetRatio = MAX_RATIO_VALUE - subsetsDistribution[1];
 
     const handleUpdateSubsetsConfiguration = (values: number[]): void => {
+        const trainingSubsetValue = values[0];
+        const validationSubsetValue = values[1] - trainingSubsetValue;
+        const testSubsetValue = MAX_RATIO_VALUE - values[1];
+
+        const KEY_VALUE_MAP: Record<string, number> = {
+            [TRAINING_SUBSET_KEY]: trainingSubsetValue,
+            [VALIDATION_SUBSET_KEY]: validationSubsetValue,
+            [TEST_SUBSET_KEY]: testSubsetValue,
+        };
+
         onTrainingConfigurationChange((config) => {
             if (!config?.parameters) return undefined;
-
-            const trainingSubsetValue = values[0];
-            const validationSubsetValue = values[1] - trainingSubsetValue;
-            const testSubsetValue = MAX_RATIO_VALUE - values[1];
-
-            const KEY_VALUE_MAP: Record<string, number> = {
-                [TRAINING_SUBSET_KEY]: trainingSubsetValue,
-                [VALIDATION_SUBSET_KEY]: validationSubsetValue,
-                [TEST_SUBSET_KEY]: testSubsetValue,
-            };
-
-            const newConfig: TrainingConfiguration = {
-                parameters: config.parameters.map((parameterGroup) => {
-                    if (parameterGroup.key === 'dataset_preparation' && isParameterGroup(parameterGroup)) {
-                        return {
-                            ...parameterGroup,
-                            parameters: parameterGroup.parameters.map((parameter) => {
-                                if (parameter.key === 'subset_split' && isParameterGroup(parameter)) {
-                                    return {
-                                        ...parameter,
-                                        parameters: parameter.parameters.map((subsetSplitParameter) => {
-                                            if (
-                                                !isParameterGroup(subsetSplitParameter) &&
-                                                [TRAINING_SUBSET_KEY, TEST_SUBSET_KEY, VALIDATION_SUBSET_KEY].includes(
-                                                    subsetSplitParameter.key
-                                                )
-                                            ) {
-                                                return {
-                                                    ...subsetSplitParameter,
-                                                    value: KEY_VALUE_MAP[subsetSplitParameter.key],
-                                                } as ConfigurableParameter;
-                                            }
-                                            return subsetSplitParameter;
-                                        }),
-                                    };
-                                }
-                                return parameter;
-                            }),
-                        };
-                    }
-                    return parameterGroup;
-                }),
-            };
-
-            return newConfig;
+            return updateSubsetSplitValues(config, (parameter) => KEY_VALUE_MAP[parameter.key]);
         });
     };
 
@@ -245,42 +247,8 @@ export const TrainingSubsets = ({
         ]);
 
         onTrainingConfigurationChange((config) => {
-            if (config === undefined) return undefined;
-
-            const newConfig: TrainingConfiguration = {
-                parameters: config.parameters.map((parameterGroup) => {
-                    if (parameterGroup.key === 'dataset_preparation' && isParameterGroup(parameterGroup)) {
-                        return {
-                            ...parameterGroup,
-                            parameters: parameterGroup.parameters.map((parameter) => {
-                                if (parameter.key === 'subset_split' && isParameterGroup(parameter)) {
-                                    return {
-                                        ...parameter,
-                                        parameters: parameter.parameters.map((subsetSplitParameter) => {
-                                            if (
-                                                !isParameterGroup(subsetSplitParameter) &&
-                                                [TRAINING_SUBSET_KEY, TEST_SUBSET_KEY, VALIDATION_SUBSET_KEY].includes(
-                                                    subsetSplitParameter.key
-                                                )
-                                            ) {
-                                                return {
-                                                    ...subsetSplitParameter,
-                                                    value: subsetSplitParameter.default_value,
-                                                } as ConfigurableParameter;
-                                            }
-                                            return subsetSplitParameter;
-                                        }),
-                                    };
-                                }
-                                return parameter;
-                            }),
-                        };
-                    }
-                    return parameterGroup;
-                }),
-            };
-
-            return newConfig;
+            if (!config?.parameters) return undefined;
+            return updateSubsetSplitValues(config, (parameter) => parameter.default_value as number);
         });
     };
 
