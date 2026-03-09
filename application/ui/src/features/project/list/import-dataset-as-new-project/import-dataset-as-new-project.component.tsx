@@ -9,12 +9,13 @@ import {
     ImportUploadFile,
 } from '../../../../components/import-upload-file/import-upload-file.component';
 import { useImportDatasetAsNewProject } from '../../../../hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportProcess } from './import-process/import-process.component';
-import { ProgressStepper } from './ProgressStepper/progress-stepper.component';
+import { ProgressStepper } from './progress-stepper/progress-stepper.component';
 
-import classes from './import-dataset-as-new-projects.module.scss';
+import classes from './import-dataset-as-new-project.module.scss';
 
 type ImportDatasetAsNewProjectProps = {
     dialogState: OverlayTriggerState;
@@ -45,11 +46,9 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
 
                         <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
                             {currentStep === 'uploading' && <ImportUploadFile onFileUploaded={handleFileUploaded} />}
-                            {currentStep === 'preparing' && (
-                                <ImportProcess
-                                    stagedDatasetId={String(currentStagedId)}
-                                    onFilePrepared={handleFilePrepared}
-                                />
+
+                            {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
+                                <ImportProcess stagedDatasetId={currentStagedId} onFilePrepared={handleFilePrepared} />
                             )}
                         </View>
                     </Content>

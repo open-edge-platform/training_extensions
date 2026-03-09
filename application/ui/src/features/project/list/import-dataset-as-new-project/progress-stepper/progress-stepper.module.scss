@@ -6,6 +6,11 @@
     border-radius: 50%;
     justify-content: center;
     background: var(--background-inverse);
+
+    &::before {
+        content: attr(data-content);
+        position: absolute;
+    }
 }
 
 [data-active='true'] {
@@ -18,10 +23,8 @@
 [data-completed='true'] {
     color: var(--spectrum-global-color-gray-50);
     background: var(--energy-blue);
-}
 
-.stepDivider {
-    width: 100%;
-    height: 1px;
-    background-color: var(--spectrum-global-color-gray-500);
+    &::before {
+        content: '✓';
+    }
 }

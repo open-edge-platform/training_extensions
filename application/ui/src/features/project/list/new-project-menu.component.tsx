@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { paths } from '../../../constants/paths';
 import { useImportDatasetDialog } from '../providers/import-dataset-dialog-provider.component';
-import { ImportDatasetAsNewProject } from './import-dataset-as-new-projects/import-dataset-as-new-projects.component';
+import { ImportDatasetAsNewProject } from './import-dataset-as-new-project/import-dataset-as-new-project.component';
 
 import classes from './new-project-menu.module.scss';
 

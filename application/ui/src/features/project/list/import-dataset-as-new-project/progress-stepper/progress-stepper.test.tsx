@@ -15,6 +15,10 @@ describe('ProgressStepper', () => {
         const stepTwo = screen.getByLabelText('step two');
         const stepThree = screen.getByLabelText('step three');
 
+        expect(stepOne).toHaveAttribute('data-content', '1');
+        expect(stepTwo).toHaveAttribute('data-content', '2');
+        expect(stepThree).toHaveAttribute('data-content', '3');
+
         expect(stepOne).toHaveAttribute('data-active', 'true');
         expect(stepTwo).toHaveAttribute('data-active', 'false');
         expect(stepThree).toHaveAttribute('data-active', 'false');
@@ -27,13 +31,17 @@ describe('ProgressStepper', () => {
         const stepTwo = screen.getByLabelText('step two');
         const stepThree = screen.getByLabelText('step three');
 
-        expect(stepOne).toHaveTextContent('✓');
-        expect(stepTwo).toHaveTextContent('2');
-        expect(stepThree).toHaveTextContent('3');
-
         expect(stepOne).toHaveAttribute('data-active', 'false');
         expect(stepTwo).toHaveAttribute('data-active', 'true');
         expect(stepThree).toHaveAttribute('data-active', 'false');
+
+        expect(stepOne).toHaveAttribute('data-content', '1');
+        expect(stepTwo).toHaveAttribute('data-content', '2');
+        expect(stepThree).toHaveAttribute('data-content', '3');
+
+        expect(stepOne).toHaveAttribute('data-completed', 'true');
+        expect(stepTwo).not.toHaveAttribute('data-completed', 'true');
+        expect(stepThree).not.toHaveAttribute('data-completed', 'true');
     });
 
     it('shows first two steps as completed and third as active for label mapping', () => {
@@ -43,13 +51,17 @@ describe('ProgressStepper', () => {
         const stepTwo = screen.getByLabelText('step two');
         const stepThree = screen.getByLabelText('step three');
 
-        expect(stepOne).toHaveTextContent('✓');
-        expect(stepTwo).toHaveTextContent('✓');
-        expect(stepThree).toHaveTextContent('3');
-
         expect(stepOne).toHaveAttribute('data-active', 'false');
         expect(stepTwo).toHaveAttribute('data-active', 'false');
         expect(stepThree).toHaveAttribute('data-active', 'true');
+
+        expect(stepOne).toHaveAttribute('data-content', '1');
+        expect(stepTwo).toHaveAttribute('data-content', '2');
+        expect(stepThree).toHaveAttribute('data-content', '3');
+
+        expect(stepOne).toHaveAttribute('data-completed', 'true');
+        expect(stepTwo).toHaveAttribute('data-completed', 'true');
+        expect(stepThree).not.toHaveAttribute('data-completed', 'true');
     });
 
     it('renders static step labels', () => {
