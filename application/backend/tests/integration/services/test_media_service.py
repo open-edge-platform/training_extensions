@@ -790,6 +790,20 @@ class TestMediaServiceIntegration:
         assert len(fetched_media) == 2
         assert sorted([media.id for media in fetched_media]) == sorted(media_ids)
 
+    def test_get_media_by_ids_not_found(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving multiple media items by non-existent IDs."""
+        project, db_media_list = fxt_project_with_media
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_media_service.get_media_by_ids(project_id=project.id, media_ids=[non_existent_id])
+        assert excinfo.value.resource_type == ResourceType.MEDIA
+        assert excinfo.value.resource_id == str(non_existent_id)
+
     def test_get_media_binary_path_by_id(
         self,
         tmp_path: Path,
@@ -1371,21 +1385,21 @@ class TestMediaServiceIntegration:
         )
         assert video_frame is None
 
-    def test_get_video_frame_by_video_id_and_indexes(
+    def test_search_video_frames_by_video_id_and_indexes(
         self,
         fxt_media_service: MediaService,
         fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
-        """Test getting a video frame by video ID and index."""
+        """Test searching video frames by video ID and indexes."""
         project, db_media_list = fxt_project_with_media
         media = db_media_list[3]
         fxt_video_frame(250)
         fxt_video_frame(260)
         fxt_video_frame(270)
 
-        video_frames = fxt_media_service.get_video_frames_by_video_id_and_indexes(
-            project=project, video_id=UUID(media.id), frame_indexes=[250, 260]
+        video_frames = fxt_media_service.search_video_frames_by_video_id_and_indexes(
+            project=project, video_id=UUID(media.id), frame_indexes=[250, 260, 280]
         )
         assert video_frames is not None
         assert len(video_frames) == 2

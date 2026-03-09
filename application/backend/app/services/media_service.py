@@ -230,7 +230,13 @@ class MediaService(BaseSessionManagedService):
         """Get a media list by its IDs"""
         repo = MediaRepository(project_id=str(project_id), db=self.db_session)
         db_media_list = repo.get_by_ids([str(media_id) for media_id in media_ids])
-        return [MediaAdapter.validate_python(db_media) for db_media in db_media_list]
+        result = []
+        for media_id in media_ids:
+            db_media = next((m for m in db_media_list if m.id == str(media_id)), None)
+            if not db_media:
+                raise ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
+            result.append(MediaAdapter.validate_python(db_media))
+        return result
 
     def get_media_binary_path(self, project_id: UUID, media: MediaDB | Media) -> Path:
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
@@ -340,11 +346,12 @@ class MediaService(BaseSessionManagedService):
         db_media = repo.get_video_frame_by_video_id_and_index(video_id=str(video_id), frame_index=frame_index)
         return VideoFrame.model_validate(db_media, from_attributes=True) if db_media else None
 
-    def get_video_frames_by_video_id_and_indexes(
+    def search_video_frames_by_video_id_and_indexes(
         self, project: Project, video_id: UUID, frame_indexes: list[int]
     ) -> list[VideoFrame]:
         """
-        Returns annotated video frames by video ID and frame indexes list.
+        Search annotated video frames by video ID and frame indexes list.
+        If certain frame index is not found, then it will be missing in the resulting list.
 
         Args:
             project: Project
@@ -355,7 +362,7 @@ class MediaService(BaseSessionManagedService):
             Video frames data
         """
         repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_media_list = repo.get_video_frames_by_video_id_and_indexes(
+        db_media_list = repo.search_video_frames_by_video_id_and_indexes(
             video_id=str(video_id), frame_indexes=frame_indexes
         )
         return [VideoFrame.model_validate(db_media, from_attributes=True) for db_media in db_media_list]

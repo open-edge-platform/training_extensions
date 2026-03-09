@@ -125,7 +125,7 @@ class MediaRepository:
         stmt = self._base_select().where(MediaDB.video_id == video_id, MediaDB.frame_index == frame_index)
         return self.db.scalar(stmt)
 
-    def get_video_frames_by_video_id_and_indexes(self, video_id: str, frame_indexes: list[int]) -> list[MediaDB]:
+    def search_video_frames_by_video_id_and_indexes(self, video_id: str, frame_indexes: list[int]) -> list[MediaDB]:
         stmt = self._base_select().where(MediaDB.video_id == video_id, MediaDB.frame_index.in_(frame_indexes))
         return list(self.db.scalars(stmt).all())
 
