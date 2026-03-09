@@ -29,10 +29,10 @@ describe('TrainModel', () => {
                 return HttpResponse.json([]);
             }),
             http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', () => {
-                return HttpResponse.json(getMockedTrainingConfiguration());
+                return HttpResponse.json({ parameters: getMockedTrainingConfiguration() });
             }),
             http.get('/api/projects/{project_id}/training_configuration', () => {
-                return HttpResponse.json(getMockedTrainingConfiguration());
+                return HttpResponse.json({ parameters: getMockedTrainingConfiguration() });
             }),
             http.get('/api/model_architectures', () => {
                 return HttpResponse.json({
