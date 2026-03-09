@@ -84,7 +84,7 @@ export const ImportUploadFile = ({ onFileUploaded }: ImportUploadFileProps) => {
             isFilled={stagedDatasetMutation.isSuccess}
             onDrop={async (event) => handleLoadingFile(await getFilesFromDropEvent(event))}
         >
-            <IllustratedMessage>
+            <IllustratedMessage maxHeight={'size-4600'}>
                 <EmptyDataset />
 
                 <Content>

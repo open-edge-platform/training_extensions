@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
+import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
+import { isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { useImportJobStatus } from '../import-dataset/hooks/use-import-job-status.hook';
-import { isJobFailed, isJobPending, isJobRunning } from '../util';
 import { ImportActiveJob } from './import-active-job/import-active-job.component';
 import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
 
