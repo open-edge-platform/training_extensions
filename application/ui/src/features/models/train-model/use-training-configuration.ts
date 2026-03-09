@@ -39,7 +39,7 @@ export const useTrainingConfiguration = ({ modelArchitectureId, modelRevisionId 
     return [
         trainingConfiguration,
         setTrainingConfiguration,
-        modelRevisionId === undefined
+        modelRevisionId === null
             ? modelArchitectureTrainingConfigurationQuery.data
             : modelTrainingConfigurationQuery.data,
     ] as const;
