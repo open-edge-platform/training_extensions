@@ -717,7 +717,7 @@ class TestOTXTrainerTrainModel:
         engine_call_kwargs = mock_engine_class.call_args.kwargs
         assert engine_call_kwargs["model"] == mock_otx_model
         assert engine_call_kwargs["data"] == mock_datamodule
-        assert engine_call_kwargs["work_dir"] == str(Path(f"./otx-workspace-{model_id}").resolve())
+        assert engine_call_kwargs["work_dir"] == f"./otx-workspace-{model_id}"
         assert engine_call_kwargs["device"] == otx_device
         assert engine_call_kwargs["checkpoint"] == weights_path
 
