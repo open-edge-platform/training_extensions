@@ -37,11 +37,13 @@ class ImportDatasetProjectParams(BaseModel):
         description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
         "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",
     )
+    include_unannotated: bool = Field(True, description="Whether to include unannotated items from the dataset")
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "labels_mapping": {"car": "vehicle", "motorcycle": "vehicle", "person": "person"},
+                "include_unannotated": False,
             }
         }
     }
@@ -64,6 +66,7 @@ class ImportDatasetToProjectRequest(BaseImportRequest, BaseJobRequest):
                 "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
                 "parameters": {
                     "labels_mapping": {"car": "vehicle", "motorcycle": "vehicle", "person": "person"},
+                    "include_unannotated": False,
                 },
             }
         }

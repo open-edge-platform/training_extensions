@@ -7,6 +7,7 @@ import { Content, Dialog, Grid, View } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import {
     SelectedMediaItemProvider,
@@ -16,7 +17,6 @@ import { AnnotatorProviders } from './annotator-providers.component';
 import { AnnotatorContainer } from './annotator.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
-import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 

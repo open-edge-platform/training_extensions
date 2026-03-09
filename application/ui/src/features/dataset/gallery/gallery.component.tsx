@@ -10,7 +10,7 @@ import { ReactComponent as EmptyDataset } from '../../../assets/empty-dataset.sv
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { Media } from '../../../constants/shared-types';
+import type { DatasetItemAnnotationStatus, Media } from '../../../constants/shared-types';
 import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
@@ -21,6 +21,7 @@ import { MediaItemActions } from './media-item-actions/media-item-actions.compon
 
 type GalleryProps = {
     items: Media[];
+    annotationStatus?: DatasetItemAnnotationStatus;
     viewMode: ViewModes;
     isPending: boolean;
     hasActiveFilter: boolean;
@@ -38,6 +39,7 @@ const VIEW_MODE_SETTINGS = {
 
 export const Gallery = ({
     items,
+    annotationStatus,
     viewMode,
     isPending,
     hasActiveFilter,
@@ -48,7 +50,7 @@ export const Gallery = ({
     const projectId = useProjectIdentifier();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { datasetItemsById } = useGetDatasetItemsById();
+    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length, annotationStatus });
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 

@@ -3,7 +3,7 @@
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { ImportDatasetState } from '../../features/dataset/import-export/import-dataset/util';
+import { ImportDatasetToProjectState } from '../../features/dataset/import-export/import-dataset/util';
 import { useProjectIdentifier } from '../use-project-identifier.hook';
 import { getParsedLocalStorage } from './utils';
 
@@ -13,7 +13,7 @@ type DatasetImportState = {
     importJobId: string | null;
     prepareJobId: string | null;
     stagedDatasetId: string | null;
-    step: ImportDatasetState;
+    step: ImportDatasetToProjectState;
 };
 
 const IMPORT_DATASET_TO_PROJECT_KEY = (projectId: string) => `import-dataset-to-project-${projectId}`;
@@ -44,16 +44,12 @@ export const useImportDatasetToProject = () => {
         );
     };
 
-    const updateImportEntryStep = (stagedDatasetId: string, newStep: ImportDatasetState): void => {
+    const updateImportEntryStep = (stagedDatasetId: string, newStep: ImportDatasetToProjectState): void => {
         return setLsImportDatasetToProject(
             (prev) =>
                 prev?.map((item) => (item.stagedDatasetId === stagedDatasetId ? { ...item, step: newStep } : item)) ??
                 null
         );
-    };
-
-    const getLastImportEntry = (): DatasetImportState | null => {
-        return lsImportDatasetToProject ? lsImportDatasetToProject[lsImportDatasetToProject.length - 1] : null;
     };
 
     const updateImportEntry = (stagedDatasetId: string, newImportState: Partial<DatasetImportState>): void => {
@@ -72,6 +68,5 @@ export const useImportDatasetToProject = () => {
         deleteImportEntry,
         updateImportEntryStep,
         updateImportEntry,
-        getLastImportEntry,
     };
 };

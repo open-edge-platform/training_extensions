@@ -3,35 +3,22 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 
-import { $api } from '../../../../../api/client';
-import { Job } from '../../../../../constants/shared-types';
-import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 import { formatBytes } from '../../../../../shared/util';
-import { isInvalidStagedFile } from '../../util';
 
 type ImportFailedJobProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    job: Job;
+    message?: string;
+    error?: string;
 };
 
-export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: ImportFailedJobProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+export const ImportFailedJob = ({ fileName, size, stagedDatasetId, message, error }: ImportFailedJobProps) => {
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
 
     const handleClose = () => {
-        deleteFileMutation.mutate(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => {
-                    deleteImportEntry(stagedDatasetId);
-                },
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        deleteFileMutation.mutate();
     };
 
     return (
@@ -53,9 +40,9 @@ export const ImportFailedJob = ({ job, fileName, size, stagedDatasetId }: Import
                 </Flex>
             </Flex>
 
-            <Text>{job.message}</Text>
+            <Text>{message}</Text>
             <Divider size='S' marginY='size-150' />
-            <Text>{job.error}</Text>
+            <Text>{error}</Text>
         </View>
     );
 };

@@ -9,6 +9,7 @@ import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-l
 import type { Media } from '../../../../constants/shared-types';
 import { useGetDatasetItemsById } from '../../../../hooks/use-get-dataset-items-by-id.hook';
 import { SIDEBAR_MEDIA_SIZE } from '../constants';
+import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
@@ -39,7 +40,7 @@ export const SidebarItems = ({
 }: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const { datasetItemsById } = useGetDatasetItemsById();
+    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length });
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -51,29 +52,33 @@ export const SidebarItems = ({
     });
 
     return (
-        <View ref={ref} width={'100%'} height={'100%'}>
-            <VirtualizerGridLayout
-                items={items}
-                ariaLabel='sidebar-items'
-                selectionMode='single'
-                selectedKeys={new Set([String(mediaItem.id)])}
-                layoutOptions={layoutOptions}
-                isLoadingMore={isFetchingNextPage}
-                scrollToIndex={selectedIndex}
-                onLoadMore={() => hasNextPage && fetchNextPage()}
-                contentItem={(item) => {
-                    const itemId = String(item.id);
-                    const isUserReviewed = datasetItemsById.get(itemId) ?? false;
+        <Toolbar.Container height={'100%'}>
+            <Toolbar.Section height={'100%'}>
+                <View ref={ref} width={'100%'} height={'100%'}>
+                    <VirtualizerGridLayout
+                        items={items}
+                        ariaLabel='sidebar-items'
+                        selectionMode='single'
+                        selectedKeys={new Set([String(mediaItem.id)])}
+                        layoutOptions={layoutOptions}
+                        isLoadingMore={isFetchingNextPage}
+                        scrollToIndex={selectedIndex}
+                        onLoadMore={() => hasNextPage && fetchNextPage()}
+                        contentItem={(item) => {
+                            const itemId = String(item.id);
+                            const isUserReviewed = datasetItemsById.get(itemId) ?? false;
 
-                    return (
-                        <SidebarMediaItem
-                            item={item}
-                            onSelectedMediaItem={onSelectedMediaItem}
-                            isUserReviewed={isUserReviewed}
-                        />
-                    );
-                }}
-            />
-        </View>
+                            return (
+                                <SidebarMediaItem
+                                    item={item}
+                                    onSelectedMediaItem={onSelectedMediaItem}
+                                    isUserReviewed={isUserReviewed}
+                                />
+                            );
+                        }}
+                    />
+                </View>
+            </Toolbar.Section>
+        </Toolbar.Container>
     );
 };

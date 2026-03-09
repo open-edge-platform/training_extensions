@@ -18,7 +18,7 @@ type VideoPlayerSliderProps = {
     videoFrame: MediaVideoFrame;
     step: number;
     frameNumber: number;
-    sizePerSquare: number;
+    sizePerSquare?: number;
     frameOffset?: number;
     ref?: RefObject<HTMLDivElement | null>;
     selectFrame: (frameNumber: number) => void;

@@ -3,13 +3,12 @@
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
 
-import { $api } from '../../../../../api/client';
 import { Job } from '../../../../../constants/shared-types';
-import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 import { formatBytes } from '../../../../../shared/util';
 import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
 import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
-import { getJobProgress, isInvalidStagedFile, isJobRunning } from '../../util';
+import { getJobProgress, isJobRunning } from '../../util';
 
 type ImportActiveJobProps = {
     job: Job;
@@ -21,19 +20,10 @@ type ImportActiveJobProps = {
 export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId }: ImportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
 
     const handleRemove = () => {
-        return deleteFileMutation.mutateAsync(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => deleteImportEntry(stagedDatasetId),
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        return deleteFileMutation.mutateAsync();
     };
 
     return (

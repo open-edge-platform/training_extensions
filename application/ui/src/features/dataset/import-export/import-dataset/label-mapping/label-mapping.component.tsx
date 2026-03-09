@@ -3,7 +3,7 @@
 
 import { Fragment, useActionState } from 'react';
 
-import { dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
+import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
 
 import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
@@ -11,6 +11,7 @@ import { useProject } from '../../../../../hooks/api/project.hook';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { isNonEmptyString } from '../../../../../shared/util';
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
+import { FormatWarning } from './format-warning/format-warning.component';
 import { IMPORT_DATASET_FORM_ID, mapProjectLabels } from './util';
 
 type LabelMappingProps = {
@@ -32,6 +33,10 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const datasetLabels = data?.metadata?.labels ?? [];
     const projectLabels = selectedProject?.task?.labels ?? [];
     const totalDatasetItems = data?.metadata?.num_items ?? 0;
+    /* 
+        Todo: update with totalAnnotatedImages 
+        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
+    */
     const totalAnnotatedItems = data?.metadata?.num_annotations ?? 0;
 
     const [_labelsMapping, submitAction] = useActionState<unknown, FormData>(async (_prevState, formData) => {
@@ -42,6 +47,7 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                     project_id: String(selectedProject?.id),
                     staged_dataset_id: stagedDatasetId,
                     parameters: {
+                        include_unannotated: formData.get('include_unannotated') === 'on',
                         labels_mapping: mapProjectLabels(datasetLabels, formData),
                     },
                 },
@@ -63,6 +69,8 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
 
             <View padding={'size-200'} borderRadius={'regular'} backgroundColor={'gray-75'}>
                 <DatasetStatistics totalMediaItems={totalDatasetItems} totalAnnotatedItems={totalAnnotatedItems} />
+
+                <FormatWarning annotationType={data?.metadata?.annotation_type} />
             </View>
 
             <Heading marginTop={'size-200'}>Label mapping</Heading>
@@ -94,6 +102,8 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                             </Fragment>
                         ))}
                     </Grid>
+
+                    <Checkbox name='include_unannotated'>Include media without annotations</Checkbox>
                 </Form>
             </View>
         </Flex>
