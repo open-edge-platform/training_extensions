@@ -19,6 +19,7 @@ import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
+    canSubmit: boolean;
     addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
@@ -101,6 +102,7 @@ export const AnnotationActionsProvider = ({
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {
             const idsToUpdate = new Set(updatedAnnotations.map((a) => a.id));
+
             setAnnotations((prevAnnotations) =>
                 prevAnnotations.map((annotation) =>
                     idsToUpdate.has(annotation.id) ? { ...annotation, labels } : annotation
@@ -108,6 +110,7 @@ export const AnnotationActionsProvider = ({
             );
         } else {
             const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
+
             setAnnotations((prevAnnotations) =>
                 prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
             );
@@ -142,7 +145,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const resetAnnotations = () => {
-        undoRedoActions.reset([]);
+        undoRedoActions.reset();
     };
 
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
@@ -157,7 +160,7 @@ export const AnnotationActionsProvider = ({
             body: { annotations: annotationsDTO },
         });
 
-        resetAnnotations();
+        undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
     const submitPredictions = async () => {
@@ -179,6 +182,15 @@ export const AnnotationActionsProvider = ({
         }
     };
 
+    const hasChangedAnnotations = useMemo(() => {
+        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+        const currentServerAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
+
+        return !isEqual(currentServerAnnotations, initialAnnotationsDTO);
+    }, [annotations, initialAnnotationsDTO]);
+
+    const canSubmit = mode === 'prediction' ? !isUserReviewed && predictions.length > 0 : hasChangedAnnotations;
+
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
@@ -187,6 +199,7 @@ export const AnnotationActionsProvider = ({
             value={{
                 isUserReviewed,
                 annotations: annotationsToRender,
+                canSubmit,
 
                 // Local
                 addAnnotations,
