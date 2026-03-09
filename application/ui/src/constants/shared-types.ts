@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { components } from '../api/openapi-spec';
+import { NumberEnumParameterField } from '../features/models/train-model/advanced-settings/components/parameters.component';
 
 export type Label = components['schemas']['LabelView'];
 
@@ -83,11 +84,29 @@ export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
 
-type BoolConfigurableParameter = components['schemas']['BoolParameterView'];
-type StringConfigurableParameter = components['schemas']['StringParameterView'];
-type IntConfigurableParameter = components['schemas']['IntParameterView'];
-type FloatConfigurableParameter = components['schemas']['FloatParameterView'];
-type FloatConfigurableRangeParameter = components['schemas']['FloatRangeParameterView'];
+export type BoolConfigurableParameter = components['schemas']['BoolParameterView'];
+export type StringConfigurableParameter = components['schemas']['StringParameterView'];
+export type IntConfigurableParameter = components['schemas']['IntParameterView'];
+export type FloatConfigurableParameter = components['schemas']['FloatParameterView'];
+export type FloatConfigurableRangeParameter = components['schemas']['FloatRangeParameterView'];
+
+export type NumberConfigurableParameter = IntConfigurableParameter | FloatConfigurableParameter;
+
+type EnumerableConfigurableParameter =
+    | StringConfigurableParameter
+    | NumberConfigurableParameter
+    | FloatConfigurableRangeParameter;
+
+type CreateEnumerableConfigurableParameterType<T extends EnumerableConfigurableParameter> = Omit<
+    T,
+    'allowed_values' | 'value' | 'default_value'
+> & {
+    allowed_values: Exclude<T['allowed_values'], null | undefined>;
+    value: Exclude<T['value'], null | undefined>;
+    default_value: Exclude<T['default_value'], null | undefined>;
+};
+
+export type NumberEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<NumberConfigurableParameter>;
 
 export type ConfigurableParameter =
     | BoolConfigurableParameter
