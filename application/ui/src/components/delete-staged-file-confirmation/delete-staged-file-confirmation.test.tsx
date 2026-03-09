@@ -5,17 +5,9 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../api/utils';
-import { server } from '../../../../msw-node-setup';
+import { http } from '../../api/utils';
+import { server } from '../../msw-node-setup';
 import { DeleteStagedFileConfirmation } from './delete-staged-file-confirmation.component';
-
-const deleteImportEntrySpy = vi.fn();
-
-vi.mock('../../../../hooks/localStorage/use-import-dataset-to-project.hook', () => ({
-    useImportDatasetToProject: () => ({
-        deleteImportEntry: deleteImportEntrySpy,
-    }),
-}));
 
 describe('DeleteStagedFileConfirmation', () => {
     const stagedDatasetId = 'test-staged-dataset-id';
@@ -26,6 +18,7 @@ describe('DeleteStagedFileConfirmation', () => {
 
     it('calls delete API and removes staged dataset from localStorage on success', async () => {
         const deleteSpy = vi.fn();
+        const mockedDeleteImportEntry = vi.fn();
 
         server.use(
             http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
@@ -34,19 +27,22 @@ describe('DeleteStagedFileConfirmation', () => {
             })
         );
 
-        render(<DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} />);
+        render(
+            <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} deleteEntry={mockedDeleteImportEntry} />
+        );
 
         fireEvent.click(screen.getByRole('button', { name: /delete import dataset status/i }));
         fireEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
 
         await waitFor(() => {
             expect(deleteSpy).toHaveBeenCalled();
-            expect(deleteImportEntrySpy).toHaveBeenCalledWith(stagedDatasetId);
+            expect(mockedDeleteImportEntry).toHaveBeenCalled();
         });
     });
 
     it('does not remove staged dataset from localStorage when delete API fails', async () => {
         const deleteSpy = vi.fn();
+        const mockedDeleteImportEntry = vi.fn();
 
         server.use(
             http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
@@ -57,7 +53,9 @@ describe('DeleteStagedFileConfirmation', () => {
             })
         );
 
-        render(<DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} />);
+        render(
+            <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} deleteEntry={mockedDeleteImportEntry} />
+        );
 
         fireEvent.click(screen.getByRole('button', { name: /delete import dataset status/i }));
         fireEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
@@ -66,11 +64,12 @@ describe('DeleteStagedFileConfirmation', () => {
             expect(deleteSpy).toHaveBeenCalled();
         });
 
-        expect(deleteImportEntrySpy).not.toHaveBeenCalled();
+        expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
 
     it('removes staged dataset from localStorage when delete API indicates staged file is invalid', async () => {
         const deleteSpy = vi.fn();
+        const mockedDeleteImportEntry = vi.fn();
 
         server.use(
             http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
@@ -81,14 +80,16 @@ describe('DeleteStagedFileConfirmation', () => {
             })
         );
 
-        render(<DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} />);
+        render(
+            <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} deleteEntry={mockedDeleteImportEntry} />
+        );
 
         fireEvent.click(screen.getByRole('button', { name: /delete import dataset status/i }));
         fireEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
 
         await waitFor(() => {
             expect(deleteSpy).toHaveBeenCalled();
-            expect(deleteImportEntrySpy).toHaveBeenCalledWith(stagedDatasetId);
+            expect(mockedDeleteImportEntry).toHaveBeenCalled();
         });
     });
 });

@@ -6,21 +6,26 @@ import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-data
 import { partition } from 'lodash-es';
 
 import { PrepareImportDataset } from '../../../../components/prepare-import-dataset/prepare-import-dataset.component';
+import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
 
 export const ImportJobsList = () => {
     const { getAllImportEntries, deleteImportEntry, updateImportEntryStep } = useImportDatasetAsNewProject();
 
     const importEntries = getAllImportEntries();
 
-    const [preparingImports] = partition(importEntries, ({ step }) => step === 'preparing');
+    const [preparingImports, others] = partition(importEntries, ({ step }) => step === 'preparing');
+    const [taskTypeSelectionImports, restItems] = partition(others, ({ step }) => step === 'taskTypeSelection');
+    const [labelMappingImports] = partition(restItems, ({ step }) => step === 'labelMapping');
 
     const preparingImportsQueue = preparingImports.reverse();
+    const labelMappingImportsQueue = labelMappingImports.reverse();
+    const taskTypeSelectionImportsQueue = taskTypeSelectionImports.reverse();
 
     return (
         <Flex
             gap='size-250'
+            maxHeight='228px'
             direction='column'
-            maxHeight='size-3400'
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
@@ -34,6 +39,32 @@ export const ImportJobsList = () => {
                         stagedDatasetId={stagedDatasetId}
                         onSuccess={() => updateImportEntryStep(stagedDatasetId, 'taskTypeSelection')}
                         deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                    />
+                );
+            })}
+
+            {taskTypeSelectionImportsQueue.map(({ fileName, stagedDatasetId }) => {
+                return (
+                    <StagedImportDataset
+                        key={`task-type-${stagedDatasetId}`}
+                        fileName={fileName}
+                        message={'Select task type'}
+                        openState={'taskTypeSelection'}
+                        stagedDatasetId={stagedDatasetId}
+                        primaryButtonLabel={'Select task type'}
+                    />
+                );
+            })}
+
+            {labelMappingImportsQueue.map(({ fileName, stagedDatasetId }) => {
+                return (
+                    <StagedImportDataset
+                        key={`label-mapping-${stagedDatasetId}`}
+                        fileName={fileName}
+                        message={'Map labels for the uploaded dataset'}
+                        openState={'labelMapping'}
+                        stagedDatasetId={stagedDatasetId}
+                        primaryButtonLabel={'Map labels'}
                     />
                 );
             })}

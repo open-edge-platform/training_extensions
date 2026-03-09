@@ -3,21 +3,31 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
 import { $api } from '../../../../../api/client';
 import { DeleteStagedFileConfirmation } from '../../../../../components/delete-staged-file-confirmation/delete-staged-file-confirmation.component';
 import { formatBytes } from '../../../../../shared/util';
-import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
+import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
+import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 
 type StagedImportDatasetProps = {
+    message: string;
     fileName: string;
     stagedDatasetId: string;
+    primaryButtonLabel: string;
+    openState: ImportDatasetAsNewProjectState;
 };
 
-export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportDatasetProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
+export const StagedImportDataset = ({
+    message,
+    fileName,
+    openState,
+    stagedDatasetId,
+    primaryButtonLabel,
+}: StagedImportDatasetProps) => {
+    const { deleteImportEntry } = useImportDatasetAsNewProject();
+    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialog();
 
     const {
         error,
@@ -29,7 +39,7 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
     });
 
     const handleOpen = () => {
-        setCurrentStep('labelMapping');
+        setCurrentStep(openState);
         setCurrentStagedId(stagedDatasetId);
         datasetImportDialogState.open();
     };
@@ -56,12 +66,8 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
                             deleteEntry={() => deleteImportEntry(stagedDatasetId)}
                         />
 
-                        <Button
-                            aria-label='continue dataset import'
-                            onPress={handleOpen}
-                            isDisabled={isError || isFetching}
-                        >
-                            Continue
+                        <Button onPress={handleOpen} isDisabled={isError || isFetching}>
+                            {primaryButtonLabel}
                         </Button>
                     </Flex>
                 </Flex>
@@ -71,7 +77,7 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
                 <Flex alignItems='center' gap='size-100'>
                     <InfoOutline width={16} height={16} />
 
-                    <Text>{isError ? `Error: ${error?.detail}` : 'Map labels for the uploaded dataset'}</Text>
+                    <Text>{isError ? `Error: ${error?.detail}` : message}</Text>
                 </Flex>
             </View>
         </View>
