@@ -592,7 +592,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 model_checkpoint_path=trained_model_path,
                 task=task,
                 model_revision_id=params.model_id,
-                model_variant_id=created_variants[ModelFormat.OPENVINO],
+                model_variant_id=created_variants[ModelFormat.PYTORCH],
                 dataset_revision_id=dataset_info.revision_id,
             )
 
