@@ -4,34 +4,29 @@
 import { useLocalStorage } from 'usehooks-ts';
 
 import { ImportDatasetAsNewProjectState } from '../../features/dataset/import-export/import-dataset/util';
-import { getParsedLocalStorage } from './utils';
+import { DatasetImportState, getParsedLocalStorage } from './utils';
 
-type DatasetImportState = {
-    size: number;
-    fileName: string;
-    importJobId: string | null;
-    prepareJobId: string;
-    stagedDatasetId: string;
-    step: ImportDatasetAsNewProjectState;
-};
+export type DatasetImportAsNewProjectState = DatasetImportState<ImportDatasetAsNewProjectState>;
 
 const IMPORT_DATASET_AS_NEW_PROJECT_KEY = `import-dataset-as-new-project`;
 
 export const useImportDatasetAsNewProject = () => {
-    const [lsImportDatasetAsNewProject, setLsImportDatasetAsNewProject] = useLocalStorage<DatasetImportState[] | null>(
+    const [lsImportDatasetAsNewProject, setLsImportDatasetAsNewProject] = useLocalStorage<
+        DatasetImportAsNewProjectState[] | null
+    >(
         IMPORT_DATASET_AS_NEW_PROJECT_KEY,
-        () => getParsedLocalStorage<DatasetImportState[]>(IMPORT_DATASET_AS_NEW_PROJECT_KEY) ?? null
+        () => getParsedLocalStorage<DatasetImportAsNewProjectState[]>(IMPORT_DATASET_AS_NEW_PROJECT_KEY) ?? null
     );
 
-    const getAllImportEntries = (): DatasetImportState[] => {
+    const getAllImportEntries = (): DatasetImportAsNewProjectState[] => {
         return lsImportDatasetAsNewProject ?? [];
     };
 
-    const getImportEntry = (stagedDatasetId: string): DatasetImportState | null => {
+    const getImportEntry = (stagedDatasetId: string): DatasetImportAsNewProjectState | null => {
         return lsImportDatasetAsNewProject?.find((item) => item.stagedDatasetId === stagedDatasetId) ?? null;
     };
 
-    const appendImportEntry = (newEntry: DatasetImportState) => {
+    const appendImportEntry = (newEntry: DatasetImportAsNewProjectState) => {
         return setLsImportDatasetAsNewProject((prev) => [...(prev ?? []), newEntry]);
     };
 
@@ -49,7 +44,10 @@ export const useImportDatasetAsNewProject = () => {
         );
     };
 
-    const updateImportEntry = (stagedDatasetId: string, newImportState: Partial<DatasetImportState>): void => {
+    const updateImportEntry = (
+        stagedDatasetId: string,
+        newImportState: Partial<DatasetImportAsNewProjectState>
+    ): void => {
         return setLsImportDatasetAsNewProject(
             (prev) =>
                 prev?.map((item) =>

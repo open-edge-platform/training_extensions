@@ -3,26 +3,18 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { getMockedPrepareImportDatasetJob } from 'mocks/mock-job';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { getMockedPrepareImportDatasetJob } from '../../../../../../mocks/mock-job';
-import { http } from '../../../../../api/utils';
-import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
-import { server } from '../../../../../msw-node-setup';
+import { http } from '../../../api/utils';
+import { PrepareImportDatasetJob } from '../../../constants/shared-types';
+import { server } from '../../../msw-node-setup';
 import { ImportActiveJob } from './import-active-job.component';
 
-const mockedDeleteImportEntry = vi.fn();
-
-vi.mock('../../../../../hooks/localStorage/use-import-dataset-to-project.hook', () => ({
-    useImportDatasetToProject: () => ({
-        deleteImportEntry: mockedDeleteImportEntry,
-    }),
-}));
-
 describe('ImportActiveJob', () => {
-    const renderApp = (job: PrepareImportDatasetJob) => {
+    const renderApp = (job: PrepareImportDatasetJob, mockedDeleteEntry = vi.fn()) => {
         server.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(getMockedProject({ id: 'project-123' }));
@@ -35,9 +27,10 @@ describe('ImportActiveJob', () => {
         render(
             <ImportActiveJob
                 job={job}
-                fileName='dataset.zip'
                 size={1024}
+                fileName='dataset.zip'
                 stagedDatasetId={job.metadata.staged_dataset_id}
+                deleteEntry={mockedDeleteEntry}
             />
         );
     };
@@ -67,19 +60,20 @@ describe('ImportActiveJob', () => {
     });
 
     it('removes from local storage when job is cancelled successfully', async () => {
+        const mockedDeleteEntry = vi.fn();
         server.use(
             http.post('/api/jobs/{job_id}:cancel', () => {
                 return HttpResponse.json(null, { status: 204 });
             })
         );
 
-        renderApp(getMockedPrepareImportDatasetJob({ status: 'RUNNING', progress: 10 }));
+        renderApp(getMockedPrepareImportDatasetJob({ status: 'RUNNING', progress: 10 }), mockedDeleteEntry);
 
         await userEvent.click(await screen.findByRole('button', { name: /cancel job dialog/i }));
         await userEvent.click(await screen.findByRole('button', { name: /cancel job/i }));
 
         await waitFor(() => {
-            expect(mockedDeleteImportEntry).toHaveBeenCalledTimes(1);
+            expect(mockedDeleteEntry).toHaveBeenCalledTimes(1);
         });
     });
 });
