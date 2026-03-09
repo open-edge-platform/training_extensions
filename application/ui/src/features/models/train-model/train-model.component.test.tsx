@@ -5,6 +5,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getMockedDatasetItem } from 'mocks/mock-dataset-item';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
+import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -26,6 +27,12 @@ describe('TrainModel', () => {
             }),
             http.get('/api/projects/{project_id}/models', () => {
                 return HttpResponse.json([]);
+            }),
+            http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', () => {
+                return HttpResponse.json(getMockedTrainingConfiguration());
+            }),
+            http.get('/api/projects/{project_id}/training_configuration', () => {
+                return HttpResponse.json(getMockedTrainingConfiguration());
             }),
             http.get('/api/model_architectures', () => {
                 return HttpResponse.json({
