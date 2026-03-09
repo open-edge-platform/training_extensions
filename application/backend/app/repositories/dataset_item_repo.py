@@ -125,7 +125,7 @@ class DatasetItemRepository:
         return result.rowcount > 0
 
     def set_annotation_data(
-        self, obj_id: str, annotation_data: list, user_reviewed: bool
+        self, obj_id: str, annotation_data: list, user_reviewed: bool, prediction_model_id: str | None
     ) -> UpdateDatasetItemAnnotation | None:
         stmt = (
             update(DatasetItemDB)
@@ -141,6 +141,7 @@ class DatasetItemRepository:
             .values(
                 annotation_data=annotation_data,
                 user_reviewed=user_reviewed,
+                prediction_model_id=prediction_model_id,
                 updated_at=datetime.now(UTC),
             )
         )

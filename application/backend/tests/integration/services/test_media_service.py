@@ -777,6 +777,19 @@ class TestMediaServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
+    def test_get_media_by_ids(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving a media by ID."""
+        project, db_media_list = fxt_project_with_media
+        media_ids = [UUID(media.id) for media in db_media_list[:2]]
+
+        fetched_media = fxt_media_service.get_media_by_ids(project_id=project.id, media_ids=media_ids)
+        assert len(fetched_media) == 2
+        assert sorted([media.id for media in fetched_media]) == sorted(media_ids)
+
     def test_get_media_binary_path_by_id(
         self,
         tmp_path: Path,
@@ -1283,7 +1296,7 @@ class TestMediaServiceIntegration:
         )
         assert len(testing_items) == 1
 
-    def test_extract_video_frame(
+    def test_save_video_frame(
         self,
         tmp_path: Path,
         fxt_video_data: Callable[[Path], None],
@@ -1292,19 +1305,19 @@ class TestMediaServiceIntegration:
         fxt_project_with_media: tuple[Project, list[MediaDB]],
         db_session: Session,
     ):
-        """Test extracting a videoframe."""
+        """Test saving a videoframe."""
         project, db_media_list = fxt_project_with_media
         media = Video.model_validate(db_media_list[3], from_attributes=True)
 
-        # Create the dataset directory and a test video file
+        # Create the dataset directory
         dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        video_path = dataset_dir / f"{media.id}.{media.format}"
 
-        # Generate video
-        fxt_video_data(video_path)
+        frame_image = PILImage.new("RGB", (640, 480))
 
-        video_frame = fxt_media_service.extract_video_frame(project=project, video=media, frame_index=50)
+        video_frame = fxt_media_service.save_video_frame(
+            project=project, video=media, frame_index=50, frame_image=frame_image
+        )
 
         video_frame_binary_path = dataset_dir / f"{video_frame.id}.jpg"
         assert os.path.exists(video_frame_binary_path)
@@ -1357,6 +1370,26 @@ class TestMediaServiceIntegration:
             project=project, video_id=UUID(media.id), frame_index=500
         )
         assert video_frame is None
+
+    def test_get_video_frame_by_video_id_and_indexes(
+        self,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test getting a video frame by video ID and index."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(250)
+        fxt_video_frame(260)
+        fxt_video_frame(270)
+
+        video_frames = fxt_media_service.get_video_frames_by_video_id_and_indexes(
+            project=project, video_id=UUID(media.id), frame_indexes=[250, 260]
+        )
+        assert video_frames is not None
+        assert len(video_frames) == 2
+        assert sorted([video_frame.frame_index for video_frame in video_frames]) == [250, 260]
 
     def test_get_video_frames_by_video_id(
         self,
