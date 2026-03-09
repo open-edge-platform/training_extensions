@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Grid, Item, minmax, Picker, Text, ToggleButtons, View } from '@geti/ui';
+import { Content, ContextualHelp, Grid, Item, minmax, Picker, Text, ToggleButtons, View } from '@geti/ui';
 import { isBoolean, isFunction } from 'lodash-es';
 
 import type { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../constants/shared-types';
@@ -12,7 +12,6 @@ import { BooleanParameterField } from './boolean-parameter-field.component';
 import { NumberParameterField } from './number-parameter-field.component';
 import { RangeParameterField } from './range-parameter-field/range-parameter-field.component';
 import { ResetButton } from './reset-button.component';
-import { Tooltip } from './tooltip.component';
 
 type ParametersProps = {
     parameters: ConfigurableParameter[];
@@ -21,7 +20,13 @@ type ParametersProps = {
 };
 
 const ParameterTooltip = ({ text }: { text: string }) => {
-    return <Tooltip>{text}</Tooltip>;
+    return (
+        <ContextualHelp variant='info'>
+            <Content>
+                <Text>{text}</Text>
+            </Content>
+        </ContextualHelp>
+    );
 };
 
 type ParameterProps = {
