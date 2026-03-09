@@ -6,10 +6,9 @@ import { useEffect } from 'react';
 import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
-import { $api } from '../../../../../api/client';
-import { PrepareImportDatasetJob } from '../../../../../constants/shared-types';
-import { isNonEmptyString } from '../../../../../shared/util';
-import { isInvalidJob, isJobDone, isJobFailed } from '../../util';
+import { $api } from '../../../api/client';
+import { isNonEmptyString } from '../../../shared/util';
+import { isInvalidJob, isJobDone, isJobFailed } from '../util';
 
 type UseImportJobStatusProps = {
     jobId: string | null | undefined;
@@ -24,7 +23,6 @@ export const useImportJobStatus = ({ jobId, onError, onSuccess }: UseImportJobSt
         { params: { path: { job_id: jobId } } },
         {
             enabled: isNonEmptyString(jobId),
-            select: (currentData) => currentData as PrepareImportDatasetJob,
             refetchInterval: ({ state }) => {
                 return isJobDone(state.data) || isJobFailed(state.data) || state.status === 'error' ? false : 1_000;
             },

@@ -10,8 +10,8 @@ type DatasetImportState = {
     size: number;
     fileName: string;
     importJobId: string | null;
-    prepareJobId: string | null;
-    stagedDatasetId: string | null;
+    prepareJobId: string;
+    stagedDatasetId: string;
     step: ImportDatasetAsNewProjectState;
 };
 

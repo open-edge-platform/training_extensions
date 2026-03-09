@@ -3,8 +3,9 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { CheckCircleOutlined } from '@geti/ui/icons';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
+import { useDeleteStagedDataset } from '../../../../../hooks/api/use-delete-staged-dataset.hook';
 import { formatBytes } from '../../../../../shared/util';
 
 import classes from './import-job-done.module.scss';
@@ -16,7 +17,11 @@ type ImportJobDoneProps = {
 };
 
 export const ImportJobDone = ({ fileName, size, stagedDatasetId }: ImportJobDoneProps) => {
-    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
+    const { deleteImportEntry } = useImportDatasetToProject();
+    const deleteFileMutation = useDeleteStagedDataset({
+        stagedDatasetId,
+        deleteEntry: () => deleteImportEntry(stagedDatasetId),
+    });
 
     const handleClose = () => {
         deleteFileMutation.mutate();

@@ -71,8 +71,10 @@ def frame_queue(mp_manager):
 
 
 @pytest.fixture
-def stop_event(mp_ctx):
-    return mp_ctx.Event()
+def stop_event(request, mp_ctx):
+    event = mp_ctx.Event()
+    request.addfinalizer(event.set)
+    return event
 
 
 @pytest.fixture
@@ -91,15 +93,30 @@ def fake_video_stream(sample_frame) -> _FakeVideoStream:
 
 
 class TestStreamLoader:
-    def test_queue_full(self, frame_queue, stop_event, source_changed_condition, fake_video_stream, sample_frame):
+    def _start_loader(self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream):
+        """Helper that starts a _TestableStreamLoader and registers cleanup."""
+        process = _TestableStreamLoader(frame_queue, stop_event, source_changed_condition, fake_video_stream)
+        process.start()
+
+        def cleanup():
+            stop_event.set()
+            process.join(timeout=5)
+            if process.is_alive():
+                process.kill()
+
+        request.addfinalizer(cleanup)
+        return process
+
+    def test_queue_full(
+        self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream, sample_frame
+    ):
         """Test that stream frames are not acquired when queue is full."""
         data1 = StreamData(frame_data=sample_frame.copy(), timestamp=time.time(), source_metadata={})
         data2 = StreamData(frame_data=sample_frame.copy(), timestamp=time.time(), source_metadata={})
         frame_queue.put(data1)
         frame_queue.put(data2)
 
-        process = _TestableStreamLoader(frame_queue, stop_event, source_changed_condition, fake_video_stream)
-        process.start()
+        process = self._start_loader(request, frame_queue, stop_event, source_changed_condition, fake_video_stream)
 
         time.sleep(1)
 
@@ -117,12 +134,14 @@ class TestStreamLoader:
         assert all(np.array_equal(el1.frame_data, el2.frame_data) for el1, el2 in zip(queue_contents, [data1, data2]))
         assert not process.is_alive(), "Process should terminate cleanly"
 
-    def test_queue_empty(self, frame_queue, stop_event, source_changed_condition, fake_video_stream):
+    def test_queue_empty(self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream):
         """Test that stream frames are acquired when queue is empty."""
-        process = _TestableStreamLoader(frame_queue, stop_event, source_changed_condition, fake_video_stream)
-        process.start()
+        process = self._start_loader(request, frame_queue, stop_event, source_changed_condition, fake_video_stream)
 
-        time.sleep(1)
+        # Poll until the queue reaches the expected size (maxsize=2), with a timeout of 5 seconds
+        deadline = time.monotonic() + 5
+        while frame_queue.qsize() < 2 and time.monotonic() < deadline:
+            time.sleep(0.05)
 
         stop_event.set()
         process.join(timeout=3)

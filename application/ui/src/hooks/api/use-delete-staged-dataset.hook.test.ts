@@ -7,24 +7,13 @@ import { renderHook } from 'test-utils/render';
 
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
-import { useDeleteStagedDataset } from './staged-file.hook';
-
-const deleteImportEntryMock = vi.fn();
-
-vi.mock('../localStorage/use-import-dataset-to-project.hook', () => ({
-    useImportDatasetToProject: () => ({
-        deleteImportEntry: deleteImportEntryMock,
-    }),
-}));
+import { useDeleteStagedDataset } from './use-delete-staged-dataset.hook';
 
 describe('useDeleteStagedDataset', () => {
-    beforeEach(() => {
-        deleteImportEntryMock.mockReset();
-    });
-
     it('deletes a staged dataset successfully', async () => {
         const stagedDatasetId = 'staged-dataset-1';
         const requestSpy = vi.fn();
+        const deleteImportEntryMock = vi.fn();
 
         server.use(
             http.delete('/api/staged_datasets/{staged_dataset_id}', ({ params }) => {
@@ -33,7 +22,9 @@ describe('useDeleteStagedDataset', () => {
             })
         );
 
-        const { result } = renderHook(() => useDeleteStagedDataset({ stagedDatasetId }));
+        const { result } = renderHook(() =>
+            useDeleteStagedDataset({ stagedDatasetId, deleteEntry: deleteImportEntryMock })
+        );
 
         await act(async () => {
             await result.current.mutateAsync();
@@ -42,12 +33,13 @@ describe('useDeleteStagedDataset', () => {
         await waitFor(() => {
             expect(result.current.isSuccess).toBe(true);
             expect(requestSpy).toHaveBeenCalledWith(stagedDatasetId);
-            expect(deleteImportEntryMock).toHaveBeenCalledWith(stagedDatasetId);
+            expect(deleteImportEntryMock).toHaveBeenCalled();
         });
     });
 
     it('removes import entry when server returns not found', async () => {
         const stagedDatasetId = 'staged-dataset-1';
+        const deleteImportEntryMock = vi.fn();
 
         server.use(
             http.delete('/api/staged_datasets/{staged_dataset_id}', () =>
@@ -57,7 +49,9 @@ describe('useDeleteStagedDataset', () => {
             )
         );
 
-        const { result } = renderHook(() => useDeleteStagedDataset({ stagedDatasetId }));
+        const { result } = renderHook(() =>
+            useDeleteStagedDataset({ stagedDatasetId, deleteEntry: deleteImportEntryMock })
+        );
 
         await act(async () => {
             await expect(result.current.mutateAsync()).rejects.toBeDefined();
@@ -65,12 +59,13 @@ describe('useDeleteStagedDataset', () => {
 
         await waitFor(() => {
             expect(result.current.isError).toBe(true);
-            expect(deleteImportEntryMock).toHaveBeenCalledWith(stagedDatasetId);
+            expect(deleteImportEntryMock).toHaveBeenCalled();
         });
     });
 
     it('does not remove import entry for other errors', async () => {
         const stagedDatasetId = 'staged-dataset-1';
+        const deleteImportEntryMock = vi.fn();
 
         server.use(
             http.delete('/api/staged_datasets/{staged_dataset_id}', () =>
@@ -80,7 +75,9 @@ describe('useDeleteStagedDataset', () => {
             )
         );
 
-        const { result } = renderHook(() => useDeleteStagedDataset({ stagedDatasetId }));
+        const { result } = renderHook(() =>
+            useDeleteStagedDataset({ stagedDatasetId, deleteEntry: deleteImportEntryMock })
+        );
 
         await act(async () => {
             await expect(result.current.mutateAsync()).rejects.toBeDefined();

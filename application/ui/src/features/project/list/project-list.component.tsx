@@ -7,6 +7,7 @@ import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useProjects } from '../../../hooks/api/project.hook';
+import { ImportDatasetDialogProvider } from '../providers/import-dataset-dialog-provider.component';
 import { NewProjectMenu } from './new-project-menu.component';
 import { ProjectCard } from './project-card.component';
 
@@ -58,7 +59,9 @@ export const ProjectList = () => {
 
                     <View flex={1} UNSAFE_style={{ overflow: 'auto' }}>
                         <Suspense fallback={<Loading size='M' mode='inline' />}>
-                            <ProjectGrid />
+                            <ImportDatasetDialogProvider>
+                                <ProjectGrid />
+                            </ImportDatasetDialogProvider>
                         </Suspense>
                     </View>
                 </Flex>

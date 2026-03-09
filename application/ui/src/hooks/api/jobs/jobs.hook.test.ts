@@ -5,15 +5,15 @@ import { act, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { renderHook } from 'test-utils/render';
 
-import { getMockedJob } from '../../../mocks/mock-job';
-import { http } from '../../api/utils';
-import { server } from '../../msw-node-setup';
+import { getMockedJob } from '../../../../mocks/mock-job';
+import { http } from '../../../api/utils';
+import { server } from '../../../msw-node-setup';
 import {
     getLastEventSource,
     MockEventSourceConstructor,
     resetMockEventSource,
     simulateSSEMessage,
-} from '../../test-utils/mock-event-source';
+} from '../../../test-utils/mock-event-source';
 import { useGetCurrentTrainingJob } from './jobs.hook';
 
 const PROJECT_ID = '123';
