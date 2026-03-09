@@ -26,7 +26,18 @@ describe('AddMediaButton', () => {
         render(<AddMediaButton onFilesSelected={vi.fn()} />);
 
         const input = screen.getByLabelText(/Upload media files/);
+        const folderInput = screen.getByLabelText(/Upload media folder/);
 
         expect(input).toHaveAttribute('accept', acceptedExtensions);
+        expect(folderInput).toHaveAttribute('accept', acceptedExtensions);
+    });
+
+    it('enables directory selection attributes on input', () => {
+        render(<AddMediaButton onFilesSelected={vi.fn()} />);
+
+        const input = screen.getByLabelText(/Upload media folder/);
+
+        expect(input).toHaveAttribute('webkitdirectory');
+        expect(input).toHaveAttribute('directory');
     });
 });
