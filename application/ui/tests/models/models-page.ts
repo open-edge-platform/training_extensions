@@ -32,7 +32,7 @@ export class ModelsPage {
 
     async selectPickerOption(label: string, optionName: string) {
         await this.page.getByLabel(label, { exact: true }).last().click();
-        await this.page.getByRole('option', { name: new RegExp(optionName, 'i') }).click();
+        await this.page.getByRole('option', { name: optionName, exact: true }).click();
     }
 
     async openTrainModelDialog() {
