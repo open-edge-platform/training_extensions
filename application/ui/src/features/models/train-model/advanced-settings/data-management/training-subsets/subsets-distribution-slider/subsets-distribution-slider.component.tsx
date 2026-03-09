@@ -51,9 +51,9 @@ const DistributionTooltip = () => {
         <ContextualHelp variant='info'>
             <Content>
                 <Text>
-                    Specify the distribution of annotated samples over the training, validation and test subsets. Note:
-                    items that have already been used for training will stay in the same subset even if these parameters
-                    are changed.
+                    Specify the distribution of annotated samples that have NOT already been assigned to a subset. Note
+                    that samples used in previous training rounds already have a subset and this will remain unchanged,
+                    to avoid data contamination and evaluation bias.
                 </Text>
             </Content>
         </ContextualHelp>

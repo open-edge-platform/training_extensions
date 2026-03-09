@@ -4,6 +4,7 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 
 import { Content, Flex, Grid, Heading, InlineAlert, minmax, Text, View } from '@geti/ui';
+import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 import { isEqual } from 'lodash-es';
 
 import type { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
@@ -103,8 +104,8 @@ const SubsetsDistribution = ({
     return (
         <View UNSAFE_className={classes.trainingSubsets}>
             <Grid
-                areas={['label slider reset', '. counts .']}
-                columns={['max-content', minmax('size-3400', '1fr'), 'max-content']}
+                areas={['label label', 'slider reset', 'counts .']}
+                columns={[minmax('size-3400', '1fr'), 'max-content']}
                 alignItems={'center'}
                 columnGap={'size-250'}
             >
@@ -116,7 +117,7 @@ const SubsetsDistribution = ({
                     value={[subsetsDistribution[0], subsetsDistribution[1]]}
                     onChange={handleSubsetDistributionChange}
                     onChangeEnd={handleSubsetDistributionChangeEnd}
-                    label={'Distribution'}
+                    label={'Distribution for new samples'}
                 />
                 <ResetButton
                     gridArea={'reset'}
@@ -204,6 +205,46 @@ const updateSubsetSplitValues = (
     }),
 });
 
+const useSubsetDatasetSizes = () => {
+    const { data: trainingDatasetItems } = useGetDatasetItems({
+        limit: 1,
+        annotationStatus: 'reviewed',
+        subset: 'training',
+    });
+    const { data: testingDatasetItems } = useGetDatasetItems({
+        limit: 1,
+        annotationStatus: 'reviewed',
+        subset: 'testing',
+    });
+    const { data: validationDatasetItems } = useGetDatasetItems({
+        limit: 1,
+        annotationStatus: 'reviewed',
+        subset: 'validation',
+    });
+    const { data: unassignedDatasetItems } = useGetDatasetItems({
+        limit: 1,
+        annotationStatus: 'reviewed',
+        subset: 'unassigned',
+    });
+
+    const trainingSubsetSize = trainingDatasetItems?.pagination?.total ?? 0;
+    const testingSubsetSize = testingDatasetItems?.pagination?.total ?? 0;
+    const validationSubsetSize = validationDatasetItems?.pagination?.total ?? 0;
+    const unassignedSubsetSize = unassignedDatasetItems?.pagination?.total ?? 0;
+
+    const assignedDatasetItemsSize = trainingSubsetSize + testingSubsetSize + validationSubsetSize;
+    const totalDatasetItemsSize = assignedDatasetItemsSize + unassignedSubsetSize;
+
+    return {
+        trainingSubsetSize,
+        testingSubsetSize,
+        validationSubsetSize,
+        unassignedSubsetSize,
+        assignedDatasetItemsSize,
+        totalDatasetItemsSize,
+    };
+};
+
 export const TrainingSubsets = ({
     defaultSubsetParameters,
     subsetsParameters,
@@ -211,6 +252,14 @@ export const TrainingSubsets = ({
     hasSupportedModels,
 }: TrainingSubsetsProps) => {
     const { trainingSubset, validationSubset } = getSubsets(subsetsParameters);
+    const {
+        validationSubsetSize,
+        testingSubsetSize,
+        unassignedSubsetSize,
+        assignedDatasetItemsSize,
+        totalDatasetItemsSize,
+        trainingSubsetSize,
+    } = useSubsetDatasetSizes();
 
     const areTrainingSubsetParametersChanged = !isEqual(defaultSubsetParameters, subsetsParameters);
 
@@ -252,11 +301,21 @@ export const TrainingSubsets = ({
         });
     };
 
-    const { trainingSubsetSize, validationSubsetSize, testSubsetSize } = getSubsetsSizes(
+    /*const { trainingSubsetSize, validationSubsetSize, testSubsetSize } = getSubsetsSizes(
         subsetsParameters,
         validationSubsetRatio,
         testSubsetRatio
-    );
+    );*/
+
+    const newValidationSubsetSize = Math.floor((validationSubsetRatio / 100) * unassignedSubsetSize);
+    const newTestingSubsetSize = Math.floor((testSubsetRatio / 100) * unassignedSubsetSize);
+    const newTrainingSubsetSize = unassignedSubsetSize - newValidationSubsetSize - newTestingSubsetSize;
+
+    const resultingDatasetDistribution = {
+        training: trainingSubsetSize + newTrainingSubsetSize,
+        validation: validationSubsetSize + newValidationSubsetSize,
+        testing: newTestingSubsetSize + newTestingSubsetSize,
+    };
 
     const subsetsSizesInvalid = areTrainingSubsetParametersChanged && !areSubsetsSizesValid(subsetsParameters);
     const isChangedDistributionWarningVisible = hasSupportedModels && areTrainingSubsetParametersChanged;
@@ -275,17 +334,42 @@ export const TrainingSubsets = ({
                     that samples used in previous training rounds already have a subset and this will remain unchanged,
                     to avoid data contamination and evaluation bias.
                 </Accordion.Description>
-                <Accordion.Divider marginY={'size-250'} />
+                <Accordion.Divider marginY={'size-200'} />
                 <View>
+                    <Text>Dataset: {totalDatasetItemsSize} samples</Text>
+                    <Flex alignItems={'center'} gap={'size-100'}>
+                        <Text>Assigned: {assignedDatasetItemsSize}</Text>
+                        <Text>Unassigned: {unassignedSubsetSize}</Text>
+                    </Flex>
+                    <Accordion.Divider marginY={'size-200'} />
                     <SubsetsDistribution
                         subsetsDistribution={subsetsDistribution}
                         onSubsetsDistributionChange={setSubsetsDistribution}
-                        testSubsetSize={testSubsetSize}
-                        trainingSubsetSize={trainingSubsetSize}
-                        validationSubsetSize={validationSubsetSize}
+                        testSubsetSize={newTestingSubsetSize}
+                        trainingSubsetSize={newTrainingSubsetSize}
+                        validationSubsetSize={newValidationSubsetSize}
                         onSubsetsDistributionChangeEnd={handleUpdateSubsetsConfiguration}
                         onSubsetsDistributionReset={handleSubsetsConfigurationReset}
                     />
+                    <Accordion.Divider marginY={'size-200'} />
+                    <Flex direction={'column'}>
+                        <Text>Resulting dataset distribution:</Text>
+                        <Text>
+                            Training: {trainingSubsetSize} + {newTrainingSubsetSize} ={' '}
+                            {resultingDatasetDistribution.training} (
+                            {Math.round((resultingDatasetDistribution.training * 100) / totalDatasetItemsSize)})
+                        </Text>
+                        <Text>
+                            Validation: {validationSubsetSize} + {newValidationSubsetSize} ={' '}
+                            {resultingDatasetDistribution.validation} (
+                            {Math.round((resultingDatasetDistribution.validation * 100) / totalDatasetItemsSize)})
+                        </Text>
+                        <Text>
+                            Testing: {testingSubsetSize} + {newTestingSubsetSize} ={' '}
+                            {resultingDatasetDistribution.testing} (
+                            {Math.round((resultingDatasetDistribution.testing * 100) / totalDatasetItemsSize)})
+                        </Text>
+                    </Flex>
                 </View>
 
                 <Flex direction={'column'} gap={'size-200'} marginTop={'size-200'}>
