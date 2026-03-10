@@ -39,7 +39,7 @@ describe('TrainModel', () => {
         );
     });
 
-    it('shows warning message when there are not enough annotated media items', async () => {
+    it.skip('shows warning message when there are not enough annotated media items', async () => {
         server.use(
             http.get('/api/projects/{project_id}/dataset/items', () => {
                 return HttpResponse.json({

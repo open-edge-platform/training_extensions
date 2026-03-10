@@ -3,7 +3,7 @@
 
 import { Button, ButtonGroup } from '@geti/ui';
 import { useCancelJob } from 'hooks/api/jobs/jobs.hook';
-import { useDeleteStagedDataset } from 'hooks/api/use-delete-staged-dataset.hook';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 type ImportProcessButtonsProps = {
     prepareJobId: string;

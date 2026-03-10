@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '../../api/client';
+import { isNonEmptyString } from '../../shared/util';
 import { isInvalidStagedFile } from './util';
 
 type useDeleteStagedDatasetProps = {
@@ -9,6 +10,17 @@ type useDeleteStagedDatasetProps = {
     deleteEntry: () => void;
     onSuccess?: () => void;
     onError?: (error: unknown) => void;
+};
+
+export const useStagedDataset = (stagedDatasetId: string | null | undefined) => {
+    return $api.useQuery(
+        'get',
+        '/api/staged_datasets/{staged_dataset_id}',
+        {
+            params: { path: { staged_dataset_id: stagedDatasetId } },
+        },
+        { enabled: isNonEmptyString(stagedDatasetId) }
+    );
 };
 
 export const useDeleteStagedDataset = ({

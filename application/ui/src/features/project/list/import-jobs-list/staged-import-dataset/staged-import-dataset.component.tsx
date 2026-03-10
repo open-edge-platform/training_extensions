@@ -3,9 +3,9 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
+import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
-import { $api } from '../../../../../api/client';
 import { DeleteStagedFileConfirmation } from '../../../../../components/delete-staged-file-confirmation/delete-staged-file-confirmation.component';
 import { formatBytes } from '../../../../../shared/util';
 import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
@@ -29,14 +29,7 @@ export const StagedImportDataset = ({
     const { deleteImportEntry } = useImportDatasetAsNewProject();
     const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialog();
 
-    const {
-        error,
-        isError,
-        isFetching,
-        data: stagedDataset,
-    } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
-        params: { path: { staged_dataset_id: String(stagedDatasetId) } },
-    });
+    const { error, isError, isFetching, data: stagedDataset } = useStagedDataset(stagedDatasetId);
 
     const handleOpen = () => {
         setCurrentStep(openState);

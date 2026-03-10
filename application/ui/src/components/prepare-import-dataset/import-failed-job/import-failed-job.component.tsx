@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
-import { useDeleteStagedDataset } from 'hooks/api/use-delete-staged-dataset.hook';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { formatBytes } from '../../../shared/util';
 

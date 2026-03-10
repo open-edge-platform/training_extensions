@@ -7,7 +7,7 @@ import { renderHook } from 'test-utils/render';
 
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
-import { useDeleteStagedDataset } from './use-delete-staged-dataset.hook';
+import { useDeleteStagedDataset } from './staged-dataset.hook';
 
 describe('useDeleteStagedDataset', () => {
     it('deletes a staged dataset successfully', async () => {

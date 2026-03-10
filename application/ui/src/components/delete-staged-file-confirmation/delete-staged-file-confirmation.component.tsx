@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AlertDialog, Button, DialogTrigger } from '@geti/ui';
-
-import { useDeleteStagedDataset } from '../../hooks/api/use-delete-staged-dataset.hook';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 type DeleteStagedFileConfirmationProps = {
     stagedDatasetId: string;

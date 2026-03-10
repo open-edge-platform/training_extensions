@@ -3,9 +3,9 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { CheckCircleOutlined } from '@geti/ui/icons';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { useDeleteStagedDataset } from '../../../../../hooks/api/use-delete-staged-dataset.hook';
 import { formatBytes } from '../../../../../shared/util';
 
 import classes from './import-job-done.module.scss';
