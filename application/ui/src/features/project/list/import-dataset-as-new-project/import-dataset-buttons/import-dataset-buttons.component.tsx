@@ -4,8 +4,9 @@
 import { Button, ButtonGroup } from '@geti/ui';
 import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
-import { ImportProcessButtons } from '../../../../../components/import-job-process/import-process-buttons.component';
+import { ImportJobProcessButtons } from '../../../../../components/import-job-process/import-job-process-buttons.component';
 import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
+import { ImportTaskSelectionButtons } from '../import-task-selection/import-task-selection-buttons.component';
 
 type ImportDatasetButtonsProps = {
     onClose: () => void;
@@ -29,9 +30,19 @@ export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: 
 
     if (currentStep === 'preparing') {
         return (
-            <ImportProcessButtons
+            <ImportJobProcessButtons
                 onClose={onClose}
                 prepareJobId={prepareJobId}
+                stagedDatasetId={stagedDatasetId}
+                deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+            />
+        );
+    }
+
+    if (currentStep === 'taskTypeSelection') {
+        return (
+            <ImportTaskSelectionButtons
+                onClose={onClose}
                 stagedDatasetId={stagedDatasetId}
                 deleteEntry={() => deleteImportEntry(stagedDatasetId)}
             />
