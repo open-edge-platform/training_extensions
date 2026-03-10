@@ -37,7 +37,7 @@ class BenchmarkMetrics(BaseModel):
     imagenet_top5_accuracy: float | None = Field(
         default=None,
         title="ImageNet Top-5 Accuracy",
-        description="Top-5 accuracy on ImageNet (percentage, optional)",
+        description="Top-5 accuracy on ImageNet (percentage, null if N/A)",
         ge=0,
         le=100,
     )
