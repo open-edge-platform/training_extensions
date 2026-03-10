@@ -56,6 +56,7 @@ export const AnnotationActionsProvider = ({
     mode,
     isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
+    const mediaItemKey = isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
         meta: {
@@ -88,14 +89,27 @@ export const AnnotationActionsProvider = ({
         return mapServerAnnotationsToLocal(initialPredictionsDTO, projectLabels);
     }, [initialPredictionsDTO, projectLabels]);
 
-    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
+    const initialAnnotations = useMemo(() => {
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-    });
+    }, [initialAnnotationsDTO, projectLabels]);
+
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(initialAnnotations);
+
+    const resetAnnotations = () => {
+        undoRedoActions.reset(initialAnnotations);
+    };
 
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
+    const prevMediaItemKeyRef = useRef(mediaItemKey);
 
-    if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
-        setAnnotations(mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels), true);
+    // Reset annotations if the provider's props are updated
+    // or if we switch to a different media item (image or video frame)
+    if (
+        prevMediaItemKeyRef.current !== mediaItemKey ||
+        !isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)
+    ) {
+        resetAnnotations();
+        prevMediaItemKeyRef.current = mediaItemKey;
         prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
     }
 
@@ -144,10 +158,6 @@ export const AnnotationActionsProvider = ({
         );
     };
 
-    const resetAnnotations = () => {
-        undoRedoActions.reset();
-    };
-
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
         const query = isVideoFrame(mediaItem)
             ? {
@@ -189,7 +199,7 @@ export const AnnotationActionsProvider = ({
         return !isEqual(currentServerAnnotations, initialAnnotationsDTO);
     }, [annotations, initialAnnotationsDTO]);
 
-    const canSubmit = mode === 'prediction' ? !isUserReviewed && predictions.length > 0 : hasChangedAnnotations;
+    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations;
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
