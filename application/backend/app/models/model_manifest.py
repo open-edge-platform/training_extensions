@@ -21,36 +21,41 @@ class ModelManifestDeprecationStatus(str, Enum):
         return str(self.name)
 
 
-class PerformanceRatings(BaseModel):
-    """Ratings for different performance aspects of a model."""
+class BenchmarkMetrics(BaseModel):
+    """Benchmark metrics for different model tasks."""
 
     model_config = ConfigDict(extra="forbid")
-    accuracy: int = Field(
-        ge=1,
-        le=3,
-        default=1,
-        title="Accuracy rating",
-        description="Rating of the model accuracy. "
-        "The value should be interpreted relatively to the other available models, "
-        "and it ranges from 1 (below average) to 3 (above average).",
+
+    # Classification metrics
+    imagenet_top1_accuracy: float | None = Field(
+        default=None,
+        title="ImageNet Top-1 Accuracy",
+        description="Top-1 accuracy on ImageNet (percentage)",
+        ge=0,
+        le=100,
     )
-    training_time: int = Field(
-        ge=1,
-        le=3,
-        default=1,
-        title="Training time rating",
-        description="Rating of the model training time. "
-        "The value should be interpreted relatively to the other available models, "
-        "and it ranges from 1 (below average/slower) to 3 (above average/faster).",
+    imagenet_top5_accuracy: float | None = Field(
+        default=None,
+        title="ImageNet Top-5 Accuracy",
+        description="Top-5 accuracy on ImageNet (percentage, optional)",
+        ge=0,
+        le=100,
     )
-    inference_speed: int = Field(
-        ge=1,
-        le=3,
-        default=1,
-        title="Inference speed rating",
-        description="Rating of the model inference speed. "
-        "The value should be interpreted relatively to the other available models, "
-        "and it ranges from 1 (below average/slower) to 3 (above average/faster).",
+
+    # Detection/Segmentation metrics
+    coco_map_50_95: float | None = Field(
+        default=None,
+        title="COCO mAP 50-95",
+        description="COCO mean Average Precision at IoU=0.50:0.95 (percentage)",
+        ge=0,
+        le=100,
+    )
+    coco_map_50: float | None = Field(
+        default=None,
+        title="COCO mAP 50",
+        description="COCO mean Average Precision at IoU=0.50 (percentage, optional)",
+        ge=0,
+        le=100,
     )
 
 
@@ -67,8 +72,8 @@ class ModelStats(BaseModel):
         title="Trainable parameters (millions)",
         description="Number of trainable parameters in the model, expressed in millions",
     )
-    performance_ratings: PerformanceRatings = Field(
-        title="Performance ratings", description="Standardized ratings for model performance metrics"
+    benchmark_metrics: BenchmarkMetrics = Field(
+        title="Benchmark metrics", description="Standardized benchmark metrics for model performance"
     )
 
 
