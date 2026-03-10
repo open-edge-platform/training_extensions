@@ -246,7 +246,12 @@ export const TrainingSubsets = ({
     const newTrainingSubsetSize = unassignedSubsetSize - newValidationSubsetSize - newTestingSubsetSize;
 
     const areSubsetsSizesValid = () => {
-        return ![newValidationSubsetSize, newTestingSubsetSize, newTrainingSubsetSize].some((size) => size === 0);
+        const resultingTrainingSubsetSize = trainingSubsetSize + newTrainingSubsetSize;
+        const resultingValidationSubsetSize = validationSubsetSize + newValidationSubsetSize;
+        const resultingTestingSubsetSize = testingSubsetSize + newTestingSubsetSize;
+        return ![resultingTrainingSubsetSize, resultingValidationSubsetSize, resultingTestingSubsetSize].some(
+            (size) => size === 0
+        );
     };
 
     const subsetsSizesInvalid = areTrainingSubsetParametersChanged && !areSubsetsSizesValid();
