@@ -12,6 +12,7 @@ import { isParameterGroup } from '../../../../model-listing/model-training-param
 import { Accordion } from '../../components/accordion/accordion.component';
 import { ResetButton } from '../../components/reset-button.component';
 import { ResultingDatasetDistribution } from './resulting-dataset-distribution.component';
+import { SubsetDistributionStats } from './subset-distribution-stats.component';
 import { SubsetsDistributionSlider } from './subsets-distribution-slider/subsets-distribution-slider.component';
 import {
     areSubsetsSizesValid,
@@ -24,51 +25,6 @@ import {
 } from './utils';
 
 import classes from './training-subsets.module.scss';
-
-type SubsetDistributionStatsProps = {
-    trainingSize: number;
-    validationSize: number;
-    testSize: number;
-};
-
-const Tile = ({ color }: { color: string }) => {
-    return (
-        <View height={'size-100'} width={'size-100'} borderRadius={'small'} UNSAFE_style={{ backgroundColor: color }} />
-    );
-};
-
-const SubsetDistributionStat = ({ size, color, title }: { size: number; color: string; title: string }) => {
-    return (
-        <Flex alignItems={'center'} gap={'size-50'}>
-            <Tile color={color} />
-            <span aria-label={`${title} subset size`}>
-                {title}: {size}
-            </span>
-        </Flex>
-    );
-};
-
-const SubsetDistributionStats = ({ trainingSize, validationSize, testSize }: SubsetDistributionStatsProps) => {
-    return (
-        <View gridArea={'counts'} backgroundColor={'static-gray-800'} borderRadius={'small'} padding={'size-100'}>
-            <Flex alignItems={'center'} justifyContent={'space-between'} UNSAFE_className={classes.statsText}>
-                <Flex alignItems={'center'} gap={'size-200'}>
-                    <SubsetDistributionStat title={'Training'} color={'var(--training-subset)'} size={trainingSize} />
-                    <SubsetDistributionStat
-                        title={'Validation'}
-                        color={'var(--validation-subset)'}
-                        size={validationSize}
-                    />
-                    <SubsetDistributionStat title={'Test'} color={'var(--test-subset)'} size={testSize} />
-                </Flex>
-                <Text>
-                    <Text UNSAFE_className={classes.totalStats}>Total: </Text>
-                    {trainingSize + validationSize + testSize} media items
-                </Text>
-            </Flex>
-        </View>
-    );
-};
 
 type SubsetsDistributionProps = {
     trainingSubsetSize: number;
@@ -104,7 +60,7 @@ const SubsetsDistribution = ({
     return (
         <View UNSAFE_className={classes.trainingSubsets}>
             <Grid
-                areas={['label label', 'slider reset', 'counts .']}
+                areas={['label label', 'slider reset', 'counts counts']}
                 columns={[minmax('size-3400', '1fr'), 'max-content']}
                 alignItems={'center'}
                 columnGap={'size-250'}
@@ -128,6 +84,7 @@ const SubsetsDistribution = ({
                     testSize={testSubsetSize}
                     trainingSize={trainingSubsetSize}
                     validationSize={validationSubsetSize}
+                    totalSize={trainingSubsetSize + validationSubsetSize + testSubsetSize}
                 />
             </Grid>
         </View>
