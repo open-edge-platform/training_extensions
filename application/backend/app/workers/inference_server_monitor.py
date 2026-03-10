@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import time
+from collections.abc import Callable
 from functools import wraps
 from multiprocessing.synchronize import Event
 
@@ -23,6 +24,8 @@ class InferenceServerMonitorThread(BaseThreadWorker):
         self._inference_requested = False
         self._ttl = 0
         self._ttl_start_time = -1.0
+
+        self._orig_stop: Callable[[], None] | None = None
 
     def setup(self) -> None:
         logger.debug("Setting up inference server")
@@ -50,6 +53,7 @@ class InferenceServerMonitorThread(BaseThreadWorker):
         self._server.infer_batch = wrapped_infer_batch
 
         orig_stop = self._server.stop
+        self._orig_stop = orig_stop
 
         @wraps(orig_stop)
         def wrapped_stop():
@@ -80,4 +84,4 @@ class InferenceServerMonitorThread(BaseThreadWorker):
                 if 0 < self._ttl <= elapsed:
                     logger.debug("TTL of {} seconds expired, unloading model", self._ttl)
                     self._ttl_start_time = -1.0
-                    self._server.stop()
+                    self._orig_stop()  # pyrefly: ignore[not-callable]

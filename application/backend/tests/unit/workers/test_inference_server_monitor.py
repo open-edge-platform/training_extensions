@@ -120,28 +120,34 @@ class TestInferenceServerMonitorThread:
 
     def test_run_loop_ttl_expired(self) -> None:
         mock_server = MagicMock()
+        stop_method = mock_server.stop
 
         stop_event = MagicMock()
         stop_event.is_set.side_effect = [False, True]  # Run loop once then stop
         monitor_thread = InferenceServerMonitorThread(server=mock_server, stop_event=stop_event)
-        monitor_thread._ttl = 10
-        monitor_thread._ttl_start_time = time.perf_counter() - 1000  # Simulate TTL expired
+        monitor_thread.setup()
+        monitor_thread._ttl = 1
+        monitor_thread._ttl_start_time = time.perf_counter()
+
+        time.sleep(2)  # Wait to ensure TTL has expired
 
         monitor_thread.run_loop()
 
         assert monitor_thread._ttl_start_time < 0  # Check that TTL countdown is reset
-        mock_server.stop.assert_called_once_with()  # Check that server stop was called on TTL expiration
+        stop_method.assert_called_once_with()  # Check that server stop was called on TTL expiration
 
     def test_run_loop_ttl_not_expired(self) -> None:
         mock_server = MagicMock()
+        stop_method = mock_server.stop
 
         stop_event = MagicMock()
         stop_event.is_set.side_effect = [False, True]  # Run loop once then stop
         monitor_thread = InferenceServerMonitorThread(server=mock_server, stop_event=stop_event)
+        monitor_thread.setup()
         monitor_thread._ttl = 1000
-        monitor_thread._ttl_start_time = time.perf_counter() - 10  # Simulate TTL not expired
+        monitor_thread._ttl_start_time = time.perf_counter()
 
         monitor_thread.run_loop()
 
         assert monitor_thread._ttl_start_time > 0
-        mock_server.stop.assert_not_called()
+        stop_method.assert_not_called()
