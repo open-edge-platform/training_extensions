@@ -85,3 +85,5 @@ class InferenceServerMonitorThread(BaseThreadWorker):
                     logger.debug("TTL of {} seconds expired, unloading model", self._ttl)
                     self._ttl_start_time = -1.0
                     self._orig_stop()  # pyrefly: ignore[not-callable]
+
+            self.stop_aware_sleep(1)

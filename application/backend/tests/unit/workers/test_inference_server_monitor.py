@@ -1,7 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 from app.models import BatchInferenceInput, BatchInferenceResult, Label
@@ -127,11 +126,10 @@ class TestInferenceServerMonitorThread:
         monitor_thread = InferenceServerMonitorThread(server=mock_server, stop_event=stop_event)
         monitor_thread.setup()
         monitor_thread._ttl = 1
-        monitor_thread._ttl_start_time = time.perf_counter()
+        monitor_thread._ttl_start_time = 1
 
-        time.sleep(2)  # Wait to ensure TTL has expired
-
-        monitor_thread.run_loop()
+        with patch("time.perf_counter", return_value=100):
+            monitor_thread.run_loop()
 
         assert monitor_thread._ttl_start_time < 0  # Check that TTL countdown is reset
         stop_method.assert_called_once_with()  # Check that server stop was called on TTL expiration
@@ -145,9 +143,10 @@ class TestInferenceServerMonitorThread:
         monitor_thread = InferenceServerMonitorThread(server=mock_server, stop_event=stop_event)
         monitor_thread.setup()
         monitor_thread._ttl = 1000
-        monitor_thread._ttl_start_time = time.perf_counter()
+        monitor_thread._ttl_start_time = 1
 
-        monitor_thread.run_loop()
+        with patch("time.perf_counter", return_value=100):
+            monitor_thread.run_loop()
 
         assert monitor_thread._ttl_start_time > 0
         stop_method.assert_not_called()

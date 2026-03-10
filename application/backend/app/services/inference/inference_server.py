@@ -60,7 +60,7 @@ class InferenceServer:
         if self._loaded_model and self._loaded_model.id == model_id and self._loaded_model.device == device:
             return False  # same model and device, no need to reload
 
-        logger.info("Logging model {} on device {}", model_id, device)
+        logger.info("Loading model {} on device {}", model_id, device)
         model_xml_path = self._get_model_file_path(project_id, model_id, "xml")
         _ = self._get_model_file_path(project_id, model_id, "bin")
 
@@ -86,17 +86,19 @@ class InferenceServer:
                 device=self._loaded_model.device,
                 ttl=self._loaded_model.ttl,
                 load_timestamp=self._loaded_model.load_timestamp,
-                remaining_seconds=(datetime.now() - self._loaded_model.load_timestamp).total_seconds(),
+                remaining_seconds=self._loaded_model.ttl
+                - (datetime.now() - self._loaded_model.load_timestamp).total_seconds(),
             ),
         )
 
     def infer_batch(self, labels: list[Label], inputs: list[BatchInferenceInput]) -> BatchInferenceResult:
-        if self._loaded_model is None:
+        loaded_model = self._loaded_model
+        if loaded_model is None:
             raise RuntimeError("No model loaded for inference")
         logger.debug("Running inference on batch of {} inputs", len(inputs))
 
         input_data = [input.data for input in inputs]
-        inference_result = self._loaded_model.model.infer_batch(input_data)
+        inference_result = loaded_model.model.infer_batch(input_data)
         result = BatchInferenceResult(predictions=[])
         for idx, input in enumerate(inputs):
             result.predictions.append(
