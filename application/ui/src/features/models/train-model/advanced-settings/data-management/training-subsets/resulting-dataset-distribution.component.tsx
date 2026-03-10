@@ -11,6 +11,7 @@ type SubsetDistributionRowProps = {
     existingSize: number;
     newSize: number;
     totalSize: number;
+    label: string;
 };
 
 const SubsetLabel = ({ label, color }: { color: string; label: string }) => {
@@ -22,7 +23,7 @@ const SubsetLabel = ({ label, color }: { color: string; label: string }) => {
     );
 };
 
-const SubsetDistributionRow = ({ existingSize, newSize, totalSize }: SubsetDistributionRowProps) => {
+const SubsetDistributionRow = ({ existingSize, newSize, totalSize, label }: SubsetDistributionRowProps) => {
     const resultingSize = existingSize + newSize;
     const percentage = totalSize > 0 ? Math.round((resultingSize * 100) / totalSize) : 0;
 
@@ -32,8 +33,8 @@ const SubsetDistributionRow = ({ existingSize, newSize, totalSize }: SubsetDistr
             <Text>+</Text>
             <Text>{newSize}</Text>
             <Text>=</Text>
-            <Text>{resultingSize}</Text>
-            <Text>({percentage}%)</Text>
+            <span aria-label={`${label} result size`}>{resultingSize}</span>
+            <span aria-label={`${label} result percentage`}>({percentage}%)</span>
         </>
     );
 };
@@ -57,7 +58,7 @@ const ResultingDatasetDistributionSubset = ({
         <>
             <SubsetLabel label={label} color={color} />
 
-            <SubsetDistributionRow totalSize={totalSize} newSize={newSize} existingSize={existingSize} />
+            <SubsetDistributionRow label={label} totalSize={totalSize} newSize={newSize} existingSize={existingSize} />
         </>
     );
 };
@@ -82,9 +83,9 @@ export const ResultingDatasetDistribution = ({
     totalDatasetItemsSize,
 }: ResultingDatasetDistributionProps) => {
     return (
-        <View backgroundColor={'static-gray-800'} borderRadius={'small'} padding={'size-100'}>
-            <Flex direction={'column'} gap={'size-50'}>
-                <Text>Resulting dataset distribution:</Text>
+        <Flex direction={'column'} gap={'size-50'}>
+            <Text>Resulting dataset distribution:</Text>
+            <View backgroundColor={'static-gray-800'} borderRadius={'small'} padding={'size-100'}>
                 <Grid
                     columns={[repeat(7, 'max-content')]}
                     alignItems={'center'}
@@ -104,19 +105,19 @@ export const ResultingDatasetDistribution = ({
                         label={'Validation'}
                         color={LABEL_COLOR_MAPPING.validation}
                         totalSize={totalDatasetItemsSize}
-                        newSize={newTestingSubsetSize}
-                        existingSize={testingSubsetSize}
+                        newSize={newValidationSubsetSize}
+                        existingSize={validationSubsetSize}
                     />
 
                     <ResultingDatasetDistributionSubset
                         label={'Test'}
                         color={LABEL_COLOR_MAPPING.test}
                         totalSize={totalDatasetItemsSize}
-                        newSize={newValidationSubsetSize}
-                        existingSize={validationSubsetSize}
+                        newSize={newTestingSubsetSize}
+                        existingSize={testingSubsetSize}
                     />
                 </Grid>
-            </Flex>
-        </View>
+            </View>
+        </Flex>
     );
 };

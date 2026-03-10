@@ -9,6 +9,59 @@ import type {
     TrainingConfigurationParameter,
 } from '../src/constants/shared-types';
 
+export function getMockedConfigurationParameter(
+    parameter: Partial<NumberConfigurableParameter> & Required<Pick<NumberConfigurableParameter, 'value_type'>>
+): NumberConfigurableParameter;
+export function getMockedConfigurationParameter(
+    parameter: Partial<BoolConfigurableParameter> & Required<Pick<BoolConfigurableParameter, 'value_type'>>
+): BoolConfigurableParameter;
+export function getMockedConfigurationParameter(
+    parameter: Partial<ConfigurableParameter> & Required<Pick<ConfigurableParameter, 'value_type'>> = {
+        value_type: 'float',
+    }
+): ConfigurableParameter {
+    if (parameter.value_type === 'float' || parameter.value_type === 'int') {
+        return {
+            type: 'parameter',
+            value: 0,
+            key: 'mocked_parameter',
+            name: 'Mocked Parameter',
+            max_value: 100,
+            min_value: 0,
+            description: 'This is a mocked configuration parameter',
+            default_value: 50,
+            ...parameter,
+        };
+    }
+
+    if (parameter.value_type === 'bool') {
+        return {
+            type: 'parameter',
+            value: false,
+            key: 'mocked_bool_parameter',
+            name: 'Mocked Bool Parameter',
+            description: 'This is a mocked boolean configuration parameter',
+            default_value: false,
+            ...parameter,
+        };
+    }
+
+    throw new Error(`Unsupported parameter type: ${parameter.type}`);
+}
+
+export const getMockedConfigurationParameterGroup = (
+    overrides: Partial<ConfigurableParameterGroup> = {}
+): ConfigurableParameterGroup => {
+    return {
+        type: 'parameter_group',
+        key: 'mocked_group',
+        name: 'Mocked Group',
+        description: 'This is a mocked configuration parameter group',
+        parameters: [getMockedConfigurationParameter({ value_type: 'float' })],
+        ...overrides,
+    };
+};
+
 export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter[] => {
     const datasetPreparationGroup: ConfigurableParameterGroup = {
         type: 'parameter_group',
@@ -124,43 +177,3 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
 
     return [datasetPreparationGroup, trainingGroup];
 };
-
-export function getMockedConfigurationParameter(
-    parameter: Partial<NumberConfigurableParameter> & Required<Pick<NumberConfigurableParameter, 'value_type'>>
-): ConfigurableParameter;
-export function getMockedConfigurationParameter(
-    parameter: Partial<BoolConfigurableParameter> & Required<Pick<BoolConfigurableParameter, 'value_type'>>
-): ConfigurableParameter;
-export function getMockedConfigurationParameter(
-    parameter: Partial<ConfigurableParameter> & Required<Pick<ConfigurableParameter, 'value_type'>> = {
-        value_type: 'float',
-    }
-): ConfigurableParameter {
-    if (parameter.value_type === 'float' || parameter.value_type === 'int') {
-        return {
-            type: 'parameter',
-            value: 0,
-            key: 'mocked_parameter',
-            name: 'Mocked Parameter',
-            max_value: 100,
-            min_value: 0,
-            description: 'This is a mocked configuration parameter',
-            default_value: 50,
-            ...parameter,
-        };
-    }
-
-    if (parameter.value_type === 'bool') {
-        return {
-            type: 'parameter',
-            value: false,
-            key: 'mocked_bool_parameter',
-            name: 'Mocked Bool Parameter',
-            description: 'This is a mocked boolean configuration parameter',
-            default_value: false,
-            ...parameter,
-        };
-    }
-
-    throw new Error(`Unsupported parameter type: ${parameter.type}`);
-}

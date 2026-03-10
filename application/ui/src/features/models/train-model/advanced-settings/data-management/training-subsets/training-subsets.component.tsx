@@ -3,7 +3,7 @@
 
 import { Dispatch, SetStateAction, useState } from 'react';
 
-import { Content, Flex, Heading, InlineAlert, Text, View } from '@geti/ui';
+import { Content, Flex, Heading, InlineAlert, View } from '@geti/ui';
 import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 import { isEqual } from 'lodash-es';
 
@@ -205,10 +205,10 @@ export const TrainingSubsets = ({
                 </Accordion.Description>
                 <Accordion.Divider marginY={'size-200'} />
                 <View>
-                    <Text>Dataset: {totalDatasetItemsSize} samples</Text>
+                    <span aria-label={'Total dataset samples'}>Dataset: {totalDatasetItemsSize} samples</span>
                     <Flex alignItems={'center'} gap={'size-100'}>
-                        <Text>Assigned: {assignedDatasetItemsSize}</Text>
-                        <Text>Unassigned: {unassignedSubsetSize}</Text>
+                        <span aria-label={'Total assigned samples'}>Assigned: {assignedDatasetItemsSize}</span>
+                        <span aria-label={'Total unassigned samples'}>Unassigned: {unassignedSubsetSize}</span>
                     </Flex>
                     <Accordion.Divider marginY={'size-200'} />
                     <SubsetsDistribution

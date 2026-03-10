@@ -1,14 +1,10 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    ConfigurableParameter,
-    NumberConfigurableParameter,
-    TrainingConfiguration,
-} from '../../../../../../constants/shared-types';
+import { NumberConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { findGroupByKey } from '../../../../model-listing/model-training-parameters/utils';
 
-export type SubsetSplitParameters = ConfigurableParameter[];
+export type SubsetSplitParameters = NumberConfigurableParameter[];
 
 export const MAX_RATIO_VALUE = 100;
 

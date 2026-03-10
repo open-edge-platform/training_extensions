@@ -61,7 +61,7 @@ export const SubsetDistributionStats = ({
                 </Flex>
                 <Text>
                     <Text UNSAFE_className={classes.totalStats}>Total: </Text>
-                    {totalSize} media items
+                    <span aria-label={'Total size'}>{totalSize}</span> media items
                 </Text>
             </Flex>
         </View>
