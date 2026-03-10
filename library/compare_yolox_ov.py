@@ -179,10 +179,14 @@ def run_torch_with_nms(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Run YOLOX torch model WITH NMS via export_by_feat.
 
+    Parameters
+    ----------
+    tensor : (B, C, H, W) — supports any batch size >= 1
+
     Returns
     -------
-    dets   : ndarray (N, 5) [x1, y1, x2, y2, score]  (model-input coords)
-    labels : ndarray (N,)
+    dets   : ndarray (B, K, 5) [x1, y1, x2, y2, score]  (model-input coords)
+    labels : ndarray (B, K)   class indices as float
     """
     tensor = tensor.to(device)
     inner = model.model  # SingleStageDetector
@@ -195,22 +199,19 @@ def run_torch_with_nms(
         "img_shape": shape,
         "scale_factor": (1.0, 1.0),
     }
+    batch_img_metas = [meta_info] * tensor.shape[0]
 
     x = inner.extract_feat(tensor)
     outs = inner.bbox_head(x)  # (cls_scores, bbox_preds, objectnesses)
 
     dets_batch, labels_batch = inner.bbox_head.export_by_feat(
         *outs,
-        batch_img_metas=[meta_info],
+        batch_img_metas=batch_img_metas,
         rescale=False,
         with_nms=True,
     )
-    # dets_batch: [1, N, 5], labels_batch: [1, N]
-    dets = dets_batch[0].cpu().numpy()     # (N, 5)
-    labels = labels_batch[0].cpu().numpy()  # (N,)
-    # Remove padding rows (score == 0 from _select_nms_index)
-    valid = dets[:, 4] > 0
-    return dets[valid], labels[valid].astype(np.int64)
+    # dets_batch: [B, K, 5], labels_batch: [B, K]
+    return dets_batch.cpu().numpy(), labels_batch.cpu().numpy()
 
 
 @torch.no_grad()
@@ -221,13 +222,16 @@ def run_torch_without_nms(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Run YOLOX torch model WITHOUT NMS via export_by_feat.
 
-    The non-NMS path now returns (B, K, 5) + (B, K) — same shape contract
-    as the NMS path but with top-K selection instead of NMS.
+    The non-NMS path returns (B, K, 5) + (B, K) — static top-K selection.
+
+    Parameters
+    ----------
+    tensor : (B, C, H, W) — supports any batch size >= 1
 
     Returns
     -------
-    dets   : ndarray (N, 5) [x1, y1, x2, y2, score]  (model-input coords)
-    labels : ndarray (N,)
+    dets   : ndarray (B, K, 5) [x1, y1, x2, y2, score]  (model-input coords)
+    labels : ndarray (B, K)   class indices as float
     """
     tensor = tensor.to(device)
     inner = model.model
@@ -240,21 +244,19 @@ def run_torch_without_nms(
         "img_shape": shape,
         "scale_factor": (1.0, 1.0),
     }
+    batch_img_metas = [meta_info] * tensor.shape[0]
 
     x = inner.extract_feat(tensor)
     outs = inner.bbox_head(x)
 
     dets_batch, labels_batch = inner.bbox_head.export_by_feat(
         *outs,
-        batch_img_metas=[meta_info],
+        batch_img_metas=batch_img_metas,
         rescale=False,
         with_nms=False,
     )
-    # dets_batch: [1, K, 5], labels_batch: [1, K]
-    dets = dets_batch[0].cpu().numpy()      # (K, 5)
-    labels = labels_batch[0].cpu().numpy()   # (K,)
-    valid = dets[:, 4] > 0
-    return dets[valid], labels[valid].astype(np.int64)
+    # dets_batch: [B, K, 5], labels_batch: [B, K]
+    return dets_batch.cpu().numpy(), labels_batch.cpu().numpy()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -350,7 +352,15 @@ def run_ov_with_nms(
     """Run OV model WITH NMS.
 
     Expected outputs: 'boxes' [B,N,5] and 'labels' [B,N]
-    Returns (N,5) and (N,) arrays for the first (and only) batch item.
+
+    Parameters
+    ----------
+    tensor : (B, C, H, W) — supports any batch size >= 1
+
+    Returns
+    -------
+    dets   : ndarray (B, N, 5)
+    labels : ndarray (B, N)
     """
     np_input = tensor.numpy()
     result = compiled(np_input)
@@ -366,11 +376,7 @@ def run_ov_with_nms(
 
     dets = _get(["boxes", "dets"], 0)    # (B, N, 5)
     labels = _get(["labels"], 1)          # (B, N)
-
-    dets = dets[0]                        # (N, 5)
-    labels = labels[0]                    # (N,)
-    valid = dets[:, 4] > 0
-    return dets[valid], labels[valid].astype(np.int64)
+    return dets, labels.astype(np.int64)
 
 
 def run_ov_without_nms(
@@ -379,9 +385,16 @@ def run_ov_without_nms(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Run OV model WITHOUT NMS.
 
-    The non-NMS export path now returns (B, K, 5) + (B, K) — same shape
-    contract as the NMS path but with top-K selection instead of NMS.
-    Returns (N, 5) and (N,) arrays for the first batch item.
+    The non-NMS export path returns (B, K, 5) + (B, K) — static top-K.
+
+    Parameters
+    ----------
+    tensor : (B, C, H, W) — supports any batch size >= 1
+
+    Returns
+    -------
+    dets   : ndarray (B, K, 5)
+    labels : ndarray (B, K)
     """
     np_input = tensor.numpy()
     result = compiled(np_input)
@@ -395,12 +408,8 @@ def run_ov_without_nms(
         return result[compiled.outputs[fallback_idx]]
 
     dets = _get(["boxes", "bboxes", "dets"], 0)    # (B, K, 5)
-    labels = _get(["labels"], 1)              # (B, K)
-
-    dets = dets[0]                             # (K, 5)
-    labels = labels[0]                         # (K,)
-    valid = dets[:, 4] > 0
-    return dets[valid], labels[valid].astype(np.int64)
+    labels = _get(["labels"], 1)                    # (B, K)
+    return dets, labels.astype(np.int64)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -623,66 +632,111 @@ def run_comparison(args: argparse.Namespace) -> None:
     metric_torch = MeanAveragePrecision(box_format="xyxy", iou_type="bbox")
     metric_ov = MeanAveragePrecision(box_format="xyxy", iou_type="bbox")
 
-    # ── Per-image loop ───────────────────────────────────────────────────────
+    # ── Batch loop ──────────────────────────────────────────────────────────
+    batch_size = getattr(args, "batch_size", 1)
     print(f"\n{'─'*80}")
     print(f"{'Image':<40} {'Torch dets':>10} {'OV dets':>10} {'Δboxes_mean':>14}")
     print(f"{'─'*80}")
 
-    for img_path in image_paths:
-        img_bgr = cv2.imread(str(img_path))
-        if img_bgr is None:
-            print(f"[WARN] Cannot read {img_path}, skipping.")
+    for batch_start in range(0, len(image_paths), batch_size):
+        batch_paths = image_paths[batch_start : batch_start + batch_size]
+
+        # ── Preprocess batch ────────────────────────────────────────────────
+        tensors: list[torch.Tensor] = []
+        scales: list[float] = []
+        pad_tls: list[tuple[int, int]] = []
+        ori_hws: list[tuple[int, int]] = []
+        img_names: list[str] = []
+
+        for img_path in batch_paths:
+            img_bgr = cv2.imread(str(img_path))
+            if img_bgr is None:
+                print(f"[WARN] Cannot read {img_path}, skipping.")
+                continue
+            t, scale, pad_tl, ori_hw = preprocess_image(img_bgr, data_params, swap_rgb)
+            tensors.append(t)
+            scales.append(scale)
+            pad_tls.append(pad_tl)
+            ori_hws.append(ori_hw)
+            img_names.append(img_path.name)
+
+        if not tensors:
             continue
 
-        # ── Preprocess ──────────────────────────────────────────────────────
-        tensor, scale, pad_tl, ori_hw = preprocess_image(img_bgr, data_params, swap_rgb)
+        # Stack to (B, C, H, W)
+        batch_tensor = torch.cat(tensors, dim=0)
+        cur_bs = batch_tensor.shape[0]
 
-        # ── Torch inference ─────────────────────────────────────────────────
+        # ── Batch inference ─────────────────────────────────────────────────
         if args.with_nms:
-            t_dets, t_labels = run_torch_with_nms(torch_model, tensor, device=device)
-            # dets: (N,5) [x1,y1,x2,y2,score]
-            t_boxes = t_dets[:, :4]
-            t_scores = t_dets[:, 4]
+            t_dets_batch, t_labels_batch = run_torch_with_nms(
+                torch_model, batch_tensor, device=device,
+            )  # (B, K, 5), (B, K)
+            ov_dets_batch, ov_labels_batch = run_ov_with_nms(ov_compiled, batch_tensor)
         else:
-            t_dets, t_labels_raw = run_torch_without_nms(torch_model, tensor, device=device)
-            # Model outputs top-K without NMS; apply post-processing NMS on CPU
-            t_boxes, t_scores, t_labels = apply_postprocess_nms(
-                t_dets, t_labels_raw, iou_thr=args.iou_thr,
-            )
+            t_dets_batch, t_labels_batch = run_torch_without_nms(
+                torch_model, batch_tensor, device=device,
+            )  # (B, K, 5), (B, K)
+            ov_dets_batch, ov_labels_batch = run_ov_without_nms(ov_compiled, batch_tensor)
 
-        # ── OV inference ────────────────────────────────────────────────────
-        if args.with_nms:
-            ov_dets, ov_labels = run_ov_with_nms(ov_compiled, tensor)
-            ov_boxes = ov_dets[:, :4]
-            ov_scores = ov_dets[:, 4]
-        else:
-            ov_dets, ov_labels_raw = run_ov_without_nms(ov_compiled, tensor)
-            # Model outputs top-K without NMS; apply post-processing NMS on CPU
-            ov_boxes, ov_scores, ov_labels = apply_postprocess_nms(
-                ov_dets, ov_labels_raw, iou_thr=args.iou_thr,
-            )
+        # ── Per-image post-processing ────────────────────────────────────────
+        for i in range(cur_bs):
+            img_name = img_names[i]
+            scale = scales[i]
+            pad_tl = pad_tls[i]
+            ori_hw = ori_hws[i]
 
-        # ── Rescale to original image space ─────────────────────────────────
-        t_boxes_orig = rescale_boxes_letterbox(t_boxes, scale, pad_tl, ori_hw)
-        ov_boxes_orig = rescale_boxes_letterbox(ov_boxes, scale, pad_tl, ori_hw)
+            t_dets_i = t_dets_batch[i]     # (K, 5)
+            t_lbls_i = t_labels_batch[i]   # (K,)
+            ov_dets_i = ov_dets_batch[i]
+            ov_lbls_i = ov_labels_batch[i]
 
-        # ── Per-image summary ────────────────────────────────────────────────
-        delta_str = "n/a"
-        if len(t_boxes_orig) > 0 and len(ov_boxes_orig) > 0:
-            min_n = min(len(t_boxes_orig), len(ov_boxes_orig))
-            delta = np.abs(t_boxes_orig[:min_n] - ov_boxes_orig[:min_n]).mean()
-            delta_str = f"{delta:.4f}"
-        print(f"{img_path.name:<40} {len(t_boxes_orig):>10} {len(ov_boxes_orig):>10} {delta_str:>14}")
+            # Filter padding / zero-score rows
+            t_valid = t_dets_i[:, 4] > 0
+            ov_valid = ov_dets_i[:, 4] > 0
+            t_dets_i = t_dets_i[t_valid]
+            t_lbls_i = t_lbls_i[t_valid].astype(np.int64)
+            ov_dets_i = ov_dets_i[ov_valid]
+            ov_lbls_i = ov_lbls_i[ov_valid].astype(np.int64)
 
-        # ── Accumulate mAP (if GT provided) ─────────────────────────────────
-        if gt_map is not None:
-            fname = img_path.name
-            if fname in gt_map:
-                target = make_target_dict(gt_map[fname]["boxes"], gt_map[fname]["labels"])
-                metric_torch.update([make_pred_dict(t_boxes_orig, t_scores, t_labels)], [target])
-                metric_ov.update([make_pred_dict(ov_boxes_orig, ov_scores, ov_labels)], [target])
+            if args.with_nms:
+                t_boxes  = t_dets_i[:, :4]
+                t_scores = t_dets_i[:, 4]
+                t_labels = t_lbls_i
+                ov_boxes  = ov_dets_i[:, :4]
+                ov_scores = ov_dets_i[:, 4]
+                ov_labels = ov_lbls_i
             else:
-                print(f"  [WARN] No GT found for {fname}")
+                # Apply per-class NMS to deduplicate top-K outputs
+                t_boxes, t_scores, t_labels = apply_postprocess_nms(
+                    t_dets_i, t_lbls_i, iou_thr=args.iou_thr,
+                )
+                ov_boxes, ov_scores, ov_labels = apply_postprocess_nms(
+                    ov_dets_i, ov_lbls_i, iou_thr=args.iou_thr,
+                )
+
+            # Rescale to original image space
+            t_boxes_orig  = rescale_boxes_letterbox(t_boxes,  scale, pad_tl, ori_hw)
+            ov_boxes_orig = rescale_boxes_letterbox(ov_boxes, scale, pad_tl, ori_hw)
+
+            # Per-image summary line
+            delta_str = "n/a"
+            if len(t_boxes_orig) > 0 and len(ov_boxes_orig) > 0:
+                min_n = min(len(t_boxes_orig), len(ov_boxes_orig))
+                delta = np.abs(t_boxes_orig[:min_n] - ov_boxes_orig[:min_n]).mean()
+                delta_str = f"{delta:.4f}"
+            print(
+                f"{img_name:<40} {len(t_boxes_orig):>10} {len(ov_boxes_orig):>10} {delta_str:>14}"
+            )
+
+            # Accumulate mAP
+            if gt_map is not None:
+                if img_name in gt_map:
+                    target = make_target_dict(gt_map[img_name]["boxes"], gt_map[img_name]["labels"])
+                    metric_torch.update([make_pred_dict(t_boxes_orig, t_scores, t_labels)], [target])
+                    metric_ov.update([make_pred_dict(ov_boxes_orig, ov_scores, ov_labels)], [target])
+                else:
+                    print(f"  [WARN] No GT found for {img_name}")
 
     print(f"{'─'*80}")
 
@@ -747,6 +801,11 @@ def parse_args() -> argparse.Namespace:
                         help="Score threshold (used when running without NMS)")
     parser.add_argument("--iou_thr", type=float, default=0.65,
                         help="IoU threshold for NMS (used when running without NMS)")
+    parser.add_argument("--batch_size", type=int, default=1,
+                        help="Number of images to process per forward pass (default: 1). "
+                             "Values > 1 require the model to have a dynamic batch dimension "
+                             "(i.e. exported with --no_nms or with dynamic batch support). "
+                             "NPU always requires batch_size=1.")
 
     nms_group = parser.add_mutually_exclusive_group()
     nms_group.add_argument("--with_nms", dest="with_nms", action="store_true", default=True,
@@ -758,8 +817,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    print(f"NMS mode: {'WITH NMS' if args.with_nms else 'WITHOUT NMS'}")
-    print(f"OV device: {args.ov_device.upper()}")
+    print(f"NMS mode:   {'WITH NMS' if args.with_nms else 'WITHOUT NMS'}")
+    print(f"OV device:  {args.ov_device.upper()}")
+    print(f"Batch size: {args.batch_size}")
     run_comparison(args)
 
 

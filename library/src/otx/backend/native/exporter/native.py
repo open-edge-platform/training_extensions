@@ -74,6 +74,11 @@ class OTXNativeModelExporter(OTXModelExporter):
         input_size = self.data_input_params.as_ncwh()
         dummy_tensor = torch.rand(input_size).to(next(model.parameters()).device)
 
+        # Use -1 for the batch dimension so the exported model accepts any batch size.
+        # The dummy tensor still has batch=1 (required for tracing), but the OV graph
+        # will have a dynamic first dimension (shown as -1 / ? in Netron / model_api).
+        dynamic_input_shape = [-1, *input_size[1:]]
+
         if self.via_onnx:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 tmp_dir = Path(tmpdirname)
@@ -87,13 +92,13 @@ class OTXNativeModelExporter(OTXModelExporter):
                 )
                 exported_model = openvino.convert_model(
                     tmp_dir / (base_model_name + ".onnx"),
-                    input=(openvino.PartialShape(input_size),),
+                    input=(openvino.PartialShape(dynamic_input_shape),),
                 )
         else:
             exported_model = openvino.convert_model(
                 model,
                 example_input=dummy_tensor,
-                input=(openvino.PartialShape(input_size),),
+                input=(openvino.PartialShape(dynamic_input_shape),),
             )
         exported_model = self._postprocess_openvino_model(exported_model)
 
