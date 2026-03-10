@@ -58,23 +58,6 @@ class BenchmarkMetrics(BaseModel):
         le=100,
     )
 
-    @model_validator(mode="after")
-    def validate_metrics(self) -> "BenchmarkMetrics":
-        if self.imagenet_top1_accuracy is None and self.coco_map_50_95 is None:
-            raise ValueError(
-                f"For classification 'imagenet_top1_accuracy' is required, for detection and segmentation "
-                f"'coco_map_50_95' is required. However, both or 'None': {self}"
-            )
-        if (self.imagenet_top1_accuracy is not None or self.imagenet_top5_accuracy is not None) and (
-            self.coco_map_50 is not None or self.coco_map_50_95 is not None
-        ):
-            raise ValueError(
-                f"For classification, only 'imagenet_top*_accuracy' metric type can be set. For detection and "
-                f"segmentation, only 'coco_map_*' metric type can be set. However, both metric types have been set: "
-                f"{self}"
-            )
-        return self
-
 
 class ModelStats(BaseModel):
     """Information about a machine learning model."""
@@ -139,3 +122,29 @@ class ModelManifest(BaseModel):
     hyperparameters: AlgoLevelParameters = Field(
         title="Hyperparameters", description="Configuration parameters for model training"
     )
+
+    @model_validator(mode="after")
+    def validate_metrics(self) -> "ModelManifest":
+        if self.task in {TaskType.CLASSIFICATION}:
+            if self.stats.benchmark_metrics.imagenet_top1_accuracy is None:
+                raise ValueError("For classification 'imagenet_top1_accuracy' benchmark metric is required")
+            if (
+                self.stats.benchmark_metrics.coco_map_50 is not None
+                or self.stats.benchmark_metrics.coco_map_50_95 is not None
+            ):
+                raise ValueError(
+                    "For classification, only ImageNet Accuracy benchmark metrics can be set. However, one of the COCO "
+                    "mAP benchmark metrics was not 'None'."
+                )
+        if self.task in {TaskType.DETECTION, TaskType.INSTANCE_SEGMENTATION}:
+            if self.stats.benchmark_metrics.coco_map_50_95 is None:
+                raise ValueError("For detection or instance segmentation 'coco_map_50_95' benchmark metric is required")
+            if (
+                self.stats.benchmark_metrics.imagenet_top1_accuracy is not None
+                or self.stats.benchmark_metrics.imagenet_top5_accuracy is not None
+            ):
+                raise ValueError(
+                    "For detection or instance segmentation, only COCO mAP benchmark metrics can be set. However, one "
+                    "of the ImageNet Accuracy benchmark metrics was not 'None'."
+                )
+        return self

@@ -108,10 +108,7 @@ class TestModelManifestService:
             "stats": {
                 "gigaflops": 1.0,
                 "trainable_parameters": 1000,
-                "benchmark_metrics": {
-                    "imagenet_top1_accuracy": 76.2,
-                    "imagenet_top5_accuracy": 95.3,
-                },
+                "benchmark_metrics": {"coco_map_50_95": 54.0, "coco_map_50": 71.6},
             },
             "support_status": "active",
             "hyperparameters": {
