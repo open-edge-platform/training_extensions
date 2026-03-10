@@ -9,10 +9,9 @@ from fastapi import status
 
 from app.api.dependencies import get_model_service, get_training_configuration_service
 from app.api.schemas import TrainingConfigurationView
-from app.api.schemas.model import ModelVariant
 from app.main import app
-from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingInfo, TrainingStatus
-from app.models.model_revision import ModelFormat
+from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, ModelVariant, TrainingInfo, TrainingStatus
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.training_configuration_service import TrainingConfigurationService
 
@@ -21,6 +20,7 @@ from app.services.training_configuration_service import TrainingConfigurationSer
 def fxt_model() -> ModelRevision:
     model_revision_id = uuid4()
     dataset_revision_id = uuid4()
+    openvino_variant_id = uuid4()
     return ModelRevision(
         id=model_revision_id,
         name="YOLOX-X (abc123)",
@@ -31,12 +31,28 @@ def fxt_model() -> ModelRevision:
             label_schema_revision={"labels": [{"name": "dog", "id": "05db02c9-6a54-4089-bd8e-b85dfe3bec03"}]},
             dataset_revision_id=dataset_revision_id,
         ),
-        evaluations=[
-            EvaluationResult(
+        variants=[
+            ModelVariant(
+                id=openvino_variant_id,
                 model_revision_id=model_revision_id,
-                dataset_revision_id=dataset_revision_id,
-                subset=DatasetItemSubset.TESTING,
-                metrics={"map": 0.85, "map_50": 0.90, "map_75": 0.80, "mar_1": 0.88, "mar_10": 0.90, "mar_100": 0.92},
+                format=ModelFormat.OPENVINO,
+                precision=ModelPrecision.FP16,
+                evaluations=[
+                    EvaluationResult(
+                        model_revision_id=model_revision_id,
+                        model_variant_id=openvino_variant_id,
+                        dataset_revision_id=dataset_revision_id,
+                        subset=DatasetItemSubset.TESTING,
+                        metrics={
+                            "map": 0.85,
+                            "map_50": 0.90,
+                            "map_75": 0.80,
+                            "mar_1": 0.88,
+                            "mar_10": 0.90,
+                            "mar_100": 0.92,
+                        },
+                    )
+                ],
             )
         ],
         files_deleted=False,
@@ -45,10 +61,29 @@ def fxt_model() -> ModelRevision:
 
 @pytest.fixture
 def fxt_model_variants() -> list[ModelVariant]:
+    model_revision_id = uuid4()
     return [
-        ModelVariant(format="openvino", precision="fp16", weights_size=100000),
-        ModelVariant(format="onnx", precision="fp16", weights_size=100100),
-        ModelVariant(format="pytorch", precision="fp32", weights_size=100200),
+        ModelVariant(
+            id=uuid4(),
+            model_revision_id=model_revision_id,
+            format=ModelFormat.OPENVINO,
+            precision=ModelPrecision.FP16,
+            weights_size=100000,
+        ),
+        ModelVariant(
+            id=uuid4(),
+            model_revision_id=model_revision_id,
+            format=ModelFormat.ONNX,
+            precision=ModelPrecision.FP16,
+            weights_size=100100,
+        ),
+        ModelVariant(
+            id=uuid4(),
+            model_revision_id=model_revision_id,
+            format=ModelFormat.PYTORCH,
+            precision=ModelPrecision.FP32,
+            weights_size=100200,
+        ),
     ]
 
 
@@ -133,28 +168,12 @@ class TestModelEndpoints:
         assert response_data["training_info"]["status"] == fxt_model.training_info.status.value
         assert response_data["training_info"]["label_schema_revision"] == fxt_model.training_info.label_schema_revision
         assert response_data["training_info"]["dataset_revision_id"] == str(fxt_model.training_info.dataset_revision_id)
-        assert response_data["evaluations"] == [
-            {
-                "dataset_revision_id": str(fxt_model.evaluations[0].dataset_revision_id),
-                "subset": fxt_model.evaluations[0].subset.value,
-                "metrics": [
-                    {"name": "mAP", "value": 0.85, "primary": True},
-                    {"name": "mAP@0.5", "value": 0.90, "primary": False},
-                    {"name": "mAP@0.75", "value": 0.80, "primary": False},
-                    {"name": "mAR@1", "value": 0.88, "primary": False},
-                    {"name": "mAR@10", "value": 0.90, "primary": False},
-                    {"name": "mAR@100", "value": 0.92, "primary": False},
-                ],
-            }
-        ]
-        assert response_data["variants"] == [
-            {
-                "format": variant.format,
-                "precision": variant.precision,
-                "weights_size": variant.weights_size,
-            }
-            for variant in fxt_model_variants
-        ]
+        assert len(response_data["variants"]) == len(fxt_model_variants)
+        for resp_variant, expected_variant in zip(response_data["variants"], fxt_model_variants):
+            assert resp_variant["id"] == str(expected_variant.id)
+            assert resp_variant["format"] == expected_variant.format
+            assert resp_variant["precision"] == expected_variant.precision
+            assert resp_variant["weights_size"] == expected_variant.weights_size
         assert response_data["size"] == 300100
 
     @pytest.mark.parametrize(
@@ -228,8 +247,9 @@ class TestModelEndpoints:
         import zipfile
         from io import BytesIO
 
+        model_variant_id = uuid4()
         # Create mock model files
-        model_dir = tmp_path / "models" / str(fxt_model.id)
+        model_dir = tmp_path / "models" / str(fxt_model.id) / "variants" / str(model_variant_id)
         model_dir.mkdir(parents=True)
         bin_content = b"binary model data"
         if model_format == ModelFormat.OPENVINO:
@@ -242,9 +262,15 @@ class TestModelEndpoints:
             (model_dir / "model.ckpt").write_bytes(bin_content)
 
         fxt_model_service.get_model_binary_files.return_value = True, tuple(model_dir.glob("*"))
+        fxt_model_service.get_variant.return_value = ModelVariant(
+            id=model_variant_id,
+            model_revision_id=fxt_model.id,
+            format=model_format,
+            precision=ModelPrecision(model_precision),
+        )
 
         response = fxt_client.get(
-            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?format={model_format.value}"
+            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?model_variant_id={model_variant_id}"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -273,18 +299,21 @@ class TestModelEndpoints:
         fxt_model_service.get_model_binary_files.assert_called_once_with(
             project_id=fxt_get_project.id,
             model_id=fxt_model.id,
-            format=model_format,
+            model_variant_id=model_variant_id,
         )
 
     def test_download_model_binary_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
         model_id = uuid4()
+        model_variant_id = uuid4()
         fxt_model_service.get_model_binary_files.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
-        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary")
+        response = fxt_client.get(
+            f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary?model_variant_id={model_variant_id}"
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_model_service.get_model_binary_files.assert_called_once_with(
-            project_id=fxt_get_project.id, model_id=model_id, format=ModelFormat.OPENVINO
+            project_id=fxt_get_project.id, model_id=model_id, model_variant_id=model_variant_id
         )
 
     def test_download_model_binary_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):

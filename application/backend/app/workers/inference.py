@@ -198,7 +198,7 @@ class InferenceWorker(BaseProcessWorker):
                         cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB),  # models expect RGB input
                         user_data={
                             "stream_data": item,
-                            "model_id": self._loaded_model.id,
+                            "model_id": self._loaded_model.model_revision_id,
                             "inference_start_time": inference_start_time,
                         },
                     )

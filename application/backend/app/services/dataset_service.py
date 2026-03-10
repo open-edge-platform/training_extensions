@@ -251,7 +251,12 @@ class DatasetService(BaseSessionManagedService):
                         raise AnnotationValidationError("Polygon points are out of bounds")
 
     def set_dataset_item_annotations(
-        self, project: Project, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation], user_reviewed: bool
+        self,
+        project: Project,
+        dataset_item_id: UUID,
+        annotations: list[DatasetItemAnnotation],
+        user_reviewed: bool,
+        prediction_model_id: UUID | None,
     ) -> DatasetItem:
         """
         Set dataset item annotations
@@ -261,6 +266,8 @@ class DatasetService(BaseSessionManagedService):
             dataset_item_id: The ID of the dataset item.
             annotations: The list of annotations to set. Overwrites existing annotations, if any.
             user_reviewed: Whether the annotations have been reviewed by a user.
+            prediction_model_id: Identifier of the model that generated predictions for this
+                dataset item, if applicable.
 
         Returns:
             The updated dataset item.
@@ -279,6 +286,7 @@ class DatasetService(BaseSessionManagedService):
             obj_id=str(dataset_item_id),
             annotation_data=[annotation.model_dump(mode="json") for annotation in annotations],
             user_reviewed=user_reviewed,
+            prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
         )
         if not result:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))

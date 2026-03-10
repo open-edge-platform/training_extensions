@@ -5,6 +5,7 @@ import json
 import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from uuid import UUID
@@ -14,11 +15,11 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB
-from app.models import EvaluationResult, ModelRevision, TrainingStatus
+from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB, ModelVariantDB
+from app.models import EvaluationResult, ModelRevision, ModelVariant, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
+from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository, ModelVariantRepository
 from app.services.dataset_revision_service import DatasetRevisionService
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
@@ -136,7 +137,7 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return model_rev_db.architecture
 
-    def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[dict]:
+    def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[ModelVariant]:
         """
         Get all variants and their information of a model.
 
@@ -145,21 +146,19 @@ class ModelService(BaseSessionManagedService):
             model_id (UUID): The unique identifier of the model to retrieve variants for.
 
         Returns:
-            list[dict]: A list of the models variants.
+            list[ModelVariant]: A list of the model variants.
         """
-        model_variants = []
-        for format in ModelFormat:
-            exists, paths = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=format)
-            if exists:
-                model_size = sum(path.stat().st_size for path in paths)
-                model_info = {
-                    "format": format.value,
-                    "precision": ModelPrecision.FP16 if format != ModelFormat.PYTORCH else ModelPrecision.FP32,
-                    "weights_size": model_size,
-                }
-                model_variants.append(model_info)
-
-        return model_variants
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
+        variants = []
+        for v_db in variant_dbs:
+            variant = ModelVariant.model_validate(v_db)
+            # Compute weights_size from the filesystem
+            variant_dir = self._get_variant_dir(project_id, model_id, UUID(v_db.id))
+            if not v_db.files_deleted and variant_dir.exists():
+                variant.weights_size = sum(f.stat().st_size for f in variant_dir.iterdir() if f.is_file())
+            variants.append(variant)
+        return variants
 
     def get_model_size_in_bytes(self, project_id: UUID, model_id: UUID) -> int:
         """
@@ -345,7 +344,14 @@ class ModelService(BaseSessionManagedService):
             )
         )
 
-    def update_revision_status(self, project_id: UUID, model_id: UUID, training_status: TrainingStatus) -> None:
+    def update_revision_status(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        training_status: TrainingStatus,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ) -> None:
         """
         Updates the training status of a model revision for the given project.
 
@@ -353,12 +359,19 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): Identifier of the project that owns the model revision.
             model_id (UUID): Identifier of the model revision to update.
             training_status (TrainingStatus): New training status to set for the model revision.
+            training_started_at (datetime): Date and time when the training was started
+            training_finished_at (datetime): Date and time when the training was finished
         """
         model_revision_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_revision_repo.update_training_status(obj_id=str(model_id), training_status=training_status)
+        model_revision_repo.update_training_status(
+            obj_id=str(model_id),
+            training_status=training_status,
+            training_started_at=training_started_at,
+            training_finished_at=training_finished_at,
+        )
 
     def get_model_binary_files(
-        self, project_id: UUID, model_id: UUID, format: ModelFormat
+        self, project_id: UUID, model_id: UUID, model_variant_id: UUID
     ) -> tuple[bool, tuple[Path, ...]]:
         """
         Get the paths to the model binary files.
@@ -366,38 +379,122 @@ class ModelService(BaseSessionManagedService):
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
-            format (ModelFormat): The format of the model files to retrieve.
+            model_variant_id (UUID): The unique identifier of the model variant files to retrieve.
 
         Returns:
             tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
-                and the second element is a tuple of Paths to the model files.
+                and the second element is a tuple of Paths to the model variant's files.
 
         Raises:
             ResourceNotFoundError: If the model has been marked as deleted.
-            FileNotFoundError: If the model directory does not exist.
         """
         model_revision = self.get_model(project_id=project_id, model_id=model_id)
         if model_revision.files_deleted:
             return False, ()
 
-        model_dir = self._projects_dir / str(project_id) / "models" / str(model_id)
-        xml_file = model_dir / "model.xml"
-        bin_file = model_dir / "model.bin"
-        onnx_file = model_dir / "model.onnx"
-        ckpt_file = model_dir / "model.ckpt"
+        # Find the variant matching the requested variant ID
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
+        for v_db in variant_dbs:
+            if v_db.id == str(model_variant_id) and not v_db.files_deleted:
+                return self._get_variant_binary_files(project_id, model_id, UUID(v_db.id))
 
-        if format == ModelFormat.OPENVINO and xml_file.exists() and bin_file.exists():
+        return False, ()
+
+    def _get_variant_binary_files(
+        self, project_id: UUID, model_id: UUID, variant_id: UUID
+    ) -> tuple[bool, tuple[Path, ...]]:
+        """
+        Get binary files for a specific variant from the filesystem.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+            variant_id (UUID): The unique identifier of the model variant.
+
+        Returns:
+            tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
+                and the second element is a tuple of Paths to the model variant's files.
+        """
+        variant_dir = self._get_variant_dir(project_id, model_id, variant_id)
+
+        xml_file = variant_dir / "model.xml"
+        bin_file = variant_dir / "model.bin"
+        onnx_file = variant_dir / "model.onnx"
+        ckpt_file = variant_dir / "model.ckpt"
+
+        if xml_file.exists() and bin_file.exists():
             return True, (xml_file, bin_file)
-        if format == ModelFormat.ONNX and onnx_file.exists():
+        if onnx_file.exists():
             return True, (onnx_file,)
-        if format == ModelFormat.PYTORCH and ckpt_file.exists():
+        if ckpt_file.exists():
             return True, (ckpt_file,)
 
         return False, ()
 
+    def _get_variant_dir(self, project_id: UUID, model_id: UUID, variant_id: UUID) -> Path:
+        """Get the filesystem path for a model variant directory."""
+        return self._projects_dir / str(project_id) / "models" / str(model_id) / "variants" / str(variant_id)
+
+    def create_variant(
+        self,
+        model_revision_id: UUID,
+        format: ModelFormat,
+        precision: ModelPrecision,
+        quantization_info: dict | None = None,
+    ) -> ModelVariant:
+        """
+        Create a new model variant record in the database.
+
+        Args:
+            model_revision_id: UUID of the parent model revision.
+            format: The format of the model variant.
+            precision: The precision of the model variant.
+            quantization_info: Optional quantization metadata.
+
+        Returns:
+            ModelVariant: The created model variant.
+        """
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_db = ModelVariantDB(
+            model_revision_id=str(model_revision_id),
+            format=format.value,
+            precision=precision.value,
+            quantization_info=quantization_info,
+        )
+        model_variant_repo.save(variant_db)
+        return ModelVariant(
+            id=UUID(variant_db.id),
+            model_revision_id=model_revision_id,
+            format=format,
+            precision=precision,
+            quantization_info=quantization_info,
+            evaluations=[],
+        )
+
+    def get_variant(self, variant_id: UUID) -> ModelVariant:
+        """
+        Get a model variant by its ID.
+
+        Args:
+            variant_id: The unique identifier of the variant.
+
+        Returns:
+            ModelVariant: The model variant.
+
+        Raises:
+            ResourceNotFoundError: If the variant is not found.
+        """
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_db = model_variant_repo.get_by_id(str(variant_id))
+        if not variant_db:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(variant_id))
+        return ModelVariant.model_validate(variant_db)
+
     def save_evaluation_result(self, result: EvaluationResult) -> None:
         evaluation_db = EvaluationDB(
             model_revision_id=str(result.model_revision_id),
+            model_variant_id=str(result.model_variant_id),
             dataset_revision_id=str(result.dataset_revision_id),
             subset=result.subset,
         )

@@ -3,6 +3,10 @@
 
 import type { Evaluation, Metric, Model } from '../../../../../constants/shared-types';
 
+export const getModelEvaluations = (model: Model): Evaluation[] => {
+    return model.variants.flatMap((variant) => variant.evaluations);
+};
+
 const getTestingEvaluation = (evaluations: Evaluation[]): Evaluation | undefined => {
     return evaluations.find(({ subset }) => subset === 'testing');
 };
@@ -12,7 +16,7 @@ export const getTestingMetrics = (evaluations: Evaluation[]): Metric[] => {
 };
 
 export const getTestingMetric = (model: Model): { name: string; value: number } | undefined => {
-    const primaryMetric = getTestingMetrics(model.evaluations).find(({ primary }) => primary);
+    const primaryMetric = getTestingMetrics(getModelEvaluations(model)).find(({ primary }) => primary);
 
     if (primaryMetric !== undefined) {
         return { name: primaryMetric.name, value: Math.round(primaryMetric.value * 100) };

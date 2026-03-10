@@ -28,16 +28,16 @@ class BoolParameterView(_BaseConfigurableParameterView):
     """Configurable boolean parameter."""
 
     value_type: Literal["bool"] = "bool"
-    value: bool | None = Field(title="Actual value of the parameter")
-    default_value: bool | None = Field(title="Default value of the parameter")
+    value: bool = Field(title="Actual value of the parameter")
+    default_value: bool = Field(title="Default value of the parameter")
 
 
 class StringParameterView(_BaseConfigurableParameterView):
     """Configurable string parameter."""
 
     value_type: Literal["str"] = "str"
-    value: str | None = Field(title="Actual value of the parameter")
-    default_value: str | None = Field(title="Default value of the parameter")
+    value: str = Field(title="Actual value of the parameter")
+    default_value: str = Field(title="Default value of the parameter")
     allowed_values: list[str] | None = Field(
         default=None,
         title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
@@ -48,8 +48,8 @@ class IntParameterView(_BaseConfigurableParameterView):
     """Configurable integer parameter with optional min/max bounds."""
 
     value_type: Literal["int"] = "int"
-    value: int | None = Field(title="Actual value of the parameter")
-    default_value: int | None = Field(title="Default value of the parameter")
+    value: int = Field(title="Actual value of the parameter")
+    default_value: int = Field(title="Default value of the parameter")
     min_value: int | float | None = Field(default=None, title="Minimum value for numeric parameters. None if unbounded")
     max_value: int | float | None = Field(default=None, title="Maximum value for numeric parameters. None if unbounded")
     allowed_values: list[int] | None = Field(
@@ -62,8 +62,8 @@ class FloatParameterView(_BaseConfigurableParameterView):
     """Configurable float parameter with optional min/max bounds."""
 
     value_type: Literal["float"] = "float"
-    value: float | None = Field(title="Actual value of the parameter")
-    default_value: float | None = Field(title="Default value of the parameter")
+    value: float = Field(title="Actual value of the parameter")
+    default_value: float = Field(title="Default value of the parameter")
     min_value: int | float | None = Field(default=None, title="Minimum value for numeric parameters. None if unbounded")
     max_value: int | float | None = Field(default=None, title="Maximum value for numeric parameters. None if unbounded")
     allowed_values: list[float] | None = Field(
@@ -76,12 +76,8 @@ class FloatRangeParameterView(_BaseConfigurableParameterView):
     """Configurable float range parameter."""
 
     value_type: Literal["float_range"] = "float_range"
-    value: tuple[float, float] | None = Field(title="Actual value of the parameter")
-    default_value: tuple[float, float] | None = Field(title="Default value of the parameter")
-    allowed_values: list[tuple[float, float]] | None = Field(
-        default=None,
-        title="List of allowed values for the parameter. None if it doesn't have a predefined set of valid values.",
-    )
+    value: tuple[float, float] = Field(title="Actual value of the parameter")
+    default_value: tuple[float, float] = Field(title="Default value of the parameter")
 
 
 def _parameter_view_discriminator(v: dict | _BaseConfigurableParameterView) -> str:

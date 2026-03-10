@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { useDeleteStagedDataset } from '../../../../../hooks/api/staged-file.hook';
 import { IMPORT_DATASET_FORM_ID } from './util';
 
 type LabelMappingButtonsProps = {
@@ -12,11 +13,17 @@ type LabelMappingButtonsProps = {
 };
 
 export const LabelMappingButtons = ({ stagedDatasetId, onClose }: LabelMappingButtonsProps) => {
-    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, onSuccess: onClose });
+    const { deleteImportEntry } = useImportDatasetToProject();
+    const deleteFileMutation = useDeleteStagedDataset({
+        stagedDatasetId,
+        onSuccess: onClose,
+        deleteEntry: () => deleteImportEntry(stagedDatasetId),
+    });
 
     const handleDelete = () => {
         deleteFileMutation.mutate();
     };
+
     return (
         <ButtonGroup>
             <Button

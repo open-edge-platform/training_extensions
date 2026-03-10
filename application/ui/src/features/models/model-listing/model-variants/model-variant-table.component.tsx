@@ -35,9 +35,9 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                             <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
                                 <ActionButton
                                     isQuiet
-                                    aria-label={`Download ${variant.format} model`}
+                                    aria-label={`Download model ${variant.id}`}
                                     isDisabled={isDownloading}
-                                    onPress={() => downloadModel(variant.format as ModelFormat)}
+                                    onPress={() => downloadModel(variant.id)}
                                 >
                                     <DownloadIcon />
                                 </ActionButton>

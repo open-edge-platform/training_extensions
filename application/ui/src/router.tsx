@@ -8,6 +8,7 @@ import { ImportDatasetDialogStateProvider } from './features/dataset/providers/e
 import { SelectedDataProvider } from './features/dataset/providers/selected-data-provider.component';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
+import { ImportDatasetDialogProvider } from './features/project/providers/import-dataset-dialog-provider.component';
 import { useProjects } from './hooks/api/project.hook';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
@@ -62,7 +63,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: paths.project.index.pattern,
-                element: <ProjectList />,
+                element: (
+                    <ImportDatasetDialogProvider>
+                        <ProjectList />
+                    </ImportDatasetDialogProvider>
+                ),
             },
             {
                 path: paths.project.new.pattern,

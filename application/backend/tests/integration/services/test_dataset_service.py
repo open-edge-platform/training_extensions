@@ -865,11 +865,13 @@ class TestDatasetServiceIntegration:
         item_idx: int,
         label_idx: int,
         fxt_dataset_service: DatasetService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
     ):
         """Test setting a dataset item annotation."""
+        _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_annotation_status_items
         label_id = str(project.task.labels[label_idx].id)
         dataset_item_id = db_dataset_items[item_idx].id
@@ -879,12 +881,14 @@ class TestDatasetServiceIntegration:
             dataset_item_id=UUID(dataset_item_id),
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=pipeline.model_id,
         )
 
         dataset_item = db_session.get(DatasetItemDB, dataset_item_id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is not None
         assert dataset_item.user_reviewed is True
+        assert dataset_item.prediction_model_id == str(pipeline.model_id)
         assert [
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         ] == annotations
@@ -901,10 +905,12 @@ class TestDatasetServiceIntegration:
     def test_set_dataset_item_annotations_not_found(
         self,
         fxt_dataset_service: DatasetService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
+        _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_dataset_items
         non_existent_id = uuid4()
         annotations = fxt_annotations(project.task.labels[0].id)
@@ -915,6 +921,7 @@ class TestDatasetServiceIntegration:
                 dataset_item_id=non_existent_id,
                 annotations=annotations,
                 user_reviewed=True,
+                prediction_model_id=pipeline.model_id,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM

@@ -56,7 +56,7 @@ jobs:
         uses: ./.github/actions/install-common-deps
         with:
           uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
-          python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
+          python-version: "3.11" # Use the lowest supported Python version for linting/type-checking
 
       - name: Prepare venv and install Python dependencies
         working-directory: library
@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.11", "3.14"]
     name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
       # YAML anchors not used cause currently zizmor don't support them in matrix strategies
@@ -139,7 +139,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.11", "3.14"]
         task:
           - "multi_class_cls"
           - "multi_label_cls"

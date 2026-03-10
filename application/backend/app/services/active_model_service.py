@@ -11,7 +11,8 @@ from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.models.model_activation import ModelActivationState
-from app.repositories import ModelRevisionRepository
+from app.models.model_revision import ModelFormat, ModelPrecision
+from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
@@ -19,7 +20,8 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 @dataclass(frozen=True)
 class LoadedModel:
-    id: UUID
+    model_revision_id: UUID
+    model_variant_id: UUID
     model: Model
     device: str
 
@@ -78,11 +80,17 @@ class ActiveModelService:
                 return ModelActivationState(
                     project_id=None,
                     active_model_id=None,
+                    active_model_variant_id=None,
                     available_models=[],
                     device="",
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all()
+            model_variants_repo = ModelVariantRepository(db=db)
+            model_variants = model_variants_repo.list_by_model_revision(str(active_model.id))
+            active_variant_id = next(
+                v.id for v in model_variants if v.format == ModelFormat.OPENVINO and v.precision == ModelPrecision.FP16
+            )
             pipeline_device = active_model_repo.get_active_pipeline_device()
             if pipeline_device is None:
                 raise RuntimeError("Active pipeline must have a device configured")
@@ -90,15 +98,16 @@ class ActiveModelService:
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
+                active_model_variant_id=UUID(active_variant_id),
                 available_models=[UUID(m.id) for m in available_models],
                 device=str(ov_device),
             )
 
-    def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
-        file_path = self.projects_dir / f"{project_id}/models/{model_id}/model.{extension}"
-        if not file_path.is_file():
-            raise FileNotFoundError(f"Model file not found: {file_path}")
-        return file_path
+    def _get_model_file_path(self, project_id: UUID, model_id: UUID, variant_id: UUID, extension: str = "xml") -> Path:
+        file_path = self.projects_dir / f"{project_id}/models/{model_id}/variants/{variant_id}/model.{extension}"
+        if file_path.is_file():
+            return file_path
+        raise FileNotFoundError(f"Model file not found: {file_path}")
 
     def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
         """
@@ -114,23 +123,41 @@ class ActiveModelService:
             self._model_activation_state = self._load_state()
             self._loaded_model = None
 
-        if self._model_activation_state.active_model_id is None or self._model_activation_state.project_id is None:
+        if (
+            self._model_activation_state.active_model_id is None
+            or self._model_activation_state.active_model_variant_id is None
+            or self._model_activation_state.project_id is None
+        ):
             return None
 
         project_id = self._model_activation_state.project_id
         active_model_id = self._model_activation_state.active_model_id
+        active_variant_id = self._model_activation_state.active_model_variant_id
         device = self._model_activation_state.device
         needs_reload = (
             self._loaded_model is None
-            or self._loaded_model.id != active_model_id
+            or self._loaded_model.model_revision_id != active_model_id
+            or self._loaded_model.model_variant_id != active_variant_id
             or self._loaded_model.device != device
         )
         if needs_reload:
-            logger.info("Loading model with ID '{}' on device '{}'", active_model_id, device)
+            logger.info(
+                "Loading model with ID '{}', variant '{}', on device '{}'", active_model_id, active_variant_id, device
+            )
             try:
                 # Ensure all necessary model files exist before loading the model
-                model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
-                _ = self._get_model_file_path(project_id, active_model_id, "bin")
+                model_xml_path = self._get_model_file_path(
+                    project_id=project_id,
+                    model_id=active_model_id,
+                    variant_id=active_variant_id,
+                    extension="xml",
+                )
+                _ = self._get_model_file_path(
+                    project_id=project_id,
+                    model_id=active_model_id,
+                    variant_id=active_variant_id,
+                    extension="bin",
+                )
                 mapi_model = Model.create_model(
                     model=str(model_xml_path),
                     device=device,
@@ -141,8 +168,9 @@ class ActiveModelService:
                 return None
 
             self._loaded_model = LoadedModel(
-                id=self._model_activation_state.active_model_id,
+                model_revision_id=self._model_activation_state.active_model_id,
                 model=mapi_model,
+                model_variant_id=active_variant_id,
                 device=device,
             )
         return self._loaded_model

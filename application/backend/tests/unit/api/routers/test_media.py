@@ -805,6 +805,7 @@ class TestMediaEndpoints:
             dataset_item_id=media.id,
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=None,
         )
 
     def test_set_video_annotations_missing_frame_index(
@@ -903,6 +904,7 @@ class TestMediaEndpoints:
             dataset_item_id=video_frame_id,
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=None,
         )
 
     def test_set_video_annotations_extract_frame(
@@ -919,12 +921,14 @@ class TestMediaEndpoints:
         media = MagicMock(spec=Video, type=MediaType.VIDEO, frame_count=20, id=uuid4())
         fxt_media_service.get_media_by_id.return_value = media
         fxt_media_service.get_video_frame_by_video_id_and_index.return_value = None
+        frame_binary = PILImage.new("RGB", (64, 64), color="red")
+        fxt_media_service.get_frame_binary.return_value = frame_binary
         video_frame = MagicMock(
             spec=VideoFrame,
             id=video_frame_id,
             type=MediaType.VIDEO_FRAME,
         )
-        fxt_media_service.extract_video_frame.return_value = video_frame
+        fxt_media_service.save_video_frame.return_value = video_frame
         dataset_item = MagicMock(
             spec=DatasetItem,
             annotation_data=annotations,
@@ -954,8 +958,9 @@ class TestMediaEndpoints:
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
             project=fxt_get_project, video_id=media.id, frame_index=10
         )
-        fxt_media_service.extract_video_frame.assert_called_once_with(
-            project=fxt_get_project, video=media, frame_index=10
+        fxt_media_service.get_frame_binary.assert_called_once_with(project=fxt_get_project, video=media, frame_index=10)
+        fxt_media_service.save_video_frame.assert_called_once_with(
+            project=fxt_get_project, video=media, frame_index=10, frame_image=frame_binary
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project_id=fxt_get_project.id,
@@ -968,6 +973,7 @@ class TestMediaEndpoints:
             dataset_item_id=video_frame_id,
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=None,
         )
 
     @pytest.mark.parametrize(
@@ -1001,6 +1007,7 @@ class TestMediaEndpoints:
             dataset_item_id=media.id,
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=None,
         )
 
     @pytest.mark.parametrize(
@@ -1036,6 +1043,7 @@ class TestMediaEndpoints:
             dataset_item_id=media.id,
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=None,
         )
 
     @pytest.mark.parametrize(

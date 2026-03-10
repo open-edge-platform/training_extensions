@@ -66,6 +66,9 @@ const test = testBase.extend<Fixtures>({
                     },
                 });
             }),
+            http.get('/api/system/devices/training', () => {
+                return HttpResponse.json([{ type: 'cpu', name: 'CPU' }]);
+            }),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json({
                     project_id: 'id-1',

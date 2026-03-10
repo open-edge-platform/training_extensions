@@ -4,12 +4,12 @@
 import { Fragment, useActionState } from 'react';
 
 import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
+import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { $api } from '../../../../../api/client';
 import { DatasetStatistics } from '../../../../../components/dataset-statistics/dataset-statistics.component';
 import { useProject } from '../../../../../hooks/api/project.hook';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
-import { isNonEmptyString } from '../../../../../shared/util';
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
 import { FormatWarning } from './format-warning/format-warning.component';
 import { IMPORT_DATASET_FORM_ID, mapProjectLabels } from './util';
@@ -23,21 +23,18 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const { updateImportEntry } = useImportDatasetToProject();
     const { datasetImportDialogState } = useImportDatasetDialogState();
 
-    const { data } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
-        params: { path: { staged_dataset_id: stagedDatasetId } },
-        enabled: isNonEmptyString(stagedDatasetId),
-    });
+    const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
 
     const importDatasetJobMutation = $api.useMutation('post', '/api/jobs');
 
-    const datasetLabels = data?.metadata?.labels ?? [];
+    const datasetLabels = stagedDataset?.metadata?.labels ?? [];
     const projectLabels = selectedProject?.task?.labels ?? [];
-    const totalDatasetItems = data?.metadata?.num_items ?? 0;
+    const totalDatasetItems = stagedDataset?.metadata?.num_items ?? 0;
     /* 
         Todo: update with totalAnnotatedImages 
         https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
     */
-    const totalAnnotatedItems = data?.metadata?.num_annotations ?? 0;
+    const totalAnnotatedItems = stagedDataset?.metadata?.num_annotations ?? 0;
 
     const [_labelsMapping, submitAction] = useActionState<unknown, FormData>(async (_prevState, formData) => {
         await importDatasetJobMutation.mutateAsync(
@@ -70,7 +67,7 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
             <View padding={'size-200'} borderRadius={'regular'} backgroundColor={'gray-75'}>
                 <DatasetStatistics totalMediaItems={totalDatasetItems} totalAnnotatedItems={totalAnnotatedItems} />
 
-                <FormatWarning annotationType={data?.metadata?.annotation_type} />
+                <FormatWarning annotationType={stagedDataset?.metadata?.annotation_type} />
             </View>
 
             <Heading marginTop={'size-200'}>Label mapping</Heading>

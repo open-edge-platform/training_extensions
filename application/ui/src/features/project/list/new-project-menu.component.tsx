@@ -5,17 +5,17 @@ import { Key } from 'react';
 
 import { ActionButton, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
-import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useNavigate } from 'react-router-dom';
 
 import { paths } from '../../../constants/paths';
-import { ImportDatasetAsNewProject } from './Import-dataset-as-new-project/Import-dataset-as-new-project.component';
+import { useImportDatasetDialog } from '../providers/import-dataset-dialog-provider.component';
+import { ImportDatasetAsNewProject } from './import-dataset-as-new-project/import-dataset-as-new-project.component';
 
 import classes from './new-project-menu.module.scss';
 
 export const NewProjectMenu = () => {
     const navigate = useNavigate();
-    const dialogState = useOverlayTriggerState({});
+    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialog();
 
     const handleAction = (key: Key) => {
         switch (key) {
@@ -24,7 +24,9 @@ export const NewProjectMenu = () => {
                 break;
 
             case 'newFromDataset':
-                dialogState.open();
+                setCurrentStep('uploading');
+                setCurrentStagedId(null);
+                datasetImportDialogState.open();
                 break;
         }
     };
@@ -43,7 +45,7 @@ export const NewProjectMenu = () => {
                 </Menu>
             </MenuTrigger>
 
-            <ImportDatasetAsNewProject dialogState={dialogState} />
+            <ImportDatasetAsNewProject dialogState={datasetImportDialogState} />
         </>
     );
 };

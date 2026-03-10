@@ -14,9 +14,13 @@ import { server } from '../../../../../../msw-node-setup';
 import { downloadFile } from '../../../../../../shared/util';
 import { ExportCompletedJob } from './export-completed-job.component';
 
-vi.mock('../../../../../../shared/util', () => ({
-    downloadFile: vi.fn(),
-}));
+vi.mock('../../../../../../shared/util', async (importActual) => {
+    const actual = await importActual<typeof import('../../../../../../shared/util')>();
+    return {
+        ...actual,
+        downloadFile: vi.fn(),
+    };
+});
 
 const mockedRemoveLsExportId = vi.fn();
 

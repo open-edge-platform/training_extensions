@@ -53,7 +53,7 @@ export const getMockedTrainingConfiguration = (): TrainingConfigurationParameter
                                 key: 'probability',
                                 name: 'Probability',
                                 description: '',
-                                value: null,
+                                value: 0.5,
                                 default_value: 0.5,
                                 value_type: 'float',
                                 min_value: 0,

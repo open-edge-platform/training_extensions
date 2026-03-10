@@ -109,6 +109,10 @@ class MediaRepository:
         stmt = self._base_select().where(MediaDB.id == obj_id)
         return self.db.scalar(stmt)
 
+    def get_by_ids(self, obj_ids: list[str]) -> list[MediaDB]:
+        stmt = self._base_select().where(MediaDB.id.in_(obj_ids))
+        return list(self.db.scalars(stmt).all())
+
     def delete(self, obj_id: str) -> bool:
         stmt = delete(MediaDB).where(
             MediaDB.project_id == self.project_id,
@@ -120,6 +124,10 @@ class MediaRepository:
     def get_video_frame_by_video_id_and_index(self, video_id: str, frame_index: int) -> MediaDB | None:
         stmt = self._base_select().where(MediaDB.video_id == video_id, MediaDB.frame_index == frame_index)
         return self.db.scalar(stmt)
+
+    def search_video_frames_by_video_id_and_indexes(self, video_id: str, frame_indexes: list[int]) -> list[MediaDB]:
+        stmt = self._base_select().where(MediaDB.video_id == video_id, MediaDB.frame_index.in_(frame_indexes))
+        return list(self.db.scalars(stmt).all())
 
     def list_annotated_video_frames_by_video_id(
         self,

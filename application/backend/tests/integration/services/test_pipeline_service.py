@@ -30,7 +30,7 @@ def fxt_system_service() -> SystemService:
 @pytest.fixture
 def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_event_bus, db_session, fxt_system_service)
+    return PipelineService(system_service=fxt_system_service, event_bus=fxt_event_bus, db_session=db_session)
 
 
 @pytest.fixture
