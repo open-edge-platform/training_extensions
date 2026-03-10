@@ -6,6 +6,7 @@ import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-data
 
 import { ImportJobProcessButtons } from '../../../../../components/import-job-process/import-job-process-buttons.component';
 import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
+import { ImportLabelMappingButtons } from '../import-label-mapping/import-label-mapping-buttons.component';
 import { ImportTaskSelectionButtons } from '../import-task-selection/import-task-selection-buttons.component';
 
 type ImportDatasetButtonsProps = {
@@ -42,6 +43,16 @@ export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: 
     if (currentStep === 'taskTypeSelection') {
         return (
             <ImportTaskSelectionButtons
+                onClose={onClose}
+                stagedDatasetId={stagedDatasetId}
+                deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+            />
+        );
+    }
+
+    if (currentStep === 'labelMapping') {
+        return (
+            <ImportLabelMappingButtons
                 onClose={onClose}
                 stagedDatasetId={stagedDatasetId}
                 deleteEntry={() => deleteImportEntry(stagedDatasetId)}

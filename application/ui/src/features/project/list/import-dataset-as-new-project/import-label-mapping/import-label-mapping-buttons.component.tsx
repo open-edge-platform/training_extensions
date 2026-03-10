@@ -4,25 +4,30 @@
 import { Button, ButtonGroup } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
-import { TASK_SELECTION_FORM_ID } from './util';
+import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 
-type ImportTaskSelectionButtonsProps = {
+type ImportLabelMappingButtonsProps = {
     stagedDatasetId: string;
     onClose: () => void;
     deleteEntry: () => void;
 };
 
-export const ImportTaskSelectionButtons = ({
+export const ImportLabelMappingButtons = ({
     stagedDatasetId,
     onClose,
     deleteEntry,
-}: ImportTaskSelectionButtonsProps) => {
+}: ImportLabelMappingButtonsProps) => {
+    const { setCurrentStep } = useImportDatasetDialog();
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, onSuccess: onClose, deleteEntry });
 
     const isPending = deleteFileMutation.isPending;
 
     const handleCancelJob = () => {
         deleteFileMutation.mutate();
+    };
+
+    const handleBack = () => {
+        setCurrentStep('taskTypeSelection');
     };
 
     return (
@@ -35,8 +40,12 @@ export const ImportTaskSelectionButtons = ({
                 Hide
             </Button>
 
-            <Button type='submit' form={TASK_SELECTION_FORM_ID} variant='primary'>
-                Next
+            <Button onPress={handleBack} isPending={isPending} isDisabled={isPending} variant='secondary'>
+                Back
+            </Button>
+
+            <Button type='submit' variant='primary'>
+                Create
             </Button>
         </ButtonGroup>
     );

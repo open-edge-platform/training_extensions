@@ -5,8 +5,11 @@ import { useActionState } from 'react';
 
 import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
+import { useProjects } from 'hooks/api/project.hook';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
+import { TaskType } from '../../../../../constants/shared-types';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
@@ -14,25 +17,33 @@ type ImportTaskSelectionProps = {
     stagedDatasetId: string;
 };
 
-export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProps) => {
+const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
+    const { data: projects } = useProjects();
     const { setCurrentStep } = useImportDatasetDialog();
+    const { getImportEntry, updateImportEntry } = useImportDatasetAsNewProject();
+    const importEntry = getImportEntry(stagedDatasetId);
+
+    const initialFormState = {
+        name: importEntry?.project?.name ?? `Project #${projects.length + 1}`,
+        task_type: importEntry?.project?.task_type ?? defaultTaskType,
+    };
+
+    return useActionState<{ name: string; task_type: string }, FormData>(async (_prevState, formData) => {
+        const project = {
+            name: String(formData.get('name')),
+            task_type: String(formData.get('task_type')),
+        };
+
+        setCurrentStep('labelMapping');
+        updateImportEntry(stagedDatasetId, { project, step: 'labelMapping' });
+        return project;
+    }, initialFormState);
+};
+
+export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProps) => {
     const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
-
     const defaultTaskType = getRecommendedTaskType(stagedDataset?.metadata?.annotation_type);
-
-    const [formState, submitAction] = useActionState<{ name: string; task_type: string }, FormData>(
-        async (_prevState, formData) => {
-            const data = {
-                name: String(formData.get('name')),
-                task_type: String(formData.get('task_type')),
-            };
-            console.log('data', data);
-
-            setCurrentStep('labelMapping');
-            return data;
-        },
-        { name: 'Project #1', task_type: defaultTaskType || '' }
-    );
+    const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
 
     return (
         <View backgroundColor={'gray-75'} margin={'size-300'} padding={'size-300'}>
@@ -51,7 +62,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     label={'Task type'}
                     aria-label={'Task type'}
                     marginBottom={'size-150'}
-                    defaultSelectedKey={defaultTaskType}
+                    defaultSelectedKey={formState.task_type}
                 >
                     <Item key={'detection'}>
                         {defaultTaskType === 'detection' ? 'Detection (Recommended)' : 'Detection'}
