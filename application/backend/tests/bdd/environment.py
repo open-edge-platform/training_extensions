@@ -12,8 +12,8 @@ from tests.bdd.server_runner import DockerRunner, ProcessRunner
 @fixture
 def fastapi_server(context: Context) -> Generator[None]:
     """Fixture that uses the selected strategy."""
-    runner_type = os.getenv("RUNNER")
-    if runner_type not in ("docker", "process", None):
+    runner_type = os.getenv("RUNNER", "process").lower()
+    if runner_type not in ("docker", "process"):
         raise RuntimeError("Environment variable RUNNER must be either unset or set to 'docker' or 'process'")
 
     runner = DockerRunner(context) if runner_type == "docker" else ProcessRunner(context)

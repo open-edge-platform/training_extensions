@@ -1,39 +1,14 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import shutil
-import zipfile
 from pathlib import Path
 from uuid import UUID
 
-from datumaro.components.dataset import Dataset
-from datumaro.experimental.data_formats.base import DataFormat, load_dataset
 from datumaro.experimental.export_import import export_dataset, import_dataset
-from datumaro.experimental.legacy import convert_from_legacy
 from loguru import logger
 
 from app.execution.base import Execution, step
-from app.models import DatasetFormat
 from app.models.jobs import PrepareDatasetForImportJobParams
-
-
-def _extract_archive(archive_path: Path) -> Path:
-    """
-    Extracts a zip archive to the same directory.
-
-    Args:
-        archive_path: Path to the zip archive.
-
-    Raises:
-        ValueError: If the archive cannot be extracted.
-    """
-    try:
-        extract_to = archive_path.with_suffix("")
-        extract_to.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(archive_path, "r") as zip_ref:
-            zip_ref.extractall(extract_to)
-        return extract_to
-    except zipfile.BadZipFile as e:
-        raise ValueError(f"Failed to extract archive {archive_path}: {e}")
 
 
 class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
@@ -46,7 +21,7 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
 
     The execution follows these steps:
     1. Validate and locate the dataset archive in the staged directory
-    2. Convert the dataset to Geti format based on the detected format
+    2. Convert the dataset to Geti format using Datumaro's import/export functionality
     3. Clean up the original archive and extracted files
 
     Supported formats:
@@ -87,47 +62,19 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
         return dataset_archive
 
     @step("Convert dataset archive to Geti format", 90)
-    def convert_archive(self, archive_path: Path) -> None:
-        parts = archive_path.stem.split("-")
-        if len(parts) != 2:
-            raise ValueError(f"Cannot infer the format from the name: {archive_path.name}.")
-        _, dataset_format = parts
-        match dataset_format:
-            case DatasetFormat.COCO:
-                extract_dir = _extract_archive(archive_path)
-                dataset = load_dataset(
-                    data_format=DataFormat.COCO,
-                    images_dir_path=str(extract_dir / "images"),
-                    annotations_path=str(extract_dir / "annotations.json"),
-                )
-            case DatasetFormat.YOLO:
-                extract_dir = _extract_archive(archive_path)
-                dataset = load_dataset(
-                    data_format=DataFormat.YOLO,
-                    root_dir=str(extract_dir),
-                )
-            case DatasetFormat.VOC:
-                # todo: implement after datumaro VOC exporter is implemented:
-                #  https://github.com/open-edge-platform/datumaro/issues/2003
-                raise NotImplementedError("VOC import is not implemented yet")
-            case DatasetFormat.GETI:
-                dataset = import_dataset(str(archive_path), extract_dir=archive_path.parent / "dataset")
-            case DatasetFormat.DATUMARO_V1:
-                legacy_dataset = Dataset.import_from(str(archive_path))
-                dataset = convert_from_legacy(legacy_dataset)
-            case _:
-                raise ValueError(f"Unknown dataset format: {dataset_format}")
-
-        if dataset_format != DatasetFormat.GETI:
-            export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
+    def convert_archive(self, archive_path: Path) -> Path:
+        tmp_dir = archive_path.parent / f"{archive_path.stem}_import"
+        dataset = import_dataset(archive_path, extract_dir=tmp_dir)
+        export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
+        return tmp_dir
 
     @step("Clean up original archive", 100)
-    def cleanup(self, archive_path: Path) -> None:
-        if archive_path.with_suffix("").exists():
-            shutil.rmtree(archive_path.with_suffix(""))
+    def cleanup(self, archive_path: Path, tmp_dir: Path) -> None:
+        if tmp_dir.exists():
+            shutil.rmtree(tmp_dir)
         archive_path.unlink()
 
     def execute(self, params: PrepareDatasetForImportJobParams) -> None:
         archive_path = self.check_archive(params.staged_dataset_id)
-        self.convert_archive(archive_path)
-        self.cleanup(archive_path)
+        tmp_dir = self.convert_archive(archive_path)
+        self.cleanup(archive_path, tmp_dir)
