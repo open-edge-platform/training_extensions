@@ -13,13 +13,6 @@ from app.models.jobs import PrepareDatasetForImportJobParams
 
 
 @pytest.fixture
-def fxt_staged_datasets_dir(tmp_path: Path) -> Path:
-    dir_path = tmp_path / "staged_datasets"
-    dir_path.mkdir(parents=True, exist_ok=True)
-    return dir_path
-
-
-@pytest.fixture
 def fxt_prepare(
     fxt_staged_datasets_dir: Path,
 ) -> PrepareDataset:

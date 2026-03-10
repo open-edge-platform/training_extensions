@@ -13,6 +13,7 @@ from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
 from app.services.parent_process_guard import parent_process_only
 
+from . import BaseSessionManagedService
 from .system_service import DEFAULT_DEVICE, SystemService
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
@@ -31,14 +32,19 @@ class OtherProjectActiveError(Exception):
         )
 
 
-class PipelineService:
-    def __init__(self, event_bus: EventBus, db_session: Session, system_service: SystemService) -> None:
-        self._event_bus: EventBus = event_bus
-        self._db_session: Session = db_session
-        self._system_service: SystemService = system_service
+class PipelineService(BaseSessionManagedService):
+    def __init__(
+        self,
+        system_service: SystemService | None = None,
+        event_bus: EventBus | None = None,
+        db_session: Session | None = None,
+    ) -> None:
+        super().__init__(db_session)
+        self._event_bus: EventBus | None = event_bus
+        self._system_service: SystemService | None = system_service
 
     def create_pipeline(self, project_id: UUID) -> Pipeline:
-        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline_repo = PipelineRepository(self.db_session)
         pipeline_db = PipelineDB(
             project_id=str(project_id),
         )
@@ -47,7 +53,9 @@ class PipelineService:
 
     def get_active_pipeline(self) -> Pipeline | None:
         """Retrieve an active pipeline."""
-        pipeline_repo = PipelineRepository(self._db_session)
+        if self._system_service is None:
+            raise ValueError("System service is required to get active pipeline.")
+        pipeline_repo = PipelineRepository(self.db_session)
         pipeline_db = pipeline_repo.get_active_pipeline()
         if pipeline_db is None:
             return None
@@ -64,7 +72,7 @@ class PipelineService:
 
     def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
-        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline_repo = PipelineRepository(self.db_session)
         pipeline_db = pipeline_repo.get_by_id(str(project_id))
         if not pipeline_db:
             raise ResourceNotFoundError(ResourceType.PIPELINE, str(project_id))
@@ -72,7 +80,7 @@ class PipelineService:
 
     def is_running(self, project_id: UUID) -> bool:
         """Retrieve a pipeline status by project ID."""
-        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline_repo = PipelineRepository(self.db_session)
         return pipeline_repo.is_running(str(project_id))
 
     @parent_process_only
@@ -81,7 +89,7 @@ class PipelineService:
         pipeline = self.get_pipeline_by_id(project_id)
         base = pipeline.model_dump()
         to_update = type(pipeline).model_validate({**base, **partial_config})
-        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline_repo = PipelineRepository(self.db_session)
         to_update_db = PipelineDB(
             project_id=str(to_update.project_id),
             source_id=str(to_update.source_id) if to_update.source_id else None,
@@ -101,6 +109,15 @@ class PipelineService:
                 )
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
+        self.__emit_event(pipeline, updated)
+        return updated
+
+    def __emit_event(self, pipeline: Pipeline, updated: Pipeline) -> None:
+        if self._event_bus is None:
+            raise ValueError(
+                "Event bus is required to update pipeline. This is because updating pipeline may trigger events that "
+                "require other services to react."
+            )
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
             if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
@@ -116,4 +133,3 @@ class PipelineService:
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
             self._event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)
-        return updated

@@ -3,12 +3,13 @@
 
 from .datasets import import_dataset_by_format
 from .images import generate_random_image
-from .jobs import export_dataset, import_dataset_to_project, prepare_dataset
+from .jobs import export_dataset, import_dataset_as_new_project, import_dataset_to_project, prepare_dataset
 from .parsers import parse_sse_events
 
 __all__ = [
     "export_dataset",
     "generate_random_image",
+    "import_dataset_as_new_project",
     "import_dataset_by_format",
     "import_dataset_to_project",
     "parse_sse_events",
