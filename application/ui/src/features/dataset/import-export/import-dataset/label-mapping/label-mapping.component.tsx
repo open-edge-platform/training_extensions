@@ -36,29 +36,35 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     */
     const totalAnnotatedItems = stagedDataset?.metadata?.num_annotations ?? 0;
 
-    const [_labelsMapping, submitAction] = useActionState<unknown, FormData>(async (_prevState, formData) => {
-        await importDatasetJobMutation.mutateAsync(
-            {
-                body: {
-                    job_type: 'import_dataset_to_project',
-                    project_id: String(selectedProject?.id),
-                    staged_dataset_id: stagedDatasetId,
-                    parameters: {
-                        include_unannotated: formData.get('include_unannotated') === 'on',
-                        labels_mapping: mapProjectLabels(datasetLabels, formData),
+    const [formState, submitAction] = useActionState<{ include_unannotated: boolean }, FormData>(
+        async (_prevState, formData) => {
+            const state = { include_unannotated: formData.get('include_unannotated') === 'on' };
+
+            await importDatasetJobMutation.mutateAsync(
+                {
+                    body: {
+                        job_type: 'import_dataset_to_project',
+                        project_id: String(selectedProject?.id),
+                        staged_dataset_id: stagedDatasetId,
+                        parameters: {
+                            include_unannotated: state.include_unannotated,
+                            labels_mapping: mapProjectLabels(datasetLabels, formData),
+                        },
                     },
                 },
-            },
-            {
-                onSuccess: ({ job_id }) => {
-                    updateImportEntry(stagedDatasetId, { importJobId: job_id, step: 'importing' });
-                },
-                onSettled: () => {
-                    datasetImportDialogState.close();
-                },
-            }
-        );
-    }, {});
+                {
+                    onSuccess: ({ job_id }) => {
+                        updateImportEntry(stagedDatasetId, { importJobId: job_id, step: 'importing' });
+                    },
+                    onSettled: () => {
+                        datasetImportDialogState.close();
+                    },
+                }
+            );
+            return state;
+        },
+        { include_unannotated: true }
+    );
 
     return (
         <Flex direction={'column'} gap={'size-200'} UNSAFE_style={{ padding: dimensionValue('size-275') }}>
@@ -79,9 +85,9 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                         alignItems={'center'}
                         columns={[`1fr ${dimensionValue('size-400')} 1fr`]}
                     >
-                        <View>Existing labels</View>
+                        <View>Dataset labels</View>
                         <View />
-                        <View>Target labels</View>
+                        <View>Project labels</View>
 
                         {datasetLabels.map((label, index) => (
                             <Fragment key={label}>
@@ -100,7 +106,9 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                         ))}
                     </Grid>
 
-                    <Checkbox name='include_unannotated'>Include media without annotations</Checkbox>
+                    <Checkbox defaultSelected={formState.include_unannotated} name='include_unannotated'>
+                        Include media without annotations
+                    </Checkbox>
                 </Form>
             </View>
         </Flex>

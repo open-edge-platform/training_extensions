@@ -3,6 +3,7 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -33,6 +34,16 @@ describe('ImportDatasetToProject', () => {
         });
 
         server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(
+                    getMockedProject({
+                        task: {
+                            task_type: 'instance_segmentation',
+                            exclusive_labels: false,
+                        },
+                    })
+                );
+            }),
             http.post('/api/staged_datasets', () => {
                 return HttpResponse.json(
                     {
@@ -76,7 +87,7 @@ describe('ImportDatasetToProject', () => {
 
         renderApp(null, mockedAppendImportEntry);
 
-        userEvent.click(screen.getByRole('button', { name: /open import dialog/i }));
+        userEvent.click(await screen.findByRole('button', { name: /open import dialog/i }));
         expect(await screen.findByText('Drop the dataset .zip file here')).toBeVisible();
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 
