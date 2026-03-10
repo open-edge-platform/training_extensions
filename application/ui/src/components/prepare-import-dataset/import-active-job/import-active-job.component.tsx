@@ -2,28 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { Job } from '../../../../../constants/shared-types';
-import { useDeleteStagedDataset } from '../../../../../hooks/api/use-delete-staged-dataset.hook';
-import { formatBytes } from '../../../../../shared/util';
-import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
-import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
+import { Job } from '../../../constants/shared-types';
+import { CancelJobConfirmation } from '../../../features/dataset/import-export/cancel-job-confirmation/cancel-job-confirmation.component';
+import { BottomProgressBar } from '../../../features/models/model-listing/current-model-training/bottom-progress-bar.component';
+import { formatBytes } from '../../../shared/util';
 
 type ImportActiveJobProps = {
     job: Job;
     size: number;
     fileName: string;
     stagedDatasetId: string;
+    deleteEntry: () => void;
 };
 
-export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId }: ImportActiveJobProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = useDeleteStagedDataset({
-        stagedDatasetId,
-        deleteEntry: () => deleteImportEntry(stagedDatasetId),
-    });
+export const ImportActiveJob = ({ job, size, fileName, stagedDatasetId, deleteEntry }: ImportActiveJobProps) => {
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, deleteEntry });
 
     const isRunning = isJobRunning(job);
     const progress = getJobProgress(job?.progress);

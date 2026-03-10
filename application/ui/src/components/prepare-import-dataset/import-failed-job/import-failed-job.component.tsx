@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
-import { useDeleteStagedDataset } from '../../../../../hooks/api/use-delete-staged-dataset.hook';
-import { formatBytes } from '../../../../../shared/util';
+import { formatBytes } from '../../../shared/util';
 
 type ImportFailedJobProps = {
     size: number;
@@ -13,14 +12,18 @@ type ImportFailedJobProps = {
     stagedDatasetId: string;
     message?: string;
     error?: string;
+    deleteEntry: () => void;
 };
 
-export const ImportFailedJob = ({ fileName, size, stagedDatasetId, message, error }: ImportFailedJobProps) => {
-    const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = useDeleteStagedDataset({
-        stagedDatasetId,
-        deleteEntry: () => deleteImportEntry(stagedDatasetId),
-    });
+export const ImportFailedJob = ({
+    size,
+    error,
+    message,
+    fileName,
+    stagedDatasetId,
+    deleteEntry,
+}: ImportFailedJobProps) => {
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, deleteEntry });
 
     const handleClose = () => {
         deleteFileMutation.mutate();

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Flex, Text, View } from '@geti/ui';
-import { useDeleteStagedDataset } from 'hooks/api/use-delete-staged-dataset.hook';
+import { useDeleteStagedDataset, useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { isNil } from 'lodash-es';
 
-import { $api, API_BASE_URL } from '../../../../../../api/client';
+import { API_BASE_URL } from '../../../../../../api/client';
 import { ExportDatasetJob } from '../../../../../../constants/shared-types';
 import { useExportDataset } from '../../../../../../hooks/localStorage/use-export-dataset.hook';
 import { downloadFile } from '../../../../../../shared/util';
@@ -18,9 +18,7 @@ type ExportCompletedJobProps = {
 
 export const ExportCompletedJob = ({ job, datasetName }: ExportCompletedJobProps) => {
     const { removeLsExportId } = useExportDataset();
-    const stageDatasetResponse = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
-        params: { path: { staged_dataset_id: job.metadata.dataset_id } },
-    });
+    const stageDatasetResponse = useStagedDataset(job.metadata.dataset_id);
 
     const removeStagedDatasetMutation = useDeleteStagedDataset({
         stagedDatasetId: job.metadata.dataset_id,
