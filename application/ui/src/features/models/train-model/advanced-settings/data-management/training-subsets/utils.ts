@@ -33,5 +33,11 @@ export const getSubsets = (subsetsParameters: SubsetSplitParameters) => {
 export const getSubsetSplitParameters = (trainingConfiguration: TrainingConfiguration) => {
     const datasetPreparation = findGroupByKey(trainingConfiguration.parameters, 'dataset_preparation')?.parameters;
 
-    return findGroupByKey(datasetPreparation, 'subset_split')?.parameters as NumberConfigurableParameter[];
+    if (datasetPreparation === undefined) return undefined;
+
+    const subsetSplit = findGroupByKey(datasetPreparation, 'subset_split');
+
+    if (subsetSplit === undefined) return undefined;
+
+    return subsetSplit.parameters as NumberConfigurableParameter[];
 };

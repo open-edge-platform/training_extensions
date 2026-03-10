@@ -19,7 +19,11 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
             path: {
                 project_id,
             },
-            query: options,
+            query: {
+                annotation_status: options?.annotationStatus,
+                limit: options?.limit,
+                subset: options?.subset,
+            },
         },
     });
 };

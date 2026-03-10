@@ -46,7 +46,7 @@ export function getMockedConfigurationParameter(
         };
     }
 
-    throw new Error(`Unsupported parameter type: ${parameter.type}`);
+    throw new Error(`Unsupported parameter type: ${parameter.value_type}`);
 }
 
 export const getMockedConfigurationParameterGroup = (
