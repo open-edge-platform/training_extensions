@@ -10,7 +10,7 @@ stats:
   gigaflops: 6.45
   trainable_parameters: 5.06
   benchmark_metrics:
-    coco_map_50_95: 32.8 # mAP at IoU=0.50:0.95
+    coco_map_50_95: 32.8
 
 hyperparameters:
   training:

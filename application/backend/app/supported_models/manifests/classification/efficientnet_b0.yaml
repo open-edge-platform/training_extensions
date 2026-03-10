@@ -10,8 +10,8 @@ stats:
   gigaflops: 0.81
   trainable_parameters: 5.3
   benchmark_metrics:
-    imagenet_top1_accuracy: 77.1 # percentage
-    imagenet_top5_accuracy: 93.3 # percentage (optional)
+    imagenet_top1_accuracy: 77.1
+    imagenet_top5_accuracy: 93.3
 
 hyperparameters:
   training:
