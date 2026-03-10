@@ -3,17 +3,15 @@
 
 import { Dispatch, SetStateAction, useState } from 'react';
 
-import { Content, Flex, Grid, Heading, InlineAlert, minmax, Text, View } from '@geti/ui';
+import { Content, Flex, Heading, InlineAlert, Text, View } from '@geti/ui';
 import { useGetDatasetItems } from 'hooks/use-get-dataset-items.hook';
 import { isEqual } from 'lodash-es';
 
 import type { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { Accordion } from '../../components/accordion/accordion.component';
-import { ResetButton } from '../../components/reset-button.component';
 import { ResultingDatasetDistribution } from './resulting-dataset-distribution.component';
-import { SubsetDistributionStats } from './subset-distribution-stats.component';
-import { SubsetsDistributionSlider } from './subsets-distribution-slider/subsets-distribution-slider.component';
+import { SubsetsDistribution } from './subset-distribution.component';
 import {
     getSubsets,
     MAX_RATIO_VALUE,
@@ -24,71 +22,6 @@ import {
 } from './utils';
 
 import classes from './training-subsets.module.scss';
-
-type SubsetsDistributionProps = {
-    trainingSubsetSize: number;
-    validationSubsetSize: number;
-    testSubsetSize: number;
-    subsetsDistribution: number[];
-    onSubsetsDistributionChange: (values: number[]) => void;
-    onSubsetsDistributionChangeEnd: (values: number[]) => void;
-    onSubsetsDistributionReset: () => void;
-};
-
-const SubsetsDistribution = ({
-    subsetsDistribution,
-    trainingSubsetSize,
-    testSubsetSize,
-    validationSubsetSize,
-    onSubsetsDistributionChange,
-    onSubsetsDistributionChangeEnd,
-    onSubsetsDistributionReset,
-}: SubsetsDistributionProps) => {
-    const handleSubsetDistributionChange = (values: number[] | number): void => {
-        if (Array.isArray(values)) {
-            onSubsetsDistributionChange(values);
-        }
-    };
-
-    const handleSubsetDistributionChangeEnd = (values: number[] | number): void => {
-        if (Array.isArray(values)) {
-            onSubsetsDistributionChangeEnd(values);
-        }
-    };
-
-    return (
-        <View UNSAFE_className={classes.trainingSubsets}>
-            <Grid
-                areas={['label label', 'slider reset', 'counts counts']}
-                columns={[minmax('size-3400', '1fr'), 'max-content']}
-                alignItems={'center'}
-                columnGap={'size-250'}
-            >
-                <SubsetsDistributionSlider
-                    aria-label={'Distribute samples'}
-                    minValue={0}
-                    maxValue={100}
-                    step={1}
-                    value={[subsetsDistribution[0], subsetsDistribution[1]]}
-                    onChange={handleSubsetDistributionChange}
-                    onChangeEnd={handleSubsetDistributionChangeEnd}
-                    label={'Distribution for new samples'}
-                />
-                <ResetButton
-                    gridArea={'reset'}
-                    onPress={onSubsetsDistributionReset}
-                    aria-label={'Reset training subsets'}
-                />
-                <SubsetDistributionStats
-                    testSize={testSubsetSize}
-                    trainingSize={trainingSubsetSize}
-                    validationSize={validationSubsetSize}
-                    totalSize={trainingSubsetSize + validationSubsetSize + testSubsetSize}
-                />
-            </Grid>
-        </View>
-    );
-};
 
 type TrainingSubsetsProps = {
     defaultSubsetParameters: SubsetSplitParameters;
