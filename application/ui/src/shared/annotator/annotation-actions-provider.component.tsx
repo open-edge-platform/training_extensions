@@ -145,7 +145,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const resetAnnotations = () => {
-        undoRedoActions.reset(mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels));
+        undoRedoActions.reset();
     };
 
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
@@ -160,7 +160,7 @@ export const AnnotationActionsProvider = ({
             body: { annotations: annotationsDTO },
         });
 
-        resetAnnotations();
+        undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
     const submitPredictions = async () => {
