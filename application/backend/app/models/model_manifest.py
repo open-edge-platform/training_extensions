@@ -53,7 +53,7 @@ class BenchmarkMetrics(BaseModel):
     coco_map_50: float | None = Field(
         default=None,
         title="COCO mAP 50",
-        description="COCO mean Average Precision at IoU=0.50 (percentage, optional)",
+        description="COCO mean Average Precision at IoU=0.50 (percentage, null if N/A)",
         ge=0,
         le=100,
     )
