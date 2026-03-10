@@ -71,7 +71,7 @@ describe('ImportTaskSelection', () => {
         render(<ImportTaskSelection stagedDatasetId={mockedStagedDatasetId} />);
     };
 
-    it('prefills project name and shows recommended task type based on dataset annotation type', async () => {
+    it('shows Detection as recommended task for bounding box annotations', async () => {
         renderApp('bounding_box');
 
         await waitFor(() => {
@@ -82,7 +82,7 @@ describe('ImportTaskSelection', () => {
         expect(await screen.findByText('Detection (Recommended)')).toBeVisible();
     });
 
-    it('prefills project name and shows recommended task type based on dataset annotation type', async () => {
+    it('shows Instance segmentation as recommended task for polygon annotations', async () => {
         renderApp('polygon');
 
         await waitFor(() => {
@@ -93,7 +93,7 @@ describe('ImportTaskSelection', () => {
         expect(await screen.findByText('Instance segmentation (Recommended)')).toBeVisible();
     });
 
-    it('prefills project name and shows recommended task type based on dataset annotation type', async () => {
+    it('shows Classification as recommended task for label annotations', async () => {
         renderApp('label', 'instance_segmentation');
 
         await waitFor(() => {
