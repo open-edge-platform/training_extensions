@@ -7,37 +7,8 @@ import {
     TrainingConfiguration,
 } from '../../../../../../constants/shared-types';
 import { findGroupByKey } from '../../../../model-listing/model-training-parameters/utils';
-import { isNumberParameter } from '../../utils';
 
 export type SubsetSplitParameters = ConfigurableParameter[];
-
-const getDatasetSize = (subsetSplitParameters: SubsetSplitParameters): number => {
-    const datasetSize = subsetSplitParameters.find((parameter) => parameter.key === 'dataset_size');
-
-    if (isNumberParameter(datasetSize)) {
-        return datasetSize.value;
-    }
-
-    return 0;
-};
-
-export const getSubsetsSizes = (
-    subsetSplitParameters: SubsetSplitParameters,
-    validationSubsetRatio: number,
-    testSubsetRatio: number
-) => {
-    const datasetSize = getDatasetSize(subsetSplitParameters);
-
-    const validationSubsetSize = Math.floor(datasetSize * (validationSubsetRatio / 100));
-    const testSubsetSize = Math.floor(datasetSize * (testSubsetRatio / 100));
-    const trainingSubsetSize = datasetSize - validationSubsetSize - testSubsetSize;
-
-    return {
-        trainingSubsetSize,
-        validationSubsetSize,
-        testSubsetSize,
-    };
-};
 
 export const MAX_RATIO_VALUE = 100;
 
@@ -61,18 +32,6 @@ export const getSubsets = (subsetsParameters: SubsetSplitParameters) => {
         validationSubset,
         testSubset,
     };
-};
-
-export const areSubsetsSizesValid = (subsetParameters: SubsetSplitParameters): boolean => {
-    const { validationSubset, testSubset } = getSubsets(subsetParameters);
-
-    const newSubsetSizes = getSubsetsSizes(subsetParameters, validationSubset.value, testSubset.value);
-
-    return ![
-        newSubsetSizes.trainingSubsetSize,
-        newSubsetSizes.validationSubsetSize,
-        newSubsetSizes.testSubsetSize,
-    ].some((size) => size === 0);
 };
 
 export const getSubsetSplitParameters = (trainingConfiguration: TrainingConfiguration) => {

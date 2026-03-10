@@ -15,7 +15,6 @@ import { ResultingDatasetDistribution } from './resulting-dataset-distribution.c
 import { SubsetDistributionStats } from './subset-distribution-stats.component';
 import { SubsetsDistributionSlider } from './subsets-distribution-slider/subsets-distribution-slider.component';
 import {
-    areSubsetsSizesValid,
     getSubsets,
     MAX_RATIO_VALUE,
     SubsetSplitParameters,
