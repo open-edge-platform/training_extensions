@@ -25,7 +25,7 @@ export const DataManagement = ({
 
     return (
         <View>
-            {subsetSplitParameters !== undefined && (
+            {subsetSplitParameters !== undefined && defaultSubsetSplitParameters !== undefined && (
                 <TrainingSubsets
                     defaultSubsetParameters={defaultSubsetSplitParameters}
                     subsetsParameters={subsetSplitParameters}
