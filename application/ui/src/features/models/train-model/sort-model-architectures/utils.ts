@@ -34,9 +34,9 @@ export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
     [SortingOptions.NAME_DESC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'desc'),
     [SortingOptions.SPEED_ASC]: (modelArchitectures) =>
-        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'asc'),
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.gigaflops, 'asc'),
     [SortingOptions.SPEED_DESC]: (modelArchitectures) =>
-        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'desc'),
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.gigaflops, 'desc'),
 };
 
 export const SORT_OPTIONS = [
