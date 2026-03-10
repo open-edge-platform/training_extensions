@@ -5,8 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import { View } from '@geti/ui';
 
-import { NumberConfigurableParameter, TrainingConfiguration } from '../../../../../constants/shared-types';
-import { findGroupByKey } from '../../../model-listing/model-training-parameters/utils';
+import { TrainingConfiguration } from '../../../../../constants/shared-types';
 import { TrainingSubsets } from './training-subsets/training-subsets.component';
 import { getSubsetSplitParameters } from './training-subsets/utils';
 
@@ -24,15 +23,11 @@ export const DataManagement = ({
     const subsetSplitParameters = getSubsetSplitParameters(trainingConfiguration);
     const defaultSubsetSplitParameters = getSubsetSplitParameters(defaultTrainingConfiguration);
 
-    console.log({ subsetSplitParameters, trainingConfiguration });
-
     return (
         <View>
             {subsetSplitParameters !== undefined && (
                 <TrainingSubsets
                     defaultSubsetParameters={defaultSubsetSplitParameters}
-                    // TODO: Revisit this
-                    hasSupportedModels={false}
                     subsetsParameters={subsetSplitParameters}
                     onTrainingConfigurationChange={onTrainingConfigurationChange}
                 />

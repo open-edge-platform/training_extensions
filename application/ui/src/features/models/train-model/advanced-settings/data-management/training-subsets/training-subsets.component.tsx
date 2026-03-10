@@ -93,7 +93,6 @@ const SubsetsDistribution = ({
 
 type TrainingSubsetsProps = {
     defaultSubsetParameters: SubsetSplitParameters;
-    hasSupportedModels: boolean;
     subsetsParameters: SubsetSplitParameters;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
@@ -107,20 +106,6 @@ const TrainingSubsetsUnavailable = () => {
                 validation, and testing subsets.
                 <br />
                 Please add more media items to ensure each subset contains at least one item.
-            </Content>
-        </InlineAlert>
-    );
-};
-
-const TrainingSubsetsChangedDistributionWarning = () => {
-    return (
-        <InlineAlert variant={'notice'}>
-            <Heading>Additional configuration change required to apply new training subsets distribution</Heading>
-            <Content>
-                To apply the updated distribution of training, validation, and testing subsets, please go to{' '}
-                {'"Training"'} tab, choose {'"Pre-trained weights"'}, and enable {'"Reshuffle subsets"'}.
-                <br />
-                This will reset your data splits and begin a new training process, replacing the current model.
             </Content>
         </InlineAlert>
     );
@@ -206,7 +191,6 @@ export const TrainingSubsets = ({
     defaultSubsetParameters,
     subsetsParameters,
     onTrainingConfigurationChange,
-    hasSupportedModels,
 }: TrainingSubsetsProps) => {
     const { trainingSubset, validationSubset } = getSubsets(subsetsParameters);
     const {
@@ -262,8 +246,11 @@ export const TrainingSubsets = ({
     const newTestingSubsetSize = Math.floor((testSubsetRatio / 100) * unassignedSubsetSize);
     const newTrainingSubsetSize = unassignedSubsetSize - newValidationSubsetSize - newTestingSubsetSize;
 
-    const subsetsSizesInvalid = areTrainingSubsetParametersChanged && !areSubsetsSizesValid(subsetsParameters);
-    const isChangedDistributionWarningVisible = hasSupportedModels && areTrainingSubsetParametersChanged;
+    const areSubsetsSizesValid = () => {
+        return ![newValidationSubsetSize, newTestingSubsetSize, newTrainingSubsetSize].some((size) => size === 0);
+    };
+
+    const subsetsSizesInvalid = areTrainingSubsetParametersChanged && !areSubsetsSizesValid();
 
     return (
         <Accordion>
@@ -273,7 +260,7 @@ export const TrainingSubsets = ({
                     {trainingSubsetRatio}/{validationSubsetRatio}/{testSubsetRatio}%
                 </Accordion.Tag>
             </Accordion.Title>
-            <Accordion.Content>
+            <Accordion.Content UNSAFE_className={classes.trainingSubsets}>
                 <Accordion.Description>
                     Specify the distribution of annotated samples that have NOT already been assigned to a subset. Note
                     that samples used in previous training rounds already have a subset and this will remain unchanged,
@@ -310,7 +297,6 @@ export const TrainingSubsets = ({
 
                 <Flex direction={'column'} gap={'size-200'} marginTop={'size-200'}>
                     {subsetsSizesInvalid && <TrainingSubsetsUnavailable />}
-                    {isChangedDistributionWarningVisible && <TrainingSubsetsChangedDistributionWarning />}
                 </Flex>
             </Accordion.Content>
         </Accordion>
