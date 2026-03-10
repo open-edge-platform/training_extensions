@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -443,15 +444,38 @@ class TestModelServiceIntegration:
         self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
     ):
         """Test updating an existing model revision succeeds."""
+        started_at = datetime.now(UTC)
+        finished_at = started_at + timedelta(hours=1)
+
+        # Test that we can update status, start and finish time
         fxt_model_service.update_revision_status(
             project_id=fxt_project_id,
             model_id=fxt_model_id,
             training_status=TrainingStatus.IN_PROGRESS,
+            training_started_at=started_at,
+            training_finished_at=finished_at,
         )
 
         model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        db_session.refresh(model_db)
         assert model_db is not None
         assert model_db.training_status == TrainingStatus.IN_PROGRESS
+        assert model_db.training_started_at == started_at.replace(tzinfo=None)
+        assert model_db.training_finished_at == finished_at.replace(tzinfo=None)
+
+        # Test that not providing start and/or finish time won't affect currently set times
+        fxt_model_service.update_revision_status(
+            project_id=fxt_project_id,
+            model_id=fxt_model_id,
+            training_status=TrainingStatus.SUCCESSFUL,
+        )
+
+        model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        db_session.refresh(model_db)
+        assert model_db is not None
+        assert model_db.training_status == TrainingStatus.SUCCESSFUL
+        assert model_db.training_started_at == started_at.replace(tzinfo=None)
+        assert model_db.training_finished_at == finished_at.replace(tzinfo=None)
 
     def test_save_evaluation_result(
         self, fxt_model_id: UUID, fxt_project_id: UUID, fxt_model_service: ModelService, db_session: Session
