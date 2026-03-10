@@ -39,7 +39,7 @@ describe('Training parameters utils', () => {
         expect(rows).toEqual([
             { name: 'Mosaic / Enable', value: 'On' },
             { name: 'Gaussian blur / Sigma range', value: '0.1 - 2' },
-            { name: 'Gaussian blur / Probability', value: '-' },
+            { name: 'Gaussian blur / Probability', value: '0.5' },
         ]);
     });
 
