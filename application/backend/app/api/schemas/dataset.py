@@ -1,6 +1,8 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from uuid import UUID
+
 from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import BaseRequiredIDModel
@@ -19,7 +21,7 @@ class DatasetFilters(BaseModel):
         description="List of subsets to consider during import or export; any item assigned a subset not present in "
         "the list will be filtered out; if the parameter is unspecified (null), then all subsets will be considered",
     )
-    include_unannotated: bool = Field(True, description="Whether to include unannotated items to the dataset")
+    include_unannotated: bool = Field(True, description="Whether to include unannotated items from the dataset")
 
     model_config = {
         "json_schema_extra": {
@@ -73,3 +75,76 @@ class StagedDatasetView(BaseRequiredIDModel):
                 "metadata": data.metadata,
             }
         return data
+
+
+class MediaCountsView(BaseModel):
+    """Media counts"""
+
+    images: int = Field(0, description="Number of images in dataset")
+    videos: int = Field(0, description="Number of videos in dataset")
+    video_frames: int = Field(0, description="Number of video frames in dataset")
+
+    model_config = {"json_schema_extra": {"example": {"images": 10, "videos": 3, "video_frames": 312}}}
+
+
+class InstancesPerLabelView(BaseModel):
+    label_id: UUID = Field(..., description="Unique identifier of label")
+    instances: int = Field(0, description="Number of annotation instances with this label in dataset")
+
+    model_config = {
+        "json_schema_extra": {"example": {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24}}
+    }
+
+
+class AnnotationCountsView(BaseModel):
+    annotated_images: int = Field(0, description="Number of annotated images in dataset")
+    annotated_videos: int = Field(0, description="Number of annotated videos in dataset")
+    annotated_video_frames: int = Field(0, description="Number of annotated video frames in dataset")
+    instances: int = Field(0, description="Number of annotation shapes in dataset")
+    instances_per_label: list[InstancesPerLabelView] = Field(
+        [], description="List of number of annotation shapes per label"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "annotated_images": 8,
+                "annotated_videos": 2,
+                "annotated_video_frames": 29,
+                "instances": 56,
+                "instances_per_label": [
+                    {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24},
+                    {"label_id": "20f1defc-8d40-47ff-9f9d-8e82f0ef224d", "instances": 32},
+                ],
+            }
+        }
+    }
+
+
+class DatasetStatisticsView(BaseModel):
+    """
+    Dataset statistics
+    """
+
+    media_counts: MediaCountsView = Field(..., description="Number of media per media type in dataset")
+    annotations_counts: AnnotationCountsView = Field(
+        ..., description="Number of annotated media per media type and labels"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "media_counts": {"images": 10, "videos": 3, "video_frames": 312},
+                "annotations_counts": {
+                    "annotated_images": 8,
+                    "annotated_videos": 2,
+                    "annotated_video_frames": 29,
+                    "instances": 56,
+                    "instances_per_label": [
+                        {"label_id": "5fffd195-7766-4171-8efe-4064a6eb0e95", "instances": 24},
+                        {"label_id": "20f1defc-8d40-47ff-9f9d-8e82f0ef224d", "instances": 32},
+                    ],
+                },
+            }
+        }
+    }

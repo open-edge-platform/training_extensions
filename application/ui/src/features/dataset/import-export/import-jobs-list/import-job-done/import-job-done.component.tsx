@@ -3,11 +3,10 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { CheckCircleOutlined } from '@geti/ui/icons';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { $api } from '../../../../../api/client';
-import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { formatBytes } from '../../../../../shared/util';
-import { isInvalidStagedFile } from '../../util';
 
 import classes from './import-job-done.module.scss';
 
@@ -19,20 +18,13 @@ type ImportJobDoneProps = {
 
 export const ImportJobDone = ({ fileName, size, stagedDatasetId }: ImportJobDoneProps) => {
     const { deleteImportEntry } = useImportDatasetToProject();
-    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+    const deleteFileMutation = useDeleteStagedDataset({
+        stagedDatasetId,
+        deleteEntry: () => deleteImportEntry(stagedDatasetId),
+    });
 
     const handleClose = () => {
-        deleteFileMutation.mutate(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => {
-                    deleteImportEntry(stagedDatasetId);
-                },
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        deleteFileMutation.mutate();
     };
 
     return (

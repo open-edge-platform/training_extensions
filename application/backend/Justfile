@@ -1,0 +1,182 @@
+#!/usr/bin/env just --justfile
+import "../recipes.justfile"
+
+app-main := "app/main.py"
+
+default:
+    @just --list --unsorted
+
+# -------------------------------------------------------------------------------------------------
+# Virtual environment management
+# -------------------------------------------------------------------------------------------------
+
+uv_version := `grep -A 3 '\[tool\.uv\]' pyproject.toml | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/'`
+
+_ensure_uv:
+    @if ! command -v uv > /dev/null; then \
+        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/{{uv_version}}/uv-installer.sh" | sh; \
+    fi
+
+# Create a virtual environment and install dependencies
+[arg("device", short="d", long="device")]
+venv device="cpu": _ensure_uv
+    uv lock --check
+    uv sync --frozen --extra {{ device }} --extra mqtt
+
+# Generate or update the uv lock file
+venv-lock: _ensure_uv
+    uv lock
+
+# -------------------------------------------------------------------------------------------------
+# Linting and formatting
+# -------------------------------------------------------------------------------------------------
+
+# Run linters (ruff + lint-imports + pyrefly)
+lint: ruff lint-imports pyrefly
+
+# Run ruff for linting and format checking
+ruff: _ensure_uv
+    uv run ruff check --output-format=github
+    uv run ruff format --check
+
+# Run ruff to format the code and apply fixes
+ruff-fix: _ensure_uv
+    uv run ruff check --fix
+    uv run ruff format
+
+# Run lint-imports for checking import statements
+lint-imports: _ensure_uv
+    uv run lint-imports
+
+# Run pyrefly to detect potential type errors
+pyrefly: _ensure_uv
+    uv run pyrefly check
+
+# -------------------------------------------------------------------------------------------------
+# Testing
+# -------------------------------------------------------------------------------------------------
+
+# Run unit tests with pytest
+test-unit *ARGS: _ensure_uv
+    uv run pytest ./tests/unit -v {{ ARGS }}
+
+# Run integration tests with pytest
+test-integration *ARGS: _ensure_uv
+    uv run pytest ./tests/integration -v {{ ARGS }}
+
+# Run BDD tests with behave
+test-bdd *ARGS: _ensure_uv
+    uv run behave tests/bdd {{ ARGS }}
+
+# -------------------------------------------------------------------------------------------------
+# Documentation
+# -------------------------------------------------------------------------------------------------
+
+# Generate OpenAPI specification from FastAPI app
+[arg("output-path", short="o", long="output-path")]
+gen-api-spec output-path="openapi.json": _ensure_uv
+    PYTHONPATH=. uv run --no-sync app/cli.py gen-api --target-path {{ output-path }}
+
+# -------------------------------------------------------------------------------------------------
+# Packaging
+# -------------------------------------------------------------------------------------------------
+
+# Build a standalone executable using PyInstaller
+[arg("device", short="d", long="device")]
+pyinstaller device="cpu": _ensure_uv
+    uv sync --frozen --extra {{device}} --extra mqtt --extra installer
+    uv run pyinstaller --noconfirm geti-tune.spec
+
+# -------------------------------------------------------------------------------------------------
+# Development server
+# -------------------------------------------------------------------------------------------------
+
+# Clean all existing data and reset the database
+[confirm("WARNING: This will delete all existing data and reset the database! Continue? (yes/no)")]
+_clean_data: _ensure_uv
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Cleaning existing data..."
+    rm -f data/geti_tune.db
+    rm -rf data/projects/*
+    rm -rf data/output/*
+    uv run app/cli.py init-db
+    echo "Database cleaned and reinitialized."
+
+# Download and import demo projects, sources, and sinks
+_setup_demo force_import="": _ensure_uv
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Setting up demo projects..."
+    FORCE_FLAG="{{ force_import }}"
+    just import-demo-projects "$FORCE_FLAG"
+    just setup-demo-sources
+    just setup-demo-sinks
+    echo "Demo setup complete."
+
+# Run the application server as standalone (for development and testing)
+[arg("host", long="host", help="Host address to bind the server to")]
+[arg("port", long="port", help="Port number to bind the server to")]
+[arg("webrtc_advertise_ip", long="webrtc-advertise-ip", help="Public IP address to advertise for WebRTC connections")]
+[arg("ice_servers", long="ice-servers", help="ICE servers configuration as a JSON string")]
+[arg("log_level", long="log-level", help="Log level (e.g. DEBUG, INFO, WARNING, ERROR)")]
+[arg("log_dir", long="log-dir", help="Directory for log files")]
+[arg("data_dir", long="data-dir", help="Directory for application data")]
+[arg("no_proxy", long="no-proxy", help="Comma-separated list of hosts to bypass proxy")]
+[arg("clean", long="clean", value="true", help="Delete all existing data and reset the database before starting")]
+[arg("setup_demo", long="setup-demo", value="true", help="Import demo projects, videos, and sinks before starting")]
+[arg("force_import", long="force-import", value="true", help="Bypass schema version checks during import (requires --setup-demo)")]
+run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" ice_servers="" log_level="" log_dir="" data_dir="" no_proxy="": _ensure_uv
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PYTHONUNBUFFERED=1
+    export PYTHONPATH=.
+
+    # Validate arguments
+    if [[ "{{ force_import }}" == "true" && "{{ setup_demo }}" != "true" ]]; then
+        echo "Error: --force-import can only be used with --setup-demo" >&2
+        exit 1
+    fi
+
+    # Handle data cleanup
+    if [[ "{{ clean }}" == "true" ]]; then
+        just _clean_data
+    fi
+
+    # Handle demo setup
+    if [[ "{{ setup_demo }}" == "true" ]]; then
+        FORCE_FLAG=""
+        if [[ "{{ force_import }}" == "true" ]]; then
+            FORCE_FLAG="--force-import"
+        fi
+        just _setup_demo "${FORCE_FLAG}"
+    fi
+
+    # Export optional settings as environment variables
+    if [[ -n "{{ host }}" ]]; then
+        export HOST="{{ host }}"
+    fi
+    if [[ -n "{{ port }}" ]]; then
+        export PORT="{{ port }}"
+    fi
+    if [[ -n "{{ webrtc_advertise_ip }}" ]]; then
+        export WEBRTC_ADVERTISE_IP="{{ webrtc_advertise_ip }}"
+    fi
+    if [[ -n "{{ ice_servers }}" ]]; then
+        export ICE_SERVERS="{{ ice_servers }}"
+    fi
+    if [[ -n "{{ log_level }}" ]]; then
+        export LOG_LEVEL="{{ log_level }}"
+    fi
+    if [[ -n "{{ log_dir }}" ]]; then
+        export LOG_DIR="{{ log_dir }}"
+    fi
+    if [[ -n "{{ data_dir }}" ]]; then
+        export DATA_DIR="{{ data_dir }}"
+    fi
+    if [[ -n "{{ no_proxy }}" ]]; then
+        export no_proxy="{{ no_proxy }}"
+    fi
+
+    echo "Starting FastAPI server..."
+    exec uv run {{ app-main }}

@@ -70,6 +70,19 @@ def fxt_converter_with_mapping(
     )
 
 
+def test_convert_with_none(fxt_converter, fxt_project_labels):
+    """Test converting a multilabel sample with confidence scores."""
+    none_array = np.array(None)
+    samples = [
+        MultilabelClassificationSample(label=none_array, confidence=None),
+        DetectionSample(label=none_array, bboxes=none_array, confidence=None),
+        InstanceSegmentationSample(label=none_array, polygons=none_array, confidence=None),
+    ]
+    for sample in samples:
+        with pytest.raises(ValueError, match="Expected 1D array for label indices, got 0D"):
+            fxt_converter.convert_sample(sample)
+
+
 class TestClassificationConversion:
     def test_convert_classification_sample_with_confidence(self, fxt_converter, fxt_project_labels):
         """Test converting a classification sample with confidence score."""

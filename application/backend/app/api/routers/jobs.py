@@ -19,6 +19,8 @@ from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
 from app.models import DatasetFormat, ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
 from app.models.jobs import (
+    ImportDatasetAsNewProjectJob,
+    ImportDatasetAsNewProjectJobParams,
     ImportDatasetToProjectJob,
     ImportDatasetToProjectJobParams,
     PrepareDatasetForImportJob,
@@ -82,7 +84,18 @@ async def submit_job(
                     ),
                 )
             case JobType.IMPORT_DATASET_AS_NEW_PROJECT:
-                raise NotImplementedError
+                job = ImportDatasetAsNewProjectJob(
+                    id=job_id,
+                    params=ImportDatasetAsNewProjectJobParams(
+                        staged_dataset_id=job_request.staged_dataset_id,
+                        project_name=job_request.parameters.project.name,
+                        task_type=job_request.parameters.project.task_type,
+                        exclusive_labels=job_request.parameters.project.exclusive_labels,
+                        labels=job_request.parameters.filters.labels,
+                        subsets=job_request.parameters.filters.subsets,
+                        include_unannotated=job_request.parameters.filters.include_unannotated,
+                    ),
+                )
             case JobType.IMPORT_DATASET_TO_PROJECT:
                 project = project_service.get_project_by_id(job_request.project_id)
                 job = ImportDatasetToProjectJob(
@@ -93,6 +106,7 @@ async def submit_job(
                         project_id=project.id,
                         task=project.task,
                         labels_mapping=job_request.parameters.labels_mapping,
+                        include_unannotated=job_request.parameters.include_unannotated,
                     ),
                 )
             case JobType.EXPORT_DATASET:

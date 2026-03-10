@@ -33,16 +33,8 @@ async def upload_archive(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Only zip files are allowed.",
             )
-        parts = file.filename.split("-")
-        if len(parts) != 2:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Filename must be in the format <dataset_name>-<dataset_format>.zip",
-            )
-        # todo: keep only dataset.zip as filename to make validation simpler when generic import implemented in
-        #  datumaro, now we need format in the filename to determine the proper datumaro API for further processing
         staged_dataset = await staged_datasets_service.upload(
-            filename=file.filename or "dataset.zip",
+            filename="dataset.zip",
             chunk_reader=lambda: file.read(1024 * 1024),
         )
         return StagedDatasetView.model_validate(staged_dataset, from_attributes=True)

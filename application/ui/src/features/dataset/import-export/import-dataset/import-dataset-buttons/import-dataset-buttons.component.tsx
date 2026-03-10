@@ -3,19 +3,19 @@
 
 import { Button, ButtonGroup } from '@geti/ui';
 
+import { ImportProcessButtons } from '../../../../../components/import-job-process/import-process-buttons.component';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
-import { ImportProcessButtons } from '../import-process/import-process-buttons.component';
 import { LabelMappingButtons } from '../label-mapping/label-mapping-buttons.component';
-import { ImportDatasetState } from '../util';
+import { ImportDatasetToProjectState } from '../util';
 
 type ImportDatasetButtonsProps = {
     onClose: () => void;
     stagedDatasetId: string | null;
-    currentStep: ImportDatasetState;
+    currentStep: ImportDatasetToProjectState;
 };
 
 export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: ImportDatasetButtonsProps) => {
-    const { getImportEntry } = useImportDatasetToProject();
+    const { getImportEntry, deleteImportEntry } = useImportDatasetToProject();
     const { prepareJobId } = getImportEntry(stagedDatasetId ?? '') ?? { prepareJobId: null };
 
     if (stagedDatasetId === null || prepareJobId === null) {
@@ -29,7 +29,14 @@ export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: 
     }
 
     if (currentStep === 'preparing') {
-        return <ImportProcessButtons onClose={onClose} prepareJobId={prepareJobId} stagedDatasetId={stagedDatasetId} />;
+        return (
+            <ImportProcessButtons
+                onClose={onClose}
+                prepareJobId={prepareJobId}
+                stagedDatasetId={stagedDatasetId}
+                deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+            />
+        );
     }
 
     if (currentStep === 'labelMapping') {

@@ -22,6 +22,7 @@ from app.services import (
     SystemService,
 )
 from app.services.base import ResourceNotFoundError, ResourceType
+from app.services.dataset_revision_service import DATASET_REVISION_ITEM_THUMBNAIL_SIZE
 from app.services.event.event_bus import EventBus
 
 
@@ -804,7 +805,7 @@ class TestDatasetRevisionServiceIntegration:
         )
 
         assert isinstance(thumbnail, Image.Image)
-        assert thumbnail.width == thumbnail.height == 64
+        assert thumbnail.width == thumbnail.height == DATASET_REVISION_ITEM_THUMBNAIL_SIZE
 
     def test_get_dataset_revision_item_thumbnail_not_found(
         self,

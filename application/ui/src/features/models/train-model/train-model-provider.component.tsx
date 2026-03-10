@@ -1,13 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, use, useMemo, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, use, useMemo, useState } from 'react';
 
 import {
     DatasetRevision,
     DeviceType,
     Model,
     ModelArchitectureWithPerformanceCategory,
+    TrainingConfiguration,
     TrainingDevice,
 } from '../../../constants/shared-types';
 import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
@@ -15,6 +16,7 @@ import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetModels } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+import { useTrainingConfiguration } from './use-training-configuration';
 
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
 type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { value: string | null };
@@ -38,6 +40,13 @@ type TrainModelContextProps = {
     modelRevisions: ModelRevisionWithValue[];
     selectedModelRevisionId: string | null;
     onSelectModelRevisionId: (modelRevisionId: string | null) => void;
+
+    isAdvancedSettingsMode: boolean;
+    onToggleAdvancedSettingsMode: (isAdvancedSettingsMode: boolean) => void;
+
+    trainingConfiguration: TrainingConfiguration | undefined;
+    defaultTrainingConfiguration: TrainingConfiguration | undefined;
+    onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -117,6 +126,13 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
     );
 
+    const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
+
+    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] = useTrainingConfiguration({
+        modelArchitectureId: selectedModelArchitectureId,
+        modelRevisionId: selectedModelRevisionId,
+    });
+
     const modelRevisions = useMemo(() => {
         return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
     }, [allModelRevisions, selectedModelArchitectureId]);
@@ -147,6 +163,13 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 modelRevisions,
                 selectedModelRevisionId,
                 onSelectModelRevisionId: setSelectedModelRevisionId,
+
+                isAdvancedSettingsMode,
+                onToggleAdvancedSettingsMode: setIsAdvancedSettingsMode,
+
+                trainingConfiguration,
+                defaultTrainingConfiguration,
+                onTrainingConfigurationChange: setTrainingConfiguration,
             }}
         >
             {children}

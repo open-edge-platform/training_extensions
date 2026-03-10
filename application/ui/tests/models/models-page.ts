@@ -30,6 +30,23 @@ export class ModelsPage {
         await this.page.getByRole('option', { name: option }).click();
     }
 
+    async selectPickerOption(label: string, optionName: string) {
+        await this.page.getByLabel(label, { exact: true }).last().click();
+        await this.page.getByRole('option', { name: optionName, exact: true }).click();
+    }
+
+    async openTrainModelDialog() {
+        await this.page.getByRole('button', { name: 'Train model' }).click();
+    }
+
+    async selectModelArchitecture(architectureName: string) {
+        await this.page.getByRole('radio', { name: architectureName, exact: true }).click();
+    }
+
+    async startTraining() {
+        await this.page.getByRole('button', { name: 'Start' }).click();
+    }
+
     async togglePinActiveModel() {
         await this.page.getByRole('button', { name: 'Pin active model on top' }).click();
     }

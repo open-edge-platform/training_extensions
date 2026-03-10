@@ -8,6 +8,7 @@ const MIN_NUMBER_OF_ANNOTATED_ITEMS = 3;
 export const useIsTrainingButtonDisabled = () => {
     const { data: datasetItems } = useGetDatasetItems({
         annotationStatus: 'reviewed',
+        limit: 1,
     });
     const count = datasetItems?.pagination.total ?? 0;
 

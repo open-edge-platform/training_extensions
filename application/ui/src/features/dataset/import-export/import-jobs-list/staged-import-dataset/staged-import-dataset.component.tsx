@@ -3,11 +3,12 @@
 
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
+import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { $api } from '../../../../../api/client';
+import { DeleteStagedFileConfirmation } from '../../../../../components/delete-staged-file-confirmation/delete-staged-file-confirmation.component';
 import { formatBytes } from '../../../../../shared/util';
 import { useImportDatasetDialogState } from '../../../providers/export-import-dataset-dialog-provider.component';
-import { DeleteStagedFileConfirmation } from '../../delete-staged-file-confirmation/delete-staged-file-confirmation.component';
 
 type StagedImportDatasetProps = {
     fileName: string;
@@ -15,16 +16,9 @@ type StagedImportDatasetProps = {
 };
 
 export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportDatasetProps) => {
+    const { deleteImportEntry } = useImportDatasetToProject();
+    const { error, isError, isFetching, data: stagedDataset } = useStagedDataset(stagedDatasetId);
     const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
-
-    const {
-        error,
-        isError,
-        isFetching,
-        data: stagedDataset,
-    } = $api.useQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
-        params: { path: { staged_dataset_id: String(stagedDatasetId) } },
-    });
 
     const handleOpen = () => {
         setCurrentStep('labelMapping');
@@ -49,7 +43,10 @@ export const StagedImportDataset = ({ stagedDatasetId, fileName }: StagedImportD
                     <Divider size='S' marginY='size-150' />
 
                     <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                        <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} />
+                        <DeleteStagedFileConfirmation
+                            stagedDatasetId={stagedDatasetId}
+                            deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                        />
 
                         <Button
                             aria-label='continue dataset import'

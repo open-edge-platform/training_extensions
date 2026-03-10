@@ -46,9 +46,9 @@ class LabelService(BaseSessionManagedService):
         except PrimaryKeyIntegrityError:
             raise ResourceWithIdAlreadyExistsError(ResourceType.LABEL, str(label_id))
 
-    def list_all(self, project_id: UUID, label_names: list[str] | None = None) -> list[Label]:
+    def list_all(self, project_id: UUID) -> list[Label]:
         label_repo = LabelRepository(str(project_id), self.db_session)
-        db_labels = label_repo.list_all(label_names)
+        db_labels = label_repo.list_all()
         return [Label.model_validate(db_label) for db_label in db_labels]
 
     def list_ids(self, project_id: UUID) -> list[UUID]:

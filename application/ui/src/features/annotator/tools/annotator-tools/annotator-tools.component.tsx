@@ -21,7 +21,12 @@ export const AnnotatorTools = () => {
         <>
             {isNonEmptyArray(selectionTool) && (
                 <>
-                    <Tools tools={selectionTool} activeTool={activeTool} setActiveTool={setActiveTool} />
+                    <Tools
+                        tools={selectionTool}
+                        activeTool={activeTool}
+                        setActiveTool={setActiveTool}
+                        isDisabled={isSceneBusy}
+                    />
                     {isNonEmptyArray(otherTools) && <Divider size='S' />}
                 </>
             )}

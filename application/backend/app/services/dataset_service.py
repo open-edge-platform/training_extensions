@@ -25,6 +25,7 @@ from app.models import (
     Task,
     TaskType,
 )
+from app.models.dataset import DatasetStatistics
 from app.models.media import MediaAdapter
 from app.repositories import DatasetItemRepository
 from app.services.media_service import MediaService
@@ -130,6 +131,12 @@ class DatasetService(BaseSessionManagedService):
             label_ids=label_ids_str,
             subset=subset,
         )
+
+    def get_dataset_statistics(self, project_id: UUID) -> DatasetStatistics:
+        """Get dataset statistics"""
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
+        statistics_dict = repo.get_statistics()
+        return DatasetStatistics.model_validate(statistics_dict)
 
     def list_dataset_items(
         self,
@@ -244,7 +251,12 @@ class DatasetService(BaseSessionManagedService):
                         raise AnnotationValidationError("Polygon points are out of bounds")
 
     def set_dataset_item_annotations(
-        self, project: Project, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation], user_reviewed: bool
+        self,
+        project: Project,
+        dataset_item_id: UUID,
+        annotations: list[DatasetItemAnnotation],
+        user_reviewed: bool,
+        prediction_model_id: UUID | None,
     ) -> DatasetItem:
         """
         Set dataset item annotations
@@ -254,6 +266,8 @@ class DatasetService(BaseSessionManagedService):
             dataset_item_id: The ID of the dataset item.
             annotations: The list of annotations to set. Overwrites existing annotations, if any.
             user_reviewed: Whether the annotations have been reviewed by a user.
+            prediction_model_id: Identifier of the model that generated predictions for this
+                dataset item, if applicable.
 
         Returns:
             The updated dataset item.
@@ -272,6 +286,7 @@ class DatasetService(BaseSessionManagedService):
             obj_id=str(dataset_item_id),
             annotation_data=[annotation.model_dump(mode="json") for annotation in annotations],
             user_reviewed=user_reviewed,
+            prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
         )
         if not result:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -308,7 +323,6 @@ class DatasetService(BaseSessionManagedService):
         project_id: UUID,
         task: Task,
         annotation_status: DatasetItemAnnotationStatus | None,
-        label_names: list[str] | None = None,
     ) -> dm.Dataset:
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
@@ -319,7 +333,7 @@ class DatasetService(BaseSessionManagedService):
         def _get_image_path(item: DatasetItem) -> str:
             return str(self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=item.id))
 
-        labels = self._label_service.list_all(project_id=project_id, label_names=label_names)
+        labels = self._label_service.list_all(project_id=project_id)
         return convert_dataset(
             task=task,
             labels=labels,

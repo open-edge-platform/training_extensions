@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -8,7 +9,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetRevisionDB, EvaluationDB, MetricScoreDB, ModelRevisionDB, ProjectDB
+from app.db.schema import DatasetRevisionDB, EvaluationDB, MetricScoreDB, ModelRevisionDB, ModelVariantDB, ProjectDB
 from app.models import DatasetItemSubset, EvaluationResult
 from app.models.model_revision import ModelFormat, TrainingStatus
 from app.services import ModelRevisionMetadata, ModelService, ResourceNotFoundError, ResourceType
@@ -179,10 +180,25 @@ class TestModelServiceIntegration:
     ):
         # Arrange
         dataset_revision = DatasetRevisionDB(id=str(uuid4()), project_id=str(fxt_project_id), name="test")
+        db_session.add(dataset_revision)
+        db_session.flush()
+
+        # Create a model variant
+        variant_id = uuid4()
+        variant = ModelVariantDB(
+            id=str(variant_id),
+            model_revision_id=str(fxt_model_id),
+            format="openvino",
+            precision="fp16",
+        )
+        db_session.add(variant)
+        db_session.flush()
+
         evaluation = EvaluationDB(
             id=str(uuid4()),
-            dataset_revision_id=dataset_revision.id,
             model_revision_id=str(fxt_model_id),
+            model_variant_id=str(variant_id),
+            dataset_revision_id=dataset_revision.id,
             subset=DatasetItemSubset.TESTING,
         )
         metrics = [
@@ -191,8 +207,6 @@ class TestModelServiceIntegration:
             MetricScoreDB(metric="precision", score=0.92),
         ]
         evaluation.metric_scores = metrics
-        db_session.add(dataset_revision)
-        db_session.flush()
         db_session.add(evaluation)
         db_session.flush()
 
@@ -200,45 +214,86 @@ class TestModelServiceIntegration:
         model = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
 
         # Assert
-        evaluations = model.evaluations
-        assert len(evaluations) == 1
-        evaluation = evaluations[0]
-        assert evaluation.model_revision_id == fxt_model_id
-        assert evaluation.dataset_revision_id == UUID(dataset_revision.id)
-        assert evaluation.subset == DatasetItemSubset.TESTING
-        assert evaluation.metrics == {
+        assert len(model.variants) == 1
+        variant_result = model.variants[0]
+        assert len(variant_result.evaluations) == 1
+        evaluation_result = variant_result.evaluations[0]
+        assert evaluation_result.model_variant_id == variant_id
+        assert evaluation_result.dataset_revision_id == UUID(dataset_revision.id)
+        assert evaluation_result.subset == DatasetItemSubset.TESTING
+        assert evaluation_result.metrics == {
             "accuracy": 0.95,
             "f1_score": 0.89,
             "precision": 0.92,
         }
 
     def test_get_model_variants(
-        self, tmp_path: Path, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
     ):
         """Test retrieving model variants."""
-        model_vars_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
-        model_vars_path.mkdir(parents=True, exist_ok=True)
-        (model_vars_path / "model.xml").touch()
-        (model_vars_path / "model.bin").touch()
-        (model_vars_path / "model.onnx").touch()
-        (model_vars_path / "model.ckpt").touch()
+        # Create variant records in the database
+        ov_variant_id = uuid4()
+        onnx_variant_id = uuid4()
+        pt_variant_id = uuid4()
+
+        db_session.add(
+            ModelVariantDB(
+                id=str(ov_variant_id), model_revision_id=str(fxt_model_id), format="openvino", precision="fp16"
+            )
+        )
+        db_session.add(
+            ModelVariantDB(
+                id=str(onnx_variant_id), model_revision_id=str(fxt_model_id), format="onnx", precision="fp16"
+            )
+        )
+        db_session.add(
+            ModelVariantDB(
+                id=str(pt_variant_id), model_revision_id=str(fxt_model_id), format="pytorch", precision="fp32"
+            )
+        )
+        db_session.flush()
+
+        # Create variant directories with files
+        for vid, files in [
+            (ov_variant_id, ["model.xml", "model.bin"]),
+            (onnx_variant_id, ["model.onnx"]),
+            (pt_variant_id, ["model.ckpt"]),
+        ]:
+            variant_dir = (
+                tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "variants" / str(vid)
+            )
+            variant_dir.mkdir(parents=True, exist_ok=True)
+            for f in files:
+                (variant_dir / f).touch()
 
         variants = fxt_model_service.get_model_variants(fxt_project_id, fxt_model_id)
+        assert len(variants) == 3
         for variant in variants:
-            assert variant.get("format") in ["openvino", "onnx", "pytorch"]
-            assert variant.get("precision") in ["fp16", "fp32"]
-            assert variant.get("weights_size") == 0  # Files are empty, so size is 0
+            assert variant.format in ["openvino", "onnx", "pytorch"]
+            assert variant.precision in ["fp16", "fp32"]
+            assert variant.weights_size == 0  # Files are empty, so size is 0
 
     def test_get_model_size_in_bytes(
         self, tmp_path: Path, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
     ):
         """Test retrieving total model size in bytes."""
-        model_size_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
-        model_size_path.mkdir(parents=True, exist_ok=True)
-        (model_size_path / "model.xml").write_bytes(b"x" * 100)
-        (model_size_path / "model.bin").write_bytes(b"x" * 200)
-        (model_size_path / "model.onnx").write_bytes(b"x" * 300)
-        (model_size_path / "model.ckpt").write_bytes(b"x" * 400)
+        model_base_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        # Create variant directories with files
+        ov_dir = model_base_path / "variants" / str(uuid4())
+        ov_dir.mkdir(parents=True, exist_ok=True)
+        (ov_dir / "model.xml").write_bytes(b"x" * 100)
+        (ov_dir / "model.bin").write_bytes(b"x" * 200)
+        onnx_dir = model_base_path / "variants" / str(uuid4())
+        onnx_dir.mkdir(parents=True, exist_ok=True)
+        (onnx_dir / "model.onnx").write_bytes(b"x" * 300)
+        pt_dir = model_base_path / "variants" / str(uuid4())
+        pt_dir.mkdir(parents=True, exist_ok=True)
+        (pt_dir / "model.ckpt").write_bytes(b"x" * 400)
 
         total_size = fxt_model_service.get_model_size_in_bytes(fxt_project_id, fxt_model_id)
 
@@ -377,35 +432,50 @@ class TestModelServiceIntegration:
         assert dataset_revision_db is None
 
     @pytest.mark.parametrize(
-        "model_format, expected_files",
+        "model_format, expected_files, precision",
         [
-            (ModelFormat.OPENVINO, ["model.xml", "model.bin"]),
-            (ModelFormat.ONNX, ["model.onnx"]),
-            (ModelFormat.PYTORCH, ["model.ckpt"]),
+            (ModelFormat.OPENVINO, ["model.xml", "model.bin"], "fp16"),
+            (ModelFormat.ONNX, ["model.onnx"], "fp16"),
+            (ModelFormat.PYTORCH, ["model.ckpt"], "fp32"),
         ],
     )
     def test_get_model_binary_files(
         self,
         model_format,
         expected_files,
+        precision,
         tmp_path: Path,
         fxt_project_id: UUID,
         fxt_model_id: UUID,
         fxt_model_service: ModelService,
+        db_session: Session,
     ):
         """Test retrieving model binary files."""
-        model_dir = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
-        model_dir.mkdir(parents=True)
-        (model_dir / "model.xml").touch()
-        (model_dir / "model.bin").touch()
-        (model_dir / "model.onnx").touch()
-        (model_dir / "model.ckpt").touch()
+        # Create variant record in database
+        variant_id = uuid4()
+        db_session.add(
+            ModelVariantDB(
+                id=str(variant_id),
+                model_revision_id=str(fxt_model_id),
+                format=model_format.value,
+                precision=precision,
+            )
+        )
+        db_session.flush()
+
+        # Create variant directory with files
+        variant_dir = (
+            tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id) / "variants" / str(variant_id)
+        )
+        variant_dir.mkdir(parents=True)
+        for f in expected_files:
+            (variant_dir / f).touch()
 
         files_exist, paths = fxt_model_service.get_model_binary_files(
-            project_id=fxt_project_id, model_id=fxt_model_id, format=model_format
+            project_id=fxt_project_id, model_id=fxt_model_id, model_variant_id=variant_id
         )
         assert files_exist is True
-        expected_paths = tuple(model_dir / file for file in expected_files)
+        expected_paths = tuple(variant_dir / file for file in expected_files)
         assert paths == expected_paths
 
     def test_create_revision(
@@ -443,15 +513,38 @@ class TestModelServiceIntegration:
         self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
     ):
         """Test updating an existing model revision succeeds."""
+        started_at = datetime.now(UTC)
+        finished_at = started_at + timedelta(hours=1)
+
+        # Test that we can update status, start and finish time
         fxt_model_service.update_revision_status(
             project_id=fxt_project_id,
             model_id=fxt_model_id,
             training_status=TrainingStatus.IN_PROGRESS,
+            training_started_at=started_at,
+            training_finished_at=finished_at,
         )
 
         model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        db_session.refresh(model_db)
         assert model_db is not None
         assert model_db.training_status == TrainingStatus.IN_PROGRESS
+        assert model_db.training_started_at == started_at.replace(tzinfo=None)
+        assert model_db.training_finished_at == finished_at.replace(tzinfo=None)
+
+        # Test that not providing start and/or finish time won't affect currently set times
+        fxt_model_service.update_revision_status(
+            project_id=fxt_project_id,
+            model_id=fxt_model_id,
+            training_status=TrainingStatus.SUCCESSFUL,
+        )
+
+        model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        db_session.refresh(model_db)
+        assert model_db is not None
+        assert model_db.training_status == TrainingStatus.SUCCESSFUL
+        assert model_db.training_started_at == started_at.replace(tzinfo=None)
+        assert model_db.training_finished_at == finished_at.replace(tzinfo=None)
 
     def test_save_evaluation_result(
         self, fxt_model_id: UUID, fxt_project_id: UUID, fxt_model_service: ModelService, db_session: Session
@@ -462,8 +555,20 @@ class TestModelServiceIntegration:
         db_session.add(dataset_revision)
         db_session.flush()
 
+        # Create a variant to associate the evaluation with
+        variant_id = uuid4()
+        variant = ModelVariantDB(
+            id=str(variant_id),
+            model_revision_id=str(fxt_model_id),
+            format="openvino",
+            precision="fp16",
+        )
+        db_session.add(variant)
+        db_session.flush()
+
         evaluation_result = EvaluationResult(
             model_revision_id=fxt_model_id,
+            model_variant_id=variant_id,
             dataset_revision_id=UUID(dataset_revision.id),
             subset=DatasetItemSubset.TESTING,
             metrics={"accuracy": 0.95, "f1_score": 0.89, "precision": 0.92},
@@ -473,10 +578,10 @@ class TestModelServiceIntegration:
         fxt_model_service.save_evaluation_result(evaluation_result)
 
         # Assert
-        saved_evaluation = db_session.query(EvaluationDB).filter_by(model_revision_id=str(fxt_model_id)).first()
+        saved_evaluation = db_session.query(EvaluationDB).filter_by(model_variant_id=str(variant_id)).first()
 
         assert saved_evaluation is not None
-        assert saved_evaluation.model_revision_id == str(fxt_model_id)
+        assert saved_evaluation.model_variant_id == str(variant_id)
         assert saved_evaluation.dataset_revision_id == str(dataset_revision.id)
         assert saved_evaluation.subset == DatasetItemSubset.TESTING
         assert len(saved_evaluation.metric_scores) == 3

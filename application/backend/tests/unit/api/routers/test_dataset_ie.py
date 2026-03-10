@@ -46,7 +46,7 @@ class TestDatasetIEEndpoints:
 
         assert response.status_code == status.HTTP_201_CREATED
         fxt_staged_dataset_service.upload.assert_called_once()
-        assert fxt_staged_dataset_service.upload.call_args.kwargs["filename"] == "dataset-coco.zip"
+        assert fxt_staged_dataset_service.upload.call_args.kwargs["filename"] == "dataset.zip"
         response_data = response.json()
         assert response_data["id"] == str(fxt_staged_dataset.id)
         assert response_data["compressed"] == fxt_staged_dataset.compressed

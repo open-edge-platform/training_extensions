@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
-import { $api } from '../../../../../api/client';
-import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
-import { isInvalidStagedFile } from '../../util';
 import { IMPORT_DATASET_FORM_ID } from './util';
 
 type LabelMappingButtonsProps = {
@@ -15,23 +14,16 @@ type LabelMappingButtonsProps = {
 
 export const LabelMappingButtons = ({ stagedDatasetId, onClose }: LabelMappingButtonsProps) => {
     const { deleteImportEntry } = useImportDatasetToProject();
-
-    const deleteFileMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}');
+    const deleteFileMutation = useDeleteStagedDataset({
+        stagedDatasetId,
+        onSuccess: onClose,
+        deleteEntry: () => deleteImportEntry(stagedDatasetId),
+    });
 
     const handleDelete = () => {
-        deleteFileMutation.mutateAsync(
-            { params: { path: { staged_dataset_id: stagedDatasetId } } },
-            {
-                onSuccess: () => {
-                    onClose();
-                    deleteImportEntry(stagedDatasetId);
-                },
-                onError: (error) => {
-                    isInvalidStagedFile(error) && deleteImportEntry(stagedDatasetId);
-                },
-            }
-        );
+        deleteFileMutation.mutate();
     };
+
     return (
         <ButtonGroup>
             <Button

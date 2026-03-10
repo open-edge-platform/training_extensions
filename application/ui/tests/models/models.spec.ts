@@ -102,9 +102,6 @@ test.describe('Models', () => {
                     },
                 });
             }),
-            http.get('/api/system/devices/training', () => {
-                return HttpResponse.json([{ type: 'cpu', name: 'CPU' }]);
-            }),
             http.get('/api/projects/{project_id}/dataset/items', () => {
                 return HttpResponse.json({
                     items: [],
@@ -195,7 +192,7 @@ test.describe('Models', () => {
                         name: 'YOLOX Model v1',
                         architecture: 'Object_Detection_YOLOX_X',
                         files_deleted: false,
-                        evaluations: [],
+                        variants: [],
                     },
                     device: 'cpu',
                 });
@@ -294,7 +291,7 @@ test.describe('Models', () => {
                               name: foundModel.name,
                               architecture: foundModel.architecture,
                               files_deleted: false,
-                              evaluations: [],
+                              variants: [],
                           }
                         : null,
                     device: 'cpu',

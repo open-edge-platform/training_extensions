@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from contextlib import contextmanager
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -24,6 +25,13 @@ def fxt_db_session_factory(fxt_db_session: Mock):
         yield fxt_db_session
 
     return session_factory
+
+
+@pytest.fixture
+def fxt_staged_datasets_dir(tmp_path: Path) -> Path:
+    dir_path = tmp_path / "staged_datasets"
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path
 
 
 @pytest.fixture

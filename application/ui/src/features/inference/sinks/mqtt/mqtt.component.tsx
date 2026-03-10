@@ -4,6 +4,7 @@
 import { Flex, NumberField, Switch, TextField } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
+import { RateLimitFields } from '../rate-limit/rate-limit-fields.component';
 import { MqttSinkConfig } from '../utils';
 
 type MqttProps = {
@@ -22,7 +23,7 @@ export const Mqtt = ({ defaultState }: MqttProps) => {
                 name='broker_host'
                 defaultValue={defaultState.broker_host}
             />
-            <Flex direction='row' gap='size-200'>
+            <Flex gap='size-200'>
                 <TextField flex='1' label='Topic' name='topic' defaultValue={defaultState.topic} />
                 <NumberField
                     label='Broker Port'
@@ -32,14 +33,11 @@ export const Mqtt = ({ defaultState }: MqttProps) => {
                     defaultValue={defaultState.broker_port}
                 />
             </Flex>
-            <Flex direction='row' gap='size-200' justifyContent='space-between'>
-                <NumberField
-                    label='Rate Limit'
-                    name='rate_limit'
-                    minValue={0}
-                    step={0.1}
-                    defaultValue={defaultState.rate_limit ?? undefined}
-                />
+            <Flex gap='size-200' justifyContent='space-between' alignItems={'center'}>
+                <RateLimitFields rateLimit={defaultState.rate_limit} />
+            </Flex>
+
+            <Flex>
                 <Switch
                     name='auth_required'
                     alignSelf='end'
@@ -50,6 +48,7 @@ export const Mqtt = ({ defaultState }: MqttProps) => {
                     Auth Required
                 </Switch>
             </Flex>
+
             <OutputFormats config={defaultState.output_formats} />
         </Flex>
     );

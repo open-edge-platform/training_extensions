@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import re
+import sys
 import time
 from collections.abc import Generator
 from unittest.mock import MagicMock
@@ -44,6 +45,7 @@ def ip_camera() -> Generator[str]:
     compose.stop()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Docker-based tests not supported on Windows CI")
 class TestIPCameraStream:
     """Integration tests for IPCameraStream functionality."""
 

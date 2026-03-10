@@ -1,9 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import multiprocessing as mp
 import os
 import threading
+from multiprocessing.context import BaseContext
+from multiprocessing.process import BaseProcess
 from multiprocessing.shared_memory import SharedMemory
 
 import numpy as np
@@ -23,25 +24,26 @@ class Scheduler:
     FRAME_QUEUE_SIZE = 5
     PREDICTION_QUEUE_SIZE = 5
 
-    def __init__(self, event_bus: EventBus, data_collector: DataCollector) -> None:
+    def __init__(self, event_bus: EventBus, data_collector: DataCollector, mp_ctx: BaseContext) -> None:
+        logger.info("Initializing Scheduler...")
         self._event_bus = event_bus
         self._data_collector = data_collector
+        self._mp_ctx = mp_ctx
 
-        logger.info("Initializing Scheduler...")
         # Queue for the frames acquired from the stream source and decoded
-        self.frame_queue: mp.Queue = mp.Queue(maxsize=self.FRAME_QUEUE_SIZE)
+        self.frame_queue = self._mp_ctx.Queue(maxsize=self.FRAME_QUEUE_SIZE)
         # Queue for the inference results (predictions)
-        self.pred_queue: mp.Queue = mp.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
+        self.pred_queue = self._mp_ctx.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
         # Broadcaster for pushing predictions to the visualization stream (WebRTC)
         self.rtc_stream_broadcaster: FrameBroadcaster[np.ndarray] = FrameBroadcaster[np.ndarray]()
         # Event to sync all processes on application shutdown
-        self.mp_stop_event = mp.Event()
+        self.mp_stop_event = self._mp_ctx.Event()
 
         # Shared memory for metrics collector
         self.shm_metrics = SharedMemory(create=True, size=SIZE)
-        self.shm_metrics_lock = mp.Lock()
+        self.shm_metrics_lock = self._mp_ctx.Lock()
 
-        self.processes: list[mp.Process] = []
+        self.processes: list[BaseProcess] = []
         self.threads: list[threading.Thread] = []
         logger.info("Scheduler initialized")
 
