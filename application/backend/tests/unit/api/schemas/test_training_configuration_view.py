@@ -19,7 +19,14 @@ from app.models.training_configuration.dataset_preparation import (
     MinAnnotationPixels,
     SubsetSplit,
 )
-from app.models.training_configuration.training import EarlyStopping
+from app.models.training_configuration.training import (
+    EarlyStopping,
+    GradientAccumulationParameters,
+    GradientClipParameters,
+    LearningRateWarmupParameters,
+    SchedulerParameters,
+    SchedulerType,
+)
 
 
 @pytest.fixture
@@ -51,8 +58,19 @@ def fxt_training_configuration() -> TrainingConfiguration:
             ),
             training=AlgoLevelTrainingParameters(
                 max_epochs=120,
+                batch_size=8,
                 early_stopping=EarlyStopping(enable=True, patience=5),
                 learning_rate=0.001,
+                weight_decay=0.01,
+                scheduler=SchedulerParameters(
+                    type=SchedulerType.COSINE_ANNEALING,
+                    warmup=LearningRateWarmupParameters(enable=True, epochs=3),
+                    factor=0.5,
+                    patience=7,
+                    min_lr=1e-5,
+                ),
+                gradient_accumulation=GradientAccumulationParameters(enable=True, steps=4),
+                gradient_clip=GradientClipParameters(enable=True, max_grad_norm=2.0),
                 input_size_width=256,
                 input_size_height=256,
                 allowed_values_input_size=[128, 256, 512],
@@ -81,8 +99,19 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
             ),
             training=AlgoLevelTrainingParameters(
                 max_epochs=250,
+                batch_size=4,
                 early_stopping=EarlyStopping(enable=False, patience=1),
                 learning_rate=0.0015,
+                weight_decay=1e-4,
+                scheduler=SchedulerParameters(
+                    type=SchedulerType.REDUCE_LR_ON_PLATEAU,
+                    warmup=LearningRateWarmupParameters(enable=False, epochs=5),
+                    factor=0.1,
+                    patience=10,
+                    min_lr=1e-6,
+                ),
+                gradient_accumulation=GradientAccumulationParameters(enable=False, steps=1),
+                gradient_clip=GradientClipParameters(enable=False, max_grad_norm=1.0),
                 input_size_width=512,
                 input_size_height=512,
                 allowed_values_input_size=[128, 256, 512],
@@ -126,6 +155,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 1,
                                 "max_value": 100,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                             {
                                 "type": "parameter",
@@ -138,6 +168,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 1,
                                 "max_value": 100,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                             {
                                 "type": "parameter",
@@ -150,6 +181,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 1,
                                 "max_value": 100,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                         ],
                     },
@@ -177,6 +209,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -189,6 +222,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0,
                                         "max_value": 200000000,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             },
@@ -206,6 +240,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -218,6 +253,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0,
                                         "max_value": None,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             },
@@ -235,6 +271,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -247,6 +284,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0,
                                         "max_value": None,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             },
@@ -279,6 +317,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -293,6 +332,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.9, 1.1],
                                         "default_value": [0.8, 1.2],
                                         "value_type": "float_range",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -307,6 +347,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.85, 1.15],
                                         "default_value": [0.75, 1.25],
                                         "value_type": "float_range",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -321,6 +362,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.8, 1.2],
                                         "default_value": [0.9, 1.1],
                                         "value_type": "float_range",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -334,6 +376,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [-0.05, 0.05],
                                         "default_value": [-0.1, 0.1],
                                         "value_type": "float_range",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -349,6 +392,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0.0,
                                         "max_value": 1.0,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             }
@@ -367,47 +411,67 @@ def fxt_training_configuration_view_json() -> dict:
                         "key": "max_epochs",
                         "name": "Maximum epochs",
                         "description": (
-                            "Maximum number of epochs to train the model. "
-                            "An epoch is one complete pass through the training dataset."
+                            "Maximum number of epochs to train the model. An epoch is one complete pass through the "
+                            "training dataset."
                         ),
                         "value": 120,
                         "default_value": 250,
                         "value_type": "int",
-                        "min_value": 0,
+                        "min_value": 1,
                         "max_value": None,
                         "allowed_values": None,
+                        "depends_on": None,
+                    },
+                    {
+                        "type": "parameter",
+                        "key": "batch_size",
+                        "name": "Batch size",
+                        "description": (
+                            "Number of training samples processed before the model's internal parameters are updated. "
+                            "A larger batch size can speed up training but may require more memory, while a smaller "
+                            "batch size can lead to more stable convergence but may take longer to train."
+                        ),
+                        "value": 8,
+                        "default_value": 4,
+                        "value_type": "int",
+                        "min_value": 1,
+                        "max_value": None,
+                        "allowed_values": None,
+                        "depends_on": None,
                     },
                     {
                         "type": "parameter_group",
                         "key": "early_stopping",
                         "name": "Early stopping",
                         "description": (
-                            "Early stopping is a technique to prevent overfitting by stopping training "
-                            "when performance on a validation set stops improving."
+                            "Early stopping is a technique to prevent overfitting by stopping training when "
+                            "performance on a validation set stops improving."
                         ),
                         "parameters": [
                             {
                                 "type": "parameter",
                                 "key": "enable",
-                                "name": "Toggle early stopping",
-                                "description": "Whether to stop training early when performance stops improving",
+                                "name": "Enable",
+                                "description": "Toggle to enable or disable early stopping during training.",
                                 "value": True,
                                 "default_value": False,
                                 "value_type": "bool",
+                                "depends_on": None,
                             },
                             {
                                 "type": "parameter",
                                 "key": "patience",
                                 "name": "Patience",
                                 "description": (
-                                    "Number of epochs with no improvement after which training will be stopped"
+                                    "Number of epochs with no improvement after which training will be stopped."
                                 ),
                                 "value": 5,
                                 "default_value": 1,
                                 "value_type": "int",
-                                "min_value": 0,
+                                "min_value": 1,
                                 "max_value": None,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                         ],
                     },
@@ -426,14 +490,215 @@ def fxt_training_configuration_view_json() -> dict:
                         "min_value": 0,
                         "max_value": 1,
                         "allowed_values": None,
+                        "depends_on": None,
+                    },
+                    {
+                        "type": "parameter",
+                        "key": "weight_decay",
+                        "name": "Weight decay",
+                        "description": (
+                            "Weight decay is a regularization technique that adds a penalty to the loss function "
+                            "based on the magnitude of the model weights. It helps prevent overfitting by discouraging "
+                            "large weight values."
+                        ),
+                        "value": 0.01,
+                        "default_value": 1e-4,
+                        "value_type": "float",
+                        "min_value": 0,
+                        "max_value": 1,
+                        "allowed_values": None,
+                        "depends_on": None,
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "scheduler",
+                        "name": "Learning rate scheduler",
+                        "description": (
+                            "The learning rate scheduler adjusts the learning rate during training according to a "
+                            "predefined schedule or based on validation performance, helping to improve convergence "
+                            "and training stability."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "type",
+                                "name": "Scheduler type",
+                                "description": (
+                                    "Type of learning rate scheduler to use during training. With ReduceLROnPlateau, "
+                                    "the learning rate will be reduced by a predetermined factor when the validation "
+                                    "metric stops improving. With CosineAnnealing, the learning rate will follow a "
+                                    "cosine decay schedule, gradually decreasing over the course of training."
+                                ),
+                                "value": "cosine_annealing",
+                                "default_value": "reduce_lr_on_plateau",
+                                "value_type": "str",
+                                "allowed_values": ["reduce_lr_on_plateau", "cosine_annealing"],
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "warmup",
+                                "name": "Learning rate warmup",
+                                "description": (
+                                    "Learning rate warmup is a technique where the learning rate starts at a lower "
+                                    "value and gradually increases to the initial learning rate over a specified "
+                                    "number of epochs at the beginning of training. This can help stabilize training "
+                                    "and improve convergence, especially when using large learning rates or training "
+                                    "on complex datasets."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": (
+                                            "Toggle to enable or disable a warmup phase at the beginning of training."
+                                        ),
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "epochs",
+                                        "name": "Warmup epochs",
+                                        "description": ("Number of epochs for the warmup phase."),
+                                        "value": 3,
+                                        "default_value": 5,
+                                        "value_type": "int",
+                                        "min_value": 1,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "factor",
+                                "name": "Factor",
+                                "description": (
+                                    "Factor by which the learning rate will be reduced. new_lr = lr * factor."
+                                ),
+                                "value": 0.5,
+                                "default_value": 0.1,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": 1,
+                                "allowed_values": None,
+                                "depends_on": {"type": "reduce_lr_on_plateau"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "patience",
+                                "name": "Patience",
+                                "description": (
+                                    "Number of epochs with no improvement after which learning rate will be reduced."
+                                ),
+                                "value": 7,
+                                "default_value": 10,
+                                "value_type": "int",
+                                "min_value": 1,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"type": "reduce_lr_on_plateau"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "min_lr",
+                                "name": "Minimum learning rate",
+                                "description": ("Minimum learning rate after annealing."),
+                                "value": 1e-5,
+                                "default_value": 1e-6,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": 1,
+                                "allowed_values": None,
+                                "depends_on": {"type": "cosine_annealing"},
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "gradient_accumulation",
+                        "name": "Gradient accumulation",
+                        "description": (
+                            "Gradient accumulation allows simulating larger batch sizes by accumulating gradients "
+                            "over multiple forward/backward passes before updating the model weights."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "enable",
+                                "name": "Enable",
+                                "description": ("Toggle to enable or disable gradient accumulation during training."),
+                                "value": True,
+                                "default_value": False,
+                                "value_type": "bool",
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "batches",
+                                "name": "Accumulation steps",
+                                "description": (
+                                    "Number of steps to accumulate gradients before performing a weight update."
+                                ),
+                                "value": 1,
+                                "default_value": 1,
+                                "value_type": "int",
+                                "min_value": 1,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": None,
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "gradient_clip",
+                        "name": "Gradient clipping",
+                        "description": (
+                            "Gradient clipping prevents exploding gradients by capping gradient norms during "
+                            "backpropagation."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "enable",
+                                "name": "Enable",
+                                "description": ("Toggle to enable or disable gradient clipping during training."),
+                                "value": True,
+                                "default_value": False,
+                                "value_type": "bool",
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "max_grad_norm",
+                                "name": "Maximum gradient norm",
+                                "description": (
+                                    "Maximum norm of the gradients. Gradients with norm larger than this value will "
+                                    "be clipped."
+                                ),
+                                "value": 2.0,
+                                "default_value": 1.0,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": None,
+                            },
+                        ],
                     },
                     {
                         "type": "parameter",
                         "key": "input_size_width",
                         "name": "Input size width",
                         "description": (
-                            "Width size in pixels for model input images. "
-                            "Determines the horizontal resolution at which images are processed."
+                            "Width size in pixels for model input images. Determines the horizontal resolution at "
+                            "which images are processed."
                         ),
                         "value": 256,
                         "default_value": 512,
@@ -441,14 +706,15 @@ def fxt_training_configuration_view_json() -> dict:
                         "min_value": 0,
                         "max_value": None,
                         "allowed_values": [128, 256, 512],
+                        "depends_on": None,
                     },
                     {
                         "type": "parameter",
                         "key": "input_size_height",
                         "name": "Input size height",
                         "description": (
-                            "Height size in pixels for model input images. "
-                            "Determines the vertical resolution at which images are processed."
+                            "Height size in pixels for model input images. Determines the vertical resolution at "
+                            "which images are processed."
                         ),
                         "value": 256,
                         "default_value": 512,
@@ -456,10 +722,12 @@ def fxt_training_configuration_view_json() -> dict:
                         "min_value": 0,
                         "max_value": None,
                         "allowed_values": [128, 256, 512],
+                        "depends_on": None,
                     },
                 ],
             },
             {
+                "type": "parameter_group",
                 "key": "evaluation",
                 "name": "Evaluation parameters",
                 "description": "Configurable parameters related to the model evaluation.",
@@ -473,9 +741,9 @@ def fxt_training_configuration_view_json() -> dict:
                         "default_value": "default",
                         "value_type": "str",
                         "allowed_values": ["default"],
+                        "depends_on": None,
                     },
                 ],
-                "type": "parameter_group",
             },
         ]
     }

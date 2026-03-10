@@ -17,6 +17,13 @@ stats:
 hyperparameters:
   training:
     learning_rate: 0.0004
+    weight_decay: 0.0001
+    scheduler:
+      factor: 0.5
+      patience: 15
+      warmup:
+        enable: true
+        epochs: 30
     allowed_values_input_size:
       - 640
     input_size_width: 640

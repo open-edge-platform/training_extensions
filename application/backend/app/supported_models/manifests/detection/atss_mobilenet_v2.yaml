@@ -17,3 +17,10 @@ stats:
 hyperparameters:
   training:
     learning_rate: 0.004
+    weight_decay: 0.0001
+    scheduler:
+      factor: 0.1
+      patience: 4
+    gradient_clip:
+      enable: true
+      max_grad_norm: 35.0

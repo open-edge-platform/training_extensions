@@ -16,5 +16,9 @@ stats:
 
 hyperparameters:
   training:
-    learning_rate: 0.01
     max_epochs: 90
+    learning_rate: 0.01
+    weight_decay: 0.0001
+    scheduler:
+      type: cosine_annealing
+      min_lr: 0
