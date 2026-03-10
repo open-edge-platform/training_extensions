@@ -31,7 +31,7 @@ type TrainingSubsetsProps = {
 
 const TrainingSubsetsUnavailable = () => {
     return (
-        <InlineAlert variant={'notice'}>
+        <InlineAlert variant={'notice'} marginTop={'size-200'}>
             <Heading>Invalid training subsets configuration</Heading>
             <Content>
                 Training subsets do not contain enough media items to support a configurable split between training,
@@ -232,9 +232,7 @@ export const TrainingSubsets = ({
                     />
                 </View>
 
-                <Flex direction={'column'} gap={'size-200'} marginTop={'size-200'}>
-                    {subsetsSizesInvalid && <TrainingSubsetsUnavailable />}
-                </Flex>
+                {subsetsSizesInvalid && <TrainingSubsetsUnavailable />}
             </Accordion.Content>
         </Accordion>
     );
