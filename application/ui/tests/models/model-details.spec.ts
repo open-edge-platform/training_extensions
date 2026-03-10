@@ -21,24 +21,36 @@ const mockedModel = getMockedModel({
     },
     variants: [
         {
+            id: 'variant-openvino-int8',
             format: 'openvino',
             precision: 'int8',
             weights_size: 52428800,
+            evaluations: [],
+            files_deleted: false,
         },
         {
+            id: 'variant-openvino-fp32',
             format: 'openvino',
             precision: 'fp32',
             weights_size: 209715200,
+            evaluations: [],
+            files_deleted: false,
         },
         {
+            id: 'variant-pytorch-fp32',
             format: 'pytorch',
             precision: 'fp32',
             weights_size: 209715200,
+            evaluations: [],
+            files_deleted: false,
         },
         {
+            id: 'variant-onnx-fp32',
             format: 'onnx',
             precision: 'fp32',
             weights_size: 209715200,
+            evaluations: [],
+            files_deleted: false,
         },
     ],
 });
@@ -188,21 +200,21 @@ test.describe('Model Details', () => {
         });
 
         test('can download model variant', async ({ page, network, modelsPage }) => {
-            let downloadFormat: string | undefined;
+            let modelVariantId: string | undefined;
 
             network.use(
                 http.get('/api/projects/{project_id}/models/{model_id}/binary', ({ request }) => {
                     const url = new URL(request.url);
-                    downloadFormat = url.searchParams.get('format') ?? undefined;
+                    modelVariantId = url.searchParams.get('model_variant_id') ?? undefined;
 
-                    if (!downloadFormat) {
+                    if (!modelVariantId) {
                         return new HttpResponse(null, { status: 400 });
                     }
 
                     return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
                         headers: {
                             'content-type': 'application/zip',
-                            'content-disposition': `attachment; filename="model-model-1-${downloadFormat}.zip"`,
+                            'content-disposition': `attachment; filename="model-model-1-${modelVariantId}.zip"`,
                         },
                     });
                 })
@@ -217,9 +229,7 @@ test.describe('Model Details', () => {
 
             await downloadButton.click();
 
-            await expect.poll(() => downloadFormat).not.toBeUndefined();
-
-            expect(['openvino', 'pytorch', 'onnx']).toContain(downloadFormat);
+            await expect.poll(() => modelVariantId).not.toBeUndefined();
         });
     });
 

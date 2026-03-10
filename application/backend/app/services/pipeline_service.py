@@ -87,6 +87,7 @@ class PipelineService:
             source_id=str(to_update.source_id) if to_update.source_id else None,
             sink_id=str(to_update.sink_id) if to_update.sink_id else None,
             model_revision_id=str(to_update.model_id) if to_update.model_id else None,
+            model_variant_id=str(to_update.model_variant_id) if to_update.model_variant_id else None,
             is_running=to_update.status.as_bool,
             data_collection=to_update.data_collection.model_dump(),
             device=to_update.device,
