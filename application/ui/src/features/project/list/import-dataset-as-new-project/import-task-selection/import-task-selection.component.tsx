@@ -52,6 +52,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     isRequired
                     name={'name'}
                     label={'Project name'}
+                    aria-label='Project name'
                     defaultValue={formState.name}
                     marginBottom={'size-250'}
                 />
