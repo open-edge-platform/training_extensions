@@ -1,41 +1,40 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
-import { useIsMutating, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
+
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { getQueryKey } from '../../../query-client/query-client';
+import { useUploadProgress } from './use-display-upload-progress';
 
 export const MEDIA_UPLOAD_CONCURRENCY = 5;
 
-type UploadMutationVariables = {
-    params?: {
-        path?: {
-            project_id?: string;
-        };
-    };
+type UploadQueueItem = {
+    files: File[];
 };
 
-// Runs ${batchSize} promises at a time until all promises have been executed,
-// returning an array of settled results.
-const executeInBatches = async <T>(
-    promises: Array<() => Promise<T>>,
-    batchSize: number,
-    onBatchCompleted?: () => Promise<void>
-) => {
-    const settledResults: PromiseSettledResult<T>[] = [];
+type UploadTask = () => Promise<unknown>;
 
-    for (let index = 0; index < promises.length; index += batchSize) {
-        const batchPromises = promises.slice(index, index + batchSize).map((promise) => promise());
+// Executes tasks in fixed-size waves and returns a flattened list of settled results.
+const executeInBatches = async (
+    uploadTasks: UploadTask[],
+    batchSize: number,
+    onBatchCompleted?: (batchResults: PromiseSettledResult<unknown>[]) => Promise<void>
+): Promise<PromiseSettledResult<unknown>[]> => {
+    const settledResults: PromiseSettledResult<unknown>[] = [];
+
+    for (let index = 0; index < uploadTasks.length; index += batchSize) {
+        const batchPromises = uploadTasks.slice(index, index + batchSize).map((task) => task());
         const batchResults = await Promise.allSettled(batchPromises);
 
         settledResults.push(...batchResults);
 
         if (isFunction(onBatchCompleted)) {
-            await onBatchCompleted();
+            await onBatchCompleted(batchResults);
         }
     }
 
@@ -45,16 +44,27 @@ const executeInBatches = async <T>(
 export const useMediaUpload = () => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
+    const { uploadProgress, startUploadProgress, updateUploadProgress, finishUploadProgress } = useUploadProgress();
+    const isUploadingRef = useRef(false);
+    const filesToUploadRef = useRef<UploadQueueItem[]>([]);
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
-    const currentlyUploading = useIsMutating({
-        mutationKey: ['post', '/api/projects/{project_id}/dataset/media'],
-        predicate: ({ state }) => {
-            const variables = state.variables as UploadMutationVariables | undefined;
+    type UploadMutationRequest = Parameters<typeof addItemMutation.mutateAsync>[0];
 
-            return variables?.params?.path?.project_id === projectId;
-        },
-    });
+    const buildUploadTask = (file: File): UploadTask => {
+        return () => {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const request: UploadMutationRequest = {
+                params: { path: { project_id: projectId } },
+                body: formData as unknown as UploadMutationRequest['body'],
+            };
+
+            return addItemMutation.mutateAsync(request);
+        };
+    };
+
     const invalidateMediaQuery = () =>
         queryClient.invalidateQueries({
             queryKey: getQueryKey([
@@ -64,39 +74,61 @@ export const useMediaUpload = () => {
             ]),
         });
 
-    const uploadMedia = async (files: File[]) => {
-        const uploadPromises = files.map((file) => {
-            return () => {
-                const formData = new FormData();
-                formData.append('file', file);
-
-                return addItemMutation.mutateAsync({
-                    params: { path: { project_id: projectId } },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    body: formData as any,
-                });
-            };
-        });
-
-        const settledResults = await executeInBatches(uploadPromises, MEDIA_UPLOAD_CONCURRENCY, invalidateMediaQuery);
-
-        const succeeded = settledResults.filter((result) => result.status === 'fulfilled').length;
-        const failed = settledResults.filter((result) => result.status === 'rejected').length;
-
-        if (failed === 0) {
-            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
-        } else if (succeeded === 0) {
-            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
-        } else {
-            toast({
-                type: 'warning',
-                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
-            });
+    // Processes one upload request (a file list) using batched concurrency
+    const processUploadBatch = async (files: File[]): Promise<void> => {
+        if (files.length === 0) {
+            return;
         }
+
+        startUploadProgress(files.length);
+
+        const onBatchCompleted = async (batchResults: PromiseSettledResult<unknown>[]) => {
+            updateUploadProgress({ settledResults: batchResults });
+
+            await invalidateMediaQuery();
+        };
+
+        const uploadTasks = files.map((file) => buildUploadTask(file));
+        const settledResults = await executeInBatches(uploadTasks, MEDIA_UPLOAD_CONCURRENCY, onBatchCompleted);
+
+        finishUploadProgress({ settledResults });
+    };
+
+    // Main queue
+    const processUploadQueue = async (): Promise<void> => {
+        if (isUploadingRef.current) {
+            return;
+        }
+
+        isUploadingRef.current = true;
+
+        try {
+            while (filesToUploadRef.current.length > 0) {
+                const nextUpload = filesToUploadRef.current.shift();
+
+                if (!nextUpload) {
+                    continue;
+                }
+
+                await processUploadBatch(nextUpload.files);
+            }
+        } finally {
+            isUploadingRef.current = false;
+        }
+    };
+
+    // Starts the upload process by pushing all files to the queue and triggering the processor.
+    const uploadMedia = (files: File[]): void => {
+        if (files.length === 0) {
+            return;
+        }
+
+        filesToUploadRef.current.push({ files });
+        void processUploadQueue();
     };
 
     return {
         uploadMedia,
-        isUploading: currentlyUploading > 0,
+        uploadProgress,
     };
 };
