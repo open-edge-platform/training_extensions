@@ -270,7 +270,7 @@ class TestModelEndpoints:
         )
 
         response = fxt_client.get(
-            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?model_variant_id={model_variant_id}"
+            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/variants/{model_variant_id}/binary"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -308,7 +308,7 @@ class TestModelEndpoints:
         fxt_model_service.get_model_binary_files.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
         response = fxt_client.get(
-            f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary?model_variant_id={model_variant_id}"
+            f"/api/projects/{fxt_get_project.id}/models/{model_id}/variants/{model_variant_id}/binary"
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -317,7 +317,8 @@ class TestModelEndpoints:
         )
 
     def test_download_model_binary_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
-        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/binary")
+        model_id = uuid4()
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/variants/invalid-id/binary")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_model_service.get_model.assert_not_called()
