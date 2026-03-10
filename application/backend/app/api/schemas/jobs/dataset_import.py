@@ -133,7 +133,6 @@ class ImportDatasetAsNewProjectRequest(BaseImportRequest):
                     "project": {
                         "name": "New Project from Imported Dataset",
                         "task_type": "object_detection",
-                        "labels": ["person", "vehicle"],
                     },
                     "filters": {
                         "labels": ["person", "car", "motorcycle"],

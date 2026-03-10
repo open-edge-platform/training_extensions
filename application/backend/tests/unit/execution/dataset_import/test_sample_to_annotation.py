@@ -79,8 +79,8 @@ def test_convert_with_none(fxt_converter, fxt_project_labels):
         InstanceSegmentationSample(label=none_array, polygons=none_array, confidence=None),
     ]
     for sample in samples:
-        result = fxt_converter.convert_sample(sample)
-        assert len(result) == 0
+        with pytest.raises(ValueError, match="Expected 1D array for label indices, got 0D"):
+            fxt_converter.convert_sample(sample)
 
 
 class TestClassificationConversion:

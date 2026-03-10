@@ -171,9 +171,7 @@ class DatumaroSampleToGetiAnnotationConverter:
         if isinstance(label_idx, int):
             return [self.__get_label_ref_by_dm_index(label_idx)]
         if isinstance(label_idx, np.ndarray):
-            if label_idx.ndim == 0:
-                return []
-            if label_idx.ndim > 1:
+            if label_idx.ndim != 1:
                 raise ValueError(f"Expected 1D array for label indices, got {label_idx.ndim}D")
             return [self.__get_label_ref_by_dm_index(idx) for idx in label_idx]
         raise ValueError(f"Unsupported label index type: {type(label_idx)}")
