@@ -13,17 +13,13 @@ import {
     Heading,
     MediaViewModes,
     Text,
-    toast,
     ViewModes,
 } from '@geti/ui';
-import { useQueryClient } from '@tanstack/react-query';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import type { Media } from '../../../../constants/shared-types';
-import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
+import { useMediaUpload } from '../../api/use-media-upload';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
@@ -52,13 +48,9 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
 };
 
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
-    const projectId = useProjectIdentifier();
-    const queryClient = useQueryClient();
-
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
+    const { uploadMedia } = useMediaUpload();
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -69,43 +61,6 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
         setSelectedKeys(toggleMultipleSelection(images));
     };
 
-    const handleAddMediaItem = async (files: File[]) => {
-        const uploadPromises = files.map((file) => {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            return addItemMutation.mutateAsync({
-                params: { path: { project_id: projectId } },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                body: formData as any,
-            });
-        });
-
-        const promises = await Promise.allSettled(uploadPromises);
-
-        const succeeded = promises.filter((result) => result.status === 'fulfilled').length;
-        const failed = promises.filter((result) => result.status === 'rejected').length;
-
-        await queryClient.invalidateQueries({
-            queryKey: getQueryKey([
-                'get',
-                '/api/projects/{project_id}/dataset/media',
-                { params: { path: { project_id: projectId } } },
-            ]),
-        });
-
-        if (failed === 0) {
-            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
-        } else if (succeeded === 0) {
-            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
-        } else {
-            toast({
-                type: 'warning',
-                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
-            });
-        }
-    };
-
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
             <Flex alignItems={'center'} justifyContent={'space-between'}>
@@ -113,7 +68,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     <ImportExport />
 
-                    <AddMediaButton onFilesSelected={handleAddMediaItem} />
+                    <AddMediaButton onFilesSelected={uploadMedia} />
 
                     <TrainModel />
 
