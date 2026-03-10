@@ -4,11 +4,20 @@
 import { toast } from '@geti/ui';
 import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { getQueryKey } from '../../../query-client/query-client';
 
 export const MEDIA_UPLOAD_CONCURRENCY = 5;
+
+type UploadMutationVariables = {
+    params?: {
+        path?: {
+            project_id?: string;
+        };
+    };
+};
 
 // Runs ${batchSize} promises at a time until all promises have been executed,
 // returning an array of settled results.
@@ -25,7 +34,7 @@ const executeInBatches = async <T>(
 
         settledResults.push(...batchResults);
 
-        if (onBatchCompleted !== undefined) {
+        if (isFunction(onBatchCompleted)) {
             await onBatchCompleted();
         }
     }
@@ -40,6 +49,11 @@ export const useMediaUpload = () => {
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
     const currentlyUploading = useIsMutating({
         mutationKey: ['post', '/api/projects/{project_id}/dataset/media'],
+        predicate: ({ state }) => {
+            const variables = state.variables as UploadMutationVariables | undefined;
+
+            return variables?.params?.path?.project_id === projectId;
+        },
     });
     const invalidateMediaQuery = () =>
         queryClient.invalidateQueries({
