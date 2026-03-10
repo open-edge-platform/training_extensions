@@ -101,9 +101,6 @@ test.describe('Models', () => {
                     },
                 });
             }),
-            http.get('/api/system/devices/training', () => {
-                return HttpResponse.json([{ type: 'cpu', name: 'CPU' }]);
-            }),
             http.get('/api/projects/{project_id}/dataset/items', () => {
                 return HttpResponse.json({
                     items: [],
