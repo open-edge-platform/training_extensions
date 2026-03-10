@@ -3,7 +3,7 @@
 
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .task import TaskType
 from .training_configuration import AlgoLevelParameters
@@ -57,6 +57,23 @@ class BenchmarkMetrics(BaseModel):
         ge=0,
         le=100,
     )
+
+    @model_validator(mode="after")
+    def validate_metrics(self) -> "BenchmarkMetrics":
+        if self.imagenet_top1_accuracy is None and self.coco_map_50_95 is None:
+            raise ValueError(
+                f"For classification 'imagenet_top1_accuracy' is required, for detection and segmentation "
+                f"'coco_map_50_95' is required. However, both or 'None': {self}"
+            )
+        if (self.imagenet_top1_accuracy is not None or self.imagenet_top5_accuracy is not None) and (
+            self.coco_map_50 is not None or self.coco_map_50_95 is not None
+        ):
+            raise ValueError(
+                f"For classification, only 'imagenet_top*_accuracy' metric type can be set. For detection and "
+                f"segmentation, only 'coco_map_*' metric type can be set. However, both metric types have been set: "
+                f"{self}"
+            )
+        return self
 
 
 class ModelStats(BaseModel):
