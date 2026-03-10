@@ -11,11 +11,11 @@ import type { ConfigurableParameter, TrainingConfiguration } from '../../../../.
 import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { ResetButton } from '../../components/reset-button.component';
+import { ResultingDatasetDistribution } from './resulting-dataset-distribution.component';
 import { SubsetsDistributionSlider } from './subsets-distribution-slider/subsets-distribution-slider.component';
 import {
     areSubsetsSizesValid,
     getSubsets,
-    getSubsetsSizes,
     MAX_RATIO_VALUE,
     SubsetSplitParameters,
     TEST_SUBSET_KEY,
@@ -301,21 +301,9 @@ export const TrainingSubsets = ({
         });
     };
 
-    /*const { trainingSubsetSize, validationSubsetSize, testSubsetSize } = getSubsetsSizes(
-        subsetsParameters,
-        validationSubsetRatio,
-        testSubsetRatio
-    );*/
-
     const newValidationSubsetSize = Math.floor((validationSubsetRatio / 100) * unassignedSubsetSize);
     const newTestingSubsetSize = Math.floor((testSubsetRatio / 100) * unassignedSubsetSize);
     const newTrainingSubsetSize = unassignedSubsetSize - newValidationSubsetSize - newTestingSubsetSize;
-
-    const resultingDatasetDistribution = {
-        training: trainingSubsetSize + newTrainingSubsetSize,
-        validation: validationSubsetSize + newValidationSubsetSize,
-        testing: newTestingSubsetSize + newTestingSubsetSize,
-    };
 
     const subsetsSizesInvalid = areTrainingSubsetParametersChanged && !areSubsetsSizesValid(subsetsParameters);
     const isChangedDistributionWarningVisible = hasSupportedModels && areTrainingSubsetParametersChanged;
@@ -352,24 +340,15 @@ export const TrainingSubsets = ({
                         onSubsetsDistributionReset={handleSubsetsConfigurationReset}
                     />
                     <Accordion.Divider marginY={'size-200'} />
-                    <Flex direction={'column'}>
-                        <Text>Resulting dataset distribution:</Text>
-                        <Text>
-                            Training: {trainingSubsetSize} + {newTrainingSubsetSize} ={' '}
-                            {resultingDatasetDistribution.training} (
-                            {Math.round((resultingDatasetDistribution.training * 100) / totalDatasetItemsSize)})
-                        </Text>
-                        <Text>
-                            Validation: {validationSubsetSize} + {newValidationSubsetSize} ={' '}
-                            {resultingDatasetDistribution.validation} (
-                            {Math.round((resultingDatasetDistribution.validation * 100) / totalDatasetItemsSize)})
-                        </Text>
-                        <Text>
-                            Testing: {testingSubsetSize} + {newTestingSubsetSize} ={' '}
-                            {resultingDatasetDistribution.testing} (
-                            {Math.round((resultingDatasetDistribution.testing * 100) / totalDatasetItemsSize)})
-                        </Text>
-                    </Flex>
+                    <ResultingDatasetDistribution
+                        trainingSubsetSize={trainingSubsetSize}
+                        validationSubsetSize={validationSubsetSize}
+                        testingSubsetSize={testingSubsetSize}
+                        newTrainingSubsetSize={newTrainingSubsetSize}
+                        newValidationSubsetSize={newValidationSubsetSize}
+                        newTestingSubsetSize={newTestingSubsetSize}
+                        totalDatasetItemsSize={totalDatasetItemsSize}
+                    />
                 </View>
 
                 <Flex direction={'column'} gap={'size-200'} marginTop={'size-200'}>
