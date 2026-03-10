@@ -91,10 +91,7 @@ export type FloatConfigurableRangeParameter = components['schemas']['FloatRangeP
 
 export type NumberConfigurableParameter = IntConfigurableParameter | FloatConfigurableParameter;
 
-type EnumerableConfigurableParameter =
-    | StringConfigurableParameter
-    | NumberConfigurableParameter
-    | FloatConfigurableRangeParameter;
+type EnumerableConfigurableParameter = StringConfigurableParameter | NumberConfigurableParameter;
 
 type CreateEnumerableConfigurableParameterType<T extends EnumerableConfigurableParameter> = Omit<
     T,
