@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
@@ -38,6 +38,9 @@ export const useMediaUpload = () => {
     const queryClient = useQueryClient();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
+    const currentlyUploading = useIsMutating({
+        mutationKey: ['post', '/api/projects/{project_id}/dataset/media'],
+    });
     const invalidateMediaQuery = () =>
         queryClient.invalidateQueries({
             queryKey: getQueryKey([
@@ -80,6 +83,6 @@ export const useMediaUpload = () => {
 
     return {
         uploadMedia,
-        isUploading: addItemMutation.isPending,
+        isUploading: currentlyUploading > 0,
     };
 };
