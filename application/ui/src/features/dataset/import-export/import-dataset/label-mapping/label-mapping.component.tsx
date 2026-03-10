@@ -18,25 +18,18 @@ type LabelMappingProps = {
     stagedDatasetId: string;
 };
 
-export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
-    const { data: selectedProject } = useProject();
+type useFormConfigProps = {
+    datasetLabels: string[];
+    stagedDatasetId: string;
+    selectedProjectId: string;
+};
+
+const useFormConfig = ({ datasetLabels, stagedDatasetId, selectedProjectId }: useFormConfigProps) => {
     const { updateImportEntry } = useImportDatasetToProject();
     const { datasetImportDialogState } = useImportDatasetDialogState();
-
-    const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
-
     const importDatasetJobMutation = $api.useMutation('post', '/api/jobs');
 
-    const datasetLabels = stagedDataset?.metadata?.labels ?? [];
-    const projectLabels = selectedProject?.task?.labels ?? [];
-    const totalDatasetItems = stagedDataset?.metadata?.num_items ?? 0;
-    /* 
-        Todo: update with totalAnnotatedImages 
-        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
-    */
-    const totalAnnotatedItems = stagedDataset?.metadata?.num_annotations ?? 0;
-
-    const [formState, submitAction] = useActionState<{ include_unannotated: boolean }, FormData>(
+    return useActionState<{ include_unannotated: boolean }, FormData>(
         async (_prevState, formData) => {
             const state = { include_unannotated: formData.get('include_unannotated') === 'on' };
 
@@ -44,7 +37,7 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                 {
                     body: {
                         job_type: 'import_dataset_to_project',
-                        project_id: String(selectedProject?.id),
+                        project_id: selectedProjectId,
                         staged_dataset_id: stagedDatasetId,
                         parameters: {
                             include_unannotated: state.include_unannotated,
@@ -65,6 +58,26 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
         },
         { include_unannotated: true }
     );
+};
+
+export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
+    const { data: selectedProject } = useProject();
+    const projectLabels = selectedProject?.task?.labels ?? [];
+
+    const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
+    const datasetLabels = stagedDataset?.metadata?.labels ?? [];
+    const totalDatasetItems = stagedDataset?.metadata?.num_items ?? 0;
+    /* 
+        Todo: update with totalAnnotatedImages 
+        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
+    */
+    const totalAnnotatedItems = stagedDataset?.metadata?.num_annotations ?? 0;
+
+    const [formState, submitAction] = useFormConfig({
+        datasetLabels,
+        stagedDatasetId,
+        selectedProjectId: selectedProject?.id ?? '',
+    });
 
     return (
         <Flex direction={'column'} gap={'size-200'} UNSAFE_style={{ padding: dimensionValue('size-275') }}>
@@ -95,9 +108,10 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                                 <View>→</View>
                                 <View>
                                     <Picker
-                                        name={`targetLabel-${index}`}
                                         items={projectLabels}
+                                        name={`targetLabel-${index}`}
                                         aria-label={`Target label for ${label}`}
+                                        defaultSelectedKey={projectLabels.find(({ name }) => name === label)?.name}
                                     >
                                         {(item) => <Item key={item.name}>{item.name}</Item>}
                                     </Picker>
@@ -106,7 +120,11 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
                         ))}
                     </Grid>
 
-                    <Checkbox defaultSelected={formState.include_unannotated} name='include_unannotated'>
+                    <Checkbox
+                        defaultSelected={formState.include_unannotated}
+                        name='include_unannotated'
+                        aria-label='include unannotated'
+                    >
                         Include media without annotations
                     </Checkbox>
                 </Form>

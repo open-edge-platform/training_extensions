@@ -24,7 +24,7 @@ export const ImportDatasetToProject = () => {
         useImportDatasetDialogState();
 
     const formatOptions = getFormatOptions(selectedProject.task.task_type)
-        .map(({ value }) => value)
+        .map(({ label }) => label)
         .join(', ');
 
     const handleFileUploaded = (response: FileUploadedResponse) => {
