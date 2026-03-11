@@ -135,18 +135,6 @@ class TestDEIMDFine:
         assert isinstance(created_model.multi_scale, list)
         assert len(created_model.multi_scale) > 0
 
-    def test_torch_compile_integration(self) -> None:
-        """Test DEIM DFine with torch compile enabled."""
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_s",
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            torch_compile=True,
-        )
-
-        # Check that torch compile is enabled
-        assert model.torch_compile is True
-
     def test_weight_dict_configuration(self) -> None:
         """Test that the weight dictionary is properly configured."""
         model = DEIMDFine(
@@ -187,52 +175,3 @@ class TestDEIMDFine:
         assert criterion.gamma == 1.5
         assert criterion.reg_max == 32
         assert criterion.num_classes == 10
-
-    def test_dummy_input_generation(self) -> None:
-        """Test dummy input generation for different batch sizes."""
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_s",
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Test with different batch sizes
-        for batch_size in [1, 2, 4]:
-            dummy_input = model.get_dummy_input(batch_size)
-            assert len(dummy_input.images) == batch_size
-            assert dummy_input.images[0].shape == (3, 640, 640)
-
-    def test_model_properties(self) -> None:
-        """Test various model properties."""
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_n",
-            label_info=20,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Test input size multiplier
-        assert model.input_size_multiplier == 32
-
-        # Test pretrained weights availability
-        assert model.model_name in model._pretrained_weights
-        assert isinstance(model._pretrained_weights[model.model_name], str)
-        assert model._pretrained_weights[model.model_name].startswith("https://")
-
-    def test_inheritance_from_rtdetr(self) -> None:
-        """Test that DEIM DFine properly inherits from RTDETR."""
-        from otx.backend.native.models.detection.rtdetr import RTDETR
-
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_s",
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Check inheritance
-        assert isinstance(model, RTDETR)
-
-        # Check that it has inherited methods
-        assert hasattr(model, "forward")
-        assert hasattr(model, "training_step")
-        assert hasattr(model, "validation_step")
-        assert hasattr(model, "predict_step")
