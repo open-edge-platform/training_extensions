@@ -69,6 +69,6 @@ describe('ProgressStepper', () => {
 
         expect(screen.getByText('Dataset')).toBeVisible();
         expect(screen.getByText('Task type')).toBeVisible();
-        expect(screen.getByText('Label')).toBeVisible();
+        expect(screen.getByText('Labels')).toBeVisible();
     });
 });
