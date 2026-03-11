@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
-import { getMockedExtendedModel, getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
+import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -73,7 +73,7 @@ test.describe('Models', () => {
                 const foundModel = mockedModels.find((model) => model.id === params.model_id);
 
                 if (foundModel) {
-                    return HttpResponse.json(getMockedExtendedModel(foundModel));
+                    return HttpResponse.json(getMockedModel(foundModel));
                 }
 
                 return new HttpResponse(null, { status: 404 });
@@ -98,6 +98,17 @@ test.describe('Models', () => {
                         balance: mockedModelArchitectures[0].id,
                         speed: mockedModelArchitectures[1].id,
                         accuracy: mockedModelArchitectures[2].id,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/items', () => {
+                return HttpResponse.json({
+                    items: [],
+                    pagination: {
+                        total: 0,
+                        count: 0,
+                        limit: 5,
+                        offset: 0,
                     },
                 });
             })
@@ -180,7 +191,7 @@ test.describe('Models', () => {
                         name: 'YOLOX Model v1',
                         architecture: 'Object_Detection_YOLOX_X',
                         files_deleted: false,
-                        evaluations: [],
+                        variants: [],
                     },
                     device: 'cpu',
                 });
@@ -279,7 +290,7 @@ test.describe('Models', () => {
                               name: foundModel.name,
                               architecture: foundModel.architecture,
                               files_deleted: false,
-                              evaluations: [],
+                              variants: [],
                           }
                         : null,
                     device: 'cpu',

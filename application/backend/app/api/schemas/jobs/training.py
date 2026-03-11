@@ -50,9 +50,9 @@ class TrainingRequest(BaseJobRequest):
                 "job_type": "train",
                 "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "parameters": {
+                    "device": "xpu-0",
                     "model_architecture_id": "object-detection-atss-mobilenet-v2",
                     "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
-                    "device": "xpu-0",
                     "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 },
             }

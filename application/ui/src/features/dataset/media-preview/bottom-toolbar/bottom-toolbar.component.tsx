@@ -8,6 +8,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -18,51 +19,56 @@ import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import classes from './bottom-toolbar.module.scss';
 
 type BottomToolbarProps = {
-    isUserReviewed: boolean;
     mediaItem: Media;
     hideHotkeys?: boolean;
 };
 
+const DATASET_ITEM_OPERATION = 'get';
+const DATASET_ITEM_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}';
+const UPDATE_SUBSET_OPERATION = 'patch';
+const UPDATE_SUBSET_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset';
+
+type AssignableSubset = Exclude<DatasetSubset, 'unassigned'>;
+
+const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !== null && key !== 'unassigned';
+
 const useSubsets = (mediaItemId: string) => {
     const projectId = useProjectIdentifier();
 
-    const { data } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}', {
-        params: {
-            path: {
-                project_id: projectId,
-                dataset_item_id: mediaItemId,
-            },
+    const datasetItemParamsPath = {
+        project_id: projectId,
+        dataset_item_id: mediaItemId,
+    };
+    const datasetItemParams = { params: { path: datasetItemParamsPath } };
+    const mediaListParams = { params: { path: { project_id: projectId } } };
+
+    const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
+
+    const updateSubsetMutation = $api.useMutation(UPDATE_SUBSET_OPERATION, UPDATE_SUBSET_URL, {
+        meta: {
+            invalidateQueries: [
+                getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]),
+                getQueryKey(['get', '/api/projects/{project_id}/dataset/media', mediaListParams]),
+            ],
         },
     });
 
-    const updateSubsetMutation = $api.useMutation(
-        'patch',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset'
-    );
-
-    const handleSubsetChange = (key: Key | null, mediaItem: Media) => {
-        if (key === null || key === 'unassigned') return;
+    const handleSubsetChange = (key: Key | null) => {
+        if (!isAssignableSubset(key)) return;
 
         updateSubsetMutation.mutate({
-            params: {
-                path: {
-                    project_id: projectId,
-                    dataset_item_id: mediaItem.id,
-                },
-            },
-            body: {
-                subset: key as Exclude<DatasetSubset, 'unassigned'>,
-            },
+            params: { path: datasetItemParamsPath },
+            body: { subset: key },
         });
     };
 
-    return { currentSubset: data?.subset ?? null, handleSubsetChange };
+    return { currentSubset: data?.subset ?? null, isUserReviewed: data?.user_reviewed ?? false, handleSubsetChange };
 };
 
-export const BottomToolbar = ({ isUserReviewed, mediaItem, hideHotkeys }: BottomToolbarProps) => {
+export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
-    const { currentSubset, handleSubsetChange } = useSubsets(mediaItem.id);
+    const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem.id);
 
     return (
         <Flex justifyContent={'end'}>
@@ -90,7 +96,7 @@ export const BottomToolbar = ({ isUserReviewed, mediaItem, hideHotkeys }: Bottom
                                 selectedKey={currentSubset === 'unassigned' ? null : currentSubset}
                                 placeholder={'Select subset'}
                                 aria-label={'Select subset'}
-                                onSelectionChange={(key) => handleSubsetChange(key, mediaItem)}
+                                onSelectionChange={handleSubsetChange}
                             >
                                 <Item key={'validation'}>Validation</Item>
                                 <Item key={'testing'}>Testing</Item>

@@ -28,6 +28,11 @@ async def upload_archive(
 ) -> StagedDatasetView:
     """Upload dataset archive to the staging area"""
     try:
+        if not file.filename or not file.filename.endswith(".zip"):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Only zip files are allowed.",
+            )
         staged_dataset = await staged_datasets_service.upload(
             filename="dataset.zip",
             chunk_reader=lambda: file.read(1024 * 1024),

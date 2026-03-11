@@ -7,6 +7,7 @@ import { useSizeHook } from 'hooks/use-size.hook';
 import useVirtual from 'react-cool-virtual';
 
 import { type Label } from '../../../../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../../../../shared/annotator/annotator-mode';
 import { useVideoPlayer } from '../../../video-player-provider.component';
 import { VideoFrameSegments } from './video-frame-segment/video-frame-segments.component';
 import { VideoPlayerSlider } from './video-player-slider/video-player-slider.component';
@@ -15,21 +16,21 @@ import classes from './video-timeline.module.scss';
 
 type VideoTimelineProps = {
     labels: Label[];
+    mode: AnnotatorMode;
 };
 
 const MIN_SIZE_OF_SEGMENT = 2 * 8;
 
-export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
+export const VideoTimeline = ({ labels, mode }: VideoTimelineProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const size = useSizeHook(containerRef);
-    const { videoFrame, videoControls } = useVideoPlayer();
+    const { videoFrame, videoControls, step } = useVideoPlayer();
     const { isPlaying } = videoControls;
 
     const frameNumber = videoFrame.frame_number;
-    const step = videoFrame.frame_stride;
     const totalFrames = videoFrame.frame_count;
 
-    const totalSegments = Math.ceil(totalFrames / step);
+    const totalSegments = Math.max(Math.ceil(totalFrames / step), 0);
     const sizePerSquare = size === undefined ? 0 : Math.max(MIN_SIZE_OF_SEGMENT, size.width / totalSegments);
     const frameOffset = Math.round(sizePerSquare / 2);
 
@@ -37,11 +38,13 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
         horizontal: true,
         itemCount: totalSegments,
         itemSize: sizePerSquare,
-        overscanCount: 5,
+        overscanCount: 20,
     });
 
     useEffect(() => {
-        scrollToItem({ index: Math.round(frameNumber / step), align: 'center', smooth: true });
+        const segmentIndex = Math.round(frameNumber / step);
+
+        scrollToItem({ index: segmentIndex, align: 'center' });
     }, [scrollToItem, frameNumber, step]);
 
     return (
@@ -59,6 +62,7 @@ export const VideoTimeline = ({ labels }: VideoTimelineProps) => {
                     />
                 </div>
                 <VideoFrameSegments
+                    mode={mode}
                     frameNumber={frameNumber}
                     ref={innerRef}
                     items={items}

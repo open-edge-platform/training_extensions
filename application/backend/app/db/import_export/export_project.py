@@ -26,25 +26,41 @@ def _query_dataset_items_labels(engine: Engine, metadata: MetaData, project_id: 
 
 
 def _query_metric_scores(engine: Engine, metadata: MetaData, project_id: str):
-    """Join through evaluations and model_revisions to get project-related metric scores."""
+    """Join through evaluations, model_variants, and model_revisions to get project-related metric scores."""
     ms = Table("metric_scores", metadata, autoload_with=engine)
     e = Table("evaluations", metadata, autoload_with=engine)
+    mv = Table("model_variants", metadata, autoload_with=engine)
     mr = Table("model_revisions", metadata, autoload_with=engine)
 
     return (
         select(ms)
         .join(e, ms.c.evaluation_id == e.c.id)
-        .join(mr, e.c.model_revision_id == mr.c.id)
+        .join(mv, e.c.model_variant_id == mv.c.id)
+        .join(mr, mv.c.model_revision_id == mr.c.id)
         .where(mr.c.project_id == project_id)
     )
 
 
 def _query_evaluations(engine: Engine, metadata: MetaData, project_id: str):
-    """Join through model_revisions to get project-related evaluations."""
+    """Join through model_variants and model_revisions to get project-related evaluations."""
     e = Table("evaluations", metadata, autoload_with=engine)
+    mv = Table("model_variants", metadata, autoload_with=engine)
     mr = Table("model_revisions", metadata, autoload_with=engine)
 
-    return select(e).join(mr, e.c.model_revision_id == mr.c.id).where(mr.c.project_id == project_id)
+    return (
+        select(e)
+        .join(mv, e.c.model_variant_id == mv.c.id)
+        .join(mr, mv.c.model_revision_id == mr.c.id)
+        .where(mr.c.project_id == project_id)
+    )
+
+
+def _query_model_variants(engine: Engine, metadata: MetaData, project_id: str):
+    """Join through model_revisions to get project-related model variants."""
+    mv = Table("model_variants", metadata, autoload_with=engine)
+    mr = Table("model_revisions", metadata, autoload_with=engine)
+
+    return select(mv).join(mr, mv.c.model_revision_id == mr.c.id).where(mr.c.project_id == project_id)
 
 
 def _query_video_frames(engine: Engine, metadata: MetaData, project_id: str):
@@ -76,6 +92,7 @@ QUERY_STRATEGY_BY_TABLE = {
     "training_configurations": "project_id",
     # Tables requiring joins
     "dataset_items_labels": _query_dataset_items_labels,
+    "model_variants": _query_model_variants,
     "evaluations": _query_evaluations,
     "metric_scores": _query_metric_scores,
     "video_frames": _query_video_frames,

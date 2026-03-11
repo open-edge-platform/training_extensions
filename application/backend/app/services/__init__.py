@@ -17,6 +17,7 @@ from .dispatch_service import DispatchService
 from .label_service import LabelService
 from .media_service import MediaService
 from .metrics_service import MetricsService
+from .model_manifest_service import ModelManifestService
 from .model_service import ModelRevisionMetadata, ModelService
 from .pipeline_metrics_service import PipelineMetricsService
 from .pipeline_service import PipelineService
@@ -39,6 +40,7 @@ __all__ = [
     "LabelService",
     "MediaService",
     "MetricsService",
+    "ModelManifestService",
     "ModelRevisionMetadata",
     "ModelService",
     "PipelineMetricsService",

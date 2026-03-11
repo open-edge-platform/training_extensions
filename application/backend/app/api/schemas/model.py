@@ -10,10 +10,14 @@ from app.core.models import BaseRequiredIDModel
 from app.models import TrainingInfo
 
 
-class ModelVariant(BaseModel):
+class ModelVariantView(BaseModel):
+    id: UUID = Field(..., description="Unique identifier for the model variant")
     format: str = Field(..., description="Model format, e.g., 'openvino', 'onnx', 'pytorch'")
-    precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32'")
-    weights_size: int = Field(..., description="Size of the model weights file in bytes")
+    precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32', 'int8'")
+    weights_size: int = Field(0, description="Size of the model weights file in bytes")
+    evaluations: list[EvaluationView] = Field(description="List of evaluations for this variant", default=[])
+    quantization_info: dict | None = Field(None, description="Quantization metadata, if applicable")
+    files_deleted: bool = Field(False, description="Indicates if variant files have been deleted")
 
 
 class ModelView(BaseRequiredIDModel):
@@ -23,8 +27,7 @@ class ModelView(BaseRequiredIDModel):
     architecture: str = Field(..., description="Model architecture name")
     parent_revision: UUID | None = Field(None, description="Parent model revision ID")
     training_info: TrainingInfo = Field(..., description="Information about the training process")
-    variants: list[ModelVariant] = Field(description="Variants of the model", default=[])
-    evaluations: list[EvaluationView] = Field(description="List of evaluations with metrics", default=[])
+    variants: list[ModelVariantView] = Field(description="Variants of the model", default=[])
     files_deleted: bool = Field(description="Indicates if model files have been deleted", default=False)
     size: int = Field(description="Total size of model and all its files in bytes")
 
@@ -55,19 +58,25 @@ class ModelView(BaseRequiredIDModel):
                 },
                 "variants": [
                     {
+                        "id": "4c576bce-5e97-408d-a0ea-cc3801e4c453",
                         "format": "openvino",
                         "precision": "fp16",
                         "weights_size": 123456,
+                        "evaluations": [],
                     },
                     {
+                        "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
                         "format": "onnx",
                         "precision": "fp16",
                         "weights_size": 123456,
+                        "evaluations": [],
                     },
                     {
+                        "id": "d01945ae-1578-41f9-a2b3-11865032981c",
                         "format": "pytorch",
                         "precision": "fp32",
                         "weights_size": 123456,
+                        "evaluations": [],
                     },
                 ],
                 "evaluations": [
@@ -92,79 +101,6 @@ class ModelView(BaseRequiredIDModel):
                 ],
                 "files_deleted": False,
                 "size": 370368,
-            }
-        }
-    }
-
-
-class ExtendedModelView(ModelView):
-    training_configuration: dict = Field(default_factory=dict)
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                "name": "YOLOX-X (76e07d18)",
-                "architecture": "object-detection-yolox-x",
-                "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
-                "training_info": {
-                    "status": "in_progress",
-                    "start_time": "2021-06-29T16:24:30.928000+00:00",
-                    "end_time": "2021-06-29T16:24:30.928000+00:00",
-                    "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
-                    "label_schema_revision": {
-                        "labels": [
-                            {
-                                "id": "a22d82ba-afa9-4d6e-bbc1-8c8e4002ec29",
-                                "name": "cat",
-                            },
-                            {
-                                "id": "8aa85368-11ba-4507-88f2-6a6704d78ef5",
-                                "name": "dog",
-                            },
-                        ]
-                    },
-                },
-                "variants": [
-                    {
-                        "format": "openvino",
-                        "precision": "fp16",
-                        "weights_size": 123456,
-                    },
-                    {
-                        "format": "onnx",
-                        "precision": "fp16",
-                        "weights_size": 123456,
-                    },
-                    {
-                        "format": "pytorch",
-                        "precision": "fp32",
-                        "weights_size": 123456,
-                    },
-                ],
-                "evaluations": [
-                    {
-                        "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
-                        "subset": "testing",
-                        "metrics": [
-                            {
-                                "name": "accuracy",
-                                "value": 0.97,
-                            },
-                            {
-                                "name": "precision",
-                                "value": 0.98,
-                            },
-                            {
-                                "name": "recall",
-                                "value": 0.94,
-                            },
-                        ],
-                    }
-                ],
-                "files_deleted": False,
-                "size": 370368,
-                "training_configuration": {},
             }
         }
     }

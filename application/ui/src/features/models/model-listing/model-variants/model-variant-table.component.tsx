@@ -4,12 +4,12 @@
 import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 
-import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
+import type { Model, ModelFormat } from '../../../../constants/shared-types';
 import { formatBytes } from '../../../../shared/util';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
 
 interface ModelVariantTableProps {
-    model: ExtendedModel;
+    model: Model;
     format: ModelFormat;
 }
 
@@ -35,9 +35,9 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                             <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
                                 <ActionButton
                                     isQuiet
-                                    aria-label={`Download ${variant.format} model`}
+                                    aria-label={`Download model ${variant.id}`}
                                     isDisabled={isDownloading}
-                                    onPress={() => downloadModel(variant.format as ModelFormat)}
+                                    onPress={() => downloadModel(variant.id)}
                                 >
                                     <DownloadIcon />
                                 </ActionButton>

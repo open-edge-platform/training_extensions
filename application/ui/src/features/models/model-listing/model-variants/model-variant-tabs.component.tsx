@@ -7,13 +7,13 @@ import { isEmpty } from 'lodash-es';
 import { ReactComponent as ONNX } from '../../../../assets/icons/onnx-logo.svg';
 import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-logo.svg';
 import { ReactComponent as Pytorch } from '../../../../assets/icons/pytorch-logo.svg';
-import type { ExtendedModel } from '../../../../constants/shared-types';
+import type { Model } from '../../../../constants/shared-types';
 import { ModelVariantTable } from './model-variant-table.component';
 
 import classes from './model-variant-tabs.module.scss';
 
 type ModelVariantsTabsProps = {
-    model: ExtendedModel;
+    model: Model;
 };
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {

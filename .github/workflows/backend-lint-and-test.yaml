@@ -23,13 +23,13 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: ubuntu-latest
+    runs-on: overflow
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
       - &checkout
         name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -46,8 +46,10 @@ jobs:
   python-checks:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
-    name: python-${{ matrix.os }}-checks
+        os: ["overflow", "windows-latest"]
+    # Use more descriptive job name for better visibility in CI results
+    # Overflow labeled runner is equivalent to ubuntu-latest in terms of resources
+    name: python-${{ matrix.os == 'overflow' && 'ubuntu-latest' || matrix.os }}-checks
     runs-on: ${{ matrix.os }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
@@ -56,15 +58,13 @@ jobs:
     steps:
       - *checkout
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
-          python-version: "3.13"
+          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
 
       - name: Install OpenCV dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'overflow'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -75,53 +75,33 @@ jobs:
         working-directory: application/backend
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen --extra cpu --extra mqtt
+        run: just venv
 
-      - name: Check formatting with ruff
-        if: matrix.os == 'ubuntu-latest'
+      - name: Run linters and type-checkers
+        if: matrix.os == 'overflow'
         working-directory: application/backend
-        run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check .
-
-      - name: Check imports with import-linter
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: application/backend
-        run: uv run lint-imports
-
-      - name: Check source code with Pyrefly
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: application/backend
-        run: uv run pyrefly check
+        run: just lint
 
       - name: Run unit tests
         working-directory: application/backend
-        run: uv run pytest tests/unit
+        run: just test-unit
 
-      - name: Run ubuntu integration tests
-        if: matrix.os == 'ubuntu-latest'
+      - name: Run integration tests
         working-directory: application/backend
-        run: uv run pytest tests/integration
-
-      - name: Run windows integration tests # Skip tests with docker issues on Windows
-        if: matrix.os == 'windows-latest'
-        working-directory: application/backend
-        run: uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py --ignore=tests/integration/services/dispatchers/test_mqtt.py tests/integration
+        run: just test-integration
 
   # Temporarily skipping BDD tests on CI due to instability and flakiness. Will be re-enabled once the underlying issues are resolved.
   #      - name: Run bdd tests
-  #        if: matrix.os == 'ubuntu-latest'
+  #        if: matrix.os == 'overflow'
   #        working-directory: application/backend
-  #        run: uv run behave tests/bdd
+  #        run: just test-bdd
 
   required_check:
     name: Required Check backend-lint-and-test
     needs:
       - check_paths
       - python-checks
-    runs-on: ubuntu-latest
+    runs-on: overflow
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()
@@ -131,7 +111,7 @@ jobs:
           for check in ${CHECKS}; do
             echo "::notice::check=${check}"
             if [[ "$check" != "success" && "$check" != "skipped" ]]; then
-              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              echo "::error::Required status checks failed. They must succeed before this pull request can be merged."
               exit 1
             fi
           done

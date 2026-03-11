@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import asdict
+from pathlib import Path
 
 import pytest
 
@@ -11,7 +12,7 @@ from tests.integration.api.geti_otx_config_utils import OTXConfig
 
 class TestGetiConfigConverter:
     def test_convert(self):
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/detection.yaml")
+        otx_config = OTXConfig.from_yaml_file(Path("tests/assets/geti/model_configs/detection.yaml"))
         config = GetiConfigConverter.convert(asdict(otx_config))
 
         assert config["data"]["input_size"] == (992, 800)
@@ -29,7 +30,7 @@ class TestGetiConfigConverter:
         assert config["data"]["tile_config"]["tile_size"] == (400, 400)
 
     def test_convert_task_overriding(self):
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/classification.yaml")
+        otx_config = OTXConfig.from_yaml_file(Path("tests/assets/geti/model_configs/classification.yaml"))
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert default_config["task"] == "MULTI_CLASS_CLS"
 
@@ -55,7 +56,7 @@ class TestGetiConfigConverter:
             "otx.data.augmentation.transforms.RandomGaussianBlur",
             "otx.data.augmentation.transforms.RandomGaussianNoise",
         ]
-        cfg_path = "tests/assets/geti/model_configs/classification.yaml"
+        cfg_path = Path("tests/assets/geti/model_configs/classification.yaml")
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 9
@@ -72,7 +73,7 @@ class TestGetiConfigConverter:
         for configuable_aug in supported_augs_list_for_configuration:
             assert configuable_aug in list_of_all_augs, f"{configuable_aug} is missing for configuration."
         # change config from geti to enable all augs
-        for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():
+        for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():  # pyrefly: ignore
             aug["enable"] = True
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 9
@@ -81,7 +82,9 @@ class TestGetiConfigConverter:
                 assert aug["enable"]
 
         # disable EfficientNetRandomCrop
-        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].items():
+        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"][  # pyrefly: ignore
+            "augmentation"
+        ].items():
             if aug_name == "random_resize_crop":
                 aug_conf["enable"] = False
             # modify some aug for test
@@ -122,7 +125,7 @@ class TestGetiConfigConverter:
             "otx.data.augmentation.transforms.RandomGaussianBlur",
             "otx.data.augmentation.transforms.RandomGaussianNoise",
         ]
-        cfg_path = "tests/assets/geti/model_configs/detection.yaml"
+        cfg_path = Path("tests/assets/geti/model_configs/detection.yaml")
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 10
@@ -139,7 +142,7 @@ class TestGetiConfigConverter:
         for configuable_aug in supported_augs_list_for_configuration:
             assert configuable_aug in list_of_all_augs, f"{configuable_aug} is missing for configuration."
         # change config from geti to enable all augs
-        for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():
+        for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():  # pyrefly: ignore
             aug["enable"] = True
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 10
@@ -148,7 +151,9 @@ class TestGetiConfigConverter:
                 assert aug["enable"]
 
         # disable iou_random_crop
-        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].items():
+        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"][  # pyrefly: ignore
+            "augmentation"
+        ].items():
             if aug_name == "iou_random_crop":
                 aug_conf["enable"] = False
             # modify some aug for test
@@ -177,7 +182,7 @@ class TestGetiConfigConverter:
         )  # 10 - disabled iou_random_crop
 
     def test_instance_seg_augs(self, tmp_path):
-        cfg_path = "tests/assets/geti/model_configs/instance_segmentation.yaml"
+        cfg_path = Path("tests/assets/geti/model_configs/instance_segmentation.yaml")
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 10
@@ -198,7 +203,7 @@ class TestGetiConfigConverter:
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/detection.yaml")
+        otx_config = OTXConfig.from_yaml_file(Path("tests/assets/geti/model_configs/detection.yaml"))
         config = GetiConfigConverter.convert(asdict(otx_config))
         engine, train_kwargs = GetiConfigConverter.instantiate(
             config=config,

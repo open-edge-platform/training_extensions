@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.api.schemas.dataset import DatasetFilters
 from app.core.jobs.models import JobType
 from app.models import DatasetItemSubset, TaskType
+from app.models.jobs import ImportDatasetAsNewProjectJob, ImportDatasetToProjectJob, PrepareDatasetForImportJob
 
 from .base import BaseJobRequest
 
@@ -31,31 +32,18 @@ class PrepareDatasetForImportRequest(BaseImportRequest):
 
 
 class ImportDatasetProjectParams(BaseModel):
-    filters: DatasetFilters = Field(
-        default_factory=DatasetFilters, description="Filters to apply to the dataset during import"
-    )
-    labels_mapping: dict[str, str] | None = Field(
+    labels_mapping: dict[str, str | None] | None = Field(
         None,
         description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
         "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",
     )
-    subset_mapping: dict[str, DatasetItemSubset] | None = Field(
-        None,
-        description="Specify how to map the subsets assigned to the items in the dataset to the project subsets. If "
-        "this parameter is unspecified (null), then each item will be assigned to the respective subset defined in the "
-        "dataset",
-    )
+    include_unannotated: bool = Field(True, description="Whether to include unannotated items from the dataset")
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "filters": {
-                    "labels": ["person", "car", "motorcycle"],
-                    "subsets": ["training", "validation"],
-                    "include_unannotated": False,
-                },
                 "labels_mapping": {"car": "vehicle", "motorcycle": "vehicle", "person": "person"},
-                "subset_mapping": {"train": "training", "validation": "validation", "unassigned": "testing"},
+                "include_unannotated": False,
             }
         }
     }
@@ -77,13 +65,8 @@ class ImportDatasetToProjectRequest(BaseImportRequest, BaseJobRequest):
                 "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
                 "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
                 "parameters": {
-                    "filters": {
-                        "labels": ["person", "car", "motorcycle"],
-                        "subsets": ["training", "validation"],
-                        "include_unannotated": False,
-                    },
                     "labels_mapping": {"car": "vehicle", "motorcycle": "vehicle", "person": "person"},
-                    "subset_mapping": {"train": "training", "validation": "validation", "unassigned": "testing"},
+                    "include_unannotated": False,
                 },
             }
         }
@@ -93,7 +76,6 @@ class ImportDatasetToProjectRequest(BaseImportRequest, BaseJobRequest):
 class NewProjectParams(BaseModel):
     name: str = Field(..., description="Name to assign to the new project")
     task_type: TaskType = Field(..., description="Type of the project to create")
-    labels: list[str] = Field(..., description="Labels to create in the new project")
     exclusive_labels: bool = Field(
         False,
         description="For classification projects: If True, multiple labels per item are allowed (multi-label); "
@@ -104,8 +86,7 @@ class NewProjectParams(BaseModel):
         "json_schema_extra": {
             "example": {
                 "name": "New Project from Imported Dataset",
-                "task_type": "object_detection",
-                "labels": ["person", "vehicle"],
+                "task_type": "detection",
             }
         }
     }
@@ -122,8 +103,7 @@ class ImportDatasetNewParams(BaseModel):
             "example": {
                 "project": {
                     "name": "New Project from Imported Dataset",
-                    "task_type": "object_detection",
-                    "labels": ["person", "vehicle"],
+                    "task_type": "detection",
                 },
                 "filters": {
                     "labels": ["person", "car", "motorcycle"],
@@ -153,7 +133,6 @@ class ImportDatasetAsNewProjectRequest(BaseImportRequest):
                     "project": {
                         "name": "New Project from Imported Dataset",
                         "task_type": "object_detection",
-                        "labels": ["person", "vehicle"],
                     },
                     "filters": {
                         "labels": ["person", "car", "motorcycle"],
@@ -170,7 +149,7 @@ class ImportDatasetMetadata(BaseModel):
     staged_dataset_id: UUID = Field(..., description="Dataset ID")
     project_id: UUID | None = Field(None, description="Project ID")
     filters: DatasetFilters | None = Field(None, description="Filters to apply to the dataset during import")
-    labels_mapping: dict[str, str] | None = Field(
+    labels_mapping: dict[str, str | None] | None = Field(
         None,
         description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
         "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",
@@ -186,5 +165,30 @@ class ImportDatasetMetadata(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def populate_metadata(cls, data: object) -> object:
-        # TODO: Implement validator when service layer models added
+        if isinstance(data, PrepareDatasetForImportJob):
+            return {
+                "staged_dataset_id": data.params.staged_dataset_id,
+            }
+        if isinstance(data, ImportDatasetToProjectJob):
+            return {
+                "staged_dataset_id": data.params.staged_dataset_id,
+                "project_id": data.params.project_id,
+                "labels_mapping": data.params.labels_mapping,
+            }
+        if isinstance(data, ImportDatasetAsNewProjectJob):
+            return {
+                "staged_dataset_id": data.params.staged_dataset_id,
+                "project_id": data.params.project_id,
+                "filters": DatasetFilters(
+                    labels=data.params.labels,
+                    subsets=data.params.subsets,
+                    include_unannotated=data.params.include_unannotated,
+                ),
+                "project": NewProjectParams(
+                    name=data.params.project_name,
+                    task_type=data.params.task_type,
+                    exclusive_labels=data.params.exclusive_labels,
+                ),
+            }
+
         return data

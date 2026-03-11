@@ -21,11 +21,15 @@ type AnnotationShapeProps = {
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
     const { data: selectedProject } = useProject();
     const { isVisible } = useAnnotationVisibility();
-    const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
+    const { updateAnnotations, deleteAnnotations, isReadOnlyMode } = useAnnotationActions();
 
     const { shape, labels } = annotation;
 
     const removeLabels = (labelId: Key | null) => {
+        if (isReadOnlyMode) {
+            return;
+        }
+
         const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
         const hasNoLabels = updatedLabels.length === 0;
 
@@ -40,7 +44,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         return (
             <g display={isVisible ? 'block' : 'none'}>
                 <AnnotationShape annotation={annotation} />
-                <AnnotationLabels labels={labels} onRemove={removeLabels} />
+                <AnnotationLabels labels={labels} onRemove={removeLabels} isRemovable={!isReadOnlyMode} />
             </g>
         );
     }
@@ -49,7 +53,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         return (
             <g transform={`translate(${shape.x}, ${shape.y})`} display={isVisible ? 'block' : 'none'}>
                 <AnnotationShape annotation={{ ...annotation, shape: { ...shape, x: 0, y: 0 } }} />
-                <AnnotationLabels labels={labels} onRemove={removeLabels} />
+                <AnnotationLabels labels={labels} onRemove={removeLabels} isRemovable={!isReadOnlyMode} />
             </g>
         );
     }
@@ -62,7 +66,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
             <g transform={`translate(${-labelX}, ${-labelY})`}>
                 <AnnotationShape annotation={annotation} />
             </g>
-            <AnnotationLabels labels={labels} onRemove={removeLabels} useBottomCorners />
+            <AnnotationLabels labels={labels} onRemove={removeLabels} useBottomCorners isRemovable={!isReadOnlyMode} />
         </g>
     );
 };

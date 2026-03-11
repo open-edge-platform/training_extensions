@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Divider, Grid, Text } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Grid, Text } from '@geti/ui';
 import { isEmpty, isNil } from 'lodash-es';
 
 import { ExportDatasetMetadata } from '../../../../../../constants/shared-types';
@@ -23,22 +23,24 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
     const labelsList = isEmpty(selectedLabels) ? projectLabelsNames : selectedLabels;
 
     return (
-        <Grid
-            gap='size-125'
-            columns={['auto', '1px', '1fr', '1px', 'auto']}
-            UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}
-        >
-            <Text>
-                Export {isNil(datasetName) ? 'dataset' : datasetName} - {metadata.export_format} format
-            </Text>
+        <Flex direction='column' UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}>
+            <Text>Export {isNil(datasetName) ? 'dataset' : datasetName}</Text>
 
-            <Divider orientation='vertical' size='S' />
-            <Text UNSAFE_style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                {`Included images by label: ${labelsList.join(', ')}`}
-            </Text>
+            <Grid gap='size-125' columns={['auto', '1px', 'auto', '1px', '1fr']}>
+                <Text>
+                    <Text UNSAFE_style={{ textTransform: 'uppercase' }}>{metadata.export_format}</Text> format
+                </Text>
 
-            <Divider orientation='vertical' size='S' />
-            <Text>{metadata.filters.include_unannotated ? 'Include:' : 'Exclude:'} media without annotations</Text>
-        </Grid>
+                <Divider orientation='vertical' size='S' />
+
+                <Text>{metadata.filters.include_unannotated ? 'All media' : 'Only media with annotations'}</Text>
+
+                <Divider orientation='vertical' size='S' />
+
+                <Text UNSAFE_style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                    With labels: {labelsList.join(', ')}
+                </Text>
+            </Grid>
+        </Flex>
     );
 };

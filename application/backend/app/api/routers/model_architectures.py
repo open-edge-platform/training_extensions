@@ -5,15 +5,11 @@
 
 from fastapi import APIRouter, status
 
-from app.api.schemas.model_architecture import (
-    RECOMMENDED_MODEL_ARCHITECTURES,
-    ModelArchitectures,
-    ModelArchitectureView,
-    TopPicks,
-)
+from app.api.schemas.model_architecture import ModelArchitectures, ModelArchitectureView, TopPicks
 from app.models import TaskType
 from app.models.model_architecture import ModelArchitecture
-from app.supported_models import SupportedModels
+from app.services import ModelManifestService
+from app.supported_models import RECOMMENDED_MODEL_ARCHITECTURES
 
 router = APIRouter(prefix="/api/model_architectures", tags=["Model Architectures"])
 
@@ -37,7 +33,7 @@ def get_model_architectures(task: TaskType) -> ModelArchitectures:
         ModelArchitectures containing list of model architectures and recommended top picks.
     """
 
-    model_manifests = SupportedModels.get_model_manifests()
+    model_manifests = ModelManifestService.get_model_manifests()
     model_architectures = [
         ModelArchitecture.from_manifest(manifest) for manifest in model_manifests.values() if manifest.task == task
     ]

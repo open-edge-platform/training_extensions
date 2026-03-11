@@ -5,6 +5,7 @@ import json
 import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from uuid import UUID
@@ -14,59 +15,68 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB
-from app.models import EvaluationResult, ModelRevision, TrainingStatus
+from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB, ModelVariantDB
+from app.models import EvaluationResult, ModelRevision, ModelVariant, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
+from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository, ModelVariantRepository
 from app.services.dataset_revision_service import DatasetRevisionService
-from app.supported_models import SupportedModels
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
+from .model_manifest_service import ModelManifestService
 from .parent_process_guard import parent_process_only
 
-# Mapping of CSV column keys to display names for series metrics.
-# Keys not included here will be ignored.
-KEY_MAPPING = {
-    "epoch": "Epoch",
-    "lr-SGD": "Learning rate (SGD)",
-    "lr-SGD-1": "Learning rate (SGD-1)",
-    "lr-SGD-1-momentum": "Learning rate momentum (SGD-1)",
-    "lr-SGD-momentum": "Learning rate momentum (SGD)",
-    "step": "Step",
-    "train/data_time": "Training data time",
-    "train/iter_time": "Training iteration time",
-    "train/loss": "Training loss",
-    "train/loss_bbox": "Training loss bbox",
-    "train/loss_centerness": "Training loss centerness",
-    "train/loss_cls": "Training loss cls",
-    "train/loss_mask": "Training loss mask",
-    "train/loss_obj": "Training loss obj",
-    "train/total_loss": "Training total loss",
-    "val/accuracy": "Validation accuracy",
-    "val/classes": "Validation classes",
-    "val/f1-score": "Validation F1 score",
-    "val/map": "Validation mAP",
-    "val/map_50": "Validation mAP@50",
-    "val/map_75": "Validation mAP@75",
-    "val/map_large": "Validation mAP large",
-    "val/map_medium": "Validation mAP medium",
-    "val/map_per_class": "Validation mAP per class",
-    "val/map_small": "Validation mAP small",
-    "val/mar_1": "Validation mAR@1",
-    "val/mar_10": "Validation mAR@10",
-    "val/mar_100": "Validation mAR@100",
-    "val/mar_100_per_class": "Validation mAR@100 per class",
-    "val/mar_large": "Validation mAR large",
-    "val/mar_medium": "Validation mAR medium",
-    "val/mar_small": "Validation mAR small",
-    "validation/data_time": "Validation data time",
-    "validation/iter_time": "Validation iteration time",
-}
 
-# Columns that should be excluded from metrics parsing
-# (used as axis values or are not actual metrics)
-BLACKLISTED_KEYS = {"epoch", "step"}
+@dataclass
+class MetricDisplayInfo:
+    display_name: str
+    frequency: str = "step"  # "step" or "epoch"
+
+    @property
+    def x_axis_label(self) -> str:
+        return self.frequency.capitalize()
+
+
+KEY_MAPPING = {
+    "epoch": MetricDisplayInfo(display_name="Epoch", frequency="epoch"),
+    "step": MetricDisplayInfo(display_name="Step", frequency="step"),
+    # Epoch based learning rate metrics
+    "lr": MetricDisplayInfo(display_name="Learning rate", frequency="epoch"),
+    "lr-SGD": MetricDisplayInfo(display_name="Learning rate (SGD)", frequency="epoch"),
+    "lr-SGD-1": MetricDisplayInfo(display_name="Learning rate (SGD-1)", frequency="epoch"),
+    "lr-SGD-1-momentum": MetricDisplayInfo(display_name="Learning rate momentum (SGD-1)", frequency="epoch"),
+    "lr-SGD-momentum": MetricDisplayInfo(display_name="Learning rate momentum (SGD)", frequency="epoch"),
+    # Step based training metric
+    "train/data_time": MetricDisplayInfo(display_name="Training data time", frequency="step"),
+    "train/iter_time": MetricDisplayInfo(display_name="Training iteration time", frequency="step"),
+    "train/loss": MetricDisplayInfo(display_name="Training loss", frequency="step"),
+    "train/loss_bbox": MetricDisplayInfo(display_name="Training loss bbox", frequency="step"),
+    "train/loss_centerness": MetricDisplayInfo(display_name="Training loss centerness", frequency="step"),
+    "train/loss_cls": MetricDisplayInfo(display_name="Training loss cls", frequency="step"),
+    "train/loss_mask": MetricDisplayInfo(display_name="Training loss mask", frequency="step"),
+    "train/loss_obj": MetricDisplayInfo(display_name="Training loss obj", frequency="step"),
+    "train/total_loss": MetricDisplayInfo(display_name="Training total loss", frequency="step"),
+    # Epoch based validation metrics
+    "val/accuracy": MetricDisplayInfo(display_name="Validation accuracy", frequency="epoch"),
+    "val/classes": MetricDisplayInfo(display_name="Validation classes", frequency="epoch"),
+    "val/f1-score": MetricDisplayInfo(display_name="Validation F1 score", frequency="epoch"),
+    "val/map": MetricDisplayInfo(display_name="Validation mAP", frequency="epoch"),
+    "val/map_50": MetricDisplayInfo(display_name="Validation mAP@50", frequency="epoch"),
+    "val/map_75": MetricDisplayInfo(display_name="Validation mAP@75", frequency="epoch"),
+    "val/map_large": MetricDisplayInfo(display_name="Validation mAP large", frequency="epoch"),
+    "val/map_medium": MetricDisplayInfo(display_name="Validation mAP medium", frequency="epoch"),
+    "val/map_per_class": MetricDisplayInfo(display_name="Validation mAP per class", frequency="epoch"),
+    "val/map_small": MetricDisplayInfo(display_name="Validation mAP small", frequency="epoch"),
+    "val/mar_1": MetricDisplayInfo(display_name="Validation mAR@1", frequency="epoch"),
+    "val/mar_10": MetricDisplayInfo(display_name="Validation mAR@10", frequency="epoch"),
+    "val/mar_100": MetricDisplayInfo(display_name="Validation mAR@100", frequency="epoch"),
+    "val/mar_100_per_class": MetricDisplayInfo(display_name="Validation mAR@100 per class", frequency="epoch"),
+    "val/mar_large": MetricDisplayInfo(display_name="Validation mAR large", frequency="epoch"),
+    "val/mar_medium": MetricDisplayInfo(display_name="Validation mAR medium", frequency="epoch"),
+    "val/mar_small": MetricDisplayInfo(display_name="Validation mAR small", frequency="epoch"),
+    "validation/data_time": MetricDisplayInfo(display_name="Validation data time", frequency="epoch"),
+    "validation/iter_time": MetricDisplayInfo(display_name="Validation iteration time", frequency="epoch"),
+}
 
 
 @dataclass(frozen=True)
@@ -107,7 +117,27 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevision.model_validate(model_rev_db)
 
-    def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[dict]:
+    def get_model_revision_architecture(self, project_id: UUID, model_id: UUID) -> str:
+        """
+        Get the architecture ID of a model revision.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            str: The architecture ID of the model revision.
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
+        """
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_rev_db = model_rev_repo.get_by_id(str(model_id))
+        if not model_rev_db:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+        return model_rev_db.architecture
+
+    def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[ModelVariant]:
         """
         Get all variants and their information of a model.
 
@@ -116,21 +146,19 @@ class ModelService(BaseSessionManagedService):
             model_id (UUID): The unique identifier of the model to retrieve variants for.
 
         Returns:
-            list[dict]: A list of the models variants.
+            list[ModelVariant]: A list of the model variants.
         """
-        model_variants = []
-        for format in ModelFormat:
-            exists, paths = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=format)
-            if exists:
-                model_size = sum(path.stat().st_size for path in paths)
-                model_info = {
-                    "format": format.value,
-                    "precision": ModelPrecision.FP16 if format != ModelFormat.PYTORCH else ModelPrecision.FP32,
-                    "weights_size": model_size,
-                }
-                model_variants.append(model_info)
-
-        return model_variants
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
+        variants = []
+        for v_db in variant_dbs:
+            variant = ModelVariant.model_validate(v_db)
+            # Compute weights_size from the filesystem
+            variant_dir = self._get_variant_dir(project_id, model_id, UUID(v_db.id))
+            if not v_db.files_deleted and variant_dir.exists():
+                variant.weights_size = sum(f.stat().st_size for f in variant_dir.iterdir() if f.is_file())
+            variants.append(variant)
+        return variants
 
     def get_model_size_in_bytes(self, project_id: UUID, model_id: UUID) -> int:
         """
@@ -297,7 +325,7 @@ class ModelService(BaseSessionManagedService):
         project_id = str(metadata.project_id)
         label_repo = LabelRepository(project_id=project_id, db=self.db_session)
         labels_schema_rev = {"labels": [{"name": label.name, "id": label.id} for label in label_repo.list_all()]}
-        arch_name = SupportedModels.get_model_manifest_by_id(metadata.architecture_id).name
+        arch_name = ModelManifestService.get_model_manifest_by_id(metadata.architecture_id).name
 
         model_revision_repo = ModelRevisionRepository(project_id=project_id, db=self.db_session)
         model_revision_repo.save(
@@ -316,7 +344,14 @@ class ModelService(BaseSessionManagedService):
             )
         )
 
-    def update_revision_status(self, project_id: UUID, model_id: UUID, training_status: TrainingStatus) -> None:
+    def update_revision_status(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        training_status: TrainingStatus,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ) -> None:
         """
         Updates the training status of a model revision for the given project.
 
@@ -324,12 +359,19 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): Identifier of the project that owns the model revision.
             model_id (UUID): Identifier of the model revision to update.
             training_status (TrainingStatus): New training status to set for the model revision.
+            training_started_at (datetime): Date and time when the training was started
+            training_finished_at (datetime): Date and time when the training was finished
         """
         model_revision_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_revision_repo.update_training_status(obj_id=str(model_id), training_status=training_status)
+        model_revision_repo.update_training_status(
+            obj_id=str(model_id),
+            training_status=training_status,
+            training_started_at=training_started_at,
+            training_finished_at=training_finished_at,
+        )
 
     def get_model_binary_files(
-        self, project_id: UUID, model_id: UUID, format: ModelFormat
+        self, project_id: UUID, model_id: UUID, model_variant_id: UUID
     ) -> tuple[bool, tuple[Path, ...]]:
         """
         Get the paths to the model binary files.
@@ -337,38 +379,122 @@ class ModelService(BaseSessionManagedService):
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
-            format (ModelFormat): The format of the model files to retrieve.
+            model_variant_id (UUID): The unique identifier of the model variant files to retrieve.
 
         Returns:
             tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
-                and the second element is a tuple of Paths to the model files.
+                and the second element is a tuple of Paths to the model variant's files.
 
         Raises:
             ResourceNotFoundError: If the model has been marked as deleted.
-            FileNotFoundError: If the model directory does not exist.
         """
         model_revision = self.get_model(project_id=project_id, model_id=model_id)
         if model_revision.files_deleted:
             return False, ()
 
-        model_dir = self._projects_dir / str(project_id) / "models" / str(model_id)
-        xml_file = model_dir / "model.xml"
-        bin_file = model_dir / "model.bin"
-        onnx_file = model_dir / "model.onnx"
-        ckpt_file = model_dir / "model.ckpt"
+        # Find the variant matching the requested variant ID
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_dbs = model_variant_repo.list_by_model_revision(str(model_id))
+        for v_db in variant_dbs:
+            if v_db.id == str(model_variant_id) and not v_db.files_deleted:
+                return self._get_variant_binary_files(project_id, model_id, UUID(v_db.id))
 
-        if format == ModelFormat.OPENVINO and xml_file.exists() and bin_file.exists():
+        return False, ()
+
+    def _get_variant_binary_files(
+        self, project_id: UUID, model_id: UUID, variant_id: UUID
+    ) -> tuple[bool, tuple[Path, ...]]:
+        """
+        Get binary files for a specific variant from the filesystem.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+            variant_id (UUID): The unique identifier of the model variant.
+
+        Returns:
+            tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
+                and the second element is a tuple of Paths to the model variant's files.
+        """
+        variant_dir = self._get_variant_dir(project_id, model_id, variant_id)
+
+        xml_file = variant_dir / "model.xml"
+        bin_file = variant_dir / "model.bin"
+        onnx_file = variant_dir / "model.onnx"
+        ckpt_file = variant_dir / "model.ckpt"
+
+        if xml_file.exists() and bin_file.exists():
             return True, (xml_file, bin_file)
-        if format == ModelFormat.ONNX and onnx_file.exists():
+        if onnx_file.exists():
             return True, (onnx_file,)
-        if format == ModelFormat.PYTORCH and ckpt_file.exists():
+        if ckpt_file.exists():
             return True, (ckpt_file,)
 
         return False, ()
 
+    def _get_variant_dir(self, project_id: UUID, model_id: UUID, variant_id: UUID) -> Path:
+        """Get the filesystem path for a model variant directory."""
+        return self._projects_dir / str(project_id) / "models" / str(model_id) / "variants" / str(variant_id)
+
+    def create_variant(
+        self,
+        model_revision_id: UUID,
+        format: ModelFormat,
+        precision: ModelPrecision,
+        quantization_info: dict | None = None,
+    ) -> ModelVariant:
+        """
+        Create a new model variant record in the database.
+
+        Args:
+            model_revision_id: UUID of the parent model revision.
+            format: The format of the model variant.
+            precision: The precision of the model variant.
+            quantization_info: Optional quantization metadata.
+
+        Returns:
+            ModelVariant: The created model variant.
+        """
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_db = ModelVariantDB(
+            model_revision_id=str(model_revision_id),
+            format=format.value,
+            precision=precision.value,
+            quantization_info=quantization_info,
+        )
+        model_variant_repo.save(variant_db)
+        return ModelVariant(
+            id=UUID(variant_db.id),
+            model_revision_id=model_revision_id,
+            format=format,
+            precision=precision,
+            quantization_info=quantization_info,
+            evaluations=[],
+        )
+
+    def get_variant(self, variant_id: UUID) -> ModelVariant:
+        """
+        Get a model variant by its ID.
+
+        Args:
+            variant_id: The unique identifier of the variant.
+
+        Returns:
+            ModelVariant: The model variant.
+
+        Raises:
+            ResourceNotFoundError: If the variant is not found.
+        """
+        model_variant_repo = ModelVariantRepository(db=self.db_session)
+        variant_db = model_variant_repo.get_by_id(str(variant_id))
+        if not variant_db:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(variant_id))
+        return ModelVariant.model_validate(variant_db)
+
     def save_evaluation_result(self, result: EvaluationResult) -> None:
         evaluation_db = EvaluationDB(
             model_revision_id=str(result.model_revision_id),
+            model_variant_id=str(result.model_variant_id),
             dataset_revision_id=str(result.dataset_revision_id),
             subset=result.subset,
         )
@@ -415,11 +541,9 @@ class ModelService(BaseSessionManagedService):
         """
         Parse a metrics CSV file and return the formatted metrics.
 
-        For each metric column (excluding 'epoch', 'step', and blacklisted keys):
+        For each metric column (excluding 'epoch' and 'step'):
         1. Filter out rows with null values in the metric column
-        2. Determine if the metric is epoch-based or step-based by checking if 'step'
-           contains consecutive integers from 1 to N
-        3. Build a TrainingMetrics object for that metric
+        2. Build a TrainingMetrics object for that metric
 
         Args:
             metrics_file (Path): Path to the metrics.csv file.
@@ -432,11 +556,27 @@ class ModelService(BaseSessionManagedService):
         # Read the CSV file with polars
         df = pl.read_csv(metrics_file)
 
-        # Get all metric columns (exclude 'epoch', 'step', and blacklisted keys)
-        metric_columns = [col for col in df.columns if col not in BLACKLISTED_KEYS and col in KEY_MAPPING]
+        # Due to a quirk in SimpleLearningRateMonitor/LearningRateMonitor, the LR metric does not log the epoch value.
+        # Fill in missing epoch values.
+        df = df.with_columns(
+            pl.when(pl.col("epoch").is_null() & pl.col("epoch").shift(-1).is_not_null())
+            .then(pl.col("epoch").shift(-1))
+            .otherwise(pl.col("epoch"))
+            .alias("epoch")
+        )
 
-        for col in metric_columns:
-            mapped_name = KEY_MAPPING.get(col)
+        for col in df.columns:
+            if col in ["epoch", "step"]:
+                continue
+
+            mapped_metric = KEY_MAPPING.get(col)
+            if mapped_metric is None:
+                logger.debug("Metric '{}' is not in KEY_MAPPING, skipping", col)
+                continue
+
+            display_name = mapped_metric.display_name
+            frequency = mapped_metric.frequency
+            x_axis_label = mapped_metric.x_axis_label
 
             # Filter to include only 'epoch', 'step', and the current metric column
             # Then filter out rows where the metric column has null values
@@ -446,32 +586,22 @@ class ModelService(BaseSessionManagedService):
                 logger.debug("Metric '{}' has no non-null values, skipping", col)
                 continue
 
-            # Determine if the metric is step-based or epoch-based
-            # Step-based: 'step' column contains consecutive integers from 1 to N
-            # Epoch-based: 'epoch' column contains consecutive integers from 1 to N
-            is_step_based = ModelService._is_step_based(metric_df)
-
-            # Choose the appropriate x-axis column
-            x_axis_col = "step" if is_step_based else "epoch"
-            x_axis_label = "Step" if is_step_based else "Epoch"
-
-            # Build the points list
             points = [
-                {"x": float(row[x_axis_col]), "y": float(row[col]), "type": "point"}
+                {"x": float(row[frequency]), "y": float(row[col]), "type": "point"}
                 for row in metric_df.iter_rows(named=True)
             ]
 
             metric = {
-                "header": mapped_name,
+                "header": display_name,
                 "type": "line",
-                "key": mapped_name,
+                "key": display_name,
                 "value": {
                     "x_axis_label": x_axis_label,
-                    "y_axis_label": mapped_name,
+                    "y_axis_label": display_name,
                     "line_data": [
                         {
-                            "header": mapped_name,
-                            "key": mapped_name,
+                            "header": display_name,
+                            "key": display_name,
                             "points": points,
                         }
                     ],
@@ -480,39 +610,6 @@ class ModelService(BaseSessionManagedService):
             metrics.append(metric)
 
         return metrics
-
-    @staticmethod
-    def _is_step_based(metric_df: pl.DataFrame) -> bool:
-        """
-        Determine if a metric is step-based by checking if the 'step' column
-        contains all consecutive integers from 1 to N without skipping any value.
-
-        Args:
-            metric_df (pl.DataFrame): DataFrame to check for step-based or epoch-based metric.
-                It is expected to have 'step' and 'epoch' columns, and at least one metric column (with no null values)
-
-        Returns:
-            bool: True if the metric is step-based, False if epoch-based.
-        """
-        # Get the step values and filter out nulls
-        step_values = metric_df.select("step")
-        epoch_values = metric_df.select("epoch")
-
-        if step_values.is_empty() or epoch_values.is_empty():
-            raise ValueError("Malformed metrics data: 'step' or 'epoch' column is missing or empty")
-
-        # Get unique step values and sort them
-        unique_steps = step_values["step"].unique()
-
-        # Get the minimum and maximum step values
-        min_step = int(unique_steps.min())  # pyrefly: ignore[no-matching-overload]
-        max_step = int(unique_steps.max())  # pyrefly: ignore[no-matching-overload]
-
-        # Expected count for consecutive integers from min to max
-        expected_count = max_step - min_step + 1
-
-        # If the number of unique steps equals the expected count, they are consecutive and hence step-based
-        return len(unique_steps) == expected_count
 
     def get_logs(self, project_id: UUID, model_id: UUID, as_text: bool = False) -> Path | Iterator[str] | None:
         """

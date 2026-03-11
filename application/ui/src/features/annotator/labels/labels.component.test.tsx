@@ -9,7 +9,7 @@ import type { Label } from '../../../constants/shared-types';
 import { Labels } from './labels.component';
 
 const mockLabels: Label[] = [
-    getMockedLabel({ id: 'label-1', name: 'Person', color: '#FF0000' }),
+    getMockedLabel({ id: 'label-1', name: 'Person', color: '#FF0000', hotkey: 'p' }),
     getMockedLabel({ id: 'label-2', name: 'Car', color: '#00FF00' }),
     getMockedLabel({ id: 'label-3', name: 'Dog', color: '#0000FF' }),
 ];
@@ -94,6 +94,14 @@ describe('Labels', () => {
         expect(screen.getByText('Person')).toBeInTheDocument();
         expect(screen.getByText('Car')).toBeInTheDocument();
         expect(screen.getByText('Dog')).toBeInTheDocument();
+    });
+
+    it('selects label when pressing configured hotkey', () => {
+        render(<Labels />);
+
+        fireEvent.keyDown(document, { key: 'p', code: 'KeyP' });
+
+        expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-1');
     });
 
     it('updates selected annotations when clicking a different label', () => {

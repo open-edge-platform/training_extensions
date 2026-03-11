@@ -159,3 +159,9 @@ class MediaAnnotations(BaseModel):
             }
         }
     }
+
+
+class AnnotatedVideoFrame(BaseModel):
+    media_id: UUID
+    frame_index: int
+    annotation_data: MediaAnnotations

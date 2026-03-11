@@ -7,9 +7,9 @@ import { ReactComponent as IpCameraIcon } from '../../../../../assets/icons/ip-c
 import { ReactComponent as VideoFileIcon } from '../../../../../assets/icons/video-file.svg';
 import { ReactComponent as WebcamIcon } from '../../../../../assets/icons/webcam.svg';
 
-interface SourceIconProps {
+type SourceIconProps = {
     type: string;
-}
+};
 
 export const SourceIcon = ({ type }: SourceIconProps) => {
     if (type === 'usb_camera') {

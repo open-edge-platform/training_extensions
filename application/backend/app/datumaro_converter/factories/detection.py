@@ -3,33 +3,32 @@
 from collections.abc import Sequence
 
 import numpy as np
-from datumaro.experimental.fields import ImageInfo
+from datumaro.experimental import LazyImage
+from datumaro.experimental.fields import ImageInfo, Subset
 from loguru import logger
 
-from app.datumaro_converter.samples import DetectionSample
-from app.datumaro_converter.utils import ShapeConverter, SubsetConverter, validate_confidence_consistency
+from app.datumaro_converter.domain import DetectionSample
+from app.datumaro_converter.utils import ShapeConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Rectangle
 
 from .sample_factory import SampleFactory
 
 
-class DetectionSampleFactory(SampleFactory):
+class DetectionSampleFactory(SampleFactory[DetectionSample]):
     """Knows how to create detection samples."""
 
-    @property
-    def sample_type(self) -> type[DetectionSample]:
-        return DetectionSample
+    sample_type = DetectionSample
 
     def create_sample(self, dataset_item: DatasetItem, media: Media, image_path: str) -> DetectionSample | None:
         if dataset_item.annotation_data is None:
             return DetectionSample(
                 id=str(dataset_item.id),
-                image=image_path,
+                image=LazyImage(image_path),
                 image_info=ImageInfo(width=media.width, height=media.height),
                 bboxes=np.array([]),
                 label=np.array([]),
                 confidence=None,
-                subset=SubsetConverter.to_datumaro(dataset_item.subset),
+                subset=Subset[dataset_item.subset.name],
                 user_reviewed=False,
             )
 
@@ -46,12 +45,12 @@ class DetectionSampleFactory(SampleFactory):
 
         return DetectionSample(
             id=str(dataset_item.id),
-            image=image_path,
+            image=LazyImage(image_path),
             image_info=ImageInfo(width=media.width, height=media.height),
             bboxes=np.array(bboxes),
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
-            subset=SubsetConverter.to_datumaro(dataset_item.subset),
+            subset=Subset[dataset_item.subset.name],
             user_reviewed=True,
         )
 
@@ -68,7 +67,7 @@ class DetectionSampleFactory(SampleFactory):
         indices = self._label_index.get_indices(label_ids)
 
         if indices is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
 
         return indices
 

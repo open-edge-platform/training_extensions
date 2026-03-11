@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSubmitJob } from 'hooks/api/jobs.hook';
+import { useSubmitJob } from 'hooks/api/jobs/jobs.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { DeviceType } from '../../../../constants/shared-types';
@@ -15,10 +15,12 @@ export const useTrainModelMutation = () => {
             device,
             modelArchitectureId,
             datasetRevisionId,
+            parentModelRevisionId,
         }: {
             device: DeviceType;
             modelArchitectureId: string;
             datasetRevisionId: string | null;
+            parentModelRevisionId: string | null;
         },
         onSuccess?: () => void
     ) => {
@@ -31,6 +33,7 @@ export const useTrainModelMutation = () => {
                         device,
                         model_architecture_id: modelArchitectureId,
                         dataset_revision_id: datasetRevisionId,
+                        parent_model_revision_id: parentModelRevisionId,
                     },
                 },
             },

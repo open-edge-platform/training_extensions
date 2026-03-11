@@ -25,6 +25,10 @@
     margin-bottom: var(--spectrum-global-dimension-font-size-1000);
 }
 
+.content {
+    padding: var(--spectrum-global-dimension-size-500);
+}
+
 .card {
     --thumbnail-size: var(--spectrum-global-dimension-size-2000);
     --border-size: var(--spectrum-global-dimension-size-25);

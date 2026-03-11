@@ -5,7 +5,7 @@
 from pydantic import BaseModel, Field
 
 from app.models import TaskType
-from app.supported_models.model_manifest import Capabilities, ModelManifest, ModelManifestDeprecationStatus, ModelStats
+from app.models.model_manifest import Capabilities, ModelManifest, ModelManifestDeprecationStatus, ModelStats
 
 
 class ModelArchitecture(BaseModel):

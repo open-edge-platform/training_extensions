@@ -1,12 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { paths } from './constants/paths';
-import { SelectedDataProvider } from './features/dataset/selected-data-provider.component';
+import { ImportDatasetDialogStateProvider } from './features/dataset/providers/export-import-dataset-dialog-provider.component';
+import { SelectedDataProvider } from './features/dataset/providers/selected-data-provider.component';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
+import { ImportDatasetDialogProvider } from './features/project/providers/import-dataset-dialog-provider.component';
 import { useProjects } from './hooks/api/project.hook';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
@@ -30,7 +32,7 @@ const Redirect = () => {
         const projectId = projects[0].id;
 
         if (projectId) {
-            path = paths.project.dataset({ projectId });
+            path = paths.project.dataset.index({ projectId });
         } else {
             path = paths.project.new({});
         }
@@ -40,7 +42,7 @@ const Redirect = () => {
         const projectWithActivePipeline = projects.find((project) => Boolean(project.active_pipeline));
 
         if (projectWithActivePipeline) {
-            path = paths.project.dataset({ projectId: projectWithActivePipeline.id });
+            path = paths.project.dataset.index({ projectId: projectWithActivePipeline.id });
         } else {
             path = paths.project.index({});
         }
@@ -61,7 +63,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: paths.project.index.pattern,
-                element: <ProjectList />,
+                element: (
+                    <ImportDatasetDialogProvider>
+                        <ProjectList />
+                    </ImportDatasetDialogProvider>
+                ),
             },
             {
                 path: paths.project.new.pattern,
@@ -81,20 +87,28 @@ export const router = createBrowserRouter([
                         element: <Inference />,
                     },
                     {
-                        path: paths.project.dataset.pattern,
+                        path: paths.project.dataset.index.pattern,
                         element: (
-                            <SelectedDataProvider>
-                                <Dataset />
-                            </SelectedDataProvider>
+                            <ImportDatasetDialogStateProvider>
+                                <SelectedDataProvider>
+                                    <Outlet />
+                                </SelectedDataProvider>
+                            </ImportDatasetDialogStateProvider>
                         ),
-                    },
-                    {
-                        path: paths.project.datasetItem.pattern,
-                        element: (
-                            <SelectedDataProvider>
-                                <Dataset />
-                            </SelectedDataProvider>
-                        ),
+                        children: [
+                            {
+                                index: true,
+                                element: <Dataset />,
+                            },
+                            {
+                                path: paths.project.dataset.item.index.pattern,
+                                element: <Dataset />,
+                            },
+                            {
+                                path: paths.project.dataset.item.frame.pattern,
+                                element: <Dataset />,
+                            },
+                        ],
                     },
                     {
                         path: paths.project.models.pattern,

@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { AlertDialog, Button, DialogContainer, Divider, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
+import { AlertDialog, Button, DialogContainer, Flex, Grid, Loading, Tag, Text } from '@geti/ui';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
@@ -110,9 +110,6 @@ export const TrainingModelRow = ({
     const formattedStartedAt = job.started_at
         ? dayjs(job.started_at).format('DD MMM YYYY, hh:mm A')
         : 'Waiting to start...';
-    const formattedElapsed = job.started_at
-        ? dayjs.duration(dayjs().diff(dayjs(job.started_at))).format('H:mm:ss')
-        : '';
 
     const statusMessage = job.message || (job.status === 'PENDING' ? 'Pending...' : 'Running...');
 
@@ -135,15 +132,7 @@ export const TrainingModelRow = ({
                         <StatusTag status={statusMessage} />
                     </Flex>
 
-                    <Text UNSAFE_className={classes.metaText}>
-                        {`Started: ${formattedStartedAt}`}
-                        {formattedElapsed && (
-                            <>
-                                <Divider orientation={'vertical'} />
-                                {`Elapsed: ${formattedElapsed}`}
-                            </>
-                        )}
-                    </Text>
+                    <Text UNSAFE_className={classes.metaText}>{`Started: ${formattedStartedAt}`}</Text>
                 </Flex>
 
                 <Text UNSAFE_className={classes.smallText}>...</Text>

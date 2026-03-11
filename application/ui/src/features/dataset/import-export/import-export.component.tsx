@@ -5,23 +5,27 @@ import { Button, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
 import { ExportDatasetConfig } from '../../../components/export-dataset-config-dialog/export-dataset-config.component';
+import { useImportDatasetDialogState } from '../providers/export-import-dataset-dialog-provider.component';
 import { MainDatasetStatistics } from './export-dataset/dataset-statistics.component';
-import { ImportDataset } from './import-dataset/import-dataset.component';
+import { ImportDatasetToProject } from './import-dataset/Import-dataset-to-project.component';
 
 export const ImportExport = () => {
     const exportDialogState = useOverlayTriggerState({});
-    const importDialogState = useOverlayTriggerState({});
+    const { datasetImportDialogState, setCurrentStep } = useImportDatasetDialogState();
 
     const handleMenuAction = (option: Key) => {
         switch (option) {
             case 'export':
                 exportDialogState.open();
                 break;
+
             case 'import':
-                importDialogState.open();
+                setCurrentStep('uploading');
+                datasetImportDialogState.open();
                 break;
         }
     };
+
     return (
         <>
             <MenuTrigger>
@@ -34,7 +38,7 @@ export const ImportExport = () => {
                 </Menu>
             </MenuTrigger>
 
-            <ImportDataset dialogState={importDialogState} />
+            <ImportDatasetToProject />
 
             <ExportDatasetConfig
                 datasetId={null}

@@ -72,6 +72,18 @@ describe('AnnotationLabels', () => {
         expect(mockOnRemove).toHaveBeenCalledWith('label-1');
     });
 
+    it('does not render remove button when labels are non-removable', () => {
+        const label = getMockedLabel({ id: 'label-1', name: 'Person' });
+
+        render(
+            <svg>
+                <AnnotationLabels labels={[label]} onRemove={mockOnRemove} isRemovable={false} />
+            </svg>
+        );
+
+        expect(screen.queryByLabelText('Remove Person')).not.toBeInTheDocument();
+    });
+
     it('positions foreignObject just above annotation anchor for CSS scaling', () => {
         const label = getMockedLabel({ name: 'Person' });
 

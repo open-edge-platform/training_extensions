@@ -40,10 +40,7 @@ const ModelArchitectureParameters = () => {
 
     return (
         <ul className={styles.modelArchitectureParameters}>
-            <li>Size: {modelArchitecture.stats.trainable_parameters} Millions</li>
-            <li>Accuracy: {modelArchitecture.stats.performance_ratings.accuracy}</li>
-            <li>Inference speed: {modelArchitecture.stats.performance_ratings.inference_speed}</li>
-            <li>Training time: {modelArchitecture.stats.performance_ratings.training_time}</li>
+            <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
             <li>License: Apache 2.0</li>
         </ul>
     );
@@ -76,7 +73,7 @@ type ModelArchitectureContextProps = {
 
 const ModelArchitectureContext = createContext<ModelArchitectureContextProps | null>(null);
 
-export const useModelArchitecture = () => {
+const useModelArchitecture = () => {
     const context = useContext(ModelArchitectureContext);
 
     if (context === null) {

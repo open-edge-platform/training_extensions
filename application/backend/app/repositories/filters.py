@@ -16,8 +16,6 @@ def _apply_annotation_status_filter(stmt: Select, annotation_status: str | None 
             stmt = stmt.where(DatasetItemDB.user_reviewed.is_(True))
         case DatasetItemAnnotationStatus.TO_REVIEW:
             stmt = stmt.where(DatasetItemDB.user_reviewed.is_(False))
-        case DatasetItemAnnotationStatus.REVIEWED_OR_UNANNOTATED:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_(None) | DatasetItemDB.user_reviewed.is_(True))
     return stmt
 
 

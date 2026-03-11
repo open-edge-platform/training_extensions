@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from io import BytesIO
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
@@ -8,6 +7,7 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
+from app.api.io_utils import write_file_to_response, write_image_to_response
 from app.api.schemas.dataset_item import DatasetRevisionItemsWithPagination, DatasetRevisionItemView
 from app.api.schemas.dataset_revision import DatasetRevisionView
 from app.api.validators import DatasetItemID, DatasetRevisionID
@@ -192,7 +192,7 @@ def get_dataset_revision_item_binary(
         dataset_revision=dataset_revision,
         item_id=str(dataset_item_id),
     ).image_path
-    return FileResponse(binary_path)
+    return write_file_to_response(path=binary_path, filename=f"{dataset_item_id}.jpeg")
 
 
 @router.get(
@@ -215,16 +215,8 @@ def get_dataset_revision_item_thumbnail(
         dataset_revision=dataset_revision,
         item_id=str(dataset_item_id),
     )
-    buffer = BytesIO()
-    thumbnail.save(buffer, format="JPEG")
-    buffer.seek(0)
-    return StreamingResponse(
-        buffer,
-        media_type="image/jpeg",
-        headers={
-            "Content-Disposition": f"inline; filename={dataset_item_id}.jpeg",
-            "Cache-Control": "public, max-age=31536000",
-        },
+    return write_image_to_response(
+        image=thumbnail, filename=f"{dataset_item_id}-thumb.jpeg", cache_control="public, max-age=31536000"
     )
 
 

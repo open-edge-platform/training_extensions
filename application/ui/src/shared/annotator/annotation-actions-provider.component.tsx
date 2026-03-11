@@ -11,36 +11,11 @@ import { $api } from '../../api/client';
 import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
-import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import { isVideoFrame } from '../media-item-utils';
 import type { Annotation, Shape } from '../types';
+import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
+import type { AnnotatorMode } from './annotator-mode';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
-
-const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
-    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
-
-    return serverAnnotations.map((annotation) => {
-        // We only get the ids of the labels
-        const labels = (annotation.labels ?? [])
-            .map((labelRef) => labelMap.get(labelRef.id))
-            .filter((label): label is Label => label !== undefined)
-            .map((label, idx) => ({ ...label, probability: annotation.confidences?.at(idx) }));
-
-        return {
-            ...annotation,
-            id: uuid(),
-            labels,
-        };
-    });
-};
-
-const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): AnnotationDTO[] => {
-    return localAnnotations.map((annotation) => ({
-        // We only want to send the ids of the labels
-        labels: annotation.labels.map((label) => ({ id: label.id })),
-        shape: annotation.shape,
-        ...(annotation.confidences !== undefined && { confidences: annotation.confidences }),
-    }));
-};
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
@@ -49,8 +24,10 @@ interface AnnotationsContextValue {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
+    resetAnnotations: () => void;
     isUserReviewed: boolean;
     isSaving: boolean;
+    isReadOnlyMode: boolean;
 }
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
@@ -62,6 +39,7 @@ type AnnotationActionsProviderProps = {
     isUserReviewed?: boolean;
     mediaItem: Media;
     mode: AnnotatorMode;
+    isReadOnly?: boolean;
 };
 
 const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotation[] => {
@@ -75,6 +53,7 @@ export const AnnotationActionsProvider = ({
     isUserReviewed = false,
     mediaItem,
     mode,
+    isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
@@ -86,6 +65,18 @@ export const AnnotationActionsProvider = ({
                     { params: { path: { project_id: projectId, media_id: mediaItem.id } } },
                 ],
                 ['get', '/api/projects/{project_id}/dataset/items', { params: { path: { project_id: projectId } } }],
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/items/{dataset_item_id}',
+                    { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
+                ],
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/media/{media_id}/frames',
+                    {
+                        params: { path: { project_id: projectId, media_id: mediaItem.id } },
+                    },
+                ],
             ],
         },
     });
@@ -150,11 +141,23 @@ export const AnnotationActionsProvider = ({
         );
     };
 
+    const resetAnnotations = () => {
+        undoRedoActions.reset([]);
+    };
+
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
+        const query = isVideoFrame(mediaItem)
+            ? {
+                  frame_index: mediaItem.frame_number,
+              }
+            : undefined;
+
         await saveMutation.mutateAsync({
-            params: { path: { media_id: mediaItem.id, project_id: projectId } },
+            params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
             body: { annotations: annotationsDTO },
         });
+
+        resetAnnotations();
     };
 
     const submitPredictions = async () => {
@@ -177,6 +180,7 @@ export const AnnotationActionsProvider = ({
     };
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+    const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
     return (
         <AnnotationsContext.Provider
@@ -189,11 +193,13 @@ export const AnnotationActionsProvider = ({
                 updateAnnotations,
                 deleteAnnotations,
                 addAnnotationWithEmptyLabel,
+                resetAnnotations,
 
                 // Remote
                 submitAnnotations,
 
                 isSaving: saveMutation.isPending,
+                isReadOnlyMode,
             }}
         >
             <UndoRedoProvider state={undoRedoActions}>{children}</UndoRedoProvider>

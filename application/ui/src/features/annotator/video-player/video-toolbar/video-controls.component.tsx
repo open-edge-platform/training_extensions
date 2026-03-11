@@ -4,12 +4,19 @@
 import { ActionButton, Flex } from '@geti/ui';
 import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti/ui/icons';
 
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useVideoPlayer } from '../video-player-provider.component';
 
 export const VideoControls = () => {
     const { isMuted, toggleMute, videoControls } = useVideoPlayer();
     const { isPlaying, play, pause, previousFrame, nextFrame, canSelectPreviousFrame, canSelectNextFrame } =
         videoControls;
+    const { resetAnnotations } = useAnnotationActions();
+
+    const handlePlay = async () => {
+        await play();
+        resetAnnotations();
+    };
 
     return (
         <Flex alignItems={'center'} gap={'size-100'}>
@@ -27,7 +34,7 @@ export const VideoControls = () => {
                         <Pause />
                     </ActionButton>
                 ) : (
-                    <ActionButton isQuiet aria-label={'Play video'} onPress={play}>
+                    <ActionButton isQuiet aria-label={'Play video'} onPress={handlePlay}>
                         <Play />
                     </ActionButton>
                 )}

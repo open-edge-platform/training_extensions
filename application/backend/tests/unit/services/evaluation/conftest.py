@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import numpy as np
 import pytest
-from datumaro.experimental import Dataset
+from datumaro.experimental import Dataset, LazyImage
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 
@@ -25,7 +25,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
     samples = (
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=0,
             confidence=None,
@@ -34,7 +34,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
         ),
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=1,
             confidence=None,
@@ -43,7 +43,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
         ),
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=2,
             confidence=None,
@@ -52,7 +52,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
         ),
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/D.jpg",
+            image=LazyImage("/dummy/path/D.jpg"),
             image_info=img_info,
             label=1,
             confidence=None,
@@ -61,7 +61,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
         ),
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/E.jpg",
+            image=LazyImage("/dummy/path/E.jpg"),
             image_info=img_info,
             label=2,
             confidence=None,
@@ -82,7 +82,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
     samples = (
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=0,
             confidence=0.9,
@@ -91,7 +91,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
         ),  # correct
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=2,
             confidence=0.6,
@@ -100,7 +100,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
         ),  # wrong
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=1,
             confidence=0.5,
@@ -109,7 +109,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
         ),  # wrong
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/D.jpg",
+            image=LazyImage("/dummy/path/D.jpg"),
             image_info=img_info,
             label=1,
             confidence=0.8,
@@ -118,7 +118,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
         ),  # correct
         ClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/E.jpg",
+            image=LazyImage("/dummy/path/E.jpg"),
             image_info=img_info,
             label=2,
             confidence=0.9,
@@ -141,7 +141,7 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
     samples = (
         MultilabelClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=np.array([0, 1]),
             confidence=None,
@@ -150,7 +150,7 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
         ),
         MultilabelClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=np.array([1]),
             confidence=None,
@@ -159,7 +159,7 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
         ),
         MultilabelClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=np.array([2, 0]),
             confidence=None,
@@ -182,7 +182,7 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
     samples = (
         MultilabelClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=np.array([0]),
             confidence=np.array([0.85]),
@@ -191,7 +191,7 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
         ),  # missing one label
         MultilabelClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=np.array([1, 2]),
             confidence=np.array([0.8, 0.6]),
@@ -200,7 +200,7 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
         ),  # one extra label
         MultilabelClassificationSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=np.array([2, 0]),
             confidence=np.array([0.9, 0.7]),
@@ -221,7 +221,7 @@ def fxt_detection_dataset_gt() -> Dataset:
     samples = (
         DetectionSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             bboxes=np.array([[10, 15, 30, 35]]),
             label=np.array([1]),
@@ -231,7 +231,7 @@ def fxt_detection_dataset_gt() -> Dataset:
         ),
         DetectionSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             bboxes=np.array([[5, 5, 20, 20], [25, 30, 50, 60]]),
             label=np.array([0, 1]),
@@ -241,7 +241,7 @@ def fxt_detection_dataset_gt() -> Dataset:
         ),
         DetectionSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             bboxes=np.array([[0, 0, 15, 15]]),
             label=np.array([0]),
@@ -263,7 +263,7 @@ def fxt_detection_dataset_pred() -> Dataset:
     samples = (
         DetectionSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             bboxes=np.array([[10, 20, 30, 40]]),  # partial overlap (IoU = 0.6)
             label=np.array([1]),  # correct
@@ -273,7 +273,7 @@ def fxt_detection_dataset_pred() -> Dataset:
         ),
         DetectionSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             bboxes=np.array([[5, 5, 20, 20], [25, 30, 50, 60]]),  # correct
             label=np.array([0, 1]),  # correct
@@ -283,7 +283,7 @@ def fxt_detection_dataset_pred() -> Dataset:
         ),
         DetectionSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             bboxes=np.array([[0, 0, 15, 15]]),  # correct
             label=np.array([1]),  # wrong
@@ -305,7 +305,7 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
     samples = (
         InstanceSegmentationSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             polygons=np.array([[[10, 20], [30, 40], [40, 70], [10, 60]], [[10, 20], [30, 40], [50, 40]]], dtype=object),
             label=np.array([0, 1]),
@@ -315,7 +315,7 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             polygons=np.array([[[50, 50], [90, 50], [50, 80]]]),
             label=np.array([0]),
@@ -325,7 +325,7 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             polygons=np.array([[[15, 15], [25, 15], [25, 25], [15, 25]]]),
             label=np.array([1]),
@@ -347,7 +347,7 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
     samples = (
         InstanceSegmentationSample(
             id=str(uuid4()),
-            image="/dummy/path/A.jpg",
+            image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             polygons=np.array(
                 [[[10, 20], [30, 40], [40, 70], [10, 60]], [[10, 20], [30, 40], [50, 40]]], dtype=object
@@ -359,7 +359,7 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
-            image="/dummy/path/B.jpg",
+            image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             polygons=np.array([[[50, 50], [82, 50], [50, 74]]]),  # partial overlap (64% IoU)
             label=np.array([0]),  # correct
@@ -369,7 +369,7 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
         ),
         InstanceSegmentationSample(
             id=str(uuid4()),
-            image="/dummy/path/C.jpg",
+            image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             polygons=np.array([[[15, 15], [25, 15], [25, 25], [15, 25]]]),  # correct
             label=np.array([0]),  # wrong

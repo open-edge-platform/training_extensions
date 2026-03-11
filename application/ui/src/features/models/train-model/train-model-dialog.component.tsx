@@ -21,7 +21,9 @@ import { useMatch } from 'react-router';
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
 import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
-import { TrainModelDialogContent } from './train-model-dialog-content';
+import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
+import { BasicTrainModelContent } from './basic-train-model-content.component';
+import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
 import { useTrainModel } from './train-model-provider.component';
 
 type TrainModelDialogProps = {
@@ -29,8 +31,16 @@ type TrainModelDialogProps = {
 };
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevisionId, datasetRevisions } =
-        useTrainModel();
+    const {
+        selectedTrainingDevice,
+        selectedModelArchitectureId,
+        selectedDatasetRevisionId,
+        selectedModelRevisionId,
+        datasetRevisions,
+        modelRevisions,
+        isAdvancedSettingsMode,
+        onToggleAdvancedSettingsMode,
+    } = useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
     const isModelsPage = useMatch(paths.project.models.pattern);
@@ -43,10 +53,12 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         if (isStartButtonDisabled) return;
 
         const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
+        const parentModelRevisionId = modelRevisions.find((revision) => revision.id === selectedModelRevisionId)?.value;
 
         trainModelMutation.mutate(
             {
                 datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
+                parentModelRevisionId: parentModelRevisionId === undefined ? null : parentModelRevisionId,
                 device: selectedTrainingDevice,
                 modelArchitectureId: selectedModelArchitectureId,
             },
@@ -73,13 +85,15 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     };
 
     return (
-        <Dialog width={'clamp(800px, 50vw, 1150px)'}>
+        <Dialog width={'clamp(800px, 50vw, 1150px)'} height={isAdvancedSettingsMode ? '80vh' : undefined}>
             <Heading>Select a model to train</Heading>
 
             <Divider size={'S'} />
 
             <Content>
-                <TrainModelDialogContent />
+                <TrainModelDialogLayout>
+                    {isAdvancedSettingsMode ? <AdvancedSettings /> : <BasicTrainModelContent />}
+                </TrainModelDialogLayout>
             </Content>
 
             <Divider size={'S'} />
@@ -91,7 +105,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                             <Heading>Why can I not start training?</Heading>
                             <Content>
                                 In order to train a model, you need to annotate at least 3 items in your dataset,
-                                although we recommend annotating at least 10 for better results.
+                                although we recommend annotating several more for better results.
                             </Content>
                         </InlineAlert>
                     ) : null}
@@ -100,6 +114,9 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 <ButtonGroup marginStart={'auto'}>
                     <Button variant={'secondary'} onPress={onClose}>
                         Cancel
+                    </Button>
+                    <Button variant={'primary'} onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}>
+                        {isAdvancedSettingsMode ? 'Back' : 'Advanced settings'}
                     </Button>
                     <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
                         Start

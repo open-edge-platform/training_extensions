@@ -1,0 +1,9 @@
+hyperparameters:
+  training:
+    max_epochs: 100
+    allowed_values_input_size:
+      - 128
+      - 256
+      - 512
+    input_size_width: 512
+    input_size_height: 256

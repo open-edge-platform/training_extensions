@@ -3,21 +3,32 @@
 
 import { ChangeEvent, useRef } from 'react';
 
-import { Button } from '@geti/ui';
+import { Button, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 
-interface AddMediaButtonProps {
+type AddMediaButtonProps = {
     onFilesSelected: (files: File[]) => void;
-    multiple?: boolean;
-}
+};
 
 const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
-const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png'];
+const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'jfif', 'tif', 'tiff', 'webp', 'bmp'];
 const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
 
-const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
+export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 
-export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaButtonProps) => {
+export const AddMediaButton = ({ onFilesSelected }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const folderInputRef = useRef<HTMLInputElement>(null);
+
+    const setFolderInputRef = (input: HTMLInputElement | null) => {
+        folderInputRef.current = input;
+
+        if (input === null) {
+            return;
+        }
+
+        input.setAttribute('webkitdirectory', '');
+        input.setAttribute('directory', '');
+    };
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -33,8 +44,12 @@ export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaBut
         }
     };
 
-    const handleClick = () => {
-        fileInputRef.current?.click();
+    const handleMenuAction = (action: Key) => {
+        if (action === 'files') {
+            fileInputRef.current?.click();
+        } else if (action === 'folder') {
+            folderInputRef.current?.click();
+        }
     };
 
     return (
@@ -42,15 +57,28 @@ export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaBut
             <input
                 ref={fileInputRef}
                 type='file'
-                multiple={multiple}
+                multiple
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
                 aria-label={'Upload media files'}
                 accept={acceptedExtensions}
             />
-            <Button variant={'secondary'} onPress={handleClick}>
-                Upload Files
-            </Button>
+            <input
+                ref={setFolderInputRef}
+                type='file'
+                multiple
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                aria-label={'Upload media folder'}
+                accept={acceptedExtensions}
+            />
+            <MenuTrigger>
+                <Button variant={'secondary'}>Upload media</Button>
+                <Menu onAction={handleMenuAction} aria-label={'Upload menu'}>
+                    <Item key={'files'}>Files</Item>
+                    <Item key={'folder'}>Folder</Item>
+                </Menu>
+            </MenuTrigger>
         </>
     );
 };
