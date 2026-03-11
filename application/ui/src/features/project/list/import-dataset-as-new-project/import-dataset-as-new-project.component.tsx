@@ -45,7 +45,9 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
                         <ProgressStepper currentStep={currentStep} />
 
                         <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
-                            {currentStep === 'uploading' && <ImportUploadFile onFileUploaded={handleFileUploaded} />}
+                            {currentStep === 'uploading' && (
+                                <ImportUploadFile formatOptions='Geti, COCO' onFileUploaded={handleFileUploaded} />
+                            )}
 
                             {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
                                 <ImportProcess stagedDatasetId={currentStagedId} onFilePrepared={handleFilePrepared} />

@@ -57,5 +57,5 @@ export const formatToFileArray = (files: FileList | File[] | null): File[] => {
 export const isSupportedDatasetZip = (file: File): boolean => {
     const fileType = file.type ? file.type.split('/')[1] : '';
 
-    return fileType ? VALID_DATASET_TYPES.includes(fileType) : false;
+    return fileType ? VALID_DATASET_TYPES.some((type) => fileType.includes(type)) : false;
 };

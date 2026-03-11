@@ -1,9 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { components } from '../../api/openapi-spec';
-
-type TaskType = components['schemas']['TaskType'];
+import { TaskType } from '../constants/shared-types';
 
 export const getFormatOptions = (taskType: TaskType) => {
     const options: Record<TaskType, { label: string; value: string }[]> = {
