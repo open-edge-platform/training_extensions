@@ -27,17 +27,17 @@ class SchedulerType(StrEnum):
     COSINE_ANNEALING = "cosine_annealing"
 
 
-class LearningRateWarmupParameters(BaseModel):
+class LrLinearWarmupParameters(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable",
-        description="Toggle to enable or disable a warmup phase at the beginning of training.",
+        description="Toggle to enable or disable the LR linear warmup phase at the beginning of training.",
     )
     epochs: int = Field(
         default=5,
         ge=1,
         title="Warmup epochs",
-        description="Number of epochs for the warmup phase.",
+        description="Number of epochs for the LR linear warmup phase.",
     )
 
 
@@ -52,9 +52,9 @@ class SchedulerParameters(BaseModel):
             "gradually decreasing over the course of training."
         ),
     )
-    warmup: LearningRateWarmupParameters = Field(
-        default_factory=LearningRateWarmupParameters,
-        title="Learning rate warmup",
+    warmup: LrLinearWarmupParameters = Field(
+        default_factory=LrLinearWarmupParameters,
+        title="Learning rate linear warmup",
         description=(
             "Learning rate warmup is a technique where the learning rate starts at a lower value and gradually "
             "increases to the initial learning rate over a specified number of epochs at the beginning of training. "
@@ -94,8 +94,11 @@ class GradientAccumulationParameters(BaseModel):
     batches: int = Field(
         ge=1,
         default=1,
-        title="Accumulation batches",
-        description="Number of batches to accumulate gradients before performing a weight update.",
+        title="Gradient accumulation batches",
+        description=(
+            "Number of steps (batches) to accumulate gradients before performing gradient descent step. "
+            "Effective batch size during training: batch_size * accumulate_grad_batches."
+        ),
     )
 
 
@@ -108,8 +111,8 @@ class GradientClipParameters(BaseModel):
     max_grad_norm: float = Field(
         gt=0,
         default=1.0,
-        title="Maximum gradient norm",
-        description="Maximum norm of the gradients. Gradients with norm larger than this value will be clipped.",
+        title="Maximum gradient L2 norm",
+        description="Maximum L2 norm of the gradients. Gradients with norm larger than this value will be clipped.",
     )
 
 
@@ -131,7 +134,8 @@ class AlgoLevelTrainingParameters(BaseModel):
         description=(
             "Number of training samples processed before the model's internal parameters are updated. "
             "A larger batch size can speed up training but may require more memory, while a smaller batch size "
-            "can lead to more stable convergence but may take longer to train."
+            "can help avoid OOM (Out of Memory) errors at the cost of longer training times and potentially noisier "
+            "gradient estimates."
         ),
     )
     early_stopping: EarlyStopping = Field(
@@ -159,7 +163,8 @@ class AlgoLevelTrainingParameters(BaseModel):
         title="Weight decay",
         description=(
             "Weight decay is a regularization technique that adds a penalty to the loss function based on the "
-            "magnitude of the model weights. It helps prevent overfitting by discouraging large weight values."
+            "squared magnitude of the model weights (L2 regularization). "
+            "It helps prevent overfitting by discouraging large weight values."
         ),
     )
     scheduler: SchedulerParameters = Field(

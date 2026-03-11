@@ -23,7 +23,7 @@ from app.models.training_configuration.training import (
     EarlyStopping,
     GradientAccumulationParameters,
     GradientClipParameters,
-    LearningRateWarmupParameters,
+    LrLinearWarmupParameters,
     SchedulerParameters,
     SchedulerType,
 )
@@ -64,7 +64,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                 weight_decay=0.01,
                 scheduler=SchedulerParameters(
                     type=SchedulerType.COSINE_ANNEALING,
-                    warmup=LearningRateWarmupParameters(enable=True, epochs=3),
+                    warmup=LrLinearWarmupParameters(enable=True, epochs=3),
                     factor=0.5,
                     patience=7,
                     min_lr=1e-5,
@@ -105,7 +105,7 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                 weight_decay=1e-4,
                 scheduler=SchedulerParameters(
                     type=SchedulerType.REDUCE_LR_ON_PLATEAU,
-                    warmup=LearningRateWarmupParameters(enable=False, epochs=5),
+                    warmup=LrLinearWarmupParameters(enable=False, epochs=5),
                     factor=0.1,
                     patience=10,
                     min_lr=1e-6,
@@ -429,7 +429,8 @@ def fxt_training_configuration_view_json() -> dict:
                         "description": (
                             "Number of training samples processed before the model's internal parameters are updated. "
                             "A larger batch size can speed up training but may require more memory, while a smaller "
-                            "batch size can lead to more stable convergence but may take longer to train."
+                            "batch size can help avoid OOM (Out of Memory) errors at the cost of longer training times "
+                            "and potentially noisier gradient estimates."
                         ),
                         "value": 8,
                         "default_value": 4,
@@ -498,8 +499,8 @@ def fxt_training_configuration_view_json() -> dict:
                         "name": "Weight decay",
                         "description": (
                             "Weight decay is a regularization technique that adds a penalty to the loss function "
-                            "based on the magnitude of the model weights. It helps prevent overfitting by discouraging "
-                            "large weight values."
+                            "based on the squared magnitude of the model weights (L2 regularization). "
+                            "It helps prevent overfitting by discouraging large weight values."
                         ),
                         "value": 0.01,
                         "default_value": 1e-4,
@@ -538,7 +539,7 @@ def fxt_training_configuration_view_json() -> dict:
                             {
                                 "type": "parameter_group",
                                 "key": "warmup",
-                                "name": "Learning rate warmup",
+                                "name": "Learning rate linear warmup",
                                 "description": (
                                     "Learning rate warmup is a technique where the learning rate starts at a lower "
                                     "value and gradually increases to the initial learning rate over a specified "
@@ -552,7 +553,8 @@ def fxt_training_configuration_view_json() -> dict:
                                         "key": "enable",
                                         "name": "Enable",
                                         "description": (
-                                            "Toggle to enable or disable a warmup phase at the beginning of training."
+                                            "Toggle to enable or disable the LR linear warmup phase at the "
+                                            "beginning of training."
                                         ),
                                         "value": True,
                                         "default_value": False,
@@ -563,7 +565,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "type": "parameter",
                                         "key": "epochs",
                                         "name": "Warmup epochs",
-                                        "description": ("Number of epochs for the warmup phase."),
+                                        "description": "Number of epochs for the LR linear warmup phase.",
                                         "value": 3,
                                         "default_value": 5,
                                         "value_type": "int",
@@ -608,7 +610,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "type": "parameter",
                                 "key": "min_lr",
                                 "name": "Minimum learning rate",
-                                "description": ("Minimum learning rate after annealing."),
+                                "description": "Minimum learning rate after annealing.",
                                 "value": 1e-5,
                                 "default_value": 1e-6,
                                 "value_type": "float",
@@ -632,7 +634,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "type": "parameter",
                                 "key": "enable",
                                 "name": "Enable",
-                                "description": ("Toggle to enable or disable gradient accumulation during training."),
+                                "description": "Toggle to enable or disable gradient accumulation during training.",
                                 "value": True,
                                 "default_value": False,
                                 "value_type": "bool",
@@ -641,9 +643,11 @@ def fxt_training_configuration_view_json() -> dict:
                             {
                                 "type": "parameter",
                                 "key": "batches",
-                                "name": "Accumulation batches",
+                                "name": "Gradient accumulation batches",
                                 "description": (
-                                    "Number of batches to accumulate gradients before performing a weight update."
+                                    "Number of steps (batches) to accumulate gradients before performing gradient "
+                                    "descent step. Effective batch size during training: "
+                                    "batch_size * accumulate_grad_batches."
                                 ),
                                 "value": 4,
                                 "default_value": 1,
@@ -668,7 +672,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "type": "parameter",
                                 "key": "enable",
                                 "name": "Enable",
-                                "description": ("Toggle to enable or disable gradient clipping during training."),
+                                "description": "Toggle to enable or disable gradient clipping during training.",
                                 "value": True,
                                 "default_value": False,
                                 "value_type": "bool",
@@ -677,9 +681,9 @@ def fxt_training_configuration_view_json() -> dict:
                             {
                                 "type": "parameter",
                                 "key": "max_grad_norm",
-                                "name": "Maximum gradient norm",
+                                "name": "Maximum gradient L2 norm",
                                 "description": (
-                                    "Maximum norm of the gradients. Gradients with norm larger than this value will "
+                                    "Maximum L2 norm of the gradients. Gradients with norm larger than this value will "
                                     "be clipped."
                                 ),
                                 "value": 2.0,

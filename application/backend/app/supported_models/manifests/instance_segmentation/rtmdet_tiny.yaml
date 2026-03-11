@@ -79,6 +79,6 @@ hyperparameters:
         epochs: 20
     gradient_clip:
       enable: true
-      max_grad_norm: 0.1
+      max_grad_norm: 35.0
     input_size_width: 640
     input_size_height: 640
