@@ -252,6 +252,9 @@ class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, OTXMulticlassCls
         return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         init_cfg = [
             {"std": 0.2, "layer": "Linear", "type": "TruncNormal"},
             {"bias": 0.0, "val": 1.0, "layer": "LayerNorm", "type": "Constant"},

@@ -46,7 +46,7 @@ def fxt_instance_seg_batch(batch_size: int = 2) -> OTXSampleBatch:
     ]
 
     return OTXSampleBatch(
-        images=images,
+        images=torch.stack(images),
         bboxes=bboxes,
         labels=labels,
         masks=masks,

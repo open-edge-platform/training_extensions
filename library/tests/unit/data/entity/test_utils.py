@@ -4,29 +4,27 @@
 
 import torch
 
-from otx.data.entity import ImageInfo, OTXSampleBatch
+from otx.data.entity import ImageInfo
 from otx.data.entity.utils import stack_batch
 
 
 def test_stack_batch():
-    # Create a sample entity with tensor images
-    entity = OTXSampleBatch(
-        images=[
-            torch.tensor([[[1, 2], [3, 4], [5, 6]]], dtype=torch.uint8),
-            torch.tensor([[[5, 6, 7], [8, 9, 10]]], dtype=torch.uint8),
-            torch.tensor([[[11, 12, 13, 14], [15, 16, 17, 18]]], dtype=torch.uint8),
-            torch.tensor([[[19, 20, 0], [0, 0, 0]]], dtype=torch.uint8),
-        ],
-        imgs_info=[
-            ImageInfo(img_shape=(3, 2), img_idx=0, ori_shape=(2, 2)),
-            ImageInfo(img_shape=(2, 3), img_idx=1, ori_shape=(2, 3)),
-            ImageInfo(img_shape=(2, 4), img_idx=2, ori_shape=(2, 4)),
-            ImageInfo(img_shape=(2, 3), img_idx=3, ori_shape=(1, 2), padding=(0, 0, 1, 1)),  # previously padded image
-        ],
-    )
+    # Create raw image tensors and image info for testing stack_batch directly
+    images = [
+        torch.tensor([[[1, 2], [3, 4], [5, 6]]], dtype=torch.uint8),
+        torch.tensor([[[5, 6, 7], [8, 9, 10]]], dtype=torch.uint8),
+        torch.tensor([[[11, 12, 13, 14], [15, 16, 17, 18]]], dtype=torch.uint8),
+        torch.tensor([[[19, 20, 0], [0, 0, 0]]], dtype=torch.uint8),
+    ]
+    imgs_info = [
+        ImageInfo(img_shape=(3, 2), img_idx=0, ori_shape=(2, 2)),
+        ImageInfo(img_shape=(2, 3), img_idx=1, ori_shape=(2, 3)),
+        ImageInfo(img_shape=(2, 4), img_idx=2, ori_shape=(2, 4)),
+        ImageInfo(img_shape=(2, 3), img_idx=3, ori_shape=(1, 2), padding=(0, 0, 1, 1)),  # previously padded image
+    ]
 
     # Call the stack_batch function
-    stacked_images, batch_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=1, pad_value=0)
+    stacked_images, batch_info = stack_batch(images, imgs_info, pad_size_divisor=1, pad_value=0)
 
     # Assert the output
     assert len(stacked_images) == 4

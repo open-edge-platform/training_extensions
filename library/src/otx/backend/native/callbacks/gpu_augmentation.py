@@ -37,10 +37,7 @@ class GPUAugmentationCallback(Callback):
     Args:
         train_config: SubsetConfig for training augmentations.
         val_config: SubsetConfig for validation augmentations (optional).
-        apply_on_val: Whether to apply augmentations during validation.
-            Defaults to True (normalization is usually applied on val too).
-        apply_on_test: Whether to apply augmentations during testing.
-            Defaults to True (normalization is usually applied on test too).
+        test_config: SubsetConfig for test augmentations (optional, defaults to val_config).
 
     Example:
         >>> callback = GPUAugmentationCallback(
@@ -67,15 +64,11 @@ class GPUAugmentationCallback(Callback):
         train_config: SubsetConfig | None = None,
         val_config: SubsetConfig | None = None,
         test_config: SubsetConfig | None = None,
-        apply_on_val: bool = True,
-        apply_on_test: bool = True,
     ) -> None:
         super().__init__()
         self.train_config = train_config
         self.val_config = val_config
         self.test_config = test_config if test_config is not None else val_config
-        self.apply_on_val = apply_on_val
-        self.apply_on_test = apply_on_test
 
         self._train_pipeline: GPUAugmentationPipeline | None = None
         self._val_pipeline: GPUAugmentationPipeline | None = None
@@ -124,7 +117,7 @@ class GPUAugmentationCallback(Callback):
         data_input_params.std = pipeline_std or model_std or (1, 1, 1)  # type: ignore[union-attr]
 
         # log update
-        if any([model_mean != data_input_params.mean, model_std != data_input_params.std]):
+        if model_mean != data_input_params.mean or model_std != data_input_params.std:
             log.info(f"Updated model mean: {model_mean} -> {data_input_params.mean}")
             log.info(f"Updated model std: {model_std} -> {data_input_params.std}")
 
@@ -237,7 +230,7 @@ class GPUAugmentationCallback(Callback):
         dataloader_idx: int = 0,
     ) -> None:
         """Apply GPU augmentations to validation batch."""
-        if not self.apply_on_val or self._val_pipeline is None:
+        if self._val_pipeline is None:
             return
 
         self._apply_pipeline(self._val_pipeline, batch)
@@ -251,7 +244,7 @@ class GPUAugmentationCallback(Callback):
         dataloader_idx: int = 0,
     ) -> None:
         """Apply GPU augmentations to test batch."""
-        if not self.apply_on_test or self._test_pipeline is None:
+        if self._test_pipeline is None:
             return
 
         self._apply_pipeline(self._test_pipeline, batch)

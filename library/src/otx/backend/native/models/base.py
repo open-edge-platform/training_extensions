@@ -926,7 +926,10 @@ class OTXModel(LightningModule):
 
         raise TypeError(label_info)
 
-    def _configure_preprocessing_params(self, preprocessing_params: DataInputParams | None) -> DataInputParams:
+    def _configure_preprocessing_params(
+        self,
+        preprocessing_params: DataInputParams | dict | None = None,
+    ) -> DataInputParams:
         """Check the validity of the preprocessing parameters."""
         if isinstance(preprocessing_params, dict):
             data_input_params = DataInputParams(**preprocessing_params)
@@ -948,6 +951,13 @@ class OTXModel(LightningModule):
         data_input_params.std = data_input_params.std or default_data_input_params.std
 
         # Validate
+        if data_input_params.mean is None:
+            msg = "Mean must be provided (either explicitly or via model defaults)."
+            raise ValueError(msg)
+        if data_input_params.std is None:
+            msg = "Std must be provided (either explicitly or via model defaults)."
+            raise ValueError(msg)
+
         if not (len(data_input_params.mean) == 3 and all(isinstance(m, float) for m in data_input_params.mean)):
             msg = f"Mean should be a tuple of 3 float values, but got {data_input_params.mean} instead."
             raise ValueError(msg)
@@ -955,11 +965,11 @@ class OTXModel(LightningModule):
             msg = f"Std should be a tuple of 3 float values, but got {data_input_params.std} instead."
             raise ValueError(msg)
 
-        if not all(0 <= m <= 255 for m in data_input_params.mean):
-            msg = f"Mean values should be in the range [0, 255], but got {data_input_params.mean} instead."
+        if not all(m >= 0 for m in data_input_params.mean):
+            msg = f"Mean values should be non-negative, but got {data_input_params.mean} instead."
             raise ValueError(msg)
-        if not all(0 <= s <= 255 for s in data_input_params.std):
-            msg = f"Std values should be in the range [0, 255], but got {data_input_params.std} instead."
+        if not all(s > 0 for s in data_input_params.std):
+            msg = f"Std values should be positive, but got {data_input_params.std} instead."
             raise ValueError(msg)
 
         if data_input_params.input_size is not None and (

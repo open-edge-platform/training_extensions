@@ -426,7 +426,7 @@ class CachedMosaic(tvt_v2.Transform):
         mosaic_w = self.img_scale[1] * 2
 
         fill_val = self.pad_val if isinstance(self.pad_val, (int, float)) else self.pad_val[0]
-        if fill_val > 1.0:
+        if fill_val > 1.0 + 1e-6:
             fill_val = fill_val / 255.0
         return torch.full((3, mosaic_h, mosaic_w), fill_val, dtype=dtype, device=device)
 

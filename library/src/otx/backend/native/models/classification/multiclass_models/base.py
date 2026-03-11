@@ -7,9 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Sequence
 
-import kornia
 import torch
-from kornia.augmentation import AugmentationSequential, Normalize
 from torch import Tensor
 
 from otx.backend.native.exporter.base import OTXModelExporter
@@ -121,15 +119,6 @@ class OTXMulticlassClsModel(OTXModel):
         )
 
     @property
-    def _default_train_transforms(self):  # noqa: ANN202
-        """Return default GPU augmentations for classification."""
-        return AugmentationSequential(
-            kornia.augmentation.RandomHorizontalFlip(),
-            kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
-            Normalize(self.data_input_params.mean, self.data_input_params.std),
-        )
-
-    @property
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
         return super()._export_parameters.wrap(
@@ -171,6 +160,9 @@ class OTXMulticlassClsModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for classification model."""
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return OTXSampleBatch(images=images, labels=labels)

@@ -75,6 +75,9 @@ class DinoV2Seg(OTXSegmentationModel):
         # initialize backbones
         num_classes = num_classes if num_classes is not None else self.num_classes
 
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         backbone = VisionTransformerBackbone(model_name=self.model_name, img_size=self.data_input_params.input_size)
         backbone.forward = partial(  # type: ignore[method-assign]
             backbone.get_intermediate_layers,

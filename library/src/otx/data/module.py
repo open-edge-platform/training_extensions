@@ -8,12 +8,13 @@ from __future__ import annotations
 import logging
 import multiprocessing
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
+
 from otx.config.data import SubsetConfig, TileConfig
 from otx.data.augmentation import CPUAugmentationPipeline
 from otx.data.dataset.tile import OTXTileDatasetFactory
@@ -122,12 +123,17 @@ class OTXDataModule(LightningDataModule):
                     subset_cfg.input_size = input_size  # type: ignore[assignment]
 
         # Derive mean/std from the CPU pipeline's Normalize transform.
-        # If no Normalize is present, leave as None so models fall back to their own defaults.
-        cpu_pipeline: CPUAugmentationPipeline | None = getattr(self.train_subset, "_cpu_pipeline", None)
-        if cpu_pipeline is None and getattr(self.train_subset, "augmentations_cpu", None):
+        # If no Normalize is present (e.g. GPU-only normalization via Kornia),
+        # leave as None so models fall back to their own defaults.
+        # The GPUAugmentationCallback.setup() will later override the model's
+        # mean/std with the GPU pipeline's values if applicable.
+        if getattr(self.train_subset, "augmentations_cpu", None):
             cpu_pipeline = CPUAugmentationPipeline.from_config(self.train_subset)
-        self.input_mean: tuple[float, float, float] | None = cpu_pipeline.mean if cpu_pipeline is not None else None
-        self.input_std: tuple[float, float, float] | None = cpu_pipeline.std if cpu_pipeline is not None else None
+            self.input_mean: tuple[float, float, float] | None = cpu_pipeline.mean
+            self.input_std: tuple[float, float, float] | None = cpu_pipeline.std
+        else:
+            self.input_mean = None
+            self.input_std = None
         self.input_size = input_size
 
         if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:
@@ -190,8 +196,6 @@ class OTXDataModule(LightningDataModule):
             raise ValueError(msg)
 
         self.label_info = next(iter(label_infos))
-
-
 
     @classmethod
     def from_otx_datasets(
@@ -322,9 +326,13 @@ class OTXDataModule(LightningDataModule):
             setattr(instance, f"{name}_subset", subset_to_assign)
 
         # Derive normalization params from the CPU pipeline's Normalize transform if available.
-        _cpu_pipeline: CPUAugmentationPipeline | None = getattr(instance.train_subset, "_cpu_pipeline", None)
-        instance.input_mean: tuple[float, float, float] | None = _cpu_pipeline.mean if _cpu_pipeline is not None else None  # type: ignore[no-redef]
-        instance.input_std: tuple[float, float, float] | None = _cpu_pipeline.std if _cpu_pipeline is not None else None  # type: ignore[no-redef]
+        if getattr(instance.train_subset, "augmentations_cpu", None):
+            _cpu_pipeline = CPUAugmentationPipeline.from_config(instance.train_subset)
+            instance.input_mean = _cpu_pipeline.mean
+            instance.input_std = _cpu_pipeline.std
+        else:
+            instance.input_mean = None
+            instance.input_std = None
 
         # Save hyperparameters
         instance.save_hyperparameters(
@@ -391,8 +399,6 @@ class OTXDataModule(LightningDataModule):
                 msg = "input size is not specified in both the config file and the DataModule constructor."
                 raise ValueError(msg)
             subset_config_dict = SubsetConfig(**subset_config_dict)
-            cpu_pipeline = CPUAugmentationPipeline.from_config(subset_config_dict)
-            subset_config_dict._cpu_pipeline = cpu_pipeline  # type: ignore[attr-defined]
             subset_dicts[subset_key] = subset_config_dict
         return subset_dicts
 

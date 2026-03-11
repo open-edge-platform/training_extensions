@@ -46,13 +46,13 @@ class TestRFDETRInst:
             label_info=3,
         )
 
-        # Check that default params use 0-255 range normalization
+        # Check that default params use 0-1 range normalization
         default_params = model._default_preprocessing_params
         assert "rfdetr_seg_n" in default_params
         assert default_params["rfdetr_seg_n"].input_size == (312, 312)
-        # ImageNet mean in 0-255 range
-        assert default_params["rfdetr_seg_n"].mean == (123.675, 116.28, 103.53)
-        assert default_params["rfdetr_seg_n"].std == (58.395, 57.12, 57.375)
+        # ImageNet mean in 0-1 range
+        assert default_params["rfdetr_seg_n"].mean == (0.485, 0.456, 0.406)
+        assert default_params["rfdetr_seg_n"].std == (0.229, 0.224, 0.225)
 
     def test_optimizer_configuration(self) -> None:
         """Test that optimizer configuration is properly set."""
@@ -85,10 +85,10 @@ class TestRFDETRInst:
         model = model.cpu()
 
         # Adjust batch images to match input size
-        fxt_instance_seg_batch.images = [
+        fxt_instance_seg_batch.images = torch.stack([
             torch.randn(3, 312, 312),
             torch.randn(3, 312, 312),
-        ]
+        ])
 
         # Set model to training mode
         model.train()
@@ -121,10 +121,10 @@ class TestRFDETRInst:
         model = model.cpu()
 
         # Adjust batch images to match input size
-        fxt_instance_seg_batch.images = [
+        fxt_instance_seg_batch.images = torch.stack([
             torch.randn(3, 312, 312),
             torch.randn(3, 312, 312),
-        ]
+        ])
 
         # Set model to evaluation mode
         model.eval()

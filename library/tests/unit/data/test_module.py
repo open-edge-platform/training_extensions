@@ -11,7 +11,7 @@ import pytest
 from importlib_resources import files
 from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
-from torchvision.transforms.v2 import Compose, Normalize
+from torchvision.transforms.v2 import Normalize
 
 from otx.config.data import (
     SubsetConfig,
@@ -373,10 +373,16 @@ class TestOTXDataModule:
             )
 
     def test_from_otx_datasets_with_normalization(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets correctly extracts normalization parameters."""
+        """Test from_otx_datasets with legacy transforms yields None normalization.
+
+        In the new augmentation pipeline, normalization is derived from
+        CPUAugmentationPipeline (augmentations_cpu), not from legacy torchvision
+        Normalize transforms.  When the dataset only has legacy transforms,
+        input_mean / input_std should be None.
+        """
         from torchvision.transforms.v2 import Normalize
 
-        # Create mock dataset with Normalize transform
+        # Create mock dataset with legacy Normalize transform
         normalize_transform = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
         shared_label_info = MagicMock()
@@ -398,9 +404,9 @@ class TestOTXDataModule:
             val_dataset=mock_val,
         )
 
-        # Assertions - normalization params should be extracted
-        assert module.input_mean == tuple(normalize_transform.mean)
-        assert module.input_std == tuple(normalize_transform.std)
+        # With legacy transforms (no augmentations_cpu), mean/std are not extracted
+        assert module.input_mean is None
+        assert module.input_std is None
 
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets with auto_num_workers enabled."""
@@ -437,42 +443,18 @@ class TestOTXDataModule:
     @pytest.mark.parametrize(
         ("transforms_source", "expected"),
         [
-            (None, None),
+            (None, (None, None)),
             (
-                [
-                    {
-                        "class_path": "torchvision.transforms.v2.Normalize",
-                        "init_args": {"mean": [123.675, 116.28, 103.53], "std": [58.395, 57.12, 57.375]},
-                    },
-                ],
-                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
-            ),
-            (
-                [
-                    Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-                ],
-                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
-            ),
-            (
-                Compose(
-                    [
-                        Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-                    ]
-                ),
+                [Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375])],
                 ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
             ),
         ],
-        ids=["from None", "from list of configs", "from list of objects", "from compose"],
+        ids=["no normalize", "with normalize"],
     )
     def test_extract_normalization_params(self, transforms_source, expected) -> None:
-        """Test _extract_normalization_params with various transform sources."""
-        result = OTXDataModule.extract_normalization_params(transforms_source)
+        """Test CPUAugmentationPipeline._extract_normalization_params."""
+        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 
-        if expected is None:
-            assert result is None
-        else:
-            assert result is not None
-            mean, std = result
-            expected_mean, expected_std = expected
-            assert mean == expected_mean
-            assert std == expected_std
+        pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
+        result = (pipeline.mean, pipeline.std)
+        assert result == expected

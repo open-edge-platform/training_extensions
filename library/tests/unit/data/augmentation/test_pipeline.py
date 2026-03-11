@@ -955,8 +955,12 @@ class TestGPUAugmentationCallback:
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
-        assert callback.apply_on_val is True
-        assert callback.apply_on_test is True
+        assert callback.train_config is None
+        assert callback.val_config is None
+        assert callback.test_config is None
+        assert callback._train_pipeline is None
+        assert callback._val_pipeline is None
+        assert callback._test_pipeline is None
 
     def test_setup_creates_pipelines(self):
         """setup() should create train and val pipelines."""
@@ -1034,24 +1038,24 @@ class TestGPUAugmentationCallback:
         callback.on_train_batch_start(MagicMock(), MagicMock(), batch, batch_idx=0)
 
     def test_on_val_batch_start_disabled(self):
-        """If apply_on_val=False, validation batches should not be augmented."""
+        """If no val pipeline, validation batches should not be augmented."""
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
-        callback = GPUAugmentationCallback(apply_on_val=False)
-        callback._val_pipeline = MagicMock()
+        callback = GPUAugmentationCallback()
+        # _val_pipeline is None by default
         batch = MagicMock()
         callback.on_validation_batch_start(MagicMock(), MagicMock(), batch, batch_idx=0)
-        callback._val_pipeline.assert_not_called()
+        # No error, batch not modified
 
     def test_on_test_batch_start_disabled(self):
-        """If apply_on_test=False, test batches should not be augmented."""
+        """If no test pipeline, test batches should not be augmented."""
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
-        callback = GPUAugmentationCallback(apply_on_test=False)
-        callback._test_pipeline = MagicMock()
+        callback = GPUAugmentationCallback()
+        # _test_pipeline is None by default
         batch = MagicMock()
         callback.on_test_batch_start(MagicMock(), MagicMock(), batch, batch_idx=0)
-        callback._test_pipeline.assert_not_called()
+        # No error, batch not modified
 
     def test_test_config_fallback_to_val(self):
         """If test_config is None, it should fall back to val_config."""

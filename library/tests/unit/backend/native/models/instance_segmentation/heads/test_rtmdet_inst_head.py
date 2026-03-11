@@ -130,7 +130,7 @@ class TestRTMDetInsHead:
         polygons[1] = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
 
         entity = OTXSampleBatch(
-            images=[torch.randn(3, 640, 640), torch.randn(3, 640, 640)],
+            images=torch.stack([torch.randn(3, 640, 640), torch.randn(3, 640, 640)]),
             imgs_info=[
                 ImageInfo(0, img_shape=(640, 640), ori_shape=(640, 640)),
                 ImageInfo(1, img_shape=(640, 640), ori_shape=(640, 640)),

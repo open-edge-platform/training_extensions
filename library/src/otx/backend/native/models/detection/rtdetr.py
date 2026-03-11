@@ -113,6 +113,9 @@ class RTDETR(OTXDetectionModel):
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]
 
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         model = DETR(
             multi_scale=self.multi_scale,
             backbone=backbone,

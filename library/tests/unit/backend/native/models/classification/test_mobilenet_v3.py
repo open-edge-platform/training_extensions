@@ -58,7 +58,9 @@ class TestMobileNetV3MulticlassCls:
             label_info=10,
             data_input_params=data_input_params,
         )
-        assert model.model.backbone.in_size == data_input_params.input_size[-2:]
+        input_size = data_input_params.input_size
+        assert input_size is not None
+        assert model.model.backbone.in_size == input_size[-2:]
 
     def test_freeze_backbone(self):
         data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -128,7 +130,9 @@ class TestMobileNetV3MultilabelCls:
             label_info=10,
             data_input_params=data_input_params,
         )
-        assert model.model.backbone.in_size == data_input_params.input_size[-2:]
+        input_size = data_input_params.input_size
+        assert input_size is not None
+        assert model.model.backbone.in_size == input_size[-2:]
 
     def test_freeze_backbone(self):
         data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -198,7 +202,9 @@ class TestMobileNetV3HLabelCls:
             label_info=fxt_hlabel_data,
             data_input_params=data_input_params,
         )
-        assert model.model.backbone.in_size == data_input_params.input_size[-2:]
+        input_size = data_input_params.input_size
+        assert input_size is not None
+        assert model.model.backbone.in_size == input_size[-2:]
 
     def test_freeze_backbone(self, fxt_hlabel_data):
         data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))

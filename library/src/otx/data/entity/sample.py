@@ -105,7 +105,7 @@ def with_image_dtype(
     new_cls_name = f"{sample_cls.__name__}_{storage_dtype}"
 
     # We use dataclass inheritance: the new class just overrides the image field
-    new_cls = dataclass(
+    new_cls: type[Sample] = dataclass(  # type: ignore[arg-type]
         type(
             new_cls_name,
             (sample_cls,),
@@ -357,18 +357,12 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
     """
     images = torch.stack([sample.image for sample in samples])
 
-    # Collect optional fields - use getattr to handle samples without these attributes
-    labels = [getattr(s, "label", None) for s in samples] if hasattr(samples[0], "label") else None
-    bboxes = [getattr(s, "bboxes", None) for s in samples] if hasattr(samples[0], "bboxes") else None
-    keypoints = [getattr(s, "keypoints", None) for s in samples] if hasattr(samples[0], "keypoints") else None
-    masks = [getattr(s, "masks", None) for s in samples] if hasattr(samples[0], "masks") else None
-
     return OTXSampleBatch(
         images=images,
-        labels=labels,
-        bboxes=bboxes,
-        keypoints=keypoints,
-        masks=masks,
+        labels=[s.label for s in samples] if hasattr(samples[0], "label") else None, # type: ignore[missing-attribute]
+        bboxes=[s.bboxes for s in samples] if hasattr(samples[0], "bboxes") else None, # type: ignore[missing-attribute]
+        keypoints=[s.keypoints for s in samples] if hasattr(samples[0], "keypoints") else None, # type: ignore[missing-attribute]
+        masks=[s.masks for s in samples] if hasattr(samples[0], "masks") else None, # type: ignore[missing-attribute]
         imgs_info=[sample.img_info for sample in samples],
     )
 

@@ -26,6 +26,7 @@ from otx.metrics.accuracy import (
 )
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -241,6 +242,9 @@ class OTXHlabelClsModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for classification OV model."""
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return OTXSampleBatch(images=images, labels=labels)
@@ -264,6 +268,11 @@ class OTXHlabelClsModel(OTXModel):
             return self.model(images=image, mode="explain")
 
         return self.model(images=image, mode="tensor")
+
+    @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.H_LABEL_CLS
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

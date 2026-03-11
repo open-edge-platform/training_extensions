@@ -43,7 +43,9 @@ class TransformLibFactory:
                 return config.augmentations_cpu
             return CPUAugmentationPipeline.from_config(config)
 
-        raise NotImplementedError(config)
+        # GPU-only configs may have an empty augmentations_cpu list;
+        # return an identity pipeline so downstream code always gets a valid object.
+        return CPUAugmentationPipeline(augmentations=[])
 
 
 class OTXDatasetFactory:

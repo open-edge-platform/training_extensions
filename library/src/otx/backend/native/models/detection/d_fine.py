@@ -89,6 +89,9 @@ class DFine(RTDETR):
 
     def _create_model(self, num_classes: int | None = None) -> DETR:
         num_classes = num_classes if num_classes is not None else self.num_classes
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
         decoder = DFINETransformer(

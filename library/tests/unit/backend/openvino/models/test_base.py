@@ -19,7 +19,7 @@ class TestOVModel:
     @pytest.fixture
     def input_batch(self) -> OTXSampleBatch:
         image = [torch.rand(3, 10, 10) for _ in range(3)]
-        return OTXSampleBatch(images=image, labels=[])
+        return OTXSampleBatch(images=torch.stack(image), labels=[])
 
     @pytest.fixture
     def model(self, get_dummy_ov_cls_model) -> OVModel:

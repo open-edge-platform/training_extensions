@@ -75,6 +75,9 @@ class TimmModelHLabelCls(OTXHlabelClsModel):
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()
         backbone = TimmBackbone(model_name=self.model_name)
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         copied_head_config = copy(head_config)
         copied_head_config["step_size"] = (
             ceil(self.data_input_params.input_size[0] / 32),

@@ -218,6 +218,9 @@ class SSD(OTXDetectionModel):
                 if isinstance(transform, Resize):
                     target_wh = transform.scale
         if target_wh is None:
+            if self.data_input_params.input_size is None:
+                msg = "input_size should not be None."
+                raise ValueError(msg)
             target_wh = list(reversed(self.data_input_params.input_size))  # type: ignore[assignment]
             msg = f"Cannot get target_wh from the dataset. Assign it with the default value: {target_wh}"
             logger.warning(msg)

@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 
 import { Item, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
 
+import { useTrainModel } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
 import { Training } from './training/training.component';
 
@@ -12,7 +13,7 @@ type ContentWrapperProps = { children: ReactNode };
 
 const ContentWrapper = ({ children }: ContentWrapperProps) => {
     return (
-        <View padding={'size-250'} backgroundColor={'gray-50'} overflow={'hidden auto'} height={'100%'}>
+        <View backgroundColor={'gray-50'} overflow={'hidden auto'} height={'100%'}>
             {children}
         </View>
     );
@@ -24,10 +25,23 @@ type TabProps = {
 };
 
 export const AdvancedSettings = () => {
+    const { trainingConfiguration, onTrainingConfigurationChange, defaultTrainingConfiguration } = useTrainModel();
+
+    // Should never happen, but just in case, to prevent errors in the UI
+    if (trainingConfiguration === undefined || defaultTrainingConfiguration === undefined) {
+        return <Text>Training configuration is not available.</Text>;
+    }
+
     const TABS: TabProps[] = [
         {
             name: 'Data management',
-            children: <DataManagement />,
+            children: (
+                <DataManagement
+                    trainingConfiguration={trainingConfiguration}
+                    defaultTrainingConfiguration={defaultTrainingConfiguration}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            ),
         },
         {
             name: 'Training',

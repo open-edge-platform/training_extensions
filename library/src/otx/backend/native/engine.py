@@ -1020,8 +1020,6 @@ class OTXEngine(Engine):
         return GPUAugmentationCallback(
             train_config=train_config if has_train_gpu_augs else None,
             val_config=val_config if has_val_gpu_augs else None,
-            apply_on_val=True,
-            apply_on_test=True,
         )
 
     def _setup_augmentation_scheduler(self) -> None:

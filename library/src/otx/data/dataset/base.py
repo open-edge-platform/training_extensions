@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import time
 import abc
 from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
@@ -94,8 +93,8 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
                     "(IntensityConfig) in the recipe to map raw pixel values to [0, 1] float32."
                 )
                 raise TypeError(msg)
-            # uint8 → float32 (safe, values 0-255 → 0.0-255.0 — GPU pipeline normalizes)
-            img = img.float()
+            # uint8 → float32 [0, 1]
+            img = img.float().div_(255.0)
         # Ensure image is in CHW format
         img = _ensure_chw_format(img)
         image_tensors.append(img)
@@ -184,8 +183,7 @@ class OTXDataset(TorchDataset):
             return entity
 
         if isinstance(self.transforms, CPUAugmentationPipeline):
-            augmentations = self.transforms(entity)
-            return augmentations
+            return self.transforms(entity)
 
         # Legacy path: Compose
         if isinstance(self.transforms, Compose):

@@ -35,14 +35,10 @@ export const RangeParameterField = ({
     name,
     step,
 }: RangeParameterFieldProps) => {
-    const [parameterValue, setParameterValue] = useState<RangeValue<number> | null>(
-        value === null
-            ? null
-            : {
-                  start: value[0],
-                  end: value[1],
-              }
-    );
+    const [parameterValue, setParameterValue] = useState<RangeValue<number>>({
+        start: value[0],
+        end: value[1],
+    });
 
     useEffect(() => {
         if (value === null) {
@@ -54,11 +50,6 @@ export const RangeParameterField = ({
             });
         }
     }, [value]);
-
-    // TODO: Remove this once API updates parameter's value type
-    if (value === null || parameterValue === null || defaultValue === null) {
-        return <>Range parameter null</>;
-    }
 
     const fieldStep = getStep({ step, maxValue: defaultValue[1], minValue: defaultValue[0] });
     const decimalPlaces = (fieldStep.toString().split('.')[1] || '').length;

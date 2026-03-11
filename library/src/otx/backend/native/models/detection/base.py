@@ -13,7 +13,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
-from kornia.geometry.boxes import Boxes
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
@@ -34,9 +33,7 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo
-    from kornia.augmentation import AugmentationSequential
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from torchvision.transforms.v2 import Compose
 
     from otx.backend.native.models.detection.detectors import SingleStageDetector
 
@@ -408,9 +405,12 @@ class OTXDetectionModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""
-        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
-        img_shape = tuple(images.shape[2:])
-        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
+        input_size = self.data_input_params.input_size
+        images = torch.stack([torch.rand(3, *input_size) for _ in range(batch_size)])
+        infos = [ImageInfo(img_idx=i, img_shape=input_size, ori_shape=input_size) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def forward_explain(self, inputs: OTXSampleBatch | OTXTileBatchDataEntity) -> OTXPredictionBatch:
@@ -532,19 +532,6 @@ class OTXDetectionModel(OTXModel):
             )
 
         return [1] * 10
-
-    @staticmethod
-    @torch.no_grad()
-    def _apply_batch_augmentations(
-        augmentations_pipeline: AugmentationSequential | Compose | None,
-        batch: OTXDataBatch,  # noqa: F821
-    ) -> None:
-        """Apply batch augmentations to detection data."""
-        if augmentations_pipeline is not None:
-            # Convert bounding boxes to Kornia Boxes [N, 4, 2]
-            kornia_boxes = Boxes.from_tensor(batch.bboxes, mode="xyxy")
-            batch.images, kornia_boxes = augmentations_pipeline(batch.images, kornia_boxes)
-            batch.bboxes = kornia_boxes.to_tensor(mode="xyxy")
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

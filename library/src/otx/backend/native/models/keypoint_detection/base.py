@@ -9,9 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Sequence
 
-import kornia
 import torch
-from kornia.augmentation import AugmentationSequential
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
@@ -25,7 +23,6 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from torchvision.transforms.v2 import Compose
 
 
 class OTXKeypointDetectionModel(OTXModel):
@@ -96,6 +93,9 @@ class OTXKeypointDetectionModel(OTXModel):
         if inputs.imgs_info is None:
             msg = "The input image information is not provided."
             raise ValueError(msg)
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         for i, output in enumerate(outputs):
             if not isinstance(output, tuple):
                 raise TypeError(output)
@@ -132,6 +132,9 @@ class OTXKeypointDetectionModel(OTXModel):
     def configure_metric(self) -> None:
         """Configure the metric."""
         super().configure_metric()
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         self._metric.input_size = tuple(self.data_input_params.input_size)
 
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
@@ -207,36 +210,6 @@ class OTXKeypointDetectionModel(OTXModel):
             model_type="keypoint_detection",
             task_type="keypoint_detection",
             confidence_threshold=self.hparams.get("best_confidence_threshold", None),
-        )
-
-    @staticmethod
-    @torch.no_grad()
-    def _apply_batch_augmentations(
-        augmentations_pipeline: AugmentationSequential | Compose | None,
-        batch: OTXDataBatch,  # noqa: F821
-    ) -> None:
-        """Apply batch augmentations to keypoint data."""
-        if augmentations_pipeline is not None:
-            stacked_kps = torch.stack(batch.keypoints)
-            # Apply augmentations
-            batch.images, augmented_kps = augmentations_pipeline(batch.images, stacked_kps[:, :, :2])
-            stacked_kps[:, :, :2] = augmented_kps
-            h, w = batch.images.shape[-2:]
-            # Compute visible mask. Keypoints should be visible if they are inside the image (>=0, x<=w, y<=h)
-            visible_mask = (
-                (augmented_kps > 0).all(axis=2) * (augmented_kps[:, :, 0] <= w) * (augmented_kps[:, :, 1] <= h)
-            )
-            stacked_kps[:, :, 2] = stacked_kps[:, :, 2] * visible_mask
-            # Update visible keypoints with augmented values
-            batch.keypoints = list(stacked_kps)
-
-    @property
-    def _default_train_transforms(self):  # noqa: ANN202
-        """Return default GPU augmentations for keypoint detection."""
-        return AugmentationSequential(
-            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-            data_keys=["input", "keypoints"],
-            keepdim=True,
         )
 
     @property

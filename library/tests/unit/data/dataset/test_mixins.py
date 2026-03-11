@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,7 +19,7 @@ class MockDataset(DataAugSwitchMixin):
     """Mock dataset class for testing the mixin."""
 
     def __init__(self):
-        self.transforms = None
+        self.transforms: Any = None
 
 
 class TestDataAugSwitchMixin:
@@ -111,7 +112,7 @@ class TestDataAugSwitchMixin:
 
         class PlainDataset(DataAugSwitchMixin):
             def __init__(self):
-                self.transforms = None
+                self.transforms: Any = None
 
         ds = PlainDataset()
         assert not ds.has_dynamic_augmentation

@@ -20,15 +20,17 @@ type SortingHandler = (
     modelArchitectures: ModelArchitectureWithPerformanceCategory[]
 ) => ModelArchitectureWithPerformanceCategory[];
 
+const getAccuracyMetricBasedOnTask = ({
+    stats: { benchmark_metrics: benchmarkMetrics },
+}: ModelArchitectureWithPerformanceCategory) => {
+    return benchmarkMetrics.imagenet_top1_accuracy ?? benchmarkMetrics.coco_map_50_95 ?? benchmarkMetrics.coco_map_50;
+};
+
 export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
     [SortingOptions.ACCURACY_ASC]: (modelArchitectures) =>
-        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy, 'asc'),
+        orderBy(modelArchitectures, getAccuracyMetricBasedOnTask, 'asc'),
     [SortingOptions.ACCURACY_DESC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy,
-            'desc'
-        ),
+        orderBy(modelArchitectures, getAccuracyMetricBasedOnTask, 'desc'),
     [SortingOptions.NAME_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'asc'),
     [SortingOptions.NAME_DESC]: (modelArchitectures) =>
