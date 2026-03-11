@@ -9,10 +9,9 @@ description: "Mask R-CNN with a ResNet-50 backbone is a widely used instance seg
 stats:
   gigaflops: 200.0
   trainable_parameters: 45.9
-  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
-    accuracy: 2
-    training_time: 2
-    inference_speed: 2
+  benchmark_metrics:
+    coco_map_50_95: 32.0
+    coco_map_50: 58.1
 
 hyperparameters:
   training:

@@ -9,10 +9,9 @@ description: "YOLOX is a high-performance, anchor-free object detection algorith
 stats:
   gigaflops: 155.6
   trainable_parameters: 54.2
-  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
-    accuracy: 3
-    training_time: 3
-    inference_speed: 2
+  benchmark_metrics:
+    coco_map_50_95: 50.2
+    coco_map_50: 68.5
 
 hyperparameters:
   dataset_preparation:
