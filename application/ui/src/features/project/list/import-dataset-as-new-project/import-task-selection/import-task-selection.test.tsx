@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -12,6 +13,7 @@ import { server } from '../../../../../msw-node-setup';
 import { ImportTaskSelection } from './import-task-selection.component';
 
 const mockedStagedDatasetId = 'staged-dataset-123';
+const mockedProject = getMockedProject({ id: 'id-1', name: 'Project 1' });
 
 const getImportEntrySpy = vi.fn();
 const updateImportEntrySpy = vi.fn();
@@ -41,15 +43,12 @@ describe('ImportTaskSelection', () => {
 
     const renderApp = (annotationType: AnnotationType, taskType: TaskType = 'classification') => {
         getImportEntrySpy.mockReturnValue({
-            project: {
-                name: 'Project #2',
-                task_type: taskType,
-            },
+            project: { name: 'Project #2', task_type: taskType },
             step: 'taskTypeSelection',
         });
 
         server.use(
-            http.get('/api/projects', () => HttpResponse.json([getMockedProject({ id: 'id-1', name: 'Project 1' })])),
+            http.get('/api/projects', () => HttpResponse.json([mockedProject])),
             http.get('/api/staged_datasets/{staged_dataset_id}', () => {
                 return HttpResponse.json({
                     id: mockedStagedDatasetId,
@@ -102,5 +101,15 @@ describe('ImportTaskSelection', () => {
         });
 
         expect(await screen.findByText('Classification (Recommended)')).toBeVisible();
+    });
+
+    it('shows an error when the project name already exists', async () => {
+        renderApp('bounding_box');
+
+        const projectNameInput = await screen.findByLabelText('Project name');
+        await userEvent.clear(projectNameInput);
+        await userEvent.type(projectNameInput, mockedProject.name);
+
+        expect(await screen.findByText('That project name already exists')).toBeVisible();
     });
 });

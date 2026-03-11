@@ -22,7 +22,7 @@ export const ImportLabelMappingButtons = ({
 
     const isPending = deleteFileMutation.isPending;
 
-    const handleCancelJob = () => {
+    const handleDeleteJob = () => {
         deleteFileMutation.mutate();
     };
 
@@ -32,7 +32,7 @@ export const ImportLabelMappingButtons = ({
 
     return (
         <ButtonGroup>
-            <Button variant='negative' isPending={isPending} isDisabled={isPending} onPress={handleCancelJob}>
+            <Button variant='negative' isPending={isPending} isDisabled={isPending} onPress={handleDeleteJob}>
                 Delete
             </Button>
 

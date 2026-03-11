@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 
 import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
@@ -10,6 +10,7 @@ import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
+import { validateProjectName } from '../../../create/validator';
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 import { getRecommendedTaskType, TASK_SELECTION_FORM_ID } from './util';
 
@@ -41,9 +42,17 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
 };
 
 export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProps) => {
+    const { data: projects } = useProjects();
     const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
+
     const defaultTaskType = getRecommendedTaskType(stagedDataset?.metadata?.annotation_type);
     const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
+    const [name, setName] = useState(formState.name);
+
+    const validationErrorMessage = validateProjectName(
+        name,
+        projects.map((project) => project.name)
+    );
 
     return (
         <View backgroundColor={'gray-75'} margin={'size-300'} padding={'size-300'}>
@@ -51,10 +60,14 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                 <TextField
                     isRequired
                     name={'name'}
+                    value={name}
+                    onChange={setName}
                     label={'Project name'}
-                    aria-label='Project name'
+                    aria-label={'Project name'}
                     defaultValue={formState.name}
                     marginBottom={'size-250'}
+                    errorMessage={validationErrorMessage}
+                    validationState={validationErrorMessage === undefined ? undefined : 'invalid'}
                 />
 
                 <Picker
@@ -78,7 +91,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
                     </Item>
                 </Picker>
 
-                <Flex gap='size-100'>
+                <Flex gap='size-100' alignItems={'center'}>
                     <View width={16} height={16}>
                         <InfoOutline />
                     </View>
