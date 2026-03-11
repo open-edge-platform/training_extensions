@@ -5,8 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { getMultipleMockedMediaImage } from 'mocks/mock-media';
+import { getMockedMediaImage, getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
+import { v4 as uuid } from 'uuid';
 
 import { expect, http, test } from '../fixtures';
 
@@ -93,5 +94,38 @@ test.describe('Dataset', () => {
         await expect(annotatorPage.getAnnotationsList()).toBeInViewport();
 
         expect(page.url()).toContain(`/dataset/${firstElement.id}`);
+    });
+
+    test('upload shows start, progress and finish toasts', async ({ page, network }) => {
+        let shouldResumeUpload = false;
+
+        network.use(
+            http.post('/api/projects/{project_id}/dataset/media', async () => {
+                while (!shouldResumeUpload) {
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                }
+
+                return HttpResponse.json(getMockedMediaImage({ id: uuid() }), {
+                    status: 201,
+                });
+            })
+        );
+
+        await page.goto('projects/id-1/dataset');
+
+        await page.getByLabel('Upload media files').setInputFiles(
+            Array.from({ length: 6 }, (_, index) => ({
+                name: `upload-${index + 1}.png`,
+                mimeType: 'image/png',
+                buffer: sampleImageBuffer,
+            }))
+        );
+
+        await expect(page.getByRole('button', { name: 'Upload media' })).toBeDisabled();
+
+        shouldResumeUpload = true;
+
+        await expect(page.getByText('Uploading 6 item(s)... (5 succeeded, 0 failed)')).toBeVisible();
+        await expect(page.getByText('Uploaded 6 item(s)')).toBeVisible();
     });
 });
