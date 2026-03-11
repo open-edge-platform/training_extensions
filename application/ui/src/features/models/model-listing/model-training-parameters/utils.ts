@@ -13,7 +13,7 @@ export const isParameterGroup = (
     return parameter.type === 'parameter_group';
 };
 
-export const isParameter = (parameter: TrainingConfigurationParameter) => {
+export const isParameter = (parameter: TrainingConfigurationParameter): parameter is ConfigurableParameter => {
     return parameter.type === 'parameter';
 };
 

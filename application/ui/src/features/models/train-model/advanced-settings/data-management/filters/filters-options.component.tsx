@@ -10,7 +10,7 @@ type FilterOptionTooltipProps = {
     description: string;
 };
 
-const FilterOptionTooltip = ({ description }: FilterOptionTooltipProps) => {
+const FilterOptionContextualHelp = ({ description }: FilterOptionTooltipProps) => {
     return (
         <ContextualHelp variant='info'>
             <Content>
@@ -48,7 +48,7 @@ const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) =>
     return (
         <>
             <Text gridColumn={'1/2'}>
-                {name} <FilterOptionTooltip description={description} />
+                {name} <FilterOptionContextualHelp description={description} />
             </Text>
             <Flex gap={'size-200'} gridColumn={'2/3'}>
                 <NumberField

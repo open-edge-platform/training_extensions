@@ -83,7 +83,7 @@ describe('Filters', () => {
             }),
             getMockedConfigurationParameterGroup({
                 key: 'max_annotation_objects',
-                name: 'Maximum annotation objects ',
+                name: 'Maximum annotation objects',
                 parameters: [
                     getMockedConfigurationParameter({
                         key: 'enable',
