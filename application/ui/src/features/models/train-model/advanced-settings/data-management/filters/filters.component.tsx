@@ -5,7 +5,11 @@ import { Dispatch, SetStateAction } from 'react';
 
 import { Grid, minmax } from '@geti/ui';
 
-import { ConfigurableParameterGroup, type TrainingConfiguration } from '../../../../../../constants/shared-types';
+import type {
+    ConfigurableParameterGroup,
+    TrainingConfiguration,
+    TrainingConfigurationParameter,
+} from '../../../../../../constants/shared-types';
 import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { FiltersOptions } from './filters-options.component';
@@ -20,50 +24,40 @@ type FiltersProps = {
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
-const changeFilter = (
-    trainingConfiguration: TrainingConfiguration,
-    { key, newParameters }: { key: string; newParameters: FilterConfigurableParameters }
-) => {
-    const outputParameters = trainingConfiguration.parameters.map((parameterGroup) => {
-        if (parameterGroup.key === 'dataset_preparation' && isParameterGroup(parameterGroup)) {
-            return {
-                ...parameterGroup,
-                parameters: parameterGroup.parameters.map((parameters) => {
-                    if (parameters.key === 'filtering' && isParameterGroup(parameters)) {
-                        return {
-                            ...parameters,
-                            parameters: parameters.parameters.map((parameter) => {
-                                if (isParameterGroup(parameter) && parameter.key === key) {
-                                    return {
-                                        ...parameter,
-                                        parameters: newParameters,
-                                    };
-                                }
-
-                                return parameter;
-                            }),
-                        };
-                    }
-
-                    return parameters;
-                }),
-            };
+const replaceByKey = (
+    parameters: TrainingConfigurationParameter[],
+    key: string,
+    replace: (match: ConfigurableParameterGroup) => ConfigurableParameterGroup
+): TrainingConfigurationParameter[] =>
+    parameters.map((parameter) => {
+        if (isParameterGroup(parameter) && parameter.key === key) {
+            return replace(parameter);
         }
-
-        return parameterGroup;
+        return parameter;
     });
 
-    return {
-        parameters: outputParameters,
-    };
-};
+const changeFilterParameters = (
+    trainingConfiguration: TrainingConfiguration,
+    { key, newParameters }: { key: string; newParameters: FilterConfigurableParameters }
+): TrainingConfiguration => ({
+    parameters: replaceByKey(trainingConfiguration.parameters, 'dataset_preparation', (datasetPreparation) => ({
+        ...datasetPreparation,
+        parameters: replaceByKey(datasetPreparation.parameters, 'filtering', (filtering) => ({
+            ...filtering,
+            parameters: replaceByKey(filtering.parameters, key, (filterGroup) => ({
+                ...filterGroup,
+                parameters: newParameters,
+            })),
+        })),
+    })),
+});
 
 export const Filters = ({ filtersParameters, onTrainingConfigurationChange }: FiltersProps) => {
     const handleFilterChange = (key: string, newParameters: FilterConfigurableParameters) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
 
-            return changeFilter(config, { key, newParameters });
+            return changeFilterParameters(config, { key, newParameters });
         });
     };
 
