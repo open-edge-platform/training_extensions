@@ -393,7 +393,7 @@ The existing model binary download endpoint supports downloading the quantized m
 | ------ | ------------------------------------------------------------------------- | ------------ | ------ | ---------------------------- |
 | `GET`  | `/api/projects/<id>/models/<model_id>/variants/<model_variant_id>/binary` | -            | zip    | Download model variant files |
 
-The `model_variant_id` query parameter specifies which model variant to download. If omitted, the openvino model files are returned by default.
+The `model_variant_id` path parameter specifies which model variant to download.
 
 ### Enable quantized model in pipeline
 
