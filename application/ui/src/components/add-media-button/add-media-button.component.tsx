@@ -3,7 +3,7 @@
 
 import { ChangeEvent, useRef } from 'react';
 
-import { Button, Item, Key, Menu, MenuTrigger } from '@geti/ui';
+import { Button } from '@geti/ui';
 
 type AddMediaButtonProps = {
     onFilesSelected: (files: File[]) => void;
@@ -18,18 +18,6 @@ export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 
 export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const folderInputRef = useRef<HTMLInputElement>(null);
-
-    const setFolderInputRef = (input: HTMLInputElement | null) => {
-        folderInputRef.current = input;
-
-        if (input === null) {
-            return;
-        }
-
-        input.setAttribute('webkitdirectory', '');
-        input.setAttribute('directory', '');
-    };
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -45,12 +33,8 @@ export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMedia
         }
     };
 
-    const handleMenuAction = (action: Key) => {
-        if (action === 'files') {
-            fileInputRef.current?.click();
-        } else if (action === 'folder') {
-            folderInputRef.current?.click();
-        }
+    const handleClick = () => {
+        fileInputRef.current?.click();
     };
 
     return (
@@ -64,24 +48,9 @@ export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMedia
                 aria-label={'Upload media files'}
                 accept={acceptedExtensions}
             />
-            <input
-                ref={setFolderInputRef}
-                type='file'
-                multiple
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-                aria-label={'Upload media folder'}
-                accept={acceptedExtensions}
-            />
-            <MenuTrigger>
-                <Button variant={'secondary'} isDisabled={isDisabled}>
-                    Upload media
-                </Button>
-                <Menu onAction={handleMenuAction} aria-label={'Upload menu'}>
-                    <Item key={'files'}>Files</Item>
-                    <Item key={'folder'}>Folder</Item>
-                </Menu>
-            </MenuTrigger>
+            <Button variant={'secondary'} isDisabled={isDisabled} onPress={handleClick}>
+                Upload media
+            </Button>
         </>
     );
 };
