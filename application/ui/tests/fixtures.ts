@@ -22,6 +22,22 @@ import { ModelsPage } from './models/models-page';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 type DefineNetworkFixtureOptions = Parameters<typeof defineNetworkFixture>[0];
+const sampleImagePath = path.resolve(dirname, './assets/candy-thumbnail.png');
+
+let cachedSampleImage: ArrayBuffer | undefined;
+
+const getSampleImageArrayBuffer = (): ArrayBuffer => {
+    if (cachedSampleImage === undefined) {
+        const sampleImageBuffer = fs.readFileSync(sampleImagePath);
+
+        cachedSampleImage = sampleImageBuffer.buffer.slice(
+            sampleImageBuffer.byteOffset,
+            sampleImageBuffer.byteOffset + sampleImageBuffer.byteLength
+        );
+    }
+
+    return cachedSampleImage;
+};
 
 interface Fixtures {
     network: NetworkFixture;
@@ -134,11 +150,8 @@ const test = testBase.extend<Fixtures>({
                         // Schema is empty, so we return an empty object
                         return response(200).json({} as never);
                     }),
-                    http.get('/api/projects/{project_id}/dataset/media/{media_id}/thumbnail', ({}) => {
-                        const sampleImagePath = path.resolve(dirname, './assets/candy-thumbnail.png');
-                        const sampleImageBuffer = fs.readFileSync(sampleImagePath);
-
-                        return HttpResponse.arrayBuffer(sampleImageBuffer.buffer, {
+                    http.get('/api/projects/{project_id}/dataset/media/{media_id}/thumbnail', () => {
+                        return HttpResponse.arrayBuffer(getSampleImageArrayBuffer(), {
                             headers: { 'content-type': 'image/png' },
                         });
                     }),
