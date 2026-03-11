@@ -27,7 +27,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from datumaro.experimental import Dataset
-from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.categories import KeypointCategories, LabelCategories
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import Subset
@@ -204,7 +204,10 @@ def main(output_dir: Path | None = None) -> None:
     print(f"  Testing    samples: {len(test_anns)}")
 
     print("Downloading images and building dataset ...")
-    categories = {"label": LabelCategories(labels=("person",))}
+    categories = {
+        "label": LabelCategories(labels=("person",)),
+        "keypoints": KeypointCategories(labels=COCO_KEYPOINT_NAMES),
+    }
     dataset: Dataset = Dataset(KeypointSample, categories=categories)  # type: ignore[arg-type]
 
     for sample in _build_dataset(train_anns, images_dir, Subset.TRAINING):

@@ -7,7 +7,7 @@ from __future__ import annotations
 import pytest
 import torch
 from datumaro.experimental import Dataset
-from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.categories import KeypointCategories, LabelCategories
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import Subset
 from torch import Tensor
@@ -23,7 +23,10 @@ class TestOTXKeypointDetectionDataset:
     @pytest.fixture
     def fxt_dm_dataset(self) -> Dataset:
         """Build a small keypoint detection dataset with the new DM API."""
-        categories = {"label": LabelCategories(labels=("car", "tree", "bug", "person"))}
+        categories = {
+            "label": LabelCategories(labels=("car", "tree", "bug", "person")),
+            "keypoints": KeypointCategories(labels=("kp0", "kp1", "kp2", "kp3")),
+        }
         ds = Dataset(KeypointSample, categories=categories)  # type: ignore[arg-type]
 
         num_keypoints = 4

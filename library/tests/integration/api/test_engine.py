@@ -119,10 +119,18 @@ def _id_fn(spec: _TaskSpec) -> str:
     return f"{spec.task.value}-{spec.recipe_name}"
 
 
+# Filter specs based on ``--task`` CLI option (populated via ``pytest.TASK_LIST``
+# in ``conftest.py``).  When ``--task all`` (the default) every spec is kept;
+# otherwise only specs whose task appears in the requested list are executed.
+_FILTERED_TASK_SPECS: list[_TaskSpec] = [
+    spec for spec in _TASK_SPECS if spec.task in getattr(pytest, "TASK_LIST", list(OTXTaskType))
+]
+
+
 # ---------------------------------------------------------------------------
 # Test
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("spec", _TASK_SPECS, ids=_id_fn)
+@pytest.mark.parametrize("spec", _FILTERED_TASK_SPECS, ids=_id_fn)
 def test_engine_workflow(
     spec: _TaskSpec,
     tmp_path: Path,

@@ -70,9 +70,9 @@ class OTXKeypointDetectionDataset(OTXDataset):
             to_tv_image=to_tv_image,
             data_format=data_format,
         )
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = dm_subset.schema.attributes["keypoints"].categories.labels
         self.label_info = LabelInfo(
-            label_names=labels,
+            label_names=list(labels),
             label_groups=[],
             label_ids=[str(i) for i in range(len(labels))],
         )
