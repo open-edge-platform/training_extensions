@@ -7,9 +7,9 @@ import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { getQueryKey } from '../../../query-client/query-client';
-import { useUploadProgress } from './use-display-upload-progress';
+import { useUploadProgress } from '../hooks/use-display-upload-progress';
 
-export const MEDIA_UPLOAD_CONCURRENCY = 5;
+export const MEDIA_UPLOAD_CONCURRENCY = 10;
 
 type UploadTask = () => Promise<unknown>;
 
