@@ -67,7 +67,7 @@ export const Filters = ({ filtersParameters, onTrainingConfigurationChange }: Fi
         });
     };
 
-    const parameters = filtersParameters.parameters.filter(isParameterGroup).filter(isFilterConfigurableParameterGroup);
+    const parameters = filtersParameters.parameters.filter(isFilterConfigurableParameterGroup);
 
     const areFiltersEnabled = checkIfFiltersAreEnabled(parameters);
 

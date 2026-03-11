@@ -6,6 +6,7 @@ import {
     ConfigurableParameterGroup,
     NumberConfigurableParameter,
     TrainingConfiguration,
+    TrainingConfigurationParameter,
 } from '../../../../../../constants/shared-types';
 import {
     findGroupByKey,
@@ -26,7 +27,7 @@ export type FilterConfigurableParameterGroup = Omit<ConfigurableParameterGroup, 
 };
 
 export const isFilterConfigurableParameterGroup = (
-    parameters: ConfigurableParameterGroup
+    parameters: TrainingConfigurationParameter
 ): parameters is FilterConfigurableParameterGroup => {
     if (isParameterGroup(parameters)) {
         const filterGroupParameters = parameters.parameters;
