@@ -140,8 +140,8 @@ class VideoRange(BaseModel):
 
 
 class MediaPredictionRequest(BaseModel):
-    id: UUID
-    range: VideoRange
+    media_id: UUID
+    range: VideoRange | None
 
 
 class MediaListPredictionRequest(BaseModel):

@@ -152,7 +152,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
     app.state.data_collector = data_collector
 
-    inference_server = InferenceServer(data_dir=settings.data_dir)
+    inference_server = InferenceServer(model_service=ModelService(data_dir=settings.data_dir))
     app.state.inference_server = inference_server
 
     # Initialize Scheduler

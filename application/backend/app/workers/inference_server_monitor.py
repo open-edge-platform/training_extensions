@@ -5,6 +5,7 @@ import time
 from collections.abc import Callable
 from functools import wraps
 from multiprocessing.synchronize import Event
+from uuid import UUID
 
 from loguru import logger
 
@@ -13,7 +14,18 @@ from app.workers.base import BaseThreadWorker
 
 
 class InferenceServerMonitorThread(BaseThreadWorker):
-    ROLE = "InferenceServer"
+    """
+    Inference Server Monitor Thread manages the lifecycle of the inference model loaded in the Inference Server,
+    ensuring that models are unloaded after their TTL expires.
+    It monitors the inference server for model loading, inference requests, and model stopping events to track the TTL
+    countdown and unload models when necessary.
+    The thread runs in the background, periodically checking the status of the loaded model and performing actions
+    based on the events it observes.
+    This helps to optimize resource usage by ensuring that models are not kept loaded indefinitely when they are not
+    being used for inference.
+    """
+
+    ROLE = "InferenceServerMonitor"
 
     def __init__(self, server: InferenceServer, stop_event: Event) -> None:
         super().__init__(stop_event=stop_event)
@@ -33,10 +45,10 @@ class InferenceServerMonitorThread(BaseThreadWorker):
         orig_set_inference_model = self._server.set_inference_model
 
         @wraps(orig_set_inference_model)
-        def wrapped_set_inference_model(*args, **kwargs):
-            model_loaded = orig_set_inference_model(*args, **kwargs)
+        def wrapped_set_inference_model(project_id: UUID, model_id: UUID, device: str, ttl: int):
+            model_loaded = orig_set_inference_model(project_id=project_id, model_id=model_id, device=device, ttl=ttl)
             if model_loaded:
-                self._ttl = kwargs.get("ttl")  # pyrefly: ignore[bad-assignment]
+                self._ttl = ttl
                 logger.debug("Model loaded with TTL of {} seconds, starting countdown", self._ttl)
                 self._model_loaded = True
             return model_loaded
