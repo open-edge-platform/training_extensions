@@ -29,10 +29,10 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
         task_type: importEntry?.project?.task_type ?? defaultTaskType,
     };
 
-    return useActionState<{ name: string; task_type: string }, FormData>(async (_prevState, formData) => {
+    return useActionState<{ name: string; task_type: TaskType }, FormData>(async (_prevState, formData) => {
         const project = {
             name: String(formData.get('name')),
-            task_type: String(formData.get('task_type')),
+            task_type: formData.get('task_type') as TaskType,
         };
 
         setCurrentStep('labelMapping');
