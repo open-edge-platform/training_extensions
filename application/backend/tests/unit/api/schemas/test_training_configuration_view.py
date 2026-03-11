@@ -69,7 +69,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                     patience=7,
                     min_lr=1e-5,
                 ),
-                gradient_accumulation=GradientAccumulationParameters(enable=True, steps=4),
+                gradient_accumulation=GradientAccumulationParameters(enable=True, batches=4),
                 gradient_clip=GradientClipParameters(enable=True, max_grad_norm=2.0),
                 input_size_width=256,
                 input_size_height=256,
@@ -110,7 +110,7 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                     patience=10,
                     min_lr=1e-6,
                 ),
-                gradient_accumulation=GradientAccumulationParameters(enable=False, steps=1),
+                gradient_accumulation=GradientAccumulationParameters(enable=False, batches=1),
                 gradient_clip=GradientClipParameters(enable=False, max_grad_norm=1.0),
                 input_size_width=512,
                 input_size_height=512,
@@ -641,11 +641,11 @@ def fxt_training_configuration_view_json() -> dict:
                             {
                                 "type": "parameter",
                                 "key": "batches",
-                                "name": "Accumulation steps",
+                                "name": "Accumulation batches",
                                 "description": (
-                                    "Number of steps to accumulate gradients before performing a weight update."
+                                    "Number of batches to accumulate gradients before performing a weight update."
                                 ),
-                                "value": 1,
+                                "value": 4,
                                 "default_value": 1,
                                 "value_type": "int",
                                 "min_value": 1,

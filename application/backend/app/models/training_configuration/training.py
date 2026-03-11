@@ -94,8 +94,8 @@ class GradientAccumulationParameters(BaseModel):
     batches: int = Field(
         ge=1,
         default=1,
-        title="Accumulation steps",
-        description="Number of steps to accumulate gradients before performing a weight update.",
+        title="Accumulation batches",
+        description="Number of batches to accumulate gradients before performing a weight update.",
     )
 
 
