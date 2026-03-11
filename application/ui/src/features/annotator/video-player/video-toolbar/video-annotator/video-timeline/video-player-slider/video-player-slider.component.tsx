@@ -8,6 +8,7 @@ import { defer } from 'lodash-es';
 import { useHover } from 'react-aria';
 
 import type { MediaVideoFrame } from '../../../../../../../constants/shared-types';
+import { FRAME_STEP_TO_DISPLAY_ALL_FRAMES } from '../../../frame-step/utils';
 import { ThumbnailPreview } from './thumbnail-preview.component';
 import { VideoSlider } from './video-slider.component';
 
@@ -17,7 +18,7 @@ type VideoPlayerSliderProps = {
     videoFrame: MediaVideoFrame;
     step: number;
     frameNumber: number;
-    sizePerSquare: number;
+    sizePerSquare?: number;
     frameOffset?: number;
     ref?: RefObject<HTMLDivElement | null>;
     selectFrame: (frameNumber: number) => void;
@@ -117,10 +118,12 @@ export const VideoPlayerSlider = ({
     const framesCount = videoFrame.frame_count;
     const minValue = 0;
     const maxValue = framesCount - 1;
-    const lastFrame = framesCount - step;
+    const isDisplayingAllFrames = FRAME_STEP_TO_DISPLAY_ALL_FRAMES === step;
+    const lastFrame = isDisplayingAllFrames ? maxValue : framesCount - step;
     const isLastFrame = sliderValue >= lastFrame;
     const containerScrollLeft = getContainerScroll(ref);
 
+    // TODO: Update highlighted frames and buffers
     const highlightedFrames: number[] = [];
     const buffers = undefined;
 

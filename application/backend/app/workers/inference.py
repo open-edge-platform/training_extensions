@@ -3,6 +3,7 @@
 
 import multiprocessing as mp
 import queue
+import threading
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
@@ -33,6 +34,50 @@ class InferenceWorkerConfig:
     logger_: LoguruLogger
 
 
+class PredictionReorderBuffer:
+    """Buffers predictions to ensure async generated predictions are fed to the prediction queue in order"""
+
+    def __init__(self, max_size: int = 10):
+        self._buffer: dict[float, StreamData] = {}
+        self._expected_timestamps: list[float] = []
+        self._max_size = max_size
+        self._lock = threading.Lock()
+
+    def register_expected_timestamp(self, timestamp: float) -> None:
+        with self._lock:
+            self._expected_timestamps.append(timestamp)
+            if len(self._expected_timestamps) > self._max_size:
+                oldest_timestamp = self._expected_timestamps.pop(0)
+                if oldest_timestamp in self._buffer:
+                    del self._buffer[oldest_timestamp]
+
+    def add_prediction_for_timestamp(self, timestamp: float, stream_data: StreamData) -> None:
+        with self._lock:
+            if timestamp in self._expected_timestamps:
+                self._buffer[timestamp] = stream_data
+            else:
+                logger.warning(
+                    "Received prediction for buffering with unexpected timestamp: "
+                    "expected timestamps: {}, received timestamp {}",
+                    self._expected_timestamps,
+                    timestamp,
+                )
+
+    def get_ready_predictions(self) -> list[StreamData]:
+        result = []
+        with self._lock:
+            while self._expected_timestamps and self._expected_timestamps[0] in self._buffer:
+                timestamp = self._expected_timestamps.pop(0)
+                stream_data = self._buffer.pop(timestamp)
+                result.append(stream_data)
+        return result
+
+    def clear(self) -> None:
+        with self._lock:
+            self._expected_timestamps = []
+            self._buffer = {}
+
+
 class InferenceWorker(BaseProcessWorker):
     """A process that pulls frames from the frame queue, runs inference, and pushes results to the prediction queue."""
 
@@ -55,10 +100,22 @@ class InferenceWorker(BaseProcessWorker):
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
+        # The reorder buffer ensures that frames are broadcast in order, even if inference results are produced
+        # out of order due to async processing. It is initialized in setup() to ensure it's created after the process
+        # fork, since it contains a threading.Lock that can't be pickled.
+        self.__prediction_buffer: PredictionReorderBuffer | None = None
+
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
         self._model_service = ActiveModelService(get_settings().data_dir)
+        self.__prediction_buffer = PredictionReorderBuffer()
+
+    @property
+    def _prediction_buffer(self) -> PredictionReorderBuffer:
+        if self.__prediction_buffer is None:
+            raise RuntimeError("Prediction buffer not initialized (method 'setup' not called?)")
+        return self.__prediction_buffer
 
     def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
@@ -75,12 +132,17 @@ class InferenceWorker(BaseProcessWorker):
             model_id=model_id,
         )
         stream_data.inference_data = inference_data
-        while not self.should_stop():
-            try:
-                self._pred_queue.put(stream_data, timeout=1)
-                break
-            except queue.Full:
-                logger.debug("Prediction queue is full, retrying...")
+
+        # Predictions are generated async, first add to buffer,
+        # then check if next expected predictions are ready to be queued
+        self._prediction_buffer.add_prediction_for_timestamp(timestamp=start_time, stream_data=stream_data)
+        for stream_data in self._prediction_buffer.get_ready_predictions():
+            while not self.should_stop():
+                try:
+                    self._pred_queue.put(stream_data, timeout=1)
+                    break
+                except queue.Full:
+                    logger.debug("Prediction queue is full, retrying...")
 
     def _install_callback_if_needed(self, model: Model) -> None:
         """Install inference completion callback once per model object instance."""
@@ -106,6 +168,11 @@ class InferenceWorker(BaseProcessWorker):
         while self._model_reload_event.is_set():
             self._model_reload_event.clear()
             loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
+
+        if loaded_model is not None:
+            # Clear prediction buffer
+            self._prediction_buffer.clear()
+
         return loaded_model
 
     def run_loop(self) -> None:
@@ -126,11 +193,12 @@ class InferenceWorker(BaseProcessWorker):
                         continue
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
+                    self._prediction_buffer.register_expected_timestamp(inference_start_time)
                     model.infer_async(
                         cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB),  # models expect RGB input
                         user_data={
                             "stream_data": item,
-                            "model_id": self._loaded_model.id,
+                            "model_id": self._loaded_model.model_revision_id,
                             "inference_start_time": inference_start_time,
                         },
                     )

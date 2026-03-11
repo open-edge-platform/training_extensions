@@ -3,7 +3,6 @@
 
 import { ReactNode } from 'react';
 
-import { ReactComponent as GenICam } from '../../../assets/icons/genicam.svg';
 import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCameraIcon } from '../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
@@ -65,22 +64,23 @@ export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsPro
                             />
                         ),
                     },
-                    {
-                        label: 'GenICam',
-                        value: 'gen_i_cam',
+                    // TODO: Reenable after MVP
+                    // {
+                    //     label: 'GenICam',
+                    //     value: 'gen_i_cam',
 
-                        icon: <GenICam width={'24px'} />,
-                        content: (
-                            <AddSource
-                                onSaved={onSaved}
-                                config={getImagesFolderInitialConfig()}
-                                componentFields={(state: ImagesFolderSourceConfig) => (
-                                    <ImageFolder defaultState={state} />
-                                )}
-                                bodyFormatter={imagesFolderBodyFormatter}
-                            />
-                        ),
-                    },
+                    //     icon: <GenICam width={'24px'} />,
+                    //     content: (
+                    //         <AddSource
+                    //             onSaved={onSaved}
+                    //             config={getImagesFolderInitialConfig()}
+                    //             componentFields={(state: ImagesFolderSourceConfig) => (
+                    //                 <ImageFolder defaultState={state} />
+                    //             )}
+                    //             bodyFormatter={imagesFolderBodyFormatter}
+                    //         />
+                    //     ),
+                    // },
                     {
                         label: 'Video file',
                         value: 'video_file',

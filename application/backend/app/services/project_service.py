@@ -29,14 +29,18 @@ MSG_ERR_DELETE_ACTIVE_PROJECT = "Cannot delete a project with a running pipeline
 
 class ProjectService(BaseSessionManagedService):
     def __init__(
-        self, data_dir: Path, db_session: Session, label_service: LabelService, pipeline_service: PipelineService
+        self,
+        data_dir: Path,
+        label_service: LabelService,
+        pipeline_service: PipelineService,
+        db_session: Session | None = None,
     ) -> None:
         super().__init__(db_session)
         self._projects_dir = data_dir / "projects"
         self._label_service: LabelService = label_service
         self._pipeline_service: PipelineService = pipeline_service
+        self.register_managed_services(label_service, pipeline_service)
 
-    @parent_process_only
     def create_project(self, project_id: UUID, name: str, task: Task) -> Project:
         project_repo = ProjectRepository(self.db_session)
         try:

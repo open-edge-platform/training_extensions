@@ -20,7 +20,7 @@ import { ArchitectureColumn } from './architecture-column.component';
 import { DatasetColumn } from './dataset-revision-column.component';
 import { getTestingMetric } from './utils';
 
-import styles from './model-row.module.scss';
+import classes from './model-row.module.scss';
 
 type ModelRowProps = {
     model: Model;
@@ -59,7 +59,7 @@ export const ModelRow = ({
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
-                    <Text UNSAFE_className={styles.modelName} data-testid={'model-name'}>
+                    <Text UNSAFE_className={classes.modelName} data-testid={'model-name'}>
                         {model.name ?? 'Unnamed Model'}
                         {isFailedModel(model) && (
                             <>
@@ -70,7 +70,7 @@ export const ModelRow = ({
                     </Text>
                     {model.id === activeModelId && <ActiveModelTag />}
                 </Flex>
-                <Text UNSAFE_className={styles.secondaryText}>
+                <Text UNSAFE_className={classes.secondaryText}>
                     {parentRevisionModel ? (
                         <ParentRevisionModel
                             id={parentRevisionModel.id}
@@ -83,7 +83,7 @@ export const ModelRow = ({
                 </Text>
             </Flex>
 
-            <Text UNSAFE_className={styles.dateText}>{formatTrainingDateTime(trainingEndTime)}</Text>
+            <Text UNSAFE_className={classes.dateText}>{formatTrainingDateTime(trainingEndTime)}</Text>
 
             {groupBy === 'architecture' ? (
                 <DatasetColumn datasetRevision={datasetRevision} labelsCount={labelsCount} />
@@ -91,7 +91,7 @@ export const ModelRow = ({
                 <ArchitectureColumn architecture={modelArchitecture} />
             )}
 
-            <Text UNSAFE_className={styles.smallText} data-testid={'model size'}>
+            <Text UNSAFE_className={classes.smallText} data-testid={'model size'}>
                 {totalSize > 0 ? formatBytes(totalSize) : '-'}
             </Text>
 

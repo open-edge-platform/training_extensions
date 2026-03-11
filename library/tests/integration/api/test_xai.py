@@ -4,8 +4,8 @@
 from pathlib import Path
 
 import numpy as np
-import openvino.runtime as ov
 import pytest
+from openvino import Core
 
 from otx.backend.native.engine import OTXEngine
 from otx.data.entity.sample import OTXPredictionBatch
@@ -123,7 +123,7 @@ def test_predict_with_explain(
     engine.trainer.save_checkpoint(ckpt_path)
     exported_model_path = engine.export(checkpoint=ckpt_path, explain=True)
 
-    model = ov.Core().read_model(exported_model_path)
+    model = Core().read_model(exported_model_path)
     feature_vector_output = None
     saliency_map_output = None
     for output in model.outputs:

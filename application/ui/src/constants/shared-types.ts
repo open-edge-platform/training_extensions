@@ -6,11 +6,13 @@ import type { components } from '../api/openapi-spec';
 export type Label = components['schemas']['LabelView'];
 
 export type Model = components['schemas']['ModelView'];
-export type ExtendedModel = components['schemas']['ExtendedModelView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
 export type ModelFormat = components['schemas']['ModelFormat'];
 export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
+export type Evaluation = components['schemas']['EvaluationView'];
+export type Metric = components['schemas']['MetricView'];
+export type LineMetric = components['schemas']['LineMetric'];
 
 export type Job = components['schemas']['JobView'];
 export type ExportDatasetJob = Job & {
@@ -22,6 +24,11 @@ export type ExportDatasetMetadata = ExportDatasetJob['metadata'];
 export type PrepareImportDatasetJob = Job & {
     type: 'prepare_dataset_for_import';
     metadata: components['schemas']['PrepareDatasetForImportRequest'];
+};
+
+export type ImportDatasetToProjectJob = Job & {
+    type: 'import_dataset_to_project';
+    metadata: components['schemas']['ImportDatasetToProjectRequest'];
 };
 
 export type MediaImage = components['schemas']['ImageView'];
@@ -38,7 +45,6 @@ export type MediaDTO = MediaImage | MediaVideo | MediaVideoFrameDTO;
 export type Media = MediaImage | MediaVideo | MediaVideoFrame;
 
 export type MediaItemState = 'accepted' | 'rejected';
-export type MediaStateMap = Map<string, MediaItemState>;
 
 export type DeviceType = components['schemas']['DeviceType'];
 export type TrainingDevice = {
@@ -71,3 +77,41 @@ export type SourceConfig =
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
 
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
+export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
+
+export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
+
+export type AnnotationType = components['schemas']['AnnotationType'];
+
+export type BoolConfigurableParameter = components['schemas']['BoolParameterView'];
+export type StringConfigurableParameter = components['schemas']['StringParameterView'];
+export type IntConfigurableParameter = components['schemas']['IntParameterView'];
+export type FloatConfigurableParameter = components['schemas']['FloatParameterView'];
+export type FloatConfigurableRangeParameter = components['schemas']['FloatRangeParameterView'];
+
+export type NumberConfigurableParameter = IntConfigurableParameter | FloatConfigurableParameter;
+
+type EnumerableConfigurableParameter = StringConfigurableParameter | NumberConfigurableParameter;
+
+type CreateEnumerableConfigurableParameterType<T extends EnumerableConfigurableParameter> = Omit<
+    T,
+    'allowed_values' | 'value' | 'default_value'
+> & {
+    allowed_values: Exclude<T['allowed_values'], null | undefined>;
+    value: Exclude<T['value'], null | undefined>;
+    default_value: Exclude<T['default_value'], null | undefined>;
+};
+
+export type NumberEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<NumberConfigurableParameter>;
+
+export type ConfigurableParameter =
+    | BoolConfigurableParameter
+    | StringConfigurableParameter
+    | IntConfigurableParameter
+    | FloatConfigurableParameter
+    | FloatConfigurableRangeParameter;
+
+export type ConfigurableParameterGroup = components['schemas']['ConfigurableParameterGroupView'];
+export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
+
+export type TrainingConfiguration = components['schemas']['TrainingConfigurationView'];

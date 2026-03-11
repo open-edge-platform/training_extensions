@@ -1,0 +1,30 @@
+.step {
+    width: var(--spectrum-global-dimension-size-300);
+    height: var(--spectrum-global-dimension-size-300);
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    justify-content: center;
+    background: var(--background-inverse);
+
+    &::before {
+        content: attr(data-content);
+        position: absolute;
+    }
+}
+
+[data-active='true'] {
+    color: var(--spectrum-global-color-gray-50);
+    width: var(--spectrum-global-dimension-size-400);
+    height: var(--spectrum-global-dimension-size-400);
+    background: var(--energy-blue);
+}
+
+[data-completed='true'] {
+    color: var(--spectrum-global-color-gray-50);
+    background: var(--energy-blue);
+
+    &::before {
+        content: '✓';
+    }
+}

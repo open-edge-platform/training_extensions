@@ -5,15 +5,14 @@ import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
 import type { Rect } from '../../../../shared/types';
 import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
-import { useMediaItemImage, useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
 import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 
 export const BoundingBoxTool = () => {
     const { scale: zoom } = useZoom();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { roi } = useSelectedMediaItem();
-    const { image } = useMediaItemImage();
+    const { roi, image } = useSelectedMediaItem();
     const { selectedLabel } = useAnnotatorLabels();
 
     const handleComplete = (shapes: Rect[], labels: Label[]): string[] => {

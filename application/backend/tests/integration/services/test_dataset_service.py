@@ -476,6 +476,150 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
+@pytest.fixture
+def fxt_project_with_rich_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
+    """Fixture with images, videos, annotated video frames, and a dataset item with multiple annotations."""
+    project, _ = fxt_project_with_pipeline
+
+    label_1_id = str(project.task.labels[0].id)
+    label_2_id = str(project.task.labels[1].id)
+
+    db_media_items = []
+    db_frame_items = []
+    db_dataset_items = []
+
+    default_media_values = {
+        "size": 1024,
+        "width": 1024,
+        "height": 768,
+        "project_id": str(project.id),
+        "created_at": datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    }
+    default_item_values = {
+        "project_id": str(project.id),
+        "subset": "training",
+        "created_at": datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    }
+    annotation_data_1 = {
+        "labels": [{"id": label_1_id}],
+        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+    }
+    annotation_data_2 = {
+        "labels": [{"id": label_2_id}],
+        "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+    }
+
+    # Image (unannotated)
+    unannotated_image = MediaDB(
+        id=str(uuid4()),
+        type="image",
+        name="img1",
+        format="jpg",
+        **default_media_values,
+    )
+    item_unannotated_image = DatasetItemDB(
+        id=str(unannotated_image.id),
+        **default_item_values,
+    )
+    db_media_items.append(unannotated_image)
+    db_dataset_items.append(item_unannotated_image)
+
+    # Image (annotated with multiple annotations (2 with label_1, 1 with label_2)
+    annotated_image = MediaDB(
+        id=str(uuid4()),
+        type="image",
+        name="multi_ann",
+        format="jpg",
+        **default_media_values,
+    )
+    item_annotated_image = DatasetItemDB(
+        id=str(annotated_image.id),
+        **default_item_values,
+        annotation_data=[annotation_data_1, annotation_data_1, annotation_data_2],
+        user_reviewed=True,
+    )
+    db_media_items.append(annotated_image)
+    db_dataset_items.append(item_annotated_image)
+
+    # Video (annotated frames)
+    annotated_video = MediaDB(
+        id=str(uuid4()),
+        type="video",
+        name="vid1",
+        format="mp4",
+        fps=30.0,
+        frame_count=20,
+        **default_media_values,
+    )
+    db_media_items.append(annotated_video)
+
+    # Video frame (annotated with label_1)
+    annotated_video_frame_1 = MediaDB(
+        id=str(uuid4()),
+        type="video_frame",
+        name="vf1",
+        format="jpg",
+        video_id=str(annotated_video.id),
+        frame_index=3,
+        **default_media_values,
+    )
+    item_annotated_video_frame_1 = DatasetItemDB(
+        id=str(annotated_video_frame_1.id),
+        **default_item_values,
+        annotation_data=[annotation_data_1],
+        user_reviewed=True,
+    )
+    db_frame_items.append(annotated_video_frame_1)
+    db_dataset_items.append(item_annotated_video_frame_1)
+
+    # Video frame (annotated with label_2)
+    annotated_video_frame_2 = MediaDB(
+        id=str(uuid4()),
+        type="video_frame",
+        name="vf2",
+        format="jpg",
+        video_id=str(annotated_video.id),
+        frame_index=8,
+        **default_media_values,
+    )
+    item_annotated_video_frame_2 = DatasetItemDB(
+        id=str(annotated_video_frame_2.id),
+        **default_item_values,
+        annotation_data=[annotation_data_2],
+        user_reviewed=True,
+    )
+    db_frame_items.append(annotated_video_frame_2)
+    db_dataset_items.append(item_annotated_video_frame_2)
+
+    # Video (no annotated frames)
+    unannotated_video = MediaDB(
+        id=str(uuid4()),
+        type="video",
+        name="vid2",
+        format="mp4",
+        fps=30.0,
+        frame_count=15,
+        **default_media_values,
+    )
+    db_media_items.append(unannotated_video)
+
+    [db_session.add(item) for item in db_media_items]
+    db_session.flush()
+    db_session.commit()
+    [db_session.add(item) for item in db_frame_items]
+    db_session.flush()
+    [db_session.add(item) for item in db_dataset_items]
+    db_session.flush()
+
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_video_frame_1.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_video_frame_2.id, label_id=label_2_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_image.id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=item_annotated_image.id, label_id=label_2_id))
+    db_session.flush()
+
+    return project, db_dataset_items
+
+
 class TestDatasetServiceIntegration:
     """Integration tests for DatasetService."""
 
@@ -509,7 +653,8 @@ class TestDatasetServiceIntegration:
         media = MediaAdapter.validate_python(db_media, from_attributes=True)
 
         created_dataset_item = fxt_dataset_service.create_dataset_item(
-            project=project,
+            project_id=project.id,
+            task=project.task,
             media=media,
             user_reviewed=user_reviewed,
             prediction_model_id=pipeline.model_id if use_pipeline_model else None,
@@ -720,11 +865,13 @@ class TestDatasetServiceIntegration:
         item_idx: int,
         label_idx: int,
         fxt_dataset_service: DatasetService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
     ):
         """Test setting a dataset item annotation."""
+        _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_annotation_status_items
         label_id = str(project.task.labels[label_idx].id)
         dataset_item_id = db_dataset_items[item_idx].id
@@ -734,12 +881,14 @@ class TestDatasetServiceIntegration:
             dataset_item_id=UUID(dataset_item_id),
             annotations=annotations,
             user_reviewed=True,
+            prediction_model_id=pipeline.model_id,
         )
 
         dataset_item = db_session.get(DatasetItemDB, dataset_item_id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is not None
         assert dataset_item.user_reviewed is True
+        assert dataset_item.prediction_model_id == str(pipeline.model_id)
         assert [
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         ] == annotations
@@ -756,10 +905,12 @@ class TestDatasetServiceIntegration:
     def test_set_dataset_item_annotations_not_found(
         self,
         fxt_dataset_service: DatasetService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
+        _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_dataset_items
         non_existent_id = uuid4()
         annotations = fxt_annotations(project.task.labels[0].id)
@@ -770,6 +921,7 @@ class TestDatasetServiceIntegration:
                 dataset_item_id=non_existent_id,
                 annotations=annotations,
                 user_reviewed=True,
+                prediction_model_id=pipeline.model_id,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
@@ -1297,3 +1449,30 @@ class TestDatasetServiceIntegration:
         assert len(testing_items) == 1
         for item in testing_items:
             assert item.subset == DatasetItemSubset.TESTING
+
+    def test_get_dataset_statistics(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_rich_dataset_items: tuple[Project, list[DatasetItemDB]],
+    ):
+        """Test retrieving dataset statistics with images, videos, video frames, and multiple annotation instances."""
+        project, _ = fxt_project_with_rich_dataset_items
+
+        statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
+
+        # Media counts
+        assert statistics.media_counts.images == 2
+        assert statistics.media_counts.videos == 2
+        assert statistics.media_counts.video_frames == 35
+
+        # Annotation counts
+        assert statistics.annotations_counts.annotated_images == 1
+        assert statistics.annotations_counts.annotated_videos == 1
+        assert statistics.annotations_counts.annotated_video_frames == 2
+
+        # Instances counts
+        assert statistics.annotations_counts.instances == 5
+        assert len(statistics.annotations_counts.instances_per_label) == 2
+        label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
+        assert label_counts[str(project.task.labels[0].id)] == 3
+        assert label_counts[str(project.task.labels[1].id)] == 2

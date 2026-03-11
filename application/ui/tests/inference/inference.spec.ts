@@ -136,6 +136,36 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
+        network.use(
+            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                return response(200).json(
+                    getMockedPipeline({
+                        data_collection: {
+                            max_dataset_size: 700,
+                            policies: [
+                                {
+                                    type: 'fixed_rate',
+                                    enabled: true,
+                                    rate: 12,
+                                },
+                                {
+                                    type: 'confidence_threshold',
+                                    enabled: false,
+                                    confidence_threshold: 0.5,
+                                    min_sampling_interval: 2.5,
+                                },
+                            ],
+                        },
+                    })
+                );
+            })
+        );
+
+        const maxDatasetSizeField = page.getByRole('textbox', { name: 'Size' });
+
+        await maxDatasetSizeField.fill('700');
+        await expect(maxDatasetSizeField).toHaveValue('700');
+
         await page.getByRole('switch', { name: 'Toggle auto capturing' }).click();
         await expect(page.getByRole('switch', { name: 'Toggle auto capturing' })).toBeChecked();
 
@@ -284,7 +314,8 @@ test('Inference', async ({ streamPage, page, network }) => {
         await page.getByRole('button', { name: 'Add new sink' }).click();
         await page.getByRole('button', { name: 'Folder' }).click();
         await page.locator('input[name="name"]').fill('New Folder');
-        await page.locator('input[aria-roledescription="Number field"]').fill('5');
+        await page.locator('input[aria-roledescription="Number field"]').first().fill('5');
+        await page.locator('input[aria-roledescription="Number field"]').nth(1).fill('5');
 
         await page.locator('input[name="folder_path"]').fill('some/path');
         await page.locator('input[name="output_formats"][value="predictions"]').click();
@@ -314,7 +345,7 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         await expect(page.getByText('New Folder')).toBeVisible();
         await expect(page.getByText('Folder path: some/path')).toBeVisible();
-        await expect(page.getByText('Rate limit: 5')).toBeVisible();
+        await expect(page.getByText('Rate limit: 5 samples every 1 second')).toBeVisible();
         await expect(page.getByText('Output formats: predictions')).toBeVisible();
     });
 });

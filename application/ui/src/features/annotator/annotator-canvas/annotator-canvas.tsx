@@ -7,13 +7,15 @@ import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
+import { VideoAnnotations } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
-import { useMediaItemImage } from '../selected-media-item-provider.component';
 import { ToolManager } from '../tools/tool-manager.component';
 import { VideoFrame } from '../video-player/video-frame.component';
+import { useVideoPlayerContext } from '../video-player/video-player-provider.component';
 
 import classes from './annotator-canvas.module.scss';
 
@@ -44,32 +46,62 @@ const MediaImage = ({ image, mediaItem }: MediaImageProps) => {
     return (
         <>
             <canvas ref={canvasRef} width={image.width} height={image.height} className={classes.image} />
-            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
-                <VideoFrame canvasRef={canvasRef} mediaItem={mediaItem} />
-            )}
+            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && <VideoFrame canvasRef={canvasRef} />}
         </>
     );
 };
 
-type AnnotatorCanvasProps = {
+type ImageAnnotationsProps = {
     mediaItem: Media;
-    isReadOnly?: boolean;
 };
 
-export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanvasProps) => {
+const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
+    const { isFocussed } = useAnnotationVisibility();
     const { annotations } = useAnnotationActions();
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { isFocussed } = useAnnotationVisibility();
-    const { image } = useMediaItemImage();
-    const isSceneBusy = useIsAnnotatorSceneBusy();
-
-    const areToolsDisabled = isSceneBusy || isReadOnly;
 
     // Order annotations by selection. Selected annotation should always be on top.
     const orderedAnnotations = [
         ...annotations.filter((a) => !selectedAnnotations.has(a.id)),
         ...annotations.filter((a) => selectedAnnotations.has(a.id)),
     ];
+
+    const size = { width: mediaItem.width, height: mediaItem.height };
+
+    return (
+        <Annotations width={size.width} height={size.height} isFocussed={isFocussed} annotations={orderedAnnotations} />
+    );
+};
+
+type MediaAnnotationsProps = {
+    mediaItem: Media;
+    mode: AnnotatorMode;
+};
+
+const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
+    const videoPlayerContext = useVideoPlayerContext();
+
+    if (isVideoFrame(mediaItem) && videoPlayerContext?.videoControls?.isPlaying) {
+        if (mode === 'annotation') {
+            return <VideoAnnotations />;
+        }
+        // TODO: Render VideoPredictions
+    }
+
+    return <ImageAnnotations mediaItem={mediaItem} />;
+};
+
+type AnnotatorCanvasProps = {
+    mediaItem: Media;
+    image: ImageData;
+    isReadOnly?: boolean;
+    mode: AnnotatorMode;
+};
+
+export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: AnnotatorCanvasProps) => {
+    const isSceneBusy = useIsAnnotatorSceneBusy();
+
+    const areToolsDisabled = isSceneBusy || isReadOnly;
 
     const size = { width: mediaItem.width, height: mediaItem.height };
 
@@ -81,12 +113,8 @@ export const AnnotatorCanvas = ({ mediaItem, isReadOnly = false }: AnnotatorCanv
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
 
-                <Annotations
-                    width={size.width}
-                    height={size.height}
-                    isFocussed={isFocussed}
-                    annotations={orderedAnnotations}
-                />
+                <MediaAnnotations mediaItem={mediaItem} mode={mode} />
+
                 {!areToolsDisabled && <ToolManager />}
             </div>
         </ZoomTransform>

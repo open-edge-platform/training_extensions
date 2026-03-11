@@ -1,20 +1,25 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, use, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, use, useMemo, useState } from 'react';
 
 import {
     DatasetRevision,
     DeviceType,
+    Model,
     ModelArchitectureWithPerformanceCategory,
+    TrainingConfiguration,
     TrainingDevice,
 } from '../../../constants/shared-types';
 import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
 import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
+import { useGetModels } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+import { useTrainingConfiguration } from './use-training-configuration';
 
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
+type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { value: string | null };
 
 type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
@@ -31,17 +36,28 @@ type TrainModelContextProps = {
     datasetRevisions: DatasetRevisionWithValue[];
     selectedDatasetRevisionId: string | null;
     onSelectDatasetRevisionId: (datasetRevision: string | null) => void;
+
+    modelRevisions: ModelRevisionWithValue[];
+    selectedModelRevisionId: string | null;
+    onSelectModelRevisionId: (modelRevisionId: string | null) => void;
+
+    isAdvancedSettingsMode: boolean;
+    onToggleAdvancedSettingsMode: (isAdvancedSettingsMode: boolean) => void;
+
+    trainingConfiguration: TrainingConfiguration | undefined;
+    defaultTrainingConfiguration: TrainingConfiguration | undefined;
+    onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
 
 type TrainModelProviderProps = {
     children: ReactNode;
-    preSelectedDatasetRevisionId?: string;
 };
 
 const useDatasetRevisions = () => {
     const { data: datasetRevisions } = useGetDatasetRevisions();
+
     return {
         datasetRevisions: [
             { id: 'use-current-dataset-revision', name: 'Use current dataset', value: null },
@@ -50,10 +66,46 @@ const useDatasetRevisions = () => {
     };
 };
 
-export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: TrainModelProviderProps) => {
+const TRAIN_FROM_SCRATCH = 'train-from-scratch';
+const useModelRevisions = () => {
+    const { data: models } = useGetModels();
+
+    return {
+        modelRevisions: [
+            { id: TRAIN_FROM_SCRATCH, name: 'Train from scratch', architecture: '', value: null },
+            ...(models?.map(({ id, name, architecture }) => ({ id, name, architecture, value: String(id) })) ?? []),
+        ],
+    };
+};
+
+const getModelRevisionsForArchitecture = (
+    modelRevisions: ModelRevisionWithValue[],
+    architectureId: string | null
+): ModelRevisionWithValue[] => {
+    return modelRevisions.filter((modelRevision) => {
+        if (modelRevision.id === TRAIN_FROM_SCRATCH) {
+            return true;
+        }
+
+        return modelRevision.architecture === architectureId;
+    });
+};
+
+const getDefaultModelRevisionIdForArchitecture = (
+    modelRevisions: ModelRevisionWithValue[],
+    architectureId: string | null
+): string | null => {
+    const revisionsForArchitecture = getModelRevisionsForArchitecture(modelRevisions, architectureId);
+    const firstRevision = revisionsForArchitecture.find(({ id }) => id !== TRAIN_FROM_SCRATCH);
+
+    return firstRevision?.id ?? revisionsForArchitecture.at(0)?.id ?? null;
+};
+
+export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const { modelArchitectures } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { datasetRevisions } = useDatasetRevisions();
+    const { modelRevisions: allModelRevisions } = useModelRevisions();
     const activeModel = useGetActiveModel();
 
     const activeModelArchitecture = modelArchitectures.find(
@@ -68,8 +120,27 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
         trainingDevices?.at(0)?.type ?? null
     );
     const [selectedDatasetRevisionId, setSelectedDatasetRevisionId] = useState<string | null>(
-        preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
+        datasetRevisions?.at(0)?.id ?? null
     );
+    const [selectedModelRevisionId, setSelectedModelRevisionId] = useState<string | null>(() =>
+        getDefaultModelRevisionIdForArchitecture(allModelRevisions, selectedModelArchitectureId)
+    );
+
+    const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
+
+    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] = useTrainingConfiguration({
+        modelArchitectureId: selectedModelArchitectureId,
+        modelRevisionId: selectedModelRevisionId,
+    });
+
+    const modelRevisions = useMemo(() => {
+        return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
+    }, [allModelRevisions, selectedModelArchitectureId]);
+
+    const onSelectModelArchitectureId = (modelArchitectureId: string | null) => {
+        setSelectedModelArchitectureId(modelArchitectureId);
+        setSelectedModelRevisionId(getDefaultModelRevisionIdForArchitecture(allModelRevisions, modelArchitectureId));
+    };
 
     return (
         <TrainModelContext
@@ -79,7 +150,7 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
                 activeModelArchitectureId: activeModel?.architecture,
 
                 selectedModelArchitectureId,
-                onSelectModelArchitectureId: setSelectedModelArchitectureId,
+                onSelectModelArchitectureId,
 
                 trainingDevices,
                 selectedTrainingDevice,
@@ -88,6 +159,17 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
                 datasetRevisions,
                 selectedDatasetRevisionId,
                 onSelectDatasetRevisionId: setSelectedDatasetRevisionId,
+
+                modelRevisions,
+                selectedModelRevisionId,
+                onSelectModelRevisionId: setSelectedModelRevisionId,
+
+                isAdvancedSettingsMode,
+                onToggleAdvancedSettingsMode: setIsAdvancedSettingsMode,
+
+                trainingConfiguration,
+                defaultTrainingConfiguration,
+                onTrainingConfigurationChange: setTrainingConfiguration,
             }}
         >
             {children}

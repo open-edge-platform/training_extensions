@@ -5,7 +5,6 @@ import { toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
-import type { ModelFormat } from '../../../../constants/shared-types';
 
 export const useDownloadModel = (modelId: string) => {
     const projectId = useProjectIdentifier();
@@ -14,11 +13,11 @@ export const useDownloadModel = (modelId: string) => {
         onSuccess: (data, variables) => {
             const blob = data as Blob;
             const url = URL.createObjectURL(blob);
-            const format = variables.params.query?.format;
+            const modelVariantId = variables.params.query?.model_variant_id;
 
             const link = document.createElement('a');
             link.href = url;
-            link.download = format ? `model-${modelId}-${format}.zip` : `model-${modelId}.zip`;
+            link.download = modelVariantId ? `model-${modelId}-${modelVariantId}.zip` : `model-${modelId}.zip`;
             link.click();
 
             URL.revokeObjectURL(url);
@@ -30,11 +29,11 @@ export const useDownloadModel = (modelId: string) => {
         },
     });
 
-    const downloadModel = (format?: ModelFormat) => {
+    const downloadModel = (modelVariantId: string) => {
         mutation.mutate({
             params: {
                 path: { project_id: projectId, model_id: modelId },
-                query: format ? { format } : undefined,
+                query: { model_variant_id: modelVariantId },
             },
             parseAs: 'blob',
         });

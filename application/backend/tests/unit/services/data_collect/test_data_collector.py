@@ -185,14 +185,15 @@ class TestDataCollectorUnit:
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
         mock_create_image.assert_called_once_with(
-            project=project,
+            project_id=project.id,
             data=ANY,
             name="1735689601_0000",
             format=ImageFormat.JPG,
             source_id=pipeline.source_id,
         )
         mock_create_dataset_item.assert_called_once_with(
-            project=project,
+            project_id=project.id,
+            task=project.task,
             media=media,
             user_reviewed=False,
             prediction_model_id=inference_data.model_id,
@@ -246,14 +247,15 @@ class TestDataCollectorUnit:
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
         mock_create_image.assert_called_once_with(
-            project=project,
+            project_id=project.id,
             data=ANY,
             name="1735689601_0000",
             format=ImageFormat.JPG,
             source_id=pipeline.source_id,
         )
         mock_create_dataset_item.assert_called_once_with(
-            project=project,
+            project_id=project.id,
+            task=project.task,
             media=media,
             user_reviewed=False,
             prediction_model_id=inference_data.model_id,

@@ -21,6 +21,7 @@ interface AnnotationLabelsProps {
     labels: AnnotationLabel[];
     onRemove: (labelId: string) => void;
     useBottomCorners?: boolean;
+    isRemovable?: boolean;
 }
 
 const formatPredictionScore = (score: number) => {
@@ -31,7 +32,12 @@ const getLabelText = (label: AnnotationLabel) => {
     return `${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : ''}`.trim();
 };
 
-export const AnnotationLabels = ({ labels, onRemove, useBottomCorners = false }: AnnotationLabelsProps) => {
+export const AnnotationLabels = ({
+    labels,
+    onRemove,
+    useBottomCorners = false,
+    isRemovable = true,
+}: AnnotationLabelsProps) => {
     const { scale } = useZoom();
 
     const onDeleteLabel = useCallback(
@@ -82,7 +88,7 @@ export const AnnotationLabels = ({ labels, onRemove, useBottomCorners = false }:
                             aria-label={`label ${label.name} background`}
                         >
                             <span aria-label={`label ${label.name}`}>{getLabelText(label)}</span>
-                            {!isPlaceholder && (
+                            {!isPlaceholder && isRemovable && (
                                 <button
                                     className={classes.removeButton}
                                     onPointerDown={onDeleteLabel(label.id)}

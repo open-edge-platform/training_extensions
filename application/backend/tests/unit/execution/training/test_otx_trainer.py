@@ -3,7 +3,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 from uuid import uuid4
 
 import pytest
@@ -14,18 +14,22 @@ from otx.metrics.types import MetricCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
+from otx.types.task import OTXTaskType
 
 from app.core.run import ExecutionContext
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingJobParams, TrainingStatus
-from app.models.system import DeviceInfo, DeviceType
-from app.models.training_configuration.configuration import (
-    GlobalDatasetPreparationParameters,
-    PartialGlobalParameters,
-    PartialTrainingConfiguration,
-    SubsetSplit,
-    TrainingConfiguration,
+from app.models import (
+    DatasetItemAnnotationStatus,
+    DatasetItemSubset,
+    ModelVariant,
+    Task,
+    TaskType,
+    TrainingJobParams,
+    TrainingStatus,
 )
+from app.models.model_revision import ModelFormat, ModelPrecision
+from app.models.system import DeviceInfo, DeviceType
+from app.models.training_configuration import AlgoLevelParameters, TaskLevelParameters, TrainingConfiguration
 from app.services import ModelRevisionMetadata, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.subset_assignment import (
@@ -145,6 +149,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         project_id = uuid4()
         parent_model_revision_id = uuid4()
+        parent_model_variant_id = uuid4()
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
@@ -154,11 +159,27 @@ class TestOTXTrainerPrepareWeights:
             job_id=uuid4(),
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
+            tmp_path
+            / "projects"
+            / str(project_id)
+            / "models"
+            / str(parent_model_revision_id)
+            / "variants"
+            / str(parent_model_variant_id)
+            / "model.ckpt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
         otx_trainer = fxt_otx_trainer()
+
+        otx_trainer._model_service.get_model_variants.return_value = [
+            ModelVariant(
+                id=parent_model_variant_id,
+                model_revision_id=parent_model_revision_id,
+                format=ModelFormat.PYTORCH,
+                precision=ModelPrecision.FP32,
+            )
+        ]
 
         # Act
         weights_path = otx_trainer.prepare_weights(training_params)
@@ -175,6 +196,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         project_id = uuid4()
         parent_model_revision_id = uuid4()
+        parent_model_variant_id = uuid4()
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
@@ -184,9 +206,25 @@ class TestOTXTrainerPrepareWeights:
             job_id=uuid4(),
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
+            tmp_path
+            / "projects"
+            / str(project_id)
+            / "models"
+            / str(parent_model_revision_id)
+            / "variants"
+            / str(parent_model_variant_id)
+            / "model.ckpt"
         )
         otx_trainer = fxt_otx_trainer()
+
+        otx_trainer._model_service.get_model_variants.return_value = [
+            ModelVariant(
+                id=parent_model_variant_id,
+                model_revision_id=parent_model_revision_id,
+                format=ModelFormat.PYTORCH,
+                precision=ModelPrecision.FP32,
+            )
+        ]
 
         # Act
         with pytest.raises(FileNotFoundError) as excinfo:
@@ -210,9 +248,11 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             job_id=uuid4(),
         )
         otx_trainer = fxt_otx_trainer()
-        mock_training_config = Mock(spec=TrainingConfiguration)
-        mock_training_config.model_dump.return_value = {"key1": "value1", "hyperparameters": {"lr": 0.001}}
-        otx_trainer._training_configuration_service.get_training_configuration.return_value = mock_training_config  # type: ignore[attr-defined]
+        mock_training_config = TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
+        )
+        otx_trainer._training_configuration_service.get_by_model_architecture.return_value = mock_training_config  # type: ignore[attr-defined]
         mock_otx_training_config = {"key2": "value2"}
         with patch.object(GetiConfigConverter, "convert", return_value=mock_otx_training_config) as mock_convert:
             # Act
@@ -221,13 +261,15 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             )
 
         # Assert
-        otx_trainer._training_configuration_service.get_training_configuration.assert_called_once_with(  # type: ignore[attr-defined]
+        otx_trainer._training_configuration_service.get_by_model_architecture.assert_called_once_with(  # type: ignore[attr-defined]
             project_id=training_params.project_id,
             model_architecture_id=training_params.model_architecture_id,
         )
-        mock_convert.assert_called_once_with(
-            {"key1": "value1", "hyper_parameters": {"lr": 0.001}, "sub_task_type": "DETECTION"}
-        )
+        expected_otx_training_config = mock_training_config.model_dump(mode="json")
+        expected_otx_training_config["hyper_parameters"] = expected_otx_training_config.pop("algo_level_parameters")
+        expected_otx_training_config["model_manifest_id"] = training_params.model_architecture_id
+        expected_otx_training_config["sub_task_type"] = OTXTaskType.DETECTION
+        mock_convert.assert_called_once_with(expected_otx_training_config)
         assert training_config == mock_training_config
         assert otx_training_config == mock_otx_training_config
 
@@ -256,10 +298,9 @@ class TestOTXTrainerAssignSubsets:
         fxt_subset_service.get_unassigned_items_with_labels.return_value = unassigned_items
 
         # Mock configuration
-        training_config = PartialTrainingConfiguration(  # type: ignore[call-arg]
-            global_parameters=PartialGlobalParameters(
-                dataset_preparation=GlobalDatasetPreparationParameters(subset_split=SubsetSplit())
-            ),
+        training_config = TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
         )
 
         # Mock current distribution
@@ -531,8 +572,7 @@ class TestOTXTrainerPrepareModel:
         )
         dataset_revision_id = uuid4()
         otx_trainer = fxt_otx_trainer()
-
-        training_config = PartialTrainingConfiguration(model_manifest_id=model_architecture_id)  # type: ignore
+        training_config = Mock(spec=TrainingConfiguration)
 
         # Act
         otx_trainer.prepare_model(training_params, dataset_revision_id, training_config)
@@ -723,6 +763,7 @@ class TestOTXTrainerEvaluateModel:
         otx_trainer = fxt_otx_trainer()
         project_id = uuid4()
         model_id = uuid4()
+        model_variant_id = uuid4()
         dataset_revision_id = uuid4()
         mock_otx_engine = Mock()
         mock_otx_engine.test.return_value = {
@@ -748,6 +789,7 @@ class TestOTXTrainerEvaluateModel:
             model_checkpoint_path=model_checkpoint_path,
             task=training_params.task,
             model_revision_id=model_id,
+            model_variant_id=model_variant_id,
             dataset_revision_id=dataset_revision_id,
         )
 
@@ -756,7 +798,7 @@ class TestOTXTrainerEvaluateModel:
         fxt_model_service.set_db_session.assert_called_once()
         actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
 
-        assert actual_call.model_revision_id == model_id
+        assert actual_call.model_variant_id == model_variant_id
         assert actual_call.dataset_revision_id == dataset_revision_id
         assert actual_call.subset == DatasetItemSubset.TESTING
         assert actual_call.metrics == pytest.approx(
@@ -819,6 +861,7 @@ class TestOTXTrainerStoreModelArtifacts:
     def test_store_model_artifacts(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_model_service: Mock,
         tmp_path: Path,
     ):
         """Test successful storing of model artifacts and cleanup."""
@@ -826,6 +869,19 @@ class TestOTXTrainerStoreModelArtifacts:
         otx_trainer = fxt_otx_trainer()
         project_id = uuid4()
         model_id = uuid4()
+
+        from app.models.model_revision import ModelFormat
+
+        pytorch_variant_id = uuid4()
+        openvino_variant_id = uuid4()
+        onnx_variant_id = uuid4()
+
+        # Pre-built mapping as returned by create_model_variants
+        created_variants = {
+            ModelFormat.PYTORCH: pytorch_variant_id,
+            ModelFormat.OPENVINO: openvino_variant_id,
+            ModelFormat.ONNX: onnx_variant_id,
+        }
 
         # Create model directory structure
         model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
@@ -864,22 +920,34 @@ class TestOTXTrainerStoreModelArtifacts:
             otx_work_dir=otx_work_dir,
             trained_model_path=trained_model_path,
             exported_model_paths=exported_model_paths,
+            created_variants=created_variants,
         )
 
         # Assert
-        # Check checkpoint was copied
-        assert (model_dir / "model.ckpt").exists()
-        assert (model_dir / "model.ckpt").read_text() == "checkpoint content"
 
-        # Check OpenVINO files were copied
-        assert (model_dir / "model.xml").exists()
-        assert (model_dir / "model.xml").read_text() == "xml content"
-        assert (model_dir / "model.bin").exists()
-        assert (model_dir / "model.bin").read_text() == "bin content"
+        # Check variant directories and files
+        variants_dir = model_dir / "variants"
+        assert variants_dir.exists()
 
-        # Check ONNX file was copied
-        assert (model_dir / "model.onnx").exists()
-        assert (model_dir / "model.onnx").read_text() == "onnx content"
+        # Check PyTorch variant
+        pytorch_dir = variants_dir / str(pytorch_variant_id)
+        assert pytorch_dir.exists()
+        assert (pytorch_dir / "model.ckpt").exists()
+        assert (pytorch_dir / "model.ckpt").read_text() == "checkpoint content"
+
+        # Check OpenVINO variant
+        openvino_dir = variants_dir / str(openvino_variant_id)
+        assert openvino_dir.exists()
+        assert (openvino_dir / "model.xml").exists()
+        assert (openvino_dir / "model.xml").read_text() == "xml content"
+        assert (openvino_dir / "model.bin").exists()
+        assert (openvino_dir / "model.bin").read_text() == "bin content"
+
+        # Check ONNX variant
+        onnx_dir = variants_dir / str(onnx_variant_id)
+        assert onnx_dir.exists()
+        assert (onnx_dir / "model.onnx").exists()
+        assert (onnx_dir / "model.onnx").read_text() == "onnx content"
 
         # Check metrics were moved
         assert (model_dir / "metrics").exists()

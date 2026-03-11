@@ -1,0 +1,172 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from abc import ABC
+from collections.abc import Callable
+from contextlib import AbstractContextManager
+from pathlib import Path
+from typing import cast
+from uuid import UUID
+
+from datumaro.experimental import Dataset, LazyImage, Sample
+from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.export_import import import_dataset
+from loguru import logger
+from sqlalchemy.orm import Session
+
+from app.datumaro_converter import (
+    ClassificationSample,
+    DetectionSample,
+    InstanceSegmentationSample,
+    MultilabelClassificationSample,
+)
+from app.execution.base import Execution, JobParamsT
+from app.models import DatasetItemSubset, Task, TaskType
+from app.models.media import ImageFormat
+from app.services import DatasetService, LabelService, MediaService
+
+from .sample_to_annotation import DatumaroSampleToGetiAnnotationConverter
+
+
+class BaseDatasetImport(Execution[JobParamsT], ABC):
+    """
+    Base implementation for dataset import logic, inheriting from Execution.
+
+    This class provides protected helper methods (_prepare_dataset, _create_items)
+    that can be orchestrated by concrete subclasses using the @step decorator.
+    It does not define the @step orchestration itself.
+
+    **Note**: Items are currently created one by one in sequential order. This approach may impact
+    performance for large datasets and could be optimized by implementing batch processing to reduce
+    database overhead and improve throughput.
+
+    Progress is reported in increments of 5% during the import process.
+
+    Attributes:
+        BATCH_PROGRESS_INTERVAL: Number of batches for progress reporting (20 batches = 5% intervals).
+
+    Args:
+        staged_datasets_dir: Path to the directory containing staged dataset files.
+        dataset_service: Service for managing dataset items and operations.
+        label_service: Service for managing project labels.
+        media_service: Service for managing media items (images).
+        db_session_factory: Factory for creating database sessions.
+
+    Raises:
+        ValueError: If the staged dataset directory does not exist or dataset import fails.
+    """
+
+    BATCH_PROGRESS_INTERVAL = 20  # 5% intervals (100% / 5% = 20)
+
+    def __init__(
+        self,
+        staged_datasets_dir: Path,
+        dataset_service: DatasetService,
+        label_service: LabelService,
+        media_service: MediaService,
+        db_session_factory: Callable[[], AbstractContextManager[Session]],
+    ) -> None:
+        super().__init__()
+        self._staged_datasets_dir = staged_datasets_dir
+        self._media_service = media_service
+        self._label_service = label_service
+        self._dataset_service = dataset_service
+        self._db_session_factory = db_session_factory
+
+    def _prepare_dataset(self, staged_dataset_id: UUID, task: Task) -> Dataset:
+        staged_dataset_path = self._staged_datasets_dir / str(staged_dataset_id) / "dataset"
+        if not staged_dataset_path.exists() or not staged_dataset_path.is_dir():
+            raise ValueError(f"Staged dataset directory does not exist: {staged_dataset_path}")
+        dataset = import_dataset(str(staged_dataset_path))
+        target_type = self.__get_sample_by_task(task=task)
+        if target_type and target_type != dataset.dtype:
+            dataset = dataset.convert_to_schema(target_type)
+        return dataset
+
+    def _create_items(
+        self,
+        dataset: Dataset,
+        project_id: UUID,
+        task: Task,
+        labels_mapping: dict[str, str | None],
+        include_unannotated: bool,
+        start_progress: float = 10.0,
+    ) -> None:
+        with self._db_session_factory() as session:
+            self._dataset_service.set_db_session(session)
+            self._label_service.set_db_session(session)
+            self._media_service.set_db_session(session)
+            project_labels = self._label_service.list_all(project_id)
+            dataset_label_cats = self._get_dataset_label_categories(dataset)
+            converter = DatumaroSampleToGetiAnnotationConverter(
+                project_labels=project_labels,
+                label_categories=dataset_label_cats,
+                label_mapping=labels_mapping,
+            )
+            logger.info("Found {} labels for project {}", [label.name for label in project_labels], project_id)
+            unfiltered_dataset_size, min_p, max_p = len(dataset), start_progress, 100
+            progress_interval = max(1, unfiltered_dataset_size // self.BATCH_PROGRESS_INTERVAL)
+            num_imported_media = 0
+            for idx, item in enumerate(dataset):
+                annotations = converter.convert_sample(item) or None
+                user_reviewed = item.user_reviewed if item.user_reviewed is not None else True
+                # If there are no annotations (due to filtering), we can consider the item as not reviewed by the user.
+                if not annotations:
+                    user_reviewed = False
+                if not user_reviewed and not include_unannotated:
+                    continue
+
+                media = self._media_service.create_image(
+                    project_id=project_id,
+                    name=str(idx).zfill(len(str(unfiltered_dataset_size))),
+                    format=self.__detect_image_format(item.image),
+                    data=item.image.data,
+                )
+                self._dataset_service.create_dataset_item(
+                    project_id=project_id,
+                    task=task,
+                    media=media,
+                    user_reviewed=user_reviewed,
+                    annotations=annotations,
+                    subset=DatasetItemSubset(item.subset.name.lower()),
+                )
+                num_imported_media += 1
+                if (idx > 0 and idx % progress_interval == 0) or idx == unfiltered_dataset_size - 1:
+                    self.update_progress(min_p + ((idx + 1) / unfiltered_dataset_size) * (max_p - min_p))
+            if num_imported_media == 0:
+                self.pin_message(
+                    "No items were imported from the dataset. "
+                    "This may be due to filtering options that excluded all items."
+                )
+            else:
+                self.pin_message(
+                    f"Imported {num_imported_media}/{unfiltered_dataset_size} items from the dataset.", level="INFO"
+                )
+
+    @staticmethod
+    def _get_dataset_label_categories(dataset: Dataset) -> LabelCategories:
+        label_attr_name = "label" if "label" in dataset.schema.attributes else "labels"
+        label_attr = dataset.schema.attributes[label_attr_name]
+        return cast(LabelCategories, label_attr.categories)
+
+    @staticmethod
+    def __detect_image_format(image: LazyImage) -> ImageFormat:
+        try:
+            ext = Path(image.path).suffix.lstrip(".").lower()
+            return ImageFormat(ext)
+        except (ValueError, AttributeError):
+            return ImageFormat.JPG
+
+    @staticmethod
+    def __get_sample_by_task(task: Task) -> type[Sample] | None:
+        match task.task_type:
+            case TaskType.CLASSIFICATION:
+                if not task.exclusive_labels:
+                    return MultilabelClassificationSample
+                return ClassificationSample
+            case TaskType.DETECTION:
+                return DetectionSample
+            case TaskType.INSTANCE_SEGMENTATION:
+                return InstanceSegmentationSample
+            case _:
+                raise ValueError(f"Unknown task type: {task}")

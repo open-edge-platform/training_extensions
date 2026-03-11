@@ -22,7 +22,7 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
     const { data: projects } = useProjects();
 
     const handleNavigateToProject = () => {
-        navigate(paths.project.dataset({ projectId: project.id }));
+        navigate(paths.project.dataset.index({ projectId: project.id }));
     };
 
     const handleDeleted = () => {
@@ -54,7 +54,7 @@ export const ProjectListItem = ({ project }: ProjectListItemProps) => {
                 <MenuActions
                     projectId={project.id}
                     projectName={project.name}
-                    activePipeline={project.active_pipeline}
+                    isPipelineRunning={project.active_pipeline}
                     onDeleted={handleDeleted}
                 />
             </Flex>

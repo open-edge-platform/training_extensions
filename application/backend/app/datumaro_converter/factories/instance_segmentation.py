@@ -4,23 +4,22 @@
 from collections.abc import Sequence
 
 import numpy as np
-from datumaro.experimental.fields import ImageInfo
+from datumaro.experimental import LazyImage
+from datumaro.experimental.fields import ImageInfo, Subset
 from loguru import logger
 from numpy import ndarray
 
-from app.datumaro_converter.samples import InstanceSegmentationSample
-from app.datumaro_converter.utils import ShapeConverter, SubsetConverter, validate_confidence_consistency
+from app.datumaro_converter.domain import InstanceSegmentationSample
+from app.datumaro_converter.utils import ShapeConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Polygon
 
 from .sample_factory import SampleFactory
 
 
-class InstanceSegmentationSampleFactory(SampleFactory):
+class InstanceSegmentationSampleFactory(SampleFactory[InstanceSegmentationSample]):
     """Knows how to create instance segmentation samples."""
 
-    @property
-    def sample_type(self) -> type[InstanceSegmentationSample]:
-        return InstanceSegmentationSample
+    sample_type = InstanceSegmentationSample
 
     def create_sample(
         self, dataset_item: DatasetItem, media: Media, image_path: str
@@ -28,9 +27,9 @@ class InstanceSegmentationSampleFactory(SampleFactory):
         if dataset_item.annotation_data is None:
             return InstanceSegmentationSample(
                 id=str(dataset_item.id),
-                image=image_path,
+                image=LazyImage(image_path),
                 image_info=ImageInfo(width=media.width, height=media.height),
-                subset=SubsetConverter.to_datumaro(dataset_item.subset),
+                subset=Subset[dataset_item.subset.name],
                 polygons=np.array([]),
                 label=np.array([]),
                 confidence=None,
@@ -50,12 +49,12 @@ class InstanceSegmentationSampleFactory(SampleFactory):
 
         return InstanceSegmentationSample(
             id=str(dataset_item.id),
-            image=image_path,
+            image=LazyImage(image_path),
             image_info=ImageInfo(width=media.width, height=media.height),
             polygons=polygons,
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
-            subset=SubsetConverter.to_datumaro(dataset_item.subset),
+            subset=Subset[dataset_item.subset.name],
             user_reviewed=True,
         )
 
@@ -84,7 +83,7 @@ class InstanceSegmentationSampleFactory(SampleFactory):
         indices = self._label_index.get_indices(label_ids)
 
         if indices is None:
-            logger.error(f"Label not found for dataset item {dataset_item.id}")
+            logger.warning(f"Label not found for dataset item {dataset_item.id}")
 
         return indices
 

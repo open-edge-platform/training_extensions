@@ -3,144 +3,148 @@
 
 import multiprocessing as mp
 import queue
-import sys
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+from uuid import uuid4
 
 import numpy as np
 import pytest
 
-from app.models import Source
+from app.models import SourceType, VideoFileSourceConfig
+from app.models.source import VideoFileConfig
 from app.stream.stream_data import StreamData
-from app.stream.video_stream import VideoStream
 from app.workers import StreamLoader
 
 
+class _FakeVideoStream:
+    """Minimal picklable stand-in for VideoStream."""
+
+    def __init__(self, frame: np.ndarray) -> None:
+        self._frame = frame
+
+    def get_data(self) -> StreamData:
+        return StreamData(frame_data=self._frame, timestamp=time.time(), source_metadata={})
+
+    def is_real_time(self) -> bool:
+        return True
+
+    def release(self) -> None:
+        pass
+
+
+class _TestableStreamLoader(StreamLoader):
+    def __init__(self, frame_queue, stop_event, source_changed_condition, fake_video_stream):
+        super().__init__(
+            frame_queue=frame_queue,
+            stop_event=stop_event,
+            source_changed_condition=source_changed_condition,
+            logger_=Mock(),  # Mock is only used in the parent; child re-creates via super().__init__
+        )
+        self._fake_video_stream = fake_video_stream
+
+    def setup(self) -> None:
+        self._source = VideoFileSourceConfig(
+            source_type=SourceType.VIDEO_FILE,
+            id=uuid4(),
+            name="Test Video File Source",
+            config_data=VideoFileConfig(video_path="fake_path.mp4"),
+        )
+        self._video_stream = self._fake_video_stream
+
+
+@pytest.fixture(scope="module")
+def mp_ctx():
+    """Use the same 'spawn' context as production code."""
+    return mp.get_context("spawn")
+
+
 @pytest.fixture
-def mp_manager():
-    """Multiprocessing manager fixture"""
-    manager = mp.Manager()
+def mp_manager(mp_ctx):
+    manager = mp_ctx.Manager()
     yield manager
     manager.shutdown()
 
 
 @pytest.fixture
 def frame_queue(mp_manager):
-    """Frame queue fixture"""
     return mp_manager.Queue(maxsize=2)
 
 
 @pytest.fixture
-def stop_event():
-    """Stop event fixture"""
-    return mp.Event()
+def stop_event(request, mp_ctx):
+    event = mp_ctx.Event()
+    request.addfinalizer(event.set)
+    return event
 
 
 @pytest.fixture
-def source_changed_condition():
-    """Source changed condition fixture"""
-    return mp.Condition()
+def source_changed_condition(mp_ctx):
+    return mp_ctx.Condition()
 
 
 @pytest.fixture
-def mock_config():
-    """Mock configuration fixture"""
-    config = Mock(spec=Source)
-    config.source = "test_camera"
-    config.resolution = (1920, 1080)
-    return config
+def sample_frame() -> np.ndarray:
+    return np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
 
 
 @pytest.fixture
-def mock_stream_data():
-    def create_sample():
-        return StreamData(
-            frame_data=np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8),
-            timestamp=time.time(),
-            source_metadata={},
-        )
-
-    yield create_sample
+def fake_video_stream(sample_frame) -> _FakeVideoStream:
+    return _FakeVideoStream(frame=sample_frame)
 
 
-@pytest.fixture
-def mock_video_stream(mock_stream_data):
-    """Mock video stream fixture"""
-    stream = Mock(spec=VideoStream)
-    stream.get_data.return_value = mock_stream_data()
-    stream.is_real_time.return_value = True
-    stream.release.return_value = None
-    return stream
-
-
-@pytest.fixture
-def mock_services(mock_config, mock_video_stream):
-    with (
-        patch("app.workers.stream_loading.SourceService") as mock_source_service,
-        patch("app.workers.stream_loading.VideoStreamService") as mock_video_service,
-    ):
-        # Set up the mocks
-        mock_source_service.get_active_source.return_value = mock_config
-        mock_video_service.get_video_stream.return_value = mock_video_stream
-
-        yield {
-            "video_service": mock_video_service,
-            "video_stream": mock_video_stream,
-        }
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Multiprocessing 'fork' start method not available on Windows")
 class TestStreamLoader:
-    """Unit tests for the StreamLoader routine"""
+    def _start_loader(self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream):
+        """Helper that starts a _TestableStreamLoader and registers cleanup."""
+        process = _TestableStreamLoader(frame_queue, stop_event, source_changed_condition, fake_video_stream)
+        process.start()
 
-    @pytest.fixture(scope="session", autouse=True)
-    def set_multiprocessing_start_method(self):
-        # Set multiprocessing start method to 'fork' to ensure mocked objects and patches
-        # from the parent process are inherited by child processes. The default 'spawn'
-        # method creates isolated child processes that don't inherit mocked state.
-        mp.set_start_method("fork", force=True)
+        def cleanup():
+            stop_event.set()
+            process.join(timeout=5)
+            if process.is_alive():
+                process.kill()
 
-    def test_queue_full(self, frame_queue, mock_stream_data, stop_event, source_changed_condition, mock_services):
-        """Test that stream frames are not acquired when queue is full"""
+        request.addfinalizer(cleanup)
+        return process
 
-        data1, data2 = mock_stream_data(), mock_stream_data()
+    def test_queue_full(
+        self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream, sample_frame
+    ):
+        """Test that stream frames are not acquired when queue is full."""
+        data1 = StreamData(frame_data=sample_frame.copy(), timestamp=time.time(), source_metadata={})
+        data2 = StreamData(frame_data=sample_frame.copy(), timestamp=time.time(), source_metadata={})
         frame_queue.put(data1)
         frame_queue.put(data2)
 
-        # Start the process
-        process = StreamLoader(frame_queue, stop_event, source_changed_condition, Mock())
-        process.start()
+        process = self._start_loader(request, frame_queue, stop_event, source_changed_condition, fake_video_stream)
 
-        # Let it run for a short time to attempt frame acquisition
         time.sleep(1)
 
-        # Stop the process
         stop_event.set()
-        process.join(timeout=1)
+        process.join(timeout=3)
 
         queue_contents = []
         while not frame_queue.empty():
             try:
-                queue_contents.append(frame_queue.get())
+                queue_contents.append(frame_queue.get_nowait())
             except queue.Empty:
                 break
 
-        # Should still have our initial frames, proving new frames were ignored
         assert len(queue_contents) == 2
         assert all(np.array_equal(el1.frame_data, el2.frame_data) for el1, el2 in zip(queue_contents, [data1, data2]))
         assert not process.is_alive(), "Process should terminate cleanly"
 
-    def test_queue_empty(self, frame_queue, stop_event, source_changed_condition, mock_services):
-        """Test that stream frames are acquired when queue is empty"""
+    def test_queue_empty(self, request, frame_queue, stop_event, source_changed_condition, fake_video_stream):
+        """Test that stream frames are acquired when queue is empty."""
+        process = self._start_loader(request, frame_queue, stop_event, source_changed_condition, fake_video_stream)
 
-        # Start the process
-        process = StreamLoader(frame_queue, stop_event, source_changed_condition, Mock())
-        process.start()
-
-        time.sleep(1)
+        # Poll until the queue reaches the expected size (maxsize=2), with a timeout of 5 seconds
+        deadline = time.monotonic() + 5
+        while frame_queue.qsize() < 2 and time.monotonic() < deadline:
+            time.sleep(0.05)
 
         stop_event.set()
-        process.join(timeout=1)
+        process.join(timeout=3)
 
         assert frame_queue.qsize() == 2
         assert not process.is_alive(), "Process should terminate cleanly"

@@ -110,7 +110,6 @@ test.describe('Project', () => {
 
         // Correctly navigated to dataset page
         await page.waitForURL(/dataset/);
-        expect(page.url()).toContain('/dataset');
 
         // Go back to project list and confirm the project was created
         await page.goto('/projects');

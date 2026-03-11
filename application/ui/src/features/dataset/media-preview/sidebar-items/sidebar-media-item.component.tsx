@@ -7,13 +7,15 @@ import { MediaItem } from '../../../../components/media-item/media-item.componen
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import type { Media } from '../../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../../shared/media-url.utils';
+import { AnnotationStatusIcon } from '../../gallery/annotation-state-icon.component';
 
 type SidebarMediaItemProps = {
     item: Media;
+    isUserReviewed: boolean;
     onSelectedMediaItem: (item: Media) => void;
 };
 
-export const SidebarMediaItem = ({ item, onSelectedMediaItem }: SidebarMediaItemProps) => {
+export const SidebarMediaItem = ({ item, isUserReviewed, onSelectedMediaItem }: SidebarMediaItemProps) => {
     const projectId = useProjectIdentifier();
 
     return (
@@ -26,6 +28,9 @@ export const SidebarMediaItem = ({ item, onSelectedMediaItem }: SidebarMediaItem
                     onClick={() => onSelectedMediaItem(item)}
                 />
             )}
+            bottomRightElement={() => {
+                return <AnnotationStatusIcon state={isUserReviewed ? 'accepted' : undefined} />;
+            }}
         />
     );
 };

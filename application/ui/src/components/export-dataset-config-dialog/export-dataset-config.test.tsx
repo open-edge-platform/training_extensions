@@ -9,7 +9,6 @@ import { getMockedProject } from '../../../mocks/mock-project';
 import { SchemaProjectView } from '../../api/openapi-spec';
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
-import { queryClient } from '../../query-client/query-client';
 import { ExportDatasetConfig } from './export-dataset-config.component';
 
 describe('ExportDatasetConfig', () => {
@@ -20,10 +19,6 @@ describe('ExportDatasetConfig', () => {
         toggle: vi.fn(),
         setOpen: vi.fn(),
     };
-
-    beforeEach(() => {
-        queryClient.clear();
-    });
 
     const renderApp = (project: SchemaProjectView) => {
         server.use(
@@ -54,7 +49,7 @@ describe('ExportDatasetConfig', () => {
         expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
     });
 
-    it('shows GETI and YOLO export option for instance_segmentation task', async () => {
+    it('shows GETI and COCO export option for instance_segmentation task', async () => {
         renderApp(
             getMockedProject({
                 task: { exclusive_labels: true, task_type: 'instance_segmentation' },
@@ -63,7 +58,6 @@ describe('ExportDatasetConfig', () => {
 
         expect(await screen.findByText('Export dataset')).toBeVisible();
         expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
-        expect(screen.getByRole('radio', { name: 'YOLO' })).toBeVisible();
-        expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('radio', { name: 'COCO' })).toBeVisible();
     });
 });

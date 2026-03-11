@@ -12,11 +12,11 @@ from uuid import UUID, uuid4
 import cv2
 import numpy as np
 import pytest
-from PIL import Image
+from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project, Video
 from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
@@ -165,8 +165,10 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
 
 
 @pytest.fixture
-def fxt_video_frame(fxt_project_with_media: tuple[Project, list[MediaDB]], db_session) -> Callable[[int], MediaDB]:
-    def _create_video_frame(frame_index: int) -> MediaDB:
+def fxt_video_frame(
+    fxt_project_with_media: tuple[Project, list[MediaDB]], db_session
+) -> Callable[[int], tuple[DatasetItemDB, MediaDB]]:
+    def _create_video_frame(frame_index: int) -> tuple[DatasetItemDB, MediaDB]:
         project, db_media_list = fxt_project_with_media
         media = db_media_list[3]
 
@@ -186,7 +188,12 @@ def fxt_video_frame(fxt_project_with_media: tuple[Project, list[MediaDB]], db_se
         db_session.add(db_media)
         db_session.flush()
 
-        return db_media
+        db_dataset_item = DatasetItemDB(id=db_media.id, project_id=str(project.id), subset="unassigned")
+
+        db_session.add(db_dataset_item)
+        db_session.flush()
+
+        return db_dataset_item, db_media
 
     return _create_video_frame
 
@@ -516,12 +523,12 @@ class TestMediaServiceIntegration:
         use_pipeline_source: bool,
     ) -> None:
         """Test creating a media."""
-        image = Image.new("RGB", (1024, 768))
+        image = PILImage.new("RGB", (1024, 768))
 
         project, pipeline = fxt_project_with_pipeline
 
         created_media = fxt_media_service.create_image(
-            project=project,
+            project_id=project.id,
             name="test",
             format=format,
             data=image,
@@ -574,7 +581,7 @@ class TestMediaServiceIntegration:
             fxt_video_data(Path(tmp_file))
             with open(tmp_file, mode="rb") as data:
                 created_media = fxt_media_service.create_video(
-                    project=project,
+                    project_id=project.id,
                     name="test",
                     format=format,
                     data=data,
@@ -601,9 +608,9 @@ class TestMediaServiceIntegration:
         assert os.path.exists(binary_file_path)
         assert created_media.size == os.path.getsize(binary_file_path)
 
-        # Do not generate thumbnail on video upload
+        # Generate thumbnail on video upload
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
-        assert not os.path.exists(thumbnail_file_path)
+        assert os.path.exists(thumbnail_file_path)
 
     def test_create_media_invalid_image(
         self,
@@ -616,7 +623,7 @@ class TestMediaServiceIntegration:
 
         with pytest.raises(InvalidImageError):
             fxt_media_service.create_image(
-                project=project,
+                project_id=project.id,
                 name="test",
                 format=ImageFormat.JPG,
                 data=BytesIO(b"123"),
@@ -770,6 +777,33 @@ class TestMediaServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
+    def test_get_media_by_ids(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving multiple media items by their IDs."""
+        project, db_media_list = fxt_project_with_media
+        media_ids = [UUID(media.id) for media in db_media_list[:2]]
+
+        fetched_media = fxt_media_service.get_media_by_ids(project_id=project.id, media_ids=media_ids)
+        assert len(fetched_media) == 2
+        assert sorted([media.id for media in fetched_media]) == sorted(media_ids)
+
+    def test_get_media_by_ids_not_found(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving multiple media items by non-existent IDs."""
+        project, db_media_list = fxt_project_with_media
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_media_service.get_media_by_ids(project_id=project.id, media_ids=[non_existent_id])
+        assert excinfo.value.resource_type == ResourceType.MEDIA
+        assert excinfo.value.resource_id == str(non_existent_id)
+
     def test_get_media_binary_path_by_id(
         self,
         tmp_path: Path,
@@ -803,7 +837,7 @@ class TestMediaServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    def test_get_media_thumbnail_path_by_id(
+    def test_get_media_thumbnail_path(
         self,
         tmp_path: Path,
         fxt_media_service: MediaService,
@@ -812,91 +846,9 @@ class TestMediaServiceIntegration:
         """Test retrieving a media thumbnail path by ID."""
         project, db_media_list = fxt_project_with_media
 
-        media_binary_path = fxt_media_service.get_media_thumbnail_path_by_id(
-            project=project, media_id=UUID(db_media_list[0].id)
-        )
+        media_binary_path = fxt_media_service.get_media_thumbnail_path(project=project, media=db_media_list[0])
 
         assert media_binary_path == tmp_path / f"projects/{str(project.id)}/dataset/{db_media_list[0].id}-thumb.jpg"
-
-    def test_get_media_thumbnail_path_by_id_not_found(
-        self,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test retrieving a non-existent media thumbnail path raises error."""
-        project, db_media_list = fxt_project_with_media
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_media_service.get_media_thumbnail_path_by_id(project=project, media_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.MEDIA
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_generate_image_thumbnail(
-        self,
-        tmp_path: Path,
-        fxt_projects_dir: Path,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test generating an image thumbnail returns a PIL Image."""
-        project, db_media_list = fxt_project_with_media
-        media = db_media_list[0]
-
-        # Create the dataset directory and a test image file
-        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-        image_path = dataset_dir / f"{media.id}.{media.format}"
-        test_image = Image.new("RGB", (1024, 768), color="red")
-        test_image.save(image_path)
-
-        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media_id=UUID(media.id))
-
-        assert isinstance(thumbnail, Image.Image)
-        assert thumbnail.width == 256
-        assert thumbnail.height == 256
-
-    def test_generate_video_thumbnail(
-        self,
-        tmp_path: Path,
-        fxt_video_data: Callable[[Path], None],
-        fxt_projects_dir: Path,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test generating a video thumbnail returns a PIL Image."""
-        project, db_media_list = fxt_project_with_media
-        media = db_media_list[3]
-
-        # Create the dataset directory and a test video file
-        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-        video_path = dataset_dir / f"{media.id}.{media.format}"
-
-        # Generate video
-        fxt_video_data(video_path)
-
-        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media_id=UUID(media.id))
-
-        assert isinstance(thumbnail, Image.Image)
-        assert thumbnail.width == 256
-        assert thumbnail.height == 256
-
-    def test_generate_media_thumbnail_not_found(
-        self,
-        fxt_media_service: MediaService,
-        fxt_project_with_media: tuple[Project, list[MediaDB]],
-    ):
-        """Test generating a thumbnail for a non-existent dataset item raises error."""
-        project, db_media_list = fxt_project_with_media
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_media_service.generate_media_thumbnail(project=project, media_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.MEDIA
-        assert excinfo.value.resource_id == str(non_existent_id)
 
     def test_delete_media(
         self,
@@ -1358,7 +1310,7 @@ class TestMediaServiceIntegration:
         )
         assert len(testing_items) == 1
 
-    def test_extract_video_frame(
+    def test_save_video_frame(
         self,
         tmp_path: Path,
         fxt_video_data: Callable[[Path], None],
@@ -1367,22 +1319,25 @@ class TestMediaServiceIntegration:
         fxt_project_with_media: tuple[Project, list[MediaDB]],
         db_session: Session,
     ):
-        """Test extracting a videoframe."""
+        """Test saving a videoframe."""
         project, db_media_list = fxt_project_with_media
-        media = db_media_list[3]
+        media = Video.model_validate(db_media_list[3], from_attributes=True)
 
-        # Create the dataset directory and a test video file
+        # Create the dataset directory
         dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        video_path = dataset_dir / f"{media.id}.{media.format}"
 
-        # Generate video
-        fxt_video_data(video_path)
+        frame_image = PILImage.new("RGB", (640, 480))
 
-        video_frame = fxt_media_service.extract_video_frame(project=project, video_id=UUID(media.id), frame_index=50)
+        video_frame = fxt_media_service.save_video_frame(
+            project=project, video=media, frame_index=50, frame_image=frame_image
+        )
 
         video_frame_binary_path = dataset_dir / f"{video_frame.id}.jpg"
         assert os.path.exists(video_frame_binary_path)
+
+        video_frame_thumbnail_path = dataset_dir / f"{video_frame.id}-thumb.jpg"
+        assert os.path.exists(video_frame_thumbnail_path)
 
         db_video_frame = db_session.get(MediaDB, str(video_frame.id))
         assert db_video_frame is not None
@@ -1394,14 +1349,14 @@ class TestMediaServiceIntegration:
             and db_video_frame.format == "jpg"
             and db_video_frame.width == 640
             and db_video_frame.height == 480
-            and db_video_frame.video_id == media.id
+            and db_video_frame.video_id == str(media.id)
             and db_video_frame.frame_index == 50
         )
 
     def test_get_video_frame_by_video_id_and_index(
         self,
         fxt_media_service: MediaService,
-        fxt_video_frame: Callable[[int], MediaDB],
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
         """Test getting a video frame by video ID and index."""
@@ -1417,7 +1372,7 @@ class TestMediaServiceIntegration:
     def test_get_non_existing_video_frame_by_video_id_and_index(
         self,
         fxt_media_service: MediaService,
-        fxt_video_frame: Callable[[int], MediaDB],
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
         """Test getting a non extracted video frame by video ID and index."""
@@ -1430,10 +1385,30 @@ class TestMediaServiceIntegration:
         )
         assert video_frame is None
 
+    def test_search_video_frames_by_video_id_and_indexes(
+        self,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test searching video frames by video ID and indexes."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(250)
+        fxt_video_frame(260)
+        fxt_video_frame(270)
+
+        video_frames = fxt_media_service.search_video_frames_by_video_id_and_indexes(
+            project=project, video_id=UUID(media.id), frame_indexes=[250, 260, 280]
+        )
+        assert video_frames is not None
+        assert len(video_frames) == 2
+        assert sorted([video_frame.frame_index for video_frame in video_frames]) == [250, 260]
+
     def test_get_video_frames_by_video_id(
         self,
         fxt_media_service: MediaService,
-        fxt_video_frame: Callable[[float], MediaDB],
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ) -> None:
         """Test getting a list of video frames by video ID."""
@@ -1442,7 +1417,29 @@ class TestMediaServiceIntegration:
         fxt_video_frame(1.0)
         fxt_video_frame(2.0)
 
-        video_frames = fxt_media_service.get_video_frames_by_video_id(project=project, video_id=UUID(media.id))
-        print(video_frames)
+        video_frames = fxt_media_service.list_annotated_video_frames_by_video_id(
+            project=project, video_id=UUID(media.id)
+        )
         assert video_frames is not None
         assert len(video_frames) == 2
+
+    @pytest.mark.parametrize("index_from, index_to", [(0, 35), (35, 55)])
+    def test_get_video_frames_by_video_id_range(
+        self,
+        index_from: int,
+        index_to: int,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test getting a list of video frames by video ID."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(30.0)
+        fxt_video_frame(40.0)
+
+        video_frames = fxt_media_service.list_annotated_video_frames_by_video_id(
+            project=project, video_id=UUID(media.id), frame_index_from=index_from, frame_index_to=index_to
+        )
+        assert video_frames is not None
+        assert len(video_frames) == 1

@@ -5,9 +5,8 @@ import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
-import type { SchemaProjectView } from '../../../api/openapi-spec';
 import { paths } from '../../../constants/paths';
-import { TaskType } from '../../../constants/shared-types';
+import { Project, TaskType } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
 import { isClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
@@ -43,7 +42,7 @@ const ActiveProjectBadge = () => {
 };
 
 type ProjectCardProps = {
-    item: SchemaProjectView;
+    item: Project;
 };
 
 export const ProjectCard = ({ item }: ProjectCardProps) => {
@@ -53,7 +52,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
 
     return (
         <div style={{ position: 'relative' }}>
-            <NavLink to={paths.project.dataset({ projectId: item.id })}>
+            <NavLink to={paths.project.dataset.index({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <Flex>
                         <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />
@@ -87,7 +86,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
             <MenuActions
                 projectId={item.id}
                 projectName={item.name}
-                activePipeline={item.active_pipeline}
+                isPipelineRunning={item.active_pipeline}
                 actionButtonStyle={{
                     top: dimensionValue(cardPadding),
                     right: dimensionValue(cardPadding),

@@ -89,9 +89,7 @@ test.describe('Dataset', () => {
         await expect(annotatorPage.getAnnotationsList()).not.toBeInViewport();
 
         await page.getByRole('img', { name: firstElement.name, exact: true }).dblclick();
-        await expect(annotatorPage.getAnnotationsList()).not.toBeInViewport();
 
-        await page.reload();
         await expect(annotatorPage.getAnnotationsList()).toBeInViewport();
 
         expect(page.url()).toContain(`/dataset/${firstElement.id}`);

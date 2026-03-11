@@ -24,13 +24,13 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check-paths:
     name: Check if workflow should run
-    runs-on: ubuntu-latest
+    runs-on: overflow
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
       - &checkout
         name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -44,7 +44,7 @@ jobs:
               - .github/**
 
   code-quality-checks:
-    runs-on: ubuntu-24.04
+    runs-on: overflow
     needs: check-paths
     if: needs.check-paths.outputs.run_workflow == 'true'
     permissions:
@@ -52,30 +52,21 @@ jobs:
     steps:
       - *checkout
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
-          python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
+          uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
+          python-version: "3.11" # Use the lowest supported Python version for linting/type-checking
 
-      - name: Installing dependencies
+      - name: Prepare venv and install Python dependencies
         working-directory: library
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen
+        run: just venv
 
-      - name: Check formatting with ruff
+      - name: Run linters and type-checkers
         working-directory: library
-        run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check .
-
-      - name: Check source code with Pyrefly
-        working-directory: library
-        run: uv run pyrefly check --baseline=pyrefly-baseline.json
+        run: just lint
 
   unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]
@@ -90,41 +81,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.11", "3.14"]
     name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
       # YAML anchors not used cause currently zizmor don't support them in matrix strategies
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       # TODO remove after switching to an official Datumaro release with pre-built wheels
       - name: Installing Rust toolchain
-        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
           toolchain: stable
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
+          uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
           python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen
+        run: just venv
 
       - name: Unit testing (excluding models)
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest tests/unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
+        run: just test-unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
 
       # Unit test models separately using --forked flag so that each is run in a separate process.
       # Running these models after each other from the same process can cause segfaults
@@ -132,7 +120,7 @@ jobs:
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest tests/unit/backend/native/models --cov --cov-report=xml --cov-append --forked
+        run: just test-unit-models --cov --cov-report=xml --cov-append --forked
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
@@ -151,7 +139,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.11", "3.14"]
         task:
           - "multi_class_cls"
           - "multi_label_cls"
@@ -164,43 +152,39 @@ jobs:
     steps:
       # YAML anchors aren't used because Zizmor fails here and support for them is best-effort for now
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       # TODO remove after switching to an official Datumaro release with pre-built wheels
       - name: Installing Rust toolchain
-        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
           toolchain: stable
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          version: "0.10.4"
-          enable-cache: false
+          uv-version-file: library/pyproject.toml # Install the uv version specified in pyproject.toml
           python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
-        run: |
-          uv lock --check
-          uv sync --frozen --extra cuda
+        run: just venv --device cuda
 
       - name: Integration testing
         working-directory: library
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
-        run: |
-          uv run --frozen --extra cuda pytest tests/integration \
-            -ra \
-            --showlocals \
-            --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
-            --task ${{ matrix.task }} \
-            --open-subprocess \
-            --run-category-only
+        run: just test-integration \
+          -ra \
+          --showlocals \
+          --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
+          --task ${{ matrix.task }} \
+          --open-subprocess \
+          --run-category-only
 
   required-check:
     name: Required Check lib-lint-and-test
@@ -209,7 +193,7 @@ jobs:
       - code-quality-checks
       - unit-tests
       - integration-tests
-    runs-on: ubuntu-latest
+    runs-on: overflow
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 import numpy as np
 import pytest
+from datumaro.experimental import LazyImage
 
 from app.datumaro_converter import (
     ClassificationSample,
@@ -151,14 +152,14 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
     assert len(dataset) == 2
     assert (
         isinstance(dataset[0], DetectionSample)
-        and dataset[0].image == "path1"
+        and dataset[0].image == LazyImage("path1")
         and np.array_equal(dataset[0].label, np.array([0]))
         and dataset[0].image_info.width == 200
         and dataset[0].image_info.height == 100
     )
     assert (
         isinstance(dataset[1], DetectionSample)
-        and dataset[1].image == "path2"
+        and dataset[1].image == LazyImage("path2")
         and np.array_equal(dataset[1].label, np.array([1]))
         and dataset[1].image_info.width == 200
         and dataset[1].image_info.height == 100
@@ -200,14 +201,14 @@ def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_class
     assert len(dataset) == 2
     assert (
         isinstance(dataset[0], ClassificationSample)
-        and dataset[0].image == "path1"
+        and dataset[0].image == LazyImage("path1")
         and dataset[0].label == 0
         and dataset[0].image_info.width == 200
         and dataset[0].image_info.height == 100
     )
     assert (
         isinstance(dataset[1], ClassificationSample)
-        and dataset[1].image == "path2"
+        and dataset[1].image == LazyImage("path2")
         and dataset[1].label == 1
         and dataset[1].image_info.width == 200
         and dataset[1].image_info.height == 100
@@ -265,12 +266,12 @@ def test_convert_multilabel_classification_dataset_item(
     assert len(dataset) == 2
     assert (
         isinstance(dataset[0], MultilabelClassificationSample)
-        and dataset[0].image == "path1"
+        and dataset[0].image == LazyImage("path1")
         and np.array_equal(dataset[0].label, np.array([0, 1]))
         and dataset[0].image_info.width == 200
         and dataset[0].image_info.height == 100
     )
-    assert isinstance(dataset[1], MultilabelClassificationSample) and dataset[1].image == "path3"
+    assert isinstance(dataset[1], MultilabelClassificationSample) and dataset[1].image == LazyImage("path3")
     get_image_path.assert_has_calls(
         [
             call(dataset_item),
@@ -320,14 +321,14 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
     assert len(dataset) == 2
     assert (
         isinstance(dataset[0], InstanceSegmentationSample)
-        and dataset[0].image == "path1"
+        and dataset[0].image == LazyImage("path1")
         and np.array_equal(dataset[0].label, np.array([0, 0]))
         and dataset[0].image_info.width == 200
         and dataset[0].image_info.height == 100
     )
     assert (
         isinstance(dataset[1], InstanceSegmentationSample)
-        and dataset[1].image == "path2"
+        and dataset[1].image == LazyImage("path2")
         and np.array_equal(dataset[1].label, np.array([1, 1]))
         and dataset[1].image_info.width == 200
         and dataset[1].image_info.height == 100

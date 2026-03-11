@@ -4,6 +4,7 @@ import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -35,7 +36,6 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
-from app.core.run import ExecutionContext
 from app.execution.base import Execution, step
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -46,6 +46,7 @@ from app.models import (
     TrainingJobParams,
     TrainingStatus,
 )
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.services import (
@@ -100,8 +101,10 @@ class ExportedModels:
     onnx_model_path: Path
 
 
-class OTXTrainer(Execution):
+class OTXTrainer(Execution[TrainingJobParams]):
     """OTX-specific trainer implementation."""
+
+    params_type = TrainingJobParams
 
     def __init__(
         self,
@@ -135,7 +138,13 @@ class OTXTrainer(Execution):
                 task=task.task_type, model_manifest_id=model_architecture_id
             )
 
-        weights_path = self.__build_model_weights_path(self._data_dir, project_id, parent_model_revision_id)
+        parent_variants = self._model_service.get_model_variants(
+            project_id=project_id, model_id=parent_model_revision_id
+        )
+        parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
+        weights_path = self.__build_model_weights_path(
+            self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
+        )
         if not weights_path.exists():
             raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
 
@@ -146,35 +155,35 @@ class OTXTrainer(Execution):
         """Assigning subsets to all unassigned dataset items in the project dataset."""
         with self._db_session_factory() as db:
             self._subset_service.set_db_session(db)
-            self.report_progress("Retrieving unassigned items")
+            self.update_message("Retrieving unassigned items")
             unassigned_items = self._subset_service.get_unassigned_items_with_labels(project_id)
 
             if not unassigned_items:
-                self.report_progress("No unassigned items found")
+                self.update_message("No unassigned items found")
                 return
 
-            self.report_progress(f"Found {len(unassigned_items)} unassigned items")
+            self.update_message(f"Found {len(unassigned_items)} unassigned items")
 
             # Get current distribution
             current_distribution = self._subset_service.get_subset_distribution(project_id)
             logger.info("Current subset distribution: {}", current_distribution)
 
             # Compute adjusted ratios
-            split_params = training_config.global_parameters.dataset_preparation.subset_split
+            split_params = training_config.task_level_parameters.dataset_preparation.subset_split
             target_ratios = SplitRatios(
                 train=(split_params.training / 100), val=(split_params.validation / 100), test=(split_params.test / 100)
             )
             adjusted_ratios = current_distribution.compute_adjusted_ratios(target_ratios, len(unassigned_items))
             logger.info("Adjusted subset ratios for unassigned items: {}", adjusted_ratios)
 
-            self.report_progress("Computing optimal subset assignments")
+            self.update_message("Computing optimal subset assignments")
             assignments = self._subset_assigner.assign(unassigned_items, adjusted_ratios)
 
             # Persist assignments
-            self.report_progress("Persisting subset assignments")
+            self.update_message("Persisting subset assignments")
             self._subset_service.update_subset_assignments(project_id, assignments)
 
-        self.report_progress(f"Successfully assigned {len(assignments)} items to subsets")
+        self.update_message(f"Successfully assigned {len(assignments)} items to subsets")
 
     @step("Prepare Training Configuration")
     def prepare_training_configuration(
@@ -184,7 +193,7 @@ class OTXTrainer(Execution):
         with self._db_session_factory() as db:
             # Load the training configuration from the database
             self._training_configuration_service.set_db_session(db)
-            training_config = self._training_configuration_service.get_training_configuration(
+            training_config = self._training_configuration_service.get_by_model_architecture(
                 project_id=project_id,
                 model_architecture_id=training_params.model_architecture_id,
             )
@@ -193,7 +202,8 @@ class OTXTrainer(Execution):
             # NOTE: this is a temporary solution to minimize changes in OTX; in the future, after refactoring OTX,
             # we should update this code to build the configuration directly in the format consumed by OTX
             geti_training_config = training_config.model_dump(exclude_none=True)
-            geti_training_config["hyper_parameters"] = geti_training_config.pop("hyperparameters")
+            geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
+            geti_training_config["model_manifest_id"] = training_params.model_architecture_id
             geti_training_config["sub_task_type"] = self.__get_otx_task_type_by_task(task)
             geti_config_path = self.__build_model_config_path(self._data_dir, project_id, training_params.model_id)
             geti_config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -388,7 +398,7 @@ class OTXTrainer(Execution):
         parser.add_argument("--callbacks", type=list[Callback])
         parsed_callbacks_cfg = parser.parse_object({"callbacks": callbacks_cfg})
         callbacks_list = parser.instantiate_classes(parsed_callbacks_cfg).get("callbacks", [])
-        callbacks_list.append(TrainingProgressCallback(self.report_progress, min_p=10, max_p=80))
+        callbacks_list.append(TrainingProgressCallback(self.update_progress, min_p=10, max_p=80))
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
@@ -410,6 +420,7 @@ class OTXTrainer(Execution):
         model_checkpoint_path: Path,
         task: Task,
         model_revision_id: UUID,
+        model_variant_id: UUID,
         dataset_revision_id: UUID,
     ) -> None:
         """Evaluate the trained model on the testing set"""
@@ -420,6 +431,7 @@ class OTXTrainer(Execution):
             self._model_service.save_evaluation_result(
                 EvaluationResult(
                     model_revision_id=model_revision_id,
+                    model_variant_id=model_variant_id,
                     dataset_revision_id=dataset_revision_id,
                     subset=DatasetItemSubset.TESTING,
                     metrics={item[0].split("/")[1]: item[1].item() for item in metrics.items()},
@@ -453,22 +465,49 @@ class OTXTrainer(Execution):
         otx_work_dir: Path,
         trained_model_path: Path,
         exported_model_paths: ExportedModels,
+        created_variants: dict[ModelFormat, UUID],
     ) -> None:
-        """Store the selected training artifacts (model binary, metrics, ...) and cleanup the rest"""
-        # Store the Pytorch model checkpoint and the OpenVINO exported model files
-        model_ckpt_source_path = trained_model_path
-        model_xml_source_path = exported_model_paths.openvino_model_path.with_suffix(".xml")
-        model_bin_source_path = exported_model_paths.openvino_model_path.with_suffix(".bin")
-        model_onnx_source_path = exported_model_paths.onnx_model_path.with_suffix(".onnx")
-        model_ckpt_dest_path = model_dir / "model.ckpt"
-        model_xml_dest_path = model_dir / "model.xml"
-        model_bin_dest_path = model_dir / "model.bin"
-        model_onnx_dest_path = model_dir / "model.onnx"
-        shutil.copyfile(model_ckpt_source_path, model_ckpt_dest_path)
-        shutil.copyfile(model_xml_source_path, model_xml_dest_path)
-        shutil.copyfile(model_bin_source_path, model_bin_dest_path)
-        shutil.copyfile(model_onnx_source_path, model_onnx_dest_path)
-        logger.info("Stored model artifacts at {}", model_dir)
+        """Copy training artifacts into variant directories and clean up the workspace.
+
+        Each variant's files are stored under model_dir/variants/<variant_id>/model.*
+
+        Args:
+            model_dir: The base model directory.
+            otx_work_dir: The OTX workspace directory to clean up.
+            trained_model_path: Path to the trained checkpoint inside the workspace.
+            exported_model_paths: Paths to exported model files inside the workspace.
+            created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
+        """
+        variants_dir = model_dir / "variants"
+        variants_dir.mkdir(parents=True, exist_ok=True)
+
+        # Copy PyTorch checkpoint
+        pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
+        pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.ckpt")
+        logger.info("Stored PyTorch variant at {}", pytorch_variant_dir)
+
+        # Copy OpenVINO IR files
+        openvino_variant_dir = variants_dir / str(created_variants[ModelFormat.OPENVINO])
+        openvino_variant_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(
+            exported_model_paths.openvino_model_path.with_suffix(".xml"),
+            openvino_variant_dir / "model.xml",
+        )
+        shutil.copyfile(
+            exported_model_paths.openvino_model_path.with_suffix(".bin"),
+            openvino_variant_dir / "model.bin",
+        )
+        logger.info("Stored OpenVINO variant at {}", openvino_variant_dir)
+
+        # Copy ONNX file
+        onnx_variant_dir = variants_dir / str(created_variants[ModelFormat.ONNX])
+        onnx_variant_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(
+            exported_model_paths.onnx_model_path.with_suffix(".onnx"),
+            onnx_variant_dir / "model.onnx",
+        )
+        logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
         # Store the metrics
         metrics_source_path = otx_work_dir / "csv"
@@ -481,63 +520,109 @@ class OTXTrainer(Execution):
         shutil.rmtree(otx_work_dir)
         logger.info("Cleaned up OTX work directory at {}", otx_work_dir)
 
-    def run(self, ctx: ExecutionContext) -> None:
-        self._ctx = ctx
-        training_params = TrainingJobParams.model_validate_json(ctx.payload)
-        project_id = training_params.project_id
-        task = training_params.task
+    def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
+        """Create variant records in the database for all exported formats.
+
+        This is called before evaluation so that variant IDs are available for
+        associating evaluation results, and before the OTX workspace is cleaned up.
+
+        Args:
+            model_revision_id: The ID of the model revision for which to create variants for.
+
+        Returns:
+            dict mapping ModelFormat to the created variant UUID.
+        """
+        created_variants: dict[ModelFormat, UUID] = {}
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            for fmt, precision in [
+                (ModelFormat.PYTORCH, ModelPrecision.FP32),
+                (ModelFormat.OPENVINO, ModelPrecision.FP16),
+                (ModelFormat.ONNX, ModelPrecision.FP16),
+            ]:
+                variant = self._model_service.create_variant(
+                    model_revision_id=model_revision_id,
+                    format=fmt,
+                    precision=precision,
+                )
+                created_variants[fmt] = variant.id
+                logger.info("Created {} variant record (id={})", fmt.value, variant.id)
+        return created_variants
+
+    def execute(self, params: TrainingJobParams) -> None:
+        training_start_time = datetime.now(UTC)
+        project_id = params.project_id
+        task = params.task
         model_dir = self.__base_model_path(
             data_dir=self._data_dir,
             project_id=project_id,
-            model_id=training_params.model_id,
+            model_id=params.model_id,
         )
 
-        weights_path = self.prepare_weights(training_params=training_params)
-        training_config, otx_training_config = self.prepare_training_configuration(
-            training_params=training_params, task=task
-        )
+        weights_path = self.prepare_weights(training_params=params)
+        training_config, otx_training_config = self.prepare_training_configuration(training_params=params, task=task)
         self.assign_subsets(training_config=training_config, project_id=project_id)
         dataset_info = self.prepare_training_dataset(
             project_id=project_id,
             task=task,
             training_config=otx_training_config,
-            dataset_revision_id=training_params.dataset_revision_id,
+            dataset_revision_id=params.dataset_revision_id,
         )
         self.prepare_model(
-            training_params=training_params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
+            training_params=params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
         )
         try:
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.IN_PROGRESS
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.IN_PROGRESS,
+                training_started_at=training_start_time,
             )
             trained_model_path, otx_engine = self.train_model(
                 training_config=otx_training_config,
                 dataset_info=dataset_info,
                 weights_path=weights_path,
-                model_id=training_params.model_id,
-                device=training_params.device,
-                has_parent_revision=training_params.parent_model_revision_id is not None,
+                model_id=params.model_id,
+                device=params.device,
+                has_parent_revision=params.parent_model_revision_id is not None,
             )
+            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+
+            # Create variant DB records first (no file I/O yet)
+            created_variants = self.create_model_variants(model_revision_id=params.model_id)
+
+            # Evaluate while the workspace and checkpoint still exist
             self.evaluate_model(
                 otx_engine=otx_engine,
                 model_checkpoint_path=trained_model_path,
                 task=task,
-                model_revision_id=training_params.model_id,
+                model_revision_id=params.model_id,
+                model_variant_id=created_variants[ModelFormat.PYTORCH],
                 dataset_revision_id=dataset_info.revision_id,
             )
-            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+
+            # Now copy files into variant dirs and clean up the workspace
             self.store_model_artifacts(
                 model_dir=model_dir,
                 otx_work_dir=Path(otx_engine.work_dir),
                 trained_model_path=trained_model_path,
                 exported_model_paths=exported_model_paths,
+                created_variants=created_variants,
             )
+            training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.SUCCESSFUL
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.SUCCESSFUL,
+                training_finished_at=training_finish_time,
             )
         except Exception:
+            training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.FAILED
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.FAILED,
+                training_finished_at=training_finish_time,
             )
             raise
 
@@ -546,8 +631,10 @@ class OTXTrainer(Execution):
         return data_dir / "projects" / str(project_id) / "models" / str(model_id)
 
     @classmethod
-    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
-        return cls.__base_model_path(data_dir, project_id, model_id) / "model.ckpt"
+    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
+        """Get the path to the PyTorch checkpoint from a model's variants directory."""
+        model_dir = cls.__base_model_path(data_dir, project_id, model_id)
+        return model_dir / "variants" / str(model_variant) / "model.ckpt"
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
@@ -597,7 +684,20 @@ class OTXTrainer(Execution):
         except KeyError:
             raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
 
-    def __update_model_revision_training_status(self, project_id: UUID, model_id: UUID, status: TrainingStatus):
+    def __update_model_revision_training_status(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        status: TrainingStatus,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ):
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
-            self._model_service.update_revision_status(project_id=project_id, model_id=model_id, training_status=status)
+            self._model_service.update_revision_status(
+                project_id=project_id,
+                model_id=model_id,
+                training_status=status,
+                training_started_at=training_started_at,
+                training_finished_at=training_finished_at,
+            )

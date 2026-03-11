@@ -9,7 +9,7 @@ from pydantic import AliasChoices, Field, model_validator
 
 from .base import BaseEntity
 from .data_collection_policy import DataCollectionConfig, DataCollectionPolicy
-from .model_revision import ModelRevision
+from .model_revision import ModelRevision, ModelVariant
 from .sink import Sink
 from .source import Source
 
@@ -39,9 +39,11 @@ class Pipeline(BaseEntity):
         source: The data source configuration, None if disconnected.
         sink: The data sink configuration, None if disconnected.
         model_revision: The model revision to use for processing, None if no model is selected.
+        model_variant: The specific model variant to use for inference, None if not specified.
         source_id: UUID reference to the source entity.
         sink_id: UUID reference to the sink entity.
         model_id: UUID reference to the model revision entity.
+        model_variant_id: UUID reference to the model variant entity.
         status: Current operational status of the pipeline (IDLE or RUNNING).
         data_collection: Configuration for data collection including max dataset size and policies.
         device: The device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-1', etc.).
@@ -54,9 +56,11 @@ class Pipeline(BaseEntity):
     source: Source | None = None
     sink: Sink | None = None
     model_revision: ModelRevision | None = None
+    model_variant: ModelVariant | None = None
     source_id: UUID | None = None
     sink_id: UUID | None = None
     model_id: UUID | None = Field(default=None, validation_alias=AliasChoices("model_revision_id", "model_id"))
+    model_variant_id: UUID | None = None
     status: PipelineStatus = PipelineStatus.IDLE
     data_collection: DataCollectionConfig = Field(default_factory=DataCollectionConfig)
     device: str = Field(default="cpu", pattern=r"^(cpu|xpu|cuda)(-\d+)?$")

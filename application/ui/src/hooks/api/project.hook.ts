@@ -10,10 +10,6 @@ export const useProjects = () => {
     return $api.useSuspenseQuery('get', '/api/projects');
 };
 
-export const useProjectsQuery = () => {
-    return $api.useQuery('get', '/api/projects');
-};
-
 export const useProject = () => {
     const projectId = useProjectIdentifier();
 

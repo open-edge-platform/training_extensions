@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field, TypeAdapter, computed_field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, computed_field
 
 from .base import BaseEntity
 
@@ -13,7 +13,13 @@ class ImageFormat(StrEnum):
     """Format of the image."""
 
     JPG = "jpg"
+    JPEG = "jpeg"
     PNG = "png"
+    JFIF = "jfif"
+    TIF = "tif"
+    TIFF = "tiff"
+    BMP = "bmp"
+    WEBP = "webp"
 
 
 class VideoFormat(StrEnum):
@@ -54,6 +60,7 @@ class BaseMedia(BaseEntity):
         source_id: Identifier of the source from which the media was acquired, if applicable.
     """
 
+    model_config = ConfigDict(frozen=True)
     id: UUID
     project_id: UUID
     name: str
@@ -96,6 +103,21 @@ class Video(BaseMedia):
     def duration(self) -> float:
         """Return duration in seconds"""
         return self.frame_count / self.fps
+
+
+class NotAnnotatedVideoFrame(BaseModel):
+    """
+    Video frame that is not annotated yet. It contains the video information and the frame index.
+    """
+
+    model_config = ConfigDict(frozen=True)
+    video: Video
+    frame_index: int
+
+    @computed_field
+    @property
+    def video_id(self) -> UUID:
+        return self.video.id
 
 
 Media = Annotated[Image | Video | VideoFrame, Field(discriminator="type")]

@@ -1,22 +1,25 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { Flex } from '@geti/ui';
+import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { partition } from 'lodash-es';
 
-import { usePrepareImportStatus } from '../import-dataset/hooks/use-prepare-import-status.hook';
-import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../util';
-import { ImportActiveJob } from './import-active-job/import-active-job.component';
-import { ImportCompletedJob } from './import-completed-job/import-completed-job.component';
-import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
+import { PrepareImportDataset } from '../../../../components/prepare-import-dataset/prepare-import-dataset.component';
+import { LoadingImportDataset } from './loading-import-dataset/loading-import-dataset.component';
+import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
 
 export const ImportJobsList = () => {
-    const { data: job, fileName, size } = usePrepareImportStatus({});
-    const isRunningOrPending = isJobRunning(job) || isJobPending(job);
+    const { getAllImportEntries, deleteImportEntry, updateImportEntryStep } = useImportDatasetToProject();
 
-    if (isEmpty(job)) {
-        return null;
-    }
+    const importEntries = getAllImportEntries();
+
+    const [preparingImports, otherItems] = partition(importEntries, ({ step }) => step === 'preparing');
+    const [stagedImports, loadingItems] = partition(otherItems, ({ step }) => step === 'labelMapping');
+
+    const loadingItemsQueue = loadingItems.reverse();
+    const stagedImportsQueue = stagedImports.reverse();
+    const preparingImportsQueue = preparingImports.reverse();
 
     return (
         <Flex
@@ -26,17 +29,31 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            <View
-                position='relative'
-                borderColor='gray-200'
-                borderRadius='regular'
-                backgroundColor='gray-75'
-                borderWidth='thin'
-            >
-                {isJobDone(job) && <ImportCompletedJob job={job} fileName={String(fileName)} size={Number(size)} />}
-                {isJobFailed(job) && <ImportFailedJob job={job} fileName={String(fileName)} size={Number(size)} />}
-                {isRunningOrPending && <ImportActiveJob job={job} fileName={String(fileName)} size={Number(size)} />}
-            </View>
+            {preparingImportsQueue.map(({ size, fileName, stagedDatasetId, prepareJobId }) => {
+                return (
+                    <PrepareImportDataset
+                        key={`prepare-${stagedDatasetId}`}
+                        size={size}
+                        fileName={fileName}
+                        jobId={prepareJobId}
+                        stagedDatasetId={stagedDatasetId}
+                        onSuccess={() => updateImportEntryStep(stagedDatasetId, 'labelMapping')}
+                        deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                    />
+                );
+            })}
+
+            {stagedImportsQueue.map(({ fileName, stagedDatasetId }) => (
+                <StagedImportDataset
+                    key={`staged-${stagedDatasetId}`}
+                    fileName={String(fileName)}
+                    stagedDatasetId={String(stagedDatasetId)}
+                />
+            ))}
+
+            {loadingItemsQueue.map(({ stagedDatasetId }) => (
+                <LoadingImportDataset key={`loading-${stagedDatasetId}`} stagedDatasetId={String(stagedDatasetId)} />
+            ))}
         </Flex>
     );
 };

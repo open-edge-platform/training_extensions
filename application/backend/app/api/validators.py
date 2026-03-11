@@ -48,6 +48,9 @@ SinkID = Annotated[UUID, Depends(lambda sink_id: validate_uuid_param(sink_id, "s
 ProjectID = Annotated[UUID, Depends(lambda project_id: validate_uuid_param(project_id, "project_id"))]
 MediaID = Annotated[UUID, Depends(lambda media_id: validate_uuid_param(media_id, "media_id"))]
 ModelID = Annotated[UUID, Depends(lambda model_id: validate_uuid_param(model_id, "model_id"))]
+ModelVariantID = Annotated[
+    UUID, Depends(lambda model_variant_id: validate_uuid_param(model_variant_id, "model_variant_id"))
+]
 DatasetItemID = Annotated[
     UUID, Depends(lambda dataset_item_id: validate_uuid_param(dataset_item_id, "dataset_item_id"))
 ]

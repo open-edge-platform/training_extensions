@@ -1,9 +1,25 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, RefObject, use, useMemo, useRef, useState } from 'react';
+import {
+    createContext,
+    Dispatch,
+    ReactNode,
+    RefObject,
+    SetStateAction,
+    use,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
-import type { MediaVideo, MediaVideoFrame } from '../../../constants/shared-types';
+import { VisuallyHidden } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
+import type { MediaVideoFrame } from '../../../constants/shared-types';
+import { getMediaBinaryUrl } from '../../../shared/media-url.utils';
 import { useVideoControls, VideoControls } from './use-video-controls';
 
 type VideoPlayerContextProps = {
@@ -20,44 +36,124 @@ type VideoPlayerContextProps = {
     videoControls: VideoControls;
 
     changeCurrentFrameIndex: (index: number) => void;
+
+    step: number;
+    changeStep: Dispatch<SetStateAction<number>>;
+};
+
+const useSynchronizeVideoTimeWithVideoFrame = ({
+    videoFrame,
+    videoRef,
+    onUpdateCurrentFrameIndex,
+}: {
+    videoRef: RefObject<HTMLVideoElement | null>;
+    videoFrame: MediaVideoFrame | undefined;
+    onUpdateCurrentFrameIndex: (index: number) => void;
+}) => {
+    const previousVideoFrame = usePreviousVideoFrame(videoFrame);
+
+    /*
+     * This part is responsible for updating video time on the initial load when the frame number is not 0.
+     * In that case we need to move the video to the correct frame number.
+     * */
+    useLayoutEffect(() => {
+        if (videoFrame?.frame_number == undefined || videoFrame?.fps === undefined || videoRef.current === null) {
+            return;
+        }
+
+        if (videoFrame.frame_number === 0) {
+            return;
+        }
+
+        const videoElement = videoRef.current;
+        const seekToInitialFrame = () => {
+            if (videoFrame.frame_number > 0 && videoElement.currentTime === 0) {
+                videoElement.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
+            }
+        };
+
+        // If metadata is already loaded (readyState >= HAVE_METADATA == 1), seek immediately.
+        if (videoElement.readyState >= 1) {
+            seekToInitialFrame();
+            return;
+        }
+
+        // Otherwise wait for metadata to load before seeking.
+        const handleLoadedMetadata = () => {
+            seekToInitialFrame();
+        };
+
+        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+
+        return () => {
+            videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
+    }, [videoFrame?.frame_number, videoFrame?.fps, videoRef]);
+
+    useEffect(() => {
+        if (videoFrame === undefined || videoRef.current === null) {
+            return;
+        }
+
+        if (previousVideoFrame?.id === videoFrame.id && previousVideoFrame?.frame_number !== videoFrame.frame_number) {
+            onUpdateCurrentFrameIndex(videoFrame.frame_number);
+
+            videoRef.current.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
+        }
+    }, [videoFrame, previousVideoFrame, videoRef, onUpdateCurrentFrameIndex]);
+};
+
+const usePreviousVideoFrame = (videoFrame: MediaVideoFrame | undefined) => {
+    const previousVideoFrameRef = useRef<MediaVideoFrame | undefined>(videoFrame);
+
+    useEffect(() => {
+        previousVideoFrameRef.current = videoFrame;
+    }, [videoFrame]);
+
+    return previousVideoFrameRef.current;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
 
 type VideoPlayerProviderProps = {
     children: ReactNode;
-    // TODO: Narrow the type to be MediaVideoFrame | undefined
-    mediaItem: MediaVideo | MediaVideoFrame | undefined;
+    videoFrame: MediaVideoFrame | undefined;
     changeSelectedMediaItem: (media: MediaVideoFrame) => void;
 };
 
-export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
+export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaItem }: VideoPlayerProviderProps) => {
+    const projectId = useProjectIdentifier();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [playbackRate, setPlaybackRate] = useState<number>(1);
-    // TODO: Update default to be media item frame index
-    const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
+    const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(videoFrame?.frame_number ?? 0);
+
+    useSynchronizeVideoTimeWithVideoFrame({
+        videoRef,
+        videoFrame,
+        onUpdateCurrentFrameIndex: setCurrentFrameIndex,
+    });
 
     const playingVideoFrame: MediaVideoFrame | undefined = useMemo(() => {
-        if (mediaItem === undefined) {
+        if (videoFrame === undefined) {
             return undefined;
         }
 
         return {
-            ...mediaItem,
+            ...videoFrame,
             frame_number: currentFrameIndex,
-
-            // TODO: This logic should be moved to selected media item provider
-            type: 'video_frame',
-            frame_count: mediaItem.frame_count,
-            fps: mediaItem.fps,
-            duration: mediaItem.duration,
-            // TODO: This should be returned by the backend, atm it's mocked to be 60 fps
-            frame_stride: 60,
         };
-    }, [currentFrameIndex, mediaItem]);
+    }, [currentFrameIndex, videoFrame]);
 
-    const videoControls = useVideoControls(videoRef, playingVideoFrame, changeSelectedMediaItem, setCurrentFrameIndex);
+    const [step, setStep] = useState<number>(playingVideoFrame?.frame_stride ?? 1);
+
+    const videoControls = useVideoControls({
+        step,
+        videoRef,
+        videoFrame: playingVideoFrame,
+        selectVideoFrame: changeSelectedMediaItem,
+        changeCurrentFrameIndex: setCurrentFrameIndex,
+    });
 
     const toggleMute = () => {
         setIsMuted((prevIsMuted) => {
@@ -87,6 +183,14 @@ export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaIt
         }
     };
 
+    const handleEnded = () => {
+        if (videoRef.current === null) {
+            return;
+        }
+        videoControls.pause();
+        videoRef.current.currentTime = 0;
+    };
+
     const value =
         playingVideoFrame !== undefined
             ? {
@@ -101,10 +205,30 @@ export const VideoPlayerProvider = ({ children, mediaItem, changeSelectedMediaIt
                   changePlaybackRate,
 
                   changeCurrentFrameIndex: setCurrentFrameIndex,
+
+                  step,
+                  changeStep: setStep,
               }
             : null;
 
-    return <VideoPlayerContext value={value}>{children}</VideoPlayerContext>;
+    return (
+        <VideoPlayerContext value={value}>
+            {children}
+            {playingVideoFrame !== undefined && (
+                <VisuallyHidden>
+                    <video
+                        ref={videoRef}
+                        src={getMediaBinaryUrl(projectId, playingVideoFrame.id)}
+                        width={playingVideoFrame.width}
+                        height={playingVideoFrame.height}
+                        preload={'auto'}
+                        onEnded={handleEnded}
+                        muted
+                    />
+                </VisuallyHidden>
+            )}
+        </VideoPlayerContext>
+    );
 };
 
 export const useVideoPlayer = () => {
