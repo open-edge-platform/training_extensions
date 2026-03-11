@@ -13,6 +13,10 @@ export const isParameterGroup = (
     return parameter.type === 'parameter_group';
 };
 
+export const isParameter = (parameter: TrainingConfigurationParameter) => {
+    return parameter.type === 'parameter';
+};
+
 export const findGroupByKey = (
     parameters: TrainingConfigurationParameter[] | undefined,
     key: string
