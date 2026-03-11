@@ -254,7 +254,9 @@ describe('TrainingSubsets', () => {
 
         return (
             <TrainingSubsets
-                subsetsParameters={getSubsetSplitParameters(trainingConfiguration ?? { parameters: [] }) ?? []}
+                subsetsParameters={
+                    getSubsetSplitParameters(trainingConfiguration ?? { parameters: [] }) ?? subsetsParameters
+                }
                 defaultSubsetParameters={subsetParameters}
                 onTrainingConfigurationChange={setTrainingConfiguration}
             />
