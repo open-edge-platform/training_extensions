@@ -70,5 +70,15 @@ hyperparameters:
         probability: 0.5
   training:
     learning_rate: 0.001
+    weight_decay: 0.0001
+    scheduler:
+      factor: 0.1
+      patience: 9
+      warmup:
+        enable: true
+        epochs: 20
+    gradient_clip:
+      enable: true
+      max_grad_norm: 35.0
     input_size_width: 640
     input_size_height: 640

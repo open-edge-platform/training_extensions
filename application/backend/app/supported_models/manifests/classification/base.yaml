@@ -56,9 +56,20 @@ hyperparameters:
     metric: accuracy
   training:
     max_epochs: 100
+    batch_size: 64
     early_stopping:
       enable: true
       patience: 7
+    scheduler:
+      type: reduce_lr_on_plateau
+      factor: 0.5
+      patience: 3
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: false
+    gradient_accumulation:
+      enable: false
     allowed_values_input_size:
       - 64
       - 128

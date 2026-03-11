@@ -17,3 +17,4 @@ stats:
 hyperparameters:
   training:
     learning_rate: 0.0001
+    weight_decay: 0.05
