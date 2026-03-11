@@ -1,8 +1,6 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from 'react';
-
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
@@ -12,10 +10,6 @@ import { getQueryKey } from '../../../query-client/query-client';
 import { useUploadProgress } from './use-display-upload-progress';
 
 export const MEDIA_UPLOAD_CONCURRENCY = 5;
-
-type UploadQueueItem = {
-    files: File[];
-};
 
 type UploadTask = () => Promise<unknown>;
 
@@ -46,8 +40,6 @@ export const useMediaUpload = () => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
     const { uploadProgress, startUploadProgress, updateUploadProgress, finishUploadProgress } = useUploadProgress();
-    const isUploadingRef = useRef(false);
-    const filesToUploadRef = useRef<UploadQueueItem[]>([]);
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
     type UploadMutationRequest = Parameters<typeof addItemMutation.mutateAsync>[0];
@@ -75,7 +67,7 @@ export const useMediaUpload = () => {
             ]),
         });
 
-    // Processes one upload request (a file list) using batched concurrency
+    // Processes files with batched concurrency
     const processUploadBatch = async (files: File[]): Promise<void> => {
         if (files.length === 0) {
             return;
@@ -95,37 +87,13 @@ export const useMediaUpload = () => {
         finishUploadProgress({ settledResults });
     };
 
-    // Main queue
-    const processUploadQueue = async (): Promise<void> => {
-        if (isUploadingRef.current) {
-            return;
-        }
-
-        isUploadingRef.current = true;
-
-        try {
-            while (filesToUploadRef.current.length > 0) {
-                const nextUpload = filesToUploadRef.current.shift();
-
-                if (!nextUpload) {
-                    continue;
-                }
-
-                await processUploadBatch(nextUpload.files);
-            }
-        } finally {
-            isUploadingRef.current = false;
-        }
-    };
-
-    // Starts the upload process by pushing all files to the queue
+    // Starts the upload process directly
     const uploadMedia = (files: File[]): void => {
         if (files.length === 0) {
             return;
         }
 
-        filesToUploadRef.current.push({ files });
-        void processUploadQueue();
+        void processUploadBatch(files);
     };
 
     return {

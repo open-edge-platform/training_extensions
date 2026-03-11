@@ -121,46 +121,4 @@ describe('useMediaUpload', () => {
         });
         expect(result.current.uploadProgress.isUploading).toBe(false);
     });
-
-    it('queues a new upload call while another upload is in progress', async () => {
-        const uploadedFileNames: string[] = [];
-
-        server.use(
-            http.post('/api/projects/{project_id}/dataset/media', async ({ request }) => {
-                const formData = await request.formData();
-                const file = formData.get('file') as File;
-
-                uploadedFileNames.push(file.name);
-
-                await new Promise((resolve) => {
-                    setTimeout(resolve, 30);
-                });
-
-                return HttpResponse.json(getMockedMediaImage({ id: uuid() }), { status: 201 });
-            })
-        );
-
-        const { result } = renderHook(() => useMediaUpload());
-
-        const firstUploadFiles = [
-            new File(['first-1'], 'first-1.jpg', { type: 'image/jpeg' }),
-            new File(['first-2'], 'first-2.jpg', { type: 'image/jpeg' }),
-        ];
-        const secondUploadFiles = [new File(['second-1'], 'second-1.jpg', { type: 'image/jpeg' })];
-
-        act(() => {
-            result.current.uploadMedia(firstUploadFiles);
-            result.current.uploadMedia(secondUploadFiles);
-        });
-
-        await waitFor(() => {
-            expect(uploadedFileNames).toEqual(['first-1.jpg', 'first-2.jpg', 'second-1.jpg']);
-        });
-        await waitFor(() => {
-            expect(result.current.uploadProgress.isUploading).toBe(false);
-        });
-
-        expect(result.current.uploadProgress.total).toBe(1);
-        expect(result.current.uploadProgress.isUploading).toBe(false);
-    });
 });
