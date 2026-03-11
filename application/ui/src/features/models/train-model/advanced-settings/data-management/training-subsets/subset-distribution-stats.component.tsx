@@ -1,16 +1,14 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
-
 import { Flex, Text, View } from '@geti/ui';
 
 import classes from './training-subsets.module.scss';
 
 type SubsetDistributionStatsProps = {
-    trainingSize: number | ReactNode;
-    validationSize: number | ReactNode;
-    testSize: number | ReactNode;
+    trainingSize: number;
+    validationSize: number;
+    testSize: number;
     totalSize: number;
 };
 
@@ -26,7 +24,7 @@ export const SubsetTile = ({ color }: { color: string }) => {
     );
 };
 
-const SubsetDistributionStat = ({ size, color, title }: { size: number | ReactNode; color: string; title: string }) => {
+const SubsetDistributionStat = ({ size, color, title }: { size: number; color: string; title: string }) => {
     return (
         <Flex alignItems={'center'} gap={'size-50'}>
             <SubsetTile color={color} />

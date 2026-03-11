@@ -4,7 +4,11 @@
 import { NumberConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { findGroupByKey } from '../../../../model-listing/model-training-parameters/utils';
 
-export type SubsetSplitParameters = NumberConfigurableParameter[];
+export type SubsetSplitParameters = [
+    NumberConfigurableParameter,
+    NumberConfigurableParameter,
+    NumberConfigurableParameter,
+];
 
 export const MAX_RATIO_VALUE = 100;
 
@@ -39,5 +43,5 @@ export const getSubsetSplitParameters = (trainingConfiguration: TrainingConfigur
 
     if (subsetSplit === undefined) return undefined;
 
-    return subsetSplit.parameters as NumberConfigurableParameter[];
+    return subsetSplit.parameters as SubsetSplitParameters;
 };
