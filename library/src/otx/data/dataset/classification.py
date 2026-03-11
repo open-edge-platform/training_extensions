@@ -234,7 +234,6 @@ class OTXHlabelClsDataset(OTXDataset):
         data_format (str): Format of the source data (e.g., "arrow", "coco").
 
     Attributes:
-        dm_categories (datumaro.components.annotation.LabelCategories): Datumaro label categories for the dataset.
         label_info (HLabelInfo): HLabelInfo containing hierarchical label structure information.
         id_to_name_mapping (dict[str, str]): Mapping from label IDs to label names.
 
@@ -261,7 +260,10 @@ class OTXHlabelClsDataset(OTXDataset):
         data_format: str = "",
     ) -> None:
         sample_type = ClassificationHierarchicalSample
-        dm_subset = dm_subset.convert_to_schema(sample_type)
+        # Pass target categories manually to ensure HierarchicalLabelCategories are not converted to regular Labels.
+        label_categories = dm_subset.schema.attributes["label"].categories
+        target_categories = {"label": label_categories} if label_categories is not None else None
+        dm_subset = dm_subset.convert_to_schema(sample_type, target_categories=target_categories)  # type: ignore[arg-type]
         super().__init__(
             dm_subset=dm_subset,
             sample_type=sample_type,

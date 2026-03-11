@@ -1,0 +1,209 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Download a ~50-sample COCO 2017 subset for multi-label classification.
+
+Each COCO image can contain objects of multiple categories, so every image is
+annotated with a multi-hot label vector -- perfect for
+``ClassificationMultiLabelSample``.
+
+Usage
+-----
+    python tests/assets/multilabel_classification_coco/download.py [--output_dir OUTPUT_DIR]
+
+Requirements
+------------
+``pycocotools`` must be installed (``pip install pycocotools``).
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import urllib.request
+import zipfile
+from pathlib import Path
+
+import numpy as np
+import torch
+from datumaro.experimental import Dataset
+from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.export_import import export_dataset
+from datumaro.experimental.fields import ImageInfo as DmImageInfo
+from datumaro.experimental.fields import Subset
+from pycocotools.coco import COCO
+from torchvision import tv_tensors
+
+from otx.data.entity.sample import ClassificationMultiLabelSample
+
+COCO_ANNOTATIONS_URL = "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
+COCO_VAL_IMAGES_URL = "http://images.cocodataset.org/val2017/{filename}"
+
+SAMPLES_TRAIN: int = 35
+SAMPLES_VAL: int = 8
+SAMPLES_TEST: int = 7
+
+# Resize images to keep the exported dataset under 3 MB
+IMG_SIZE: int = 64
+
+
+def _download_annotations(download_dir: Path) -> Path:
+    """Download and extract COCO 2017 annotations if not already present."""
+    ann_file = download_dir / "annotations" / "instances_val2017.json"
+    if ann_file.exists():
+        print("  Annotations already downloaded.")
+        return ann_file
+
+    zip_path = download_dir / "annotations_trainval2017.zip"
+    if not zip_path.exists():
+        print(f"  Downloading annotations from {COCO_ANNOTATIONS_URL} ...")
+        download_dir.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(COCO_ANNOTATIONS_URL, zip_path)  # noqa: S310
+
+    print("  Extracting annotations ...")
+    with zipfile.ZipFile(zip_path) as zf:
+        zf.extractall(download_dir)
+
+    return ann_file
+
+
+def _download_image(image_filename: str, download_dir: Path) -> Path:
+    """Download a single COCO image if not already present."""
+    img_path = download_dir / image_filename
+    if not img_path.exists():
+        url = COCO_VAL_IMAGES_URL.format(filename=image_filename)
+        urllib.request.urlretrieve(url, img_path)  # noqa: S310
+    return img_path
+
+
+def _select_multilabel_images(coco: COCO, total: int) -> list[int]:
+    """Select image IDs that have annotations from at least 2 different categories."""
+    selected: list[int] = []
+    for img_id in sorted(coco.getImgIds()):
+        if len(selected) >= total:
+            break
+        ann_ids = coco.getAnnIds(imgIds=img_id, iscrowd=False)
+        anns = coco.loadAnns(ann_ids)
+        unique_cats = {a["category_id"] for a in anns}
+        if len(unique_cats) >= 2:
+            selected.append(img_id)
+    return selected
+
+
+def _build_samples(
+    coco: COCO,
+    image_ids: list[int],
+    images_dir: Path,
+    subset: Subset,
+    cat_id_to_idx: dict[int, int],
+) -> list[ClassificationMultiLabelSample]:
+    """Create ClassificationMultiLabelSample objects from COCO annotations."""
+    from PIL import Image as PILImage
+
+    samples: list[ClassificationMultiLabelSample] = []
+
+    for img_id in image_ids:
+        img_info = coco.loadImgs(img_id)[0]
+        filename = img_info["file_name"]
+        _w, _h = img_info["width"], img_info["height"]
+
+        img_path = _download_image(filename, images_dir)
+        img_pil = PILImage.open(img_path).convert("RGB")
+        img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.BILINEAR)  # type: ignore[attr-defined]
+        img_np = np.array(img_pil, dtype=np.uint8)
+        img_chw = torch.from_numpy(img_np.transpose(2, 0, 1))
+        image = tv_tensors.Image(img_chw)
+
+        ann_ids = coco.getAnnIds(imgIds=img_id, iscrowd=False)
+        anns = coco.loadAnns(ann_ids)
+        unique_cats = sorted({a["category_id"] for a in anns if a["category_id"] in cat_id_to_idx})
+
+        if not unique_cats:
+            continue
+
+        label_indices = np.array([cat_id_to_idx[c] for c in unique_cats], dtype=np.uint8)
+
+        sample = ClassificationMultiLabelSample(
+            image=image,
+            label=label_indices,
+            dm_image_info=DmImageInfo(width=IMG_SIZE, height=IMG_SIZE),
+            subset=subset,
+        )
+        samples.append(sample)
+
+    return samples
+
+
+def main(output_dir: Path | None = None) -> None:
+    """Download COCO 2017 subset, build a 50-sample multi-label classification dataset, and export it."""
+    if output_dir is None:
+        output_dir = Path(__file__).resolve().parent
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    download_dir = output_dir / "raw"
+    images_dir = output_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
+    print("Setting up COCO annotations ...")
+    ann_file = _download_annotations(download_dir)
+
+    print("Loading COCO annotations ...")
+    coco = COCO(str(ann_file))
+
+    print("Selecting images with multiple categories ...")
+    all_ids = _select_multilabel_images(coco, SAMPLES_TRAIN + SAMPLES_VAL + SAMPLES_TEST)
+    train_ids = all_ids[:SAMPLES_TRAIN]
+    val_ids = all_ids[SAMPLES_TRAIN : SAMPLES_TRAIN + SAMPLES_VAL]
+    test_ids = all_ids[SAMPLES_TRAIN + SAMPLES_VAL :]
+    print(f"  Training   images: {len(train_ids)}")
+    print(f"  Validation images: {len(val_ids)}")
+    print(f"  Testing    images: {len(test_ids)}")
+
+    # Collect only the category IDs that actually appear in the selected images.
+    used_cat_ids: set[int] = set()
+    for img_id in all_ids:
+        ann_ids = coco.getAnnIds(imgIds=img_id, iscrowd=False)
+        for ann in coco.loadAnns(ann_ids):
+            used_cat_ids.add(ann["category_id"])
+    used_cat_ids_sorted = sorted(used_cat_ids)
+    cat_id_to_idx = {cat_id: idx for idx, cat_id in enumerate(used_cat_ids_sorted)}
+    used_cats = coco.loadCats(used_cat_ids_sorted)
+    cat_names = tuple(c["name"] for c in used_cats)
+    print(f"  {len(cat_names)} categories used (of {len(coco.getCatIds())} total)")
+
+    print("Downloading images and building dataset ...")
+    categories = {"label": LabelCategories(labels=cat_names)}
+    dataset: Dataset = Dataset(ClassificationMultiLabelSample, categories=categories)  # type: ignore[arg-type]
+
+    for sample in _build_samples(coco, train_ids, images_dir, Subset.TRAINING, cat_id_to_idx):
+        dataset.append(sample)
+    for sample in _build_samples(coco, val_ids, images_dir, Subset.VALIDATION, cat_id_to_idx):
+        dataset.append(sample)
+    for sample in _build_samples(coco, test_ids, images_dir, Subset.TESTING, cat_id_to_idx):
+        dataset.append(sample)
+
+    print(f"  Dataset length: {len(dataset)}")
+
+    export_dir = output_dir / "exported_dataset"
+    print(f"Exporting dataset to {export_dir} ...")
+    export_dataset(dataset, export_dir)
+
+    print("Cleaning up intermediate files ...")
+    shutil.rmtree(download_dir, ignore_errors=True)
+    shutil.rmtree(images_dir, ignore_errors=True)
+
+    print("Done")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Download a 50-sample COCO 2017 multi-label classification benchmark dataset.",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=Path,
+        default=None,
+        help="Directory to save the dataset. Defaults to tests/assets/multilabel_classification_coco",
+    )
+    args = parser.parse_args()
+    main(output_dir=args.output_dir)

@@ -23,13 +23,13 @@ from otx.utils.utils import should_pass_label_info
 @pytest.fixture
 def fxt_data_root_per_task_type() -> dict:
     return {
-        OTXTaskType.MULTI_CLASS_CLS: "tests/assets/classification_dataset",
-        OTXTaskType.MULTI_LABEL_CLS: "tests/assets/multilabel_classification",
-        OTXTaskType.DETECTION: "tests/assets/car_tree_bug",
-        OTXTaskType.KEYPOINT_DETECTION: "tests/assets/car_tree_bug_keypoint",
-        OTXTaskType.ROTATED_DETECTION: "tests/assets/car_tree_bug",
-        OTXTaskType.INSTANCE_SEGMENTATION: "tests/assets/car_tree_bug",
-        OTXTaskType.SEMANTIC_SEGMENTATION: "tests/assets/common_semantic_segmentation_dataset",
+        OTXTaskType.MULTI_CLASS_CLS: "tests/assets/classification_cifar10",
+        OTXTaskType.MULTI_LABEL_CLS: "tests/assets/multilabel_classification_coco",
+        OTXTaskType.DETECTION: "tests/assets/detection_coco",
+        OTXTaskType.KEYPOINT_DETECTION: "tests/assets/keypoint_detection_coco",
+        OTXTaskType.ROTATED_DETECTION: "tests/assets/detection_coco",
+        OTXTaskType.INSTANCE_SEGMENTATION: "tests/assets/instance_segmentation_coco",
+        OTXTaskType.SEMANTIC_SEGMENTATION: "tests/assets/segmentation_pets",
     }
 
 
@@ -59,13 +59,13 @@ class TestAutoConfigurator:
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
         # data_root is not None & task is None
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         auto_configurator = AutoConfigurator(data_root=data_root, task="MULTI_CLASS_CLS")
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
     def test_load_default_config(self) -> None:
         # Test the load_default_config function
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         task = OTXTaskType.MULTI_CLASS_CLS
         auto_configurator = AutoConfigurator(data_root=data_root, task=task)
 
@@ -103,7 +103,7 @@ class TestAutoConfigurator:
         with pytest.raises(ValueError, match="No data root provided."):
             assert auto_configurator.get_datamodule() is None
 
-        data_root = "tests/assets/car_tree_bug"
+        data_root = "tests/assets/detection_coco"
         auto_configurator = AutoConfigurator(data_root=data_root, task=task)
 
         datamodule = auto_configurator.get_datamodule()
@@ -113,7 +113,7 @@ class TestAutoConfigurator:
     def test_get_datamodule_set_input_size_multiplier(self, mocker) -> None:
         mock_otxdatamodule = mocker.patch.object(target_file, "OTXDataModule")
         auto_configurator = AutoConfigurator(
-            data_root="tests/assets/car_tree_bug",
+            data_root="tests/assets/detection_coco",
             task=OTXTaskType.DETECTION,
             model="yolox_tiny",
         )
@@ -161,7 +161,7 @@ class TestAutoConfigurator:
         assert model.data_input_params.input_size == (300, 300)
 
     def test_update_ov_subset_pipeline(self) -> None:
-        data_root = "tests/assets/car_tree_bug"
+        data_root = "tests/assets/detection_coco"
         auto_configurator = AutoConfigurator(data_root=data_root, task="DETECTION")
 
         datamodule = auto_configurator.get_datamodule()

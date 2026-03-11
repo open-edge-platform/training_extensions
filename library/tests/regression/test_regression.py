@@ -7,10 +7,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import pytest
-from tests.utils import run_main
 import mlflow
 import pandas as pd
+import pytest
+
+from tests.utils import run_main
 
 
 @dataclass
@@ -121,7 +122,7 @@ class BaseTest:
             for _, row in sub_df.iterrows():
                 row = row.dropna()
                 metrics = row.to_dict()
-                mlflow.log_metrics(metrics=metrics, step=step)
+                mlflow.log_metrics(metrics=metrics, step=int(step))  # type: ignore[arg-type]
 
         mlflow.log_artifact(local_path=str(metric_csv_file), artifact_path="metrics")
 
@@ -136,7 +137,7 @@ class TestMultiClassCls(BaseTest):
         ModelTestCase(task="classification/multi_class_cls", name="mobilenet_v3_large"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [  # noqa: RUF012
+    DATASET_TEST_CASES = [
         DatasetTestCase(
             name=f"multiclass_CUB_small_{idx}",
             data_root=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
@@ -150,7 +151,7 @@ class TestMultiClassCls(BaseTest):
         for idx in range(1, 4)
     ] + [
         DatasetTestCase(
-            name=f"multiclass_CUB_medium",
+            name="multiclass_CUB_medium",
             data_root=Path("multiclass_classification/multiclass_CUB_medium"),
             data_format="imagenet_with_subset_dirs",
             num_classes=67,
@@ -160,7 +161,7 @@ class TestMultiClassCls(BaseTest):
             },
         ),
         DatasetTestCase(
-            name=f"multiclass_food101_large",
+            name="multiclass_food101_large",
             data_root=Path("multiclass_classification/multiclass_food101_large"),
             data_format="imagenet_with_subset_dirs",
             num_classes=20,
@@ -211,7 +212,7 @@ class TestMultilabelCls(BaseTest):
         ModelTestCase(task="classification/multi_label_cls", name="deit_tiny"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [  # noqa: RUF012
+    DATASET_TEST_CASES = [
         DatasetTestCase(
             name=f"multilabel_CUB_small_{idx}",
             data_root=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
@@ -225,7 +226,7 @@ class TestMultilabelCls(BaseTest):
         for idx in range(1, 4)
     ] + [
         DatasetTestCase(
-            name=f"multilabel_CUB_medium",
+            name="multilabel_CUB_medium",
             data_root=Path("multilabel_classification/multilabel_CUB_medium"),
             data_format="datumaro",
             num_classes=68,
@@ -235,7 +236,7 @@ class TestMultilabelCls(BaseTest):
             },
         ),
         DatasetTestCase(
-            name=f"multilabel_food101_large",
+            name="multilabel_food101_large",
             data_root=Path("multilabel_classification/multilabel_food101_large"),
             data_format="datumaro",
             num_classes=21,
@@ -286,7 +287,7 @@ class TestHlabelCls(BaseTest):
         ModelTestCase(task="classification/h_label_cls", name="deit_tiny"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [  # noqa: RUF012
+    DATASET_TEST_CASES = [
         DatasetTestCase(
             name=f"hlabel_CUB_small_{idx}",
             data_root=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
@@ -300,7 +301,7 @@ class TestHlabelCls(BaseTest):
         for idx in range(1, 4)
     ] + [
         DatasetTestCase(
-            name=f"hlabel_CUB_medium",
+            name="hlabel_CUB_medium",
             data_root=Path("hlabel_classification/hlabel_CUB_medium"),
             data_format="datumaro",
             num_classes=102,
@@ -354,7 +355,7 @@ class TestObjectDetection(BaseTest):
         ModelTestCase(task="detection", name="yolox_x"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [  # noqa: RUF012
+    DATASET_TEST_CASES = [
         DatasetTestCase(
             name=f"pothole_small_{idx}",
             data_root=Path("detection/pothole_small") / f"{idx}",
@@ -438,7 +439,7 @@ class TestSemanticSegmentation(BaseTest):
         ModelTestCase(task="semantic_segmentation", name="dino_v2"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [  # noqa: RUF012
+    DATASET_TEST_CASES = [
         DatasetTestCase(
             name=f"kvasir_small_{idx}",
             data_root=Path("semantic_seg/kvasir_small") / f"{idx}",
@@ -503,7 +504,7 @@ class TestInstanceSegmentation(BaseTest):
         ModelTestCase(task="instance_segmentation", name="maskrcnn_swint"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [  # noqa: RUF012
+    DATASET_TEST_CASES = [
         DatasetTestCase(
             name=f"wgisd_small_{idx}",
             data_root=Path("instance_seg/wgisd_small") / f"{idx}",

@@ -24,6 +24,15 @@ __all__ = [
 ]
 
 
+def _normalize(obj: object) -> object:
+    """Recursively convert tuples to lists so tuple-vs-list differences are ignored in comparisons."""
+    if isinstance(obj, (list, tuple)):
+        return [_normalize(item) for item in obj]
+    if isinstance(obj, dict):
+        return {k: _normalize(v) for k, v in obj.items()}
+    return obj
+
+
 @dataclass
 class LabelInfo:
     """Object to represent label information."""
@@ -36,11 +45,7 @@ class LabelInfo:
         """Compare two LabelInfo objects, normalizing list/tuple differences."""
         if not isinstance(other, LabelInfo):
             return NotImplemented
-        return (
-            list(self.label_names) == list(other.label_names)
-            and list(self.label_ids) == list(other.label_ids)
-            and [list(g) for g in self.label_groups] == [list(g) for g in other.label_groups]
-        )
+        return _normalize(asdict(self)) == _normalize(asdict(other))
 
     @property
     def num_classes(self) -> int:
@@ -162,6 +167,17 @@ class HLabelInfo(LabelInfo):
     label_tree_edges: list[list[str]]
     empty_multiclass_head_indices: list[int]
 
+    def __eq__(self, other: object) -> bool:
+        """Compare two HLabelInfo objects, normalizing list/tuple differences.
+
+        Datumaro produces tuples for groups while JSON deserialization produces
+        lists.  The comparison normalises every sequence-typed field so that
+        ``tuple`` vs ``list`` differences do not cause a false mismatch.
+        """
+        if not isinstance(other, HLabelInfo):
+            return NotImplemented
+        return _normalize(asdict(self)) == _normalize(asdict(other))
+
     @classmethod
     def from_dm_label_groups(cls, dm_label_categories: HierarchicalLabelCategories) -> HLabelInfo:
         """Generate HLabelData from the Datumaro LabelCategories.
@@ -258,7 +274,16 @@ class HLabelInfo(LabelInfo):
             single_label_group_info["class_to_idx"],
         )
 
+        # Build label_to_idx starting from classification output labels, then
+        # append any remaining labels (e.g. parent/intermediate hierarchy nodes)
+        # so that model_api's SimpleLabelsGraph has all vertices it needs when
+        # constructing edges from label_tree_edges.
         label_to_idx = {lbl: i for i, lbl in enumerate(merged_class_to_idx.keys())}
+        next_idx = len(label_to_idx)
+        for lbl in label_names:
+            if lbl not in label_to_idx:
+                label_to_idx[lbl] = next_idx
+                next_idx += 1
 
         return HLabelInfo(
             label_names=label_names,
@@ -295,6 +320,7 @@ class HLabelInfo(LabelInfo):
             key: tuple(value) for key, value in loaded["head_idx_to_logits_range"].items()
         }
         loaded["class_to_group_idx"] = {key: tuple(value) for key, value in loaded["class_to_group_idx"].items()}
+        loaded["all_groups"] = [tuple(g) for g in loaded["all_groups"]]
         return cls(**loaded)
 
 

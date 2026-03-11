@@ -6,7 +6,7 @@ from __future__ import annotations
 import itertools
 
 import pytest
-from datumaro import Dataset as DmDataset
+from datumaro.experimental.export_import import import_dataset
 
 from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.factory import OTXDatasetFactory
@@ -33,10 +33,7 @@ def _test_augmentation(
     data_format = config["data"]["data_format"]
 
     # Load dataset
-    dm_dataset = DmDataset.import_from(
-        target_dataset_per_task[task_name],
-        format=data_format,
-    )
+    dm_dataset = import_dataset(target_dataset_per_task[task_name])
 
     # Extract sampler config once before the loop
     sampler_config = train_config.pop("sampler", {})
