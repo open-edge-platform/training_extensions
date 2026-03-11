@@ -20,47 +20,25 @@ from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestDFine:
-    @pytest.mark.parametrize(
-        "model",
-        [
-            DFine(
-                label_info=3,
-                model_name="dfine_hgnetv2_x",
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_loss(self, model, fxt_detection_batch):
-        model(fxt_detection_batch)
+    @pytest.fixture
+    def fxt_model(self) -> DFine:
+        return DFine(
+            label_info=3,
+            model_name="dfine_hgnetv2_x",
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            DFine(
-                label_info=3,
-                model_name="dfine_hgnetv2_x",
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_predict(self, model, fxt_detection_batch):
-        model.eval()
-        output = model(fxt_detection_batch)
+    def test_loss(self, fxt_model, fxt_detection_batch):
+        fxt_model(fxt_detection_batch)
+
+    def test_predict(self, fxt_model, fxt_detection_batch):
+        fxt_model.eval()
+        output = fxt_model(fxt_detection_batch)
         assert isinstance(output, OTXPredictionBatch)
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            DFine(
-                label_info=3,
-                model_name="dfine_hgnetv2_x",
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_export(self, model):
-        model.eval()
-        output = model.forward_for_tracing(torch.randn(1, 3, 640, 640))
+    def test_export(self, fxt_model):
+        fxt_model.eval()
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 640, 640))
         assert len(output) == 3
 
     @pytest.fixture

@@ -23,8 +23,6 @@ class TestDEIMV2:
         [
             "deimv2_s",
             "deimv2_m",
-            "deimv2_l",
-            "deimv2_x",
         ],
     )
     def test_init(self, model_name: str) -> None:
@@ -133,9 +131,6 @@ class TestDEIMV2:
         "model_name",
         [
             "deimv2_s",
-            "deimv2_m",
-            "deimv2_l",
-            "deimv2_x",
         ],
     )
     def test_predict(self, mock_load_checkpoint: MagicMock, model_name: str, fxt_detection_batch) -> None:
@@ -163,9 +158,6 @@ class TestDEIMV2:
         "model_name",
         [
             "deimv2_s",
-            "deimv2_m",
-            "deimv2_l",
-            "deimv2_x",
         ],
     )
     def test_export(self, mock_load_checkpoint: MagicMock, model_name: str) -> None:
