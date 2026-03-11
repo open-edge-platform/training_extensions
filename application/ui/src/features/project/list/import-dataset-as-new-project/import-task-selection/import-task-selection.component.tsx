@@ -31,7 +31,7 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
 
     return useActionState<{ name: string; task_type: TaskType }, FormData>(async (_prevState, formData) => {
         const project = {
-            name: String(formData.get('name')),
+            name: String(formData.get('name')).trim(),
             task_type: formData.get('task_type') as TaskType,
         };
 
@@ -50,7 +50,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
     const [name, setName] = useState(formState.name);
 
     const validationErrorMessage = validateProjectName(
-        name,
+        name.trim(),
         projects.map((project) => project.name)
     );
 

@@ -40,7 +40,7 @@ export const NewProjectMenu = () => {
                     <Text>Create project</Text>
                 </ActionButton>
                 <Menu onAction={handleAction}>
-                    <Item key='newEmptyProject'>Create new empty project</Item>
+                    <Item key='newEmptyProject'>Create new project</Item>
                     <Item key='newFromDataset'>Create from dataset</Item>
                 </Menu>
             </MenuTrigger>
