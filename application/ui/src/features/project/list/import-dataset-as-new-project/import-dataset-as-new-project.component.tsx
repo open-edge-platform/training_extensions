@@ -13,6 +13,7 @@ import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportProcess } from './import-process/import-process.component';
+import { ImportTaskSelection } from './import-task-selection/import-task-selection.component';
 import { ProgressStepper } from './progress-stepper/progress-stepper.component';
 
 import classes from './import-dataset-as-new-project.module.scss';
@@ -38,10 +39,10 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
     return (
         <DialogContainer onDismiss={dialogState.close}>
             {dialogState.isOpen && (
-                <Dialog aria-label={'import-dataset-dialog'} width={800}>
+                <Dialog aria-label={'import-dataset-dialog'} width={860}>
                     <Heading>Create project from a dataset - Import</Heading>
                     <Divider />
-                    <Content minHeight={'size-5000'} UNSAFE_className={classes.container}>
+                    <Content UNSAFE_className={classes.container}>
                         <ProgressStepper currentStep={currentStep} />
 
                         <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
@@ -51,6 +52,10 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
 
                             {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
                                 <ImportProcess stagedDatasetId={currentStagedId} onFilePrepared={handleFilePrepared} />
+                            )}
+
+                            {currentStep === 'taskTypeSelection' && isNonEmptyString(currentStagedId) && (
+                                <ImportTaskSelection stagedDatasetId={currentStagedId} />
                             )}
                         </View>
                     </Content>

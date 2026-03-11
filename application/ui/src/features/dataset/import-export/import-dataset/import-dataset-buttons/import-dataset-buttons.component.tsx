@@ -3,7 +3,7 @@
 
 import { Button, ButtonGroup } from '@geti/ui';
 
-import { ImportProcessButtons } from '../../../../../components/import-job-process/import-process-buttons.component';
+import { ImportJobProcessButtons } from '../../../../../components/import-job-process/import-job-process-buttons.component';
 import { useImportDatasetToProject } from '../../../../../hooks/localStorage/use-import-dataset-to-project.hook';
 import { LabelMappingButtons } from '../label-mapping/label-mapping-buttons.component';
 import { ImportDatasetToProjectState } from '../util';
@@ -30,7 +30,7 @@ export const ImportDatasetButtons = ({ currentStep, stagedDatasetId, onClose }: 
 
     if (currentStep === 'preparing') {
         return (
-            <ImportProcessButtons
+            <ImportJobProcessButtons
                 onClose={onClose}
                 prepareJobId={prepareJobId}
                 stagedDatasetId={stagedDatasetId}

@@ -3,10 +3,14 @@
 
 import { useLocalStorage } from 'usehooks-ts';
 
+import { TaskType } from '../../constants/shared-types';
 import { ImportDatasetAsNewProjectState } from '../../features/dataset/import-export/import-dataset/util';
 import { DatasetImportState, getParsedLocalStorage } from './utils';
 
-export type DatasetImportAsNewProjectState = DatasetImportState<ImportDatasetAsNewProjectState>;
+export type DatasetImportAsNewProjectState = DatasetImportState<ImportDatasetAsNewProjectState> & {
+    project?: { name: string; task_type: string };
+    filters?: { labels: TaskType[]; include_unannotated: boolean };
+};
 
 const IMPORT_DATASET_AS_NEW_PROJECT_KEY = `import-dataset-as-new-project`;
 

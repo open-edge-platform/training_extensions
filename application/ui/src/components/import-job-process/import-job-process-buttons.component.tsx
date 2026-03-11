@@ -5,19 +5,19 @@ import { Button, ButtonGroup } from '@geti/ui';
 import { useCancelJob } from 'hooks/api/jobs/jobs.hook';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
-type ImportProcessButtonsProps = {
+type ImportJobProcessButtonsProps = {
     prepareJobId: string;
     stagedDatasetId: string;
     onClose: () => void;
     deleteEntry: () => void;
 };
 
-export const ImportProcessButtons = ({
+export const ImportJobProcessButtons = ({
     prepareJobId,
     stagedDatasetId,
     onClose,
     deleteEntry,
-}: ImportProcessButtonsProps) => {
+}: ImportJobProcessButtonsProps) => {
     const cancelJobMutation = useCancelJob();
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, onSuccess: onClose, deleteEntry });
 
