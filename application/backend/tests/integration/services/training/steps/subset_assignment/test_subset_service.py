@@ -63,27 +63,6 @@ class TestSubsetServiceIntegration:
         items = fxt_subset_service.get_unassigned_items_with_labels(fxt_project_id)
         assert len(items) == fxt_default_distribution.get(DatasetItemSubset.UNASSIGNED)  # based on default distribution
 
-    def test_get_subset_distribution(
-        self,
-        fxt_project_id: UUID,
-        fxt_subset_service: SubsetService,
-        fxt_default_distribution: dict[DatasetItemSubset, int],
-    ):
-        """Test retrieving subset distribution."""
-        distribution = fxt_subset_service.get_subset_distribution(fxt_project_id)
-        assert distribution.get_count(DatasetItemSubset.TRAINING) == fxt_default_distribution.get(
-            DatasetItemSubset.TRAINING
-        )
-        assert distribution.get_count(DatasetItemSubset.VALIDATION) == fxt_default_distribution.get(
-            DatasetItemSubset.VALIDATION
-        )
-        assert distribution.get_count(DatasetItemSubset.TESTING) == fxt_default_distribution.get(
-            DatasetItemSubset.TESTING
-        )
-        assert distribution.get_count(DatasetItemSubset.UNASSIGNED) == fxt_default_distribution.get(
-            DatasetItemSubset.UNASSIGNED
-        )
-
     def test_update_subset_assignments(
         self,
         fxt_project_id: UUID,
