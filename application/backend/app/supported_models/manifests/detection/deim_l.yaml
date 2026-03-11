@@ -9,14 +9,20 @@ description: "DEIM is an advanced training framework designed to enhance the mat
 stats:
   gigaflops: 91
   trainable_parameters: 31
-  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
-    accuracy: 2
-    training_time: 2
-    inference_speed: 2
+  benchmark_metrics:
+    coco_map_50_95: 54.7
+    coco_map_50: 72.4
 
 hyperparameters:
   training:
     learning_rate: 0.0005
+    weight_decay: 0.000125
+    scheduler:
+      factor: 0.5
+      patience: 10
+      warmup:
+        enable: true
+        epochs: 30
     allowed_values_input_size:
       - 640
     input_size_width: 640

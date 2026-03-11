@@ -54,10 +54,18 @@ hyperparameters:
   evaluation:
     metric: dice
   training:
-    max_epochs: 200
+    batch_size: 4
     early_stopping:
       enable: true
       patience: 10
+    scheduler:
+      type: reduce_lr_on_plateau
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: false
+    gradient_accumulation:
+      enable: false
     allowed_values_input_size:
       - 512
       - 640

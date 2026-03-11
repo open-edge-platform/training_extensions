@@ -83,6 +83,7 @@ class TestJobEndpoints:
                     "device": "cpu",
                     "model_architecture_id": "image-classification-deit-tiny",
                     "parent_model_revision_id": uuid4(),
+                    "parent_model_variant_id": uuid4(),
                 },
             }
         )

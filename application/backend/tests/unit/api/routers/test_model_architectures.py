@@ -45,7 +45,7 @@ class TestModelArchitecturesEndpoint:
         assert "stats" in detection_model
         assert detection_model["stats"]["gigaflops"] == 20.6
         assert detection_model["stats"]["trainable_parameters"] == 3.9
-        assert "performance_ratings" in detection_model["stats"]
+        assert "benchmark_metrics" in detection_model["stats"]
 
         # Verify top picks
         assert "top_picks" in data

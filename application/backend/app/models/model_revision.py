@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
-from app.db.schema import ModelRevisionDB
+from app.db.schema import ModelRevisionDB, ModelVariantDB
 from app.models import DatasetItemSubset, EvaluationResult
 from app.models.base import BaseEntity
 
@@ -21,6 +21,7 @@ class ModelFormat(StrEnum):
 class ModelPrecision(StrEnum):
     FP16 = "fp16"
     FP32 = "fp32"
+    INT8 = "int8"
 
 
 class TrainingStatus(StrEnum):
@@ -53,6 +54,59 @@ class TrainingInfo(BaseEntity):
         return data
 
 
+class ModelVariant(BaseEntity):
+    """
+    Represents a specific variant of a model revision, such as a particular format and precision combination.
+
+    A model variant is a first-class entity with its own ID, format, precision, and evaluation results.
+    Variants are stored in the database and on the filesystem under the model's variants directory.
+
+    Attributes:
+        id: Unique identifier for the model variant.
+        model_revision_id: UUID of the parent model revision.
+        format: The format of the model variant (e.g., 'openvino', 'onnx', 'pytorch').
+        precision: The precision of the model variant (e.g., 'fp16', 'fp32', 'int8').
+        weights_size: Size of the model weights files in bytes.
+        evaluations: List of evaluation results for this variant.
+        quantization_info: Info about the quantization process (only for quantized variants).
+        files_deleted: Flag indicating whether the variant files have been deleted from storage.
+    """
+
+    id: UUID
+    model_revision_id: UUID
+    format: ModelFormat
+    precision: ModelPrecision
+    weights_size: int = 0
+    evaluations: list[EvaluationResult] = []
+    quantization_info: dict | None = None
+    files_deleted: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_model_variant(cls, data: object) -> object:
+        if isinstance(data, ModelVariantDB):
+            return {
+                "id": data.id,
+                "model_revision_id": data.model_revision_id,
+                "format": data.format,
+                "precision": data.precision,
+                "weights_size": 0,  # Computed at runtime
+                "quantization_info": data.quantization_info,
+                "files_deleted": data.files_deleted,
+                "evaluations": [
+                    EvaluationResult(
+                        model_revision_id=UUID(data.model_revision_id),
+                        model_variant_id=UUID(e.model_variant_id),
+                        dataset_revision_id=UUID(e.dataset_revision_id),
+                        subset=DatasetItemSubset(e.subset),
+                        metrics={m.metric: m.score for m in e.metric_scores},
+                    )
+                    for e in data.evaluations
+                ],
+            }
+        return data
+
+
 class ModelRevision(BaseEntity):
     """
     Represents a specific revision of a machine learning model.
@@ -68,6 +122,7 @@ class ModelRevision(BaseEntity):
             None if this is the initial revision.
         training_info: Details about the training process, including status, configuration, and associated dataset.
             None if training hasn't started.
+        variants: List of model variants (different formats/precisions/quanizations) for this revision.
         files_deleted: Flag indicating whether the model files have been deleted from storage.
     """
 
@@ -76,7 +131,7 @@ class ModelRevision(BaseEntity):
     architecture: str
     parent_revision: UUID | None = None
     training_info: TrainingInfo | None = None
-    evaluations: list[EvaluationResult] = []
+    variants: list[ModelVariant] = []
     training_configuration: dict | None = None
     files_deleted: bool = False
 
@@ -90,15 +145,7 @@ class ModelRevision(BaseEntity):
                 "architecture": data.architecture,
                 "parent_revision": data.parent_revision,
                 "files_deleted": data.files_deleted,
-                "evaluations": [
-                    EvaluationResult(
-                        model_revision_id=UUID(e.model_revision_id),
-                        dataset_revision_id=UUID(e.dataset_revision_id),
-                        subset=DatasetItemSubset(e.subset),
-                        metrics={m.metric: m.score for m in e.metric_scores},
-                    )
-                    for e in data.evaluations
-                ],
+                "variants": [ModelVariant.model_validate(v) for v in data.variants],
                 "training_info": TrainingInfo.model_validate(data),
                 "training_configuration": data.training_configuration,
             }

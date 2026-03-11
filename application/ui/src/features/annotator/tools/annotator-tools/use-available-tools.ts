@@ -38,6 +38,8 @@ const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
     hotkey: HOTKEYS.magneticLassoTool,
     label: 'Magnetic Lasso',
 };
+// TODO: After the MVP we will enable the Tool
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SSIM_TOOL_CONFIG: ToolConfig = {
     type: 'ssim',
     icon: DetectionTool,
@@ -47,13 +49,12 @@ const SSIM_TOOL_CONFIG: ToolConfig = {
 
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
-    detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_CONFIG, SSIM_TOOL_CONFIG],
+    detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_CONFIG],
     instance_segmentation: [
         SELECTION_TOOL_CONFIG,
         POLYGON_TOOL_CONFIG,
         MAGNETIC_LASSO_TOOL_CONFIG,
         AUTO_SEGMENTATION_CONFIG,
-        SSIM_TOOL_CONFIG,
     ],
 };
 

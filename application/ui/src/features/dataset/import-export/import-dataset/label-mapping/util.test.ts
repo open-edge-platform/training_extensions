@@ -6,14 +6,14 @@ import { describe, expect, it } from 'vitest';
 import { mapProjectLabels } from './util';
 
 describe('util - label mapping', () => {
-    it('should return an empty mapping when datasetLabels is empty', () => {
+    it('returns an empty mapping when datasetLabels is empty', () => {
         const formData = new FormData();
         const mapping = mapProjectLabels([], formData);
 
         expect(mapping).toEqual({});
     });
 
-    it('should map labels when corresponding target labels are provided', () => {
+    it('maps labels when corresponding target labels are provided', () => {
         const datasetLabels = ['cat', 'dog', 'bird'];
         const formData = new FormData();
         formData.set('targetLabel-0', 'feline');
@@ -29,7 +29,7 @@ describe('util - label mapping', () => {
         });
     });
 
-    it('should skip labels when the target label is missing', () => {
+    it('skips labels when the target label is missing', () => {
         const datasetLabels = ['cat', 'dog'];
         const formData = new FormData();
         formData.set('targetLabel-0', 'feline');
@@ -43,7 +43,7 @@ describe('util - label mapping', () => {
         expect(mapping).not.toHaveProperty('dog');
     });
 
-    it('should skip labels when the target label is an empty string', () => {
+    it('skips labels when the target label is an empty string', () => {
         const datasetLabels = ['cat', 'dog'];
         const formData = new FormData();
         formData.set('targetLabel-0', '');
@@ -57,7 +57,7 @@ describe('util - label mapping', () => {
         expect(mapping).not.toHaveProperty('cat');
     });
 
-    it('should skip labels when the target label is a File (non-string)', () => {
+    it('skips labels when the target label is a File (non-string)', () => {
         const datasetLabels = ['image'];
         const formData = new FormData();
         const file = new File(['content'], 'image.txt', { type: 'text/plain' });
@@ -68,7 +68,7 @@ describe('util - label mapping', () => {
         expect(mapping).toEqual({});
     });
 
-    it('should handle sparse mappings correctly', () => {
+    it('handles sparse mappings correctly', () => {
         const datasetLabels = ['cat', 'dog', 'bird', 'fish'];
         const formData = new FormData();
         formData.set('targetLabel-0', 'feline');

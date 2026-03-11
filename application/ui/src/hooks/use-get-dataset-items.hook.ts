@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '../api/client';
-import type { DatasetItemAnnotationStatus } from '../constants/shared-types';
+import type { DatasetItemAnnotationStatus, DatasetSubset } from '../constants/shared-types';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
 type UseGetDatasetItemsOptions = {
     limit: number;
     annotationStatus?: DatasetItemAnnotationStatus;
+    subset?: DatasetSubset;
 };
 
 export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
@@ -19,8 +20,9 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
                 project_id,
             },
             query: {
-                limit: options?.limit,
                 annotation_status: options?.annotationStatus,
+                limit: options?.limit,
+                subset: options?.subset,
             },
         },
     });

@@ -8,7 +8,7 @@ import requests
 
 from app.api.schemas.jobs import JobView
 from app.core.jobs.models import JobStatus, JobType
-from app.models import DatasetFormat
+from app.models import DatasetFormat, TaskType
 from tests.bdd.utils.parsers import parse_sse_events
 
 
@@ -68,6 +68,35 @@ def import_dataset_to_project(
     }
     if labels_mapping is not None:
         job_body["parameters"] = {"labels_mapping": labels_mapping}
+    response = requests.post(f"{base_url}/api/jobs", json=job_body)
+    job = expect_job_accepted(response)
+    return wait_for_job_completion(base_url, job.job_id)
+
+
+def import_dataset_as_new_project(
+    base_url: str,
+    project_name: str,
+    staged_dataset_id: str,
+    labels: list[str],
+    task_type: TaskType,
+    exclusive_labels: bool = False,
+    include_unannotated: bool = True,
+) -> JobView:
+    job_body = {
+        "job_type": JobType.IMPORT_DATASET_AS_NEW_PROJECT,
+        "staged_dataset_id": staged_dataset_id,
+        "parameters": {
+            "project": {
+                "name": project_name,
+                "task_type": task_type,
+                "exclusive_labels": exclusive_labels,
+            },
+            "filters": {
+                "labels": labels,
+                "include_unannotated": include_unannotated,
+            },
+        },
+    }
     response = requests.post(f"{base_url}/api/jobs", json=job_body)
     job = expect_job_accepted(response)
     return wait_for_job_completion(base_url, job.job_id)

@@ -18,7 +18,7 @@ from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, Trainin
 from .label import Label, LabelReference
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
 from .model_manifest import ModelManifest
-from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
+from .model_revision import ModelRevision, ModelVariant, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
 from .shape import FullImage, Point, Polygon, Rectangle, Shape
@@ -80,6 +80,7 @@ __all__ = [
     "MediaType",
     "ModelManifest",
     "ModelRevision",
+    "ModelVariant",
     "MqttSinkConfig",
     "OutputFormat",
     "Pipeline",

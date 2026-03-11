@@ -1,6 +1,48 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-export const DataManagement = () => {
-    return <div>Data management</div>;
+import { Dispatch, SetStateAction } from 'react';
+
+import { View } from '@geti/ui';
+
+import { TrainingConfiguration } from '../../../../../constants/shared-types';
+import { Filters } from './filters/filters.component';
+import { getFiltersParameters } from './filters/utils';
+import { TrainingSubsets } from './training-subsets/training-subsets.component';
+import { getSubsetSplitParameters } from './training-subsets/utils';
+
+type DataManagementProps = {
+    trainingConfiguration: TrainingConfiguration;
+    defaultTrainingConfiguration: TrainingConfiguration;
+    onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
+};
+
+export const DataManagement = ({
+    trainingConfiguration,
+    defaultTrainingConfiguration,
+    onTrainingConfigurationChange,
+}: DataManagementProps) => {
+    const subsetSplitParameters = getSubsetSplitParameters(trainingConfiguration);
+    const defaultSubsetSplitParameters = getSubsetSplitParameters(defaultTrainingConfiguration);
+
+    const filtersParameters = getFiltersParameters(trainingConfiguration);
+
+    return (
+        <View>
+            {subsetSplitParameters !== undefined && defaultSubsetSplitParameters !== undefined && (
+                <TrainingSubsets
+                    defaultSubsetParameters={defaultSubsetSplitParameters}
+                    subsetsParameters={subsetSplitParameters}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            )}
+
+            {filtersParameters !== undefined && (
+                <Filters
+                    filtersParameters={filtersParameters}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            )}
+        </View>
+    );
 };

@@ -165,8 +165,7 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
 
             return (
                 <NumberParameterField
-                    // TODO: Remove assertion after API update
-                    value={Number(parameter.value)}
+                    value={parameter.value}
                     minValue={parameter.min_value ?? null}
                     maxValue={parameter.max_value ?? null}
                     onChange={handleChange}
@@ -207,8 +206,7 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
 
         return (
             <BooleanParameterField
-                // TODO: Remove assertion after API update
-                value={Boolean(parameter.value)}
+                value={parameter.value}
                 header={parameter.name}
                 onChange={handleChange}
                 isDisabled={isDisabled}

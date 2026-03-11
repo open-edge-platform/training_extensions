@@ -5,6 +5,7 @@ import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
 import { useGetDatasetRevisions } from '../../../../hooks/use-get-dataset-revisions.hook';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
+import { getModelEvaluations } from '../components/model-row/utils';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
 import { ModelTrainingDatasets } from '../model-training-datasets/model-training-datasets.component';
 import { ModelTrainingParameters } from '../model-training-parameters/model-training-parameters.component';
@@ -72,7 +73,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
                     <ModelVariantsTabs model={model} />
                 </Item>
                 <Item key='metrics'>
-                    <ModelMetrics modelId={model.id} evaluations={model.evaluations} />
+                    <ModelMetrics modelId={model.id} evaluations={getModelEvaluations(model)} />
                 </Item>
                 <Item key='parameters'>
                     <ModelTrainingParameters modelId={model.id} />

@@ -28,7 +28,6 @@ def step_project_is_exported(context: Context, export_format: str) -> None:
 def step_prepare_dataset_for_import(context: Context) -> None:
     dataset_id = cast(UUID, context.dataset_id)
     prepare_dataset(base_url=str(context.base_url), staged_dataset_id=str(dataset_id))
-    context.export_format = DatasetFormat.GETI
 
 
 @then("the staged dataset is ready for import")  # pyrefly: ignore
