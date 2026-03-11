@@ -11,10 +11,6 @@ export const VideoControls = () => {
     const { isPlaying, play, pause, previousFrame, nextFrame, canSelectPreviousFrame, canSelectNextFrame } =
         videoControls;
 
-    const handlePlay = async () => {
-        await play();
-    };
-
     return (
         <Flex alignItems={'center'} gap={'size-100'}>
             <Flex alignItems={'center'}>
@@ -31,7 +27,7 @@ export const VideoControls = () => {
                         <Pause />
                     </ActionButton>
                 ) : (
-                    <ActionButton isQuiet aria-label={'Play video'} onPress={handlePlay}>
+                    <ActionButton isQuiet aria-label={'Play video'} onPress={play}>
                         <Play />
                     </ActionButton>
                 )}
