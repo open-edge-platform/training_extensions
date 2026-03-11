@@ -10,8 +10,8 @@ stats:
   gigaflops: 202
   trainable_parameters: 62
   benchmark_metrics:
-    coco_map_50_95: 55.8
-    coco_map_50: 73.7
+    coco_map_50_95: 56.5
+    coco_map_50: 74.0
 
 hyperparameters:
   training:
