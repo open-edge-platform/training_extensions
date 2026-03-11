@@ -90,7 +90,9 @@ describe('useMediaUpload', () => {
                 requestCount += 1;
 
                 if (requestCount === 2) {
-                    return HttpResponse.error();
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    return HttpResponse.json({ detail: 'Upload failed' }, { status: 400 });
                 }
 
                 return HttpResponse.json(getMockedMediaImage({ id: uuid() }), { status: 201 });

@@ -18,7 +18,6 @@ export type UploadOutcome = Pick<UploadProgress, 'succeeded' | 'failed'>;
 type UploadProgressUpdate = {
     settledResults: PromiseSettledResult<unknown>[];
 };
-type UploadProgressFinish = UploadProgressUpdate;
 
 const INITIAL_UPLOAD_PROGRESS: UploadProgress = {
     total: 0,
@@ -41,14 +40,13 @@ export const useUploadProgress = () => {
     const [uploadProgress, setUploadProgress] = useState<UploadProgress>(INITIAL_UPLOAD_PROGRESS);
 
     const startUploadProgress = (total: number): void => {
-        setUploadProgress({ total, completed: 0, succeeded: 0, failed: 0, isUploading: true });
-
-        toast({
-            id: UPLOAD_TOAST_ID,
-            type: 'info',
-            message: `Uploading ${total} item(s)... (0 succeeded, 0 failed)`,
-            duration: 0,
-        });
+        setUploadProgress(() => ({
+            total,
+            completed: 0,
+            succeeded: 0,
+            failed: 0,
+            isUploading: true,
+        }));
     };
 
     const updateUploadProgress = ({ settledResults }: UploadProgressUpdate): void => {
@@ -57,64 +55,57 @@ export const useUploadProgress = () => {
         setUploadProgress((previousProgress) => {
             const nextCompleted = previousProgress.completed + settledResults.length;
             const total = previousProgress.total;
-            const totalSucceeded = previousProgress.succeeded + succeeded;
-            const totalFailed = previousProgress.failed + failed;
-            const isUploading = nextCompleted < total;
+            const nextSucceeded = previousProgress.succeeded + succeeded;
+            const nextFailed = previousProgress.failed + failed;
 
-            const progressMessage = `
-                Uploading ${total} item(s)... (${totalSucceeded} succeeded, ${totalFailed} failed)
-            `;
+            const msg = `Uploading ${total} item(s)... (${nextSucceeded} succeeded, ${nextFailed} failed)`;
 
             toast({
                 id: UPLOAD_TOAST_ID,
                 type: 'info',
-                message: progressMessage,
-                duration: 0,
+                message: msg,
             });
 
             return {
                 total,
                 completed: nextCompleted,
-                succeeded: totalSucceeded,
-                failed: totalFailed,
-                isUploading,
+                succeeded: nextSucceeded,
+                failed: nextFailed,
+                isUploading: true,
             };
         });
     };
 
-    const finishUploadProgress = ({ settledResults }: UploadProgressFinish): void => {
-        const { succeeded, failed } = summarizeSettledResults(settledResults);
+    const finishUploadProgress = (): void => {
+        setUploadProgress((previousProgress) => {
+            const nextProgress = {
+                ...previousProgress,
+                isUploading: false,
+            };
 
-        setUploadProgress((previousProgress) => ({
-            total: previousProgress.total,
-            completed: previousProgress.total,
-            succeeded,
-            failed,
-            isUploading: false,
-        }));
+            let toastType: 'success' | 'error' | 'warning' = 'success';
+            let msg = `Uploaded ${nextProgress.succeeded} item(s)`;
 
-        if (failed === 0) {
+            if (nextProgress.failed === 0) {
+                toastType = 'success';
+                msg = `Uploaded ${nextProgress.succeeded} item(s)`;
+            } else if (nextProgress.succeeded === 0) {
+                toastType = 'error';
+                msg = `Failed to upload ${nextProgress.failed} item(s)`;
+            } else {
+                toastType = 'warning';
+                msg = `Uploaded ${nextProgress.succeeded} item(s), ${nextProgress.failed} failed`;
+            }
+
             toast({
                 id: UPLOAD_TOAST_ID,
-                type: 'success',
-                message: `Uploaded ${succeeded} item(s)`,
-                duration: 3000,
+                type: toastType,
+                message: msg,
+                duration: 5000,
             });
-        } else if (succeeded === 0) {
-            toast({
-                id: UPLOAD_TOAST_ID,
-                type: 'error',
-                message: `Failed to upload ${failed} item(s)`,
-                duration: 3000,
-            });
-        } else {
-            toast({
-                id: UPLOAD_TOAST_ID,
-                type: 'warning',
-                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
-                duration: 3000,
-            });
-        }
+
+            return nextProgress;
+        });
     };
 
     return {

@@ -63,6 +63,7 @@ describe('useUploadProgress', () => {
             result.current.updateUploadProgress({
                 settledResults: [fulfilledResult('b')],
             });
+            result.current.finishUploadProgress();
         });
 
         expect(result.current.uploadProgress.isUploading).toBe(false);
@@ -74,9 +75,10 @@ describe('useUploadProgress', () => {
 
         act(() => {
             result.current.startUploadProgress(2);
-            result.current.finishUploadProgress({
+            result.current.updateUploadProgress({
                 settledResults: [fulfilledResult('a'), fulfilledResult('b')],
             });
+            result.current.finishUploadProgress();
         });
 
         expect(result.current.uploadProgress).toEqual({
@@ -94,9 +96,10 @@ describe('useUploadProgress', () => {
 
         act(() => {
             result.current.startUploadProgress(2);
-            result.current.finishUploadProgress({
+            result.current.updateUploadProgress({
                 settledResults: [fulfilledResult('a'), rejectedResult(new Error('bad'))],
             });
+            result.current.finishUploadProgress();
         });
 
         expect(result.current.uploadProgress).toEqual({
@@ -114,9 +117,10 @@ describe('useUploadProgress', () => {
 
         act(() => {
             result.current.startUploadProgress(2);
-            result.current.finishUploadProgress({
+            result.current.updateUploadProgress({
                 settledResults: [rejectedResult(new Error('bad-1')), rejectedResult(new Error('bad-2'))],
             });
+            result.current.finishUploadProgress();
         });
 
         expect(result.current.uploadProgress).toEqual({

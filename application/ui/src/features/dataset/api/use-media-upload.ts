@@ -75,16 +75,20 @@ export const useMediaUpload = () => {
 
         startUploadProgress(files.length);
 
-        const onBatchCompleted = async (batchResults: PromiseSettledResult<unknown>[]) => {
-            updateUploadProgress({ settledResults: batchResults });
+        try {
+            const onBatchCompleted = async (batchResults: PromiseSettledResult<unknown>[]) => {
+                updateUploadProgress({ settledResults: batchResults });
 
-            await invalidateMediaQuery();
-        };
+                await invalidateMediaQuery();
+            };
 
-        const uploadTasks = files.map((file) => buildUploadTask(file));
-        const settledResults = await executeInBatches(uploadTasks, MEDIA_UPLOAD_CONCURRENCY, onBatchCompleted);
+            const uploadTasks = files.map((file) => buildUploadTask(file));
+            await executeInBatches(uploadTasks, MEDIA_UPLOAD_CONCURRENCY, onBatchCompleted);
 
-        finishUploadProgress({ settledResults });
+            finishUploadProgress();
+        } catch (_error) {
+            finishUploadProgress();
+        }
     };
 
     // Starts the upload process directly
