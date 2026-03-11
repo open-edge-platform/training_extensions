@@ -19,7 +19,8 @@ type UploadQueueItem = {
 
 type UploadTask = () => Promise<unknown>;
 
-// Executes tasks in fixed-size waves and returns a flattened list of settled results.
+// Runs ${batchSize} promises at a time until all promises have been executed,
+// returning an array of settled results.
 const executeInBatches = async (
     uploadTasks: UploadTask[],
     batchSize: number,
@@ -117,7 +118,7 @@ export const useMediaUpload = () => {
         }
     };
 
-    // Starts the upload process by pushing all files to the queue and triggering the processor.
+    // Starts the upload process by pushing all files to the queue
     const uploadMedia = (files: File[]): void => {
         if (files.length === 0) {
             return;

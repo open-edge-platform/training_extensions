@@ -35,11 +35,20 @@ const summarizeSettledResults = <T>(results: PromiseSettledResult<T>[]): UploadO
     return { succeeded, failed };
 };
 
+const UPLOAD_TOAST_ID = 'upload-progress-notification';
+
 export const useUploadProgress = () => {
     const [uploadProgress, setUploadProgress] = useState<UploadProgress>(INITIAL_UPLOAD_PROGRESS);
 
     const startUploadProgress = (total: number): void => {
         setUploadProgress({ total, completed: 0, succeeded: 0, failed: 0, isUploading: true });
+
+        toast({
+            id: UPLOAD_TOAST_ID,
+            type: 'info',
+            message: `Uploading ${total} item(s)... (0 succeeded, 0 failed)`,
+            duration: 0,
+        });
     };
 
     const updateUploadProgress = ({ settledResults }: UploadProgressUpdate): void => {
@@ -48,13 +57,27 @@ export const useUploadProgress = () => {
         setUploadProgress((previousProgress) => {
             const nextCompleted = previousProgress.completed + settledResults.length;
             const total = previousProgress.total;
+            const totalSucceeded = previousProgress.succeeded + succeeded;
+            const totalFailed = previousProgress.failed + failed;
+            const isUploading = nextCompleted < total;
+
+            const progressMessage = `
+                Uploading ${total} item(s)... (${totalSucceeded} succeeded, ${totalFailed} failed)
+            `;
+
+            toast({
+                id: UPLOAD_TOAST_ID,
+                type: 'info',
+                message: progressMessage,
+                duration: 0,
+            });
 
             return {
                 total,
                 completed: nextCompleted,
-                succeeded: previousProgress.succeeded + succeeded,
-                failed: previousProgress.failed + failed,
-                isUploading: nextCompleted < total,
+                succeeded: totalSucceeded,
+                failed: totalFailed,
+                isUploading,
             };
         });
     };
@@ -71,13 +94,25 @@ export const useUploadProgress = () => {
         }));
 
         if (failed === 0) {
-            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
+            toast({
+                id: UPLOAD_TOAST_ID,
+                type: 'success',
+                message: `Uploaded ${succeeded} item(s)`,
+                duration: 3000,
+            });
         } else if (succeeded === 0) {
-            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
+            toast({
+                id: UPLOAD_TOAST_ID,
+                type: 'error',
+                message: `Failed to upload ${failed} item(s)`,
+                duration: 3000,
+            });
         } else {
             toast({
+                id: UPLOAD_TOAST_ID,
                 type: 'warning',
                 message: `Uploaded ${succeeded} item(s), ${failed} failed`,
+                duration: 3000,
             });
         }
     };
