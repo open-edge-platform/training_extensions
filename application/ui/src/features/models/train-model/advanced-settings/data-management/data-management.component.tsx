@@ -6,6 +6,8 @@ import { Dispatch, SetStateAction } from 'react';
 import { View } from '@geti/ui';
 
 import { TrainingConfiguration } from '../../../../../constants/shared-types';
+import { DataAugmentation } from './data-augmentation/data-augmentation.component';
+import { getDataAugmentationParameters } from './data-augmentation/utils';
 import { Filters } from './filters/filters.component';
 import { getFiltersParameters } from './filters/utils';
 import { Tiling } from './tiling/tiling.component';
@@ -29,6 +31,9 @@ export const DataManagement = ({
 
     const filtersParameters = getFiltersParameters(trainingConfiguration);
     const tilingParameters = getTilingParameters(trainingConfiguration);
+    const dataAugmentationParameters = getDataAugmentationParameters(trainingConfiguration);
+
+    console.log({ dataAugmentationParameters });
 
     return (
         <View>
@@ -43,6 +48,13 @@ export const DataManagement = ({
             {tilingParameters !== undefined && (
                 <Tiling
                     tilingParameters={tilingParameters}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            )}
+
+            {dataAugmentationParameters !== undefined && (
+                <DataAugmentation
+                    dataAugmentationParameters={dataAugmentationParameters}
                     onTrainingConfigurationChange={onTrainingConfigurationChange}
                 />
             )}
