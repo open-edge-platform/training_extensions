@@ -16,10 +16,12 @@ import type {
     SegmentAnythingWorkerApi,
     SegmentAnythingWorkerInstance,
 } from '../../webworkers/segment-anything.worker.interface';
+import { executeWithTimeout } from '../execute-with-timeout';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 type SegmentAnythingRemoteInstance = Remote<SegmentAnythingWorkerInstance>;
+const SAM_TIMEOUT_MS = 5000;
 
 const getSegmentAnythingWorkerQueryKey = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER') =>
     ['workers', algorithmType] as const;
@@ -35,9 +37,9 @@ const segmentAnythingWorkerQueryOptions = (
                 type: 'module',
             });
             const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
-            const model = await samWorker.build();
+            const model = await executeWithTimeout(samWorker.build(), 'SAM worker build', SAM_TIMEOUT_MS);
 
-            await model.init(algorithmType);
+            await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_TIMEOUT_MS);
 
             return model;
         },
@@ -75,9 +77,7 @@ export const useSegmentAnythingWorker = (
     algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'SEGMENT_ANYTHING_ENCODER',
     enabled = true
 ) => {
-    const { data } = useQuery(segmentAnythingWorkerQueryOptions(algorithmType, enabled));
-
-    return data;
+    return useQuery(segmentAnythingWorkerQueryOptions(algorithmType, enabled));
 };
 
 const useEncodingQuery = (
@@ -98,7 +98,7 @@ const useEncodingQuery = (
                 throw new Error('Model not yet initialized');
             }
 
-            return model.processEncoder(image);
+            return executeWithTimeout(model.processEncoder(image), 'SAM encoder', SAM_TIMEOUT_MS);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -134,14 +134,18 @@ const useDecodingFn = (model: SegmentAnythingRemoteInstance | undefined, encodin
             return [];
         }
 
-        const { shapes } = await model.processDecoder(encoding, {
-            points,
-            boxes: [],
-            ouputConfig: {
-                type: decoderOutput,
-            },
-            image: undefined,
-        });
+        const { shapes } = await executeWithTimeout(
+            model.processDecoder(encoding, {
+                points,
+                boxes: [],
+                ouputConfig: {
+                    type: decoderOutput,
+                },
+                image: undefined,
+            }),
+            'SAM decoder',
+            SAM_TIMEOUT_MS
+        );
 
         return shapes.map(convertToolShapeToGetiShape);
     };
@@ -152,9 +156,12 @@ type SegmentAnythingModelOptions = {
 };
 
 export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelOptions = {}) => {
-    const encoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER');
-    const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
-    const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
+    const encoderWorkerQuery = useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER');
+    const decoderWorkerQuery = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
+    const encoderModel = encoderWorkerQuery.data;
+    const decoderModel = decoderWorkerQuery.data;
+    const hasWorkerError = encoderWorkerQuery.isError || decoderWorkerQuery.isError;
+    const isLoadingWorkers = encoderWorkerQuery.isLoading || decoderWorkerQuery.isLoading;
     const projectId = useProjectIdentifier();
 
     const { mediaItem, image, isImageReady } = useSelectedMediaItem();
@@ -172,12 +179,16 @@ export const useSegmentAnythingModel = ({ nextMediaItem }: SegmentAnythingModelO
 
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
-    const isLoading = isLoadingWorkers || encodingQuery.isLoading;
+    const isLoading = !hasWorkerError && (isLoadingWorkers || encodingQuery.isLoading);
     const isProcessing = encodingQuery.isFetching;
+    const isError = hasWorkerError || encodingQuery.isError;
+    const error = encoderWorkerQuery.error ?? decoderWorkerQuery.error ?? encodingQuery.error;
 
     return {
         isLoading,
         isProcessing,
+        isError,
+        error,
         encodingQuery,
         decodingQueryFn,
     };
