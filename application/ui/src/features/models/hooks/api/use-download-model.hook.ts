@@ -9,31 +9,34 @@ import { $api } from '../../../../api/client';
 export const useDownloadModel = (modelId: string) => {
     const projectId = useProjectIdentifier();
 
-    const mutation = $api.useMutation('get', '/api/projects/{project_id}/models/{model_id}/binary', {
-        onSuccess: (data, variables) => {
-            const blob = data as Blob;
-            const url = URL.createObjectURL(blob);
-            const modelVariantId = variables.params.query?.model_variant_id;
+    const mutation = $api.useMutation(
+        'get',
+        '/api/projects/{project_id}/models/{model_id}/variants/{model_variant_id}/binary',
+        {
+            onSuccess: (data, variables) => {
+                const blob = data as Blob;
+                const url = URL.createObjectURL(blob);
+                const modelVariantId = variables.params.path?.model_variant_id;
 
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = modelVariantId ? `model-${modelId}-${modelVariantId}.zip` : `model-${modelId}.zip`;
-            link.click();
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = modelVariantId ? `model-${modelId}-${modelVariantId}.zip` : `model-${modelId}.zip`;
+                link.click();
 
-            URL.revokeObjectURL(url);
+                URL.revokeObjectURL(url);
 
-            toast({ type: 'success', message: 'Model downloaded successfully' });
-        },
-        onError: () => {
-            toast({ type: 'error', message: 'Failed to download model' });
-        },
-    });
+                toast({ type: 'success', message: 'Model downloaded successfully' });
+            },
+            onError: () => {
+                toast({ type: 'error', message: 'Failed to download model' });
+            },
+        }
+    );
 
     const downloadModel = (modelVariantId: string) => {
         mutation.mutate({
             params: {
-                path: { project_id: projectId, model_id: modelId },
-                query: { model_variant_id: modelVariantId },
+                path: { project_id: projectId, model_id: modelId, model_variant_id: modelVariantId },
             },
             parseAs: 'blob',
         });
