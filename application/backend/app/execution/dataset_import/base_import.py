@@ -133,6 +133,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                         )
                         num_imported_images += 1
                     case LazyVideoFrame(video_path=video_path, frame_index=frame_idx):
+                        video_path = str(video_path)
                         if video_path not in created_videos:
                             with Path(video_path).open("rb") as video_data:
                                 video = self._media_service.create_video(
@@ -141,7 +142,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                                     format_=self.__detect_video_format(item.media),
                                     data=video_data,
                                 )
-                                created_videos[str(video_path)] = video.id
+                                created_videos[video_path] = video.id
                         media = self._media_service.create_image(
                             ImageMetadata(
                                 project_id=project_id,
@@ -149,7 +150,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                                 format_=ImageFormat.JPG,
                                 media_type=MediaType.VIDEO_FRAME,
                                 data=item.media.data,
-                                video_id=created_videos[str(video_path)],
+                                video_id=created_videos[video_path],
                                 frame_idx=frame_idx,
                             )
                         )

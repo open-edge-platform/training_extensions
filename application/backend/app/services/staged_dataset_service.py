@@ -22,13 +22,13 @@ _ANNOTATION_ATTRS: list[tuple[str, AnnotationType]] = [
 def _count_annotations(sample: Sample) -> tuple[AnnotationType, int]:
     if (
         hasattr(sample, "annotation_type")
-        and callable(getattr(sample, "annotation_type"))
-        and getattr(sample, "annotations")
+        and callable(getattr(sample, "annotation_type", None))
+        and hasattr(sample, "annotations")
     ):
         return sample.annotation_type(), sample.annotations
 
     for attr, ann_type in _ANNOTATION_ATTRS:
-        value = getattr(sample, attr)
+        value = getattr(sample, attr, None)
         if value is not None:
             return ann_type, len(value)
 

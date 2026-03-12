@@ -112,7 +112,7 @@ class MediaService(BaseSessionManagedService):
 
         dataset_dir = self.projects_dir / f"{metadata.project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        binary_path = dataset_dir / f"{media_id}.{format}"
+        binary_path = dataset_dir / f"{media_id}.{metadata.format_}"
         image.save(binary_path)
 
         try:
@@ -152,7 +152,7 @@ class MediaService(BaseSessionManagedService):
 
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        binary_path = dataset_dir / f"{media_id}.{format}"
+        binary_path = dataset_dir / f"{media_id}.{format_}"
 
         data.seek(0)
         with open(binary_path, "wb") as f:
