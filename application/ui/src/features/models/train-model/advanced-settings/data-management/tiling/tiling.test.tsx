@@ -28,7 +28,7 @@ describe('getTilingMode', () => {
         expect(getTilingMode([])).toBe(TILING_MODES.OFF);
     });
 
-    it('tiling is off when when enable tiling parameter is false', () => {
+    it('tiling is off when enable tiling parameter is false', () => {
         expect(
             getTilingMode([
                 getMockedConfigurationParameter({
