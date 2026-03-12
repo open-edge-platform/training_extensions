@@ -5,12 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import { Grid, minmax } from '@geti/ui';
 
-import type {
-    ConfigurableParameterGroup,
-    TrainingConfiguration,
-    TrainingConfigurationParameter,
-} from '../../../../../../constants/shared-types';
-import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
+import type { ConfigurableParameterGroup, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { replaceByKey } from '../../utils';
 import { FiltersOptions } from './filters-options.component';
