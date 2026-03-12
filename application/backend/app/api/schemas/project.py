@@ -29,7 +29,7 @@ class TaskCreate(TaskBase):
     @model_validator(mode="after")
     def validate_labels(self) -> "TaskCreate":
         if self.task_type is TaskType.CLASSIFICATION and self.exclusive_labels and len(self.labels) < 2:
-            raise ValueError("Multi-class classifications requires at least two labels.")
+            raise ValueError("Multi-class classification requires at least two labels.")
         if len(self.labels) == 0:
             raise ValueError("A project requires at least one label.")
         return self
