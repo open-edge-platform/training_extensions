@@ -94,7 +94,7 @@ export const SegmentAnythingTool = () => {
             .catch(() => {
                 // If getting decoding went wrong we set an empty preview and
                 // start to compute the next decoding
-                return [];
+                setPreviewShapes([]);
             });
     };
 
