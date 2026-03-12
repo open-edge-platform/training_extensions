@@ -32,13 +32,7 @@ from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration import AlgoLevelParameters, TaskLevelParameters, TrainingConfiguration
 from app.services import ModelRevisionMetadata, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService
-from app.services.subset_assignment import (
-    DatasetItemWithLabels,
-    SubsetAssigner,
-    SubsetAssignment,
-    SubsetDistribution,
-    SubsetService,
-)
+from app.services.subset_assignment import DatasetItemWithLabels, SubsetAssigner, SubsetAssignment, SubsetService
 
 
 @pytest.fixture
@@ -303,16 +297,6 @@ class TestOTXTrainerAssignSubsets:
             algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
         )
 
-        # Mock current distribution
-        current_distribution = SubsetDistribution(
-            counts={
-                DatasetItemSubset.TRAINING: 10,
-                DatasetItemSubset.VALIDATION: 3,
-                DatasetItemSubset.TESTING: 2,
-            }
-        )
-        fxt_subset_service.get_subset_distribution.return_value = current_distribution
-
         # Mock assignments
         expected_assignments = [
             SubsetAssignment(item_id=unassigned_items[0].item_id, subset=DatasetItemSubset.TRAINING),
@@ -326,7 +310,6 @@ class TestOTXTrainerAssignSubsets:
 
         # Assert
         fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
-        fxt_subset_service.get_subset_distribution.assert_called_once_with(project_id)
         fxt_assigner.assign.assert_called_once()
         fxt_subset_service.update_subset_assignments.assert_called_once_with(project_id, expected_assignments)
 
@@ -348,7 +331,6 @@ class TestOTXTrainerAssignSubsets:
 
         # Assert
         fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
-        fxt_subset_service.get_subset_distribution.assert_not_called()
         fxt_assigner.assign.assert_not_called()
         fxt_subset_service.update_subset_assignments.assert_not_called()
 

@@ -1,20 +1,118 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import StrEnum
+
 from pydantic import BaseModel, Field, model_validator
 
 
 class EarlyStopping(BaseModel):
     enable: bool = Field(
         default=False,
-        title="Toggle early stopping",
-        description="Whether to stop training early when performance stops improving",
+        title="Enable",
+        description="Toggle to enable or disable early stopping during training.",
     )
     patience: int = Field(
-        gt=0,
+        ge=1,
         default=1,
         title="Patience",
-        description="Number of epochs with no improvement after which training will be stopped",
+        description="Number of epochs with no improvement after which training will be stopped.",
+    )
+
+
+class SchedulerType(StrEnum):
+    """Learning rate scheduler type"""
+
+    REDUCE_LR_ON_PLATEAU = "reduce_lr_on_plateau"
+    COSINE_ANNEALING = "cosine_annealing"
+
+
+class LrLinearWarmupParameters(BaseModel):
+    enable: bool = Field(
+        default=False,
+        title="Enable",
+        description="Toggle to enable or disable the LR linear warmup phase at the beginning of training.",
+    )
+    epochs: int = Field(
+        default=5,
+        ge=1,
+        title="Warmup epochs",
+        description="Number of epochs for the LR linear warmup phase.",
+    )
+
+
+class SchedulerParameters(BaseModel):
+    type: SchedulerType = Field(
+        default=SchedulerType.REDUCE_LR_ON_PLATEAU,
+        title="Scheduler type",
+        description=(
+            "Type of learning rate scheduler to use during training. "
+            "With ReduceLROnPlateau, the learning rate will be reduced by a predetermined factor when the validation "
+            "metric stops improving. With CosineAnnealing, the learning rate will follow a cosine decay schedule, "
+            "gradually decreasing over the course of training."
+        ),
+    )
+    warmup: LrLinearWarmupParameters = Field(
+        default_factory=LrLinearWarmupParameters,
+        title="Learning rate linear warmup",
+        description=(
+            "Learning rate warmup is a technique where the learning rate starts at a lower value and gradually "
+            "increases to the initial learning rate over a specified number of epochs at the beginning of training. "
+            "This can help stabilize training and improve convergence, especially when using large learning rates "
+            "or training on complex datasets."
+        ),
+    )
+    factor: float = Field(
+        default=0.5,
+        gt=0,
+        lt=1,
+        title="Factor",
+        description="Factor by which the learning rate will be reduced. new_lr = lr * factor.",
+        json_schema_extra={"depends_on": {"type": "reduce_lr_on_plateau"}},
+    )
+    patience: int = Field(
+        default=5,
+        ge=1,
+        title="Patience",
+        description="Number of epochs with no improvement after which learning rate will be reduced.",
+        json_schema_extra={"depends_on": {"type": "reduce_lr_on_plateau"}},
+    )
+    min_lr: float = Field(
+        default=0,
+        ge=0,
+        lt=1,
+        title="Minimum learning rate",
+        description="Minimum learning rate after annealing.",
+        json_schema_extra={"depends_on": {"type": "cosine_annealing"}},
+    )
+
+
+class GradientAccumulationParameters(BaseModel):
+    enable: bool = Field(
+        default=False, title="Enable", description="Toggle to enable or disable gradient accumulation during training."
+    )
+    batches: int = Field(
+        ge=1,
+        default=1,
+        title="Gradient accumulation batches",
+        description=(
+            "Number of steps (batches) to accumulate gradients before performing gradient descent step. "
+            "Effective batch size during training: batch_size * accumulate_grad_batches."
+        ),
+    )
+
+
+class GradientClipParameters(BaseModel):
+    enable: bool = Field(
+        default=False,
+        title="Enable",
+        description="Toggle to enable or disable gradient clipping during training.",
+    )
+    max_grad_norm: float = Field(
+        gt=0,
+        default=1.0,
+        title="Maximum gradient L2 norm",
+        description="Maximum L2 norm of the gradients. Gradients with norm larger than this value will be clipped.",
     )
 
 
@@ -22,11 +120,22 @@ class AlgoLevelTrainingParameters(BaseModel):
     """Hyperparameters for model training process."""
 
     max_epochs: int = Field(
-        gt=0,
+        ge=1,
         default=200,
         title="Maximum epochs",
         description=(
             "Maximum number of epochs to train the model. An epoch is one complete pass through the training dataset."
+        ),
+    )
+    batch_size: int = Field(
+        ge=1,
+        default=4,
+        title="Batch size",
+        description=(
+            "Number of training samples processed before the model's internal parameters are updated. "
+            "A larger batch size can speed up training but may require more memory, while a smaller batch size "
+            "can help avoid OOM (Out of Memory) errors at the cost of longer training times and potentially noisier "
+            "gradient estimates."
         ),
     )
     early_stopping: EarlyStopping = Field(
@@ -45,6 +154,40 @@ class AlgoLevelTrainingParameters(BaseModel):
             "Learning rate for the optimizer, controlling the step size during model weight updates. "
             "A smaller learning rate may lead to more stable convergence, while a larger learning rate may speed up "
             "training but risk overshooting minima in the loss landscape."
+        ),
+    )
+    weight_decay: float = Field(
+        ge=0,
+        lt=1,
+        default=1e-4,
+        title="Weight decay",
+        description=(
+            "Weight decay is a regularization technique that adds a penalty to the loss function based on the "
+            "squared magnitude of the model weights (L2 regularization). "
+            "It helps prevent overfitting by discouraging large weight values."
+        ),
+    )
+    scheduler: SchedulerParameters = Field(
+        default_factory=SchedulerParameters,
+        title="Learning rate scheduler",
+        description=(
+            "The learning rate scheduler adjusts the learning rate during training according to a predefined schedule "
+            "or based on validation performance, helping to improve convergence and training stability."
+        ),
+    )
+    gradient_accumulation: GradientAccumulationParameters = Field(
+        default_factory=GradientAccumulationParameters,
+        title="Gradient accumulation",
+        description=(
+            "Gradient accumulation allows simulating larger batch sizes by accumulating gradients "
+            "over multiple forward/backward passes before updating the model weights."
+        ),
+    )
+    gradient_clip: GradientClipParameters = Field(
+        default_factory=GradientClipParameters,
+        title="Gradient clipping",
+        description=(
+            "Gradient clipping prevents exploding gradients by capping gradient norms during backpropagation."
         ),
     )
     input_size_width: int = Field(
