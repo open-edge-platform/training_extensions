@@ -20,7 +20,7 @@ type LabelMappingProps = {
 
 type FormValues = { labels: string[]; include_unannotated: boolean };
 
-const initialFormState = {
+const initialFormState: FormValues = {
     include_unannotated: true,
     labels: [],
 };
@@ -53,11 +53,9 @@ const useFormConfig = (stagedDatasetId: string) => {
             },
             {
                 onSuccess: ({ job_id }) => {
-                    updateImportEntry(stagedDatasetId, { filters, importJobId: job_id, step: 'importing' });
+                    updateImportEntry(stagedDatasetId, { filters, project, importJobId: job_id, step: 'importing' });
                 },
-                onSettled: () => {
-                    datasetImportDialogState.close();
-                },
+                onSettled: datasetImportDialogState.close,
             }
         );
 
