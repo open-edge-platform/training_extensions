@@ -142,7 +142,8 @@ export const SegmentAnythingTool = () => {
     if (isError) {
         toast({
             type: 'error',
-            message: `Error in Segment Anything tool: ${error?.message ?? 'Unknown error'}`,
+            message: `
+            Error in Segment Anything tool: ${error?.message ?? 'Unknown error, please try refreshing the page.'}`,
         });
     }
 
