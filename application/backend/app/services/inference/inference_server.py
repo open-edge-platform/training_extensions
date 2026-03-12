@@ -23,7 +23,6 @@ class _LoadedModel:
     id: UUID
     model: Model
     device: str
-    ttl: int
     load_timestamp: datetime
 
 
@@ -39,10 +38,12 @@ class InferenceServer:
     def __init__(self, model_service: ModelService) -> None:
         self._model_service = model_service
         self._loaded_model: _LoadedModel | None = None
+        self._loading_model: bool = False
         self._lock = threading.Lock()
 
     def set_inference_model(self, project_id: UUID, model_id: UUID, device: str, ttl: int) -> bool:
-        with self._lock:
+        self._lock.acquire(timeout=10)
+        try:
             if self._loaded_model and self._loaded_model.id == model_id and self._loaded_model.device == device:
                 return False  # same model and device, no need to reload
 
@@ -68,35 +69,55 @@ class InferenceServer:
                 )
             model_xml_path, _ = paths
 
+            self._loading_model = True
             model = Model.create_model(
                 model=str(model_xml_path),
                 device=device,
                 nstreams=MODELAPI_NSTREAMS,
             )
+            self._loading_model = False
 
-            self._loaded_model = _LoadedModel(
-                id=model_id, model=model, device=device, ttl=ttl, load_timestamp=datetime.now()
-            )
+            self._loaded_model = _LoadedModel(id=model_id, model=model, device=device, load_timestamp=datetime.now())
             return True
+        finally:
+            self._lock.release()
 
     def get_status(self) -> InferenceState:
-        with self._lock:
-            if self._loaded_model is None:
-                return InferenceState(status=InferenceStatus.IDLE)
+        """
+        Get inference server status
 
-            return InferenceState(
-                status=InferenceStatus.ACTIVE,
-                model=InferenceModel(
-                    model_id=self._loaded_model.id,
-                    device=self._loaded_model.device,
-                    ttl=self._loaded_model.ttl,
-                    load_timestamp=self._loaded_model.load_timestamp,
-                    remaining_seconds=self._loaded_model.ttl
-                    - (datetime.now() - self._loaded_model.load_timestamp).total_seconds(),
-                ),
-            )
+        Returns:
+            Inference server status
+        """
+        loaded_model = self._loaded_model
+        loading_model = self._loading_model
+        if loaded_model is None:
+            return InferenceState(status=(InferenceStatus.IDLE if not loading_model else InferenceStatus.LOADING))
+
+        return InferenceState(
+            status=InferenceStatus.ACTIVE,
+            model=InferenceModel(
+                model_id=loaded_model.id,
+                device=loaded_model.device,
+                load_timestamp=loaded_model.load_timestamp,
+            ),
+        )
 
     def infer_batch(self, labels: list[Label], inputs: list[BatchInferenceInput]) -> BatchInferenceResult:
+        """
+        Perform batch inference on the provided inputs using the currently loaded model.
+        It processes each input, runs inference, and converts the raw predictions into a structured
+        format using the provided labels.
+
+        Args:
+            labels: Project labels
+            inputs: List of inputs
+
+        Returns:
+            Prediction results for inputs
+        """
+        if self._loaded_model is None:
+            raise RuntimeError("No model loaded for inference")
         with self._lock:
             if self._loaded_model is None:
                 raise RuntimeError("No model loaded for inference")
@@ -117,6 +138,9 @@ class InferenceServer:
             return result
 
     def stop(self) -> None:
+        """
+        Stop inference server and unload the model.
+        """
         # TODO: model unload & active inference cancellation
         with self._lock:
             self._loaded_model = None

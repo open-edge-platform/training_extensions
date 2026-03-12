@@ -37,22 +37,21 @@ class BatchInferenceResult:
 @dataclass(frozen=True)
 class InferenceModel:
     """
-    Information about model used for inference with it's TTL, device and remaining time before unload.
+    Information about model used for inference it's load time and device.
     """
 
     model_id: UUID
     device: str
-    ttl: int
     load_timestamp: datetime
-    remaining_seconds: float
 
 
 class InferenceStatus(StrEnum):
     """
-    Inference server status. Either idle or active
+    Inference server status. Can be idle, loading or active
     """
 
     IDLE = "IDLE"
+    LOADING = "LOADING"
     ACTIVE = "ACTIVE"
 
 

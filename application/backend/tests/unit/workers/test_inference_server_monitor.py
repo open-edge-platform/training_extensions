@@ -26,7 +26,7 @@ class TestInferenceServerMonitorThread:
 
         assert returned_result is True
         assert monitor_thread._ttl == ttl_value
-        assert monitor_thread._model_loaded
+        assert monitor_thread._ttl_start_time > 0
         orig_set_inference_model.assert_called_once_with(
             project_id=project_id, model_id=model_id, device="AUTO", ttl=ttl_value
         )
@@ -48,7 +48,7 @@ class TestInferenceServerMonitorThread:
 
         assert returned_result is False
         assert monitor_thread._ttl == 0
-        assert not monitor_thread._model_loaded
+        assert monitor_thread._ttl_start_time < 0
         orig_set_inference_model.assert_called_once_with(
             project_id=project_id, model_id=model_id, device="AUTO", ttl=60
         )
@@ -68,7 +68,7 @@ class TestInferenceServerMonitorThread:
         returned_result = mock_server.infer_batch(labels=[label], inputs=[input])
 
         assert returned_result == result
-        assert monitor_thread._inference_requested
+        assert monitor_thread._ttl_start_time > 0
         orig_infer_batch.assert_called_once_with(labels=[label], inputs=[input])
 
     def test_stop(self) -> None:
@@ -81,41 +81,8 @@ class TestInferenceServerMonitorThread:
         # Simulate stop request
         mock_server.stop()
 
-        assert monitor_thread._model_stopped
+        assert monitor_thread._ttl_start_time < 0
         orig_stop.assert_called_once_with()
-
-    def test_run_loop_model_loaded(self) -> None:
-        stop_event = MagicMock()
-        stop_event.is_set.side_effect = [False, True]  # Run loop once then stop
-        monitor_thread = InferenceServerMonitorThread(server=MagicMock(), stop_event=stop_event)
-        monitor_thread._model_loaded = True
-
-        monitor_thread.run_loop()
-
-        assert not monitor_thread._model_loaded
-        assert monitor_thread._ttl_start_time > 0  # Check that TTL countdown started
-
-    def test_run_loop_model_stopped(self) -> None:
-        stop_event = MagicMock()
-        stop_event.is_set.side_effect = [False, True]  # Run loop once then stop
-        monitor_thread = InferenceServerMonitorThread(server=MagicMock(), stop_event=stop_event)
-        monitor_thread._model_stopped = True
-
-        monitor_thread.run_loop()
-
-        assert not monitor_thread._model_stopped
-        assert monitor_thread._ttl_start_time < 0  # Check that TTL countdown is reset
-
-    def test_run_loop_inference_requested(self) -> None:
-        stop_event = MagicMock()
-        stop_event.is_set.side_effect = [False, True]  # Run loop once then stop
-        monitor_thread = InferenceServerMonitorThread(server=MagicMock(), stop_event=stop_event)
-        monitor_thread._inference_requested = True
-
-        monitor_thread.run_loop()
-
-        assert not monitor_thread._inference_requested
-        assert monitor_thread._ttl_start_time > 0  # Check that TTL countdown restarted on inference request
 
     def test_run_loop_ttl_expired(self) -> None:
         mock_server = MagicMock()

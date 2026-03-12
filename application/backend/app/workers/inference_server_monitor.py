@@ -31,9 +31,6 @@ class InferenceServerMonitorThread(BaseThreadWorker):
         super().__init__(stop_event=stop_event)
 
         self._server = server
-        self._model_loaded = False
-        self._model_stopped = False
-        self._inference_requested = False
         self._ttl = 0
         self._ttl_start_time = -1.0
 
@@ -50,7 +47,7 @@ class InferenceServerMonitorThread(BaseThreadWorker):
             if model_loaded:
                 self._ttl = ttl
                 logger.debug("Model loaded with TTL of {} seconds, starting countdown", self._ttl)
-                self._model_loaded = True
+                self._ttl_start_time = time.perf_counter()
             return model_loaded
 
         self._server.set_inference_model = wrapped_set_inference_model
@@ -59,7 +56,8 @@ class InferenceServerMonitorThread(BaseThreadWorker):
 
         @wraps(orig_infer_batch)
         def wrapped_infer_batch(*args, **kwargs):
-            self._inference_requested = True
+            logger.debug("Batch inference requested, resetting TTL countdown")
+            self._ttl_start_time = time.perf_counter()
             return orig_infer_batch(*args, **kwargs)
 
         self._server.infer_batch = wrapped_infer_batch
@@ -69,28 +67,14 @@ class InferenceServerMonitorThread(BaseThreadWorker):
 
         @wraps(orig_stop)
         def wrapped_stop():
-            self._model_stopped = True
+            logger.debug("Model stopped, stopping TTL countdown")
+            self._ttl_start_time = -1.0
             orig_stop()
 
         self._server.stop = wrapped_stop
 
     def run_loop(self) -> None:
         while not self.should_stop():
-            if self._model_loaded:
-                logger.debug("Model loaded with TTL of {} seconds, starting countdown", self._ttl)
-                self._model_loaded = False
-                self._ttl_start_time = time.perf_counter()
-
-            if self._model_stopped:
-                logger.debug("Model stopped, stopping TTL countdown")
-                self._model_stopped = False
-                self._ttl_start_time = -1.0
-
-            if self._inference_requested:
-                logger.debug("Batch inference requested, resetting TTL countdown")
-                self._inference_requested = False
-                self._ttl_start_time = time.perf_counter()
-
             if self._ttl_start_time > 0:
                 elapsed = time.perf_counter() - self._ttl_start_time
                 if 0 < self._ttl <= elapsed:

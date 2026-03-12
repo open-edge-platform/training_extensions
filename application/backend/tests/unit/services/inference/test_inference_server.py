@@ -28,7 +28,6 @@ class TestInferenceServer:
         model_id = uuid4()
         model_variant_id = uuid4()
         device = "AUTO"
-        ttl = 60
 
         model_variant = MagicMock(
             spec=ModelVariant, id=model_variant_id, format=ModelFormat.OPENVINO, precision=ModelPrecision.FP16
@@ -46,7 +45,7 @@ class TestInferenceServer:
             mock_create_model.return_value = model
 
             model_loaded = inference_server.set_inference_model(
-                project_id=project_id, model_id=model_id, device=device, ttl=ttl
+                project_id=project_id, model_id=model_id, device=device, ttl=60
             )
 
             assert model_loaded
@@ -55,7 +54,6 @@ class TestInferenceServer:
                 and inference_server._loaded_model.id == model_id
                 and inference_server._loaded_model.model == model
                 and inference_server._loaded_model.device == device
-                and inference_server._loaded_model.ttl == ttl
             )
 
             model_service.get_model_variants.assert_called_once_with(project_id=project_id, model_id=model_id)
@@ -68,24 +66,22 @@ class TestInferenceServer:
         project_id = uuid4()
         model_id = uuid4()
         device = "AUTO"
-        ttl = 60
 
         model = MagicMock(spec=Model)
 
         inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
         inference_server._loaded_model = _LoadedModel(
-            id=model_id, model=model, device=device, ttl=ttl, load_timestamp=datetime.now()
+            id=model_id, model=model, device=device, load_timestamp=datetime.now()
         )
 
         model_loaded = inference_server.set_inference_model(
-            project_id=project_id, model_id=model_id, device=device, ttl=ttl
+            project_id=project_id, model_id=model_id, device=device, ttl=60
         )
 
         assert not model_loaded
         assert inference_server._loaded_model.id == model_id
         assert inference_server._loaded_model.model == model
         assert inference_server._loaded_model.device == device
-        assert inference_server._loaded_model.ttl == ttl
 
     def test_get_status_idle(self, tmp_path) -> None:
         inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
@@ -98,13 +94,12 @@ class TestInferenceServer:
     def test_get_status_active(self, tmp_path) -> None:
         model_id = uuid4()
         device = "AUTO"
-        ttl = 60
 
         model = MagicMock(spec=Model)
 
         inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
         inference_server._loaded_model = _LoadedModel(
-            id=model_id, model=model, device=device, ttl=ttl, load_timestamp=datetime.now()
+            id=model_id, model=model, device=device, load_timestamp=datetime.now()
         )
 
         status = inference_server.get_status()
@@ -114,9 +109,7 @@ class TestInferenceServer:
             model=InferenceModel(
                 model_id=model_id,
                 device=device,
-                ttl=ttl,
                 load_timestamp=ANY,
-                remaining_seconds=ANY,
             ),
         )
 
@@ -125,7 +118,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
         inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device="AUTO", ttl=60, load_timestamp=datetime.now()
+            id=uuid4(), model=model, device="AUTO", load_timestamp=datetime.now()
         )
 
         inference_server.stop()
@@ -156,7 +149,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
         inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device="AUTO", ttl=60, load_timestamp=datetime.now()
+            id=uuid4(), model=model, device="AUTO", load_timestamp=datetime.now()
         )
 
         with patch("app.services.inference.inference_server.convert_prediction") as mock_convert_prediction:
