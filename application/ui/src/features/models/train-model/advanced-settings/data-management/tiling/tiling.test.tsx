@@ -24,6 +24,10 @@ import {
 } from './utils';
 
 describe('getTilingMode', () => {
+    it('tiling is off when enable tiling parameter is absent', () => {
+        expect(getTilingMode([])).toBe(TILING_MODES.OFF);
+    });
+
     it('tiling is off when when enable tiling parameter is false', () => {
         expect(
             getTilingMode([

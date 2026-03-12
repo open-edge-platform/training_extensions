@@ -12,6 +12,7 @@ import type {
 } from '../../../../../../constants/shared-types';
 import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { Accordion } from '../../components/accordion/accordion.component';
+import { replaceByKey } from '../../utils';
 import { FiltersOptions } from './filters-options.component';
 import {
     checkIfFiltersAreEnabled,
@@ -23,18 +24,6 @@ type FiltersProps = {
     filtersParameters: ConfigurableParameterGroup;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
-
-const replaceByKey = (
-    parameters: TrainingConfigurationParameter[],
-    key: string,
-    replace: (match: ConfigurableParameterGroup) => ConfigurableParameterGroup
-): TrainingConfigurationParameter[] =>
-    parameters.map((parameter) => {
-        if (isParameterGroup(parameter) && parameter.key === key) {
-            return replace(parameter);
-        }
-        return parameter;
-    });
 
 const changeFilterParameters = (
     trainingConfiguration: TrainingConfiguration,

@@ -34,7 +34,7 @@ export const TILING_OFF_DESCRIPTION =
     'might miss finer details';
 
 export const TILING_AUTOMATIC_DESCRIPTION =
-    'It means that the system will automatically set the parameters based on the images resolution and ' +
+    'It means that the system will automatically set the parameters based on the image resolution and ' +
     'annotations size.';
 
 const ADAPTIVE_TILING_PARAMETER = 'adaptive_tiling';
@@ -70,7 +70,7 @@ export const getTilingMode = (tilingParameters: ConfigurableParameter[]): Tiling
     const adaptive = getAdaptiveTilingParameter(tilingParameters);
     const enablingTiling = getEnableTilingParameter(tilingParameters);
 
-    if (enablingTiling?.value === false) {
+    if (!enablingTiling || enablingTiling.value === false) {
         return TILING_MODES.OFF;
     }
 

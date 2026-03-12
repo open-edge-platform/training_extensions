@@ -6,9 +6,9 @@ import { Dispatch, ReactNode, SetStateAction } from 'react';
 import { Grid, minmax, Text, View } from '@geti/ui';
 
 import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
-import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { Parameters } from '../../components/parameters.component';
+import { replaceByKey } from '../../utils';
 import { TilingModes } from './tiling-modes.component';
 import {
     getAdaptiveTilingParameter,
@@ -33,42 +33,34 @@ const changeTilingParameters = (
     trainingConfiguration: TrainingConfiguration,
     newConfigurationParameters: ConfigurableParameter[]
 ): TrainingConfiguration => {
-    const parameters: TrainingConfiguration['parameters'] = trainingConfiguration.parameters.map((parameterGroup) => {
-        if (parameterGroup.key === 'dataset_preparation' && isParameterGroup(parameterGroup)) {
-            return {
-                ...parameterGroup,
-                parameters: parameterGroup.parameters.map((datasetPreparationParameter) => {
-                    if (
-                        datasetPreparationParameter.key === 'augmentation' &&
-                        isParameterGroup(datasetPreparationParameter)
-                    ) {
-                        return {
-                            ...datasetPreparationParameter,
-                            parameters: datasetPreparationParameter.parameters.map((augmentationParameter) => {
-                                if (augmentationParameter.key === 'tiling' && isParameterGroup(augmentationParameter)) {
-                                    return {
-                                        ...augmentationParameter,
-                                        parameters: augmentationParameter.parameters.map((tilingParameter) => {
-                                            const newParameter = newConfigurationParameters.find(
-                                                ({ key }) => key === tilingParameter.key
-                                            );
+    const parameters: TrainingConfiguration['parameters'] = replaceByKey(
+        trainingConfiguration.parameters,
+        'dataset_preparation',
+        (datasetParameterGroup) => ({
+            ...datasetParameterGroup,
+            parameters: replaceByKey(
+                datasetParameterGroup.parameters,
+                'augmentation',
+                (augmentationParameterGroup) => ({
+                    ...augmentationParameterGroup,
+                    parameters: replaceByKey(
+                        augmentationParameterGroup.parameters,
+                        'tiling',
+                        (tilingParametersGroup) => ({
+                            ...tilingParametersGroup,
+                            parameters: tilingParametersGroup.parameters.map((tilingParameter) => {
+                                const newParameter = newConfigurationParameters.find(
+                                    ({ key }) => key === tilingParameter.key
+                                );
 
-                                            return newParameter ?? tilingParameter;
-                                        }),
-                                    };
-                                }
-                                return augmentationParameter;
+                                return newParameter ?? tilingParameter;
                             }),
-                        };
-                    }
-
-                    return datasetPreparationParameter;
-                }),
-            };
-        }
-
-        return parameterGroup;
-    });
+                        })
+                    ),
+                })
+            ),
+        })
+    );
 
     return { parameters };
 };
@@ -89,7 +81,7 @@ export const Tiling = ({ tilingParameters, onTrainingConfigurationChange }: Tili
         const adaptiveParameter = getAdaptiveTilingParameter(tilingParameters.parameters);
         const enableParameter = getEnableTilingParameter(tilingParameters.parameters);
 
-        if (adaptiveParameter === undefined || enableParameter === undefined) return undefined;
+        if (adaptiveParameter === undefined || enableParameter === undefined) return;
 
         if (newTilingMode === TILING_MODES.AUTOMATIC) {
             handleTilingParametersChange([
@@ -117,9 +109,9 @@ export const Tiling = ({ tilingParameters, onTrainingConfigurationChange }: Tili
         ),
 
         [TILING_MODES.AUTOMATIC]: (
-            <View UNSAFE_className={classes.tilingModeDescription} gridColumn={'2/3'}>
+            <Text UNSAFE_className={classes.tilingModeDescription} gridColumn={'2/3'}>
                 {TILING_AUTOMATIC_DESCRIPTION}
-            </View>
+            </Text>
         ),
         [TILING_MODES.CUSTOM]: (
             <View gridColumn={'1/-1'}>
