@@ -9,7 +9,6 @@ import { getMockedMediaImage, getMultipleMockedMediaImage } from 'mocks/mock-med
 import { HttpResponse } from 'msw';
 import { v4 as uuid } from 'uuid';
 
-import { MEDIA_UPLOAD_CONCURRENCY } from '../../src/features/dataset/api/use-media-upload';
 import { expect, http, test } from '../fixtures';
 
 const mockedItems = getMultipleMockedMediaImage(20, '1');
@@ -99,7 +98,7 @@ test.describe('Dataset', () => {
 
     test('upload shows start, progress and finish toasts', async ({ page, network }) => {
         let uploadRequestCount = 0;
-        const firstBatchCount = MEDIA_UPLOAD_CONCURRENCY;
+        const firstBatchCount = 10;
         const totalFiles = firstBatchCount + 1;
 
         network.use(
