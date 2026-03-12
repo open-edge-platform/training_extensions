@@ -7,6 +7,7 @@ import {
     Content,
     ContextualHelp,
     DimensionValue,
+    Flex,
     Grid,
     Item,
     minmax,
@@ -33,12 +34,22 @@ type ParameterGroupWithParameters = Omit<ConfigurableParameterGroup, 'parameters
     parameters: ConfigurableParameter[];
 };
 
-type ParametersType = ParameterGroupWithParameters | ConfigurableParameter[];
-
 type ParametersProps = {
-    parameters: ParametersType;
+    parameters: ConfigurableParameter[];
     onChange: (parameter: ConfigurableParameter) => void;
     isReadOnly?: boolean;
+};
+
+type ParametersGroupProps = {
+    parameters: ParameterGroupWithParameters[];
+    onChange: (groupKey: string, parameter: ConfigurableParameter) => void;
+    isReadOnly?: boolean;
+};
+
+type ParametersGroupListProps = {
+    parameters: ParameterGroupWithParameters;
+    onChange: (parameter: ConfigurableParameter) => void;
+    isReadOnly: boolean;
 };
 
 const ParameterTooltip = ({ text }: { text: string }) => {
@@ -302,15 +313,7 @@ const ParametersContainer = ({
     );
 };
 
-export const Parameters = ({ parameters, onChange, isReadOnly = false }: ParametersProps) => {
-    if (Array.isArray(parameters)) {
-        return (
-            <ParametersContainer>
-                <ParametersList parameters={parameters} onChange={onChange} isReadOnly={isReadOnly} />
-            </ParametersContainer>
-        );
-    }
-
+const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGroupListProps) => {
     if (
         isParameterGroup(parameters) &&
         isParameter(parameters.parameters[0]) &&
@@ -327,13 +330,13 @@ export const Parameters = ({ parameters, onChange, isReadOnly = false }: Paramet
                     onChange={onChange}
                     isReadOnly={isReadOnly}
                 />
-                {configurableParameters.filter(isParameter).map((parameter) => (
+                {configurableParameters.map((configParameter) => (
                     <Parameter
                         marginStart={'size-200'}
-                        key={parameter.key}
-                        header={parameter.name}
-                        description={parameter.description}
-                        parameter={parameter}
+                        key={configParameter.key}
+                        header={configParameter.name}
+                        description={configParameter.description}
+                        parameter={configParameter}
                         onChange={onChange}
                         isReadOnly={isReadOnly}
                         isDisabled={!enableParameter.value}
@@ -343,9 +346,32 @@ export const Parameters = ({ parameters, onChange, isReadOnly = false }: Paramet
         );
     }
 
+    return <Parameters parameters={parameters.parameters} onChange={onChange} isReadOnly={isReadOnly} />;
+};
+
+export const ParametersGroup = ({ parameters, onChange, isReadOnly = false }: ParametersGroupProps) => {
+    const handleChange = (groupKey: string) => (parameter: ConfigurableParameter) => {
+        onChange(groupKey, parameter);
+    };
+
+    return (
+        <Flex direction={'column'} gap={'size-300'}>
+            {parameters.map((parameterGroup) => (
+                <ParametersGroupList
+                    key={parameterGroup.key}
+                    parameters={parameterGroup}
+                    onChange={handleChange(parameterGroup.key)}
+                    isReadOnly={isReadOnly}
+                />
+            ))}
+        </Flex>
+    );
+};
+
+export const Parameters = ({ parameters, onChange, isReadOnly = false }: ParametersProps) => {
     return (
         <ParametersContainer>
-            <ParametersList parameters={parameters.parameters} onChange={onChange} isReadOnly={isReadOnly} />
+            <ParametersList parameters={parameters} onChange={onChange} isReadOnly={isReadOnly} />
         </ParametersContainer>
     );
 };

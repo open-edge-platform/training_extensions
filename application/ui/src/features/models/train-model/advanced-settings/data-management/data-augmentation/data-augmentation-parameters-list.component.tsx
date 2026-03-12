@@ -3,10 +3,9 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { Flex } from '@geti/ui';
-
-import { type TrainingConfiguration } from '../../../../../../constants/shared-types';
-import { Parameters } from '../../components/parameters.component';
+import { ConfigurableParameter, type TrainingConfiguration } from '../../../../../../constants/shared-types';
+import { ParametersGroup } from '../../components/parameters.component';
+import { replaceByKey } from '../../utils';
 import { DataAugmentationConfigurableParameters } from './utils';
 
 type DataAugmentationParametersListProps = {
@@ -14,15 +13,49 @@ type DataAugmentationParametersListProps = {
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
+const changeDataAugmentationParameters = (
+    trainingConfiguration: TrainingConfiguration,
+    parameterGroupKey: string,
+    newParameter: ConfigurableParameter
+): TrainingConfiguration => {
+    const parameters: TrainingConfiguration['parameters'] = replaceByKey(
+        trainingConfiguration.parameters,
+        'dataset_preparation',
+        (datasetPreparationGroup) => ({
+            ...datasetPreparationGroup,
+            parameters: replaceByKey(datasetPreparationGroup.parameters, 'augmentation', (augmentationGroup) => ({
+                ...augmentationGroup,
+                parameters: replaceByKey(augmentationGroup.parameters, parameterGroupKey, (parameterGroup) => ({
+                    ...parameterGroup,
+                    parameters: parameterGroup.parameters.map((parameter) =>
+                        parameter.key === newParameter.key ? newParameter : parameter
+                    ),
+                })),
+            })),
+        })
+    );
+
+    return {
+        parameters,
+    };
+};
+
 export const DataAugmentationParametersList = ({
     dataAugmentationParameters,
     onTrainingConfigurationChange,
 }: DataAugmentationParametersListProps) => {
+    const handleAugmentationParameterChange = (groupKey: string, parameter: ConfigurableParameter) => {
+        onTrainingConfigurationChange((config) => {
+            if (config === undefined) return;
+
+            return changeDataAugmentationParameters(config, groupKey, parameter);
+        });
+    };
+
     return (
-        <Flex direction={'column'} gap={'size-300'}>
-            {dataAugmentationParameters.parameters.map((parameters) => (
-                <Parameters key={parameters.key} parameters={parameters} onChange={() => {}} />
-            ))}
-        </Flex>
+        <ParametersGroup
+            parameters={dataAugmentationParameters.parameters}
+            onChange={handleAugmentationParameterChange}
+        />
     );
 };

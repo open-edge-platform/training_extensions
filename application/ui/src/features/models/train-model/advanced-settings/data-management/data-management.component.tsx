@@ -33,8 +33,6 @@ export const DataManagement = ({
     const tilingParameters = getTilingParameters(trainingConfiguration);
     const dataAugmentationParameters = getDataAugmentationParameters(trainingConfiguration);
 
-    console.log({ dataAugmentationParameters });
-
     return (
         <View>
             {subsetSplitParameters !== undefined && defaultSubsetSplitParameters !== undefined && (
