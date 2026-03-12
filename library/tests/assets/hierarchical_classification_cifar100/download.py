@@ -420,9 +420,8 @@ def main(output_dir: Path | None = None) -> None:
     dataset = _build_dataset(train_items, val_items, test_items, images_dir)
     print(f"  Dataset length: {len(dataset)}")
 
-    export_dir = output_dir / "exported_dataset"
-    print(f"Exporting dataset to {export_dir} ...")
-    export_dataset(dataset, export_dir)
+    print(f"Exporting dataset to {output_dir} ...")
+    export_dataset(dataset, output_dir)
 
     print("Cleaning up intermediate files ...")
     shutil.rmtree(download_dir, ignore_errors=True)

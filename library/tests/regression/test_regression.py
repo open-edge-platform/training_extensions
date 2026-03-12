@@ -134,7 +134,7 @@ class TestMultiClassCls(BaseTest):
         ModelTestCase(task="classification/multi_class_cls", name="mobilenet_v3_large"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name=f"multiclass_CUB_small_{idx}",
             data_root=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
@@ -206,7 +206,7 @@ class TestMultilabelCls(BaseTest):
         ModelTestCase(task="classification/multi_label_cls", name="deit_tiny"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name=f"multilabel_CUB_small_{idx}",
             data_root=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
@@ -278,7 +278,7 @@ class TestHlabelCls(BaseTest):
         ModelTestCase(task="classification/h_label_cls", name="deit_tiny"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name=f"hlabel_CUB_small_{idx}",
             data_root=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
@@ -344,7 +344,7 @@ class TestObjectDetection(BaseTest):
         ModelTestCase(task="detection", name="yolox_x"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name=f"pothole_small_{idx}",
             data_root=Path("detection/pothole_small") / f"{idx}",
@@ -425,7 +425,7 @@ class TestSemanticSegmentation(BaseTest):
         ModelTestCase(task="semantic_segmentation", name="dino_v2"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name=f"kvasir_small_{idx}",
             data_root=Path("semantic_seg/kvasir_small") / f"{idx}",
@@ -487,7 +487,7 @@ class TestInstanceSegmentation(BaseTest):
         ModelTestCase(task="instance_segmentation", name="maskrcnn_swint"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name=f"wgisd_small_{idx}",
             data_root=Path("instance_seg/wgisd_small") / f"{idx}",
@@ -567,7 +567,7 @@ class TestTileObjectDetection(BaseTest):
         ModelTestCase(task="detection", name="yolox_x_tile"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name="vitens_coliform",
             data_root=Path("instance_seg/Vitens-Coliform-coco"),
@@ -631,7 +631,7 @@ class TestTileInstanceSegmentation(BaseTest):
         ModelTestCase(task="instance_segmentation", name="maskrcnn_swint_tile"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name="vitens_coliform",
             data_root=Path("instance_seg/Vitens-Coliform-coco"),

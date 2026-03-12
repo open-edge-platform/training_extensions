@@ -25,6 +25,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import NamedTuple
 
+import numpy as np
 import pytest
 from model_api.models import Model
 
@@ -187,6 +188,11 @@ def test_engine_workflow(
     mapi_onnx_model = Model.create_model(str(onnx_path))
     assert mapi_onnx_model is not None
 
+    # Run a quick inference to validate the exported ONNX model is functional
+    dummy_input = np.zeros((224, 224, 3), dtype=np.uint8)
+    onnx_result = mapi_onnx_model(dummy_input)
+    assert onnx_result is not None
+
     # ---- 6. Export to OpenVINO IR & predict with OVEngine ---------------
     ov_xml_path = engine.export(
         export_format=OTXExportFormatType.OPENVINO,
@@ -215,3 +221,7 @@ def test_engine_workflow(
 
     mapi_int8_model = Model.create_model(str(optimized_path))
     assert mapi_int8_model is not None
+
+    # Run a quick inference to validate the quantized INT8 model is functional
+    int8_result = mapi_int8_model(dummy_input)
+    assert int8_result is not None

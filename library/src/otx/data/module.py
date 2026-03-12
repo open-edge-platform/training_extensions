@@ -42,6 +42,9 @@ _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
     "train": Subset.TRAINING,
     "val": Subset.VALIDATION,
     "test": Subset.TESTING,
+    "training": Subset.TRAINING,
+    "validation": Subset.VALIDATION,
+    "testing": Subset.TESTING,
 }
 
 
@@ -148,7 +151,7 @@ class OTXDataModule(LightningDataModule):
 
         label_infos: list[LabelInfo] = []
         for name, subset_cfg in config_mapping.items():
-            subset_enum = _SUBSET_NAME_TO_ENUM.get(name)
+            subset_enum = _SUBSET_NAME_TO_ENUM.get(name.lower())
             if subset_enum is None:
                 logger.warning(f"{name} has no Subset enum mapping. Skip it")
                 continue

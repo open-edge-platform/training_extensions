@@ -36,8 +36,8 @@ from torchvision import tv_tensors
 
 from otx.data.entity.sample import ClassificationMultiLabelSample
 
-COCO_ANNOTATIONS_URL = "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
-COCO_VAL_IMAGES_URL = "http://images.cocodataset.org/val2017/{filename}"
+COCO_ANNOTATIONS_URL = "https://images.cocodataset.org/annotations/annotations_trainval2017.zip"
+COCO_VAL_IMAGES_URL = "https://images.cocodataset.org/val2017/{filename}"
 
 SAMPLES_TRAIN: int = 35
 SAMPLES_VAL: int = 8
@@ -184,9 +184,8 @@ def main(output_dir: Path | None = None) -> None:
 
     print(f"  Dataset length: {len(dataset)}")
 
-    export_dir = output_dir / "exported_dataset"
-    print(f"Exporting dataset to {export_dir} ...")
-    export_dataset(dataset, export_dir)
+    print(f"Exporting dataset to {output_dir} ...")
+    export_dataset(dataset, output_dir)
 
     print("Cleaning up intermediate files ...")
     shutil.rmtree(download_dir, ignore_errors=True)
