@@ -105,7 +105,6 @@ class TestOTXDataset:
             dm_subset=self.mock_dm_subset,
             transforms=mock_compose,
             data_format="arrow",
-            to_tv_image=True,
         )
 
         result = dataset._apply_transforms(mock_entity)

@@ -103,7 +103,6 @@ class OTXTileDataset(OTXDataset):
             dataset.transforms,
             dataset.max_refetch,
             dataset.stack_images,
-            dataset.to_tv_image,
         )
         self.tile_config = tile_config
         self._dataset = dataset

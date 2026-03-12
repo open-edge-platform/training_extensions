@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import torch
 from lightning import Callback
+from torchvision import tv_tensors
 
 from otx.data.augmentation import GPUAugmentationPipeline
 from otx.data.entity.sample import OTXSampleBatch
@@ -135,8 +136,6 @@ class GPUAugmentationCallback(Callback):
             pipeline: GPUAugmentationPipeline to apply.
             batch: OTXSampleBatch to transform.
         """
-        from torchvision import tv_tensors
-
         # Move pipeline to same device as batch
         device = batch.images.device if hasattr(batch.images, "device") else None
         if device is not None:

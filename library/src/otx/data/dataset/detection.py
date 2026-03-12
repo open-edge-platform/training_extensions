@@ -29,7 +29,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         transforms (Transforms | None, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         stack_images (bool): Whether to stack images in batch processing.
-        to_tv_image (bool): Whether to convert images to torchvision format.
         data_format (str): Format of the source data (e.g., "coco", "pascal_voc").
 
     Example:
@@ -47,7 +46,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
         data_format: str = "",
         storage_dtype: str = "uint8",
     ) -> None:
@@ -59,7 +57,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            to_tv_image=to_tv_image,
             data_format=data_format,
             storage_dtype=storage_dtype,
         )

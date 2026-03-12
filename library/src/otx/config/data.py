@@ -86,8 +86,6 @@ class SubsetConfig:
     Attributes:
         batch_size (int): Batch size produced by the dataloader.
         subset_name (str): Datumaro Dataset's subset name for this subset config.
-        transforms (list[dict[str, Any]] | Compose): [DEPRECATED] Legacy transforms field.
-            Use augmentations_cpu instead for new implementations.
         augmentations_cpu (list[dict[str, Any]]): CPU-stage augmentations using torchvision.transforms.v2.
             These run in Dataset workers before collate. Must output fixed-size tensors for batching.
             Examples: Resize, RandomResizedCrop, intensity mapping transforms.
@@ -95,10 +93,8 @@ class SubsetConfig:
             These run after batch transfer to GPU via Lightning Callback.
             Examples: RandomHorizontalFlip, ColorJiggle, Normalize.
         intensity (IntensityConfig): High-bit-depth intensity mapping configuration.
-        transform_lib_type (TransformLibType): [DEPRECATED] Specifies the transform library type used.
         num_workers (int): Number of worker processes for the dataloader.
         sampler (SamplerConfig): Sampler configuration for the dataloader.
-        to_tv_image (bool): [DEPRECATED] Whether to convert images to torch tensors.
         input_size (tuple[int, int] | None): Input size expected by the model.
             If `$(input_size)` is present in augmentations, it will be replaced with this value.
 
@@ -127,7 +123,6 @@ class SubsetConfig:
     intensity: IntensityConfig = field(default_factory=IntensityConfig)
     num_workers: int = 2
     sampler: SamplerConfig = field(default_factory=SamplerConfig)
-    to_tv_image: bool = True
     input_size: tuple[int, int] | None = None
 
 

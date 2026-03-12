@@ -73,7 +73,6 @@ class OTXDatasetFactory:
             "dm_subset": dm_subset,
             "transforms": transforms,
             "data_format": data_format,
-            "to_tv_image": cfg_subset.to_tv_image,
             "storage_dtype": storage_dtype,
         }
 

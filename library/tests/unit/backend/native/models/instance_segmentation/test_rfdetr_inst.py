@@ -85,10 +85,10 @@ class TestRFDETRInst:
         model = model.cpu()
 
         # Adjust batch images to match input size
-        fxt_instance_seg_batch.images = torch.stack([
+        fxt_instance_seg_batch.images = [
             torch.randn(3, 312, 312),
             torch.randn(3, 312, 312),
-        ])
+        ]
 
         # Set model to training mode
         model.train()
@@ -121,10 +121,10 @@ class TestRFDETRInst:
         model = model.cpu()
 
         # Adjust batch images to match input size
-        fxt_instance_seg_batch.images = torch.stack([
+        fxt_instance_seg_batch.images = [
             torch.randn(3, 312, 312),
             torch.randn(3, 312, 312),
-        ])
+        ]
 
         # Set model to evaluation mode
         model.eval()

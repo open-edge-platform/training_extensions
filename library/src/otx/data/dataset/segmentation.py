@@ -29,7 +29,6 @@ class OTXSegmentationDataset(OTXDataset):
         max_refetch: Maximum number of retries when fetching a data item fails.
         image_color_channel: Color channel format for images (RGB, BGR, etc.).
         stack_images: Whether to stack images in batch processing.
-        to_tv_image: Whether to convert images to torchvision format.
         data_format: Format of the source data (e.g., "cityscapes", "pascal_voc").
         ignore_index: Index value for pixels to be ignored during training.
 
@@ -51,7 +50,6 @@ class OTXSegmentationDataset(OTXDataset):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        to_tv_image: bool = True,
         ignore_index: int = 255,
         data_format: str = "",
         storage_dtype: str = "uint8",
@@ -62,7 +60,6 @@ class OTXSegmentationDataset(OTXDataset):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            to_tv_image=to_tv_image,
             data_format=data_format,
             sample_type=sample_type,
             storage_dtype=storage_dtype,

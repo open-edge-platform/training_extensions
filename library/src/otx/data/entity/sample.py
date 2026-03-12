@@ -359,10 +359,10 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
 
     return OTXSampleBatch(
         images=images,
-        labels=[s.label for s in samples] if hasattr(samples[0], "label") else None, # type: ignore[missing-attribute]
-        bboxes=[s.bboxes for s in samples] if hasattr(samples[0], "bboxes") else None, # type: ignore[missing-attribute]
-        keypoints=[s.keypoints for s in samples] if hasattr(samples[0], "keypoints") else None, # type: ignore[missing-attribute]
-        masks=[s.masks for s in samples] if hasattr(samples[0], "masks") else None, # type: ignore[missing-attribute]
+        labels=[s.label for s in samples] if hasattr(samples[0], "label") else None,  # type: ignore[missing-attribute]
+        bboxes=[s.bboxes for s in samples] if hasattr(samples[0], "bboxes") else None,  # type: ignore[missing-attribute]
+        keypoints=[s.keypoints for s in samples] if hasattr(samples[0], "keypoints") else None,  # type: ignore[missing-attribute]
+        masks=[s.masks for s in samples] if hasattr(samples[0], "masks") else None,  # type: ignore[missing-attribute]
         imgs_info=[sample.img_info for sample in samples],
     )
 

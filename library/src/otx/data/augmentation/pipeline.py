@@ -200,10 +200,6 @@ class CPUAugmentationPipeline(nn.Module):
             for aug_config in aug_configs:
                 cfg = copy(aug_config)
                 if isinstance(cfg, (dict, DictConfig)):
-                    # Skip disabled transforms
-                    if not cfg.get("enable", True):
-                        continue
-
                     # Handle input_size placeholder
                     cfg = cls._configure_input_size(dict(cfg), input_size)
 
@@ -407,12 +403,7 @@ class CPUAugmentationPipeline(nn.Module):
             result = transform(transformable)
             if isinstance(result, dict):
                 for key, value in result.items():
-                    if key == "boxes":
-                        inputs.bboxes = value  # type: ignore[missing-attribute]
-                    elif key == "labels":
-                        inputs.label = value  # type: ignore[missing-attribute]
-                    else:
-                        setattr(inputs, key, value)
+                    setattr(inputs, key, value)
             else:
                 # Single result, assume it's the image
                 inputs.image = result
@@ -577,10 +568,6 @@ class GPUAugmentationPipeline(nn.Module):
         for aug_config in aug_configs:
             cfg = copy(aug_config)
             if isinstance(cfg, (dict, DictConfig)):
-                # Skip disabled transforms
-                if not cfg.get("enable", True):
-                    continue
-
                 # Handle input_size placeholder
                 cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)  # noqa: SLF001
 

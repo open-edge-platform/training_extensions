@@ -1006,12 +1006,14 @@ class OTXEngine(Engine):
         """
         train_config = self._datamodule.train_subset
         val_config = self._datamodule.val_subset
+        test_config = self._datamodule.test_subset
 
         # Check if any GPU augmentations are configured
         has_train_gpu_augs = (
             train_config and hasattr(train_config, "augmentations_gpu") and train_config.augmentations_gpu
         )
         has_val_gpu_augs = val_config and hasattr(val_config, "augmentations_gpu") and val_config.augmentations_gpu
+        has_test_gpu_augs = test_config and hasattr(test_config, "augmentations_gpu") and test_config.augmentations_gpu
 
         if not has_train_gpu_augs and not has_val_gpu_augs:
             return None
@@ -1020,6 +1022,7 @@ class OTXEngine(Engine):
         return GPUAugmentationCallback(
             train_config=train_config if has_train_gpu_augs else None,
             val_config=val_config if has_val_gpu_augs else None,
+            test_config=test_config if has_test_gpu_augs else None,
         )
 
     def _setup_augmentation_scheduler(self) -> None:
