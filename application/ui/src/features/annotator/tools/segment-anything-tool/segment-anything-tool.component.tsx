@@ -4,6 +4,7 @@
 import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
+import { toast } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
@@ -65,7 +66,7 @@ export const SegmentAnythingTool = () => {
     const nextMediaItem = useNextMediaItem(mediaItem, items);
     const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { isLoading, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
+    const { isLoading, isError, error, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
     const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
@@ -137,6 +138,13 @@ export const SegmentAnythingTool = () => {
             id: `${idx}`,
         };
     });
+
+    if (isError) {
+        toast({
+            type: 'error',
+            message: `Error in Segment Anything tool: ${error?.message ?? 'Unknown error'}`,
+        });
+    }
 
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;
