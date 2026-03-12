@@ -70,7 +70,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             to_tv_image=to_tv_image,
         )
 
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -149,7 +149,7 @@ class OTXMultilabelClsDataset(OTXDataset):
             to_tv_image=to_tv_image,
         )
 
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],

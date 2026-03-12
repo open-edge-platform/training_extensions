@@ -41,12 +41,6 @@ class LabelInfo:
     label_ids: list[str]
     label_groups: list[list[str]]
 
-    def __eq__(self, other: object) -> bool:
-        """Compare two LabelInfo objects, normalizing list/tuple differences."""
-        if not isinstance(other, LabelInfo):
-            return NotImplemented
-        return _normalize(asdict(self)) == _normalize(asdict(other))
-
     @property
     def num_classes(self) -> int:
         """Return number of labels."""
