@@ -53,7 +53,6 @@ class OTXDataModule(LightningDataModule):
     Args:
         task (OTXTaskType): Task type (e.g., classification, detection).
         data_root (str): Root directory of the dataset.
-        data_format (str, optional): Data format (e.g., 'coco', 'voc'). Defaults to None.
         train_subset (SubsetConfig, optional): Training subset configuration. Defaults to None.
         val_subset (SubsetConfig, optional): Validation subset configuration. Defaults to None.
         test_subset (SubsetConfig, optional): Test subset configuration. Defaults to None.
@@ -72,7 +71,6 @@ class OTXDataModule(LightningDataModule):
         self,
         task: OTXTaskType,
         data_root: str,
-        data_format: str | None = None,
         train_subset: SubsetConfig | None = None,
         val_subset: SubsetConfig | None = None,
         test_subset: SubsetConfig | None = None,
@@ -87,7 +85,6 @@ class OTXDataModule(LightningDataModule):
         super().__init__()
 
         self.task = task
-        self.data_format = data_format
         self.data_root = data_root
 
         if input_size is not None and not isinstance(input_size, (tuple, list)):
@@ -110,9 +107,6 @@ class OTXDataModule(LightningDataModule):
         self.save_hyperparameters(ignore=["input_size"])
 
         dataset = import_dataset(self.data_root)
-
-        if self.data_format is None:
-            self.data_format = dataset.format if hasattr(dataset, "format") else "datumaro"
 
         if input_size is not None:
             # override input_size to all subset configs when it is given
@@ -168,7 +162,6 @@ class OTXDataModule(LightningDataModule):
                 task=self.task,
                 dm_subset=dm_subset,
                 cfg_subset=subset_cfg,
-                data_format=self.data_format,  # type: ignore[arg-type]
                 ignore_index=self.ignore_index,
             )
 
@@ -251,8 +244,8 @@ class OTXDataModule(LightningDataModule):
         """Create an OTXDataModule from pre-constructed OTXDataset instances.
 
         This is a factory method that provides a clean way to create OTXDataModule instances
-        when you already have constructed datasets, without needing to provide data_root,
-        data_format, or other data loading parameters.
+        when you already have constructed datasets, without needing to provide data_root
+        or other data loading parameters.
 
         Args:
             train_dataset (OTXDataset): Pre-constructed training dataset.
@@ -318,7 +311,6 @@ class OTXDataModule(LightningDataModule):
         # Set basic attributes
         instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.task = train_dataset.task_type  # type: ignore[assignment]
-        instance.data_format = train_dataset.data_format
         instance.data_root = ""
         instance.tile_config = (
             train_dataset.tile_config if hasattr(train_dataset, "tile_config") else TileConfig(enable_tiler=False)
@@ -556,7 +548,6 @@ class OTXDataModule(LightningDataModule):
             self.__class__,
             (
                 self.task,
-                self.data_format,
                 self.data_root,
                 self.train_subset,
                 self.val_subset,

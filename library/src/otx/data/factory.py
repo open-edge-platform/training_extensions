@@ -44,7 +44,6 @@ class OTXDatasetFactory:
         task: OTXTaskType,
         dm_subset: Dataset,
         cfg_subset: SubsetConfig,
-        data_format: str,
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
     ) -> OTXDataset:
@@ -53,7 +52,6 @@ class OTXDatasetFactory:
         common_kwargs = {
             "dm_subset": dm_subset,
             "transforms": transforms,
-            "data_format": data_format,
             "to_tv_image": cfg_subset.to_tv_image,
         }
 

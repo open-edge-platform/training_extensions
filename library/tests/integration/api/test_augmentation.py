@@ -30,7 +30,6 @@ def _test_augmentation(
     train_config = config["data"]["train_subset"]
     input_size = 32
     train_config["input_size"] = (input_size, input_size)
-    data_format = config["data"]["data_format"]
 
     # Load dataset
     dm_dataset = import_dataset(target_dataset_per_task[task_name])
@@ -54,7 +53,6 @@ def _test_augmentation(
             task=task,
             dm_subset=dm_dataset,
             cfg_subset=SubsetConfig(sampler=SamplerConfig(**sampler_config), **train_config),
-            data_format=data_format,
         )
         # Check if all aug combinations are size-compatible
         sample = dataset[0]

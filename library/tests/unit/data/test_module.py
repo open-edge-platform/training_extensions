@@ -58,7 +58,6 @@ class TestOTXDataModule:
 
         mock = MagicMock(spec=DictConfig)
         mock.task = "MULTI_LABEL_CLS"
-        mock.data_format = "coco_instances"
         mock.data_root = "."
         mock.train_subset = train_subset
         mock.val_subset = val_subset
@@ -101,7 +100,6 @@ class TestOTXDataModule:
 
         module = OTXDataModule(
             task=task,
-            data_format=fxt_config.data_format,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -133,7 +131,6 @@ class TestOTXDataModule:
 
         OTXDataModule(
             task=OTXTaskType.MULTI_CLASS_CLS,
-            data_format=fxt_config.data_format,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -218,7 +215,6 @@ class TestOTXDataModule:
             mock_dataset = MagicMock()
             mock_dataset.label_info = label_info or MagicMock()
             mock_dataset.task_type = task
-            mock_dataset.data_format = "coco"
             mock_dataset.image_color_channel = "RGB"
             mock_dataset.transforms = transforms or []
             mock_dataset_item = MagicMock(

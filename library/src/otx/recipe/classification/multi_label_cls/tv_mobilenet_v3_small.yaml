@@ -46,4 +46,3 @@ callbacks:
 overrides:
   data:
     task: MULTI_LABEL_CLS
-    data_format: datumaro
