@@ -14,7 +14,7 @@ from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotat
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
 from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
-from .label import Label, LabelReference
+from .label import Label, LabelReference, LabelUpdateInfo
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
 from .model_manifest import ModelManifest
 from .model_revision import ModelRevision, ModelVariant, TrainingInfo, TrainingStatus
@@ -70,6 +70,7 @@ __all__ = [
     "ImagesFolderSourceConfig",
     "Label",
     "LabelReference",
+    "LabelUpdateInfo",
     "Media",
     "MediaFormat",
     "MediaType",
