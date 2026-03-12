@@ -8,7 +8,7 @@ export const executeWithTimeout = async <T>(
     operation: string,
     timeoutMs = DEFAULT_WORKER_TIMEOUT_MS
 ): Promise<T> => {
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
         return await Promise.race([

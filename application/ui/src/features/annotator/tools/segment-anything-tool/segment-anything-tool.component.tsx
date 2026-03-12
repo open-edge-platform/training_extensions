@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 import { toast } from '@geti/ui';
@@ -71,6 +71,7 @@ export const SegmentAnythingTool = () => {
     const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
     const canvasRef = useRef<SVGRectElement>(null);
+    const hasShownErrorToastRef = useRef(false);
 
     const clampPoint = clampPointBetweenImage(image);
 
@@ -139,13 +140,21 @@ export const SegmentAnythingTool = () => {
         };
     });
 
-    if (isError) {
-        toast({
-            type: 'error',
-            message: `
-            Error in Segment Anything tool: ${error?.message ?? 'Unknown error, please try refreshing the page.'}`,
-        });
-    }
+    useEffect(() => {
+        if (isError && !hasShownErrorToastRef.current) {
+            toast({
+                type: 'error',
+                message: `
+                Error in Segment Anything tool: ${error?.message ?? 'Unknown error, please try refreshing the page.'}`,
+            });
+
+            hasShownErrorToastRef.current = true;
+        }
+
+        if (!isError) {
+            hasShownErrorToastRef.current = false;
+        }
+    }, [isError, error]);
 
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;

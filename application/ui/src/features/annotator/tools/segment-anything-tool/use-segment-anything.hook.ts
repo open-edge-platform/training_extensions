@@ -36,12 +36,17 @@ const segmentAnythingWorkerQueryOptions = (
             const baseWorker = new Worker(new URL('../../webworkers/segment-anything.worker', import.meta.url), {
                 type: 'module',
             });
-            const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
-            const model = await executeWithTimeout(samWorker.build(), 'SAM worker build', SAM_TIMEOUT_MS);
+            try {
+                const samWorker = wrap<SegmentAnythingWorkerApi>(baseWorker);
+                const model = await executeWithTimeout(samWorker.build(), 'SAM worker build', SAM_TIMEOUT_MS);
 
-            await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_TIMEOUT_MS);
+                await executeWithTimeout(model.init(algorithmType), 'SAM worker init', SAM_TIMEOUT_MS);
 
-            return model;
+                return model;
+            } catch (error) {
+                baseWorker.terminate();
+                throw error;
+            }
         },
         staleTime: Infinity,
         enabled,
