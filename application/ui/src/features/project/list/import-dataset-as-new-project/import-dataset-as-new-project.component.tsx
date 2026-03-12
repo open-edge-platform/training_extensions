@@ -14,7 +14,7 @@ import { useImportDatasetAsNewProject } from '../../../../hooks/localStorage/use
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
-import { LabelMapping } from './import-label-mapping/import-label-mapping.component';
+import { ImportLabelMapping } from './import-label-mapping/import-label-mapping.component';
 import { ImportProcess } from './import-process/import-process.component';
 import { ImportTaskSelection } from './import-task-selection/import-task-selection.component';
 import { ProgressStepper } from './progress-stepper/progress-stepper.component';
@@ -66,7 +66,7 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
                                 )}
 
                                 {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
-                                    <LabelMapping stagedDatasetId={currentStagedId} />
+                                    <ImportLabelMapping stagedDatasetId={currentStagedId} />
                                 )}
                             </View>
                         </Suspense>

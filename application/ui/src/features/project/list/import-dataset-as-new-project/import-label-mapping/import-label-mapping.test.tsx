@@ -1,0 +1,65 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { screen } from '@testing-library/react';
+import { HttpResponse } from 'msw';
+import { render } from 'test-utils/render';
+
+import { http } from '../../../../../api/utils';
+import { server } from '../../../../../msw-node-setup';
+import { ImportDatasetDialogProvider } from '../../../providers/import-dataset-dialog-provider.component';
+import { ImportLabelMapping } from './import-label-mapping.component';
+
+vi.mock('hooks/localStorage/use-import-dataset-as-new-project.hook', () => ({
+    useImportDatasetAsNewProject: () => ({
+        getImportEntry: vi.fn(),
+        updateImportEntry: vi.fn(),
+    }),
+}));
+
+describe('ImportLabelMapping', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    const renderApp = (stagedDatasetId: string, datasetLabels: string[] = []) => {
+        server.use(
+            http.get('/api/staged_datasets/{staged_dataset_id}', () => {
+                return HttpResponse.json({
+                    id: stagedDatasetId,
+                    format: 'unknown',
+                    compressed: true,
+                    ready_for_export: false,
+                    ready_for_import: true,
+                    size: 10,
+                    metadata: {
+                        num_items: 10,
+                        num_annotations: 5,
+                        annotation_type: 'polygon',
+                        labels: datasetLabels,
+                    },
+                });
+            })
+        );
+
+        render(
+            <ImportDatasetDialogProvider>
+                <ImportLabelMapping stagedDatasetId={stagedDatasetId} />
+            </ImportDatasetDialogProvider>
+        );
+    };
+
+    it('checks include unannotated by default', async () => {
+        renderApp('staged-dataset-123');
+
+        expect(await screen.findByRole('checkbox', { name: 'include unannotated' })).toBeChecked();
+    });
+
+    it('renders dataset labels from staged dataset', async () => {
+        renderApp('staged-dataset-123', ['label-a', 'label-b', 'label-c']);
+
+        expect(await screen.findByText('label-a')).toBeVisible();
+        expect(await screen.findByText('label-b')).toBeVisible();
+        expect(await screen.findByText('label-c')).toBeVisible();
+    });
+});
