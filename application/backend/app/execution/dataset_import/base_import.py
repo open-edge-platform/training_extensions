@@ -8,22 +8,23 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
-from datumaro.experimental import Dataset, LazyImage, Sample
+from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, Sample
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.export_import import import_dataset
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    ClassificationImportExportSample,
+    DetectionImportExportSample,
+    InstanceSegmentationImportExportSample,
+    MultilabelClassificationImportExportSample,
 )
 from app.execution.base import Execution, JobParamsT
-from app.models import DatasetItemSubset, Task, TaskType
-from app.models.media import ImageFormat
+from app.models import DatasetItemSubset, Media, MediaType, Task, TaskType
+from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, LabelService, MediaService
+from app.services.media_service import ImageMetadata
 
 from .sample_to_annotation import DatumaroSampleToGetiAnnotationConverter
 
@@ -106,7 +107,9 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             logger.info("Found {} labels for project {}", [label.name for label in project_labels], project_id)
             unfiltered_dataset_size, min_p, max_p = len(dataset), start_progress, 100
             progress_interval = max(1, unfiltered_dataset_size // self.BATCH_PROGRESS_INTERVAL)
-            num_imported_media = 0
+            num_imported_images, num_imported_frames = 0, 0
+            # Cache to track created videos and their IDs to avoid duplicates when importing video frames
+            created_videos: dict[str, UUID] = {}
             for idx, item in enumerate(dataset):
                 annotations = converter.convert_sample(item) or None
                 user_reviewed = item.user_reviewed if item.user_reviewed is not None else True
@@ -116,12 +119,45 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                 if not user_reviewed and not include_unannotated:
                     continue
 
-                media = self._media_service.create_image(
-                    project_id=project_id,
-                    name=str(idx).zfill(len(str(unfiltered_dataset_size))),
-                    format=self.__detect_image_format(item.image),
-                    data=item.image.data,
-                )
+                name_suffix = str(idx).zfill(len(str(unfiltered_dataset_size)))
+                media: Media | None = None
+                match item.media:
+                    case LazyImage():
+                        media = self._media_service.create_image(
+                            ImageMetadata(
+                                project_id=project_id,
+                                name=f"image_{name_suffix}",
+                                format_=self.__detect_image_format(item.media),
+                                data=item.media.data,
+                            )
+                        )
+                        num_imported_images += 1
+                    case LazyVideoFrame(video_path=video_path, frame_index=frame_idx):
+                        if video_path not in created_videos:
+                            with Path(video_path).open("rb") as video_data:
+                                video = self._media_service.create_video(
+                                    project_id=project_id,
+                                    name=f"video_{name_suffix}",
+                                    format_=self.__detect_video_format(item.media),
+                                    data=video_data,
+                                )
+                                created_videos[str(video_path)] = video.id
+                        media = self._media_service.create_image(
+                            ImageMetadata(
+                                project_id=project_id,
+                                name=f"video_frame_{name_suffix}",
+                                format_=ImageFormat.JPG,
+                                media_type=MediaType.VIDEO_FRAME,
+                                data=item.media.data,
+                                video_id=created_videos[str(video_path)],
+                                frame_idx=frame_idx,
+                            )
+                        )
+                        num_imported_frames += 1
+
+                if media is None:
+                    raise ValueError(f"Error creating media for item {item}")
+
                 self._dataset_service.create_dataset_item(
                     project_id=project_id,
                     task=task,
@@ -130,9 +166,9 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                     annotations=annotations,
                     subset=DatasetItemSubset(item.subset.name.lower()),
                 )
-                num_imported_media += 1
                 if (idx > 0 and idx % progress_interval == 0) or idx == unfiltered_dataset_size - 1:
                     self.update_progress(min_p + ((idx + 1) / unfiltered_dataset_size) * (max_p - min_p))
+            num_imported_media = num_imported_images + num_imported_frames
             if num_imported_media == 0:
                 self.pin_message(
                     "No items were imported from the dataset. "
@@ -140,7 +176,9 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                 )
             else:
                 self.pin_message(
-                    f"Imported {num_imported_media}/{unfiltered_dataset_size} items from the dataset.", level="INFO"
+                    f"Imported {num_imported_media}/{unfiltered_dataset_size} items "
+                    f"({num_imported_images} image(s), {num_imported_frames} frame(s)).",
+                    level="INFO",
                 )
 
     @staticmethod
@@ -158,15 +196,23 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             return ImageFormat.JPG
 
     @staticmethod
+    def __detect_video_format(video_frame: LazyVideoFrame) -> VideoFormat:
+        try:
+            ext = Path(video_frame.video_path).suffix.lstrip(".").lower()
+            return VideoFormat(ext)
+        except (ValueError, AttributeError):
+            return VideoFormat.MP4
+
+    @staticmethod
     def __get_sample_by_task(task: Task) -> type[Sample] | None:
         match task.task_type:
             case TaskType.CLASSIFICATION:
                 if not task.exclusive_labels:
-                    return MultilabelClassificationSample
-                return ClassificationSample
+                    return MultilabelClassificationImportExportSample
+                return ClassificationImportExportSample
             case TaskType.DETECTION:
-                return DetectionSample
+                return DetectionImportExportSample
             case TaskType.INSTANCE_SEGMENTATION:
-                return InstanceSegmentationSample
+                return InstanceSegmentationImportExportSample
             case _:
                 raise ValueError(f"Unknown task type: {task}")

@@ -1,18 +1,19 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .domain import (
+from .import_export import (
     ClassificationImportExportSample,
-    ClassificationTrainingSample,
     DetectionImportExportSample,
-    DetectionTrainingSample,
     InstanceSegmentationImportExportSample,
-    InstanceSegmentationTrainingSample,
     MultilabelClassificationImportExportSample,
-    MultilabelClassificationTrainingSample,
-    SampleMode,
 )
-from .facade import convert_dataset
+from .sample_mode import SampleMode
+from .training import (
+    ClassificationTrainingSample,
+    DetectionTrainingSample,
+    InstanceSegmentationTrainingSample,
+    MultilabelClassificationTrainingSample,
+)
 
 __all__ = [
     "ClassificationImportExportSample",
@@ -24,5 +25,4 @@ __all__ = [
     "MultilabelClassificationImportExportSample",
     "MultilabelClassificationTrainingSample",
     "SampleMode",
-    "convert_dataset",
 ]

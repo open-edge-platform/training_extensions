@@ -2,12 +2,27 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .label_index import LabelIndex
-from .samples import ClassificationSample, DetectionSample, InstanceSegmentationSample, MultilabelClassificationSample
+from .samples import (
+    ClassificationImportExportSample,
+    ClassificationTrainingSample,
+    DetectionImportExportSample,
+    DetectionTrainingSample,
+    InstanceSegmentationImportExportSample,
+    InstanceSegmentationTrainingSample,
+    MultilabelClassificationImportExportSample,
+    MultilabelClassificationTrainingSample,
+    SampleMode,
+)
 
 __all__ = [
-    "ClassificationSample",
-    "DetectionSample",
-    "InstanceSegmentationSample",
+    "ClassificationImportExportSample",
+    "ClassificationTrainingSample",
+    "DetectionImportExportSample",
+    "DetectionTrainingSample",
+    "InstanceSegmentationImportExportSample",
+    "InstanceSegmentationTrainingSample",
     "LabelIndex",
-    "MultilabelClassificationSample",
+    "MultilabelClassificationImportExportSample",
+    "MultilabelClassificationTrainingSample",
+    "SampleMode",
 ]

@@ -11,6 +11,7 @@ from datumaro.experimental import Dataset
 from datumaro.experimental.data_formats.base import DataFormat
 from datumaro.experimental.fields import Subset
 
+from app.datumaro_converter import SampleMode
 from app.execution import ExportDataset
 from app.models import (
     DatasetFormat,
@@ -80,6 +81,7 @@ class TestDatasetExporter:
             project_id=fxt_export_params.project_id,
             task=fxt_export_params.task,
             annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            sample_mode=SampleMode.IMPORT_EXPORT,
         )
         if subsets:
             dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])

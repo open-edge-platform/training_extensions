@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.preprocessing import MultiLabelBinarizer
 
-from app.datumaro_converter import DetectionSample
+from app.datumaro_converter import DetectionTrainingSample
 
 
 def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
@@ -209,7 +209,7 @@ class MeanAveragePrecisionEvaluator(EvaluatorBase):
         coco_evaluator = COCOeval_faster(
             cocoGt=gt_coco,
             cocoDt=pred_coco,
-            iouType="bbox" if self.predictions_dataset.dtype is DetectionSample else "segm",
+            iouType="bbox" if self.predictions_dataset.dtype is DetectionTrainingSample else "segm",
         )
         coco_evaluator.run()
         return coco_evaluator.stats_as_dict

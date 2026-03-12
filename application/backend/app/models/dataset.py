@@ -31,6 +31,9 @@ class DatasetMetadata(BaseModel):
     annotation_type: AnnotationType
     num_annotations: int
     labels: list[str]
+    num_videos: int
+    num_annotated_images: int
+    num_annotated_frames: int
 
 
 class StagedDataset(BaseRequiredIDModel):

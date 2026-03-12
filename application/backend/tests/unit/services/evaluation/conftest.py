@@ -10,63 +10,60 @@ from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    ClassificationTrainingSample,
+    DetectionTrainingSample,
+    InstanceSegmentationTrainingSample,
+    MultilabelClassificationTrainingSample,
 )
 
 
 @pytest.fixture(scope="module")
 def fxt_multiclass_classification_dataset_gt() -> Dataset:
     # Ground truth dataset for multiclass classification task
-    dataset = Dataset(ClassificationSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))})
+    dataset = Dataset(
+        ClassificationTrainingSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))}
+    )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=0,
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=1,
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=2,
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/D.jpg"),
             image_info=img_info,
             label=1,
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/E.jpg"),
             image_info=img_info,
             label=2,
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -77,53 +74,50 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
 @pytest.fixture(scope="module")
 def fxt_multiclass_classification_dataset_pred() -> Dataset:
     # Prediction dataset for multiclass classification task
-    dataset = Dataset(ClassificationSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))})
+    dataset = Dataset(
+        ClassificationTrainingSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))}
+    )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=0,
             confidence=0.9,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # correct
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=2,
             confidence=0.6,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # wrong
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=1,
             confidence=0.5,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # wrong
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/D.jpg"),
             image_info=img_info,
             label=1,
             confidence=0.8,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # correct
-        ClassificationSample(
+        ClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/E.jpg"),
             image_info=img_info,
             label=2,
             confidence=0.9,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # correct
     )
     for sample in samples:
@@ -135,36 +129,33 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
 def fxt_multilabel_classification_dataset_gt() -> Dataset:
     # Ground truth dataset for multilabel classification task
     dataset = Dataset(
-        MultilabelClassificationSample, categories={"label": LabelCategories(labels=("pop", "rock", "jazz"))}
+        MultilabelClassificationTrainingSample, categories={"label": LabelCategories(labels=("pop", "rock", "jazz"))}
     )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        MultilabelClassificationSample(
+        MultilabelClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=np.array([0, 1]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        MultilabelClassificationSample(
+        MultilabelClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=np.array([1]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        MultilabelClassificationSample(
+        MultilabelClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=np.array([2, 0]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -176,36 +167,33 @@ def fxt_multilabel_classification_dataset_gt() -> Dataset:
 def fxt_multilabel_classification_dataset_pred() -> Dataset:
     # Prediction dataset for multilabel classification task
     dataset = Dataset(
-        MultilabelClassificationSample, categories={"label": LabelCategories(labels=("pop", "rock", "jazz"))}
+        MultilabelClassificationTrainingSample, categories={"label": LabelCategories(labels=("pop", "rock", "jazz"))}
     )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        MultilabelClassificationSample(
+        MultilabelClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
             label=np.array([0]),
             confidence=np.array([0.85]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # missing one label
-        MultilabelClassificationSample(
+        MultilabelClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
             label=np.array([1, 2]),
             confidence=np.array([0.8, 0.6]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # one extra label
-        MultilabelClassificationSample(
+        MultilabelClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
             label=np.array([2, 0]),
             confidence=np.array([0.9, 0.7]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),  # correct
     )
     for sample in samples:
@@ -216,10 +204,10 @@ def fxt_multilabel_classification_dataset_pred() -> Dataset:
 @pytest.fixture(scope="module")
 def fxt_detection_dataset_gt() -> Dataset:
     # Ground truth dataset for detection task
-    dataset = Dataset(DetectionSample, categories={"label": LabelCategories(labels=("car", "person"))})
+    dataset = Dataset(DetectionTrainingSample, categories={"label": LabelCategories(labels=("car", "person"))})
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        DetectionSample(
+        DetectionTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
@@ -227,9 +215,8 @@ def fxt_detection_dataset_gt() -> Dataset:
             label=np.array([1]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        DetectionSample(
+        DetectionTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
@@ -237,9 +224,8 @@ def fxt_detection_dataset_gt() -> Dataset:
             label=np.array([0, 1]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        DetectionSample(
+        DetectionTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
@@ -247,7 +233,6 @@ def fxt_detection_dataset_gt() -> Dataset:
             label=np.array([0]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -258,10 +243,10 @@ def fxt_detection_dataset_gt() -> Dataset:
 @pytest.fixture(scope="module")
 def fxt_detection_dataset_pred() -> Dataset:
     # Prediction dataset for detection task
-    dataset = Dataset(DetectionSample, categories={"label": LabelCategories(labels=("car", "person"))})
+    dataset = Dataset(DetectionTrainingSample, categories={"label": LabelCategories(labels=("car", "person"))})
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        DetectionSample(
+        DetectionTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
@@ -269,9 +254,8 @@ def fxt_detection_dataset_pred() -> Dataset:
             label=np.array([1]),  # correct
             confidence=np.array([0.8]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        DetectionSample(
+        DetectionTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
@@ -279,9 +263,8 @@ def fxt_detection_dataset_pred() -> Dataset:
             label=np.array([0, 1]),  # correct
             confidence=np.array([0.9, 0.7]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        DetectionSample(
+        DetectionTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
@@ -289,7 +272,6 @@ def fxt_detection_dataset_pred() -> Dataset:
             label=np.array([1]),  # wrong
             confidence=np.array([0.6]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -300,10 +282,12 @@ def fxt_detection_dataset_pred() -> Dataset:
 @pytest.fixture(scope="module")
 def fxt_instance_segmentation_dataset_gt() -> Dataset:
     # Ground truth dataset for instance segmentation task
-    dataset = Dataset(InstanceSegmentationSample, categories={"label": LabelCategories(labels=("apple", "banana"))})
+    dataset = Dataset(
+        InstanceSegmentationTrainingSample, categories={"label": LabelCategories(labels=("apple", "banana"))}
+    )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        InstanceSegmentationSample(
+        InstanceSegmentationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
@@ -311,9 +295,8 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
             label=np.array([0, 1]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        InstanceSegmentationSample(
+        InstanceSegmentationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
@@ -321,9 +304,8 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
             label=np.array([0]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        InstanceSegmentationSample(
+        InstanceSegmentationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
@@ -331,7 +313,6 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
             label=np.array([1]),
             confidence=None,
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
     )
     for sample in samples:
@@ -342,10 +323,12 @@ def fxt_instance_segmentation_dataset_gt() -> Dataset:
 @pytest.fixture(scope="module")
 def fxt_instance_segmentation_dataset_pred() -> Dataset:
     # Prediction dataset for instance segmentation task
-    dataset = Dataset(InstanceSegmentationSample, categories={"label": LabelCategories(labels=("apple", "banana"))})
+    dataset = Dataset(
+        InstanceSegmentationTrainingSample, categories={"label": LabelCategories(labels=("apple", "banana"))}
+    )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        InstanceSegmentationSample(
+        InstanceSegmentationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
@@ -355,9 +338,8 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
             label=np.array([0, 1]),  # correct
             confidence=np.array([0.9, 0.75]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        InstanceSegmentationSample(
+        InstanceSegmentationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
@@ -365,9 +347,8 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
             label=np.array([0]),  # correct
             confidence=np.array([0.8]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
-        InstanceSegmentationSample(
+        InstanceSegmentationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
@@ -375,7 +356,6 @@ def fxt_instance_segmentation_dataset_pred() -> Dataset:
             label=np.array([0]),  # wrong
             confidence=np.array([0.6]),
             subset=Subset.VALIDATION,
-            user_reviewed=True,
         ),
     )
     for sample in samples:

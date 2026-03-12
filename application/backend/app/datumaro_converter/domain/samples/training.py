@@ -7,7 +7,6 @@ from datumaro.experimental.fields import (
     ImageInfo,
     Subset,
     bbox_field,
-    bool_field,
     image_info_field,
     image_path_field,
     label_field,
@@ -17,31 +16,28 @@ from datumaro.experimental.fields import (
     subset_field,
 )
 
-from app.models import AnnotationType
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 
-class BaseSample(Sample):
+class BaseTrainingSample(Sample):
     """
-    Base sample class with shared attributes.
+    Base sample class for training with shared attributes.
 
     Attributes:
         id: Unique identifier of the sample
         image: Path to the image
         image_info: Image information (width, height)
         subset: Subset name to which the sample belongs to
-        user_reviewed: Whether the sample is annotated (True) or unannotated (False)
     """
 
-    id: str | None = string_field(semantic="id")  # todo: make required for training
+    id: str = string_field(semantic="id")
     image: LazyImage = image_path_field()
     image_info: ImageInfo = image_info_field()
     subset: Subset = subset_field()
-    user_reviewed: bool | None = bool_field(semantic="user_reviewed")  # todo: keep only for import/export
 
 
 @register_sample
-class ClassificationSample(BaseSample):
+class ClassificationTrainingSample(BaseTrainingSample):
     """
     Sample for multiclass classification datasets.
 
@@ -53,17 +49,9 @@ class ClassificationSample(BaseSample):
     label: int | None = label_field(dtype=pl.UInt8(), is_list=False)
     confidence: float | None = numeric_field(dtype=pl.Float32(), semantic="confidence")
 
-    @staticmethod
-    def annotation_type() -> AnnotationType:
-        return AnnotationType.LABEL
-
-    @property
-    def annotations(self) -> int:
-        return 1 if self.label is not None and self.user_reviewed else 0
-
 
 @register_sample
-class MultilabelClassificationSample(BaseSample):
+class MultilabelClassificationTrainingSample(BaseTrainingSample):
     """
     Sample for multilabel classification datasets.
 
@@ -75,17 +63,9 @@ class MultilabelClassificationSample(BaseSample):
     label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
-    @staticmethod
-    def annotation_type() -> AnnotationType:
-        return AnnotationType.LABEL
-
-    @property
-    def annotations(self) -> int:
-        return self.label.size if self.user_reviewed else 0
-
 
 @register_sample
-class DetectionSample(BaseSample):
+class DetectionTrainingSample(BaseTrainingSample):
     """
     Sample for object detection datasets.
 
@@ -99,17 +79,9 @@ class DetectionSample(BaseSample):
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
-    @staticmethod
-    def annotation_type() -> AnnotationType:
-        return AnnotationType.BOUNDING_BOX
-
-    @property
-    def annotations(self) -> int:
-        return self.bboxes.size if self.user_reviewed else 0
-
 
 @register_sample
-class InstanceSegmentationSample(BaseSample):
+class InstanceSegmentationTrainingSample(BaseTrainingSample):
     """
     Sample for instance segmentation datasets.
 
@@ -122,11 +94,3 @@ class InstanceSegmentationSample(BaseSample):
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
     label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
-
-    @staticmethod
-    def annotation_type() -> AnnotationType:
-        return AnnotationType.POLYGON
-
-    @property
-    def annotations(self) -> int:
-        return self.polygons.size if self.user_reviewed else 0

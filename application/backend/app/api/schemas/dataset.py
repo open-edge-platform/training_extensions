@@ -53,8 +53,11 @@ class StagedDatasetView(BaseRequiredIDModel):
                 "size": 987654321,
                 "metadata": {
                     "num_items": 2000,
+                    "num_videos": 10,
                     "annotation_type": "bounding_box",
                     "num_annotations": 10000,
+                    "num_annotated_images": 1300,
+                    "num_annotated_frames": 500,
                     "labels": ["person", "bicycle", "tree"],
                 },
             },

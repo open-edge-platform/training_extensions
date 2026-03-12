@@ -8,10 +8,15 @@ import pytest
 from datumaro.experimental import LazyImage
 
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    ClassificationImportExportSample,
+    ClassificationTrainingSample,
+    DetectionImportExportSample,
+    DetectionTrainingSample,
+    InstanceSegmentationImportExportSample,
+    InstanceSegmentationTrainingSample,
+    MultilabelClassificationImportExportSample,
+    MultilabelClassificationTrainingSample,
+    SampleMode,
     convert_dataset,
 )
 from app.models import (
@@ -46,12 +51,12 @@ def fxt_project_labels():
 def fxt_dataset_item():
     def _create_dataset_item(
         project_id: UUID,
-        annotation_data: list[DatasetItemAnnotation] = [],
+        annotation_data: list[DatasetItemAnnotation] | None = None,
     ) -> DatasetItem:
         return DatasetItem(
             id=uuid4(),
             project_id=project_id,
-            annotation_data=annotation_data,
+            annotation_data=annotation_data or [],
             subset=DatasetItemSubset.TRAINING,
             subset_assigned_at=None,
             user_reviewed=False,
@@ -124,7 +129,16 @@ def fxt_instance_segmentation_dataset_item(fxt_dataset_item, fxt_dataset_item_an
     return _create_instance_segmentation_dataset_item
 
 
-def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_item) -> None:
+@pytest.mark.parametrize(
+    "sample_mode, sample_type, media_attr",
+    [
+        (SampleMode.TRAINING, DetectionTrainingSample, "image"),
+        (SampleMode.IMPORT_EXPORT, DetectionImportExportSample, "media"),
+    ],
+)
+def test_convert_detection_dataset(
+    sample_mode, sample_type, media_attr, fxt_project_labels, fxt_detection_dataset_item
+) -> None:
     project_id = uuid4()
     media = Image(
         id=uuid4(),
@@ -140,40 +154,46 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
     dataset_item_1 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[0].id), 4, 5, 10, 10)
     dataset_item_2 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[1].id), 14, 35, 10, 10)
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item_1, media), (dataset_item_2, media)], []])
-    get_image_path = MagicMock(side_effect=["path1", "path2"])
+    get_media_path = MagicMock(side_effect=["path1", "path2"])
 
     dataset = convert_dataset(
         task=Task(task_type=TaskType.DETECTION),
         labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
-        get_image_path=get_image_path,
+        get_media_path=get_media_path,
+        sample_mode=sample_mode,
     )
 
+    media_attr_info = f"{media_attr}_info"
     assert len(dataset) == 2
     assert (
-        isinstance(dataset[0], DetectionSample)
-        and dataset[0].image == LazyImage("path1")
+        isinstance(dataset[0], sample_type)
+        and getattr(dataset[0], media_attr) == LazyImage("path1")
         and np.array_equal(dataset[0].label, np.array([0]))
-        and dataset[0].image_info.width == 200
-        and dataset[0].image_info.height == 100
+        and getattr(dataset[0], media_attr_info).width == 200
+        and getattr(dataset[0], media_attr_info).height == 100
     )
     assert (
-        isinstance(dataset[1], DetectionSample)
-        and dataset[1].image == LazyImage("path2")
+        isinstance(dataset[1], sample_type)
+        and getattr(dataset[1], media_attr) == LazyImage("path2")
         and np.array_equal(dataset[1].label, np.array([1]))
-        and dataset[1].image_info.width == 200
-        and dataset[1].image_info.height == 100
+        and getattr(dataset[1], media_attr_info).width == 200
+        and getattr(dataset[1], media_attr_info).height == 100
     )
-    assert get_image_path.call_count == 2
-    get_image_path.assert_has_calls(
-        [
-            call(dataset_item_1),
-            call(dataset_item_2),
-        ]
-    )
+    assert get_media_path.call_count == 2
+    get_media_path.assert_has_calls([call(media)] * 2)
 
 
-def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_classification_dataset_item) -> None:
+@pytest.mark.parametrize(
+    "sample_mode, sample_type, media_attr",
+    [
+        (SampleMode.TRAINING, ClassificationTrainingSample, "image"),
+        (SampleMode.IMPORT_EXPORT, ClassificationImportExportSample, "media"),
+    ],
+)
+def test_convert_multiclass_classification_dataset(
+    sample_mode, sample_type, media_attr, fxt_project_labels, fxt_classification_dataset_item
+) -> None:
     project_id = uuid4()
     media = Image(
         id=uuid4(),
@@ -189,41 +209,45 @@ def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_class
     dataset_item_1 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[0].id))
     dataset_item_2 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[1].id))
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item_1, media), (dataset_item_2, media)], []])
-    get_image_path = MagicMock(side_effect=["path1", "path2"])
+    get_media_path = MagicMock(side_effect=["path1", "path2"])
 
     dataset = convert_dataset(
         task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
         labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
-        get_image_path=get_image_path,
+        get_media_path=get_media_path,
+        sample_mode=sample_mode,
     )
 
+    media_attr_info = f"{media_attr}_info"
     assert len(dataset) == 2
     assert (
-        isinstance(dataset[0], ClassificationSample)
-        and dataset[0].image == LazyImage("path1")
+        isinstance(dataset[0], sample_type)
+        and getattr(dataset[0], media_attr) == LazyImage("path1")
         and dataset[0].label == 0
-        and dataset[0].image_info.width == 200
-        and dataset[0].image_info.height == 100
+        and getattr(dataset[0], media_attr_info).width == 200
+        and getattr(dataset[0], media_attr_info).height == 100
     )
     assert (
-        isinstance(dataset[1], ClassificationSample)
-        and dataset[1].image == LazyImage("path2")
+        isinstance(dataset[1], sample_type)
+        and getattr(dataset[1], media_attr) == LazyImage("path2")
         and dataset[1].label == 1
-        and dataset[1].image_info.width == 200
-        and dataset[1].image_info.height == 100
+        and getattr(dataset[1], media_attr_info).width == 200
+        and getattr(dataset[1], media_attr_info).height == 100
     )
-    assert get_image_path.call_count == 2
-    get_image_path.assert_has_calls(
-        [
-            call(dataset_item_1),
-            call(dataset_item_2),
-        ]
-    )
+    assert get_media_path.call_count == 2
+    get_media_path.assert_has_calls([call(media)] * 2)
 
 
+@pytest.mark.parametrize(
+    "sample_mode, sample_type, media_attr",
+    [
+        (SampleMode.TRAINING, MultilabelClassificationTrainingSample, "image"),
+        (SampleMode.IMPORT_EXPORT, MultilabelClassificationImportExportSample, "media"),
+    ],
+)
 def test_convert_multilabel_classification_dataset_item(
-    fxt_project_labels, fxt_multilabel_classification_dataset_item
+    sample_mode, sample_type, media_attr, fxt_project_labels, fxt_multilabel_classification_dataset_item
 ) -> None:
     project_id = uuid4()
     media = Image(
@@ -254,34 +278,39 @@ def test_convert_multilabel_classification_dataset_item(
             [],
         ]
     )
-    get_image_path = MagicMock(side_effect=["path1", "path2", "path3"])
+    get_media_path = MagicMock(side_effect=["path1", "path2", "path3"])
 
     dataset = convert_dataset(
         task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False),
         labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
-        get_image_path=get_image_path,
+        get_media_path=get_media_path,
+        sample_mode=sample_mode,
     )
 
+    media_attr_info = f"{media_attr}_info"
     assert len(dataset) == 2
     assert (
-        isinstance(dataset[0], MultilabelClassificationSample)
-        and dataset[0].image == LazyImage("path1")
+        isinstance(dataset[0], sample_type)
+        and getattr(dataset[0], media_attr) == LazyImage("path1")
         and np.array_equal(dataset[0].label, np.array([0, 1]))
-        and dataset[0].image_info.width == 200
-        and dataset[0].image_info.height == 100
+        and getattr(dataset[0], media_attr_info).width == 200
+        and getattr(dataset[0], media_attr_info).height == 100
     )
-    assert isinstance(dataset[1], MultilabelClassificationSample) and dataset[1].image == LazyImage("path3")
-    get_image_path.assert_has_calls(
-        [
-            call(dataset_item),
-            call(dataset_item_empty_label_training),
-            call(dataset_item_empty_label_validation),
-        ]
-    )
+    assert isinstance(dataset[1], sample_type) and getattr(dataset[1], media_attr) == LazyImage("path3")
+    get_media_path.assert_has_calls([call(media)] * 3)
 
 
-def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_segmentation_dataset_item) -> None:
+@pytest.mark.parametrize(
+    "sample_mode, sample_type, media_attr",
+    [
+        (SampleMode.TRAINING, InstanceSegmentationTrainingSample, "image"),
+        (SampleMode.IMPORT_EXPORT, InstanceSegmentationImportExportSample, "media"),
+    ],
+)
+def test_convert_instance_segmentation_dataset(
+    sample_mode, sample_type, media_attr, fxt_project_labels, fxt_instance_segmentation_dataset_item
+) -> None:
     project_id = uuid4()
     media = Image(
         id=uuid4(),
@@ -309,34 +338,31 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
         ],
     )
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item_1, media), (dataset_item_2, media)], []])
-    get_image_path = MagicMock(side_effect=["path1", "path2"])
+    get_media_path = MagicMock(side_effect=["path1", "path2"])
 
     dataset = convert_dataset(
         task=Task(task_type=TaskType.INSTANCE_SEGMENTATION),
         labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
-        get_image_path=get_image_path,
+        get_media_path=get_media_path,
+        sample_mode=sample_mode,
     )
 
+    media_attr_info = f"{media_attr}_info"
     assert len(dataset) == 2
     assert (
-        isinstance(dataset[0], InstanceSegmentationSample)
-        and dataset[0].image == LazyImage("path1")
+        isinstance(dataset[0], sample_type)
+        and getattr(dataset[0], media_attr) == LazyImage("path1")
         and np.array_equal(dataset[0].label, np.array([0, 0]))
-        and dataset[0].image_info.width == 200
-        and dataset[0].image_info.height == 100
+        and getattr(dataset[0], media_attr_info).width == 200
+        and getattr(dataset[0], media_attr_info).height == 100
     )
     assert (
-        isinstance(dataset[1], InstanceSegmentationSample)
-        and dataset[1].image == LazyImage("path2")
+        isinstance(dataset[1], sample_type)
+        and getattr(dataset[1], media_attr) == LazyImage("path2")
         and np.array_equal(dataset[1].label, np.array([1, 1]))
-        and dataset[1].image_info.width == 200
-        and dataset[1].image_info.height == 100
+        and getattr(dataset[1], media_attr_info).width == 200
+        and getattr(dataset[1], media_attr_info).height == 100
     )
-    assert get_image_path.call_count == 2
-    get_image_path.assert_has_calls(
-        [
-            call(dataset_item_1),
-            call(dataset_item_2),
-        ]
-    )
+    assert get_media_path.call_count == 2
+    get_media_path.assert_has_calls([call(media)] * 2)

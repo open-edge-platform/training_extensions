@@ -30,7 +30,7 @@ from app.models import (
 from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
-from app.services.media_service import MediaFilters
+from app.services.media_service import ImageMetadata, MediaFilters
 
 
 @pytest.fixture
@@ -182,12 +182,12 @@ class TestMediaEndpoints:
             "source_id": str(fxt_image_media.source_id),
             "width": 1024,
         }
-        fxt_media_service.create_image.assert_called_once_with(
-            project_id=fxt_get_project.id,
-            data=ANY,
-            name="test_file",
-            format=ImageFormat(image_format),
-        )
+        fxt_media_service.create_image.assert_called_once()
+        metadata: ImageMetadata = fxt_media_service.create_image.call_args.args[0]
+        assert metadata.project_id == fxt_get_project.id
+        assert metadata.name == "test_file"
+        assert metadata.format_ == ImageFormat(image_format)
+        assert metadata.data
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project_id=fxt_get_project.id,
             task=fxt_get_project.task,
@@ -240,7 +240,7 @@ class TestMediaEndpoints:
             project_id=fxt_get_project.id,
             data=ANY,
             name="test_file",
-            format="mp4",
+            format_="mp4",
         )
         fxt_dataset_service.create_dataset_item.assert_not_called()
 

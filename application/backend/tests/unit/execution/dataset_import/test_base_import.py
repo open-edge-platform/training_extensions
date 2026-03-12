@@ -8,17 +8,18 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import pytest
-from datumaro.experimental import Dataset, LazyImage
+from datumaro.experimental import Dataset, LazyImage, MediaInfo
 from datumaro.experimental.categories import Categories, LabelCategories
-from datumaro.experimental.fields import ImageInfo, Subset
+from datumaro.experimental.fields import Subset
 from sqlalchemy.orm import Session
 
 from app.core.jobs.models import JobParams
-from app.datumaro_converter import ClassificationSample
+from app.datumaro_converter import ClassificationImportExportSample
 from app.execution.dataset_import.base_import import BaseDatasetImport
 from app.models import DatasetItemAnnotation, DatasetItemSubset, FullImage, Label, LabelReference, Task, TaskType
 from app.models.media import ImageFormat
 from app.services import DatasetService, LabelService, MediaService
+from app.services.media_service import ImageMetadata
 
 
 class DummyJobParams(JobParams):
@@ -121,14 +122,14 @@ class TestBaseDatasetImport:
         project_id = uuid4()
         task = Task(task_type=TaskType.CLASSIFICATION)
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(ClassificationSample, categories=label_categories)
+        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
         (tmp_path / "image1.jpg").write_bytes(create_mock_img_bytes())
         (tmp_path / "image2.bmp").write_bytes(create_mock_img_bytes(image_format="BMP"))
         dataset.append(
-            ClassificationSample(
+            ClassificationImportExportSample(
                 id=None,
-                image=LazyImage(tmp_path / "image1.jpg"),
-                image_info=ImageInfo(10, 10),
+                media=LazyImage(tmp_path / "image1.jpg"),
+                media_info=MediaInfo(10, 10),
                 label=0,
                 user_reviewed=True,
                 confidence=None,
@@ -136,10 +137,10 @@ class TestBaseDatasetImport:
             )
         )
         dataset.append(
-            ClassificationSample(
+            ClassificationImportExportSample(
                 id=None,
-                image=LazyImage(tmp_path / "image2.bmp"),
-                image_info=ImageInfo(10, 10),
+                media=LazyImage(tmp_path / "image2.bmp"),
+                media_info=MediaInfo(10, 10),
                 label=0,
                 user_reviewed=True,
                 confidence=None,
@@ -164,14 +165,17 @@ class TestBaseDatasetImport:
             # Verify media creation
             assert fxt_media_service.create_image.call_count == 2
             calls = fxt_media_service.create_image.call_args_list
-            assert calls[0].kwargs["project_id"] == project_id
-            assert calls[0].kwargs["name"] == "0"
-            assert calls[0].kwargs["format"] == ImageFormat.JPG
-            assert calls[0].kwargs["data"] is not None
-            assert calls[1].kwargs["project_id"] == project_id
-            assert calls[1].kwargs["name"] == "1"
-            assert calls[1].kwargs["format"] == ImageFormat.BMP
-            assert calls[1].kwargs["data"] is not None
+            metadata: ImageMetadata = calls[0].args[0]
+            assert metadata.project_id == project_id
+            assert metadata.name == "image_0"
+            assert metadata.format_ == ImageFormat.JPG
+            assert metadata.data is not None
+
+            metadata: ImageMetadata = calls[1].args[0]
+            assert metadata.project_id == project_id
+            assert metadata.name == "image_1"
+            assert metadata.format_ == ImageFormat.BMP
+            assert metadata.data is not None
 
             # Verify dataset item creation
             assert fxt_dataset_service.create_dataset_item.call_count == 2
@@ -185,7 +189,7 @@ class TestBaseDatasetImport:
                 ],
                 subset=DatasetItemSubset.TRAINING,
             )
-            mock_pin_message.assert_called_once_with("Imported 2/2 items from the dataset.", level="INFO")
+            mock_pin_message.assert_called_once_with("Imported 2/2 items (2 image(s), 0 frame(s)).", level="INFO")
 
     def test_create_items_filter_unannotated(
         self,
@@ -197,16 +201,16 @@ class TestBaseDatasetImport:
     ) -> None:
         """Test complete item creation flow: media, annotations, and dataset items."""
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(ClassificationSample, categories=label_categories)
+        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
         (tmp_path / "image1.jpg").write_bytes(create_mock_img_bytes())
         (tmp_path / "image2.bmp").write_bytes(create_mock_img_bytes(image_format="BMP"))
         # This will cause the second sample to have no annotations after label mapping
         labels_mapping: dict[str, str | None] = {"dog": None}
         dataset.append(
-            ClassificationSample(
+            ClassificationImportExportSample(
                 id=None,
-                image=LazyImage(tmp_path / "image1.jpg"),
-                image_info=ImageInfo(10, 10),
+                media=LazyImage(tmp_path / "image1.jpg"),
+                media_info=MediaInfo(10, 10),
                 label=None,
                 user_reviewed=False,
                 confidence=None,
@@ -214,10 +218,10 @@ class TestBaseDatasetImport:
             )
         )
         dataset.append(
-            ClassificationSample(
+            ClassificationImportExportSample(
                 id=None,
-                image=LazyImage(tmp_path / "image2.bmp"),
-                image_info=ImageInfo(10, 10),
+                media=LazyImage(tmp_path / "image2.bmp"),
+                media_info=MediaInfo(10, 10),
                 label=1,
                 user_reviewed=True,
                 confidence=None,
@@ -261,14 +265,14 @@ class TestBaseDatasetImport:
     ) -> None:
         items_count = 100
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(ClassificationSample, categories=label_categories)
+        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
         for i in range(items_count):
             (tmp_path / f"image{i}.png").write_bytes(create_mock_img_bytes(image_format="PNG"))
             dataset.append(
-                ClassificationSample(
+                ClassificationImportExportSample(
                     id=None,
-                    image=LazyImage(tmp_path / f"image{i}.png"),
-                    image_info=ImageInfo(10, 10),
+                    media=LazyImage(tmp_path / f"image{i}.png"),
+                    media_info=MediaInfo(10, 10),
                     label=0,
                     user_reviewed=True,
                     confidence=None,

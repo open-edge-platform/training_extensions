@@ -3,13 +3,47 @@
 
 import shutil
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from datumaro.experimental import Dataset, import_dataset
+from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, Sample, import_dataset
 
 from app.models import AnnotationType, DatasetFormat, StagedDataset
 from app.models.dataset import DatasetMetadata
+
+_ANNOTATION_ATTRS: list[tuple[str, AnnotationType]] = [
+    ("labels", AnnotationType.LABEL),
+    ("bboxes", AnnotationType.BOUNDING_BOX),
+    ("polygons", AnnotationType.POLYGON),
+]
+
+
+def _count_annotations(sample: Sample) -> tuple[AnnotationType, int]:
+    if (
+        hasattr(sample, "annotation_type")
+        and callable(getattr(sample, "annotation_type"))
+        and getattr(sample, "annotations")
+    ):
+        return sample.annotation_type(), sample.annotations
+
+    for attr, ann_type in _ANNOTATION_ATTRS:
+        value = getattr(sample, attr)
+        if value is not None:
+            return ann_type, len(value)
+
+    return AnnotationType.UNKNOWN, 0
+
+
+@dataclass
+class _Counts:
+    annotation_type: AnnotationType = AnnotationType.UNKNOWN
+    num_annotations: int = 0
+    num_images: int = 0
+    num_frames: int = 0
+    num_annotated_images: int = 0
+    num_annotated_frames: int = 0
+    video_paths: set[str] = field(default_factory=set)
 
 
 def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
@@ -18,26 +52,32 @@ def _get_dataset_metadata(dataset: Dataset) -> DatasetMetadata:
     label_attr = dataset.schema.attributes[label_attr_name]
     if label_attr and label_attr.categories and hasattr(label_attr.categories, "labels"):
         labels = label_attr.categories.labels
-    annotation_type, num_annotations = AnnotationType.UNKNOWN, 0
-    if len(dataset) > 0:
-        item = dataset[0]
-        if hasattr(item, "annotation_type") and callable(getattr(item, "annotation_type")):
-            annotation_type = item.annotation_type()
-            num_annotations = sum(item.annotations for item in dataset)
-        elif hasattr(item, "labels") and item.labels is not None:
-            annotation_type = AnnotationType.LABEL
-            num_annotations = sum(len(item.labels) for item in dataset)
-        elif hasattr(item, "bboxes") and item.bboxes is not None:
-            annotation_type = AnnotationType.BOUNDING_BOX
-            num_annotations = sum(len(item.bboxes) for item in dataset)
-        elif hasattr(item, "polygons") and item.polygons is not None:
-            annotation_type = AnnotationType.POLYGON
-            num_annotations = sum(len(item.polygons) for item in dataset)
+
+    counts = _Counts()
+    for item in dataset:
+        ann_type, count = _count_annotations(item)
+        counts.annotation_type = ann_type
+        match item.media:
+            case LazyImage():
+                counts.num_images += 1
+                counts.num_annotations += count
+                counts.num_annotated_images += count > 0
+            case LazyVideoFrame():
+                counts.num_frames += 1
+                counts.video_paths.add(str(item.media.video_path))
+                counts.num_annotations += count
+                counts.num_annotated_frames += count > 0
+            case _:
+                raise ValueError(f"Unsupported media type: {type(item.media)}")
+
     return DatasetMetadata(
         num_items=len(dataset),
-        annotation_type=annotation_type,
-        num_annotations=num_annotations,
+        annotation_type=counts.annotation_type,
+        num_annotations=counts.num_annotations,
         labels=sorted(labels),
+        num_videos=len(counts.video_paths),
+        num_annotated_frames=counts.num_annotated_frames,
+        num_annotated_images=counts.num_annotated_images,
     )
 
 

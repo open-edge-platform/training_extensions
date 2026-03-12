@@ -15,7 +15,7 @@ from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExi
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
 from app.services.label_service import DuplicateLabelsError
-from app.services.media_service import MediaService
+from app.services.media_service import ImageMetadata, MediaService
 from app.services.project_service import ProjectService
 
 
@@ -249,11 +249,9 @@ class TestProjectServiceIntegration:
         dummy_image = Image.fromarray(np.zeros((10, 10, 3), dtype=np.uint8))
         # Create media using the service
         media = fxt_media_service.create_image(
-            project_id=project.id,
-            name="test_image.jpg",
-            format=ImageFormat.JPG,
-            data=dummy_image,
-            source_id=None,
+            ImageMetadata(
+                project_id=project.id, name="test_image.jpg", format_=ImageFormat.JPG, data=dummy_image, source_id=None
+            )
         )
         project_folder = fxt_project_service._projects_dir / db_project.id
         media_file = project_folder / f"dataset/{media.id}.jpg"
