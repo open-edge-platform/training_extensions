@@ -380,4 +380,116 @@ test.describe('Annotator', () => {
             await expect(page.getByLabel(`label ${redLabel.name}`).nth(2)).toBeInViewport();
         });
     });
+
+    test('Annotations reset correctly when switching media items', async ({ page, annotatorPage, network }) => {
+        const mediaItems = [
+            getMockedMediaImage({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+
+        const mediaAnnotations: Record<string, AnnotationDTO[]> = {
+            'media-1': [
+                {
+                    shape: {
+                        type: 'rectangle',
+                        x: 80,
+                        y: 120,
+                        width: 140,
+                        height: 120,
+                    },
+                    labels: [{ id: redLabel.id }],
+                },
+            ],
+            'media-2': [],
+        };
+
+        network.use(
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ params }) => {
+                return HttpResponse.json({
+                    annotations: mediaAnnotations[params.media_id as string] ?? [],
+                    user_reviewed: true,
+                });
+            })
+        );
+
+        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+        await test.step('Media 1 renders its annotations', async () => {
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+        });
+
+        await test.step('Switching to media 2 clears media 1 annotations', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+        });
+
+        await test.step('Switching back restores media 1 annotations', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+        });
+    });
+
+    test('Selected label persists when switching media items', async ({ page, network }) => {
+        const mediaItems = [
+            getMockedMediaImage({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+
+        network.use(
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
+                return HttpResponse.json({
+                    annotations: [],
+                    user_reviewed: true,
+                });
+            })
+        );
+
+        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+        await test.step('Select non-default label on first media item', async () => {
+            const blueLabelButton = page.getByRole('button', { name: `Label ${blueLabel.name}` });
+            await blueLabelButton.click();
+            await expect(blueLabelButton).toHaveAttribute('aria-pressed', 'true');
+        });
+
+        await test.step('Switching media keeps selected label active', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+
+            await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toHaveAttribute(
+                'aria-pressed',
+                'true'
+            );
+        });
+    });
 });
