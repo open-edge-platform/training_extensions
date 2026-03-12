@@ -11,6 +11,7 @@ import {
     isParameter,
     isParameterGroup,
 } from '../../../../model-listing/model-training-parameters/utils';
+import { isBoolEnableParameter } from '../../utils';
 
 type DataAugmentationConfigurationParameters = Omit<ConfigurableParameterGroup, 'parameters'> & {
     parameters: ConfigurableParameter[];
@@ -39,3 +40,9 @@ export const getDataAugmentationParameters = (
             })),
     };
 };
+
+export const isDataAugmentationEnabled = (dataAugmentationParameters: DataAugmentationConfigurableParameters) =>
+    dataAugmentationParameters.parameters
+        .flatMap((group) => group.parameters[0])
+        .filter((parameter) => isBoolEnableParameter(parameter))
+        .some((parameter) => parameter.value === true);

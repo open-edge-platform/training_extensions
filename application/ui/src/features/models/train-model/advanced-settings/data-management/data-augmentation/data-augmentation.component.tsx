@@ -6,7 +6,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { type TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { DataAugmentationParametersList } from './data-augmentation-parameters-list.component';
-import { DataAugmentationConfigurableParameters } from './utils';
+import { DataAugmentationConfigurableParameters, isDataAugmentationEnabled } from './utils';
 
 type DataAugmentationProps = {
     dataAugmentationParameters: DataAugmentationConfigurableParameters;
@@ -17,7 +17,7 @@ export const DataAugmentation = ({
     dataAugmentationParameters,
     onTrainingConfigurationChange,
 }: DataAugmentationProps) => {
-    const isEnabled = false;
+    const isEnabled = isDataAugmentationEnabled(dataAugmentationParameters);
 
     return (
         <Accordion>
