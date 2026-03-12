@@ -76,7 +76,9 @@ class LabelService(BaseSessionManagedService):
 
         Args:
             project (Project): The project whose labels to update.
-            labels (PatchLabels): The patch object containing labels to add, remove, and edit.
+            labels_to_add (list[Label]): Labels to be added to the project.
+            labels_to_remove (list[LabelReference]): Labels to be removed from the project.
+            labels_to_edit (list[LabelUpdateInfo]): Labels within the project to be edited.
 
         Returns:
             list[Label]: The full list of labels for the project after all updates have been applied.
