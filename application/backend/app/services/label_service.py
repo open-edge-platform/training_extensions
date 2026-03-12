@@ -99,7 +99,7 @@ class LabelService(BaseSessionManagedService):
             and new_number_of_labels < 2
         ):
             raise ValueError(
-                f"Multi-class classifications requires at least two labels, but after this label update the total "
+                f"Multi-class classification requires at least two labels, but after this label update the total "
                 f"number of labels is {new_number_of_labels}."
             )
         if new_number_of_labels == 0:
