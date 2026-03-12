@@ -102,7 +102,7 @@ class LabelService(BaseSessionManagedService):
                 f"Multi-class classification requires at least two labels, but after this label update the total "
                 f"number of labels is {new_number_of_labels}."
             )
-        if new_number_of_labels == 0:
+        if new_number_of_labels < 1:
             raise ValueError(
                 f"A project requires at least one label, but after this label update the total number of labels is "
                 f"{new_number_of_labels}."
