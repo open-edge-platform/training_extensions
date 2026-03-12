@@ -174,7 +174,10 @@ def delete_project(
         status.HTTP_200_OK: {"description": "Labels updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or label not found"},
-        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists or have duplicated names or hotkeys"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Label(s) already exists or have duplicated names or hotkeys, "
+            "or minimum number of labels for project will be violated after update."
+        },
     },
 )
 def update_labels(
@@ -191,11 +194,13 @@ def update_labels(
     try:
         updated_labels = label_service.update_labels(
             project=project,
-            labels_to_add=[Label.model_validate(lbl) for lbl in labels.labels_to_add],
-            labels_to_edit=[LabelUpdateInfo.model_validate(lbl) for lbl in labels.labels_to_edit],
-            labels_to_remove=[LabelReference.model_validate(lbl) for lbl in labels.labels_to_remove],
+            labels_to_add=[Label.model_validate(lbl, from_attributes=True) for lbl in labels.labels_to_add],
+            labels_to_edit=[LabelUpdateInfo.model_validate(lbl, from_attributes=True) for lbl in labels.labels_to_edit],
+            labels_to_remove=[
+                LabelReference.model_validate(lbl, from_attributes=True) for lbl in labels.labels_to_remove
+            ],
         )
-    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError, ValueError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     return [LabelView.model_validate(label, from_attributes=True) for label in updated_labels]
