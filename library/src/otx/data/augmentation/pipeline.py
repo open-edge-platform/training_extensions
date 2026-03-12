@@ -682,7 +682,7 @@ class GPUAugmentationPipeline(nn.Module):
         # Sanitize geometric annotations after Kornia transforms.
         if output["images"] is not None:
             s_bboxes, s_labels, s_masks, s_keypoints = self._sanitize_annotations(
-                typing.cast("torch.Tensor", output["images"]),
+                output["images"],
                 output["bboxes"],
                 output["labels"],
                 output["masks"],
