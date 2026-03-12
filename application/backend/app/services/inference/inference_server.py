@@ -11,7 +11,7 @@ from model_api.models import Model
 
 from app.models import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult, Label
 from app.models.inference import InferenceModel, InferenceState, InferenceStatus
-from app.models.model_revision import ModelFormat
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 from app.services.data_collect.prediction_converter import convert_prediction
 
@@ -47,9 +47,19 @@ class InferenceServer:
                 return False  # same model and device, no need to reload
 
             format = ModelFormat.OPENVINO
+            precision = ModelPrecision.FP16
             logger.info("Loading model {} with format {} on device {}", model_id, format, device)
+            model_variants = self._model_service.get_model_variants(project_id=project_id, model_id=model_id)
+            model_variant = next(
+                (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
+            )
+            if not model_variant:
+                raise ResourceNotFoundError(
+                    resource_type=ResourceType.MODEL,
+                    resource_id=f"{model_id} with format {format.value} and precision {precision}",
+                )
             files_exist, paths = self._model_service.get_model_binary_files(
-                project_id=project_id, model_id=model_id, format=format
+                project_id=project_id, model_id=model_id, model_variant_id=model_variant.id
             )
             if not files_exist:
                 raise ResourceNotFoundError(

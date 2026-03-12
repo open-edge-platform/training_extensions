@@ -16,7 +16,7 @@ from app.models import (
     DatasetItemAnnotation,
     Label,
 )
-from app.models.model_revision import ModelFormat
+from app.models.model_revision import ModelFormat, ModelPrecision, ModelVariant
 from app.services import ModelService
 from app.services.inference import InferenceModel, InferenceServer, InferenceState, InferenceStatus
 from app.services.inference.inference_server import _LoadedModel
@@ -26,10 +26,16 @@ class TestInferenceServer:
     def test_set_inference_model(self, tmp_path) -> None:
         project_id = uuid4()
         model_id = uuid4()
+        model_variant_id = uuid4()
         device = "AUTO"
         ttl = 60
 
+        model_variant = MagicMock(
+            spec=ModelVariant, id=model_variant_id, format=ModelFormat.OPENVINO, precision=ModelPrecision.FP16
+        )
+
         model_service = MagicMock(spec=ModelService)
+        model_service.get_model_variants.return_value = [model_variant]
         model_service.get_model_binary_files.return_value = (True, (tmp_path / "model.xml", tmp_path / "model.bin"))
 
         inference_server = InferenceServer(model_service=model_service)
@@ -52,8 +58,9 @@ class TestInferenceServer:
                 and inference_server._loaded_model.ttl == ttl
             )
 
+            model_service.get_model_variants.assert_called_once_with(project_id=project_id, model_id=model_id)
             model_service.get_model_binary_files.assert_called_once_with(
-                project_id=project_id, model_id=model_id, format=ModelFormat.OPENVINO
+                project_id=project_id, model_id=model_id, model_variant_id=model_variant_id
             )
             mock_create_model.assert_called_once_with(model=str(tmp_path / "model.xml"), device=device, nstreams="2")
 
