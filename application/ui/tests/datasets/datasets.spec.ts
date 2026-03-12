@@ -9,6 +9,7 @@ import { getMockedMediaImage, getMultipleMockedMediaImage } from 'mocks/mock-med
 import { HttpResponse } from 'msw';
 import { v4 as uuid } from 'uuid';
 
+import { MEDIA_UPLOAD_CONCURRENCY } from '../../src/features/dataset/api/use-media-upload';
 import { expect, http, test } from '../fixtures';
 
 const mockedItems = getMultipleMockedMediaImage(20, '1');
@@ -97,13 +98,17 @@ test.describe('Dataset', () => {
     });
 
     test('upload shows start, progress and finish toasts', async ({ page, network }) => {
-        let shouldResumeUpload = false;
+        let uploadRequestCount = 0;
+        const firstBatchCount = MEDIA_UPLOAD_CONCURRENCY;
+        const totalFiles = firstBatchCount + 1;
 
         network.use(
             http.post('/api/projects/{project_id}/dataset/media', async () => {
-                while (!shouldResumeUpload) {
-                    await new Promise((resolve) => setTimeout(resolve, 10));
-                }
+                uploadRequestCount += 1;
+                const isLastUploadRequest = uploadRequestCount === totalFiles;
+
+                // Small delay to test the "in progress" toast or else we would only see start and finish toasts
+                await new Promise((resolve) => setTimeout(resolve, isLastUploadRequest ? 250 : 30));
 
                 return HttpResponse.json(getMockedMediaImage({ id: uuid() }), {
                     status: 201,
@@ -114,7 +119,7 @@ test.describe('Dataset', () => {
         await page.goto('projects/id-1/dataset');
 
         await page.getByLabel('Upload media files').setInputFiles(
-            Array.from({ length: 6 }, (_, index) => ({
+            Array.from({ length: totalFiles }, (_, index) => ({
                 name: `upload-${index + 1}.png`,
                 mimeType: 'image/png',
                 buffer: sampleImageBuffer,
@@ -123,9 +128,10 @@ test.describe('Dataset', () => {
 
         await expect(page.getByRole('button', { name: 'Upload media' })).toBeDisabled();
 
-        shouldResumeUpload = true;
+        await expect(
+            page.getByText(`Uploading ${totalFiles} item(s)... (${firstBatchCount} succeeded, 0 failed)`)
+        ).toBeVisible();
 
-        await expect(page.getByText('Uploading 6 item(s)... (5 succeeded, 0 failed)')).toBeVisible();
-        await expect(page.getByText('Uploaded 6 item(s)')).toBeVisible();
+        await expect(page.getByText(`Uploaded ${totalFiles} item(s)`)).toBeVisible();
     });
 });
