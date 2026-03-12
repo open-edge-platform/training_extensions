@@ -130,7 +130,7 @@ class TestLabelServiceIntegration:
         - An existing label can be updated for the existing project
         """
         db_project, db_labels = fxt_stored_project_with_labels
-        updated_label = fxt_label_service.update_label(
+        updated_label = fxt_label_service._update_label(
             project_id=UUID(db_project.id),
             label_id=UUID(db_labels[0].id),
             new_name="bird",
@@ -158,7 +158,7 @@ class TestLabelServiceIntegration:
 
         with pytest.raises(ResourceNotFoundError) as exc_info:
             label_id = uuid4()
-            fxt_label_service.update_label(
+            fxt_label_service._update_label(
                 project_id=UUID(db_project.id),
                 label_id=label_id,
                 new_name="bird",
@@ -183,7 +183,7 @@ class TestLabelServiceIntegration:
         """
         db_project, db_labels = fxt_stored_project_with_labels
         with pytest.raises(DuplicateLabelsError):
-            fxt_label_service.update_label(
+            fxt_label_service._update_label(
                 project_id=UUID(db_project.id),
                 label_id=UUID(db_labels[0].id),
                 new_name=db_labels[1].name,
@@ -205,7 +205,7 @@ class TestLabelServiceIntegration:
         """
         db_project, db_labels = fxt_stored_project_with_labels
         with pytest.raises(DuplicateLabelsError):
-            fxt_label_service.update_label(
+            fxt_label_service._update_label(
                 project_id=UUID(db_project.id),
                 label_id=UUID(db_labels[0].id),
                 new_name="bird",
@@ -226,7 +226,7 @@ class TestLabelServiceIntegration:
         - An existing label can be deleted for the existing project
         """
         db_project, db_labels = fxt_stored_project_with_labels
-        fxt_label_service.delete_label(project_id=UUID(db_project.id), label_id=UUID(db_labels[0].id))
+        fxt_label_service._delete_label(project_id=UUID(db_project.id), label_id=UUID(db_labels[0].id))
 
         assert db_session.query(LabelDB).filter(LabelDB.id == db_labels[0].id).one_or_none() is None
 
@@ -245,7 +245,7 @@ class TestLabelServiceIntegration:
         non_existing_label_id = uuid4()
         db_project, _ = fxt_stored_project_with_labels
         with pytest.raises(ResourceNotFoundError) as exc_info:
-            fxt_label_service.delete_label(project_id=UUID(db_project.id), label_id=non_existing_label_id)
+            fxt_label_service._delete_label(project_id=UUID(db_project.id), label_id=non_existing_label_id)
 
         assert exc_info.value.resource_type == ResourceType.LABEL
         assert exc_info.value.resource_id == str(non_existing_label_id)

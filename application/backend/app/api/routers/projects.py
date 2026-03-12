@@ -13,7 +13,8 @@ from starlette.responses import FileResponse
 from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_service
 from app.api.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.api.validators import ProjectID
-from app.models import Label, Task
+from app.models import Label, LabelReference, LabelUpdateInfo, Task
+from app.models.project import Project
 from app.services import LabelService, ProjectService, ResourceInUseError, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
 from app.services.label_service import DuplicateLabelsError
@@ -177,7 +178,7 @@ def delete_project(
     },
 )
 def update_labels(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     labels: Annotated[
         PatchLabels,
         Body(
@@ -188,43 +189,16 @@ def update_labels(
 ) -> list[LabelView]:
     """Update labels for a given project"""
     try:
-        existing_ids = label_service.list_ids(project_id=project.id)
-        if labels.labels_to_remove:
-            ids_to_remove = [label.id for label in labels.labels_to_remove]
-            if not all(label_id in existing_ids for label_id in ids_to_remove):
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="One or more labels to remove do not exist in the project",
-                )
-        if labels.labels_to_edit:
-            ids_to_edit = [label.id for label in labels.labels_to_edit]
-            if not all(label_id in existing_ids for label_id in ids_to_edit):
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="One or more labels to edit do not exist in the project",
-                )
-        for label_to_edit in labels.labels_to_edit:
-            label_service.update_label(
-                project_id=project.id,
-                label_id=label_to_edit.id,
-                new_name=label_to_edit.new_name,
-                new_color=label_to_edit.new_color,
-                new_hotkey=label_to_edit.new_hotkey,
-            )
-        for label_to_remove in labels.labels_to_remove:
-            label_service.delete_label(project_id=project.id, label_id=label_to_remove.id)
-        for label_to_add in labels.labels_to_add:
-            label_service.create_label(
-                project_id=project.id,
-                label_id=label_to_add.id,
-                name=label_to_add.name,
-                color=label_to_add.color,
-                hotkey=label_to_add.hotkey,
-            )
-        updated_labels = label_service.list_all(project_id=project.id)
-        return [LabelView.model_validate(label, from_attributes=True) for label in updated_labels]
+        updated_labels = label_service.update_labels(
+            project=project,
+            labels_to_add=[Label.model_validate(lbl) for lbl in labels.labels_to_add],
+            labels_to_edit=[LabelUpdateInfo.model_validate(lbl) for lbl in labels.labels_to_edit],
+            labels_to_remove=[LabelReference.model_validate(lbl) for lbl in labels.labels_to_remove],
+        )
     except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    return [LabelView.model_validate(label, from_attributes=True) for label in updated_labels]
 
 
 @router.get(
