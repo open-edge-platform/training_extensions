@@ -417,7 +417,7 @@ test.describe('Annotator', () => {
             }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ params }) => {
                 return HttpResponse.json({
-                    annotations: mediaAnnotations[params.media_id as string] ?? [],
+                    annotations: mediaAnnotations[params.media_id] ?? [],
                     user_reviewed: true,
                 });
             })
@@ -426,7 +426,7 @@ test.describe('Annotator', () => {
         await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
         await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
 
-        await test.step('Media 1 renders its annotations', async () => {
+        await test.step('Check first media annotations', async () => {
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
         });
 
@@ -479,6 +479,7 @@ test.describe('Annotator', () => {
         await test.step('Select non-default label on first media item', async () => {
             const blueLabelButton = page.getByRole('button', { name: `Label ${blueLabel.name}` });
             await blueLabelButton.click();
+
             await expect(blueLabelButton).toHaveAttribute('aria-pressed', 'true');
         });
 
