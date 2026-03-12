@@ -29,10 +29,10 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
         task_type: importEntry?.project?.task_type ?? defaultTaskType,
     };
 
-    return useActionState<{ name: string; task_type: string }, FormData>(async (_prevState, formData) => {
+    return useActionState<{ name: string; task_type: TaskType }, FormData>(async (_prevState, formData) => {
         const project = {
-            name: String(formData.get('name')),
-            task_type: String(formData.get('task_type')),
+            name: String(formData.get('name')).trim(),
+            task_type: formData.get('task_type') as TaskType,
         };
 
         setCurrentStep('labelMapping');
@@ -50,7 +50,7 @@ export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProp
     const [name, setName] = useState(formState.name);
 
     const validationErrorMessage = validateProjectName(
-        name,
+        name.trim(),
         projects.map((project) => project.name)
     );
 

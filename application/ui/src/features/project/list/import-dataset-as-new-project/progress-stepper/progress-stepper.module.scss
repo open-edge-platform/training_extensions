@@ -18,11 +18,13 @@
     width: var(--spectrum-global-dimension-size-400);
     height: var(--spectrum-global-dimension-size-400);
     background: var(--energy-blue);
+    position: relative;
 }
 
 [data-completed='true'] {
     color: var(--spectrum-global-color-gray-50);
     background: var(--energy-blue);
+    position: relative;
 
     &::before {
         content: '✓';

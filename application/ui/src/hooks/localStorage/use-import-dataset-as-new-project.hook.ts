@@ -8,8 +8,8 @@ import { ImportDatasetAsNewProjectState } from '../../features/dataset/import-ex
 import { DatasetImportState, getParsedLocalStorage } from './utils';
 
 export type DatasetImportAsNewProjectState = DatasetImportState<ImportDatasetAsNewProjectState> & {
-    project?: { name: string; task_type: string };
-    filters?: { labels: TaskType[]; include_unannotated: boolean };
+    project?: { name: string; task_type: TaskType };
+    filters?: { labels: string[]; include_unannotated: boolean };
 };
 
 const IMPORT_DATASET_AS_NEW_PROJECT_KEY = `import-dataset-as-new-project`;
