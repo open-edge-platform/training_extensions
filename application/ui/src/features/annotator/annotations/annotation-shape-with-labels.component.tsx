@@ -32,8 +32,11 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
 
         const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
         const hasNoLabels = updatedLabels.length === 0;
+        const shouldDeleteAnnotation =
+            hasNoLabels &&
+            (isClassificationTask(selectedProject.task.task_type) || annotation.shape.type === 'full_image');
 
-        if (isClassificationTask(selectedProject.task.task_type) && hasNoLabels) {
+        if (shouldDeleteAnnotation) {
             deleteAnnotations([annotation.id]);
         } else {
             updateAnnotations([{ ...annotation, labels: updatedLabels }]);
