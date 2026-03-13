@@ -14,6 +14,7 @@ import { useImportDatasetAsNewProject } from '../../../../hooks/localStorage/use
 import { isNonEmptyString } from '../../../../shared/util';
 import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-provider.component';
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
+import { ImportErrorBoundary } from './import-error-boundary.component';
 import { ImportLabelMapping } from './import-label-mapping/import-label-mapping.component';
 import { ImportProcess } from './import-process/import-process.component';
 import { ImportTaskSelection } from './import-task-selection/import-task-selection.component';
@@ -48,28 +49,33 @@ export const ImportDatasetAsNewProject = ({ dialogState }: ImportDatasetAsNewPro
                     <Content UNSAFE_className={classes.container}>
                         <ProgressStepper currentStep={currentStep} />
 
-                        <Suspense fallback={<Loading size='M' mode='inline' />}>
-                            <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
-                                {currentStep === 'uploading' && (
-                                    <ImportUploadFile formatOptions='Geti, COCO' onFileUploaded={handleFileUploaded} />
-                                )}
+                        <ImportErrorBoundary>
+                            <Suspense fallback={<Loading size='M' mode='inline' />}>
+                                <View flex={'1'} width={'100%'} backgroundColor={'gray-50'}>
+                                    {currentStep === 'uploading' && (
+                                        <ImportUploadFile
+                                            formatOptions='GETI, DATUMARO, COCO, YOLO, VOC'
+                                            onFileUploaded={handleFileUploaded}
+                                        />
+                                    )}
 
-                                {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
-                                    <ImportProcess
-                                        stagedDatasetId={currentStagedId}
-                                        onFilePrepared={handleFilePrepared}
-                                    />
-                                )}
+                                    {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
+                                        <ImportProcess
+                                            stagedDatasetId={currentStagedId}
+                                            onFilePrepared={handleFilePrepared}
+                                        />
+                                    )}
 
-                                {currentStep === 'taskTypeSelection' && isNonEmptyString(currentStagedId) && (
-                                    <ImportTaskSelection stagedDatasetId={currentStagedId} />
-                                )}
+                                    {currentStep === 'taskTypeSelection' && isNonEmptyString(currentStagedId) && (
+                                        <ImportTaskSelection stagedDatasetId={currentStagedId} />
+                                    )}
 
-                                {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
-                                    <ImportLabelMapping stagedDatasetId={currentStagedId} />
-                                )}
-                            </View>
-                        </Suspense>
+                                    {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
+                                        <ImportLabelMapping stagedDatasetId={currentStagedId} />
+                                    )}
+                                </View>
+                            </Suspense>
+                        </ImportErrorBoundary>
                     </Content>
 
                     <ImportDatasetButtons
