@@ -28,7 +28,7 @@ export class ProjectPage {
     }
 
     getMultiLabelValidationMessage() {
-        return this.page.getByText('At least 2 labels are required for multi-label classification');
+        return this.page.getByText('At least 2 labels are required for single-label classification');
     }
 
     async setProjectName(name: string) {

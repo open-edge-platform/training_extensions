@@ -8,10 +8,12 @@ import { getMockedProject } from '../mocks/mock-project';
 import { expect, http, test } from './fixtures';
 
 const expectToastToBeInteractive = async (page: Page, message: string) => {
-    const toastMessage = page.getByText(message);
+    const toast = page.getByLabel('toast').filter({ hasText: message });
+    const dismissButton = toast.getByRole('button').first();
 
-    await expect(toastMessage).toBeVisible();
-    await toastMessage.click();
+    await expect(toast).toBeVisible();
+    await expect(dismissButton).toBeVisible();
+    await dismissButton.click();
 };
 
 test.describe('Toast Rendering', () => {

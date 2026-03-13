@@ -96,25 +96,52 @@ test.describe('Project', () => {
         await expect(page.getByText('New Project')).toBeVisible();
     });
 
-    test('toggles create button for multi-label classification based on label count', async ({ page }) => {
+    test('shows warning for multi-class classification based on label count', async ({ page, network }) => {
         const projectPage = new ProjectPage(page);
 
         await projectPage.gotoCreate();
 
         await projectPage.fillProjectForm({
-            name: 'Multi-label project labels check',
+            name: 'Multi-class project labels check',
             task: 'classification',
-            classificationType: 'Multi-label',
+            classificationType: 'Single-label',
             labelNames: ['Person'],
         });
 
-        await expect(projectPage.getCreateProjectButton()).toBeDisabled();
+        await expect(projectPage.getCreateProjectButton()).toBeEnabled();
+        await projectPage.getCreateProjectButton().click();
+
         await expect(projectPage.getMultiLabelValidationMessage()).toBeVisible();
+
+        // Close the notification
+        const toast = page
+            .getByLabel('toast')
+            .filter({ hasText: 'At least 2 labels are required for single-label classification' });
+        await toast.getByRole('button').first().click();
 
         await projectPage.addLabel('Car');
 
-        await expect(projectPage.getCreateProjectButton()).toBeEnabled();
-        await expect(projectPage.getMultiLabelValidationMessage()).toBeHidden();
+        network.use(
+            http.post('/api/projects', ({ response }) => {
+                return response(201).json(
+                    getMockedProject({
+                        id: 'single-label-project-id',
+                        name: 'Multi-class project labels check',
+                        task: {
+                            task_type: 'classification',
+                            exclusive_labels: true,
+                            labels: [
+                                { id: '1', color: 'red', name: 'Person' },
+                                { id: '2', color: 'blue', name: 'Car' },
+                            ],
+                        },
+                    })
+                );
+            })
+        );
+
+        await projectPage.getCreateProjectButton().click();
+        await page.waitForURL(/dataset/);
     });
 
     test('deletes a project', async ({ page, network }) => {
