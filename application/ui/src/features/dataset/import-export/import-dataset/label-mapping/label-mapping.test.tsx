@@ -49,6 +49,9 @@ describe('LabelMapping', () => {
                     metadata: {
                         num_items: 10,
                         num_annotations: 10,
+                        num_videos: 1,
+                        num_annotated_frames: 5,
+                        num_annotated_images: 9,
                         annotation_type: 'polygon',
                         labels: datasetLabels,
                     },
