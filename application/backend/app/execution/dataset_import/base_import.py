@@ -178,7 +178,8 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             else:
                 self.pin_message(
                     f"Imported {num_imported_media}/{unfiltered_dataset_size} items "
-                    f"({num_imported_images} image(s), {num_imported_frames} frame(s)).",
+                    f"({num_imported_images} image(s), {len(created_videos)} video(s), "
+                    f"{num_imported_frames} frame(s)).",
                     level="INFO",
                 )
 

@@ -1,23 +1,27 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import secrets
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
+import cv2
+import numpy as np
 import pytest
-from datumaro.experimental import Dataset, LazyImage, MediaInfo
+from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, MediaInfo
 from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.fields import Subset
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.core.jobs.models import JobParams
 from app.datumaro_converter import ClassificationImportExportSample
 from app.execution.dataset_import.base_import import BaseDatasetImport
 from app.models import DatasetItemAnnotation, DatasetItemSubset, FullImage, Label, LabelReference, Task, TaskType
-from app.models.media import ImageFormat
+from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import DatasetService, LabelService, MediaService
 from app.services.media_service import ImageMetadata
 
@@ -68,19 +72,28 @@ def fxt_dummy_import(
     )
 
 
-def create_mock_img_bytes(width: int = 10, height: int = 10, image_format: str = "JPEG") -> bytes:
+def create_mock_image(output_path: Path, width: int = 10, height: int = 10, image_format: str = "JPEG") -> None:
     """Create a minimal valid JPEG image for testing."""
-    import io
-    import secrets
-
-    from PIL import Image
-
     img = Image.new(
         "RGB", (width, height), color=(secrets.randbelow(256), secrets.randbelow(256), secrets.randbelow(256))
     )
-    buffer = io.BytesIO()
-    img.save(buffer, format=image_format)
-    return buffer.getvalue()
+    img.save(output_path, format=image_format)
+
+
+def create_mock_video(output_path: Path, width: int = 10, height: int = 10, fps: int = 30, duration: int = 5) -> None:
+    """
+    Create a valid MP4 file for testing.
+    """
+    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+    out = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
+
+    for frame_num in range(fps * duration):
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+        # Draw something on each frame
+        cv2.putText(frame, f"Frame {frame_num}", (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        out.write(frame)
+
+    out.release()
 
 
 class TestBaseDatasetImport:
@@ -110,7 +123,7 @@ class TestBaseDatasetImport:
             mock_import.assert_called_once_with(str(dataset_dir))
             assert result == converted_dataset
 
-    def test_create_items_basic_flow(
+    def test_create_items_images(
         self,
         fxt_dummy_import: DummyDatasetImport,
         fxt_dataset_service: Mock,
@@ -123,8 +136,8 @@ class TestBaseDatasetImport:
         task = Task(task_type=TaskType.CLASSIFICATION)
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
         dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
-        (tmp_path / "image1.jpg").write_bytes(create_mock_img_bytes())
-        (tmp_path / "image2.bmp").write_bytes(create_mock_img_bytes(image_format="BMP"))
+        create_mock_image(output_path=tmp_path / "image1.jpg", image_format="JPEG")
+        create_mock_image(output_path=tmp_path / "image2.bmp", image_format="BMP")
         dataset.append(
             ClassificationImportExportSample(
                 id=None,
@@ -162,34 +175,109 @@ class TestBaseDatasetImport:
                 dataset=dataset, project_id=project_id, task=task, labels_mapping={}, include_unannotated=True
             )
 
-            # Verify media creation
-            assert fxt_media_service.create_image.call_count == 2
-            calls = fxt_media_service.create_image.call_args_list
-            metadata: ImageMetadata = calls[0].args[0]
-            assert metadata.project_id == project_id
-            assert metadata.name == "image_0"
-            assert metadata.format_ == ImageFormat.JPG
-            assert metadata.data is not None
+        # Verify media creation
+        assert fxt_media_service.create_image.call_count == 2
+        for index, call in enumerate(fxt_media_service.create_image.call_args_list):
+            meta: ImageMetadata = call.args[0]
+            assert meta.project_id == project_id
+            assert meta.name == f"image_{index}"
+            assert meta.media_type == MediaType.IMAGE
+            assert meta.format_ == ImageFormat.JPG if index == 0 else ImageFormat.BMP
+            assert meta.data is not None
 
-            metadata: ImageMetadata = calls[1].args[0]
-            assert metadata.project_id == project_id
-            assert metadata.name == "image_1"
-            assert metadata.format_ == ImageFormat.BMP
-            assert metadata.data is not None
+        # Verify dataset item creation
+        assert fxt_dataset_service.create_dataset_item.call_count == 2
+        fxt_dataset_service.create_dataset_item.assert_any_call(
+            project_id=project_id,
+            task=task,
+            media=mock_media,
+            user_reviewed=True,
+            annotations=[DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])],
+            subset=DatasetItemSubset.TRAINING,
+        )
+        mock_pin_message.assert_called_once_with(
+            "Imported 2/2 items (2 image(s), 0 video(s), 0 frame(s)).", level="INFO"
+        )
 
-            # Verify dataset item creation
-            assert fxt_dataset_service.create_dataset_item.call_count == 2
-            fxt_dataset_service.create_dataset_item.assert_any_call(
+    def test_create_items_video(
+        self,
+        fxt_dummy_import: DummyDatasetImport,
+        fxt_dataset_service: Mock,
+        fxt_label_service: Mock,
+        fxt_media_service: Mock,
+        tmp_path: Path,
+    ) -> None:
+        """Test item creation flow for video frames: video + frame media are created correctly."""
+        project_id = uuid4()
+        task = Task(task_type=TaskType.CLASSIFICATION)
+        label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat",))}
+        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
+
+        video_path = tmp_path / "video1.mp4"
+        create_mock_video(output_path=video_path)
+
+        dataset.append(
+            ClassificationImportExportSample(
+                id=None,
+                media=LazyVideoFrame(video_path=video_path, frame_index=0),
+                media_info=MediaInfo(10, 10),
+                label=0,
+                user_reviewed=True,
+                confidence=None,
+                subset=Subset.TRAINING,
+            )
+        )
+        dataset.append(
+            ClassificationImportExportSample(
+                id=None,
+                media=LazyVideoFrame(video_path=video_path, frame_index=5),  # same video, different frame
+                media_info=MediaInfo(10, 10),
+                label=0,
+                user_reviewed=True,
+                confidence=None,
+                subset=Subset.TRAINING,
+            )
+        )
+
+        project_labels = [Label(id=uuid4(), name="cat", color="#FF0000", hotkey=None)]
+        fxt_label_service.list_all.return_value = project_labels
+
+        mock_video = Mock(id=uuid4(), type=MediaType.VIDEO)
+        mock_frame = Mock(id=uuid4(), type=MediaType.VIDEO_FRAME)
+
+        # create_video returns the video; create_image returns the video frame
+        fxt_media_service.create_video.return_value = mock_video
+        fxt_media_service.create_image.return_value = mock_frame
+
+        with patch.object(fxt_dummy_import, "pin_message") as mock_pin_message:
+            fxt_dummy_import._create_items(
+                dataset=dataset,
                 project_id=project_id,
                 task=task,
-                media=mock_media,
-                user_reviewed=True,
-                annotations=[
-                    DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])
-                ],
-                subset=DatasetItemSubset.TRAINING,
+                labels_mapping={},
+                include_unannotated=True,
             )
-            mock_pin_message.assert_called_once_with("Imported 2/2 items (2 image(s), 0 frame(s)).", level="INFO")
+
+        # Video should be created exactly once (same video_path used for both frames)
+        fxt_media_service.create_video.assert_called_once()
+        video_call_kwargs = fxt_media_service.create_video.call_args
+        assert video_call_kwargs.kwargs["project_id"] == project_id
+        assert video_call_kwargs.kwargs["format_"] == VideoFormat.MP4
+
+        # A video-frame image entry should be created for each frame
+        assert fxt_media_service.create_image.call_count == 2
+        for call in fxt_media_service.create_image.call_args_list:
+            meta: ImageMetadata = call.args[0]
+            assert meta.media_type == MediaType.VIDEO_FRAME
+            assert meta.video_id == mock_video.id
+            assert meta.format_ == ImageFormat.JPG
+
+        # Dataset items should be created for each frame
+        assert fxt_dataset_service.create_dataset_item.call_count == 2
+
+        mock_pin_message.assert_called_once_with(
+            "Imported 2/2 items (0 image(s), 1 video(s), 2 frame(s)).", level="INFO"
+        )
 
     def test_create_items_filter_unannotated(
         self,
@@ -202,8 +290,8 @@ class TestBaseDatasetImport:
         """Test complete item creation flow: media, annotations, and dataset items."""
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
         dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
-        (tmp_path / "image1.jpg").write_bytes(create_mock_img_bytes())
-        (tmp_path / "image2.bmp").write_bytes(create_mock_img_bytes(image_format="BMP"))
+        create_mock_image(output_path=tmp_path / "image1.jpg")
+        create_mock_image(output_path=tmp_path / "image2.bmp", image_format="BMP")
         # This will cause the second sample to have no annotations after label mapping
         labels_mapping: dict[str, str | None] = {"dog": None}
         dataset.append(
@@ -267,7 +355,7 @@ class TestBaseDatasetImport:
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
         dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
         for i in range(items_count):
-            (tmp_path / f"image{i}.png").write_bytes(create_mock_img_bytes(image_format="PNG"))
+            create_mock_image(output_path=tmp_path / f"image{i}.png", image_format="PNG")
             dataset.append(
                 ClassificationImportExportSample(
                     id=None,

@@ -156,10 +156,12 @@ class MediaAnnotations(BaseModel):
     annotations: list[DatasetItemAnnotation]
     user_reviewed: bool
     prediction_model_id: UUID | None = None
+    media_id: UUID | None = None
 
     model_config = {
         "json_schema_extra": {
             "example": {
+                "media_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "annotations": [
                     {
                         "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],

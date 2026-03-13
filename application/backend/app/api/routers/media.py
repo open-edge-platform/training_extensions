@@ -448,6 +448,7 @@ def set_media_annotations(
             prediction_model_id=None,
         )
         return MediaAnnotations(
+            media_id=media.id,
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,

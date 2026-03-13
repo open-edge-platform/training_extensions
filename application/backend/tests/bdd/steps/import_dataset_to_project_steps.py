@@ -12,17 +12,17 @@ import requests
 from behave import given, then, when
 from behave.model import Table
 from behave.runner import Context
-from datumaro.experimental import Dataset, LazyImage
+from datumaro.experimental import Dataset, LazyImage, MediaInfo
 from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.export_import import export_dataset
-from datumaro.experimental.fields import ImageInfo, Subset
+from datumaro.experimental.fields import Subset
 
 from app.api.schemas import ProjectView
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    ClassificationImportExportSample,
+    DetectionImportExportSample,
+    InstanceSegmentationImportExportSample,
+    MultilabelClassificationImportExportSample,
 )
 from app.models import DatasetItemAnnotationStatus, Task, TaskType
 from tests.bdd.utils import generate_random_image, import_dataset_to_project
@@ -38,11 +38,15 @@ def step_dataset_with_labels_exists(context: Context, labels: str) -> None:
     project = cast(ProjectView, context.project)
     match project.task.task_type:
         case TaskType.DETECTION:
-            sample_type = DetectionSample
+            sample_type = DetectionImportExportSample
         case TaskType.CLASSIFICATION:
-            sample_type = ClassificationSample if project.task.exclusive_labels else MultilabelClassificationSample
+            sample_type = (
+                ClassificationImportExportSample
+                if project.task.exclusive_labels
+                else MultilabelClassificationImportExportSample
+            )
         case TaskType.INSTANCE_SEGMENTATION:
-            sample_type = InstanceSegmentationSample
+            sample_type = InstanceSegmentationImportExportSample
     context.dataset = Dataset(sample_type, categories={"label": label_categories})
 
 
@@ -66,18 +70,16 @@ def step_dataset_with_samples_exists(context: Context) -> None:
             count = int(row.get(subset, "0").strip())
 
             for i in range(count):
-                buffer, filename = generate_random_image()
-                image_path = images_dir / f"{subset}_{filename}"
-                image_path.write_bytes(buffer.read())
+                image_path = generate_random_image(output_path=images_dir, suffix=subset)
                 sample = None
                 match task.task_type:
                     case TaskType.DETECTION:
                         x1, y1 = 10 + secrets.randbelow(50), 20 + secrets.randbelow(50)
                         x2, y2 = x1 + 80 + secrets.randbelow(100), y1 + 100 + secrets.randbelow(150)
-                        sample = DetectionSample(
+                        sample = DetectionImportExportSample(
                             id=None,
-                            image=LazyImage(image_path),
-                            image_info=ImageInfo(width=640, height=480),
+                            media=LazyImage(image_path),
+                            media_info=MediaInfo(width=640, height=480),
                             subset=Subset[subset.upper()],
                             user_reviewed=True,
                             label=np.array([label_idx]),
@@ -86,30 +88,30 @@ def step_dataset_with_samples_exists(context: Context) -> None:
                         )
                     case TaskType.CLASSIFICATION:
                         if task.exclusive_labels:
-                            sample = ClassificationSample(
+                            sample = ClassificationImportExportSample(
                                 id=None,
-                                image=LazyImage(image_path),
-                                image_info=ImageInfo(width=640, height=480),
+                                media=LazyImage(image_path),
+                                media_info=MediaInfo(width=640, height=480),
                                 subset=Subset[subset.upper()],
                                 user_reviewed=True,
                                 label=label_idx,
                                 confidence=None,
                             )
                         else:
-                            sample = MultilabelClassificationSample(
+                            sample = MultilabelClassificationImportExportSample(
                                 id=None,
-                                image=LazyImage(image_path),
-                                image_info=ImageInfo(width=640, height=480),
+                                media=LazyImage(image_path),
+                                media_info=MediaInfo(width=640, height=480),
                                 subset=Subset[subset.upper()],
                                 user_reviewed=True,
                                 label=np.array([label_idx]),
                                 confidence=None,
                             )
                     case TaskType.INSTANCE_SEGMENTATION:
-                        sample = InstanceSegmentationSample(
+                        sample = InstanceSegmentationImportExportSample(
                             id=None,
-                            image=LazyImage(image_path),
-                            image_info=ImageInfo(width=640, height=480),
+                            media=LazyImage(image_path),
+                            media_info=MediaInfo(width=640, height=480),
                             subset=Subset[subset.upper()],
                             user_reviewed=True,
                             label=np.array([label_idx]),
