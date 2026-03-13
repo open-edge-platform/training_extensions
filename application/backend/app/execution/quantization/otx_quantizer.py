@@ -309,7 +309,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
 
             quantization_info = {
                 "type": "PTQ" if params.max_drop is None else "Accuracy-aware PTQ",
-                "max_calibration_dataset_size": params.max_calibration_subset_size,
+                "max_calibration_subset_size": params.max_calibration_subset_size,
                 "max_drop": params.max_drop,
             }
 
