@@ -47,7 +47,7 @@ export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
                 translateShape={translate}
                 onComplete={onComplete}
             >
-                <AnnotationShapeRenderer annotation={{ ...annotation, shape }} hideLabels />
+                <AnnotationShapeRenderer annotation={{ ...annotation, shape }} />
             </TranslateShape>
 
             <g
