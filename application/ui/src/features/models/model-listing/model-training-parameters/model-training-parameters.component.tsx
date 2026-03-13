@@ -29,10 +29,17 @@ const TrainingConfigurationParametersList = ({ parameters }: TrainingConfigurati
 
     return (
         <Grid columns={['1fr', '1fr']} gap={'size-100'}>
-            {parameterRows.map((row) => (
-                <Fragment key={`${row.name}-${row.value}`}>
-                    <Text>{row.name}</Text>
-                    <Text>{row.value}</Text>
+            {parameterRows.map((row, index) => (
+                <Fragment key={`${index}-${row.isGroup}-${row.depth}-${row.name}-${row.value}`}>
+                    <Text
+                        UNSAFE_style={{
+                            paddingInlineStart: `calc(${row.depth} * var(--spectrum-global-dimension-size-200))`,
+                        }}
+                    >
+                        {row.isGroup ? row.name : `• ${row.name}`}
+                    </Text>
+
+                    <Text>{row.isGroup ? '' : row.value}</Text>
                 </Fragment>
             ))}
         </Grid>

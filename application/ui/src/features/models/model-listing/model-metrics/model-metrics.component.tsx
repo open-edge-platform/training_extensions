@@ -20,7 +20,7 @@ export const ModelMetrics = ({ modelId, evaluations }: ModelMetricsProps) => {
         <Flex direction='column' gap={'size-300'}>
             {isPending ? (
                 <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
-                    <Loading size={'M'} />
+                    <Loading size={'M'} mode={'inline'} />
                 </Flex>
             ) : isError ? (
                 <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
