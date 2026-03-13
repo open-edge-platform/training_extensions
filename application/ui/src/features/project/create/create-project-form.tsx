@@ -3,7 +3,7 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField } from '@geti/ui';
+import { Button, ButtonGroup, Content, Divider, Flex, Form, InlineAlert, Text, TextField } from '@geti/ui';
 import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
@@ -42,8 +42,16 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         projects.map((project) => project.name)
     );
 
+    const isMultiLabelClassification = isClassificationTask(selectedTask) && classificationTaskType === 'multi-label';
+
+    const needsMinimumNumberOfLabels = isMultiLabelClassification && labels.length < 2;
+    const multiLabelClassificationErrorMessage = 'At least 2 labels are required for multi-label classification';
+
     const isCreateProjectDisabled =
-        selectedTask === null || validationErrorMessage !== undefined || labels.length === 0;
+        selectedTask === null ||
+        validationErrorMessage !== undefined ||
+        labels.length === 0 ||
+        needsMinimumNumberOfLabels;
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
@@ -124,6 +132,14 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                                 </Text>
                             </Flex>
                             <LabelSelection labels={labels} setLabels={setLabels} taskType={selectedTask} />
+
+                            {needsMinimumNumberOfLabels && (
+                                <InlineAlert variant={'notice'}>
+                                    <Content>
+                                        <Text>{multiLabelClassificationErrorMessage}</Text>
+                                    </Content>
+                                </InlineAlert>
+                            )}
                         </Flex>
                     )}
                 </Flex>
