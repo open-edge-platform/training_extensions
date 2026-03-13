@@ -7,15 +7,16 @@ import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { partition } from 'lodash-es';
 
+import { StagedImportDataset } from '../../../../components/import-card-status/staged-import-dataset/staged-import-dataset.component';
 import { LoadingImportDataset } from '../../../../components/loading-import-dataset/loading-import-dataset.component';
 import { PrepareImportDataset } from '../../../../components/prepare-import-dataset/prepare-import-dataset.component';
 import { getQueryKey } from '../../../../query-client/query-client';
-import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
+import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
 
 export const ImportJobsList = () => {
     const queryClient = useQueryClient();
     const projectId = useProjectIdentifier();
-
+    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
     const { getAllImportEntries, deleteImportEntry, updateImportEntryStep } = useImportDatasetToProject();
 
     const importEntries = getAllImportEntries();
@@ -35,6 +36,12 @@ export const ImportJobsList = () => {
                 { params: { path: { project_id: projectId } } },
             ]),
         });
+    };
+
+    const handleOpen = (stagedDatasetId: string) => {
+        setCurrentStep('labelMapping');
+        setCurrentStagedId(stagedDatasetId);
+        datasetImportDialogState.open();
     };
 
     return (
@@ -62,8 +69,12 @@ export const ImportJobsList = () => {
             {stagedImportsQueue.map(({ fileName, stagedDatasetId }) => (
                 <StagedImportDataset
                     key={`staged-${stagedDatasetId}`}
-                    fileName={String(fileName)}
-                    stagedDatasetId={String(stagedDatasetId)}
+                    fileName={fileName}
+                    message={'Map labels for the uploaded dataset'}
+                    stagedDatasetId={stagedDatasetId}
+                    primaryButtonLabel={'Continue'}
+                    onOpen={() => handleOpen(stagedDatasetId)}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
                 />
             ))}
 

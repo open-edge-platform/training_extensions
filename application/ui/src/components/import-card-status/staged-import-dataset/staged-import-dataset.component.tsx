@@ -4,38 +4,28 @@
 import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
-import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
-import { DeleteStagedFileConfirmation } from '../../../../../components/delete-staged-file-confirmation/delete-staged-file-confirmation.component';
-import { formatBytes } from '../../../../../shared/util';
-import { ImportDatasetAsNewProjectState } from '../../../../dataset/import-export/import-dataset/util';
-import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
+import { formatBytes } from '../../../shared/util';
+import { DeleteStagedFileConfirmation } from '../../delete-staged-file-confirmation/delete-staged-file-confirmation.component';
 
 type StagedImportDatasetProps = {
     message: string;
     fileName: string;
     stagedDatasetId: string;
     primaryButtonLabel: string;
-    openState: ImportDatasetAsNewProjectState;
+    onOpen: () => void;
+    deleteEntry: () => void;
 };
 
 export const StagedImportDataset = ({
     message,
     fileName,
-    openState,
     stagedDatasetId,
     primaryButtonLabel,
+    onOpen,
+    deleteEntry,
 }: StagedImportDatasetProps) => {
-    const { deleteImportEntry } = useImportDatasetAsNewProject();
-    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialog();
-
-    const { error, isError, isFetching, data: stagedDataset } = useStagedDataset(stagedDatasetId);
-
-    const handleOpen = () => {
-        setCurrentStep(openState);
-        setCurrentStagedId(stagedDatasetId);
-        datasetImportDialogState.open();
-    };
+    const { error, isError, data: stagedDataset } = useStagedDataset(stagedDatasetId);
 
     return (
         <View
@@ -51,15 +41,10 @@ export const StagedImportDataset = ({
                         Import dataset - {fileName} - {formatBytes(stagedDataset?.size ?? 0)}
                     </Text>
 
-                    <Divider size='S' marginY='size-150' />
-
                     <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                        <DeleteStagedFileConfirmation
-                            stagedDatasetId={stagedDatasetId}
-                            deleteEntry={() => deleteImportEntry(stagedDatasetId)}
-                        />
+                        <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} deleteEntry={deleteEntry} />
 
-                        <Button onPress={handleOpen} isDisabled={isError || isFetching}>
+                        <Button onPress={onOpen} isDisabled={isError}>
                             {primaryButtonLabel}
                         </Button>
                     </Flex>

@@ -63,7 +63,7 @@ const useFormConfig = (stagedDatasetId: string) => {
     }, initialFormState);
 };
 
-export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
+export const ImportLabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
 
     const [formState, submitAction] = useFormConfig(stagedDatasetId);
