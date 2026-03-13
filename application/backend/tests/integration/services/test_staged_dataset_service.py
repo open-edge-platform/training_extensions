@@ -149,7 +149,8 @@ class TestStagedDatasetServiceIntegration:
         assert geti_ds.format == DatasetFormat.GETI
         assert geti_ds.filename == str(geti_path)
         assert geti_ds.metadata == DatasetMetadata(
-            num_items=3,
+            num_images=2,
+            num_frames=1,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,
@@ -209,7 +210,8 @@ class TestStagedDatasetServiceIntegration:
         assert result.compressed is False
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
-            num_items=3,
+            num_images=2,
+            num_frames=1,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
             num_annotations=3,

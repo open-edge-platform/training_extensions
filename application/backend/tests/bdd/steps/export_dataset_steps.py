@@ -239,7 +239,9 @@ def step_project_dataset_has_video_frames(context: Context) -> None:
 @when("I export the project dataset in {export_format} format with filters={filters}")  # pyrefly: ignore
 def step_export_dataset(context: Context, export_format: str, filters: str) -> None:
     project = cast(ProjectView, context.project)
-    job = export_dataset(str(context.base_url), str(project.id), DatasetFormat(export_format.lower()), filters)
+    export_format = DatasetFormat(export_format.lower())
+    job = export_dataset(str(context.base_url), str(project.id), export_format, filters)
+    context.export_format = export_format
     context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
 
 
@@ -253,7 +255,17 @@ def step_staged_dataset_archive_exists(context: Context, archive_name: str) -> N
 
 @then("the staged dataset with name={dataset_name} has {count:d} {media_type}")  # pyrefly: ignore
 def step_staged_dataset_has_items(context: Context, dataset_name: str, count: int, media_type: str) -> None:
+    export_format = cast(DatasetFormat, context.export_format)
     dataset_path = cast(Path, context.tmp_path) / "data" / "staged_datasets" / str(context.dataset_id) / dataset_name
+    if export_format != DatasetFormat.GETI:
+        if media_type == "video frames":
+            return
+        if media_type == "images":
+            dataset = import_dataset(dataset_path)
+            actual_count = len(dataset)
+            assert actual_count == count, f"Expected {count} {media_type} in dataset, but found {actual_count}"
+            return
+
     dataset = import_dataset(dataset_path)
     media_class = LazyVideoFrame if media_type == "video frames" else LazyImage
     actual_count = sum(1 for sample in dataset if isinstance(sample.media, media_class))

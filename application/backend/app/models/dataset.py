@@ -27,7 +27,8 @@ class DatasetFormat(StrEnum):
 
 
 class DatasetMetadata(BaseModel):
-    num_items: int
+    num_images: int
+    num_frames: int
     annotation_type: AnnotationType
     num_annotations: int
     labels: list[str]

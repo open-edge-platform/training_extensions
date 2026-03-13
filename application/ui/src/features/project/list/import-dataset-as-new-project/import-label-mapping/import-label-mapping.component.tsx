@@ -69,10 +69,12 @@ export const ImportLabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const [formState, submitAction] = useFormConfig(stagedDatasetId);
 
     const datasetLabels = stagedDataset?.metadata?.labels ?? [];
-    const totalDatasetItems = stagedDataset?.metadata?.num_items ?? 0;
-    /* 
-        Todo: update with totalAnnotatedImages 
-        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137 
+    const totalImages = stagedDataset?.metadata?.num_images ?? 0;
+    const totalFrames = stagedDataset?.metadata?.num_frames ?? 0;
+    const totalDatasetItems = totalImages + totalFrames;
+    /*
+        Todo: update with totalAnnotatedImages
+        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137
     */
     const totalAnnotatedItems = stagedDataset?.metadata?.num_annotations ?? 0;
 

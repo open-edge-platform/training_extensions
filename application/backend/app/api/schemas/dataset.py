@@ -52,7 +52,8 @@ class StagedDatasetView(BaseRequiredIDModel):
                 "ready_for_import": True,
                 "size": 987654321,
                 "metadata": {
-                    "num_items": 2000,
+                    "num_images": 2000,
+                    "num_frames": 800,
                     "num_videos": 10,
                     "annotation_type": "bounding_box",
                     "num_annotations": 10000,
