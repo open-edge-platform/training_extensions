@@ -156,7 +156,7 @@ class MediaAnnotations(BaseModel):
     annotations: list[DatasetItemAnnotation]
     user_reviewed: bool
     prediction_model_id: UUID | None = None
-    media_id: UUID | None = None
+    media_id: UUID | None = Field(None, exclude_if=lambda v: v is None)
 
     model_config = {
         "json_schema_extra": {

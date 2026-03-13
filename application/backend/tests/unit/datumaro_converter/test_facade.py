@@ -8,12 +8,12 @@ import pytest
 from datumaro.experimental import LazyImage
 
 from app.datumaro_converter import (
-    ClassificationImportExportSample,
-    ClassificationTrainingSample,
     DetectionImportExportSample,
     DetectionTrainingSample,
     InstanceSegmentationImportExportSample,
     InstanceSegmentationTrainingSample,
+    MulticlassClassificationImportExportSample,
+    MulticlassClassificationTrainingSample,
     MultilabelClassificationImportExportSample,
     MultilabelClassificationTrainingSample,
     SampleMode,
@@ -187,8 +187,8 @@ def test_convert_detection_dataset(
 @pytest.mark.parametrize(
     "sample_mode, sample_type, media_attr",
     [
-        (SampleMode.TRAINING, ClassificationTrainingSample, "image"),
-        (SampleMode.IMPORT_EXPORT, ClassificationImportExportSample, "media"),
+        (SampleMode.TRAINING, MulticlassClassificationTrainingSample, "image"),
+        (SampleMode.IMPORT_EXPORT, MulticlassClassificationImportExportSample, "media"),
     ],
 )
 def test_convert_multiclass_classification_dataset(

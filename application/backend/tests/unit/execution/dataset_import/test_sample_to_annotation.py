@@ -8,9 +8,9 @@ import pytest
 from datumaro.experimental.categories import LabelCategories
 
 from app.datumaro_converter import (
-    ClassificationImportExportSample,
     DetectionImportExportSample,
     InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
     MultilabelClassificationImportExportSample,
 )
 from app.execution.dataset_import.sample_to_annotation import DatumaroSampleToGetiAnnotationConverter
@@ -86,7 +86,7 @@ def test_convert_with_none(fxt_converter, fxt_project_labels):
 class TestClassificationConversion:
     def test_convert_classification_sample_with_confidence(self, fxt_converter, fxt_project_labels):
         """Test converting a classification sample with confidence score."""
-        sample = ClassificationImportExportSample(label=0, confidence=0.95)
+        sample = MulticlassClassificationImportExportSample(label=0, confidence=0.95)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -98,7 +98,7 @@ class TestClassificationConversion:
 
     def test_convert_classification_sample_without_confidence(self, fxt_converter, fxt_project_labels):
         """Test converting a classification sample without confidence."""
-        sample = ClassificationImportExportSample(label=1, confidence=None)
+        sample = MulticlassClassificationImportExportSample(label=1, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -108,7 +108,7 @@ class TestClassificationConversion:
 
     def test_convert_classification_sample_with_none_label(self, fxt_converter):
         """Test converting a classification sample with None label."""
-        sample = ClassificationImportExportSample(label=None, confidence=0.5)
+        sample = MulticlassClassificationImportExportSample(label=None, confidence=0.5)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -118,7 +118,7 @@ class TestClassificationConversion:
         self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
     ):
         """Test converting a classification sample with label mapping."""
-        sample = ClassificationImportExportSample(label=0, confidence=0.9)
+        sample = MulticlassClassificationImportExportSample(label=0, confidence=0.9)
         result = fxt_converter_with_mapping.convert_sample(sample)
 
         assert result is not None
@@ -131,7 +131,7 @@ class TestClassificationConversion:
         project_labels = fxt_project_labels[:2]  # Only "cat" and "dog" labels in project
         converter = DatumaroSampleToGetiAnnotationConverter(project_labels, fxt_label_categories, label_mapping)
 
-        sample = ClassificationImportExportSample(label=2, confidence=0.9)
+        sample = MulticlassClassificationImportExportSample(label=2, confidence=0.9)
         result = converter.convert_sample(sample)
 
         assert result == []  # Label should be filtered out and no annotations returned

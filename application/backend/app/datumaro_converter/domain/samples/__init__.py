@@ -2,26 +2,26 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .import_export import (
-    ClassificationImportExportSample,
     DetectionImportExportSample,
     InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
     MultilabelClassificationImportExportSample,
 )
 from .sample_mode import SampleMode
 from .training import (
-    ClassificationTrainingSample,
     DetectionTrainingSample,
     InstanceSegmentationTrainingSample,
+    MulticlassClassificationTrainingSample,
     MultilabelClassificationTrainingSample,
 )
 
 __all__ = [
-    "ClassificationImportExportSample",
-    "ClassificationTrainingSample",
     "DetectionImportExportSample",
     "DetectionTrainingSample",
     "InstanceSegmentationImportExportSample",
     "InstanceSegmentationTrainingSample",
+    "MulticlassClassificationImportExportSample",
+    "MulticlassClassificationTrainingSample",
     "MultilabelClassificationImportExportSample",
     "MultilabelClassificationTrainingSample",
     "SampleMode",

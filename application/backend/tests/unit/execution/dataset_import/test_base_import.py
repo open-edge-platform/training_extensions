@@ -18,7 +18,7 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.core.jobs.models import JobParams
-from app.datumaro_converter import ClassificationImportExportSample
+from app.datumaro_converter import MulticlassClassificationImportExportSample
 from app.execution.dataset_import.base_import import BaseDatasetImport
 from app.models import DatasetItemAnnotation, DatasetItemSubset, FullImage, Label, LabelReference, Task, TaskType
 from app.models.media import ImageFormat, MediaType, VideoFormat
@@ -135,11 +135,11 @@ class TestBaseDatasetImport:
         project_id = uuid4()
         task = Task(task_type=TaskType.CLASSIFICATION)
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
+        dataset = Dataset(MulticlassClassificationImportExportSample, categories=label_categories)
         create_mock_image(output_path=tmp_path / "image1.jpg", image_format="JPEG")
         create_mock_image(output_path=tmp_path / "image2.bmp", image_format="BMP")
         dataset.append(
-            ClassificationImportExportSample(
+            MulticlassClassificationImportExportSample(
                 id=None,
                 media=LazyImage(tmp_path / "image1.jpg"),
                 media_info=MediaInfo(10, 10),
@@ -150,7 +150,7 @@ class TestBaseDatasetImport:
             )
         )
         dataset.append(
-            ClassificationImportExportSample(
+            MulticlassClassificationImportExportSample(
                 id=None,
                 media=LazyImage(tmp_path / "image2.bmp"),
                 media_info=MediaInfo(10, 10),
@@ -182,7 +182,7 @@ class TestBaseDatasetImport:
             assert meta.project_id == project_id
             assert meta.name == f"image_{index}"
             assert meta.media_type == MediaType.IMAGE
-            assert meta.format_ == ImageFormat.JPG if index == 0 else ImageFormat.BMP
+            assert meta.image_format == ImageFormat.JPG if index == 0 else ImageFormat.BMP
             assert meta.data is not None
 
         # Verify dataset item creation
@@ -211,13 +211,13 @@ class TestBaseDatasetImport:
         project_id = uuid4()
         task = Task(task_type=TaskType.CLASSIFICATION)
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat",))}
-        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
+        dataset = Dataset(MulticlassClassificationImportExportSample, categories=label_categories)
 
         video_path = tmp_path / "video1.mp4"
         create_mock_video(output_path=video_path)
 
         dataset.append(
-            ClassificationImportExportSample(
+            MulticlassClassificationImportExportSample(
                 id=None,
                 media=LazyVideoFrame(video_path=video_path, frame_index=0),
                 media_info=MediaInfo(10, 10),
@@ -228,7 +228,7 @@ class TestBaseDatasetImport:
             )
         )
         dataset.append(
-            ClassificationImportExportSample(
+            MulticlassClassificationImportExportSample(
                 id=None,
                 media=LazyVideoFrame(video_path=video_path, frame_index=5),  # same video, different frame
                 media_info=MediaInfo(10, 10),
@@ -262,7 +262,7 @@ class TestBaseDatasetImport:
         fxt_media_service.create_video.assert_called_once()
         video_call_kwargs = fxt_media_service.create_video.call_args
         assert video_call_kwargs.kwargs["project_id"] == project_id
-        assert video_call_kwargs.kwargs["format_"] == VideoFormat.MP4
+        assert video_call_kwargs.kwargs["video_format"] == VideoFormat.MP4
 
         # A video-frame image entry should be created for each frame
         assert fxt_media_service.create_image.call_count == 2
@@ -270,7 +270,7 @@ class TestBaseDatasetImport:
             meta: ImageMetadata = call.args[0]
             assert meta.media_type == MediaType.VIDEO_FRAME
             assert meta.video_id == mock_video.id
-            assert meta.format_ == ImageFormat.JPG
+            assert meta.image_format == ImageFormat.JPG
 
         # Dataset items should be created for each frame
         assert fxt_dataset_service.create_dataset_item.call_count == 2
@@ -289,13 +289,13 @@ class TestBaseDatasetImport:
     ) -> None:
         """Test complete item creation flow: media, annotations, and dataset items."""
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
+        dataset = Dataset(MulticlassClassificationImportExportSample, categories=label_categories)
         create_mock_image(output_path=tmp_path / "image1.jpg")
         create_mock_image(output_path=tmp_path / "image2.bmp", image_format="BMP")
         # This will cause the second sample to have no annotations after label mapping
         labels_mapping: dict[str, str | None] = {"dog": None}
         dataset.append(
-            ClassificationImportExportSample(
+            MulticlassClassificationImportExportSample(
                 id=None,
                 media=LazyImage(tmp_path / "image1.jpg"),
                 media_info=MediaInfo(10, 10),
@@ -306,7 +306,7 @@ class TestBaseDatasetImport:
             )
         )
         dataset.append(
-            ClassificationImportExportSample(
+            MulticlassClassificationImportExportSample(
                 id=None,
                 media=LazyImage(tmp_path / "image2.bmp"),
                 media_info=MediaInfo(10, 10),
@@ -353,11 +353,11 @@ class TestBaseDatasetImport:
     ) -> None:
         items_count = 100
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(ClassificationImportExportSample, categories=label_categories)
+        dataset = Dataset(MulticlassClassificationImportExportSample, categories=label_categories)
         for i in range(items_count):
             create_mock_image(output_path=tmp_path / f"image{i}.png", image_format="PNG")
             dataset.append(
-                ClassificationImportExportSample(
+                MulticlassClassificationImportExportSample(
                     id=None,
                     media=LazyImage(tmp_path / f"image{i}.png"),
                     media_info=MediaInfo(10, 10),

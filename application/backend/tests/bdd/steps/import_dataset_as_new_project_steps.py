@@ -14,9 +14,9 @@ from datumaro.experimental.categories import Categories, LabelCategories
 from app.api.schemas import ProjectView
 from app.api.schemas.jobs.dataset_import import ImportDatasetMetadata
 from app.datumaro_converter import (
-    ClassificationImportExportSample,
     DetectionImportExportSample,
     InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
     MultilabelClassificationImportExportSample,
 )
 from app.models import Task, TaskType
@@ -24,7 +24,7 @@ from tests.bdd.utils import import_dataset_as_new_project
 
 SAMPLE_TYPES: dict[TaskType | str, Any] = {
     TaskType.DETECTION: DetectionImportExportSample,
-    TaskType.CLASSIFICATION: ClassificationImportExportSample,
+    TaskType.CLASSIFICATION: MulticlassClassificationImportExportSample,
     "multilabel": MultilabelClassificationImportExportSample,
     TaskType.INSTANCE_SEGMENTATION: InstanceSegmentationImportExportSample,
 }

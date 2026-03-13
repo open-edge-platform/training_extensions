@@ -3,25 +3,25 @@
 
 from .label_index import LabelIndex
 from .samples import (
-    ClassificationImportExportSample,
-    ClassificationTrainingSample,
     DetectionImportExportSample,
     DetectionTrainingSample,
     InstanceSegmentationImportExportSample,
     InstanceSegmentationTrainingSample,
+    MulticlassClassificationImportExportSample,
+    MulticlassClassificationTrainingSample,
     MultilabelClassificationImportExportSample,
     MultilabelClassificationTrainingSample,
     SampleMode,
 )
 
 __all__ = [
-    "ClassificationImportExportSample",
-    "ClassificationTrainingSample",
     "DetectionImportExportSample",
     "DetectionTrainingSample",
     "InstanceSegmentationImportExportSample",
     "InstanceSegmentationTrainingSample",
     "LabelIndex",
+    "MulticlassClassificationImportExportSample",
+    "MulticlassClassificationTrainingSample",
     "MultilabelClassificationImportExportSample",
     "MultilabelClassificationTrainingSample",
     "SampleMode",

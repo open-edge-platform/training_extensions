@@ -5,9 +5,9 @@ import numpy as np
 from datumaro.experimental.categories import LabelCategories
 
 from app.datumaro_converter import (
-    ClassificationImportExportSample,
     DetectionImportExportSample,
     InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
     MultilabelClassificationImportExportSample,
 )
 from app.datumaro_converter.domain import LabelIndex
@@ -15,7 +15,7 @@ from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, 
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 SampleType = (
-    ClassificationImportExportSample
+    MulticlassClassificationImportExportSample
     | DetectionImportExportSample
     | InstanceSegmentationImportExportSample
     | MultilabelClassificationImportExportSample
@@ -101,7 +101,7 @@ class DatumaroSampleToGetiAnnotationConverter:
             ValueError: If the sample format is invalid or unsupported.
         """
         match sample:
-            case ClassificationImportExportSample(label=label, confidence=confidence):
+            case MulticlassClassificationImportExportSample(label=label, confidence=confidence):
                 return self.__convert_classification_sample(label, confidence)
             case MultilabelClassificationImportExportSample(label=labels, confidence=confidences):
                 return self.__convert_multilabel_sample(labels, confidences)

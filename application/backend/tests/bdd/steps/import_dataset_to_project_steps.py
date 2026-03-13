@@ -19,9 +19,9 @@ from datumaro.experimental.fields import Subset
 
 from app.api.schemas import ProjectView
 from app.datumaro_converter import (
-    ClassificationImportExportSample,
     DetectionImportExportSample,
     InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
     MultilabelClassificationImportExportSample,
 )
 from app.models import DatasetItemAnnotationStatus, Task, TaskType
@@ -41,7 +41,7 @@ def step_dataset_with_labels_exists(context: Context, labels: str) -> None:
             sample_type = DetectionImportExportSample
         case TaskType.CLASSIFICATION:
             sample_type = (
-                ClassificationImportExportSample
+                MulticlassClassificationImportExportSample
                 if project.task.exclusive_labels
                 else MultilabelClassificationImportExportSample
             )
@@ -88,7 +88,7 @@ def step_dataset_with_samples_exists(context: Context) -> None:
                         )
                     case TaskType.CLASSIFICATION:
                         if task.exclusive_labels:
-                            sample = ClassificationImportExportSample(
+                            sample = MulticlassClassificationImportExportSample(
                                 id=None,
                                 media=LazyImage(image_path),
                                 media_info=MediaInfo(width=640, height=480),

@@ -531,7 +531,7 @@ class TestMediaServiceIntegration:
             ImageMetadata(
                 project_id=project.id,
                 name="test",
-                format_=format,
+                image_format=format,
                 data=image,
                 source_id=pipeline.source_id if use_pipeline_source else None,
             )
@@ -585,7 +585,7 @@ class TestMediaServiceIntegration:
                 created_media = fxt_media_service.create_video(
                     project_id=project.id,
                     name="test",
-                    format_=format,
+                    video_format=format,
                     data=data,
                     source_id=pipeline.source_id if use_pipeline_source else None,
                 )
@@ -628,7 +628,7 @@ class TestMediaServiceIntegration:
                 ImageMetadata(
                     project_id=project.id,
                     name="test",
-                    format_=ImageFormat.JPG,
+                    image_format=ImageFormat.JPG,
                     data=BytesIO(b"123"),
                 )
             )

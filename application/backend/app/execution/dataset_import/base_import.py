@@ -15,9 +15,9 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.datumaro_converter import (
-    ClassificationImportExportSample,
     DetectionImportExportSample,
     InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
     MultilabelClassificationImportExportSample,
 )
 from app.execution.base import Execution, JobParamsT
@@ -127,7 +127,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                             ImageMetadata(
                                 project_id=project_id,
                                 name=f"image_{name_suffix}",
-                                format_=self.__detect_image_format(item.media),
+                                image_format=self.__detect_image_format(item.media),
                                 data=item.media.data,
                             )
                         )
@@ -139,7 +139,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                                 video = self._media_service.create_video(
                                     project_id=project_id,
                                     name=f"video_{name_suffix}",
-                                    format_=self.__detect_video_format(item.media),
+                                    video_format=self.__detect_video_format(item.media),
                                     data=video_data,
                                 )
                                 created_videos[video_path] = video.id
@@ -147,7 +147,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                             ImageMetadata(
                                 project_id=project_id,
                                 name=f"video_frame_{name_suffix}",
-                                format_=ImageFormat.JPG,
+                                image_format=ImageFormat.JPG,
                                 media_type=MediaType.VIDEO_FRAME,
                                 data=item.media.data,
                                 video_id=created_videos[video_path],
@@ -211,7 +211,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             case TaskType.CLASSIFICATION:
                 if not task.exclusive_labels:
                     return MultilabelClassificationImportExportSample
-                return ClassificationImportExportSample
+                return MulticlassClassificationImportExportSample
             case TaskType.DETECTION:
                 return DetectionImportExportSample
             case TaskType.INSTANCE_SEGMENTATION:

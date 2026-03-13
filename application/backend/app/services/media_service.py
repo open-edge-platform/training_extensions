@@ -52,7 +52,7 @@ class MediaFilters:
 class ImageMetadata:
     project_id: UUID
     name: str
-    format_: ImageFormat
+    image_format: ImageFormat
     data: Image.Image | np.ndarray | BinaryIO | BytesIO
     media_type: MediaType = MediaType.IMAGE
     source_id: UUID | None = None
@@ -112,7 +112,7 @@ class MediaService(BaseSessionManagedService):
 
         dataset_dir = self.projects_dir / f"{metadata.project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        binary_path = dataset_dir / f"{media_id}.{metadata.format_}"
+        binary_path = dataset_dir / f"{media_id}.{metadata.image_format}"
         image.save(binary_path)
 
         try:
@@ -123,7 +123,7 @@ class MediaService(BaseSessionManagedService):
                 project_id=str(metadata.project_id),
                 type=metadata.media_type,
                 name=metadata.name,
-                format=str(metadata.format_),
+                format=str(metadata.image_format),
                 width=image.width,
                 height=image.height,
                 size=os.path.getsize(binary_path),
@@ -143,7 +143,7 @@ class MediaService(BaseSessionManagedService):
         self,
         project_id: UUID,
         name: str,
-        format_: VideoFormat,
+        video_format: VideoFormat,
         data: BinaryIO,
         source_id: UUID | None = None,
     ) -> Media:
@@ -152,7 +152,7 @@ class MediaService(BaseSessionManagedService):
 
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        binary_path = dataset_dir / f"{media_id}.{format_}"
+        binary_path = dataset_dir / f"{media_id}.{video_format}"
 
         data.seek(0)
         with open(binary_path, "wb") as f:
@@ -167,7 +167,7 @@ class MediaService(BaseSessionManagedService):
                 project_id=str(project_id),
                 type=MediaType.VIDEO,
                 name=name,
-                format=str(format_),
+                format=str(video_format),
                 width=video_metadata.width,
                 height=video_metadata.height,
                 frame_count=video_metadata.frame_count,

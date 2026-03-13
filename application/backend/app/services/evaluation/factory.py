@@ -4,9 +4,9 @@
 from datumaro.experimental import Dataset, Sample
 
 from app.datumaro_converter import (
-    ClassificationTrainingSample,
     DetectionTrainingSample,
     InstanceSegmentationTrainingSample,
+    MulticlassClassificationTrainingSample,
     MultilabelClassificationTrainingSample,
 )
 
@@ -23,7 +23,7 @@ class EvaluatorFactory:
     """Factory to get a suitable evaluator for a given set of ground truth and predictions datasets."""
 
     _registry: dict[type[Sample], type[Evaluator]] = {
-        ClassificationTrainingSample: MultiClassClassificationEvaluator,
+        MulticlassClassificationTrainingSample: MultiClassClassificationEvaluator,
         MultilabelClassificationTrainingSample: MultiLabelClassificationEvaluator,
         DetectionTrainingSample: DetectionEvaluator,
         InstanceSegmentationTrainingSample: InstanceSegmentationEvaluator,

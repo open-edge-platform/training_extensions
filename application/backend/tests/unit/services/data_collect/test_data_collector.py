@@ -189,7 +189,7 @@ class TestDataCollectorUnit:
         metadata: ImageMetadata = mock_create_image.call_args.args[0]
         assert metadata.project_id == project.id
         assert metadata.name == "1735689601_0000"
-        assert metadata.format_ == ImageFormat.JPG
+        assert metadata.image_format == ImageFormat.JPG
         assert metadata.source_id == pipeline.source_id
         assert metadata.data is not None
         mock_create_dataset_item.assert_called_once_with(
@@ -251,7 +251,7 @@ class TestDataCollectorUnit:
         metadata: ImageMetadata = mock_create_image.call_args.args[0]
         assert metadata.project_id == project.id
         assert metadata.name == "1735689601_0000"
-        assert metadata.format_ == ImageFormat.JPG
+        assert metadata.image_format == ImageFormat.JPG
         assert metadata.source_id == pipeline.source_id
         assert metadata.data is not None
         mock_create_dataset_item.assert_called_once_with(

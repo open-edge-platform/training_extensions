@@ -4,20 +4,23 @@ from datumaro.experimental import LazyImage
 from datumaro.experimental.fields import ImageInfo, Subset
 from loguru import logger
 
-from app.datumaro_converter.domain import ClassificationImportExportSample, ClassificationTrainingSample
+from app.datumaro_converter.domain import (
+    MulticlassClassificationImportExportSample,
+    MulticlassClassificationTrainingSample,
+)
 from app.models import DatasetItem, Media
 
 from .sample_factory import SampleFactory, SampleMode
 
-ClassificationSample = ClassificationImportExportSample | ClassificationTrainingSample
+MulticlassClassificationSample = MulticlassClassificationImportExportSample | MulticlassClassificationTrainingSample
 
 
-class ClassificationSampleFactory(SampleFactory[ClassificationSample]):
+class ClassificationSampleFactory(SampleFactory[MulticlassClassificationSample]):
     """Knows how to create classification samples."""
 
     _sample_type_map = {
-        SampleMode.TRAINING: ClassificationTrainingSample,
-        SampleMode.IMPORT_EXPORT: ClassificationImportExportSample,
+        SampleMode.TRAINING: MulticlassClassificationTrainingSample,
+        SampleMode.IMPORT_EXPORT: MulticlassClassificationImportExportSample,
     }
 
     def __create_sample_for_mode(
@@ -28,12 +31,12 @@ class ClassificationSampleFactory(SampleFactory[ClassificationSample]):
         label: int | None = None,
         confidence: float | None = None,
         user_reviewed: bool = False,
-    ) -> ClassificationSample | None:
+    ) -> MulticlassClassificationSample | None:
         subset = Subset[dataset_item.subset.name]
         match self._mode:
             case SampleMode.IMPORT_EXPORT:
                 media_item, media_info = self._get_dm_media_with_info(media, media_path)
-                return ClassificationImportExportSample(
+                return MulticlassClassificationImportExportSample(
                     id=str(dataset_item.id),
                     media=media_item,
                     media_info=media_info,
@@ -43,7 +46,7 @@ class ClassificationSampleFactory(SampleFactory[ClassificationSample]):
                     user_reviewed=user_reviewed,
                 )
             case SampleMode.TRAINING:
-                return ClassificationTrainingSample(
+                return MulticlassClassificationTrainingSample(
                     id=str(dataset_item.id),
                     image=LazyImage(media_path),
                     image_info=ImageInfo(width=media.width, height=media.height),
@@ -54,7 +57,9 @@ class ClassificationSampleFactory(SampleFactory[ClassificationSample]):
             case _:
                 raise ValueError(f"Unsupported sample mode: {self._mode}")
 
-    def create_sample(self, dataset_item: DatasetItem, media: Media, media_path: str) -> ClassificationSample | None:
+    def create_sample(
+        self, dataset_item: DatasetItem, media: Media, media_path: str
+    ) -> MulticlassClassificationSample | None:
         if dataset_item.annotation_data is None:
             return self.__create_sample_for_mode(dataset_item, media, media_path)
 

@@ -186,7 +186,7 @@ class TestMediaEndpoints:
         metadata: ImageMetadata = fxt_media_service.create_image.call_args.args[0]
         assert metadata.project_id == fxt_get_project.id
         assert metadata.name == "test_file"
-        assert metadata.format_ == ImageFormat(image_format)
+        assert metadata.image_format == ImageFormat(image_format)
         assert metadata.data
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project_id=fxt_get_project.id,
@@ -240,7 +240,7 @@ class TestMediaEndpoints:
             project_id=fxt_get_project.id,
             data=ANY,
             name="test_file",
-            format_="mp4",
+            video_format="mp4",
         )
         fxt_dataset_service.create_dataset_item.assert_not_called()
 
@@ -816,6 +816,7 @@ class TestMediaEndpoints:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json() == {
+            "media_id": str(media.id),
             "annotations": [
                 {
                     "confidences": None,
@@ -912,6 +913,7 @@ class TestMediaEndpoints:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json() == {
+            "media_id": str(video_frame_id),
             "annotations": [
                 {
                     "confidences": None,
@@ -971,6 +973,7 @@ class TestMediaEndpoints:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json() == {
+            "media_id": str(video_frame_id),
             "annotations": [
                 {
                     "confidences": None,

@@ -250,7 +250,11 @@ class TestProjectServiceIntegration:
         # Create media using the service
         media = fxt_media_service.create_image(
             ImageMetadata(
-                project_id=project.id, name="test_image.jpg", format_=ImageFormat.JPG, data=dummy_image, source_id=None
+                project_id=project.id,
+                name="test_image.jpg",
+                image_format=ImageFormat.JPG,
+                data=dummy_image,
+                source_id=None,
             )
         )
         project_folder = fxt_project_service._projects_dir / db_project.id

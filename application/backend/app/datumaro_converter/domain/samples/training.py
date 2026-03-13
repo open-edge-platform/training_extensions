@@ -37,7 +37,7 @@ class BaseTrainingSample(Sample):
 
 
 @register_sample
-class ClassificationTrainingSample(BaseTrainingSample):
+class MulticlassClassificationTrainingSample(BaseTrainingSample):
     """
     Sample for multiclass classification datasets.
 

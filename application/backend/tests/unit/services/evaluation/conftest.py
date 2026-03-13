@@ -10,9 +10,9 @@ from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, Subset
 
 from app.datumaro_converter import (
-    ClassificationTrainingSample,
     DetectionTrainingSample,
     InstanceSegmentationTrainingSample,
+    MulticlassClassificationTrainingSample,
     MultilabelClassificationTrainingSample,
 )
 
@@ -21,11 +21,11 @@ from app.datumaro_converter import (
 def fxt_multiclass_classification_dataset_gt() -> Dataset:
     # Ground truth dataset for multiclass classification task
     dataset = Dataset(
-        ClassificationTrainingSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))}
+        MulticlassClassificationTrainingSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))}
     )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
@@ -33,7 +33,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             confidence=None,
             subset=Subset.VALIDATION,
         ),
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
@@ -41,7 +41,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             confidence=None,
             subset=Subset.VALIDATION,
         ),
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
@@ -49,7 +49,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             confidence=None,
             subset=Subset.VALIDATION,
         ),
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/D.jpg"),
             image_info=img_info,
@@ -57,7 +57,7 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
             confidence=None,
             subset=Subset.VALIDATION,
         ),
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/E.jpg"),
             image_info=img_info,
@@ -75,11 +75,11 @@ def fxt_multiclass_classification_dataset_gt() -> Dataset:
 def fxt_multiclass_classification_dataset_pred() -> Dataset:
     # Prediction dataset for multiclass classification task
     dataset = Dataset(
-        ClassificationTrainingSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))}
+        MulticlassClassificationTrainingSample, categories={"label": LabelCategories(labels=("cat", "dog", "bird"))}
     )
     img_info = ImageInfo(width=100, height=100)
     samples = (
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/A.jpg"),
             image_info=img_info,
@@ -87,7 +87,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             confidence=0.9,
             subset=Subset.VALIDATION,
         ),  # correct
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/B.jpg"),
             image_info=img_info,
@@ -95,7 +95,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             confidence=0.6,
             subset=Subset.VALIDATION,
         ),  # wrong
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/C.jpg"),
             image_info=img_info,
@@ -103,7 +103,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             confidence=0.5,
             subset=Subset.VALIDATION,
         ),  # wrong
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/D.jpg"),
             image_info=img_info,
@@ -111,7 +111,7 @@ def fxt_multiclass_classification_dataset_pred() -> Dataset:
             confidence=0.8,
             subset=Subset.VALIDATION,
         ),  # correct
-        ClassificationTrainingSample(
+        MulticlassClassificationTrainingSample(
             id=str(uuid4()),
             image=LazyImage("/dummy/path/E.jpg"),
             image_info=img_info,

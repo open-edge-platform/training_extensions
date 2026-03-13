@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .domain import (
-    ClassificationImportExportSample,
-    ClassificationTrainingSample,
     DetectionImportExportSample,
     DetectionTrainingSample,
     InstanceSegmentationImportExportSample,
     InstanceSegmentationTrainingSample,
+    MulticlassClassificationImportExportSample,
+    MulticlassClassificationTrainingSample,
     MultilabelClassificationImportExportSample,
     MultilabelClassificationTrainingSample,
     SampleMode,
@@ -15,12 +15,12 @@ from .domain import (
 from .facade import convert_dataset
 
 __all__ = [
-    "ClassificationImportExportSample",
-    "ClassificationTrainingSample",
     "DetectionImportExportSample",
     "DetectionTrainingSample",
     "InstanceSegmentationImportExportSample",
     "InstanceSegmentationTrainingSample",
+    "MulticlassClassificationImportExportSample",
+    "MulticlassClassificationTrainingSample",
     "MultilabelClassificationImportExportSample",
     "MultilabelClassificationTrainingSample",
     "SampleMode",

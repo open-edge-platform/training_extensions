@@ -209,7 +209,7 @@ class DataCollector:
                     project_id=project.id,
                     data=frame_data,
                     name=f"{timestamp:.4f}".replace(".", "_"),
-                    format_=ImageFormat.JPG,
+                    image_format=ImageFormat.JPG,
                     source_id=pipeline.source_id,
                 )
             )

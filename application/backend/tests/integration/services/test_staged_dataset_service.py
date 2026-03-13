@@ -11,7 +11,7 @@ from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.export_import import ExportMode
 from datumaro.experimental.fields import Subset
 
-from app.datumaro_converter import ClassificationImportExportSample
+from app.datumaro_converter import MulticlassClassificationImportExportSample
 from app.models import AnnotationType, DatasetFormat
 from app.models.dataset import DatasetMetadata
 from app.services import StagedDatasetService
@@ -32,9 +32,9 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
     parent_dir.mkdir(parents=True)
     ds_dir = parent_dir / "dataset"
     categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-    dataset = Dataset(ClassificationImportExportSample, categories=categories)
+    dataset = Dataset(MulticlassClassificationImportExportSample, categories=categories)
     dataset.append(
-        ClassificationImportExportSample(
+        MulticlassClassificationImportExportSample(
             id=str(uuid4()),
             media=LazyImage(ds_dir / "images/image1.jpg"),
             media_info=MediaInfo(width=200, height=200),
@@ -45,7 +45,7 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
         )
     )
     dataset.append(
-        ClassificationImportExportSample(
+        MulticlassClassificationImportExportSample(
             id=str(uuid4()),
             media=LazyImage(ds_dir / "images/image2.jpg"),
             media_info=MediaInfo(width=200, height=200),
@@ -56,7 +56,7 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
         )
     )
     dataset.append(
-        ClassificationImportExportSample(
+        MulticlassClassificationImportExportSample(
             id=str(uuid4()),
             media=LazyVideoFrame(video_path=ds_dir / "videos/video1.mp4", frame_index=10),
             media_info=MediaInfo(width=200, height=200),

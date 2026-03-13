@@ -168,7 +168,7 @@ def add_media(
                     project_id=project.id,
                     data=file.file,
                     name=name,
-                    format_=format_,
+                    image_format=format_,
                 )
             )
             dataset_service.create_dataset_item(
@@ -183,7 +183,7 @@ def add_media(
                 project_id=project.id,
                 data=file.file,
                 name=name,
-                format_=format_,
+                video_format=format_,
             )
         return MediaViewAdapter.validate_python(media, from_attributes=True)
     except InvalidImageError:

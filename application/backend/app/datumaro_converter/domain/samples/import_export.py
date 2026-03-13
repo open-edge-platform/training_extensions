@@ -40,7 +40,7 @@ class BaseImportExportSample(Sample):
 
 
 @register_sample
-class ClassificationImportExportSample(BaseImportExportSample):
+class MulticlassClassificationImportExportSample(BaseImportExportSample):
     """
     Sample for multiclass classification datasets.
 
