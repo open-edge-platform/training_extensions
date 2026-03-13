@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB
 from app.models import Label
+from app.models.label import LabelReference, LabelUpdateInfo
+from app.models.project import Project
+from app.models.task import TaskType
 from app.repositories import LabelRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.utils.color import random_color
@@ -56,7 +59,90 @@ class LabelService(BaseSessionManagedService):
         db_ids = label_repo.list_ids()
         return [UUID(db_id) for db_id in db_ids]
 
-    def update_label(
+    def update_labels(
+        self,
+        project: Project,
+        labels_to_add: list[Label],
+        labels_to_remove: list[LabelReference],
+        labels_to_edit: list[LabelUpdateInfo],
+    ) -> list[Label]:
+        """
+        Update labels for a given project by adding, removing, and editing labels.
+
+        Validates that the resulting number of labels satisfies project task constraints
+        (e.g., multi-class classification requires at least two labels, and every project
+        requires at least one label). Also validates that labels to remove or edit exist
+        in the project before applying changes.
+
+        Args:
+            project (Project): The project whose labels to update.
+            labels_to_add (list[Label]): Labels to be added to the project.
+            labels_to_remove (list[LabelReference]): Labels to be removed from the project.
+            labels_to_edit (list[LabelUpdateInfo]): Labels within the project to be edited.
+
+        Returns:
+            list[Label]: The full list of labels for the project after all updates have been applied.
+
+        Raises:
+            ValueError: If the resulting number of labels violates project task constraints.
+            ResourceNotFoundError: If any labels to remove or edit do not exist in the project.
+            DuplicateLabelsError: If any label names or hotkeys conflict with existing labels.
+            ResourceWithIdAlreadyExistsError: If a label to add has an ID that already exists.
+        """
+
+        # Validate minimal number of labels satisfies project task constraints
+        existing_ids = self.list_ids(project_id=project.id)
+        new_number_of_labels = len(existing_ids) - len(labels_to_remove) + len(labels_to_add)
+        if (
+            project.task.task_type is TaskType.CLASSIFICATION
+            and project.task.exclusive_labels
+            and new_number_of_labels < 2
+        ):
+            raise ValueError(
+                f"Multi-class classification requires at least two labels, but after this label update the total "
+                f"number of labels is {new_number_of_labels}."
+            )
+        if new_number_of_labels < 1:
+            raise ValueError(
+                f"A project requires at least one label, but after this label update the total number of labels is "
+                f"{new_number_of_labels}."
+            )
+
+        # Validate labels to remove or edit exist in project
+        if missing_ids_to_remove := [label.id for label in labels_to_remove if label.id not in existing_ids]:
+            raise ResourceNotFoundError(
+                resource_type=ResourceType.LABEL,
+                resource_id=str(missing_ids_to_remove[0]),
+                message="One or more labels to remove do not exist in the project",
+            )
+        if missing_ids_to_edit := [label.id for label in labels_to_edit if label.id not in existing_ids]:
+            raise ResourceNotFoundError(
+                resource_type=ResourceType.LABEL,
+                resource_id=str(missing_ids_to_edit[0]),
+                message="One or more labels to edit do not exist in the project",
+            )
+
+        for label_to_edit in labels_to_edit:
+            self._update_label(
+                project_id=project.id,
+                label_id=label_to_edit.id,
+                new_name=label_to_edit.new_name,
+                new_color=label_to_edit.new_color,
+                new_hotkey=label_to_edit.new_hotkey,
+            )
+        for label_to_remove in labels_to_remove:
+            self._delete_label(project_id=project.id, label_id=label_to_remove.id)
+        for label_to_add in labels_to_add:
+            self.create_label(
+                project_id=project.id,
+                label_id=label_to_add.id,
+                name=label_to_add.name,
+                color=label_to_add.color,
+                hotkey=label_to_add.hotkey,
+            )
+        return self.list_all(project_id=project.id)
+
+    def _update_label(
         self, project_id: UUID, label_id: UUID, new_name: str | None, new_color: str | None, new_hotkey: str | None
     ) -> Label:
         label_repo = LabelRepository(str(project_id), self.db_session)
@@ -77,7 +163,7 @@ class LabelService(BaseSessionManagedService):
         except UniqueConstraintIntegrityError:
             raise DuplicateLabelsError
 
-    def delete_label(self, project_id: UUID, label_id: UUID) -> None:
+    def _delete_label(self, project_id: UUID, label_id: UUID) -> None:
         label_repo = LabelRepository(str(project_id), self.db_session)
         if not label_repo.delete(str(label_id)):
             raise ResourceNotFoundError(ResourceType.LABEL, str(label_id))

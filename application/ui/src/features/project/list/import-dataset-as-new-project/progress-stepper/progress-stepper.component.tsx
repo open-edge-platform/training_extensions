@@ -56,7 +56,7 @@ export const ProgressStepper = ({ currentStep }: ProgressStepperProps) => {
             <Text gridArea={'label2'} UNSAFE_style={{ width: dimensionValue('size-800'), textAlign: 'center' }}>
                 Task type
             </Text>
-            <Text gridArea={'label3'}>Label</Text>
+            <Text gridArea={'label3'}>Labels</Text>
         </Grid>
     );
 };

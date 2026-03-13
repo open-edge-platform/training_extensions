@@ -26,18 +26,29 @@ describe('AddMediaButton', () => {
         render(<AddMediaButton onFilesSelected={vi.fn()} />);
 
         const input = screen.getByLabelText(/Upload media files/);
-        const folderInput = screen.getByLabelText(/Upload media folder/);
 
         expect(input).toHaveAttribute('accept', acceptedExtensions);
-        expect(folderInput).toHaveAttribute('accept', acceptedExtensions);
     });
 
-    it('enables directory selection attributes on input', () => {
-        render(<AddMediaButton onFilesSelected={vi.fn()} />);
+    it('opens file picker when button is clicked', () => {
+        const mockOnFilesSelected = vi.fn();
 
-        const input = screen.getByLabelText(/Upload media folder/);
+        render(<AddMediaButton onFilesSelected={mockOnFilesSelected} />);
 
-        expect(input).toHaveAttribute('webkitdirectory');
-        expect(input).toHaveAttribute('directory');
+        const button = screen.getByRole('button', { name: /Upload media/ });
+        const input = screen.getByLabelText(/Upload media files/) as HTMLInputElement;
+
+        const clickSpy = vi.spyOn(input, 'click');
+        fireEvent.click(button);
+
+        expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('disables button when isDisabled prop is true', () => {
+        render(<AddMediaButton onFilesSelected={vi.fn()} isDisabled />);
+
+        const button = screen.getByRole('button', { name: /Upload media/ });
+
+        expect(button).toBeDisabled();
     });
 });

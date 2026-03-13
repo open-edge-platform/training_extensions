@@ -7,7 +7,10 @@ import {
     BoolConfigurableParameter,
     ConfigurableParameter,
     NumberConfigurableParameter,
+    type ConfigurableParameterGroup,
+    type TrainingConfigurationParameter,
 } from '../../../../constants/shared-types';
+import { isParameterGroup } from '../../model-listing/model-training-parameters/utils';
 
 const getDecimalPoints = (value: number): number => {
     return Math.abs(Math.ceil(Math.log10(value)));
@@ -47,3 +50,15 @@ export const isNumberParameter = (input: unknown): input is NumberConfigurablePa
 export const isConfigurationParameter = (input: unknown): input is ConfigurableParameter => {
     return isObject(input) && 'key' in input && 'name' in input && 'description' in input;
 };
+
+export const replaceByKey = (
+    parameters: TrainingConfigurationParameter[],
+    key: string,
+    replace: (match: ConfigurableParameterGroup) => ConfigurableParameterGroup
+): TrainingConfigurationParameter[] =>
+    parameters.map((parameter) => {
+        if (isParameterGroup(parameter) && parameter.key === key) {
+            return replace(parameter);
+        }
+        return parameter;
+    });

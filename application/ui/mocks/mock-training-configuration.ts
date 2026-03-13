@@ -30,6 +30,7 @@ export function getMockedConfigurationParameter(
             min_value: 0,
             description: 'This is a mocked configuration parameter',
             default_value: 50,
+            allowed_values: null,
             ...parameter,
         };
     }
