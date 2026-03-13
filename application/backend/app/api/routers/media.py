@@ -13,6 +13,7 @@ from app.api.dependencies import get_dataset_service, get_file_name_and_extensio
 from app.api.io_utils import write_file_to_response, write_image_to_response
 from app.api.schemas.media import (
     AnnotatedVideoFrame,
+    BulkDeleteMedia,
     MediaAnnotations,
     MediaView,
     MediaViewAdapter,
@@ -24,6 +25,7 @@ from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
 from app.models.media import ImageFormat, MediaType, NotAnnotatedVideoFrame, VideoFormat
 from app.services import DatasetService, MediaService
+from app.services.base import ResourceNotFoundError
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import InvalidImageError, MediaFilters
 
@@ -94,6 +96,13 @@ SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES = {
             "annotations": [],
         },
     ),
+}
+
+BULK_MEDIA_DELETE_EXAMPLE = {
+    "list_of_media_ids": Example(
+        summary="List of Media IDs",
+        value={"media_ids": ["d476573e-d43c-42a6-9327-199a9aa75c33", "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"]},
+    )
 }
 
 
@@ -367,6 +376,28 @@ def delete_media(
 ) -> None:
     """Delete media from the dataset"""
     media_service.delete_media(project=project, media_id=media_id)
+
+
+@router.delete(
+    "",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Requested media has been deleted"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def bulk_delete_media(
+    project: Annotated[Project, Depends(get_project)],
+    media_ids_list: Annotated[BulkDeleteMedia, Body(openapi_examples=BULK_MEDIA_DELETE_EXAMPLE)],
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+) -> None:
+    """Bulk delete media"""
+    for media_id in media_ids_list.media_ids:
+        try:
+            media_service.delete_media(project=project, media_id=media_id)
+        except ResourceNotFoundError:
+            pass
 
 
 @router.post(

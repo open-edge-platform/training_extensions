@@ -5,7 +5,7 @@ import tempfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, PropertyMock
+from unittest.mock import ANY, MagicMock, PropertyMock, call
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -755,6 +755,33 @@ class TestMediaEndpoints:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_media_service.delete_media.assert_called_once_with(project=fxt_get_project, media_id=media_id)
+
+    def test_bulk_delete_media_skips_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
+        media_id_1 = uuid4()
+        media_id_2 = uuid4()
+        media_id_3 = uuid4()
+
+        fxt_media_service.delete_media.side_effect = [
+            None,
+            ResourceNotFoundError(ResourceType.MEDIA, str(media_id_2)),
+            None,
+        ]
+
+        response = fxt_client.request(
+            "DELETE",
+            f"/api/projects/{str(uuid4())}/dataset/media",
+            json={"media_ids": [str(media_id_1), str(media_id_2), str(media_id_3)]},
+        )
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert fxt_media_service.delete_media.call_count == 3
+        fxt_media_service.delete_media.assert_has_calls(
+            [
+                call(project=fxt_get_project, media_id=media_id_1),
+                call(project=fxt_get_project, media_id=media_id_2),
+                call(project=fxt_get_project, media_id=media_id_3),
+            ]
+        )
 
     @pytest.mark.parametrize(
         "media",
