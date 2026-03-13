@@ -50,7 +50,7 @@ export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraph
                                 tickMargin={12}
                             />
                             <YAxis
-                                label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -38 }}
+                                label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -38, fill: '#666' }}
                                 tickCount={Y_AXIS_TICK_COUNT}
                                 tickMargin={12}
                                 tickFormatter={(value) => Number(value).toFixed(4)}
