@@ -1,7 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
 import { isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 
@@ -30,13 +29,7 @@ export const PrepareImportDataset = ({
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 
     return (
-        <View
-            position='relative'
-            borderColor='gray-200'
-            borderRadius='regular'
-            backgroundColor='gray-75'
-            borderWidth='thin'
-        >
+        <>
             {isJobFailed(job) && (
                 <ImportFailedJob
                     size={size}
@@ -68,6 +61,6 @@ export const PrepareImportDataset = ({
                     deleteEntry={deleteEntry}
                 />
             )}
-        </View>
+        </>
     );
 };
