@@ -25,7 +25,7 @@ from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
 from app.models.media import ImageFormat, MediaType, NotAnnotatedVideoFrame, VideoFormat
 from app.services import DatasetService, MediaService
-from app.services.base import ResourceNotFoundError
+from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_service import InvalidImageError, MediaFilters
 
@@ -396,8 +396,10 @@ def bulk_delete_media(
     for media_id in media_ids_list.media_ids:
         try:
             media_service.delete_media(project=project, media_id=media_id)
-        except ResourceNotFoundError:
-            pass
+        except ResourceNotFoundError as error:
+            # Ignore not-found errors only for media resources; re-raise for others (e.g., project)
+            if getattr(error, "resource_type", None) != ResourceType.MEDIA:
+                raise
 
 
 @router.post(
