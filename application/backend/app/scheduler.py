@@ -13,9 +13,16 @@ from loguru import logger
 
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
+from app.services.inference import InferenceServer
 from app.services.metrics_service import SIZE
 from app.webrtc.broadcaster import FrameBroadcaster
-from app.workers import DispatchingWorker, InferenceWorker, InferenceWorkerConfig, StreamLoader
+from app.workers import (
+    DispatchingWorker,
+    InferenceServerMonitorThread,
+    InferenceWorker,
+    InferenceWorkerConfig,
+    StreamLoader,
+)
 
 
 class Scheduler:
@@ -24,10 +31,13 @@ class Scheduler:
     FRAME_QUEUE_SIZE = 5
     PREDICTION_QUEUE_SIZE = 5
 
-    def __init__(self, event_bus: EventBus, data_collector: DataCollector, mp_ctx: BaseContext) -> None:
+    def __init__(
+        self, event_bus: EventBus, data_collector: DataCollector, inference_server: InferenceServer, mp_ctx: BaseContext
+    ) -> None:
         logger.info("Initializing Scheduler...")
         self._event_bus = event_bus
         self._data_collector = data_collector
+        self._inference_server = inference_server
         self._mp_ctx = mp_ctx
 
         # Queue for the frames acquired from the stream source and decoded
@@ -70,6 +80,10 @@ class Scheduler:
         )
         inference_server_proc = InferenceWorker(inference_worker_config)
 
+        inference_server_monitor_thread = InferenceServerMonitorThread(
+            server=self._inference_server, stop_event=self.mp_stop_event
+        )
+
         dispatching_thread = DispatchingWorker(
             event_bus=self._event_bus,
             pred_queue=self.pred_queue,
@@ -81,11 +95,12 @@ class Scheduler:
         # Start all workers
         stream_loader_proc.start()
         inference_server_proc.start()
+        inference_server_monitor_thread.start()
         dispatching_thread.start()
 
         # Track processes and threads
         self.processes.extend([stream_loader_proc, inference_server_proc])
-        self.threads.append(dispatching_thread)
+        self.threads.extend([dispatching_thread, inference_server_monitor_thread])
 
         logger.info("All worker processes started successfully")
 
