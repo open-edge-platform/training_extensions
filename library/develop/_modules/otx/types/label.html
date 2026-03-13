@@ -279,6 +279,15 @@
 <span class="p">]</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively convert tuples to lists so tuple-vs-list differences are ignored in comparisons.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_normalize</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">_normalize</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="n">obj</span>
+
+
 <div class="viewcode-block" id="LabelInfo">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo">[docs]</a>
 <span class="nd">@dataclass</span>
@@ -288,16 +297,6 @@
     <span class="n">label_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">label_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">label_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compare two LabelInfo objects, normalizing list/tuple differences.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LabelInfo</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_ids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">label_ids</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span>
-        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -434,6 +433,17 @@
     <span class="n">label_tree_edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="n">empty_multiclass_head_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compare two HLabelInfo objects, normalizing list/tuple differences.</span>
+
+<span class="sd">        Datumaro produces tuples for groups while JSON deserialization produces</span>
+<span class="sd">        lists.  The comparison normalises every sequence-typed field so that</span>
+<span class="sd">        ``tuple`` vs ``list`` differences do not cause a false mismatch.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">HLabelInfo</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="n">_normalize</span><span class="p">(</span><span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="o">==</span> <span class="n">_normalize</span><span class="p">(</span><span class="n">asdict</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
 <div class="viewcode-block" id="HLabelInfo.from_dm_label_groups">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_dm_label_groups">[docs]</a>
     <span class="nd">@classmethod</span>
@@ -532,7 +542,16 @@
             <span class="n">single_label_group_info</span><span class="p">[</span><span class="s2">&quot;class_to_idx&quot;</span><span class="p">],</span>
         <span class="p">)</span>
 
+        <span class="c1"># Build label_to_idx starting from classification output labels, then</span>
+        <span class="c1"># append any remaining labels (e.g. parent/intermediate hierarchy nodes)</span>
+        <span class="c1"># so that model_api&#39;s SimpleLabelsGraph has all vertices it needs when</span>
+        <span class="c1"># constructing edges from label_tree_edges.</span>
         <span class="n">label_to_idx</span> <span class="o">=</span> <span class="p">{</span><span class="n">lbl</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">merged_class_to_idx</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
+        <span class="n">next_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_to_idx</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="n">label_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lbl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">label_to_idx</span><span class="p">:</span>
+                <span class="n">label_to_idx</span><span class="p">[</span><span class="n">lbl</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_idx</span>
+                <span class="n">next_idx</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">HLabelInfo</span><span class="p">(</span>
             <span class="n">label_names</span><span class="o">=</span><span class="n">label_names</span><span class="p">,</span>
@@ -575,6 +594,7 @@
             <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">loaded</span><span class="p">[</span><span class="s2">&quot;head_idx_to_logits_range&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
         <span class="n">loaded</span><span class="p">[</span><span class="s2">&quot;class_to_group_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">loaded</span><span class="p">[</span><span class="s2">&quot;class_to_group_idx&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">loaded</span><span class="p">[</span><span class="s2">&quot;all_groups&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">loaded</span><span class="p">[</span><span class="s2">&quot;all_groups&quot;</span><span class="p">]]</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">loaded</span><span class="p">)</span></div>
 </div>
 

@@ -285,7 +285,6 @@
 <span class="sd">        max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.</span>
 <span class="sd">        stack_images (bool, optional): Whether to stack images. Defaults to True.</span>
 <span class="sd">        to_tv_image (bool, optional): Whether to convert images to torchvision format. Defaults to True.</span>
-<span class="sd">        data_format (str, optional): Data format string. Defaults to &quot;&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -296,7 +295,6 @@
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sample_type</span> <span class="o">=</span> <span class="n">InstanceSegmentationSample</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
@@ -307,7 +305,6 @@
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
-            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>

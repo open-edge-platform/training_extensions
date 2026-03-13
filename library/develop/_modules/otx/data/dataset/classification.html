@@ -277,6 +277,7 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental.categories</span><span class="w"> </span><span class="kn">import</span> <span class="n">HierarchicalLabelCategories</span>
 
 
 <div class="viewcode-block" id="OTXMulticlassClsDataset">
@@ -294,7 +295,6 @@
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
 <span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
-<span class="sd">        data_format (str): Format of the source data (e.g., &quot;arrow&quot;, &quot;coco&quot;).</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If an image has multiple labels (multi-label case).</span>
@@ -315,7 +315,6 @@
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationSample</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
@@ -326,10 +325,9 @@
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
-            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>  <span class="c1"># type: ignore[missing-attribute]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
             <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
             <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span>
@@ -383,7 +381,6 @@
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
 <span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
-<span class="sd">        data_format (str): Format of the source data (e.g., &quot;arrow&quot;, &quot;coco&quot;).</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        num_classes (int): Number of classes in the dataset.</span>
@@ -404,7 +401,6 @@
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationMultiLabelSample</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
@@ -414,10 +410,9 @@
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
-            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>  <span class="c1"># type: ignore[missing-attribute]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
             <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
             <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span>
@@ -500,10 +495,8 @@
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
 <span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
-<span class="sd">        data_format (str): Format of the source data (e.g., &quot;arrow&quot;, &quot;coco&quot;).</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        dm_categories (datumaro.components.annotation.LabelCategories): Datumaro label categories for the dataset.</span>
 <span class="sd">        label_info (HLabelInfo): HLabelInfo containing hierarchical label structure information.</span>
 <span class="sd">        id_to_name_mapping (dict[str, str]): Mapping from label IDs to label names.</span>
 
@@ -527,10 +520,12 @@
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationHierarchicalSample</span>
-        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
+        <span class="n">label_categories</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span>
+        <span class="c1"># Pass target categories manually to ensure HierarchicalLabelCategories are not converted to regular Labels.</span>
+        <span class="n">target_categories</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_categories</span><span class="p">}</span> <span class="k">if</span> <span class="n">label_categories</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">,</span> <span class="n">target_categories</span><span class="o">=</span><span class="n">target_categories</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
             <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
@@ -538,9 +533,8 @@
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
-            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">:</span> <span class="n">HierarchicalLabelCategories</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span>  <span class="c1"># type: ignore[assignment]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">HLabelInfo</span><span class="o">.</span><span class="n">from_dm_label_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">))</span>
@@ -600,13 +594,7 @@
             <span class="n">class_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
         <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">label_anns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
-                <span class="c1"># skips unknown labels for instance, the empty one</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_name_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">ann_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="n">ann</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
             <span class="n">group_idx</span><span class="p">,</span> <span class="n">in_group_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">class_to_group_idx</span><span class="p">[</span><span class="n">ann_name</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="n">group_idx</span> <span class="o">&lt;</span> <span class="n">num_multiclass_heads</span><span class="p">:</span>

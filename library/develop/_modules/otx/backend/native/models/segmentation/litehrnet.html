@@ -361,7 +361,10 @@
             <span class="n">pad_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="n">swap_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">via_onnx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;operator_export_type&quot;</span><span class="p">:</span> <span class="n">OperatorExportTypes</span><span class="o">.</span><span class="n">ONNX_ATEN_FALLBACK</span><span class="p">},</span>
+            <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;operator_export_type&quot;</span><span class="p">:</span> <span class="n">OperatorExportTypes</span><span class="o">.</span><span class="n">ONNX_ATEN_FALLBACK</span><span class="p">,</span>
+                <span class="s2">&quot;dynamo&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 

@@ -287,7 +287,6 @@
 <span class="sd">        image_color_channel: Color channel format for images (RGB, BGR, etc.).</span>
 <span class="sd">        stack_images: Whether to stack images in batch processing.</span>
 <span class="sd">        to_tv_image: Whether to convert images to torchvision format.</span>
-<span class="sd">        data_format: Format of the source data (e.g., &quot;cityscapes&quot;, &quot;pascal_voc&quot;).</span>
 <span class="sd">        ignore_index: Index value for pixels to be ignored during training.</span>
 
 <span class="sd">    Attributes:</span>
@@ -310,7 +309,6 @@
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">ignore_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">255</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sample_type</span> <span class="o">=</span> <span class="n">SegmentationSample</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
@@ -319,7 +317,6 @@
             <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
-            <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
             <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
         <span class="p">)</span>
 

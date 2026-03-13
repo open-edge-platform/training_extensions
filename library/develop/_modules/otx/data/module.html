@@ -265,7 +265,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental.export_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental.fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">Subset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
@@ -275,13 +276,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.transform_libs.torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">TorchVisionTransformLib</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_tile_config</span><span class="p">,</span> <span class="n">get_adaptive_num_workers</span><span class="p">,</span> <span class="n">instantiate_sampler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.pre_filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">pre_filtering</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adaptive_num_workers</span><span class="p">,</span> <span class="n">instantiate_sampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AttributeDict</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
@@ -290,6 +291,16 @@
 
 
 <span class="n">_MP_CONTEXT</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
+
+<span class="c1"># Mapping from OTX subset config names to Datumaro experimental Subset enums</span>
+<span class="n">_SUBSET_NAME_TO_ENUM</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Subset</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">Subset</span><span class="o">.</span><span class="n">TRAINING</span><span class="p">,</span>
+    <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">Subset</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
+    <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">Subset</span><span class="o">.</span><span class="n">TESTING</span><span class="p">,</span>
+    <span class="s2">&quot;training&quot;</span><span class="p">:</span> <span class="n">Subset</span><span class="o">.</span><span class="n">TRAINING</span><span class="p">,</span>
+    <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="n">Subset</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
+    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="n">Subset</span><span class="o">.</span><span class="n">TESTING</span><span class="p">,</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="OTXDataModule">
@@ -302,7 +313,6 @@
 <span class="sd">    Args:</span>
 <span class="sd">        task (OTXTaskType): Task type (e.g., classification, detection).</span>
 <span class="sd">        data_root (str): Root directory of the dataset.</span>
-<span class="sd">        data_format (str, optional): Data format (e.g., &#39;coco&#39;, &#39;voc&#39;). Defaults to None.</span>
 <span class="sd">        train_subset (SubsetConfig, optional): Training subset configuration. Defaults to None.</span>
 <span class="sd">        val_subset (SubsetConfig, optional): Validation subset configuration. Defaults to None.</span>
 <span class="sd">        test_subset (SubsetConfig, optional): Test subset configuration. Defaults to None.</span>
@@ -321,7 +331,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="p">,</span>
         <span class="n">data_root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">train_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">val_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">test_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -336,7 +345,6 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">=</span> <span class="n">data_format</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_root</span> <span class="o">=</span> <span class="n">data_root</span>
 
         <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
@@ -358,21 +366,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OTXDataset</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_hyperparameters</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input_size&quot;</span><span class="p">])</span>
 
-        <span class="n">dataset</span> <span class="o">=</span> <span class="n">DmDataset</span><span class="o">.</span><span class="n">import_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_root</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">format</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">!=</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">H_LABEL_CLS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">KEYPOINT_DETECTION</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span>
-        <span class="p">):</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="n">pre_filtering</span><span class="p">(</span>
-                <span class="n">dataset</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">unannotated_items_ratio</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
-                <span class="n">ignore_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;SEMANTIC_SEGMENTATION&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">import_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_root</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># override input_size to all subset configs when it is given</span>
@@ -384,17 +378,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_normalization_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_adaptive_tiling</span><span class="p">:</span>
-            <span class="n">adapt_tile_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup_otx_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_otx_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup OTXDataset from Datumaro Dataset object.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_otx_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup OTXDataset instances from a Datumaro experimental Dataset.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            dataset: Datumaro Dataset object.</span>
-<span class="sd">        Returns: None</span>
+<span class="sd">            dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config_mapping</span> <span class="o">=</span> <span class="p">{</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="o">.</span><span class="n">subset_name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="p">,</span>
@@ -417,16 +407,21 @@
                     <span class="n">subset_config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
 
         <span class="n">label_infos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LabelInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dm_subset</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config_mapping</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not available. Skip it&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">subset_cfg</span> <span class="ow">in</span> <span class="n">config_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">subset_enum</span> <span class="o">=</span> <span class="n">_SUBSET_NAME_TO_ENUM</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">subset_enum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has no Subset enum mapping. Skip it&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">filter_by_subset</span><span class="p">(</span><span class="n">subset_enum</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dm_subset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Subset &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; is empty in the dataset. Skip it&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">otx_dataset</span> <span class="o">=</span> <span class="n">OTXDatasetFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
                 <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
-                <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">(),</span>
-                <span class="n">cfg_subset</span><span class="o">=</span><span class="n">config_mapping</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
-                <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
+                <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+                <span class="n">cfg_subset</span><span class="o">=</span><span class="n">subset_cfg</span><span class="p">,</span>
                 <span class="n">ignore_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -514,8 +509,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an OTXDataModule from pre-constructed OTXDataset instances.</span>
 
 <span class="sd">        This is a factory method that provides a clean way to create OTXDataModule instances</span>
-<span class="sd">        when you already have constructed datasets, without needing to provide data_root,</span>
-<span class="sd">        data_format, or other data loading parameters.</span>
+<span class="sd">        when you already have constructed datasets, without needing to provide data_root</span>
+<span class="sd">        or other data loading parameters.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            train_dataset (OTXDataset): Pre-constructed training dataset.</span>
@@ -581,7 +576,6 @@
         <span class="c1"># Set basic attributes</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">subsets</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">test_dataset</span><span class="p">}</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">task_type</span>  <span class="c1"># type: ignore[assignment]</span>
-        <span class="n">instance</span><span class="o">.</span><span class="n">data_format</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">data_format</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">train_dataset</span><span class="o">.</span><span class="n">tile_config</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="s2">&quot;tile_config&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -841,7 +835,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
             <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_root</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span><span class="p">,</span>
