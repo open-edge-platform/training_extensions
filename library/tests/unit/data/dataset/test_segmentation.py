@@ -32,7 +32,6 @@ class TestOTXSegmentationDataset:
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
             ignore_index=255,
-            data_format="cityscapes",
         )
 
         # Ensure schema conversion to SegmentationSample

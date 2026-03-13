@@ -73,6 +73,8 @@ dev = [
     "pytest-forked",
     "dill",
     "tifffile",
+    "py-cpuinfo",
+    "mlflow",
 ]
 
 lint = [

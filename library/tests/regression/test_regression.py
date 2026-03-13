@@ -7,10 +7,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import pytest
-from tests.utils import run_main
 import mlflow
 import pandas as pd
+import pytest
+
+from tests.utils import run_main
 
 
 @dataclass
@@ -23,7 +24,6 @@ class ModelTestCase:
 class DatasetTestCase:
     name: str
     data_root: Path
-    data_format: str
     num_classes: int
     extra_overrides: dict
 
@@ -76,8 +76,6 @@ class BaseTest:
                     str(test_case.dataset.num_classes),
                     "--data_root",
                     str(data_root),
-                    "--data.data_format",
-                    test_case.dataset.data_format,
                     "--work_dir",
                     str(test_case.output_dir),
                     "--engine.device",
@@ -121,7 +119,7 @@ class BaseTest:
             for _, row in sub_df.iterrows():
                 row = row.dropna()
                 metrics = row.to_dict()
-                mlflow.log_metrics(metrics=metrics, step=step)
+                mlflow.log_metrics(metrics=metrics, step=int(step))  # type: ignore[arg-type]
 
         mlflow.log_artifact(local_path=str(metric_csv_file), artifact_path="metrics")
 
@@ -140,7 +138,6 @@ class TestMultiClassCls(BaseTest):
         DatasetTestCase(
             name=f"multiclass_CUB_small_{idx}",
             data_root=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
-            data_format="imagenet_with_subset_dirs",
             num_classes=2,
             extra_overrides={
                 "deterministic": "True",
@@ -150,9 +147,8 @@ class TestMultiClassCls(BaseTest):
         for idx in range(1, 4)
     ] + [
         DatasetTestCase(
-            name=f"multiclass_CUB_medium",
+            name="multiclass_CUB_medium",
             data_root=Path("multiclass_classification/multiclass_CUB_medium"),
-            data_format="imagenet_with_subset_dirs",
             num_classes=67,
             extra_overrides={
                 "deterministic": "True",
@@ -160,9 +156,8 @@ class TestMultiClassCls(BaseTest):
             },
         ),
         DatasetTestCase(
-            name=f"multiclass_food101_large",
+            name="multiclass_food101_large",
             data_root=Path("multiclass_classification/multiclass_food101_large"),
-            data_format="imagenet_with_subset_dirs",
             num_classes=20,
             extra_overrides={
                 "deterministic": "True",
@@ -215,7 +210,6 @@ class TestMultilabelCls(BaseTest):
         DatasetTestCase(
             name=f"multilabel_CUB_small_{idx}",
             data_root=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
-            data_format="datumaro",
             num_classes=3,
             extra_overrides={
                 "deterministic": "True",
@@ -225,9 +219,8 @@ class TestMultilabelCls(BaseTest):
         for idx in range(1, 4)
     ] + [
         DatasetTestCase(
-            name=f"multilabel_CUB_medium",
+            name="multilabel_CUB_medium",
             data_root=Path("multilabel_classification/multilabel_CUB_medium"),
-            data_format="datumaro",
             num_classes=68,
             extra_overrides={
                 "deterministic": "True",
@@ -235,9 +228,8 @@ class TestMultilabelCls(BaseTest):
             },
         ),
         DatasetTestCase(
-            name=f"multilabel_food101_large",
+            name="multilabel_food101_large",
             data_root=Path("multilabel_classification/multilabel_food101_large"),
-            data_format="datumaro",
             num_classes=21,
             extra_overrides={
                 "deterministic": "True",
@@ -290,7 +282,6 @@ class TestHlabelCls(BaseTest):
         DatasetTestCase(
             name=f"hlabel_CUB_small_{idx}",
             data_root=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
-            data_format="datumaro",
             num_classes=6,
             extra_overrides={
                 "deterministic": "True",
@@ -300,9 +291,8 @@ class TestHlabelCls(BaseTest):
         for idx in range(1, 4)
     ] + [
         DatasetTestCase(
-            name=f"hlabel_CUB_medium",
+            name="hlabel_CUB_medium",
             data_root=Path("hlabel_classification/hlabel_CUB_medium"),
-            data_format="datumaro",
             num_classes=102,
             extra_overrides={
                 "deterministic": "True",
@@ -358,7 +348,6 @@ class TestObjectDetection(BaseTest):
         DatasetTestCase(
             name=f"pothole_small_{idx}",
             data_root=Path("detection/pothole_small") / f"{idx}",
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -372,7 +361,6 @@ class TestObjectDetection(BaseTest):
         DatasetTestCase(
             name="pothole_medium",
             data_root=Path("detection/pothole_medium"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -384,7 +372,6 @@ class TestObjectDetection(BaseTest):
         DatasetTestCase(
             name="vitens_large",
             data_root=Path("detection/vitens_large"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -442,7 +429,6 @@ class TestSemanticSegmentation(BaseTest):
         DatasetTestCase(
             name=f"kvasir_small_{idx}",
             data_root=Path("semantic_seg/kvasir_small") / f"{idx}",
-            data_format="common_semantic_segmentation_with_subset_dirs",
             num_classes=2,
             extra_overrides={},
         )
@@ -451,14 +437,12 @@ class TestSemanticSegmentation(BaseTest):
         DatasetTestCase(
             name="kvasir_medium",
             data_root=Path("semantic_seg/kvasir_medium"),
-            data_format="common_semantic_segmentation_with_subset_dirs",
             num_classes=2,
             extra_overrides={},
         ),
         DatasetTestCase(
             name="kvasir_large",
             data_root=Path("semantic_seg/kvasir_large"),
-            data_format="common_semantic_segmentation_with_subset_dirs",
             num_classes=2,
             extra_overrides={},
         ),
@@ -507,7 +491,6 @@ class TestInstanceSegmentation(BaseTest):
         DatasetTestCase(
             name=f"wgisd_small_{idx}",
             data_root=Path("instance_seg/wgisd_small") / f"{idx}",
-            data_format="coco",
             num_classes=5,
             extra_overrides={
                 "deterministic": "True",
@@ -521,7 +504,6 @@ class TestInstanceSegmentation(BaseTest):
         DatasetTestCase(
             name="coco_car_person_medium",
             data_root=Path("instance_seg/coco_car_person_medium"),
-            data_format="coco",
             num_classes=2,
             extra_overrides={
                 "deterministic": "True",
@@ -533,7 +515,6 @@ class TestInstanceSegmentation(BaseTest):
         DatasetTestCase(
             name="vitens_coliform",
             data_root=Path("instance_seg/Vitens-Coliform-coco"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -586,11 +567,10 @@ class TestTileObjectDetection(BaseTest):
         ModelTestCase(task="detection", name="yolox_x_tile"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name="vitens_coliform",
             data_root=Path("instance_seg/Vitens-Coliform-coco"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -602,7 +582,6 @@ class TestTileObjectDetection(BaseTest):
         DatasetTestCase(
             name="vitens_aeromonas",
             data_root=Path("instance_seg/Vitens-Aeromonas-coco"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -652,11 +631,10 @@ class TestTileInstanceSegmentation(BaseTest):
         ModelTestCase(task="instance_segmentation", name="maskrcnn_swint_tile"),
     ]
     # Test case parametrization for dataset
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         DatasetTestCase(
             name="vitens_coliform",
             data_root=Path("instance_seg/Vitens-Coliform-coco"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
@@ -668,7 +646,6 @@ class TestTileInstanceSegmentation(BaseTest):
         DatasetTestCase(
             name="vitens_aeromonas",
             data_root=Path("instance_seg/Vitens-Aeromonas-coco"),
-            data_format="coco",
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",

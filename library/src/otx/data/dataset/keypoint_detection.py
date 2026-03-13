@@ -38,14 +38,12 @@ class OTXKeypointDetectionDataset(OTXDataset):
         image_color_channel (ImageColorChannel, optional): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool, optional): Whether to stack images in batch processing.
         to_tv_image (bool, optional): Whether to convert images to torchvision format.
-        data_format (str, optional): Format of the source data (e.g., "coco", "arrow").
 
     Example:
         >>> from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
         >>> dataset = OTXKeypointDetectionDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
-        ...     data_format="coco"
         ... )
         >>> item = dataset[0]  # Get first item with keypoints
     """
@@ -57,7 +55,6 @@ class OTXKeypointDetectionDataset(OTXDataset):
         max_refetch: int = 1000,
         stack_images: bool = True,
         to_tv_image: bool = True,
-        data_format: str = "",
     ) -> None:
         sample_type = KeypointSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
@@ -68,11 +65,10 @@ class OTXKeypointDetectionDataset(OTXDataset):
             max_refetch=max_refetch,
             stack_images=stack_images,
             to_tv_image=to_tv_image,
-            data_format=data_format,
         )
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = dm_subset.schema.attributes["keypoints"].categories.labels
         self.label_info = LabelInfo(
-            label_names=labels,
+            label_names=list(labels),
             label_groups=[],
             label_ids=[str(i) for i in range(len(labels))],
         )

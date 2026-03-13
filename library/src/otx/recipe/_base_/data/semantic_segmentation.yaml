@@ -2,7 +2,6 @@ task: SEMANTIC_SEGMENTATION
 input_size:
   - 512
   - 512
-data_format: common_semantic_segmentation_with_subset_dirs
 unannotated_items_ratio: 0.0
 ignore_index: 255
 train_subset:

@@ -3,60 +3,55 @@
 #
 """Unit tests of incremental sampler."""
 
-import numpy as np
 import pytest
-from datumaro import Image
-from datumaro.components.annotation import Label
-from datumaro.components.dataset import Dataset as DmDataset
-from datumaro.components.dataset_base import DatasetItem
-from datumaro.experimental.legacy import convert_from_legacy
+import torch
+from datumaro.experimental import Dataset
+from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.fields import ImageInfo as DmImageInfo
+from datumaro.experimental.fields import Subset
+from torchvision import tv_tensors
 
 from otx.data.dataset import OTXMulticlassClsDataset
 from otx.data.dataset.base import OTXDataset
+from otx.data.entity.sample import ClassificationSample
 from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
 
 @pytest.fixture
 def fxt_old_new_dataset() -> OTXDataset:
-    dataset_items = (
-        [
-            DatasetItem(
-                id=f"item00{i}_0",
-                subset="train",
-                media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
-                annotations=[
-                    Label(label=0),
-                ],
-            )
-            for i in range(1, 101)
-        ]
-        + [
-            DatasetItem(
-                id=f"item00{i}_1",
-                subset="train",
-                media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
-                annotations=[
-                    Label(label=1),
-                ],
-            )
-            for i in range(1, 9)
-        ]
-        + [
-            DatasetItem(
-                id=f"item00{i}_2",
-                subset="train",
-                media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
-                annotations=[
-                    Label(label=2),
-                ],
-            )
-            for i in range(1, 9)
-        ]
-    )
+    categories = {"label": LabelCategories(labels=("0", "1", "2"))}
+    dm_dataset = Dataset(ClassificationSample, categories=categories)  # type: ignore[arg-type]
 
-    dm_dataset = DmDataset.from_iterable(dataset_items, categories=["0", "1", "2"])
+    for _ in range(1, 101):
+        dm_dataset.append(
+            ClassificationSample(
+                image=tv_tensors.Image(torch.zeros(3, 10, 10, dtype=torch.uint8)),
+                label=torch.tensor(0, dtype=torch.uint8),
+                dm_image_info=DmImageInfo(width=10, height=10),
+                subset=Subset.TRAINING,
+            ),
+        )
+    for _ in range(1, 9):
+        dm_dataset.append(
+            ClassificationSample(
+                image=tv_tensors.Image(torch.zeros(3, 10, 10, dtype=torch.uint8)),
+                label=torch.tensor(1, dtype=torch.uint8),
+                dm_image_info=DmImageInfo(width=10, height=10),
+                subset=Subset.TRAINING,
+            ),
+        )
+    for _ in range(1, 9):
+        dm_dataset.append(
+            ClassificationSample(
+                image=tv_tensors.Image(torch.zeros(3, 10, 10, dtype=torch.uint8)),
+                label=torch.tensor(2, dtype=torch.uint8),
+                dm_image_info=DmImageInfo(width=10, height=10),
+                subset=Subset.TRAINING,
+            ),
+        )
+
     return OTXMulticlassClsDataset(
-        dm_subset=convert_from_legacy(dm_dataset.get_subset("train")),
+        dm_subset=dm_dataset,
         transforms=[],
     )
 

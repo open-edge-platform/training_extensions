@@ -49,7 +49,6 @@ overrides:
 
   data:
     task: MULTI_LABEL_CLS
-    data_format: datumaro
     train_subset:
       transforms:
         - class_path: otx.data.transform_libs.torchvision.EfficientNetRandomCrop
