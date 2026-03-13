@@ -31,7 +31,7 @@ class InferenceServer:
     Inference Server manages the lifecycle of a loaded model for inference, including loading models,
     tracking their status, and performing batch inference.
     It interacts with the ModelService to retrieve model files and uses the Model API to run inference on input data.
-    The server maintains the currently loaded model and its associated metadata, such as device and TTL,
+    The server maintains the currently loaded model and its associated metadata, such as device,
     to ensure efficient inference operations.
     """
 
@@ -42,10 +42,30 @@ class InferenceServer:
         self._lock = threading.Lock()
 
     def set_inference_model(self, project_id: UUID, model_id: UUID, device: str, ttl: int) -> bool:
-        self._lock.acquire(timeout=10)
+        """
+        Load the specified model for inference.
+        If the same model is already loaded on the same device, it does nothing.
+
+        Args:
+            project_id: Project identifier.
+            model_id: Model identifier.
+            device: Device to use for inference.
+            ttl: Model time-to-live (TTL).
+
+        Returns:
+            True, if the model has been loaded, False if model has not been changed.
+        """
+        # Optimization: if the given model is already loaded on the given device, return immediately without acquiring
+        # the lock
+        loaded_model = self._loaded_model  # use a variable to avoid multiple unprotected reads of self._loaded_model
+        if loaded_model and loaded_model.id == model_id and loaded_model.device == device:
+            return False  # same model and device, no need to reload
+
+        self._lock.acquire()
         try:
             if self._loaded_model and self._loaded_model.id == model_id and self._loaded_model.device == device:
                 return False  # same model and device, no need to reload
+            self._loading_model = True
 
             format = ModelFormat.OPENVINO
             precision = ModelPrecision.FP16
@@ -69,17 +89,15 @@ class InferenceServer:
                 )
             model_xml_path, _ = paths
 
-            self._loading_model = True
             model = Model.create_model(
                 model=str(model_xml_path),
                 device=device,
                 nstreams=MODELAPI_NSTREAMS,
             )
-            self._loading_model = False
-
             self._loaded_model = _LoadedModel(id=model_id, model=model, device=device, load_timestamp=datetime.now())
             return True
         finally:
+            self._loading_model = False
             self._lock.release()
 
     def get_status(self) -> InferenceState:
@@ -118,24 +136,28 @@ class InferenceServer:
         """
         if self._loaded_model is None:
             raise RuntimeError("No model loaded for inference")
-        with self._lock:
+        self._lock.acquire(timeout=10)
+        try:
             if self._loaded_model is None:
                 raise RuntimeError("No model loaded for inference")
             logger.debug("Running inference on batch of {} inputs", len(inputs))
 
             input_data = [input.data for input in inputs]
             inference_result = self._loaded_model.model.infer_batch(input_data)
-            result = BatchInferenceResult(predictions=[])
-            for idx, input in enumerate(inputs):
-                result.predictions.append(
-                    BatchInferencePrediction(
-                        media=BatchInferenceMedia(id=input.media_id, frame_index=input.frame_index),
-                        prediction=convert_prediction(
-                            labels=labels, frame_data=input_data[idx], prediction=inference_result[idx]
-                        ),
-                    )
+        finally:
+            self._lock.release()
+
+        result = BatchInferenceResult(predictions=[])
+        for idx, input in enumerate(inputs):
+            result.predictions.append(
+                BatchInferencePrediction(
+                    media=BatchInferenceMedia(id=input.media_id, frame_index=input.frame_index),
+                    prediction=convert_prediction(
+                        labels=labels, frame_data=input_data[idx], prediction=inference_result[idx]
+                    ),
                 )
-            return result
+            )
+        return result
 
     def stop(self) -> None:
         """
