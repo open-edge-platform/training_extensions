@@ -17,7 +17,15 @@ from app.api.schemas.jobs import JobRequest, JobType, JobView
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
-from app.models import DatasetFormat, ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
+from app.models import (
+    DatasetFormat,
+    ExportDatasetJob,
+    ExportDatasetJobParams,
+    QuantizationJob,
+    QuantizationJobParams,
+    TrainingJob,
+    TrainingJobParams,
+)
 from app.models.jobs import (
     ImportDatasetAsNewProjectJob,
     ImportDatasetAsNewProjectJobParams,
@@ -74,6 +82,23 @@ async def submit_job(
                         project_id=project.id,
                         job_id=job_id,
                         dataset_revision_id=job_request.parameters.dataset_revision_id,
+                    ),
+                )
+            case JobType.QUANTIZE:
+                device = system_service.get_device_info(job_request.parameters.device)
+                project = project_service.get_project_by_id(job_request.project_id)
+                job = QuantizationJob(
+                    id=job_id,
+                    project_id=project.id,
+                    log_dir=job_dir,
+                    data_dir=data_dir,
+                    params=QuantizationJobParams(
+                        device=device,
+                        model_id=job_request.parameters.model_id,
+                        project_id=project.id,
+                        job_id=job_id,
+                        max_calibration_subset_size=job_request.parameters.max_calibration_subset_size,
+                        max_drop=job_request.parameters.max_drop,
                     ),
                 )
             case JobType.PREPARE_DATASET_FOR_IMPORT:

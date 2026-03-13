@@ -329,6 +329,7 @@ class OVEngine(Engine):
         checkpoint: PathLike | None = None,
         datamodule: OTXDataModule | None = None,
         max_data_subset_size: int | None = None,
+        max_drop: float | None = None,
     ) -> Path:
         """Apply Post-Training Quantization (PTQ) to optimize the model.
 
@@ -338,6 +339,8 @@ class OVEngine(Engine):
             checkpoint (PathLike | None, optional): Checkpoint to optimize. Defaults to None.
             datamodule (OTXDataModule | None, optional): The data module to use for optimization.
             max_data_subset_size (int | None, optional): Maximum size of the train subset used for optimization.
+                Defaults to None.
+            max_drop (float | None, optional): Maximum accuracy drop allowed for accuracy-aware quantization.
                 Defaults to None.
 
         Returns:
@@ -353,6 +356,8 @@ class OVEngine(Engine):
         ptq_config = {}
         if max_data_subset_size is not None:
             ptq_config["subset_size"] = max_data_subset_size
+        if max_drop is not None:
+            ptq_config["max_drop"] = max_drop
 
         return model.optimize(
             Path(self.work_dir),

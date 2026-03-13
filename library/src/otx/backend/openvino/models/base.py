@@ -240,11 +240,18 @@ class OVModel:
 
         quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)  # type: ignore[attr-defined]
 
-        compressed_model = nncf.quantize(  # type: ignore[attr-defined]
-            ov_model,
-            quantization_dataset,
-            **ptq_config,
-        )
+        if ptq_config.get("max_drop") is not None:
+            compressed_model = nncf.quantize_with_accuracy_control(
+                ov_model,
+                quantization_dataset,
+                **ptq_config,
+            )
+        else:
+            compressed_model = nncf.quantize(  # type: ignore[attr-defined]
+                ov_model,
+                quantization_dataset,
+                **ptq_config,
+            )
 
         openvino.save_model(compressed_model, output_model_path)
 

@@ -442,6 +442,7 @@ class ModelService(BaseSessionManagedService):
         format: ModelFormat,
         precision: ModelPrecision,
         quantization_info: dict | None = None,
+        model_variant_id: UUID | None = None,
     ) -> ModelVariant:
         """
         Create a new model variant record in the database.
@@ -451,12 +452,14 @@ class ModelService(BaseSessionManagedService):
             format: The format of the model variant.
             precision: The precision of the model variant.
             quantization_info: Optional quantization metadata.
+            model_variant_id: Optional UUID for the model variant. If not provided, a new UUID will be generated.
 
         Returns:
             ModelVariant: The created model variant.
         """
         model_variant_repo = ModelVariantRepository(db=self.db_session)
         variant_db = ModelVariantDB(
+            id=str(model_variant_id) if model_variant_id else None,
             model_revision_id=str(model_revision_id),
             format=format.value,
             precision=precision.value,

@@ -13,7 +13,14 @@ from .dataset import AnnotationType, DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
-from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
+from .jobs import (
+    ExportDatasetJob,
+    ExportDatasetJobParams,
+    QuantizationJob,
+    QuantizationJobParams,
+    TrainingJob,
+    TrainingJobParams,
+)
 from .label import Label, LabelReference
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
 from .model_manifest import ModelManifest
@@ -83,6 +90,8 @@ __all__ = [
     "Point",
     "Polygon",
     "Project",
+    "QuantizationJob",
+    "QuantizationJobParams",
     "Rectangle",
     "RosSinkConfig",
     "Shape",
