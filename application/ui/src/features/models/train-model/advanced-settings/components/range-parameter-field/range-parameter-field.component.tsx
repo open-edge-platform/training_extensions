@@ -36,18 +36,18 @@ export const RangeParameterField = ({
     step,
 }: RangeParameterFieldProps) => {
     const [draftRange, setDraftRange] = useState<RangeValue<number> | null>(null);
-    const parameterValue = draftRange ?? (value === null ? null : { start: value[0], end: value[1] });
+    const parameterValue = draftRange ?? { start: value[0], end: value[1] };
 
     const fieldStep = getStep({ step, maxValue: defaultValue[1], minValue: defaultValue[0] });
     const decimalPlaces = (fieldStep.toString().split('.')[1] || '').length;
 
     const handleRangeChangeEnd = (): void => {
-        if (parameterValue === null) {
+        if (draftRange === null) {
             return;
         }
 
         setDraftRange(null);
-        onChange([parameterValue.start, parameterValue.end]);
+        onChange([draftRange.start, draftRange.end]);
     };
 
     const handleRangeChange = (inputValue: RangeValue<number>): void => {
@@ -71,16 +71,16 @@ export const RangeParameterField = ({
             <NumberField
                 isQuiet
                 step={fieldStep}
-                value={parameterValue?.start}
+                value={parameterValue.start}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
-                onChange={(start) => handleNumberChange(start, parameterValue?.end ?? defaultValue[1])}
+                onChange={(start) => handleNumberChange(start, parameterValue.end)}
                 isDisabled={isDisabled}
                 aria-label={`Change ${name} start range value`}
                 formatOptions={{ maximumFractionDigits: decimalPlaces }}
             />
             <RangeSlider
-                value={parameterValue ?? undefined}
+                value={parameterValue}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
                 defaultValue={{ start: defaultValue[0], end: defaultValue[1] }}
@@ -95,10 +95,10 @@ export const RangeParameterField = ({
             <NumberField
                 isQuiet
                 step={fieldStep}
-                value={parameterValue?.end}
+                value={parameterValue.end}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
-                onChange={(end) => handleNumberChange(parameterValue?.start ?? defaultValue[0], end)}
+                onChange={(end) => handleNumberChange(parameterValue.start, end)}
                 isDisabled={isDisabled}
                 aria-label={`Change ${name} end range value`}
                 formatOptions={{ maximumFractionDigits: decimalPlaces }}
