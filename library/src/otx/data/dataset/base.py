@@ -31,7 +31,7 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     """Ensure image tensor is in CHW format with 3 channels.
 
     Args:
-        img: Image tensor that may be in HWC or CHW format
+        img: Image tensor that may be in HWC, HCW, or CHW format
 
     Returns:
         Image tensor in CHW format (C, H, W) for 3D or (B, C, H, W) for 4D with 3 channels
@@ -46,6 +46,10 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
         if img.shape[-1] in (1, 3, 4) and img.shape[0] > 4:
             # HWC format detected, convert to CHW
             img = img.permute(2, 0, 1)
+        # Check for HCW format: channels in the middle dimension
+        elif img.shape[1] in (1, 3, 4) and img.shape[0] > 4 and img.shape[2] > 4:
+            # HCW format detected, convert to CHW
+            img = img.permute(1, 0, 2)
         # If 4 channels (RGBA), convert to 3 channels (RGB)
         if img.shape[0] == 4:
             img = img[:3]
@@ -218,6 +222,8 @@ class OTXDataset(TorchDataset):
 
     def _get_item_impl(self, index: int) -> OTXSample | None:
         dm_item = self.dm_subset[index]
+        # Ensure image is in CHW format before applying transforms.
+        dm_item.image = _ensure_chw_format(dm_item.image)
         return self._apply_transforms(dm_item)
 
     @property
