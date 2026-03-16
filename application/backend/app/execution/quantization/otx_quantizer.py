@@ -324,14 +324,13 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
                 )
             logger.info("Created INT8 variant record (id={})", variant.id)
 
-            dataset_revision_id = model.training_info.dataset_revision_id if model.training_info else None
             self.evaluate_quantized_model(
                 ov_engine=ov_engine,
                 quantized_model_path=quantized_model_path,
                 task=task,
                 model_revision_id=params.model_id,
                 model_variant_id=variant.id,
-                dataset_revision_id=dataset_revision_id,
+                dataset_revision_id=model.training_info.dataset_revision_id,
             )
 
             self.store_artifacts(
