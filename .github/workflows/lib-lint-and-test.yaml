@@ -108,7 +108,7 @@ jobs:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: just venv
 
-      - name: Unit testing (excluding models)
+      - name: Unit testing
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
