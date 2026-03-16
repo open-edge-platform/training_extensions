@@ -16,9 +16,15 @@ install-uv:
     set -euo pipefail
     REPO_ROOT=$(git rev-parse --show-toplevel)
     UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/')
-    if ! command -v uv > /dev/null; then
-        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh" | sh
+    if command -v uv > /dev/null; then
+        INSTALLED_VERSION=$(uv --version | awk '{print $2}')
+        if [[ "$INSTALLED_VERSION" == "$UV_VERSION" ]]; then
+            exit 0
+        else
+            echo "uv version mismatch: installed=${INSTALLED_VERSION}, required=${UV_VERSION}. Reinstalling..."
+        fi
     fi
+    curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh" | sh
 
 # Download a file from a URL to a destination directory (skips if already present)
 [private]
