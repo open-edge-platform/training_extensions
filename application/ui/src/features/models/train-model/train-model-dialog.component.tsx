@@ -118,13 +118,23 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     <Button variant={'secondary'} onPress={onClose}>
                         Cancel
                     </Button>
-                    <Button
-                        variant={'primary'}
-                        isDisabled={isAdvancedSettingsModeDisabled}
-                        onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
-                    >
-                        {isAdvancedSettingsMode ? 'Back' : 'Advanced settings'}
-                    </Button>
+                    {isAdvancedSettingsMode ? (
+                        <Button
+                            variant={'primary'}
+                            onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
+                        >
+                            Back
+                        </Button>
+                    ) : (
+                        <Button
+                            variant={'primary'}
+                            isDisabled={isAdvancedSettingsModeDisabled}
+                            onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
+                        >
+                            Advanced settings
+                        </Button>
+                    )}
+
                     <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
                         Start
                     </Button>
