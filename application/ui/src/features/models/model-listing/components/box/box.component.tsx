@@ -14,11 +14,10 @@ type BoxProps = {
     customClasses?: string;
     headingClassName?: string;
     contentClassName?: string;
+    testId?: string;
 };
 
-export const Box = ({ title, content, customClasses, headingClassName, contentClassName }: BoxProps) => {
-    const testId = typeof title === 'string' ? `Box-${title}` : undefined;
-
+export const Box = ({ title, content, customClasses, headingClassName, contentClassName, testId }: BoxProps) => {
     return (
         <Flex direction={'column'} height={'100%'} UNSAFE_className={customClasses} data-testid={testId}>
             <Heading UNSAFE_className={clsx(classes.boxHeading, headingClassName)} level={5}>

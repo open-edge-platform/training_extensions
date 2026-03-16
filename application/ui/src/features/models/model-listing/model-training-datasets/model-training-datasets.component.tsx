@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Text, View } from '@geti/ui';
+import { ActionButton, Flex, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
@@ -56,14 +56,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
             customClasses={classes.box}
             headingClassName={classes.boxHeading}
             contentClassName={classes.boxContent}
-            title={
-                <Flex gap={'size-50'}>
-                    <View>
-                        {title} {formatter.format(subsetPercentage)}
-                    </View>
-                    <Text UNSAFE_className={classes.totalCount}>({totalCount})</Text>
-                </Flex>
-            }
+            title={`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}
             content={
                 <SubsetGallery
                     items={items}
