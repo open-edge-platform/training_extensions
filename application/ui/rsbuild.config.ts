@@ -50,8 +50,9 @@ export default defineConfig({
         title: 'Geti Tune',
         favicon: './src/assets/icons/build-icon.svg',
         meta: {
-            description:
-                'Geti Tune helps you create and manage computer vision projects for datasets, models, and inference.',
+            description: `Geti provides a "recipe" for every supported task type, which consolidates necessary 
+                information to build a model. Model templates are validated on various 
+                datasets andserve as a one-stop shop for obtaining the best models in general.`,
         },
     },
     performance: {
