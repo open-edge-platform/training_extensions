@@ -110,6 +110,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install common dependencies
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
+
       - name: Build image for ${{ matrix.ai-device }}
         working-directory: application
         run: just build-image --accelerator $DEVICE
