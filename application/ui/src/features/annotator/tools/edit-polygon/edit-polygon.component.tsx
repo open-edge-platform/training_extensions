@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { isPolygonValid } from '@geti/smart-tools/utils';
 
@@ -23,6 +23,10 @@ export const EditPolygon = ({ annotation, zoom }: EditPolygonProps) => {
     const isAddPoint = useRef(false);
     const [shape, setShape] = useState(annotation.shape);
     const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
+
+    useEffect(() => {
+        setShape(annotation.shape);
+    }, [annotation.shape]);
 
     // "removeOffLimitPoints" not only remove offlimit points but also in-between ones,
     // a new point is considered "in-between," and so it gets removed,

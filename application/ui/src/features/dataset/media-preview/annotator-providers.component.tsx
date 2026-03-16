@@ -9,6 +9,7 @@ import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
+import { isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorLabelsProvider } from '../../annotator/annotator-labels-provider.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
 
@@ -31,6 +32,8 @@ export const AnnotatorProviders = ({
     isReadOnly = false,
     children,
 }: AnnotatorProvidersProps) => {
+    const mediaSelectionResetKey = isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
+
     return (
         <ZoomProvider>
             <AnnotationVisibilityProvider>
@@ -44,7 +47,7 @@ export const AnnotatorProviders = ({
                             mode={mode}
                             isReadOnly={isReadOnly}
                         >
-                            <SelectAnnotationProvider>{children}</SelectAnnotationProvider>
+                            <SelectAnnotationProvider key={mediaSelectionResetKey}>{children}</SelectAnnotationProvider>
                         </AnnotationActionsProvider>
                     </AnnotatorLabelsProvider>
                 </CanvasSettingsProvider>
