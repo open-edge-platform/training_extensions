@@ -107,8 +107,9 @@ describe('ImportTaskSelection', () => {
         renderApp('bounding_box');
 
         const projectNameInput = await screen.findByLabelText('Project name');
+
         await userEvent.clear(projectNameInput);
-        await userEvent.type(projectNameInput, mockedProject.name);
+        await userEvent.type(projectNameInput, `${mockedProject.name}   `);
 
         expect(await screen.findByText('That project name already exists')).toBeVisible();
     });

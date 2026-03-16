@@ -37,9 +37,11 @@ describe('Training parameters utils', () => {
         const rows = flattenParameters(augmentationGroup?.parameters);
 
         expect(rows).toEqual([
-            { name: 'Mosaic / Enable', value: 'On' },
-            { name: 'Gaussian blur / Sigma range', value: '0.1 - 2' },
-            { name: 'Gaussian blur / Probability', value: '0.5' },
+            { name: 'Mosaic:', value: '', depth: 0, isGroup: true },
+            { name: 'Enable', value: 'On', depth: 1, isGroup: false },
+            { name: 'Gaussian blur:', value: '', depth: 0, isGroup: true },
+            { name: 'Sigma range', value: '0.1 - 2', depth: 1, isGroup: false },
+            { name: 'Probability', value: '0.5', depth: 1, isGroup: false },
         ]);
     });
 

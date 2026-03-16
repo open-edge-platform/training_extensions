@@ -389,11 +389,11 @@ field is only returned for quantized models (null for non-quantized models). The
 
 The existing model binary download endpoint supports downloading the quantized model variant.
 
-| Method | Path                                          | Query params                                            | Return | Description                  |
-| ------ | --------------------------------------------- | ------------------------------------------------------- | ------ | ---------------------------- |
-| `GET`  | `/api/projects/<id>/models/<model_id>/binary` | `model_variant_id=6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b` | zip    | Download model variant files |
+| Method | Path                                                                      | Query params | Return | Description                  |
+| ------ | ------------------------------------------------------------------------- | ------------ | ------ | ---------------------------- |
+| `GET`  | `/api/projects/<id>/models/<model_id>/variants/<model_variant_id>/binary` | -            | zip    | Download model variant files |
 
-The `model_variant_id` query parameter specifies which model variant to download. If omitted, the openvino model files are returned by default.
+The `model_variant_id` path parameter specifies which model variant to download.
 
 ### Enable quantized model in pipeline
 

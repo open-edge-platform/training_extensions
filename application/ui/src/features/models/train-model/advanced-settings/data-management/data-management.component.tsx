@@ -6,6 +6,10 @@ import { Dispatch, SetStateAction } from 'react';
 import { View } from '@geti/ui';
 
 import { TrainingConfiguration } from '../../../../../constants/shared-types';
+import { Filters } from './filters/filters.component';
+import { getFiltersParameters } from './filters/utils';
+import { Tiling } from './tiling/tiling.component';
+import { getTilingParameters } from './tiling/utils';
 import { TrainingSubsets } from './training-subsets/training-subsets.component';
 import { getSubsetSplitParameters } from './training-subsets/utils';
 
@@ -23,12 +27,29 @@ export const DataManagement = ({
     const subsetSplitParameters = getSubsetSplitParameters(trainingConfiguration);
     const defaultSubsetSplitParameters = getSubsetSplitParameters(defaultTrainingConfiguration);
 
+    const filtersParameters = getFiltersParameters(trainingConfiguration);
+    const tilingParameters = getTilingParameters(trainingConfiguration);
+
     return (
         <View>
             {subsetSplitParameters !== undefined && defaultSubsetSplitParameters !== undefined && (
                 <TrainingSubsets
                     defaultSubsetParameters={defaultSubsetSplitParameters}
                     subsetsParameters={subsetSplitParameters}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            )}
+
+            {tilingParameters !== undefined && (
+                <Tiling
+                    tilingParameters={tilingParameters}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            )}
+
+            {filtersParameters !== undefined && (
+                <Filters
+                    filtersParameters={filtersParameters}
                     onTrainingConfigurationChange={onTrainingConfigurationChange}
                 />
             )}

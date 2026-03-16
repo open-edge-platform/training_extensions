@@ -3,11 +3,14 @@
 
 import '@wessberg/pointer-events';
 
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { getMockedProject } from 'mocks/mock-project';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../../api/utils';
+import { server } from '../../../../msw-node-setup';
 import { AnnotationVisibilityProvider } from '../../../../shared/annotator/annotation-visibility-provider.component';
 import { Annotation, Point, Polygon } from '../../../../shared/types';
 import { CanvasSettingsProvider } from '../../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
@@ -16,7 +19,6 @@ import { removeOffLimitPointsPolygon } from '../utils';
 import { EditPolygon } from './edit-polygon.component';
 
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
-vi.mock('hooks/api/project.hook', () => ({ useProject: () => ({ data: getMockedProject({}) }) }));
 
 vi.mock('../../selected-media-item-provider.component', () => ({
     useSelectedMediaItem: vi.fn(() => ({ roi: mockROI })),
@@ -70,7 +72,7 @@ const renderApp = async (
         };
     }
 ) => {
-    return render(
+    const app = render(
         <SelectedDataProvider>
             <AnnotationVisibilityProvider>
                 <CanvasSettingsProvider>
@@ -79,6 +81,12 @@ const renderApp = async (
             </AnnotationVisibilityProvider>
         </SelectedDataProvider>
     );
+
+    await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
+
+    return app;
 };
 
 describe('EditPolygonTool', () => {
@@ -96,6 +104,12 @@ describe('EditPolygonTool', () => {
     const shape = annotation.shape;
 
     beforeEach(() => {
+        server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(getMockedProject({}));
+            })
+        );
+
         vi.clearAllMocks();
     });
 

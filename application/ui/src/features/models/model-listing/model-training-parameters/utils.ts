@@ -13,6 +13,10 @@ export const isParameterGroup = (
     return parameter.type === 'parameter_group';
 };
 
+export const isParameter = (parameter: TrainingConfigurationParameter): parameter is ConfigurableParameter => {
+    return parameter.type === 'parameter';
+};
+
 export const findGroupByKey = (
     parameters: TrainingConfigurationParameter[] | undefined,
     key: string
@@ -72,30 +76,48 @@ const formatParameterValue = (value: ConfigurableParameter['value']): string => 
  *
  * Example output rows from this function:
  * [
- *   { name: "Data augmentation / Random affine / Rotation degrees", value: "10" },
- *   { name: "Data augmentation / Random affine / Scaling ratio range", value: "0.5 - 1.5" }
+ *   { name: "Data augmentation:", value: "", depth: 0, isGroup: true },
+ *   { name: "Random affine:", value: "", depth: 1, isGroup: true },
+ *   { name: "Rotation degrees", value: "10", depth: 2, isGroup: false },
+ *   { name: "Scaling ratio range", value: "0.5 - 1.5", depth: 2, isGroup: false }
  * ]
  *
- * {ParentLabel} / {ParentLabel} / {ParameterName} {ParameterValue}
- *
  */
+
+type FlattenedParameterRow = {
+    name: string;
+    value: string;
+    depth: number;
+    isGroup: boolean;
+};
+
 export const flattenParameters = (
     parameters: TrainingConfigurationParameter[] | undefined,
-    parentLabel = ''
-): Array<{ name: string; value: string }> => {
+    depth = 0
+): FlattenedParameterRow[] => {
     if (!parameters) {
         return [];
     }
 
     return parameters.flatMap((parameter) => {
         if (isParameterGroup(parameter)) {
-            const nextParentLabel = parentLabel ? `${parentLabel} / ${parameter.name}` : parameter.name;
+            const groupRow: FlattenedParameterRow = {
+                name: `${parameter.name}:`,
+                value: '',
+                depth,
+                isGroup: true,
+            };
 
-            return flattenParameters(parameter.parameters, nextParentLabel);
+            return [groupRow, ...flattenParameters(parameter.parameters, depth + 1)];
         }
 
-        const name = parentLabel ? `${parentLabel} / ${parameter.name}` : parameter.name;
-
-        return [{ name, value: formatParameterValue(parameter.value) }];
+        return [
+            {
+                name: parameter.name,
+                value: formatParameterValue(parameter.value),
+                depth,
+                isGroup: false,
+            },
+        ];
     });
 };

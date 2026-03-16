@@ -50,7 +50,7 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { uploadMedia } = useMediaUpload();
+    const { uploadMedia, uploadProgress } = useMediaUpload();
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -68,7 +68,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     <ImportExport />
 
-                    <AddMediaButton onFilesSelected={uploadMedia} />
+                    <AddMediaButton onFilesSelected={uploadMedia} isDisabled={uploadProgress.isUploading} />
 
                     <TrainModel />
 

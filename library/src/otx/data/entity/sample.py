@@ -12,7 +12,7 @@ import numpy as np
 import polars as pl
 import torch
 import torch.utils._pytree as pytree
-from datumaro.experimental.dataset import Sample
+from datumaro.experimental import Sample, register_sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import (
     Subset,
@@ -106,6 +106,7 @@ class OTXSample(Sample):
 
 
 @register_pytree_node
+@register_sample
 class ClassificationSample(OTXSample):
     """ClassificationSample is a base class for OTX classification items."""
 
@@ -126,6 +127,7 @@ class ClassificationSample(OTXSample):
 
 
 @register_pytree_node
+@register_sample
 class ClassificationMultiLabelSample(OTXSample):
     """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
 
@@ -144,6 +146,7 @@ class ClassificationMultiLabelSample(OTXSample):
 
 
 @register_pytree_node
+@register_sample
 class ClassificationHierarchicalSample(OTXSample):
     """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
 
@@ -162,6 +165,7 @@ class ClassificationHierarchicalSample(OTXSample):
 
 
 @register_pytree_node
+@register_sample
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
@@ -191,6 +195,7 @@ class DetectionSample(OTXSample):
 
 
 @register_pytree_node
+@register_sample
 class SegmentationSample(OTXSample):
     """OTXSample for segmentation tasks."""
 
@@ -209,6 +214,7 @@ class SegmentationSample(OTXSample):
 
 
 @register_pytree_node
+@register_sample
 class InstanceSegmentationSample(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
@@ -238,6 +244,7 @@ class InstanceSegmentationSample(OTXSample):
 
 
 @register_pytree_node
+@register_sample
 class KeypointSample(OTXSample):
     """KeypointSample is a base class for OTX keypoint detection items."""
 

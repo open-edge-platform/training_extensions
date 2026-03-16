@@ -121,7 +121,6 @@ class OTXDataset(TorchDataset):
         stack_images (bool, optional): Whether to stack images in the collate function in OTXBatchData entity.
             Defaults to True.
         to_tv_image (bool, optional): Whether to convert images to TorchVision format. Defaults to True.
-        data_format (str, optional): Source data format originally passed to Datumaro (e.g., "arrow"). Defaults to "".
 
     """
 
@@ -132,7 +131,6 @@ class OTXDataset(TorchDataset):
         max_refetch: int = 1000,
         stack_images: bool = True,
         to_tv_image: bool = True,
-        data_format: str = "",
         sample_type: type[OTXSample] = OTXSample,
     ) -> None:
         self.transforms = transforms
@@ -140,7 +138,6 @@ class OTXDataset(TorchDataset):
         self.to_tv_image = to_tv_image
         self.sample_type = sample_type
         self.max_refetch = max_refetch
-        self.data_format = data_format
         self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset
 

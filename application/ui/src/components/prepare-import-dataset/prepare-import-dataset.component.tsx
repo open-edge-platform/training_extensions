@@ -5,8 +5,8 @@ import { View } from '@geti/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
 import { isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 
-import { ImportActiveJob } from './import-active-job/import-active-job.component';
-import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
+import { ImportActiveJob } from '../import-card-status/import-active-job/import-active-job.component';
+import { ImportFailedJob } from '../import-card-status/import-failed-job/import-failed-job.component';
 
 type PrepareImportDatasetProps = {
     size: number;

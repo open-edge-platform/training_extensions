@@ -2,7 +2,6 @@ task: DETECTION
 input_size:
   - 800
   - 992
-data_format: coco_instances
 unannotated_items_ratio: 0.0
 train_subset:
   subset_name: train

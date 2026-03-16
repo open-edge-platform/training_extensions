@@ -28,7 +28,6 @@ class OTXInstanceSegDataset(OTXDataset):
         max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
         stack_images (bool, optional): Whether to stack images. Defaults to True.
         to_tv_image (bool, optional): Whether to convert images to torchvision format. Defaults to True.
-        data_format (str, optional): Data format string. Defaults to "".
     """
 
     def __init__(
@@ -39,7 +38,6 @@ class OTXInstanceSegDataset(OTXDataset):
         max_refetch: int = 1000,
         stack_images: bool = True,
         to_tv_image: bool = True,
-        data_format: str = "",
     ) -> None:
         sample_type = InstanceSegmentationSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
@@ -50,7 +48,6 @@ class OTXInstanceSegDataset(OTXDataset):
             max_refetch=max_refetch,
             stack_images=stack_images,
             to_tv_image=to_tv_image,
-            data_format=data_format,
         )
 
         labels = list(dm_subset.schema.attributes["label"].categories.labels)

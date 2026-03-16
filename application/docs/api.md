@@ -104,15 +104,15 @@
 
 ### Models
 
-| Method   | Path                                                    | Payload          | Return           | Description                                                             |
-| -------- | ------------------------------------------------------- | ---------------- | ---------------- | ----------------------------------------------------------------------- |
-| `GET`    | `/api/projects/<id>/models`                             | -                | list of models   | List all the models in a project                                        |
-| `GET`    | `/api/projects/<id>/models/<model_id>`                  | -                | model info       | Get info about a specific model                                         |
-| `GET`    | `/api/projects/<id>/models/<model_id>/labels`           | -                | labels           | Get the labels used to train the model                                  |
-| `GET`    | `/api/projects/<id>/models/<model_id>/binary`           | model_variant_id | zip              | Download model binary of the requested model variant                    |
-| `DELETE` | `/api/projects/<id>/models/<model_id>`                  | -                | -                | Delete a model (option 'weights_only')                                  |
-| `GET`    | `/api/projects/<id>/models/<model_id>/training_metrics` | -                | training metrics | Get training metrics                                                    |
-| `GET`    | `/api/projects/<id>/models/<model_id>/logs`             | -                | training log     | Get training logs (supports Accept: text/plain or application/x-ndjson) |
+| Method   | Path                                                                      | Payload | Return           | Description                                                             |
+| -------- | ------------------------------------------------------------------------- | ------- | ---------------- | ----------------------------------------------------------------------- |
+| `GET`    | `/api/projects/<id>/models`                                               | -       | list of models   | List all the models in a project                                        |
+| `GET`    | `/api/projects/<id>/models/<model_id>`                                    | -       | model info       | Get info about a specific model                                         |
+| `GET`    | `/api/projects/<id>/models/<model_id>/labels`                             | -       | labels           | Get the labels used to train the model                                  |
+| `GET`    | `/api/projects/<id>/models/<model_id>/variants/<model_variant_id>/binary` | -       | zip              | Download model binary of the requested model variant                    |
+| `DELETE` | `/api/projects/<id>/models/<model_id>`                                    | -       | -                | Delete a model (option 'weights_only')                                  |
+| `GET`    | `/api/projects/<id>/models/<model_id>/training_metrics`                   | -       | training metrics | Get training metrics                                                    |
+| `GET`    | `/api/projects/<id>/models/<model_id>/logs`                               | -       | training log     | Get training logs (supports Accept: text/plain or application/x-ndjson) |
 
 ### Dataset revisions (training datasets, etc...)
 

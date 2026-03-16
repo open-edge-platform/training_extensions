@@ -38,7 +38,6 @@ class TestOTXDetectionDataset:
         dataset = OTXDetectionDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         assert dataset.sample_type == DetectionSample
@@ -67,7 +66,6 @@ class TestOTXDetectionDataset:
         dataset = OTXDetectionDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         # Override length for this test
@@ -106,7 +104,6 @@ class TestOTXDetectionDataset:
         dataset = OTXDetectionDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         # Override length for this test

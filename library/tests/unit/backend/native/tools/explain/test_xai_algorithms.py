@@ -1,7 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import torch
-from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
 
@@ -106,7 +105,6 @@ def test_instseg() -> None:
                 canvas_size=(10, 10),
             ),
         ],
-        polygons=[Polygon(points=[1, 1, 2, 2, 3, 3, 4, 4])],
     )
 
     # 2 images

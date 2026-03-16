@@ -6,7 +6,7 @@ from __future__ import annotations
 import itertools
 
 import pytest
-from datumaro import Dataset as DmDataset
+from datumaro.experimental.export_import import import_dataset
 
 from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.factory import OTXDatasetFactory
@@ -30,13 +30,9 @@ def _test_augmentation(
     train_config = config["data"]["train_subset"]
     input_size = 32
     train_config["input_size"] = (input_size, input_size)
-    data_format = config["data"]["data_format"]
 
     # Load dataset
-    dm_dataset = DmDataset.import_from(
-        target_dataset_per_task[task_name],
-        format=data_format,
-    )
+    dm_dataset = import_dataset(target_dataset_per_task[task_name])
 
     # Extract sampler config once before the loop
     sampler_config = train_config.pop("sampler", {})
@@ -57,7 +53,6 @@ def _test_augmentation(
             task=task,
             dm_subset=dm_dataset,
             cfg_subset=SubsetConfig(sampler=SamplerConfig(**sampler_config), **train_config),
-            data_format=data_format,
         )
         # Check if all aug combinations are size-compatible
         sample = dataset[0]

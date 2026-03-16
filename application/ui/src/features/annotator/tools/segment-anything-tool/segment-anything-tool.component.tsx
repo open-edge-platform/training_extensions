@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
+import { toast } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
@@ -65,11 +66,12 @@ export const SegmentAnythingTool = () => {
     const nextMediaItem = useNextMediaItem(mediaItem, items);
     const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { isLoading, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
+    const { isLoading, isError, error, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
     const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
     const canvasRef = useRef<SVGRectElement>(null);
+    const hasShownErrorToastRef = useRef(false);
 
     const clampPoint = clampPointBetweenImage(image);
 
@@ -94,7 +96,7 @@ export const SegmentAnythingTool = () => {
             .catch(() => {
                 // If getting decoding went wrong we set an empty preview and
                 // start to compute the next decoding
-                return [];
+                setPreviewShapes([]);
             });
     };
 
@@ -137,6 +139,22 @@ export const SegmentAnythingTool = () => {
             id: `${idx}`,
         };
     });
+
+    useEffect(() => {
+        if (isError && !hasShownErrorToastRef.current) {
+            toast({
+                type: 'error',
+                message: `
+                Error in Segment Anything tool: ${error?.message ?? 'Unknown error, please try refreshing the page.'}`,
+            });
+
+            hasShownErrorToastRef.current = true;
+        }
+
+        if (!isError) {
+            hasShownErrorToastRef.current = false;
+        }
+    }, [isError, error]);
 
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;

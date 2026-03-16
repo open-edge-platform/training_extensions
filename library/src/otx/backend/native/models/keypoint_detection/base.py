@@ -109,11 +109,11 @@ class OTXKeypointDetectionModel(OTXModel):
             inverted_scale = max(kp_scale_h, kp_scale_w)
             kp_scale_h = kp_scale_w = inverted_scale
             # decode kps
-            kps = torch.as_tensor(output[0], device=self.device) * torch.tensor(
+            kps = torch.as_tensor(output[0], dtype=torch.float32, device=self.device) * torch.tensor(
                 [kp_scale_w, kp_scale_h],
                 device=self.device,
             )
-            score = torch.as_tensor(output[1], device=self.device)
+            score = torch.as_tensor(output[1], dtype=torch.float32, device=self.device)
             visible_keypoints = torch.cat([kps, score.unsqueeze(1) > visibility_threshold], dim=1)
             keypoints.append(visible_keypoints)
             scores.append(score)

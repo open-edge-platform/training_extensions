@@ -14,7 +14,6 @@ import pytest
 from cpuinfo import get_cpu_info
 from otx import __version__
 
-import mlflow
 
 log = logging.getLogger(__name__)
 
@@ -107,6 +106,8 @@ def fxt_mlflow_experiment(
     If there is a MLFlow Experiment which has the same name with the given name,
     it will use that MLFlow Experiment. Otherwise, it will create a new one and use it.
     """
+    import mlflow
+
     mlflow.set_tracking_uri(fxt_mlflow_tracking_uri)
     exp = mlflow.get_experiment_by_name(name=fxt_mlflow_experiment_name)
     exp_id = (

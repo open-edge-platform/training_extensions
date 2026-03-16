@@ -46,7 +46,6 @@ class TestOTXMulticlassClsDataset:
         dataset = OTXMulticlassClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         # Override length for this test
@@ -71,7 +70,6 @@ class TestOTXMulticlassClsDataset:
         dataset = OTXMulticlassClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         # Override length for this test

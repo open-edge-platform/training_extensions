@@ -5,6 +5,7 @@ import { Button, ButtonGroup } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
+import { LABEL_MAPPING_FORM_ID } from './util';
 
 type ImportLabelMappingButtonsProps = {
     stagedDatasetId: string;
@@ -44,7 +45,7 @@ export const ImportLabelMappingButtons = ({
                 Back
             </Button>
 
-            <Button type='submit' variant='primary'>
+            <Button type='submit' variant='accent' form={LABEL_MAPPING_FORM_ID}>
                 Create
             </Button>
         </ButtonGroup>

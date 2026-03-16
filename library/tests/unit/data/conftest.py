@@ -5,209 +5,39 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
-import cv2
-import numpy as np
 import pytest
-from datumaro.components.annotation import AnnotationType, Bbox, Label, LabelCategories, Mask, Polygon
-from datumaro.components.dataset import Dataset as DmDataset
-from datumaro.components.dataset_base import DatasetItem
-from datumaro.components.media import Image
+from datumaro.experimental import Dataset
 
 from otx.data.dataset.classification import (
     HLabelInfo,
-    OTXHlabelClsDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
 )
-from otx.data.dataset.detection import (
-    OTXDetectionDataset,
-)
-from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.data.dataset.segmentation import (
-    OTXSegmentationDataset,
-)
-from otx.data.entity.sample import OTXSample
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from otx.data.dataset.base import OTXDataset
 
 _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion", "Panda"]
 
 
 @pytest.fixture
-def fxt_dm_item() -> DatasetItem:
-    np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
-    np_img[:, :, 0] = 0  # Set 0 for B channel
-    np_img[:, :, 1] = 1  # Set 1 for G channel
-    np_img[:, :, 2] = 2  # Set 2 for R channel
-
-    _, np_bytes = cv2.imencode(".png", np_img)
-    media = Image.from_bytes(np_bytes.tobytes())
-    media.path = ""
-
-    return DatasetItem(
-        id="item",
-        subset="train",
-        media=media,
-        annotations=[
-            Label(label=0),
-            Bbox(x=200, y=200, w=1, h=1, label=0),
-            Mask(label=0, image=np.eye(10, dtype=np.uint8)),
-            Polygon(points=[399.0, 570.0, 397.0, 572.0, 397.0, 573.0, 394.0, 576.0], label=0),
-        ],
-    )
-
-
-@pytest.fixture
-def fxt_classification_dm_item() -> DatasetItem:
-    np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
-    np_img[:, :, 0] = 0  # Set 0 for B channel
-    np_img[:, :, 1] = 1  # Set 1 for G channel
-    np_img[:, :, 2] = 2  # Set 2 for R channel
-
-    _, np_bytes = cv2.imencode(".png", np_img)
-    media = Image.from_bytes(np_bytes.tobytes())
-    media.path = ""
-
-    return DatasetItem(
-        id="item",
-        subset="train",
-        media=media,
-        annotations=[
-            Label(label=0),
-        ],
-    )
-
-
-@pytest.fixture
-def fxt_detection_dm_item() -> DatasetItem:
-    np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
-    np_img[:, :, 0] = 0  # Set 0 for B channel
-    np_img[:, :, 1] = 1  # Set 1 for G channel
-    np_img[:, :, 2] = 2  # Set 2 for R channel
-
-    _, np_bytes = cv2.imencode(".png", np_img)
-    media = Image.from_bytes(np_bytes.tobytes())
-    media.path = ""
-
-    return DatasetItem(
-        id="item",
-        subset="train",
-        media=media,
-        annotations=[
-            Bbox(x=0, y=0, w=1, h=1, label=0),
-            Bbox(x=1, y=0, w=1, h=1, label=0),
-            Bbox(x=1, y=1, w=1, h=1, label=0),
-        ],
-    )
-
-
-@pytest.fixture
-def fxt_segmentation_dm_item() -> DatasetItem:
-    np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
-    np_img[:, :, 0] = 0  # Set 0 for B channel
-    np_img[:, :, 1] = 1  # Set 1 for G channel
-    np_img[:, :, 2] = 2  # Set 2 for R channel
-
-    _, np_bytes = cv2.imencode(".png", np_img)
-    media = Image.from_bytes(np_bytes.tobytes())
-    media.path = ""
-
-    return DatasetItem(
-        id="item",
-        subset="train",
-        media=media,
-        annotations=[
-            Mask(label=0, image=np.eye(10, dtype=np.uint8)),
-            Polygon(points=[399.0, 570.0, 397.0, 572.0, 397.0, 573.0, 394.0, 576.0], label=0),
-        ],
-    )
-
-
-@pytest.fixture
-def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> MagicMock:
-    mock_dm_subset = mocker.MagicMock(spec=DmDataset)
-    mock_dm_subset.__getitem__.return_value = fxt_dm_item
-    mock_dm_subset.__iter__.return_value = [fxt_dm_item]
+def fxt_mock_classification_dm_subset(mocker: MockerFixture) -> MagicMock:
+    mock_dm_subset = mocker.MagicMock(spec=Dataset)
     mock_dm_subset.__len__.return_value = 1
-    mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.categories().get.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.media_type.return_value = Image
-    mock_dm_subset.ann_types.return_value = [
-        AnnotationType.label,
-        AnnotationType.bbox,
-        AnnotationType.mask,
-        AnnotationType.polygon,
-    ]
-    mock_dm_subset.convert_to_schema = MagicMock(return_value=mock_dm_subset)
     return mock_dm_subset
 
 
 @pytest.fixture
-def fxt_mock_classification_dm_subset(mocker: MockerFixture, fxt_classification_dm_item: DatasetItem) -> MagicMock:
-    mock_dm_subset = mocker.MagicMock(spec=DmDataset)
-    mock_dm_subset.__getitem__.return_value = fxt_classification_dm_item
-    mock_dm_subset.__iter__.return_value = [fxt_classification_dm_item]
+def fxt_mock_detection_dm_subset(mocker: MockerFixture) -> MagicMock:
+    mock_dm_subset = mocker.MagicMock(spec=Dataset)
     mock_dm_subset.__len__.return_value = 1
-    mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.categories().get.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.media_type.return_value = Image
-    mock_dm_subset.ann_types.return_value = [
-        AnnotationType.label,
-    ]
     return mock_dm_subset
 
 
 @pytest.fixture
-def fxt_mock_detection_dm_subset(mocker: MockerFixture, fxt_detection_dm_item: DatasetItem) -> MagicMock:
-    mock_dm_subset = mocker.MagicMock(spec=DmDataset)
-    mock_dm_subset.__getitem__.return_value = fxt_detection_dm_item
-    mock_dm_subset.__iter__.return_value = [fxt_detection_dm_item]
+def fxt_mock_segmentation_dm_subset(mocker: MockerFixture) -> MagicMock:
+    mock_dm_subset = mocker.MagicMock(spec=Dataset)
     mock_dm_subset.__len__.return_value = 1
-    mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.categories().get.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.media_type.return_value = Image
-    mock_dm_subset.ann_types.return_value = [AnnotationType.bbox]
     return mock_dm_subset
-
-
-@pytest.fixture
-def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_item: DatasetItem) -> MagicMock:
-    mock_dm_subset = mocker.MagicMock(spec=DmDataset)
-    mock_dm_subset.__getitem__.return_value = fxt_segmentation_dm_item
-    mock_dm_subset.__iter__.return_value = [fxt_segmentation_dm_item]
-    mock_dm_subset.__len__.return_value = 1
-    mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.categories().get.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
-    mock_dm_subset.media_type.return_value = Image
-    mock_dm_subset.ann_types.return_value = [AnnotationType.polygon, AnnotationType.mask]
-    return mock_dm_subset
-
-
-@pytest.fixture(
-    params=[
-        (OTXHlabelClsDataset, OTXSample, {}),
-        (OTXMultilabelClsDataset, OTXSample, {}),
-        (OTXMulticlassClsDataset, OTXSample, {}),
-        (OTXDetectionDataset, OTXSample, {}),
-        (OTXInstanceSegDataset, OTXSample, {}),
-        (OTXSegmentationDataset, OTXSample, {}),
-    ],
-    ids=[
-        "hlabel_cls",
-        "multi_label_cls",
-        "multi_class_cls",
-        "detection",
-        "instance_seg",
-        "semantic_seg",
-    ],
-)
-def fxt_dataset_and_data_entity_cls(
-    request: pytest.FixtureRequest,
-) -> tuple[OTXDataset, OTXSample]:
-    return request.param
 
 
 @pytest.fixture
@@ -240,55 +70,3 @@ def fxt_mock_hlabelinfo():
         ],
         empty_multiclass_head_indices=[],
     )
-
-
-@pytest.fixture
-def fxt_hlabel_dataset_subset() -> DmDataset:
-    return DmDataset.from_iterable(
-        [
-            DatasetItem(
-                id=0,
-                subset="train",
-                media=Image.from_numpy(np.zeros((3, 10, 10))),
-                annotations=[
-                    Label(
-                        label=2,
-                        id=0,
-                        group=1,
-                    ),
-                ],
-            ),
-            DatasetItem(
-                id=1,
-                subset="train",
-                media=Image.from_numpy(np.zeros((3, 10, 10))),
-                annotations=[
-                    Label(
-                        label=4,
-                        id=0,
-                        group=2,
-                    ),
-                ],
-            ),
-        ],
-        categories={
-            AnnotationType.label: LabelCategories(
-                items=[
-                    LabelCategories.Category(name="Heart", parent=""),
-                    LabelCategories.Category(name="Spade", parent=""),
-                    LabelCategories.Category(name="Heart_Queen", parent="Heart"),
-                    LabelCategories.Category(name="Heart_King", parent="Heart"),
-                    LabelCategories.Category(name="Spade_A", parent="Spade"),
-                    LabelCategories.Category(name="Spade_King", parent="Spade"),
-                    LabelCategories.Category(name="Black_Joker", parent=""),
-                    LabelCategories.Category(name="Red_Joker", parent=""),
-                    LabelCategories.Category(name="Extra_Joker", parent=""),
-                ],
-                label_groups=[
-                    LabelCategories.LabelGroup(name="Card", labels=["Heart", "Spade"]),
-                    LabelCategories.LabelGroup(name="Heart Group", labels=["Heart_Queen", "Heart_King"]),
-                    LabelCategories.LabelGroup(name="Spade Group", labels=["Spade_Queen", "Spade_King"]),
-                ],
-            ),
-        },
-    ).get_subset("train")
