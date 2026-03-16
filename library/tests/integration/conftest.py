@@ -149,14 +149,14 @@ def fxt_asset_dir() -> Path:
 @pytest.fixture(scope="module")
 def fxt_target_dataset_per_task() -> dict:
     return {
-        "multi_class_cls": "tests/assets/classification_dataset",
+        "multi_class_cls": "tests/assets/classification_cifar10",
         "multi_class_cls_16bit": "tests/assets/classification_dataset_16bit",
-        "multi_label_cls": "tests/assets/multilabel_classification",
-        "h_label_cls": "tests/assets/hlabel_classification",
-        "detection": "tests/assets/car_tree_bug",
-        "rotated_detection": "tests/assets/car_tree_bug",
-        "instance_segmentation": "tests/assets/car_tree_bug",
-        "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset",
-        "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
-        "tiling_detection": "tests/assets/tiling_small_objects",
+        "multi_label_cls": "tests/assets/multilabel_classification_coco",
+        "h_label_cls": "tests/assets/hierarchical_classification_cifar100",
+        "detection": "tests/assets/detection_coco",
+        "rotated_detection": "tests/assets/detection_coco",
+        "instance_segmentation": "tests/assets/instance_segmentation_coco",
+        "semantic_segmentation": "tests/assets/segmentation_pets",
+        "keypoint_detection": "tests/assets/keypoint_detection_coco",
+        "tiling_detection": "tests/assets/detection_coco",
     }
