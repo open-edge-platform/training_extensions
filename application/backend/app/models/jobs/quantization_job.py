@@ -9,7 +9,6 @@ from loguru import logger
 from pydantic import Field
 
 from app.core.jobs.models import JobParams, JobType, ProjectJob
-from app.models.system import DeviceInfo
 
 
 class QuantizationJobParams(JobParams):
@@ -17,7 +16,6 @@ class QuantizationJobParams(JobParams):
     project_id: UUID
     model_id: UUID  # Source model revision to quantize
     model_variant_id: UUID = Field(default_factory=uuid4)
-    device: DeviceInfo
     max_calibration_subset_size: int = Field(default=100, description="Max samples for calibration")
     max_drop: float | None = Field(default=None, description="Max accuracy drop for accuracy-aware quantization")
 

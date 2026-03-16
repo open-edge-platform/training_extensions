@@ -16,7 +16,6 @@ class QuantizationRequestParams(BaseModel):
     """Request parameters for the quantization job."""
 
     model_id: UUID = Field(..., description="ID of the model revision to quantize")
-    device: str = Field(..., description="Device identifier for calibration (e.g., 'cpu', 'xpu-0')")
     max_calibration_subset_size: int = Field(
         100, description="Maximum number of samples from training set used for calibration"
     )
@@ -32,7 +31,6 @@ class QuantizationRequestParams(BaseModel):
         "json_schema_extra": {
             "example": {
                 "model_id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
-                "device": "cpu",
                 "max_calibration_subset_size": 100,
                 "max_drop": 0.01,
             }
@@ -53,7 +51,6 @@ class QuantizationRequest(BaseJobRequest):
                 "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "parameters": {
                     "model_id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
-                    "device": "cpu",
                     "max_calibration_subset_size": 100,
                     "max_drop": 0.01,
                 },
@@ -86,7 +83,6 @@ class QuantizationMetadata(BaseModel):
     project: QuantizationProjectMetadata = Field(..., description="Project associated with the quantization job")
     model: QuantizationModelMetadata = Field(..., description="Model being quantized")
     model_variant: QuantizationModelVariantMetadata = Field(..., description="Model variant created by quantization")
-    device: str = Field(..., description="Device used for calibration")
     max_calibration_subset_size: int = Field(..., description="Maximum calibration subset size")
     max_drop: float | None = Field(None, description="Maximum allowed accuracy drop")
 
@@ -98,7 +94,6 @@ class QuantizationMetadata(BaseModel):
                 "project": QuantizationProjectMetadata(id=data.project_id),
                 "model": QuantizationModelMetadata(id=data.params.model_id),
                 "model_variant": QuantizationModelVariantMetadata(id=data.params.model_variant_id),
-                "device": data.params.device.name,
                 "max_calibration_subset_size": data.params.max_calibration_subset_size,
                 "max_drop": data.params.max_drop,
             }

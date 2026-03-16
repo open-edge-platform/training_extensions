@@ -85,7 +85,6 @@ async def submit_job(
                     ),
                 )
             case JobType.QUANTIZE:
-                device = system_service.get_device_info(job_request.parameters.device)
                 project = project_service.get_project_by_id(job_request.project_id)
                 job = QuantizationJob(
                     id=job_id,
@@ -93,7 +92,6 @@ async def submit_job(
                     log_dir=job_dir,
                     data_dir=data_dir,
                     params=QuantizationJobParams(
-                        device=device,
                         model_id=job_request.parameters.model_id,
                         project_id=project.id,
                         job_id=job_id,
