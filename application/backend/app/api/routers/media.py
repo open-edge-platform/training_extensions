@@ -1,5 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import os
 import os.path
 from datetime import datetime
 from typing import Annotated
@@ -9,7 +10,14 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
-from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
+from app.api.dependencies import (
+    get_dataset_service,
+    get_file_name_and_extension,
+    get_inference_media_limit,
+    get_media_prediction_service,
+    get_media_service,
+    get_project,
+)
 from app.api.io_utils import write_file_to_response, write_image_to_response
 from app.api.schemas.media import (
     AnnotatedVideoFrame,
@@ -22,11 +30,12 @@ from app.api.schemas.media import (
 )
 from app.api.validators import MediaID
 from app.core.models import Pagination
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
-from app.models.media import ImageFormat, MediaType, NotAnnotatedVideoFrame, VideoFormat
-from app.services import DatasetService, MediaService
+from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
+from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
+from app.services import DatasetService, MediaPredictionService, MediaService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
+from app.services.media_prediction_service import VideoRangeError
 from app.services.media_service import InvalidImageError, MediaFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
@@ -511,3 +520,42 @@ def delete_media_annotation(
     # Dataset item has the same ID as media
     dataset_item_id = media.id
     dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
+
+
+@router.post(
+    "/media:predict",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {"description": "Media predictions are calculated"},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Missing frame range, range is specified for non-video media, "
+            "or media inference limit exceeded"
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+    },
+)
+def media_predict(
+    inference_media_limit: Annotated[int, Depends(get_inference_media_limit)],
+    project: Annotated[Project, Depends(get_project)],
+    request: Annotated[MediaListPredictionRequest, Body()],
+    media_prediction_service: Annotated[MediaPredictionService, Depends(get_media_prediction_service)],
+) -> BatchInferenceResult:
+    """Get predictions for media"""
+    items_count = sum(
+        [
+            1
+            if media_request.range is None
+            else len(range(media_request.range.start_frame, media_request.range.end_frame, media_request.range.stride))
+            for media_request in request.media
+        ]
+    )
+    if items_count > inference_media_limit:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many media items to predict. Please reduce the number of media or frame range size.",
+        )
+
+    try:
+        return media_prediction_service.predict_media(project=project, request=request)
+    except VideoRangeError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

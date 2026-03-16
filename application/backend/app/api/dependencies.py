@@ -19,6 +19,7 @@ from app.services import (
     DatasetRevisionService,
     DatasetService,
     LabelService,
+    MediaPredictionService,
     MediaService,
     MetricsService,
     ModelService,
@@ -32,6 +33,7 @@ from app.services import (
 )
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
+from app.services.inference import InferenceServer
 from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
 
@@ -89,6 +91,16 @@ def get_ice_servers(request: Request) -> list[dict]:
     return request.app.state.settings.ice_servers
 
 
+def get_inference_media_limit(request: Request) -> int:
+    """Provides the inference media limit from settings."""
+    return request.app.state.settings.inference_media_limit
+
+
+def get_inference_model_ttl(request: Request) -> int:
+    """Provides the inference model TTL from settings."""
+    return request.app.state.settings.inference_model_ttl
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus
@@ -97,6 +109,11 @@ def get_event_bus(request: Request) -> EventBus:
 def get_data_collector(request: Request) -> DataCollector:
     """Provides an DataCollector instance."""
     return request.app.state.data_collector
+
+
+def get_inference_server(request: Request) -> InferenceServer:
+    """Provides an InferenceServer instance."""
+    return request.app.state.inference_server
 
 
 def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
@@ -188,6 +205,25 @@ def get_dataset_service(
 ) -> DatasetService:
     """Provides a DatasetService instance."""
     return DatasetService(label_service=label_service, media_service=media_service, db_session=db)
+
+
+def get_media_prediction_service(
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    inference_server: Annotated[InferenceServer, Depends(get_inference_server)],
+    inference_model_ttl: Annotated[int, Depends(get_inference_model_ttl)],
+    db: Annotated[Session, Depends(get_db)],
+) -> MediaPredictionService:
+    """Provides a MediaPredictionService instance."""
+    return MediaPredictionService(
+        label_service=label_service,
+        media_service=media_service,
+        dataset_service=dataset_service,
+        inference_server=inference_server,
+        inference_model_ttl=inference_model_ttl,
+        db_session=db,
+    )
 
 
 def get_dataset_revision_service(
