@@ -127,9 +127,14 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
     };
 
     const isLabelActive = (label: Label): boolean => {
+        if (label.id === EMPTY_LABEL_ID) {
+            return false;
+        }
+
         if (isClassification) {
             return annotations.some((annotation) => annotation.labels.some((l) => l.id === label.id));
         }
+
         return selectedLabelId === label.id;
     };
 

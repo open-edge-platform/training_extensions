@@ -84,16 +84,6 @@ describe('Labels', () => {
         expect(carButton).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('shows No object as selected when it is the active label', () => {
-        mockSelectedLabelId.current = EMPTY_LABEL_ID;
-
-        render(<Labels />);
-
-        const noObjectButton = screen.getByRole('button', { name: 'Label No object' });
-
-        expect(noObjectButton).toHaveAttribute('aria-pressed', 'true');
-    });
-
     it('calls setSelectedLabelId when clicking a label', () => {
         render(<Labels />);
 
