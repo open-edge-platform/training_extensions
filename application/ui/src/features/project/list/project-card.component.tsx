@@ -43,11 +43,12 @@ const ActiveProjectBadge = () => {
 
 type ProjectCardProps = {
     item: Project;
+    prioritizeImage?: boolean;
 };
 
 const DEFAULT_THUMBNAIL_SIZE = 156;
 
-export const ProjectCard = ({ item }: ProjectCardProps) => {
+export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
     const isClassification = isClassificationTask(item.task.task_type);
     const isMultiLabel = isClassification && item.task.exclusive_labels === false;
@@ -62,7 +63,8 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
                             alt={item.name}
                             width={DEFAULT_THUMBNAIL_SIZE}
                             height={DEFAULT_THUMBNAIL_SIZE}
-                            fetchPriority='high'
+                            loading={prioritizeImage ? 'eager' : 'lazy'}
+                            fetchPriority={prioritizeImage ? 'high' : 'auto'}
                         />
                     </Flex>
 

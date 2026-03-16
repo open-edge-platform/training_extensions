@@ -50,9 +50,10 @@ export default defineConfig({
         title: 'Geti Tune',
         favicon: './src/assets/icons/build-icon.svg',
         meta: {
-            description: `Geti provides a "recipe" for every supported task type, which consolidates necessary 
-                information to build a model. Model templates are validated on various 
-                datasets andserve as a one-stop shop for obtaining the best models in general.`,
+            description:
+                'Geti provides a "recipe" for every supported task type, which consolidates ' +
+                'necessary information to build a model. Model templates are validated on ' +
+                'various datasets and serve as a one-stop shop for obtaining the best models in general.',
         },
     },
     performance: {
