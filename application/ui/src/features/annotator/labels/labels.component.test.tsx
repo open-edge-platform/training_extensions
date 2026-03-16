@@ -6,13 +6,17 @@ import { getMockedLabel } from 'mocks/mock-labels';
 import { render } from 'test-utils/render';
 
 import type { Label } from '../../../constants/shared-types';
+import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import { Labels } from './labels.component';
 
 const mockLabels: Label[] = [
     getMockedLabel({ id: 'label-1', name: 'Person', color: '#FF0000', hotkey: 'p' }),
     getMockedLabel({ id: 'label-2', name: 'Car', color: '#00FF00' }),
     getMockedLabel({ id: 'label-3', name: 'Dog', color: '#0000FF' }),
+    getMockedLabel({ id: EMPTY_LABEL_ID, name: 'No object', color: '#FFFFFF' }),
 ];
+
+const mockSelectedLabelId = { current: 'label-1' };
 
 const mockSetSelectedLabelId = vi.fn();
 const mockUpdateAnnotations = vi.fn();
@@ -24,7 +28,7 @@ const mockAnnotations = { current: [] as { id: string; labels: Label[]; shape: {
 vi.mock('../annotator-labels-provider.component', () => ({
     useAnnotatorLabels: () => ({
         labels: mockLabels,
-        selectedLabelId: 'label-1',
+        selectedLabelId: mockSelectedLabelId.current,
         setSelectedLabelId: mockSetSelectedLabelId,
     }),
 }));
@@ -57,6 +61,7 @@ describe('Labels', () => {
         mockUpdateAnnotations.mockClear();
         mockAddAnnotations.mockClear();
         mockDeleteAnnotations.mockClear();
+        mockSelectedLabelId.current = 'label-1';
         mockSelectedAnnotations.current = new Set();
         mockAnnotations.current = [];
     });
@@ -77,6 +82,16 @@ describe('Labels', () => {
 
         expect(personButton).toHaveAttribute('aria-pressed', 'true');
         expect(carButton).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('shows No object as selected when it is the active label', () => {
+        mockSelectedLabelId.current = EMPTY_LABEL_ID;
+
+        render(<Labels />);
+
+        const noObjectButton = screen.getByRole('button', { name: 'Label No object' });
+
+        expect(noObjectButton).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('calls setSelectedLabelId when clicking a label', () => {

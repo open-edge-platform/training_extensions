@@ -200,7 +200,11 @@ export const AnnotationActionsProvider = ({
         return !isEqual(currentServerAnnotations, initialAnnotationsDTO);
     }, [annotations, initialAnnotationsDTO]);
 
-    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations;
+    const hasEmptyLabelSelection = useMemo(() => {
+        return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
+    }, [annotations]);
+
+    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations || hasEmptyLabelSelection;
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
