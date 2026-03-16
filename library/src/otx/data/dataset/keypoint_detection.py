@@ -5,20 +5,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, List, Union
+from typing import TYPE_CHECKING
 
 import torch
-from torchvision.transforms.v2 import Compose
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
+from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.sample import KeypointSample
 from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 from otx.types.label import LabelInfo
-
-from .base import OTXDataset
-
-Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
@@ -73,16 +68,8 @@ class OTXKeypointDetectionDataset(OTXDataset):
         )
 
     def _get_item_impl(self, index: int) -> KeypointSample | None:
-        item = self.dm_subset[index]
-        keypoints = item.keypoints
-        keypoints[:, 2] = torch.clamp(keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
-        item.keypoints = keypoints
-        # Handle image conversion - to_image only permutes numpy arrays, not tensors
-        image = item.image
-        if isinstance(image, torch.Tensor) and image.ndim == 3 and image.shape[-1] in (1, 3):
-            # Image is in HWC format, convert to CHW
-            image = image.permute(2, 0, 1)
-        item.image = to_dtype(to_image(image), torch.float32)
+        item = self._read_dm_item(index)
+        item.keypoints[:, 2] = torch.clamp(item.keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
         return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property

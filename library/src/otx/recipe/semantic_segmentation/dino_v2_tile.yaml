@@ -64,6 +64,7 @@ overrides:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
+            resize_targets: true
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [0.485, 0.456, 0.406]
@@ -74,6 +75,7 @@ overrides:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
+            resize_targets: true
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [0.485, 0.456, 0.406]

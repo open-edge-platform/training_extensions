@@ -220,6 +220,7 @@ class TestOTXDataset:
         self.mock_dm_subset.__getitem__ = Mock(return_value=mock_item)
 
         mock_transformed_item = Mock(spec=OTXSample)
+        mock_transformed_item.image = torch.rand(3, 32, 32)
 
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,

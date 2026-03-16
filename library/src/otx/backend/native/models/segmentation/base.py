@@ -178,11 +178,7 @@ class OTXSegmentationModel(OTXModel):
             raise ValueError(msg)
 
         return [
-            {
-                "preds": pred_mask,
-                "target": target_mask,
-            }
-            for pred_mask, target_mask in zip(preds.masks, inputs.masks)
+            {"preds": pred_mask, "target": target_mask} for pred_mask, target_mask in zip(preds.masks, inputs.masks)
         ]
 
     @staticmethod

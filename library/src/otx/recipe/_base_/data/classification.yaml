@@ -17,11 +17,6 @@ train_subset:
         ratio:
           - 0.75
           - 1.34
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-        scale: true
-  # GPU-stage augmentations (Kornia)
   augmentations_gpu:
     - class_path: kornia.augmentation.RandomHorizontalFlip
       init_args:
@@ -55,11 +50,6 @@ val_subset:
     - class_path: torchvision.transforms.v2.Resize
       init_args:
         size: $(input_size)
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-        scale: true
-  # Validation only needs normalization (same as train)
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:
@@ -83,11 +73,6 @@ test_subset:
     - class_path: torchvision.transforms.v2.Resize
       init_args:
         size: $(input_size)
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-        scale: true
-  # Test only needs normalization (same as train)
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:

@@ -167,7 +167,7 @@ def with_image_dtype(
     new_cls.__qualname__ = new_cls_name
 
     # Make the class discoverable by pickle in the current process.
-    # In spawned workers the module-level __getattr__ (PEP 562) in
+    # In spawned workers the module-level __getattr__ in
     # otx.data.entity.sample handles the lookup instead.
     parent_module = sys.modules.get(sample_cls.__module__)
     if parent_module is not None:

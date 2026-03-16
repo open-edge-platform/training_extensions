@@ -46,7 +46,7 @@ val_subset:
       init_args:
         size: $(input_size)
         keep_aspect_ratio: false
-        resize_targets: false
+        resize_targets: true
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:
@@ -70,8 +70,8 @@ test_subset:
     - class_path: otx.data.augmentation.transforms.Resize
       init_args:
         size: $(input_size)
-        keep_aspect_ratio: true
-        resize_targets: false
+        keep_aspect_ratio: false
+        resize_targets: true
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:

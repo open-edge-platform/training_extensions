@@ -1,6 +1,18 @@
 {
   "errors": [
     {
+      "line": 38,
+      "column": 31,
+      "stop_line": 38,
+      "stop_column": 72,
+      "path": "docker/download_pretrained_weights.py",
+      "code": -2,
+      "name": "no-matching-overload",
+      "description": "No matching overload found for function `iter` called with arguments: (list[partial[Unknown]] | None)\n  Possible overloads:\n  (object: SupportsIter[_SupportsNextT_co], /) -> _SupportsNextT_co [closest match]\n  (object: _GetItemIterable[_T], /) -> Iterator[_T]\n  (object: () -> _T | None, sentinel: None, /) -> Iterator[_T]\n  (object: () -> _T, sentinel: object, /) -> Iterator[_T]",
+      "concise_description": "No matching overload found for function `iter` called with arguments: (list[partial[Unknown]] | None)",
+      "severity": "error"
+    },
+    {
       "line": 51,
       "column": 27,
       "stop_line": 51,
@@ -145,9 +157,9 @@
       "severity": "error"
     },
     {
-      "line": 299,
+      "line": 303,
       "column": 27,
-      "stop_line": 299,
+      "stop_line": 303,
       "stop_column": 75,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -157,9 +169,9 @@
       "severity": "error"
     },
     {
-      "line": 481,
+      "line": 485,
       "column": 67,
-      "stop_line": 481,
+      "stop_line": 485,
       "stop_column": 81,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -169,9 +181,9 @@
       "severity": "error"
     },
     {
-      "line": 483,
+      "line": 487,
       "column": 16,
-      "stop_line": 483,
+      "stop_line": 487,
       "stop_column": 30,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -181,9 +193,9 @@
       "severity": "error"
     },
     {
-      "line": 650,
+      "line": 654,
       "column": 39,
-      "stop_line": 650,
+      "stop_line": 654,
       "stop_column": 48,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -193,9 +205,9 @@
       "severity": "error"
     },
     {
-      "line": 657,
+      "line": 661,
       "column": 30,
-      "stop_line": 657,
+      "stop_line": 661,
       "stop_column": 53,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -205,9 +217,9 @@
       "severity": "error"
     },
     {
-      "line": 657,
+      "line": 661,
       "column": 66,
-      "stop_line": 657,
+      "stop_line": 661,
       "stop_column": 80,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -217,9 +229,9 @@
       "severity": "error"
     },
     {
-      "line": 889,
+      "line": 893,
       "column": 13,
-      "stop_line": 889,
+      "stop_line": 893,
       "stop_column": 31,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -229,9 +241,9 @@
       "severity": "error"
     },
     {
-      "line": 939,
+      "line": 943,
       "column": 36,
-      "stop_line": 939,
+      "stop_line": 943,
       "stop_column": 49,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -241,9 +253,9 @@
       "severity": "error"
     },
     {
-      "line": 941,
+      "line": 945,
       "column": 30,
-      "stop_line": 941,
+      "stop_line": 945,
       "stop_column": 43,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -253,9 +265,9 @@
       "severity": "error"
     },
     {
-      "line": 948,
+      "line": 952,
       "column": 16,
-      "stop_line": 948,
+      "stop_line": 952,
       "stop_column": 22,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -265,9 +277,9 @@
       "severity": "error"
     },
     {
-      "line": 957,
+      "line": 961,
       "column": 27,
-      "stop_line": 957,
+      "stop_line": 961,
       "stop_column": 35,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -277,9 +289,9 @@
       "severity": "error"
     },
     {
-      "line": 960,
+      "line": 964,
       "column": 29,
-      "stop_line": 960,
+      "stop_line": 964,
       "stop_column": 44,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -289,9 +301,9 @@
       "severity": "error"
     },
     {
-      "line": 962,
+      "line": 966,
       "column": 29,
-      "stop_line": 962,
+      "stop_line": 966,
       "stop_column": 45,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -301,9 +313,9 @@
       "severity": "error"
     },
     {
-      "line": 964,
+      "line": 968,
       "column": 29,
-      "stop_line": 964,
+      "stop_line": 968,
       "stop_column": 43,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -313,9 +325,9 @@
       "severity": "error"
     },
     {
-      "line": 966,
+      "line": 970,
       "column": 29,
-      "stop_line": 966,
+      "stop_line": 970,
       "stop_column": 54,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -325,9 +337,9 @@
       "severity": "error"
     },
     {
-      "line": 968,
+      "line": 972,
       "column": 29,
-      "stop_line": 968,
+      "stop_line": 972,
       "stop_column": 44,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -337,9 +349,9 @@
       "severity": "error"
     },
     {
-      "line": 971,
+      "line": 975,
       "column": 29,
-      "stop_line": 971,
+      "stop_line": 975,
       "stop_column": 42,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -349,9 +361,9 @@
       "severity": "error"
     },
     {
-      "line": 978,
+      "line": 982,
       "column": 29,
-      "stop_line": 978,
+      "stop_line": 982,
       "stop_column": 52,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -361,9 +373,9 @@
       "severity": "error"
     },
     {
-      "line": 987,
+      "line": 991,
       "column": 29,
-      "stop_line": 987,
+      "stop_line": 991,
       "stop_column": 42,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -373,9 +385,9 @@
       "severity": "error"
     },
     {
-      "line": 991,
+      "line": 995,
       "column": 29,
-      "stop_line": 991,
+      "stop_line": 995,
       "stop_column": 52,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -385,9 +397,9 @@
       "severity": "error"
     },
     {
-      "line": 1097,
+      "line": 1104,
       "column": 25,
-      "stop_line": 1097,
+      "stop_line": 1104,
       "stop_column": 48,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -397,9 +409,9 @@
       "severity": "error"
     },
     {
-      "line": 1112,
+      "line": 1119,
       "column": 45,
-      "stop_line": 1112,
+      "stop_line": 1119,
       "stop_column": 60,
       "path": "src/otx/backend/native/engine.py",
       "code": -2,
@@ -4693,18 +4705,6 @@
       "severity": "error"
     },
     {
-      "line": 289,
-      "column": 20,
-      "stop_line": 289,
-      "stop_column": 72,
-      "path": "src/otx/backend/native/models/detection/base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXPredictionBatch.__init__`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXPredictionBatch.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 291,
       "column": 20,
       "stop_line": 291,
@@ -4801,10 +4801,10 @@
       "severity": "error"
     },
     {
-      "line": 413,
+      "line": 410,
       "column": 27,
-      "stop_line": 413,
-      "stop_column": 82,
+      "stop_line": 410,
+      "stop_column": 80,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
       "name": "no-matching-overload",
@@ -4813,9 +4813,9 @@
       "severity": "error"
     },
     {
-      "line": 423,
+      "line": 420,
       "column": 40,
-      "stop_line": 423,
+      "stop_line": 420,
       "stop_column": 57,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4825,9 +4825,9 @@
       "severity": "error"
     },
     {
-      "line": 424,
+      "line": 421,
       "column": 33,
-      "stop_line": 424,
+      "stop_line": 421,
       "stop_column": 54,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4837,9 +4837,9 @@
       "severity": "error"
     },
     {
-      "line": 428,
+      "line": 425,
       "column": 45,
-      "stop_line": 428,
+      "stop_line": 425,
       "stop_column": 55,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4849,9 +4849,9 @@
       "severity": "error"
     },
     {
-      "line": 430,
+      "line": 427,
       "column": 50,
-      "stop_line": 430,
+      "stop_line": 427,
       "stop_column": 60,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4861,9 +4861,9 @@
       "severity": "error"
     },
     {
-      "line": 433,
+      "line": 430,
       "column": 13,
-      "stop_line": 435,
+      "stop_line": 432,
       "stop_column": 40,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4873,9 +4873,9 @@
       "severity": "error"
     },
     {
-      "line": 449,
+      "line": 446,
       "column": 26,
-      "stop_line": 449,
+      "stop_line": 446,
       "stop_column": 48,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4885,9 +4885,9 @@
       "severity": "error"
     },
     {
-      "line": 450,
+      "line": 447,
       "column": 24,
-      "stop_line": 450,
+      "stop_line": 447,
       "stop_column": 39,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4897,9 +4897,9 @@
       "severity": "error"
     },
     {
-      "line": 453,
+      "line": 450,
       "column": 27,
-      "stop_line": 453,
+      "stop_line": 450,
       "stop_column": 49,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4909,9 +4909,9 @@
       "severity": "error"
     },
     {
-      "line": 502,
+      "line": 499,
       "column": 33,
-      "stop_line": 502,
+      "stop_line": 499,
       "stop_column": 54,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -4921,9 +4921,9 @@
       "severity": "error"
     },
     {
-      "line": 521,
+      "line": 518,
       "column": 39,
-      "stop_line": 521,
+      "stop_line": 518,
       "stop_column": 43,
       "path": "src/otx/backend/native/models/detection/base.py",
       "code": -2,
@@ -8401,9 +8401,9 @@
       "severity": "error"
     },
     {
-      "line": 181,
+      "line": 171,
       "column": 9,
-      "stop_line": 181,
+      "stop_line": 171,
       "stop_column": 27,
       "path": "src/otx/backend/native/models/detection/rtdetr.py",
       "code": -2,
@@ -8413,9 +8413,9 @@
       "severity": "error"
     },
     {
-      "line": 193,
+      "line": 183,
       "column": 33,
-      "stop_line": 193,
+      "stop_line": 183,
       "stop_column": 39,
       "path": "src/otx/backend/native/models/detection/rtdetr.py",
       "code": -2,
@@ -8425,9 +8425,9 @@
       "severity": "error"
     },
     {
-      "line": 202,
+      "line": 192,
       "column": 34,
-      "stop_line": 202,
+      "stop_line": 192,
       "stop_column": 56,
       "path": "src/otx/backend/native/models/detection/rtdetr.py",
       "code": -2,
@@ -8437,9 +8437,9 @@
       "severity": "error"
     },
     {
-      "line": 247,
+      "line": 237,
       "column": 47,
-      "stop_line": 247,
+      "stop_line": 237,
       "stop_column": 81,
       "path": "src/otx/backend/native/models/detection/rtdetr.py",
       "code": -2,
@@ -8449,9 +8449,9 @@
       "severity": "error"
     },
     {
-      "line": 281,
+      "line": 271,
       "column": 20,
-      "stop_line": 281,
+      "stop_line": 271,
       "stop_column": 38,
       "path": "src/otx/backend/native/models/detection/rtdetr.py",
       "code": -2,
@@ -8461,9 +8461,9 @@
       "severity": "error"
     },
     {
-      "line": 287,
+      "line": 277,
       "column": 19,
-      "stop_line": 287,
+      "stop_line": 277,
       "stop_column": 22,
       "path": "src/otx/backend/native/models/detection/rtdetr.py",
       "code": -2,
@@ -8506,66 +8506,6 @@
       "name": "missing-attribute",
       "description": "Object of class `Trainer` has no attribute `datamodule`",
       "concise_description": "Object of class `Trainer` has no attribute `datamodule`",
-      "severity": "error"
-    },
-    {
-      "line": 251,
-      "column": 29,
-      "stop_line": 251,
-      "stop_column": 42,
-      "path": "src/otx/backend/native/models/detection/ssd.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `img_info`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `img_info`",
-      "severity": "error"
-    },
-    {
-      "line": 252,
-      "column": 18,
-      "stop_line": 252,
-      "stop_column": 29,
-      "path": "src/otx/backend/native/models/detection/ssd.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "severity": "error"
-    },
-    {
-      "line": 253,
-      "column": 18,
-      "stop_line": 253,
-      "stop_column": 29,
-      "path": "src/otx/backend/native/models/detection/ssd.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "severity": "error"
-    },
-    {
-      "line": 254,
-      "column": 18,
-      "stop_line": 254,
-      "stop_column": 29,
-      "path": "src/otx/backend/native/models/detection/ssd.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "severity": "error"
-    },
-    {
-      "line": 255,
-      "column": 18,
-      "stop_line": 255,
-      "stop_column": 29,
-      "path": "src/otx/backend/native/models/detection/ssd.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `bboxes`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `bboxes`",
       "severity": "error"
     },
     {
@@ -8677,9 +8617,9 @@
       "severity": "error"
     },
     {
-      "line": 190,
+      "line": 191,
       "column": 30,
-      "stop_line": 190,
+      "stop_line": 191,
       "stop_column": 54,
       "path": "src/otx/backend/native/models/detection/yolox.py",
       "code": -2,
@@ -8689,9 +8629,9 @@
       "severity": "error"
     },
     {
-      "line": 192,
+      "line": 193,
       "column": 13,
-      "stop_line": 192,
+      "stop_line": 193,
       "stop_column": 37,
       "path": "src/otx/backend/native/models/detection/yolox.py",
       "code": -2,
@@ -8701,9 +8641,9 @@
       "severity": "error"
     },
     {
-      "line": 192,
+      "line": 193,
       "column": 48,
-      "stop_line": 192,
+      "stop_line": 193,
       "stop_column": 72,
       "path": "src/otx/backend/native/models/detection/yolox.py",
       "code": -2,
@@ -8713,9 +8653,9 @@
       "severity": "error"
     },
     {
-      "line": 195,
+      "line": 196,
       "column": 13,
-      "stop_line": 195,
+      "stop_line": 196,
       "stop_column": 37,
       "path": "src/otx/backend/native/models/detection/yolox.py",
       "code": -2,
@@ -9001,18 +8941,6 @@
       "severity": "error"
     },
     {
-      "line": 225,
-      "column": 20,
-      "stop_line": 225,
-      "stop_column": 72,
-      "path": "src/otx/backend/native/models/instance_segmentation/base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXPredictionBatch.__init__`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXPredictionBatch.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 227,
       "column": 20,
       "stop_line": 227,
@@ -9241,10 +9169,10 @@
       "severity": "error"
     },
     {
-      "line": 477,
+      "line": 474,
       "column": 27,
-      "stop_line": 477,
-      "stop_column": 82,
+      "stop_line": 474,
+      "stop_column": 80,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
       "name": "no-matching-overload",
@@ -9253,9 +9181,9 @@
       "severity": "error"
     },
     {
-      "line": 485,
+      "line": 482,
       "column": 40,
-      "stop_line": 485,
+      "stop_line": 482,
       "stop_column": 57,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9265,9 +9193,9 @@
       "severity": "error"
     },
     {
-      "line": 486,
+      "line": 483,
       "column": 33,
-      "stop_line": 486,
+      "stop_line": 483,
       "stop_column": 54,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9277,9 +9205,9 @@
       "severity": "error"
     },
     {
-      "line": 489,
+      "line": 486,
       "column": 44,
-      "stop_line": 489,
+      "stop_line": 486,
       "stop_column": 54,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9289,9 +9217,9 @@
       "severity": "error"
     },
     {
-      "line": 491,
+      "line": 488,
       "column": 49,
-      "stop_line": 491,
+      "stop_line": 488,
       "stop_column": 59,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9301,9 +9229,9 @@
       "severity": "error"
     },
     {
-      "line": 495,
+      "line": 492,
       "column": 13,
-      "stop_line": 497,
+      "stop_line": 494,
       "stop_column": 40,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9313,9 +9241,9 @@
       "severity": "error"
     },
     {
-      "line": 510,
+      "line": 508,
       "column": 26,
-      "stop_line": 510,
+      "stop_line": 508,
       "stop_column": 48,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9325,9 +9253,9 @@
       "severity": "error"
     },
     {
-      "line": 511,
+      "line": 509,
       "column": 23,
-      "stop_line": 511,
+      "stop_line": 509,
       "stop_column": 49,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9337,9 +9265,9 @@
       "severity": "error"
     },
     {
-      "line": 519,
+      "line": 517,
       "column": 28,
-      "stop_line": 519,
+      "stop_line": 517,
       "stop_column": 43,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9349,9 +9277,9 @@
       "severity": "error"
     },
     {
-      "line": 552,
+      "line": 550,
       "column": 28,
-      "stop_line": 552,
+      "stop_line": 550,
       "stop_column": 42,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9361,9 +9289,9 @@
       "severity": "error"
     },
     {
-      "line": 553,
+      "line": 551,
       "column": 29,
-      "stop_line": 553,
+      "stop_line": 551,
       "stop_column": 49,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9373,9 +9301,9 @@
       "severity": "error"
     },
     {
-      "line": 562,
+      "line": 560,
       "column": 20,
-      "stop_line": 562,
+      "stop_line": 560,
       "stop_column": 42,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9385,9 +9313,9 @@
       "severity": "error"
     },
     {
-      "line": 565,
+      "line": 563,
       "column": 20,
-      "stop_line": 565,
+      "stop_line": 563,
       "stop_column": 48,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9397,9 +9325,9 @@
       "severity": "error"
     },
     {
-      "line": 566,
+      "line": 564,
       "column": 28,
-      "stop_line": 566,
+      "stop_line": 564,
       "stop_column": 55,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9409,9 +9337,9 @@
       "severity": "error"
     },
     {
-      "line": 567,
+      "line": 565,
       "column": 16,
-      "stop_line": 567,
+      "stop_line": 565,
       "stop_column": 43,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9421,9 +9349,9 @@
       "severity": "error"
     },
     {
-      "line": 591,
+      "line": 589,
       "column": 33,
-      "stop_line": 591,
+      "stop_line": 589,
       "stop_column": 54,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -9433,9 +9361,9 @@
       "severity": "error"
     },
     {
-      "line": 610,
+      "line": 608,
       "column": 39,
-      "stop_line": 610,
+      "stop_line": 608,
       "stop_column": 43,
       "path": "src/otx/backend/native/models/instance_segmentation/base.py",
       "code": -2,
@@ -11461,9 +11389,9 @@
       "severity": "error"
     },
     {
-      "line": 94,
+      "line": 96,
       "column": 16,
-      "stop_line": 96,
+      "stop_line": 98,
       "stop_column": 10,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11473,9 +11401,9 @@
       "severity": "error"
     },
     {
-      "line": 94,
+      "line": 96,
       "column": 17,
-      "stop_line": 94,
+      "stop_line": 96,
       "stop_column": 70,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11485,9 +11413,9 @@
       "severity": "error"
     },
     {
-      "line": 94,
+      "line": 96,
       "column": 17,
-      "stop_line": 94,
+      "stop_line": 96,
       "stop_column": 70,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11497,9 +11425,9 @@
       "severity": "error"
     },
     {
-      "line": 129,
+      "line": 131,
       "column": 30,
-      "stop_line": 129,
+      "stop_line": 131,
       "stop_column": 36,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11509,9 +11437,9 @@
       "severity": "error"
     },
     {
-      "line": 131,
+      "line": 133,
       "column": 33,
-      "stop_line": 131,
+      "stop_line": 133,
       "stop_column": 39,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11521,9 +11449,9 @@
       "severity": "error"
     },
     {
-      "line": 170,
+      "line": 172,
       "column": 69,
-      "stop_line": 170,
+      "stop_line": 172,
       "stop_column": 102,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11533,9 +11461,9 @@
       "severity": "error"
     },
     {
-      "line": 187,
+      "line": 189,
       "column": 13,
-      "stop_line": 187,
+      "stop_line": 189,
       "stop_column": 46,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11545,9 +11473,9 @@
       "severity": "error"
     },
     {
-      "line": 223,
+      "line": 225,
       "column": 28,
-      "stop_line": 223,
+      "stop_line": 225,
       "stop_column": 49,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11557,9 +11485,9 @@
       "severity": "error"
     },
     {
-      "line": 225,
+      "line": 227,
       "column": 16,
-      "stop_line": 225,
+      "stop_line": 227,
       "stop_column": 37,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11569,9 +11497,9 @@
       "severity": "error"
     },
     {
-      "line": 254,
+      "line": 256,
       "column": 28,
-      "stop_line": 254,
+      "stop_line": 256,
       "stop_column": 48,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11581,9 +11509,9 @@
       "severity": "error"
     },
     {
-      "line": 259,
+      "line": 261,
       "column": 33,
-      "stop_line": 259,
+      "stop_line": 261,
       "stop_column": 53,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -11593,9 +11521,9 @@
       "severity": "error"
     },
     {
-      "line": 267,
+      "line": 269,
       "column": 30,
-      "stop_line": 267,
+      "stop_line": 269,
       "stop_column": 52,
       "path": "src/otx/backend/native/models/instance_segmentation/segmentors/two_stage.py",
       "code": -2,
@@ -12949,9 +12877,9 @@
       "severity": "error"
     },
     {
-      "line": 252,
+      "line": 248,
       "column": 19,
-      "stop_line": 252,
+      "stop_line": 248,
       "stop_column": 71,
       "path": "src/otx/backend/native/models/segmentation/base.py",
       "code": -2,
@@ -12961,9 +12889,9 @@
       "severity": "error"
     },
     {
-      "line": 256,
+      "line": 252,
       "column": 40,
-      "stop_line": 256,
+      "stop_line": 252,
       "stop_column": 99,
       "path": "src/otx/backend/native/models/segmentation/base.py",
       "code": -2,
@@ -12973,9 +12901,9 @@
       "severity": "error"
     },
     {
-      "line": 257,
+      "line": 253,
       "column": 42,
-      "stop_line": 257,
+      "stop_line": 253,
       "stop_column": 103,
       "path": "src/otx/backend/native/models/segmentation/base.py",
       "code": -2,
@@ -12985,9 +12913,9 @@
       "severity": "error"
     },
     {
-      "line": 261,
+      "line": 257,
       "column": 9,
-      "stop_line": 261,
+      "stop_line": 257,
       "stop_column": 28,
       "path": "src/otx/backend/native/models/segmentation/base.py",
       "code": -2,
@@ -12997,9 +12925,9 @@
       "severity": "error"
     },
     {
-      "line": 291,
+      "line": 287,
       "column": 31,
-      "stop_line": 291,
+      "stop_line": 287,
       "stop_column": 40,
       "path": "src/otx/backend/native/models/segmentation/base.py",
       "code": -2,
@@ -13009,9 +12937,9 @@
       "severity": "error"
     },
     {
-      "line": 292,
+      "line": 288,
       "column": 31,
-      "stop_line": 292,
+      "stop_line": 288,
       "stop_column": 40,
       "path": "src/otx/backend/native/models/segmentation/base.py",
       "code": -2,
@@ -14833,18 +14761,6 @@
       "severity": "error"
     },
     {
-      "line": 308,
-      "column": 28,
-      "stop_line": 308,
-      "stop_column": 69,
-      "path": "src/otx/backend/openvino/engine.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 310,
       "column": 34,
       "stop_line": 310,
@@ -15469,9 +15385,9 @@
       "severity": "error"
     },
     {
-      "line": 150,
+      "line": 149,
       "column": 18,
-      "stop_line": 150,
+      "stop_line": 149,
       "stop_column": 29,
       "path": "src/otx/cli/cli.py",
       "code": -2,
@@ -15553,9 +15469,9 @@
       "severity": "error"
     },
     {
-      "line": 220,
+      "line": 214,
       "column": 21,
-      "stop_line": 220,
+      "stop_line": 214,
       "stop_column": 61,
       "path": "src/otx/data/dataset/base.py",
       "code": -2,
@@ -15565,105 +15481,21 @@
       "severity": "error"
     },
     {
-      "line": 226,
-      "column": 39,
-      "stop_line": 226,
-      "stop_column": 46,
-      "path": "src/otx/data/dataset/base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DatasetItem` is not assignable to parameter `entity` with type `OTXSample` in function `OTXDataset._apply_transforms`",
-      "concise_description": "Argument `DatasetItem` is not assignable to parameter `entity` with type `OTXSample` in function `OTXDataset._apply_transforms`",
-      "severity": "error"
-    },
-    {
-      "line": 68,
-      "column": 23,
-      "stop_line": 68,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 78,
-      "column": 18,
-      "stop_line": 78,
-      "stop_column": 72,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "concise_description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "severity": "error"
-    },
-    {
-      "line": 95,
-      "column": 24,
-      "stop_line": 95,
-      "stop_column": 34,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 153,
-      "column": 23,
-      "stop_line": 153,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 162,
-      "column": 18,
-      "stop_line": 162,
-      "stop_column": 72,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "concise_description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "severity": "error"
-    },
-    {
-      "line": 172,
+      "line": 159,
       "column": 9,
-      "stop_line": 172,
+      "stop_line": 159,
       "stop_column": 19,
       "path": "src/otx/data/dataset/classification.py",
       "code": -2,
       "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `image`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `image`",
+      "description": "Object of class `OTXSample` has no attribute `label`",
+      "concise_description": "Object of class `OTXSample` has no attribute `label`",
       "severity": "error"
     },
     {
-      "line": 173,
-      "column": 9,
-      "stop_line": 173,
-      "stop_column": 19,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 174,
+      "line": 160,
       "column": 16,
-      "stop_line": 174,
+      "stop_line": 160,
       "stop_column": 44,
       "path": "src/otx/data/dataset/classification.py",
       "code": -2,
@@ -15673,21 +15505,9 @@
       "severity": "error"
     },
     {
-      "line": 174,
-      "column": 39,
-      "stop_line": 174,
-      "stop_column": 43,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DatasetItem` is not assignable to parameter `entity` with type `OTXSample` in function `otx.data.dataset.base.OTXDataset._apply_transforms`",
-      "concise_description": "Argument `DatasetItem` is not assignable to parameter `entity` with type `OTXSample` in function `otx.data.dataset.base.OTXDataset._apply_transforms`",
-      "severity": "error"
-    },
-    {
-      "line": 176,
+      "line": 162,
       "column": 42,
-      "stop_line": 176,
+      "stop_line": 162,
       "stop_column": 54,
       "path": "src/otx/data/dataset/classification.py",
       "code": -2,
@@ -15697,9 +15517,9 @@
       "severity": "error"
     },
     {
-      "line": 176,
+      "line": 162,
       "column": 86,
-      "stop_line": 176,
+      "stop_line": 162,
       "stop_column": 98,
       "path": "src/otx/data/dataset/classification.py",
       "code": -2,
@@ -15709,69 +15529,21 @@
       "severity": "error"
     },
     {
-      "line": 204,
-      "column": 22,
-      "stop_line": 204,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 272,
-      "column": 23,
-      "stop_line": 272,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 282,
-      "column": 59,
-      "stop_line": 282,
-      "stop_column": 77,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Categories | None` is not assignable to parameter `dm_label_categories` with type `HierarchicalLabelCategories` in function `otx.types.label.HLabelInfo.from_dm_label_groups`",
-      "concise_description": "Argument `Categories | None` is not assignable to parameter `dm_label_categories` with type `HierarchicalLabelCategories` in function `otx.types.label.HLabelInfo.from_dm_label_groups`",
-      "severity": "error"
-    },
-    {
-      "line": 293,
+      "line": 274,
       "column": 9,
-      "stop_line": 293,
+      "stop_line": 274,
       "stop_column": 19,
       "path": "src/otx/data/dataset/classification.py",
       "code": -2,
       "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `image`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `image`",
+      "description": "Object of class `OTXSample` has no attribute `label`",
+      "concise_description": "Object of class `OTXSample` has no attribute `label`",
       "severity": "error"
     },
     {
-      "line": 294,
-      "column": 9,
-      "stop_line": 294,
-      "stop_column": 19,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 295,
+      "line": 275,
       "column": 16,
-      "stop_line": 295,
+      "stop_line": 275,
       "stop_column": 44,
       "path": "src/otx/data/dataset/classification.py",
       "code": -2,
@@ -15781,69 +15553,9 @@
       "severity": "error"
     },
     {
-      "line": 295,
-      "column": 39,
-      "stop_line": 295,
-      "stop_column": 43,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DatasetItem` is not assignable to parameter `entity` with type `OTXSample` in function `otx.data.dataset.base.OTXDataset._apply_transforms`",
-      "concise_description": "Argument `DatasetItem` is not assignable to parameter `entity` with type `OTXSample` in function `otx.data.dataset.base.OTXDataset._apply_transforms`",
-      "severity": "error"
-    },
-    {
-      "line": 343,
-      "column": 20,
-      "stop_line": 343,
-      "stop_column": 44,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Categories` has no attribute `items`\nObject of class `NoneType` has no attribute `items`",
-      "concise_description": "Object of class `Categories` has no attribute `items`\nObject of class `NoneType` has no attribute `items`",
-      "severity": "error"
-    },
-    {
-      "line": 345,
-      "column": 52,
-      "stop_line": 345,
-      "stop_column": 76,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Categories` has no attribute `items`\nObject of class `NoneType` has no attribute `items`",
-      "concise_description": "Object of class `Categories` has no attribute `items`\nObject of class `NoneType` has no attribute `items`",
-      "severity": "error"
-    },
-    {
-      "line": 347,
-      "column": 28,
-      "stop_line": 347,
-      "stop_column": 52,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Categories` has no attribute `items`\nObject of class `NoneType` has no attribute `items`",
-      "concise_description": "Object of class `Categories` has no attribute `items`\nObject of class `NoneType` has no attribute `items`",
-      "severity": "error"
-    },
-    {
-      "line": 369,
-      "column": 22,
-      "stop_line": 369,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/classification.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 20,
+      "line": 21,
       "column": 7,
-      "stop_line": 20,
+      "stop_line": 21,
       "stop_column": 26,
       "path": "src/otx/data/dataset/detection.py",
       "code": -2,
@@ -15853,21 +15565,9 @@
       "severity": "error"
     },
     {
-      "line": 57,
-      "column": 23,
-      "stop_line": 57,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/detection.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 66,
+      "line": 60,
       "column": 18,
-      "stop_line": 66,
+      "stop_line": 60,
       "stop_column": 72,
       "path": "src/otx/data/dataset/detection.py",
       "code": -2,
@@ -15877,21 +15577,9 @@
       "severity": "error"
     },
     {
-      "line": 83,
-      "column": 22,
-      "stop_line": 83,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/detection.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
-      "severity": "error"
-    },
-    {
-      "line": 92,
+      "line": 86,
       "column": 9,
-      "stop_line": 92,
+      "stop_line": 86,
       "stop_column": 26,
       "path": "src/otx/data/dataset/detection.py",
       "code": -2,
@@ -15901,9 +15589,9 @@
       "severity": "error"
     },
     {
-      "line": 95,
+      "line": 89,
       "column": 16,
-      "stop_line": 95,
+      "stop_line": 89,
       "stop_column": 49,
       "path": "src/otx/data/dataset/detection.py",
       "code": -2,
@@ -15913,21 +15601,9 @@
       "severity": "error"
     },
     {
-      "line": 48,
+      "line": 52,
       "column": 23,
-      "stop_line": 48,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/instance_segmentation.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 58,
-      "column": 23,
-      "stop_line": 58,
+      "stop_line": 52,
       "stop_column": 77,
       "path": "src/otx/data/dataset/instance_segmentation.py",
       "code": -2,
@@ -15937,123 +15613,51 @@
       "severity": "error"
     },
     {
-      "line": 76,
-      "column": 22,
-      "stop_line": 76,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/instance_segmentation.py",
+      "line": 63,
+      "column": 18,
+      "stop_line": 63,
+      "stop_column": 76,
+      "path": "src/otx/data/dataset/keypoint_detection.py",
       "code": -2,
       "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `label`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `label`",
+      "description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
+      "concise_description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
+      "severity": "error"
+    },
+    {
+      "line": 72,
+      "column": 9,
+      "stop_line": 72,
+      "stop_column": 23,
+      "path": "src/otx/data/dataset/keypoint_detection.py",
+      "code": -2,
+      "name": "missing-attribute",
+      "description": "Object of class `OTXSample` has no attribute `keypoints`",
+      "concise_description": "Object of class `OTXSample` has no attribute `keypoints`",
+      "severity": "error"
+    },
+    {
+      "line": 72,
+      "column": 44,
+      "stop_line": 72,
+      "stop_column": 58,
+      "path": "src/otx/data/dataset/keypoint_detection.py",
+      "code": -2,
+      "name": "missing-attribute",
+      "description": "Object of class `OTXSample` has no attribute `keypoints`",
+      "concise_description": "Object of class `OTXSample` has no attribute `keypoints`",
       "severity": "error"
     },
     {
       "line": 66,
       "column": 23,
       "stop_line": 66,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/keypoint_detection.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 75,
-      "column": 18,
-      "stop_line": 75,
-      "stop_column": 72,
-      "path": "src/otx/data/dataset/keypoint_detection.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "concise_description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "severity": "error"
-    },
-    {
-      "line": 84,
-      "column": 21,
-      "stop_line": 84,
-      "stop_column": 35,
-      "path": "src/otx/data/dataset/keypoint_detection.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `keypoints`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `keypoints`",
-      "severity": "error"
-    },
-    {
-      "line": 86,
-      "column": 9,
-      "stop_line": 86,
-      "stop_column": 23,
-      "path": "src/otx/data/dataset/keypoint_detection.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `keypoints`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `keypoints`",
-      "severity": "error"
-    },
-    {
-      "line": 88,
-      "column": 17,
-      "stop_line": 88,
-      "stop_column": 27,
-      "path": "src/otx/data/dataset/keypoint_detection.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `image`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `image`",
-      "severity": "error"
-    },
-    {
-      "line": 92,
-      "column": 9,
-      "stop_line": 92,
-      "stop_column": 19,
-      "path": "src/otx/data/dataset/keypoint_detection.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `DatasetItem` has no attribute `image`",
-      "concise_description": "Object of class `DatasetItem` has no attribute `image`",
-      "severity": "error"
-    },
-    {
-      "line": 62,
-      "column": 23,
-      "stop_line": 62,
-      "stop_column": 32,
-      "path": "src/otx/data/dataset/segmentation.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "concise_description": "Argument `datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.components.dataset.Dataset` in function `otx.data.dataset.base.OTXDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 71,
-      "column": 23,
-      "stop_line": 71,
       "stop_column": 77,
       "path": "src/otx/data/dataset/segmentation.py",
       "code": -2,
       "name": "missing-attribute",
       "description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
       "concise_description": "Object of class `Categories` has no attribute `labels`\nObject of class `NoneType` has no attribute `labels`",
-      "severity": "error"
-    },
-    {
-      "line": 66,
-      "column": 17,
-      "stop_line": 74,
-      "stop_column": 18,
-      "path": "src/otx/data/dataset/tile.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `(datumaro.experimental.transform.Transform) -> TilingTransform` is not assignable to parameter `method` with type `str | type[datumaro.components.transformer.Transform]` in function `datumaro.components.dataset.Dataset.transform`",
-      "concise_description": "Argument `(datumaro.experimental.transform.Transform) -> TilingTransform` is not assignable to parameter `method` with type `str | type[datumaro.components.transformer.Transform]` in function `datumaro.components.dataset.Dataset.transform`",
       "severity": "error"
     },
     {
@@ -16069,18 +15673,6 @@
       "severity": "error"
     },
     {
-      "line": 82,
-      "column": 64,
-      "stop_line": 82,
-      "stop_column": 70,
-      "path": "src/otx/data/dataset/tile.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `str` is not assignable to parameter `subset` with type `Subset` in function `OTXTileDetTestDataset.__init__`",
-      "concise_description": "Argument `str` is not assignable to parameter `subset` with type `Subset` in function `OTXTileDetTestDataset.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 84,
       "column": 46,
       "stop_line": 84,
@@ -16093,18 +15685,6 @@
       "severity": "error"
     },
     {
-      "line": 84,
-      "column": 68,
-      "stop_line": 84,
-      "stop_column": 74,
-      "path": "src/otx/data/dataset/tile.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `str` is not assignable to parameter `subset` with type `Subset` in function `OTXTileInstSegTestDataset.__init__`",
-      "concise_description": "Argument `str` is not assignable to parameter `subset` with type `Subset` in function `OTXTileInstSegTestDataset.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 86,
       "column": 50,
       "stop_line": 86,
@@ -16114,18 +15694,6 @@
       "name": "bad-argument-type",
       "description": "Argument `OTXDataset` is not assignable to parameter `dataset` with type `OTXSegmentationDataset` in function `OTXTileSemanticSegTestDataset.__init__`",
       "concise_description": "Argument `OTXDataset` is not assignable to parameter `dataset` with type `OTXSegmentationDataset` in function `OTXTileSemanticSegTestDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 86,
-      "column": 72,
-      "stop_line": 86,
-      "stop_column": 78,
-      "path": "src/otx/data/dataset/tile.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `str` is not assignable to parameter `subset` with type `Subset` in function `OTXTileSemanticSegTestDataset.__init__`",
-      "concise_description": "Argument `str` is not assignable to parameter `subset` with type `Subset` in function `OTXTileSemanticSegTestDataset.__init__`",
       "severity": "error"
     },
     {
@@ -16153,33 +15721,9 @@
       "severity": "error"
     },
     {
-      "line": 161,
-      "column": 13,
-      "stop_line": 161,
-      "stop_column": 26,
-      "path": "src/otx/data/entity/sample.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Sample` has no attribute `_img_info`",
-      "concise_description": "Object of class `Sample` has no attribute `_img_info`",
-      "severity": "error"
-    },
-    {
-      "line": 167,
-      "column": 22,
-      "stop_line": 167,
-      "stop_column": 34,
-      "path": "src/otx/data/entity/sample.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `(values: list[Any], context: list[str]) -> object` is not assignable to parameter `unflatten_fn` with type `(Iterable[Any], Any) -> Any` in function `torch.utils._pytree.register_pytree_node`",
-      "concise_description": "Argument `(values: list[Any], context: list[str]) -> object` is not assignable to parameter `unflatten_fn` with type `(Iterable[Any], Any) -> Any` in function `torch.utils._pytree.register_pytree_node`",
-      "severity": "error"
-    },
-    {
-      "line": 205,
+      "line": 82,
       "column": 34,
-      "stop_line": 209,
+      "stop_line": 86,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16189,9 +15733,9 @@
       "severity": "error"
     },
     {
-      "line": 223,
+      "line": 101,
       "column": 34,
-      "stop_line": 227,
+      "stop_line": 105,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16201,9 +15745,9 @@
       "severity": "error"
     },
     {
-      "line": 241,
+      "line": 120,
       "column": 34,
-      "stop_line": 245,
+      "stop_line": 124,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16213,9 +15757,9 @@
       "severity": "error"
     },
     {
-      "line": 264,
+      "line": 144,
       "column": 51,
-      "stop_line": 269,
+      "stop_line": 149,
       "stop_column": 14,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16225,9 +15769,9 @@
       "severity": "error"
     },
     {
-      "line": 271,
+      "line": 151,
       "column": 34,
-      "stop_line": 275,
+      "stop_line": 155,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16237,9 +15781,9 @@
       "severity": "error"
     },
     {
-      "line": 289,
+      "line": 170,
       "column": 34,
-      "stop_line": 293,
+      "stop_line": 174,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16249,9 +15793,9 @@
       "severity": "error"
     },
     {
-      "line": 315,
+      "line": 197,
       "column": 51,
-      "stop_line": 320,
+      "stop_line": 202,
       "stop_column": 14,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16261,9 +15805,9 @@
       "severity": "error"
     },
     {
-      "line": 322,
+      "line": 204,
       "column": 34,
-      "stop_line": 326,
+      "stop_line": 208,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16273,9 +15817,9 @@
       "severity": "error"
     },
     {
-      "line": 342,
+      "line": 225,
       "column": 34,
-      "stop_line": 346,
+      "stop_line": 229,
       "stop_column": 10,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16285,9 +15829,9 @@
       "severity": "error"
     },
     {
-      "line": 409,
+      "line": 267,
       "column": 29,
-      "stop_line": 409,
+      "stop_line": 267,
       "stop_column": 40,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16297,9 +15841,9 @@
       "severity": "error"
     },
     {
-      "line": 411,
+      "line": 269,
       "column": 29,
-      "stop_line": 411,
+      "stop_line": 269,
       "stop_column": 40,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16309,9 +15853,9 @@
       "severity": "error"
     },
     {
-      "line": 413,
+      "line": 271,
       "column": 32,
-      "stop_line": 413,
+      "stop_line": 271,
       "stop_column": 46,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16321,9 +15865,9 @@
       "severity": "error"
     },
     {
-      "line": 415,
+      "line": 273,
       "column": 28,
-      "stop_line": 415,
+      "stop_line": 273,
       "stop_column": 38,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16333,9 +15877,9 @@
       "severity": "error"
     },
     {
-      "line": 432,
+      "line": 290,
       "column": 40,
-      "stop_line": 432,
+      "stop_line": 290,
       "stop_column": 54,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16345,9 +15889,9 @@
       "severity": "error"
     },
     {
-      "line": 432,
+      "line": 290,
       "column": 40,
-      "stop_line": 432,
+      "stop_line": 290,
       "stop_column": 54,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16357,9 +15901,9 @@
       "severity": "error"
     },
     {
-      "line": 432,
+      "line": 290,
       "column": 56,
-      "stop_line": 432,
+      "stop_line": 290,
       "stop_column": 60,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16369,9 +15913,9 @@
       "severity": "error"
     },
     {
-      "line": 432,
+      "line": 290,
       "column": 56,
-      "stop_line": 432,
+      "stop_line": 290,
       "stop_column": 60,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16381,9 +15925,9 @@
       "severity": "error"
     },
     {
-      "line": 482,
+      "line": 340,
       "column": 29,
-      "stop_line": 482,
+      "stop_line": 340,
       "stop_column": 40,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16393,9 +15937,9 @@
       "severity": "error"
     },
     {
-      "line": 484,
+      "line": 342,
       "column": 38,
-      "stop_line": 484,
+      "stop_line": 342,
       "stop_column": 57,
       "path": "src/otx/data/entity/sample.py",
       "code": -2,
@@ -16450,18 +15994,6 @@
       "name": "bad-override",
       "description": "Class member `TileBatchInstSegDataEntity.unbind` overrides parent class `OTXTileBatchDataEntity` in an inconsistent manner\n  `TileBatchInstSegDataEntity.unbind` has type `BoundMethod[TileBatchInstSegDataEntity, (self: TileBatchInstSegDataEntity) -> list[tuple[list[dict[str, int | str]], OTXSampleBatch]]]`, which is not assignable to `BoundMethod[TileBatchInstSegDataEntity, (self: TileBatchInstSegDataEntity) -> list[tuple[list[TileInfo], OTXSampleBatch]]]`, the type of `OTXTileBatchDataEntity.unbind`",
       "concise_description": "Class member `TileBatchInstSegDataEntity.unbind` overrides parent class `OTXTileBatchDataEntity` in an inconsistent manner",
-      "severity": "error"
-    },
-    {
-      "line": 198,
-      "column": 28,
-      "stop_line": 198,
-      "stop_column": 58,
-      "path": "src/otx/data/entity/tile.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Image]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "concise_description": "Argument `list[Image]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
       "severity": "error"
     },
     {
@@ -16520,8 +16052,8 @@
       "path": "src/otx/data/entity/tile.py",
       "code": -2,
       "name": "bad-argument-type",
-      "description": "Argument `((...) -> Any) | ((ParamSpec(@_)) -> @_) | Unknown` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "concise_description": "Argument `((...) -> Any) | ((ParamSpec(@_)) -> @_) | Unknown` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
+      "description": "Argument `((...) -> Any) | ((ParamSpec(@_)) -> @_) | Unknown` is not assignable to parameter `images` with type `Image | Tensor | list[Image] | list[Tensor]` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
+      "concise_description": "Argument `((...) -> Any) | ((ParamSpec(@_)) -> @_) | Unknown` is not assignable to parameter `images` with type `Image | Tensor | list[Image] | list[Tensor]` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
       "severity": "error"
     },
     {
@@ -16633,21 +16165,9 @@
       "severity": "error"
     },
     {
-      "line": 33,
-      "column": 48,
-      "stop_line": 33,
-      "stop_column": 76,
-      "path": "src/otx/data/entity/utils.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Unpacked keyword argument `Image | Tensor` is not assignable to parameter `subset` with type `Subset` in function `otx.data.entity.sample.OTXSample.__init__`",
-      "concise_description": "Unpacked keyword argument `Image | Tensor` is not assignable to parameter `subset` with type `Subset` in function `otx.data.entity.sample.OTXSample.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 88,
+      "line": 271,
       "column": 26,
-      "stop_line": 88,
+      "stop_line": 271,
       "stop_column": 46,
       "path": "src/otx/data/entity/utils.py",
       "code": -2,
@@ -16657,9 +16177,9 @@
       "severity": "error"
     },
     {
-      "line": 91,
+      "line": 274,
       "column": 24,
-      "stop_line": 91,
+      "stop_line": 274,
       "stop_column": 106,
       "path": "src/otx/data/entity/utils.py",
       "code": -2,
@@ -16669,201 +16189,9 @@
       "severity": "error"
     },
     {
-      "line": 83,
-      "column": 43,
-      "stop_line": 83,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 85,
-      "column": 44,
-      "stop_line": 85,
-      "stop_column": 59,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.classification.OTXMulticlassClsDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.classification.OTXMulticlassClsDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 90,
-      "column": 43,
-      "stop_line": 90,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 92,
-      "column": 44,
-      "stop_line": 92,
-      "stop_column": 59,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.classification.OTXMultilabelClsDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.classification.OTXMultilabelClsDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 97,
-      "column": 43,
-      "stop_line": 97,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 99,
-      "column": 40,
-      "stop_line": 99,
-      "stop_column": 55,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.classification.OTXHlabelClsDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.classification.OTXHlabelClsDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 104,
-      "column": 43,
-      "stop_line": 104,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 106,
-      "column": 40,
-      "stop_line": 106,
-      "stop_column": 55,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.detection.OTXDetectionDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.detection.OTXDetectionDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 111,
-      "column": 43,
-      "stop_line": 111,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 113,
-      "column": 58,
-      "stop_line": 113,
-      "stop_column": 73,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.instance_segmentation.OTXInstanceSegDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.instance_segmentation.OTXInstanceSegDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 118,
-      "column": 43,
-      "stop_line": 118,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 120,
-      "column": 43,
-      "stop_line": 120,
-      "stop_column": 58,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.segmentation.OTXSegmentationDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.segmentation.OTXSegmentationDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 125,
-      "column": 43,
-      "stop_line": 125,
-      "stop_column": 52,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `legacy_dataset` with type `datumaro.components.dataset.Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 127,
-      "column": 48,
-      "stop_line": 127,
-      "stop_column": 63,
-      "path": "src/otx/data/factory.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.keypoint_detection.OTXKeypointDetectionDataset.__init__`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset | datumaro.experimental.dataset.Dataset[Unknown]` is not assignable to parameter `dm_subset` with type `datumaro.experimental.dataset.Dataset[Unknown]` in function `otx.data.dataset.keypoint_detection.OTXKeypointDetectionDataset.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 113,
-      "column": 17,
-      "stop_line": 113,
-      "stop_column": 33,
-      "path": "src/otx/data/module.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `str | None` is not assignable to parameter `data_format` with type `str` in function `otx.data.utils.pre_filtering.pre_filtering`",
-      "concise_description": "Argument `str | None` is not assignable to parameter `data_format` with type `str` in function `otx.data.utils.pre_filtering.pre_filtering`",
-      "severity": "error"
-    },
-    {
-      "line": 140,
-      "column": 57,
-      "stop_line": 140,
-      "stop_column": 64,
-      "path": "src/otx/data/module.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `datumaro.components.dataset.Dataset` is not assignable to parameter `dataset` with type `torch.utils.data.dataset.Dataset[Unknown]` in function `otx.data.utils.utils.adapt_tile_config`",
-      "concise_description": "Argument `datumaro.components.dataset.Dataset` is not assignable to parameter `dataset` with type `torch.utils.data.dataset.Dataset[Unknown]` in function `otx.data.utils.utils.adapt_tile_config`",
-      "severity": "error"
-    },
-    {
-      "line": 302,
+      "line": 296,
       "column": 31,
-      "stop_line": 302,
+      "stop_line": 296,
       "stop_column": 59,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16873,9 +16201,9 @@
       "severity": "error"
     },
     {
-      "line": 392,
+      "line": 386,
       "column": 33,
-      "stop_line": 392,
+      "stop_line": 386,
       "stop_column": 55,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16885,9 +16213,9 @@
       "severity": "error"
     },
     {
-      "line": 394,
+      "line": 388,
       "column": 17,
-      "stop_line": 394,
+      "stop_line": 388,
       "stop_column": 49,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16897,9 +16225,9 @@
       "severity": "error"
     },
     {
-      "line": 394,
+      "line": 388,
       "column": 17,
-      "stop_line": 394,
+      "stop_line": 388,
       "stop_column": 49,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16909,9 +16237,9 @@
       "severity": "error"
     },
     {
-      "line": 394,
+      "line": 388,
       "column": 17,
-      "stop_line": 394,
+      "stop_line": 388,
       "stop_column": 49,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16921,9 +16249,9 @@
       "severity": "error"
     },
     {
-      "line": 396,
+      "line": 390,
       "column": 17,
-      "stop_line": 396,
+      "stop_line": 390,
       "stop_column": 49,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16933,9 +16261,9 @@
       "severity": "error"
     },
     {
-      "line": 396,
+      "line": 390,
       "column": 17,
-      "stop_line": 396,
+      "stop_line": 390,
       "stop_column": 49,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16945,9 +16273,9 @@
       "severity": "error"
     },
     {
-      "line": 396,
+      "line": 390,
       "column": 17,
-      "stop_line": 396,
+      "stop_line": 390,
       "stop_column": 49,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16957,9 +16285,9 @@
       "severity": "error"
     },
     {
-      "line": 396,
+      "line": 390,
       "column": 68,
-      "stop_line": 396,
+      "stop_line": 390,
       "stop_column": 80,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16969,9 +16297,9 @@
       "severity": "error"
     },
     {
-      "line": 398,
+      "line": 392,
       "column": 16,
-      "stop_line": 398,
+      "stop_line": 392,
       "stop_column": 48,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16981,9 +16309,9 @@
       "severity": "error"
     },
     {
-      "line": 398,
+      "line": 392,
       "column": 16,
-      "stop_line": 398,
+      "stop_line": 392,
       "stop_column": 48,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -16993,9 +16321,9 @@
       "severity": "error"
     },
     {
-      "line": 398,
+      "line": 392,
       "column": 16,
-      "stop_line": 398,
+      "stop_line": 392,
       "stop_column": 48,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -17005,9 +16333,9 @@
       "severity": "error"
     },
     {
-      "line": 401,
+      "line": 395,
       "column": 49,
-      "stop_line": 401,
+      "stop_line": 395,
       "stop_column": 67,
       "path": "src/otx/data/module.py",
       "code": -2,
@@ -17017,39 +16345,15 @@
       "severity": "error"
     },
     {
-      "line": 516,
+      "line": 510,
       "column": 16,
-      "stop_line": 516,
+      "stop_line": 510,
       "stop_column": 18,
       "path": "src/otx/data/module.py",
       "code": -2,
       "name": "bad-return",
       "description": "Returned type `lightning.fabric.utilities.data.AttributeDict` is not assignable to declared return type `lightning.pytorch.utilities.parsing.AttributeDict`",
       "concise_description": "Returned type `lightning.fabric.utilities.data.AttributeDict` is not assignable to declared return type `lightning.pytorch.utilities.parsing.AttributeDict`",
-      "severity": "error"
-    },
-    {
-      "line": 26,
-      "column": 16,
-      "stop_line": 26,
-      "stop_column": 62,
-      "path": "src/otx/data/utils/pre_filtering.py",
-      "code": -2,
-      "name": "bad-index",
-      "description": "Cannot index into `Categories`\n  Object of class `Categories` has no attribute `__getitem__`",
-      "concise_description": "Cannot index into `Categories`",
-      "severity": "error"
-    },
-    {
-      "line": 27,
-      "column": 12,
-      "stop_line": 27,
-      "stop_column": 54,
-      "path": "src/otx/data/utils/pre_filtering.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `Categories` is not assignable to declared return type `list[str]`",
-      "concise_description": "Returned type `Categories` is not assignable to declared return type `list[str]`",
       "severity": "error"
     },
     {
@@ -17218,114 +16522,6 @@
       "name": "missing-attribute",
       "description": "Object of class `bool` has no attribute `float`",
       "concise_description": "Object of class `bool` has no attribute `float`",
-      "severity": "error"
-    },
-    {
-      "line": 41,
-      "column": 39,
-      "stop_line": 41,
-      "stop_column": 47,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "not-a-type",
-      "description": "Expected a type form, got instance of `Overload[\n  [_ArrayType: ndarray[Any, Any]](object: _ArrayType, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_ArrayType: ndarray[Any, Any]](object: numpy._core.multiarray._SupportsArray[_ArrayType], dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: Literal[0] = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_SCT: generic[Any]](object: _ArrayLike, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: object, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n  [_SCT: generic[Any]](object: Any, dtype: _DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: Any, dtype: DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n]`",
-      "concise_description": "Expected a type form, got instance of `Overload[\n  [_ArrayType: ndarray[Any, Any]](object: _ArrayType, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_ArrayType: ndarray[Any, Any]](object: numpy._core.multiarray._SupportsArray[_ArrayType], dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: Literal[0] = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_SCT: generic[Any]](object: _ArrayLike, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: object, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n  [_SCT: generic[Any]](object: Any, dtype: _DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: Any, dtype: DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n]`",
-      "severity": "error"
-    },
-    {
-      "line": 74,
-      "column": 45,
-      "stop_line": 74,
-      "stop_column": 53,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "not-a-type",
-      "description": "Expected a type form, got instance of `Overload[\n  [_ArrayType: ndarray[Any, Any]](object: _ArrayType, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_ArrayType: ndarray[Any, Any]](object: numpy._core.multiarray._SupportsArray[_ArrayType], dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: Literal[0] = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_SCT: generic[Any]](object: _ArrayLike, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: object, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n  [_SCT: generic[Any]](object: Any, dtype: _DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: Any, dtype: DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n]`",
-      "concise_description": "Expected a type form, got instance of `Overload[\n  [_ArrayType: ndarray[Any, Any]](object: _ArrayType, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_ArrayType: ndarray[Any, Any]](object: numpy._core.multiarray._SupportsArray[_ArrayType], dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: Literal[True], ndmin: Literal[0] = ..., like: _SupportsArrayFunc | None = ...) -> _ArrayType\n  [_SCT: generic[Any]](object: _ArrayLike, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: object, dtype: None = ..., *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n  [_SCT: generic[Any]](object: Any, dtype: _DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[_SCT]]\n  (object: Any, dtype: DTypeLike, *, copy: _CopyMode | bool | None = ..., order: _OrderKACF = ..., subok: bool = ..., ndmin: int = ..., like: _SupportsArrayFunc | None = ...) -> ndarray[tuple[int, ...], dtype[Any]]\n]`",
-      "severity": "error"
-    },
-    {
-      "line": 134,
-      "column": 25,
-      "stop_line": 134,
-      "stop_column": 35,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `media`",
-      "concise_description": "Object of class `NoneType` has no attribute `media`",
-      "severity": "error"
-    },
-    {
-      "line": 146,
-      "column": 20,
-      "stop_line": 146,
-      "stop_column": 36,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `NoneType` has no attribute `annotations`",
-      "concise_description": "Object of class `NoneType` has no attribute `annotations`",
-      "severity": "error"
-    },
-    {
-      "line": 149,
-      "column": 36,
-      "stop_line": 149,
-      "stop_column": 80,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "bad-index",
-      "description": "Cannot index into `Categories`\n  Object of class `Categories` has no attribute `__getitem__`",
-      "concise_description": "Cannot index into `Categories`",
-      "severity": "error"
-    },
-    {
-      "line": 154,
-      "column": 29,
-      "stop_line": 154,
-      "stop_column": 36,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "bad-index",
-      "description": "Cannot index into `dict[str, list[Unknown]]`\n  Argument `type[Polygon]` is not assignable to parameter `key` with type `str` in function `dict.__getitem__`",
-      "concise_description": "Cannot index into `dict[str, list[Unknown]]`",
-      "severity": "error"
-    },
-    {
-      "line": 181,
-      "column": 99,
-      "stop_line": 181,
-      "stop_column": 114,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "bad-index",
-      "description": "Cannot index into `dict[str, list[Unknown]]`\n  Argument `type[Bbox] | type[Polygon] | str | None` is not assignable to parameter `key` with type `str` in function `dict.__getitem__`",
-      "concise_description": "Cannot index into `dict[str, list[Unknown]]`",
-      "severity": "error"
-    },
-    {
-      "line": 196,
-      "column": 26,
-      "stop_line": 196,
-      "stop_column": 41,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Dataset` has no attribute `subsets`",
-      "concise_description": "Object of class `Dataset` has no attribute `subsets`",
-      "severity": "error"
-    },
-    {
-      "line": 196,
-      "column": 60,
-      "stop_line": 196,
-      "stop_column": 75,
-      "path": "src/otx/data/utils/utils.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Dataset` has no attribute `subsets`",
-      "concise_description": "Object of class `Dataset` has no attribute `subsets`",
       "severity": "error"
     },
     {
@@ -17749,9 +16945,9 @@
       "severity": "error"
     },
     {
-      "line": 274,
+      "line": 276,
       "column": 56,
-      "stop_line": 274,
+      "stop_line": 276,
       "stop_column": 66,
       "path": "src/otx/tools/auto_configurator.py",
       "code": -2,
@@ -17761,9 +16957,9 @@
       "severity": "error"
     },
     {
-      "line": 336,
+      "line": 356,
       "column": 9,
-      "stop_line": 336,
+      "stop_line": 356,
       "stop_column": 18,
       "path": "src/otx/types/label.py",
       "code": -2,
@@ -17773,9 +16969,9 @@
       "severity": "error"
     },
     {
-      "line": 61,
+      "line": 57,
       "column": 55,
-      "stop_line": 61,
+      "stop_line": 57,
       "stop_column": 76,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17785,9 +16981,9 @@
       "severity": "error"
     },
     {
-      "line": 105,
+      "line": 101,
       "column": 30,
-      "stop_line": 105,
+      "stop_line": 101,
       "stop_column": 36,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17797,9 +16993,9 @@
       "severity": "error"
     },
     {
-      "line": 234,
+      "line": 230,
       "column": 32,
-      "stop_line": 234,
+      "stop_line": 230,
       "stop_column": 83,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17809,9 +17005,9 @@
       "severity": "error"
     },
     {
-      "line": 258,
+      "line": 254,
       "column": 32,
-      "stop_line": 258,
+      "stop_line": 254,
       "stop_column": 83,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17821,9 +17017,9 @@
       "severity": "error"
     },
     {
-      "line": 282,
+      "line": 278,
       "column": 32,
-      "stop_line": 282,
+      "stop_line": 278,
       "stop_column": 83,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17833,9 +17029,9 @@
       "severity": "error"
     },
     {
-      "line": 299,
+      "line": 295,
       "column": 12,
-      "stop_line": 299,
+      "stop_line": 295,
       "stop_column": 73,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17845,9 +17041,9 @@
       "severity": "error"
     },
     {
-      "line": 307,
+      "line": 303,
       "column": 32,
-      "stop_line": 307,
+      "stop_line": 303,
       "stop_column": 83,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17857,9 +17053,9 @@
       "severity": "error"
     },
     {
-      "line": 308,
+      "line": 304,
       "column": 43,
-      "stop_line": 308,
+      "stop_line": 304,
       "stop_column": 113,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17869,9 +17065,9 @@
       "severity": "error"
     },
     {
-      "line": 331,
+      "line": 327,
       "column": 12,
-      "stop_line": 331,
+      "stop_line": 327,
       "stop_column": 73,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17881,9 +17077,9 @@
       "severity": "error"
     },
     {
-      "line": 339,
+      "line": 335,
       "column": 32,
-      "stop_line": 339,
+      "stop_line": 335,
       "stop_column": 83,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17893,9 +17089,9 @@
       "severity": "error"
     },
     {
-      "line": 340,
+      "line": 336,
       "column": 43,
-      "stop_line": 340,
+      "stop_line": 336,
       "stop_column": 113,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17905,9 +17101,9 @@
       "severity": "error"
     },
     {
-      "line": 367,
+      "line": 363,
       "column": 12,
-      "stop_line": 367,
+      "stop_line": 363,
       "stop_column": 73,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17917,9 +17113,9 @@
       "severity": "error"
     },
     {
-      "line": 375,
+      "line": 371,
       "column": 32,
-      "stop_line": 375,
+      "stop_line": 371,
       "stop_column": 83,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17929,9 +17125,9 @@
       "severity": "error"
     },
     {
-      "line": 395,
+      "line": 391,
       "column": 12,
-      "stop_line": 395,
+      "stop_line": 391,
       "stop_column": 73,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17941,9 +17137,9 @@
       "severity": "error"
     },
     {
-      "line": 493,
+      "line": 489,
       "column": 20,
-      "stop_line": 500,
+      "stop_line": 496,
       "stop_column": 10,
       "path": "tests/conftest.py",
       "code": -2,
@@ -17953,69 +17149,9 @@
       "severity": "error"
     },
     {
-      "line": 67,
-      "column": 37,
-      "stop_line": 67,
-      "stop_column": 55,
-      "path": "tests/integration/api/test_augmentation.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "concise_description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "severity": "error"
-    },
-    {
-      "line": 68,
-      "column": 37,
-      "stop_line": 68,
-      "stop_column": 55,
-      "path": "tests/integration/api/test_augmentation.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "concise_description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "severity": "error"
-    },
-    {
-      "line": 69,
-      "column": 42,
-      "stop_line": 69,
-      "stop_column": 60,
-      "path": "tests/integration/api/test_augmentation.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "concise_description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "severity": "error"
-    },
-    {
-      "line": 70,
-      "column": 41,
-      "stop_line": 70,
-      "stop_column": 59,
-      "path": "tests/integration/api/test_augmentation.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "concise_description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "severity": "error"
-    },
-    {
-      "line": 71,
-      "column": 40,
-      "stop_line": 71,
-      "stop_column": 58,
-      "path": "tests/integration/api/test_augmentation.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "concise_description": "No attribute `RECIPE_LIST` in module `pytest`",
-      "severity": "error"
-    },
-    {
-      "line": 21,
+      "line": 23,
       "column": 36,
-      "stop_line": 21,
+      "stop_line": 23,
       "stop_column": 54,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18025,9 +17161,9 @@
       "severity": "error"
     },
     {
-      "line": 76,
+      "line": 78,
       "column": 15,
-      "stop_line": 76,
+      "stop_line": 78,
       "stop_column": 34,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18037,9 +17173,9 @@
       "severity": "error"
     },
     {
-      "line": 104,
+      "line": 106,
       "column": 32,
-      "stop_line": 104,
+      "stop_line": 106,
       "stop_column": 59,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18049,9 +17185,9 @@
       "severity": "error"
     },
     {
-      "line": 108,
+      "line": 110,
       "column": 36,
-      "stop_line": 108,
+      "stop_line": 110,
       "stop_column": 59,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18061,9 +17197,9 @@
       "severity": "error"
     },
     {
-      "line": 128,
+      "line": 130,
       "column": 35,
-      "stop_line": 128,
+      "stop_line": 130,
       "stop_column": 41,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18073,9 +17209,9 @@
       "severity": "error"
     },
     {
-      "line": 128,
+      "line": 130,
       "column": 78,
-      "stop_line": 128,
+      "stop_line": 130,
       "stop_column": 88,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18085,9 +17221,9 @@
       "severity": "error"
     },
     {
-      "line": 151,
+      "line": 153,
       "column": 58,
-      "stop_line": 151,
+      "stop_line": 153,
       "stop_column": 82,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
@@ -18097,63 +17233,15 @@
       "severity": "error"
     },
     {
-      "line": 152,
+      "line": 154,
       "column": 53,
-      "stop_line": 152,
+      "stop_line": 154,
       "stop_column": 81,
       "path": "tests/integration/api/test_engine_api.py",
       "code": -2,
       "name": "missing-attribute",
       "description": "Object of class `Tiler` has no attribute `tiles_overlap`",
       "concise_description": "Object of class `Tiler` has no attribute `tiles_overlap`",
-      "severity": "error"
-    },
-    {
-      "line": 81,
-      "column": 16,
-      "stop_line": 85,
-      "stop_column": 10,
-      "path": "tests/integration/api/test_geti_interaction.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `tuple[Engine, dict[str, Any]]` is not assignable to declared return type `tuple[OTXEngine, dict[str, Any]]`",
-      "concise_description": "Returned type `tuple[Engine, dict[str, Any]]` is not assignable to declared return type `tuple[OTXEngine, dict[str, Any]]`",
-      "severity": "error"
-    },
-    {
-      "line": 141,
-      "column": 45,
-      "stop_line": 141,
-      "stop_column": 54,
-      "path": "tests/integration/api/test_geti_interaction.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Path` is not assignable to parameter `model` with type `InferenceAdapter | str` in function `model_api.models.model.Model.create_model`",
-      "concise_description": "Argument `Path` is not assignable to parameter `model` with type `InferenceAdapter | str` in function `model_api.models.model.Model.create_model`",
-      "severity": "error"
-    },
-    {
-      "line": 164,
-      "column": 45,
-      "stop_line": 164,
-      "stop_column": 58,
-      "path": "tests/integration/api/test_geti_interaction.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Path` is not assignable to parameter `model` with type `InferenceAdapter | str` in function `model_api.models.model.Model.create_model`",
-      "concise_description": "Argument `Path` is not assignable to parameter `model` with type `InferenceAdapter | str` in function `model_api.models.model.Model.create_model`",
-      "severity": "error"
-    },
-    {
-      "line": 187,
-      "column": 26,
-      "stop_line": 187,
-      "stop_column": 44,
-      "path": "tests/integration/api/test_geti_interaction.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `Engine` has no attribute `optimize`",
-      "concise_description": "Object of class `Engine` has no attribute `optimize`",
       "severity": "error"
     },
     {
@@ -20221,18 +19309,6 @@
       "severity": "error"
     },
     {
-      "line": 133,
-      "column": 20,
-      "stop_line": 133,
-      "stop_column": 72,
-      "path": "tests/unit/backend/native/models/instance_segmentation/heads/test_rtmdet_inst_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 135,
       "column": 26,
       "stop_line": 135,
@@ -20293,18 +19369,6 @@
       "severity": "error"
     },
     {
-      "line": 26,
-      "column": 16,
-      "stop_line": 26,
-      "stop_column": 44,
-      "path": "tests/unit/backend/native/models/instance_segmentation/test_roi_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "severity": "error"
-    },
-    {
       "line": 27,
       "column": 16,
       "stop_line": 27,
@@ -20326,18 +19390,6 @@
       "name": "no-matching-overload",
       "description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[480], Literal[480]], ori_shape=tuple[Literal[480], Literal[480]], ignored_labels=list[@_])\n  Possible overloads:\n  (*args: Any, *, device: device | int | str | None = None) -> None\n  (storage: Storage) -> None\n  (other: Tensor) -> None\n  (size: _size, *, device: device | int | str | None = None) -> None [closest match]",
       "concise_description": "No matching overload found for function `torch._C.TensorBase.__init__` called with arguments: (img_idx=Literal[0], img_shape=tuple[Literal[480], Literal[480]], ori_shape=tuple[Literal[480], Literal[480]], ignored_labels=list[@_])",
-      "severity": "error"
-    },
-    {
-      "line": 44,
-      "column": 16,
-      "stop_line": 44,
-      "stop_column": 44,
-      "path": "tests/unit/backend/native/models/instance_segmentation/test_roi_head.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
-      "concise_description": "Argument `list[Tensor]` is not assignable to parameter `images` with type `Tensor` in function `otx.data.entity.sample.OTXSampleBatch.__init__`",
       "severity": "error"
     },
     {
@@ -21529,9 +20581,9 @@
       "severity": "error"
     },
     {
-      "line": 54,
+      "line": 58,
       "column": 41,
-      "stop_line": 54,
+      "stop_line": 58,
       "stop_column": 46,
       "path": "tests/unit/backend/native/models/test_base.py",
       "code": -2,
@@ -21541,21 +20593,9 @@
       "severity": "error"
     },
     {
-      "line": 128,
-      "column": 35,
-      "stop_line": 128,
-      "stop_column": 110,
-      "path": "tests/unit/backend/native/models/test_base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `dict[str, tuple[float, float, float] | tuple[int, int]]` is not assignable to parameter `data_input_params` with type `DataInputParams | None` in function `otx.backend.native.models.classification.multiclass_models.base.OTXMulticlassClsModel.__init__`",
-      "concise_description": "Argument `dict[str, tuple[float, float, float] | tuple[int, int]]` is not assignable to parameter `data_input_params` with type `DataInputParams | None` in function `otx.backend.native.models.classification.multiclass_models.base.OTXMulticlassClsModel.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 140,
+      "line": 144,
       "column": 47,
-      "stop_line": 140,
+      "stop_line": 144,
       "stop_column": 50,
       "path": "tests/unit/backend/native/models/test_base.py",
       "code": -2,
@@ -21565,33 +20605,9 @@
       "severity": "error"
     },
     {
-      "line": 150,
-      "column": 35,
-      "stop_line": 150,
-      "stop_column": 110,
-      "path": "tests/unit/backend/native/models/test_base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `dict[str, tuple[float, float, float] | tuple[int, int]]` is not assignable to parameter `data_input_params` with type `DataInputParams | None` in function `otx.backend.native.models.segmentation.base.OTXSegmentationModel.__init__`",
-      "concise_description": "Argument `dict[str, tuple[float, float, float] | tuple[int, int]]` is not assignable to parameter `data_input_params` with type `DataInputParams | None` in function `otx.backend.native.models.segmentation.base.OTXSegmentationModel.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 181,
-      "column": 55,
-      "stop_line": 181,
-      "stop_column": 74,
-      "path": "tests/unit/backend/native/models/test_base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `LabelCategories` is not assignable to parameter `dm_label_categories` with type `HierarchicalLabelCategories` in function `otx.types.label.HLabelInfo.from_dm_label_groups`",
-      "concise_description": "Argument `LabelCategories` is not assignable to parameter `dm_label_categories` with type `HierarchicalLabelCategories` in function `otx.types.label.HLabelInfo.from_dm_label_groups`",
-      "severity": "error"
-    },
-    {
-      "line": 186,
+      "line": 191,
       "column": 17,
-      "stop_line": 186,
+      "stop_line": 191,
       "stop_column": 39,
       "path": "tests/unit/backend/native/models/test_base.py",
       "code": -2,
@@ -21601,21 +20617,9 @@
       "severity": "error"
     },
     {
-      "line": 187,
-      "column": 35,
-      "stop_line": 187,
-      "stop_column": 110,
-      "path": "tests/unit/backend/native/models/test_base.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `dict[str, tuple[float, float, float] | tuple[int, int]]` is not assignable to parameter `data_input_params` with type `DataInputParams | None` in function `otx.backend.native.models.classification.hlabel_models.base.OTXHlabelClsModel.__init__`",
-      "concise_description": "Argument `dict[str, tuple[float, float, float] | tuple[int, int]]` is not assignable to parameter `data_input_params` with type `DataInputParams | None` in function `otx.backend.native.models.classification.hlabel_models.base.OTXHlabelClsModel.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 226,
+      "line": 231,
       "column": 73,
-      "stop_line": 226,
+      "stop_line": 231,
       "stop_column": 77,
       "path": "tests/unit/backend/native/models/test_base.py",
       "code": -2,
@@ -21625,9 +20629,9 @@
       "severity": "error"
     },
     {
-      "line": 237,
+      "line": 242,
       "column": 73,
-      "stop_line": 237,
+      "stop_line": 242,
       "stop_column": 77,
       "path": "tests/unit/backend/native/models/test_base.py",
       "code": -2,
@@ -21757,9 +20761,9 @@
       "severity": "error"
     },
     {
-      "line": 246,
+      "line": 220,
       "column": 18,
-      "stop_line": 246,
+      "stop_line": 220,
       "stop_column": 27,
       "path": "tests/unit/backend/native/test_engine.py",
       "code": -2,
@@ -21769,9 +20773,9 @@
       "severity": "error"
     },
     {
-      "line": 258,
+      "line": 232,
       "column": 22,
-      "stop_line": 258,
+      "stop_line": 232,
       "stop_column": 31,
       "path": "tests/unit/backend/native/test_engine.py",
       "code": -2,
@@ -21901,9 +20905,9 @@
       "severity": "error"
     },
     {
-      "line": 32,
+      "line": 31,
       "column": 16,
-      "stop_line": 32,
+      "stop_line": 31,
       "stop_column": 36,
       "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
       "code": -2,
@@ -21913,9 +20917,9 @@
       "severity": "error"
     },
     {
-      "line": 37,
+      "line": 36,
       "column": 9,
-      "stop_line": 37,
+      "stop_line": 36,
       "stop_column": 28,
       "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
       "code": -2,
@@ -21925,9 +20929,9 @@
       "severity": "error"
     },
     {
-      "line": 52,
+      "line": 51,
       "column": 16,
-      "stop_line": 52,
+      "stop_line": 51,
       "stop_column": 37,
       "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
       "code": -2,
@@ -21937,9 +20941,9 @@
       "severity": "error"
     },
     {
-      "line": 56,
+      "line": 55,
       "column": 9,
-      "stop_line": 56,
+      "stop_line": 55,
       "stop_column": 28,
       "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
       "code": -2,
@@ -21949,9 +20953,9 @@
       "severity": "error"
     },
     {
-      "line": 100,
+      "line": 99,
       "column": 29,
-      "stop_line": 100,
+      "stop_line": 99,
       "stop_column": 80,
       "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
       "code": -2,
@@ -21961,9 +20965,9 @@
       "severity": "error"
     },
     {
-      "line": 103,
+      "line": 102,
       "column": 39,
-      "stop_line": 107,
+      "stop_line": 106,
       "stop_column": 14,
       "path": "tests/unit/backend/native/tools/explain/test_xai_algorithms.py",
       "code": -2,
@@ -22153,105 +21157,9 @@
       "severity": "error"
     },
     {
-      "line": 48,
-      "column": 5,
-      "stop_line": 48,
-      "stop_column": 15,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "concise_description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "severity": "error"
-    },
-    {
-      "line": 57,
-      "column": 17,
-      "stop_line": 57,
-      "stop_column": 60,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "missing-argument",
-      "description": "Missing argument `_image` in function `datumaro.components.annotation.Mask.__init__`",
-      "concise_description": "Missing argument `_image` in function `datumaro.components.annotation.Mask.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 57,
-      "column": 27,
-      "stop_line": 57,
-      "stop_column": 32,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "unexpected-keyword",
-      "description": "Unexpected keyword argument `image` in function `datumaro.components.annotation.Mask.__init__`",
-      "concise_description": "Unexpected keyword argument `image` in function `datumaro.components.annotation.Mask.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 72,
-      "column": 5,
-      "stop_line": 72,
-      "stop_column": 15,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "concise_description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "severity": "error"
-    },
-    {
-      "line": 93,
-      "column": 5,
-      "stop_line": 93,
-      "stop_column": 15,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "concise_description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "severity": "error"
-    },
-    {
-      "line": 116,
-      "column": 5,
-      "stop_line": 116,
-      "stop_column": 15,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "concise_description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "severity": "error"
-    },
-    {
-      "line": 123,
-      "column": 17,
-      "stop_line": 123,
-      "stop_column": 60,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "missing-argument",
-      "description": "Missing argument `_image` in function `datumaro.components.annotation.Mask.__init__`",
-      "concise_description": "Missing argument `_image` in function `datumaro.components.annotation.Mask.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 123,
-      "column": 27,
-      "stop_line": 123,
-      "stop_column": 32,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "unexpected-keyword",
-      "description": "Unexpected keyword argument `image` in function `datumaro.components.annotation.Mask.__init__`",
-      "concise_description": "Unexpected keyword argument `image` in function `datumaro.components.annotation.Mask.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 226,
+      "line": 56,
       "column": 20,
-      "stop_line": 226,
+      "stop_line": 56,
       "stop_column": 104,
       "path": "tests/unit/data/conftest.py",
       "code": -2,
@@ -22261,45 +21169,9 @@
       "severity": "error"
     },
     {
-      "line": 247,
-      "column": 12,
-      "stop_line": 294,
-      "stop_column": 26,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `DatasetSubset` is not assignable to declared return type `Dataset`",
-      "concise_description": "Returned type `DatasetSubset` is not assignable to declared return type `Dataset`",
-      "severity": "error"
-    },
-    {
-      "line": 250,
-      "column": 20,
-      "stop_line": 250,
-      "stop_column": 21,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[0]` is not assignable to parameter `id` with type `str` in function `datumaro.components.dataset_base.DatasetItem.__init__`",
-      "concise_description": "Argument `Literal[0]` is not assignable to parameter `id` with type `str` in function `datumaro.components.dataset_base.DatasetItem.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 262,
-      "column": 20,
-      "stop_line": 262,
-      "stop_column": 21,
-      "path": "tests/unit/data/conftest.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[1]` is not assignable to parameter `id` with type `str` in function `datumaro.components.dataset_base.DatasetItem.__init__`",
-      "concise_description": "Argument `Literal[1]` is not assignable to parameter `id` with type `str` in function `datumaro.components.dataset_base.DatasetItem.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 188,
+      "line": 212,
       "column": 30,
-      "stop_line": 188,
+      "stop_line": 212,
       "stop_column": 42,
       "path": "tests/unit/data/dataset/test_base.py",
       "code": -2,
@@ -22309,9 +21181,9 @@
       "severity": "error"
     },
     {
-      "line": 231,
+      "line": 254,
       "column": 20,
-      "stop_line": 231,
+      "stop_line": 254,
       "stop_column": 56,
       "path": "tests/unit/data/dataset/test_base.py",
       "code": -2,
@@ -22405,9 +21277,9 @@
       "severity": "error"
     },
     {
-      "line": 23,
+      "line": 25,
       "column": 40,
-      "stop_line": 23,
+      "stop_line": 25,
       "stop_column": 95,
       "path": "tests/unit/data/entity/test_torch.py",
       "code": -2,
@@ -22417,9 +21289,9 @@
       "severity": "error"
     },
     {
-      "line": 24,
+      "line": 26,
       "column": 53,
-      "stop_line": 28,
+      "stop_line": 30,
       "stop_column": 14,
       "path": "tests/unit/data/entity/test_torch.py",
       "code": -2,
@@ -22429,9 +21301,9 @@
       "severity": "error"
     },
     {
-      "line": 35,
+      "line": 37,
       "column": 20,
-      "stop_line": 35,
+      "stop_line": 37,
       "stop_column": 40,
       "path": "tests/unit/data/entity/test_torch.py",
       "code": -2,
@@ -22489,33 +21361,9 @@
       "severity": "error"
     },
     {
-      "line": 46,
-      "column": 66,
-      "stop_line": 46,
-      "stop_column": 96,
-      "path": "tests/unit/data/samplers/test_balanced_sampler.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DatasetSubset` is not assignable to parameter `legacy_dataset` with type `Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `DatasetSubset` is not assignable to parameter `legacy_dataset` with type `Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 59,
-      "column": 39,
-      "stop_line": 59,
-      "stop_column": 69,
-      "path": "tests/unit/data/samplers/test_class_incremental_sampler.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `DatasetSubset` is not assignable to parameter `legacy_dataset` with type `Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "concise_description": "Argument `DatasetSubset` is not assignable to parameter `legacy_dataset` with type `Dataset` in function `datumaro.experimental.legacy.dataset_converters.convert_from_legacy`",
-      "severity": "error"
-    },
-    {
-      "line": 189,
+      "line": 166,
       "column": 16,
-      "stop_line": 189,
+      "stop_line": 166,
       "stop_column": 19,
       "path": "tests/unit/data/test_module.py",
       "code": -2,
@@ -22525,447 +21373,15 @@
       "severity": "error"
     },
     {
-      "line": 227,
+      "line": 205,
       "column": 35,
-      "stop_line": 227,
+      "stop_line": 205,
       "stop_column": 43,
       "path": "tests/unit/data/test_module.py",
       "code": -2,
       "name": "not-a-type",
       "description": "Expected a type form, got instance of `(obj: object, /) -> TypeIs[(...) -> object]`",
       "concise_description": "Expected a type form, got instance of `(obj: object, /) -> TypeIs[(...) -> object]`",
-      "severity": "error"
-    },
-    {
-      "line": 88,
-      "column": 16,
-      "stop_line": 88,
-      "stop_column": 67,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Categories` is not assignable to parameter `obj` with type `Sized` in function `len`\n  Protocol `Sized` requires attribute `__len__`",
-      "concise_description": "Argument `Categories` is not assignable to parameter `obj` with type `Sized` in function `len`",
-      "severity": "error"
-    },
-    {
-      "line": 183,
-      "column": 77,
-      "stop_line": 183,
-      "stop_column": 83,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int] | list[str]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int] | list[str]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 189,
-      "column": 88,
-      "stop_line": 189,
-      "stop_column": 91,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 195,
-      "column": 88,
-      "stop_line": 195,
-      "stop_column": 91,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 201,
-      "column": 88,
-      "stop_line": 201,
-      "stop_column": 91,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 210,
-      "column": 89,
-      "stop_line": 210,
-      "stop_column": 92,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 211,
-      "column": 89,
-      "stop_line": 211,
-      "stop_column": 92,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 212,
-      "column": 87,
-      "stop_line": 212,
-      "stop_column": 90,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 220,
-      "column": 98,
-      "stop_line": 220,
-      "stop_column": 101,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 221,
-      "column": 101,
-      "stop_line": 221,
-      "stop_column": 104,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 222,
-      "column": 101,
-      "stop_line": 222,
-      "stop_column": 104,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 230,
-      "column": 106,
-      "stop_line": 230,
-      "stop_column": 109,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 232,
-      "column": 106,
-      "stop_line": 232,
-      "stop_column": 109,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 234,
-      "column": 99,
-      "stop_line": 234,
-      "stop_column": 102,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 245,
-      "column": 98,
-      "stop_line": 245,
-      "stop_column": 101,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 246,
-      "column": 100,
-      "stop_line": 246,
-      "stop_column": 103,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 247,
-      "column": 101,
-      "stop_line": 247,
-      "stop_column": 104,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 248,
-      "column": 103,
-      "stop_line": 248,
-      "stop_column": 106,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 249,
-      "column": 93,
-      "stop_line": 249,
-      "stop_column": 96,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 252,
-      "column": 104,
-      "stop_line": 252,
-      "stop_column": 107,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 253,
-      "column": 106,
-      "stop_line": 253,
-      "stop_column": 109,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 254,
-      "column": 107,
-      "stop_line": 254,
-      "stop_column": 110,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 256,
-      "column": 106,
-      "stop_line": 256,
-      "stop_column": 109,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 258,
-      "column": 99,
-      "stop_line": 258,
-      "stop_column": 102,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 264,
-      "column": 92,
-      "stop_line": 264,
-      "stop_column": 95,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 268,
-      "column": 92,
-      "stop_line": 268,
-      "stop_column": 95,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 272,
-      "column": 109,
-      "stop_line": 272,
-      "stop_column": 112,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 277,
-      "column": 109,
-      "stop_line": 277,
-      "stop_column": 112,
-      "path": "tests/unit/data/test_pre_filtering.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "concise_description": "Argument `list[int]` is not assignable to parameter `labels` with type `list[str]` in function `otx.data.utils.pre_filtering.is_valid_anno_for_task`",
-      "severity": "error"
-    },
-    {
-      "line": 25,
-      "column": 20,
-      "stop_line": 32,
-      "stop_column": 14,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `Compose` is not assignable to declared return type `list[dict[str, Any]]`",
-      "concise_description": "Returned type `Compose` is not assignable to declared return type `list[dict[str, Any]]`",
-      "severity": "error"
-    },
-    {
-      "line": 53,
-      "column": 20,
-      "stop_line": 56,
-      "stop_column": 14,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `SubsetConfig` is not assignable to declared return type `list[dict[str, Any]]`",
-      "concise_description": "Returned type `SubsetConfig` is not assignable to declared return type `list[dict[str, Any]]`",
-      "severity": "error"
-    },
-    {
-      "line": 57,
-      "column": 16,
-      "stop_line": 57,
-      "stop_column": 23,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `DictConfig | ListConfig` is not assignable to declared return type `list[dict[str, Any]]`",
-      "concise_description": "Returned type `DictConfig | ListConfig` is not assignable to declared return type `list[dict[str, Any]]`",
-      "severity": "error"
-    },
-    {
-      "line": 115,
-      "column": 16,
-      "stop_line": 115,
-      "stop_column": 37,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "bad-return",
-      "description": "Returned type `DictConfig | ListConfig` is not assignable to declared return type `list[dict[str, Any]]`",
-      "concise_description": "Returned type `DictConfig | ListConfig` is not assignable to declared return type `list[dict[str, Any]]`",
-      "severity": "error"
-    },
-    {
-      "line": 120,
-      "column": 16,
-      "stop_line": 120,
-      "stop_column": 45,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `FunctionType` has no attribute `scale`",
-      "concise_description": "Object of class `FunctionType` has no attribute `scale`",
-      "severity": "error"
-    },
-    {
-      "line": 121,
-      "column": 16,
-      "stop_line": 121,
-      "stop_column": 49,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `FunctionType` has no attribute `crop_size`",
-      "concise_description": "Object of class `FunctionType` has no attribute `crop_size`",
-      "severity": "error"
-    },
-    {
-      "line": 122,
-      "column": 16,
-      "stop_line": 122,
-      "stop_column": 45,
-      "path": "tests/unit/data/test_transform_libs.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `FunctionType` has no attribute `scale`",
-      "concise_description": "Object of class `FunctionType` has no attribute `scale`",
-      "severity": "error"
-    },
-    {
-      "line": 73,
-      "column": 5,
-      "stop_line": 73,
-      "stop_column": 15,
-      "path": "tests/unit/data/utils/test_utils.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `ImageFromBytes` has no attribute `path`",
-      "concise_description": "Object of class `ImageFromBytes` has no attribute `path`",
       "severity": "error"
     },
     {
@@ -23446,294 +21862,6 @@
       "name": "bad-argument-type",
       "description": "Argument `Literal['DETECTION']` is not assignable to parameter `task` with type `OTXTaskType | None` in function `otx.tools.auto_configurator.AutoConfigurator.__init__`",
       "concise_description": "Argument `Literal['DETECTION']` is not assignable to parameter `task` with type `OTXTaskType | None` in function `otx.tools.auto_configurator.AutoConfigurator.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 114,
-      "column": 20,
-      "stop_line": 114,
-      "stop_column": 50,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 115,
-      "column": 16,
-      "stop_line": 115,
-      "stop_column": 50,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 116,
-      "column": 20,
-      "stop_line": 116,
-      "stop_column": 54,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 178,
-      "column": 20,
-      "stop_line": 178,
-      "stop_column": 50,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 179,
-      "column": 16,
-      "stop_line": 179,
-      "stop_column": 50,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 181,
-      "column": 17,
-      "stop_line": 181,
-      "stop_column": 51,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 197,
-      "column": 20,
-      "stop_line": 197,
-      "stop_column": 50,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 198,
-      "column": 16,
-      "stop_line": 198,
-      "stop_column": 50,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 199,
-      "column": 20,
-      "stop_line": 199,
-      "stop_column": 54,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_dataloader`\nObject of class `Path` has no attribute `train_dataloader`\nObject of class `str` has no attribute `train_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 201,
-      "column": 17,
-      "stop_line": 201,
-      "stop_column": 49,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `val_dataloader`\nObject of class `Path` has no attribute `val_dataloader`\nObject of class `str` has no attribute `val_dataloader`",
-      "concise_description": "Object of class `PathLike` has no attribute `val_dataloader`\nObject of class `Path` has no attribute `val_dataloader`\nObject of class `str` has no attribute `val_dataloader`",
-      "severity": "error"
-    },
-    {
-      "line": 215,
-      "column": 16,
-      "stop_line": 215,
-      "stop_column": 43,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `data_root`\nObject of class `Path` has no attribute `data_root`\nObject of class `str` has no attribute `data_root`",
-      "concise_description": "Object of class `PathLike` has no attribute `data_root`\nObject of class `Path` has no attribute `data_root`\nObject of class `str` has no attribute `data_root`",
-      "severity": "error"
-    },
-    {
-      "line": 216,
-      "column": 16,
-      "stop_line": 216,
-      "stop_column": 46,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 217,
-      "column": 16,
-      "stop_line": 217,
-      "stop_column": 44,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `val_subset`\nObject of class `Path` has no attribute `val_subset`\nObject of class `str` has no attribute `val_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `val_subset`\nObject of class `Path` has no attribute `val_subset`\nObject of class `str` has no attribute `val_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 218,
-      "column": 16,
-      "stop_line": 218,
-      "stop_column": 45,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `test_subset`\nObject of class `Path` has no attribute `test_subset`\nObject of class `str` has no attribute `test_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `test_subset`\nObject of class `Path` has no attribute `test_subset`\nObject of class `str` has no attribute `test_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 219,
-      "column": 16,
-      "stop_line": 219,
-      "stop_column": 46,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `train_subset`\nObject of class `Path` has no attribute `train_subset`\nObject of class `str` has no attribute `train_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 220,
-      "column": 16,
-      "stop_line": 220,
-      "stop_column": 44,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `val_subset`\nObject of class `Path` has no attribute `val_subset`\nObject of class `str` has no attribute `val_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `val_subset`\nObject of class `Path` has no attribute `val_subset`\nObject of class `str` has no attribute `val_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 221,
-      "column": 16,
-      "stop_line": 221,
-      "stop_column": 45,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `test_subset`\nObject of class `Path` has no attribute `test_subset`\nObject of class `str` has no attribute `test_subset`",
-      "concise_description": "Object of class `PathLike` has no attribute `test_subset`\nObject of class `Path` has no attribute `test_subset`\nObject of class `str` has no attribute `test_subset`",
-      "severity": "error"
-    },
-    {
-      "line": 222,
-      "column": 20,
-      "stop_line": 222,
-      "stop_column": 49,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `tile_config`\nObject of class `Path` has no attribute `tile_config`\nObject of class `str` has no attribute `tile_config`",
-      "concise_description": "Object of class `PathLike` has no attribute `tile_config`\nObject of class `Path` has no attribute `tile_config`\nObject of class `str` has no attribute `tile_config`",
-      "severity": "error"
-    },
-    {
-      "line": 223,
-      "column": 16,
-      "stop_line": 223,
-      "stop_column": 45,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `tile_config`\nObject of class `Path` has no attribute `tile_config`\nObject of class `str` has no attribute `tile_config`",
-      "concise_description": "Object of class `PathLike` has no attribute `tile_config`\nObject of class `Path` has no attribute `tile_config`\nObject of class `str` has no attribute `tile_config`",
-      "severity": "error"
-    },
-    {
-      "line": 224,
-      "column": 16,
-      "stop_line": 224,
-      "stop_column": 44,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `PathLike` has no attribute `input_size`\nObject of class `Path` has no attribute `input_size`\nObject of class `str` has no attribute `input_size`",
-      "concise_description": "Object of class `PathLike` has no attribute `input_size`\nObject of class `Path` has no attribute `input_size`\nObject of class `str` has no attribute `input_size`",
-      "severity": "error"
-    },
-    {
-      "line": 225,
-      "column": 16,
-      "stop_line": 225,
-      "stop_column": 46,
-      "path": "tests/unit/tools/test_converter.py",
-      "code": -2,
-      "name": "missing-attribute",
-      "description": "Object of class `OVModel` has no attribute `data_input_params`\nObject of class `PathLike` has no attribute `data_input_params`\nObject of class `Path` has no attribute `data_input_params`\nObject of class `str` has no attribute `data_input_params`",
-      "concise_description": "Object of class `OVModel` has no attribute `data_input_params`\nObject of class `PathLike` has no attribute `data_input_params`\nObject of class `Path` has no attribute `data_input_params`\nObject of class `str` has no attribute `data_input_params`",
-      "severity": "error"
-    },
-    {
-      "line": 48,
-      "column": 24,
-      "stop_line": 48,
-      "stop_column": 43,
-      "path": "tests/unit/types/test_label.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[datumaro.components.annotation.GroupType.EXCLUSIVE]` is not assignable to parameter `group_type` with type `datumaro.experimental.categories.GroupType` in function `datumaro.experimental.categories.LabelGroup.__init__`",
-      "concise_description": "Argument `Literal[datumaro.components.annotation.GroupType.EXCLUSIVE]` is not assignable to parameter `group_type` with type `datumaro.experimental.categories.GroupType` in function `datumaro.experimental.categories.LabelGroup.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 53,
-      "column": 24,
-      "stop_line": 53,
-      "stop_column": 43,
-      "path": "tests/unit/types/test_label.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[datumaro.components.annotation.GroupType.EXCLUSIVE]` is not assignable to parameter `group_type` with type `datumaro.experimental.categories.GroupType` in function `datumaro.experimental.categories.LabelGroup.__init__`",
-      "concise_description": "Argument `Literal[datumaro.components.annotation.GroupType.EXCLUSIVE]` is not assignable to parameter `group_type` with type `datumaro.experimental.categories.GroupType` in function `datumaro.experimental.categories.LabelGroup.__init__`",
-      "severity": "error"
-    },
-    {
-      "line": 55,
-      "column": 70,
-      "stop_line": 55,
-      "stop_column": 90,
-      "path": "tests/unit/types/test_label.py",
-      "code": -2,
-      "name": "bad-argument-type",
-      "description": "Argument `Literal[datumaro.components.annotation.GroupType.RESTRICTED]` is not assignable to parameter `group_type` with type `datumaro.experimental.categories.GroupType` in function `datumaro.experimental.categories.LabelGroup.__init__`",
-      "concise_description": "Argument `Literal[datumaro.components.annotation.GroupType.RESTRICTED]` is not assignable to parameter `group_type` with type `datumaro.experimental.categories.GroupType` in function `datumaro.experimental.categories.LabelGroup.__init__`",
       "severity": "error"
     },
     {

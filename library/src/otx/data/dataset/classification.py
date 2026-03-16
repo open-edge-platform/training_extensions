@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import torch
 from torch.nn import functional
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx import HLabelInfo, LabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
@@ -34,7 +33,7 @@ class OTXMulticlassClsDataset(OTXDataset):
     multi-class classification training and inference.
 
     Args:
-        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        dm_subset (Dataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         stack_images (bool): Whether to stack images in batch processing.
@@ -156,8 +155,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         self.num_classes = len(labels)
 
     def _get_item_impl(self, index: int) -> ClassificationMultiLabelSample | None:
-        item = self.dm_subset[index]
-        item.image = to_dtype(to_image(item.image), dtype=torch.float32)
+        item = self._read_dm_item(index)
         item.label = self._convert_to_onehot(torch.as_tensor(list(item.label)), ignored_labels=[])
         return self._apply_transforms(item)
 
@@ -272,8 +270,7 @@ class OTXHlabelClsDataset(OTXDataset):
             raise ValueError(msg)
 
     def _get_item_impl(self, index: int) -> ClassificationHierarchicalSample | None:
-        item = self.dm_subset[index]
-        item.image = to_dtype(to_image(item.image), dtype=torch.float32)
+        item = self._read_dm_item(index)
         item.label = torch.as_tensor(self._convert_label_to_hlabel_format(list(item.label), []))
         return self._apply_transforms(item)
 
