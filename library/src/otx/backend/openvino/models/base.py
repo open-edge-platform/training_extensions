@@ -238,7 +238,7 @@ class OVModel:
         else:
             ptq_config = ptq_config_from_ir
 
-        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)  # type: ignore[attr-defined]
+        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)
 
         if ptq_config.get("max_drop") is not None:
             compressed_model = nncf.quantize_with_accuracy_control(
@@ -247,7 +247,7 @@ class OVModel:
                 **ptq_config,
             )
         else:
-            compressed_model = nncf.quantize(  # type: ignore[attr-defined]
+            compressed_model = nncf.quantize(
                 ov_model,
                 quantization_dataset,
                 **ptq_config,
