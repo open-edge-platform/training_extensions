@@ -98,6 +98,73 @@ class TestJobEndpoints:
         assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-deit-tiny"
         assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
 
+    def test_submit_quantize_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
+        app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
+        app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
+        project = Mock(spec=Project)
+        project.id = uuid4()
+        project.task = Mock(spec=Task)
+        project.task.task_type = TaskType.CLASSIFICATION
+        project.task.exclusive_labels = True
+        fxt_project_service.get_project_by_id.return_value = project
+
+        model_id = uuid4()
+        job_request = JobRequestAdapter.validate_python(
+            {
+                "project_id": project.id,
+                "job_type": JobType.QUANTIZE,
+                "parameters": {
+                    "model_id": model_id,
+                    "max_calibration_subset_size": 200,
+                    "max_drop": 0.01,
+                },
+            }
+        )
+
+        response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert response.json()["job_id"]
+        fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
+        fxt_jobs_queue.submit.assert_called_once()
+        submitted_job = fxt_jobs_queue.submit.call_args[0][0]
+        assert submitted_job.job_type == JobType.QUANTIZE
+        assert submitted_job.params.model_id == model_id
+        assert submitted_job.params.max_calibration_subset_size == 200
+        assert submitted_job.params.max_drop == 0.01
+        assert submitted_job.project_id == project.id
+
+    def test_submit_quantize_job_defaults(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
+        """Quantize request without max_drop uses defaults (None for max_drop, 100 for subset size)."""
+        app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
+        app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
+        project = Mock(spec=Project)
+        project.id = uuid4()
+        project.task = Mock(spec=Task)
+        project.task.task_type = TaskType.DETECTION
+        project.task.exclusive_labels = True
+        fxt_project_service.get_project_by_id.return_value = project
+
+        model_id = uuid4()
+        job_request = JobRequestAdapter.validate_python(
+            {
+                "project_id": project.id,
+                "job_type": JobType.QUANTIZE,
+                "parameters": {
+                    "model_id": model_id,
+                },
+            }
+        )
+
+        response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        submitted_job = fxt_jobs_queue.submit.call_args[0][0]
+        assert submitted_job.job_type == JobType.QUANTIZE
+        assert submitted_job.params.model_id == model_id
+        assert submitted_job.params.max_calibration_subset_size == 100
+        assert submitted_job.params.max_drop is None
+
     def test_list_jobs(self, fxt_client, fxt_jobs_queue, fxt_job):
         fxt_jobs_queue.list_all.return_value = [fxt_job(), fxt_job()]
 

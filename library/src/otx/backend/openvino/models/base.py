@@ -264,8 +264,9 @@ class OVModel:
     def _create_validation_fn(self, data_module: OTXDataModule):
         """Create a validation function for accuracy-aware quantization.
 
-        The returned function computes accuracy on the validation set using the model's
-        metric callable. It is compatible with ``nncf.quantize_with_accuracy_control``.
+        The returned function computes accuracy on the validation set using the
+        compiled model provided by NNCF. It is compatible with
+        ``nncf.quantize_with_accuracy_control``.
 
         Args:
             data_module (OTXDataModule): Data module providing the validation dataloader.
@@ -275,14 +276,49 @@ class OVModel:
             where the float is the primary accuracy metric value.
         """
 
-        def validation_fn(compiled_model: openvino.CompiledModel, validation_dataset) -> tuple[float, None]:
-            """Evaluate the compiled OpenVINO model on the validation dataset.
+        def _infer_compiled_model(
+            compiled_model: openvino.CompiledModel,
+            inputs: OTXSampleBatch,
+        ) -> OTXPredictionBatch:
+            """Run inference using the NNCF-provided compiled model.
 
-            Args are unused but required by the NNCF interface to match the expected signature.
+            This replaces ``self.forward`` so that accuracy is measured on the
+            quantized candidate, not the original FP model.
 
             Args:
-                compiled_model: Compiled OpenVINO model provided by NNCF.
-                validation_dataset: Validation dataset (unused – we use the dataloader directly).
+                compiled_model: Compiled OpenVINO model supplied by NNCF.
+                inputs: Input data batch.
+
+            Returns:
+                OTXPredictionBatch with predictions from the compiled model.
+            """
+            numpy_inputs = self._customize_inputs(inputs)["inputs"]
+            infer_request = compiled_model.create_infer_request()
+            outputs: list[Result] = []
+            for image in numpy_inputs:
+                model_ref = self.model.model if isinstance(self.model, Tiler) else self.model
+                resized = model_ref.resize(image, (model_ref.w, model_ref.h))
+                resized = model_ref.input_transform(resized)
+                input_tensor = model_ref._change_layout(resized)  # noqa: SLF001
+                infer_request.infer({0: input_tensor})
+                raw_result = {
+                    out.get_any_name(): infer_request.get_tensor(out).data.copy() for out in compiled_model.outputs
+                }
+                result = model_ref.postprocess(raw_result, {"original_shape": image.shape})
+                outputs.append(result)
+            return self._customize_outputs(outputs, inputs)
+
+        def validation_fn(
+            compiled_model: openvino.CompiledModel,
+            validation_dataset,  # noqa: ARG001 – required by NNCF signature
+        ) -> tuple[float, None]:
+            """Evaluate the compiled OpenVINO model on the validation dataset.
+
+            Args:
+                compiled_model: Compiled OpenVINO model provided by NNCF during
+                    accuracy-aware quantization.
+                validation_dataset: Validation NNCF dataset (unused – we iterate
+                    via the dataloader for proper batching and transforms).
 
             Returns:
                 Tuple of (metric_value, None).
@@ -291,7 +327,7 @@ class OVModel:
 
             val_dataloader = data_module.val_dataloader()
             for data_batch in val_dataloader:
-                preds = self.forward(data_batch, async_inference=False)
+                preds = _infer_compiled_model(compiled_model, data_batch)
                 metric_inputs = self.prepare_metric_inputs(preds, data_batch)
                 if isinstance(metric_inputs, list):
                     for mi in metric_inputs:
