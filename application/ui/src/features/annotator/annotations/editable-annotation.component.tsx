@@ -23,7 +23,7 @@ export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
 
     if (isSelected && selectedAnnotations.size === 1) {
         if (isPolygon(annotation)) {
-            return <EditPolygon key={`polygon-${annotation.id}`} annotation={annotation} zoom={scale} />;
+            return <EditPolygon annotation={annotation} zoom={scale} />;
         }
 
         if (isRectangle(annotation)) {

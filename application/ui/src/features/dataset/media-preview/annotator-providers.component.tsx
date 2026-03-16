@@ -46,8 +46,9 @@ export const AnnotatorProviders = ({
                             isUserReviewed={isUserReviewed}
                             mode={mode}
                             isReadOnly={isReadOnly}
+                            key={mediaSelectionResetKey}
                         >
-                            <SelectAnnotationProvider key={mediaSelectionResetKey}>{children}</SelectAnnotationProvider>
+                            <SelectAnnotationProvider>{children}</SelectAnnotationProvider>
                         </AnnotationActionsProvider>
                     </AnnotatorLabelsProvider>
                 </CanvasSettingsProvider>
