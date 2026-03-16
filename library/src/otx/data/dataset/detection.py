@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 from otx import OTXTaskType
 from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.dataset.mixins import DataAugSwitchMixin
-from otx.data.entity.sample import DetectionSample, with_image_dtype
+from otx.data.entity.sample import DetectionSample
+from otx.data.entity.utils import with_image_dtype
 from otx.types.label import LabelInfo
 
 if TYPE_CHECKING:

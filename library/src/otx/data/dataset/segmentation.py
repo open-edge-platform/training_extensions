@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 
 from otx import SegLabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
-from otx.data.entity.sample import SegmentationSample, with_image_dtype
+from otx.data.entity.sample import SegmentationSample
+from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:

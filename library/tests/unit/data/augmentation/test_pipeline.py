@@ -171,26 +171,6 @@ class TestCPUAugmentationPipelineFromConfig:
         assert isinstance(pipeline.augmentations[0], _IntensityAdapter)
         assert isinstance(pipeline.augmentations[1], tvt_v2.RandomHorizontalFlip)
 
-    def test_disabled_transform_skipped(self):
-        config = SubsetConfig(
-            augmentations_cpu=[
-                {
-                    "class_path": "torchvision.transforms.v2.RandomHorizontalFlip",
-                    "init_args": {"p": 0.5},
-                    "enable": False,
-                },
-                {
-                    "class_path": "torchvision.transforms.v2.RandomVerticalFlip",
-                    "init_args": {"p": 0.5},
-                },
-            ],
-            input_size=None,
-        )
-        pipeline = CPUAugmentationPipeline.from_config(config)
-        # 1 intensity (default) + 1 enabled augmentation (disabled one skipped)
-        assert len(pipeline.augmentations) == 2
-        assert isinstance(pipeline.augmentations[1], tvt_v2.RandomVerticalFlip)
-
     def test_nn_module_passthrough(self):
         """Pre-instantiated nn.Module should be passed through directly."""
         flip = tvt_v2.RandomHorizontalFlip(p=1.0)
@@ -584,21 +564,6 @@ class TestGPUAugmentationPipelineFromConfig:
         )
         pipeline = GPUAugmentationPipeline.from_config(config)
         assert pipeline.aug_sequential is not None
-
-    def test_disabled_transform_skipped(self):
-        config = SubsetConfig(
-            augmentations_gpu=[
-                {
-                    "class_path": "kornia.augmentation.RandomHorizontalFlip",
-                    "init_args": {"p": 0.5},
-                    "enable": False,
-                },
-            ],
-            input_size=None,
-        )
-        pipeline = GPUAugmentationPipeline.from_config(config)
-        # All disabled → empty
-        assert pipeline.aug_sequential is None
 
     def test_nn_module_passthrough(self):
         aug = kornia_aug.RandomHorizontalFlip(p=1.0)

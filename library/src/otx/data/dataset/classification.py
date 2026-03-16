@@ -17,8 +17,8 @@ from otx.data.entity.sample import (
     ClassificationHierarchicalSample,
     ClassificationMultiLabelSample,
     ClassificationSample,
-    with_image_dtype,
 )
+from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
