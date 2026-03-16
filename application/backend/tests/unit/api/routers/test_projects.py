@@ -145,8 +145,7 @@ class TestProjectEndpoints:
             labels_to_add=labels_to_add, labels_to_edit=labels_to_edit, labels_to_remove=labels_to_remove
         )
 
-        fxt_label_service.list_ids.return_value = [fxt_get_project.task.labels[0].id, fxt_get_project.task.labels[1].id]
-        fxt_label_service.list_all.return_value = [
+        fxt_label_service.update_labels.return_value = [
             Label(
                 id=fxt_get_project.task.labels[0].id,
                 project_id=fxt_get_project.id,
@@ -164,24 +163,25 @@ class TestProjectEndpoints:
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
-        fxt_label_service.update_label.assert_called_once_with(
-            project_id=fxt_get_project.id,
-            label_id=fxt_get_project.task.labels[0].id,
-            new_name="updated_cat",
-            new_color="#121212",
-            new_hotkey=None,
-        )
-        fxt_label_service.delete_label.assert_called_once_with(
-            project_id=fxt_get_project.id,
-            label_id=fxt_get_project.task.labels[1].id,
-        )
-        fxt_label_service.create_label.assert_called_once_with(
-            project_id=fxt_get_project.id,
-            label_id=new_label_id,
-            name="mouse",
-            color="#0000FF",
-            hotkey="m",
-        )
+        fxt_label_service.update_labels.assert_called_once()
+        call_kwargs = fxt_label_service.update_labels.call_args[1]
+        assert call_kwargs["project"].id == fxt_get_project.id
+
+        assert len(call_kwargs["labels_to_add"]) == 1
+        assert call_kwargs["labels_to_add"][0].id == new_label_id
+        assert call_kwargs["labels_to_add"][0].name == "mouse"
+        assert call_kwargs["labels_to_add"][0].color == "#0000FF"
+        assert call_kwargs["labels_to_add"][0].hotkey == "m"
+
+        assert len(call_kwargs["labels_to_edit"]) == 1
+        assert call_kwargs["labels_to_edit"][0].id == fxt_get_project.task.labels[0].id
+        assert call_kwargs["labels_to_edit"][0].new_name == "updated_cat"
+        assert call_kwargs["labels_to_edit"][0].new_color == "#121212"
+        assert call_kwargs["labels_to_edit"][0].new_hotkey is None
+
+        assert len(call_kwargs["labels_to_remove"]) == 1
+        assert call_kwargs["labels_to_remove"][0].id == fxt_get_project.task.labels[1].id
+
         assert response.json() == [
             {
                 "id": str(fxt_get_project.task.labels[0].id),
@@ -201,8 +201,7 @@ class TestProjectEndpoints:
         # Setup
         patch_labels = PatchLabels()
 
-        fxt_label_service.list_ids.return_value = []
-        fxt_label_service.list_all.return_value = []
+        fxt_label_service.update_labels.return_value = []
 
         # Execute
         response = fxt_client.patch(
@@ -211,53 +210,24 @@ class TestProjectEndpoints:
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
-        fxt_label_service.update_label.assert_not_called()
-        fxt_label_service.delete_label.assert_not_called()
-        fxt_label_service.create_label.assert_not_called()
+        fxt_label_service.update_labels.assert_called_once()
+        call_kwargs = fxt_label_service.update_labels.call_args[1]
+        assert call_kwargs["labels_to_add"] == []
+        assert call_kwargs["labels_to_edit"] == []
+        assert call_kwargs["labels_to_remove"] == []
 
-    def test_update_labels_create_conflict(self, fxt_get_project, fxt_label_service, fxt_client):
+    def test_update_labels_duplicate_labels_error(self, fxt_get_project, fxt_label_service, fxt_client):
         """Test label update with duplicate attributes returns 409."""
         new_label_id = uuid4()
         labels_to_add = [LabelCreate(id=new_label_id, name="cat", color="#FF0000", hotkey="c")]
         patch_labels = PatchLabels(labels_to_add=labels_to_add)
 
-        fxt_label_service.list_ids.return_value = []
-        fxt_label_service.create_label.side_effect = DuplicateLabelsError
+        fxt_label_service.update_labels.side_effect = DuplicateLabelsError()
 
         response = fxt_client.patch(
             f"/api/projects/{str(fxt_get_project.id)}/labels", json=patch_labels.model_dump(mode="json")
         )
 
-        fxt_label_service.create_label.assert_called_once_with(
-            project_id=fxt_get_project.id,
-            label_id=new_label_id,
-            name="cat",
-            color="#FF0000",
-            hotkey="c",
-        )
-        assert response.status_code == status.HTTP_409_CONFLICT
-        assert response.json()["detail"] == "Either label names or hotkeys have duplicates"
-
-    def test_update_labels_update_conflict(self, fxt_get_project, fxt_label_service, fxt_client):
-        """Test label update with duplicate attributes returns 409."""
-        label_id = uuid4()
-        labels_to_edit = [LabelEdit(id=label_id, new_name="cat", new_color="#FF0000", new_hotkey="c")]
-        patch_labels = PatchLabels(labels_to_edit=labels_to_edit)
-
-        fxt_label_service.list_ids.return_value = [label_id]
-        fxt_label_service.update_label.side_effect = DuplicateLabelsError
-
-        response = fxt_client.patch(
-            f"/api/projects/{str(fxt_get_project.id)}/labels", json=patch_labels.model_dump(mode="json")
-        )
-
-        fxt_label_service.update_label.assert_called_once_with(
-            project_id=fxt_get_project.id,
-            label_id=label_id,
-            new_name="cat",
-            new_color="#FF0000",
-            new_hotkey="c",
-        )
         assert response.status_code == status.HTTP_409_CONFLICT
         assert response.json()["detail"] == "Either label names or hotkeys have duplicates"
 
@@ -272,7 +242,11 @@ class TestProjectEndpoints:
     )
     def test_update_labels_remove_edit_nonexistent(self, patch_labels, fxt_get_project, fxt_label_service, fxt_client):
         """Test editing or removing labels that don't exist returns 404."""
-        fxt_label_service.list_ids.return_value = []
+        fxt_label_service.update_labels.side_effect = ResourceNotFoundError(
+            resource_type=ResourceType.LABEL,
+            resource_id=str(uuid4()),
+            message="One or more labels to remove do not exist in the project",
+        )
 
         response = fxt_client.patch(
             f"/api/projects/{str(fxt_get_project.id)}/labels", json=patch_labels.model_dump(mode="json")
@@ -280,8 +254,39 @@ class TestProjectEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "do not exist" in response.json()["detail"]
-        fxt_label_service.update_label.assert_not_called()
-        fxt_label_service.delete_label.assert_not_called()
+
+    def test_update_labels_id_already_exists(self, fxt_get_project, fxt_label_service, fxt_client):
+        """Test label update with existing label ID returns 409."""
+        existing_label_id = uuid4()
+        labels_to_add = [LabelCreate(id=existing_label_id, name="new_label", color="#FF0000", hotkey="n")]
+        patch_labels = PatchLabels(labels_to_add=labels_to_add)
+
+        fxt_label_service.update_labels.side_effect = ResourceWithIdAlreadyExistsError(
+            resource_type=ResourceType.LABEL, resource_id=str(existing_label_id)
+        )
+
+        response = fxt_client.patch(
+            f"/api/projects/{str(fxt_get_project.id)}/labels", json=patch_labels.model_dump(mode="json")
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_update_labels_value_error(self, fxt_get_project, fxt_label_service, fxt_client):
+        """Test label update that violates label count constraints returns 409."""
+        labels_to_remove = [LabelRemove(id=fxt_get_project.task.labels[0].id)]
+        patch_labels = PatchLabels(labels_to_remove=labels_to_remove)
+
+        fxt_label_service.update_labels.side_effect = ValueError(
+            "Multi-class classifications requires at least two labels, but after this label update the total "
+            "number of labels is 1."
+        )
+
+        response = fxt_client.patch(
+            f"/api/projects/{str(fxt_get_project.id)}/labels", json=patch_labels.model_dump(mode="json")
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "at least two labels" in response.json()["detail"]
 
     def test_update_labels_invalid_project_id(self, fxt_project_service, fxt_client):
         """Test update with invalid project ID returns 400."""

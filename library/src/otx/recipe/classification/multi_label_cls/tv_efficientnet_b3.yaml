@@ -50,7 +50,6 @@ overrides:
 
   data:
     task: MULTI_LABEL_CLS
-    data_format: datumaro
     train_subset:
       # CPU-stage: Size-dependent transforms only
       augmentations_cpu:

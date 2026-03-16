@@ -37,14 +37,13 @@ class OTXKeypointDetectionDataset(OTXDataset):
         max_refetch (int, optional): Maximum number of retries when fetching a data item fails.
         image_color_channel (ImageColorChannel, optional): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool, optional): Whether to stack images in batch processing.
-        data_format (str, optional): Format of the source data (e.g., "coco", "arrow").
+
 
     Example:
         >>> from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
         >>> dataset = OTXKeypointDetectionDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
-        ...     data_format="coco"
         ... )
         >>> item = dataset[0]  # Get first item with keypoints
     """
@@ -55,7 +54,6 @@ class OTXKeypointDetectionDataset(OTXDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        data_format: str = "",
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(KeypointSample, storage_dtype)
@@ -66,11 +64,10 @@ class OTXKeypointDetectionDataset(OTXDataset):
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            data_format=data_format,
         )
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = dm_subset.schema.attributes["keypoints"].categories.labels
         self.label_info = LabelInfo(
-            label_names=labels,
+            label_names=list(labels),
             label_groups=[],
             label_ids=[str(i) for i in range(len(labels))],
         )

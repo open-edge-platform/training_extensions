@@ -51,7 +51,7 @@ export const AdvancedSettings = () => {
 
     return (
         <Tabs items={TABS} height={'100%'} UNSAFE_style={{ overflow: 'hidden' }} aria-label={'Advanced settings tabs'}>
-            <TabList>
+            <TabList UNSAFE_style={{ '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)' }}>
                 {(tab: TabProps) => (
                     <Item key={tab.name} textValue={tab.name}>
                         <Text>{tab.name}</Text>

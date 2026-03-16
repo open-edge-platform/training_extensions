@@ -78,9 +78,6 @@ class SamplerConfig:
     class_path: str = "torch.utils.data.RandomSampler"
     init_args: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
-        """Normalize init_args: treat None as empty dict."""
-
 
 @dataclass
 class SubsetConfig:

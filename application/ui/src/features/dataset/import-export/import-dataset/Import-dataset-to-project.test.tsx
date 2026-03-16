@@ -87,7 +87,7 @@ describe('ImportDatasetToProject', () => {
 
         renderApp(null, mockedAppendImportEntry);
 
-        userEvent.click(await screen.findByRole('button', { name: /open import dialog/i }));
+        await userEvent.click(await screen.findByRole('button', { name: /open import dialog/i }));
         expect(await screen.findByText('Drop the dataset .zip file here')).toBeVisible();
         const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
 

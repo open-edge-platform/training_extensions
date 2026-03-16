@@ -29,7 +29,7 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         transforms (Transforms | None, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         stack_images (bool): Whether to stack images in batch processing.
-        data_format (str): Format of the source data (e.g., "coco", "pascal_voc").
+
 
     Example:
         >>> from otx.data.dataset.detection import OTXDetectionDataset
@@ -46,7 +46,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        data_format: str = "",
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(DetectionSample, storage_dtype)
@@ -57,7 +56,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            data_format=data_format,
         )
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(

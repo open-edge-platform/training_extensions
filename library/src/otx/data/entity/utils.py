@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 import polars as pl
 import torch
 import torch.utils._pytree as pytree
-from datumaro.experimental.dataset import Sample
+from datumaro.experimental.dataset import Sample  # noqa: TC002
 from datumaro.experimental.fields import image_field
 
 if TYPE_CHECKING:
@@ -22,8 +22,7 @@ if TYPE_CHECKING:
     from otx.data.entity.base import ImageInfo
 
 # High-bit-depth converter registration
-from otx.data.entity import _highbit_converter as _highbit_converter  # noqa: F401
-
+from otx.data.entity import _highbit_converter as _highbit_converter  # noqa: PLC0414
 
 #: Map from IntensityConfig.storage_dtype strings to Polars dtype instances.
 STORAGE_DTYPE_MAP: dict[str, pl.DataType] = {

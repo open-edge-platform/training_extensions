@@ -131,7 +131,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=mock_compose,
-            data_format="arrow",
         )
 
         result = dataset._apply_transforms(mock_entity)
@@ -150,7 +149,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=mock_transform,
-            data_format="arrow",
         )
 
         result = dataset._apply_transforms(mock_entity)
@@ -174,7 +172,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=[transform1, transform2],
-            data_format="arrow",
         )
 
         result = dataset._apply_transforms(mock_entity)
@@ -195,7 +192,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=[transform1, transform2],
-            data_format="arrow",
         )
 
         result = dataset._apply_transforms(mock_entity)
@@ -209,7 +205,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         mock_entity = Mock(spec=OTXSample)
@@ -229,7 +224,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         with patch.object(dataset, "_apply_transforms", return_value=mock_transformed_item):
@@ -246,7 +240,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
             max_refetch=2,
         )
 
@@ -264,7 +257,6 @@ class TestOTXDataset:
         dataset = OTXDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         collate = dataset.collate_fn

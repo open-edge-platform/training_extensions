@@ -138,7 +138,7 @@ test.describe('Model Details', () => {
                     pagination: { offset: 0, limit: 20, count, total },
                 });
             }),
-            http.get('/api/projects/{project_id}/models/{model_id}/binary', () => {
+            http.get('/api/projects/{project_id}/models/{model_id}/variants/{model_variant_id}/binary', () => {
                 return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
                     headers: {
                         'content-type': 'application/zip',
@@ -203,21 +203,23 @@ test.describe('Model Details', () => {
             let modelVariantId: string | undefined;
 
             network.use(
-                http.get('/api/projects/{project_id}/models/{model_id}/binary', ({ request }) => {
-                    const url = new URL(request.url);
-                    modelVariantId = url.searchParams.get('model_variant_id') ?? undefined;
+                http.get(
+                    '/api/projects/{project_id}/models/{model_id}/variants/{model_variant_id}/binary',
+                    ({ params }) => {
+                        modelVariantId = params.model_variant_id;
 
-                    if (!modelVariantId) {
-                        return new HttpResponse(null, { status: 400 });
+                        if (!modelVariantId) {
+                            return new HttpResponse(null, { status: 400 });
+                        }
+
+                        return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
+                            headers: {
+                                'content-type': 'application/zip',
+                                'content-disposition': `attachment; filename="model-model-1-${modelVariantId}.zip"`,
+                            },
+                        });
                     }
-
-                    return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
-                        headers: {
-                            'content-type': 'application/zip',
-                            'content-disposition': `attachment; filename="model-model-1-${modelVariantId}.zip"`,
-                        },
-                    });
-                })
+                )
             );
 
             await modelsPage.goto();

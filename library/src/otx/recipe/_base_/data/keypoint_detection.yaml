@@ -1,5 +1,4 @@
 task: KEYPOINT_DETECTION
-data_format: coco_person_keypoints
 unannotated_items_ratio: 0.0
 input_size:
   - 512

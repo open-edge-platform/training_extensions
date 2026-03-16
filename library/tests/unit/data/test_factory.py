@@ -58,7 +58,6 @@ class TestOTXDatasetFactory:
                 task=task_type,
                 dm_subset=dm_subset,
                 cfg_subset=cfg_subset,
-                data_format="",
             ),
             dataset_cls,
         )

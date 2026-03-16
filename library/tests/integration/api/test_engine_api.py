@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 
 import pytest
 from datumaro import Dataset as DmDataset
 from model_api.tilers import Tiler
 
+import otx
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import OTXModel
 from otx.data.module import OTXDataModule
@@ -160,14 +162,10 @@ def test_16bit_classification(
     """Test end-to-end training on 16-bit PNG images.
 
     Uses a lightweight classification model (tv_mobilenet_v3_small) with a
-    synthetic 16-bit uint16 dataset. The factory auto-detects the 16-bit dtype
-    from the PNG file header — no explicit storage_dtype override is needed.
-    Verifies train → test → predict → export → OV-inference.
+    synthetic 16-bit uint16 dataset. The IntensityConfig override tells the
+    pipeline to read images as uint16 and apply scale-to-unit mapping before
+    augmentations.  Verifies train → test → predict → export → OV-inference.
     """
-    import inspect
-
-    import otx
-
     recipe = (
         Path(inspect.getfile(otx)).parent
         / "recipe"

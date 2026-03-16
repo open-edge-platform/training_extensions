@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useMemo, useRef } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEqual } from 'lodash-es';
@@ -102,16 +102,17 @@ export const AnnotationActionsProvider = ({
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
     const prevMediaItemKeyRef = useRef(mediaItemKey);
 
-    // Reset annotations if the provider's props are updated
-    // or if we switch to a different media item (image or video frame)
-    if (
-        prevMediaItemKeyRef.current !== mediaItemKey ||
-        !isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)
-    ) {
-        resetAnnotations();
-        prevMediaItemKeyRef.current = mediaItemKey;
-        prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
-    }
+    useEffect(() => {
+        // Reset annotations when source annotations change or when switching media/frame.
+        if (
+            prevMediaItemKeyRef.current !== mediaItemKey ||
+            !isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)
+        ) {
+            undoRedoActions.reset(initialAnnotations);
+            prevMediaItemKeyRef.current = mediaItemKey;
+            prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
+        }
+    }, [mediaItemKey, initialAnnotationsDTO, initialAnnotations, undoRedoActions]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {

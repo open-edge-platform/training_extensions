@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,9 +23,6 @@ from otx.data.module import (
     OTXTaskType,
 )
 
-if TYPE_CHECKING:
-    from datumaro.components.dataset import Dataset as DmDataset
-
 
 class TestOTXDataModule:
     @pytest.fixture
@@ -38,7 +34,7 @@ class TestOTXDataModule:
         train_subset.num_workers = 0
         train_subset.batch_size = 4
         train_subset.input_size = None
-        train_subset.subset_name = "train_1"
+        train_subset.subset_name = "train"
         train_subset.transforms = []
         val_subset = MagicMock(spec=SubsetConfig)
         val_subset.sampler = DictConfig(
@@ -47,7 +43,7 @@ class TestOTXDataModule:
         val_subset.num_workers = 0
         val_subset.batch_size = 3
         val_subset.input_size = None
-        val_subset.subset_name = "val_1"
+        val_subset.subset_name = "val"
         test_subset = MagicMock(spec=SubsetConfig)
         test_subset.sampler = DictConfig(
             {"class_path": "torch.utils.data.RandomSampler", "init_args": {"num_samples": 3}},
@@ -55,13 +51,12 @@ class TestOTXDataModule:
         test_subset.num_workers = 0
         test_subset.batch_size = 1
         test_subset.input_size = None
-        test_subset.subset_name = "test_1"
+        test_subset.subset_name = "test"
         tile_config = MagicMock(spec=TileConfig)
         tile_config.enable_tiler = False
 
         mock = MagicMock(spec=DictConfig)
         mock.task = "MULTI_LABEL_CLS"
-        mock.data_format = "coco_instances"
         mock.data_root = "."
         mock.train_subset = train_subset
         mock.val_subset = val_subset
@@ -72,28 +67,11 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def mock_dm_dataset(self, mocker) -> MagicMock:
-        return mocker.patch("otx.data.module.DmDataset.import_from")
+        return mocker.patch("otx.data.module.import_dataset")
 
     @pytest.fixture
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
         return mocker.patch("otx.data.module.OTXDatasetFactory")
-
-    @pytest.fixture
-    def mock_data_filtering(self, mocker) -> MagicMock:
-        def func(
-            dataset: DmDataset,
-            data_format: str,
-            unannotated_items_ratio: float,
-            task: OTXTaskType,
-            ignore_index: int | None,
-        ) -> DmDataset:
-            del data_format
-            del unannotated_items_ratio
-            del ignore_index
-            del task
-            return dataset
-
-        return mocker.patch("otx.data.module.pre_filtering", side_effect=func)
 
     @pytest.mark.parametrize(
         "task",
@@ -110,17 +88,17 @@ class TestOTXDataModule:
         self,
         mock_dm_dataset,
         mock_otx_dataset_factory,
-        mock_data_filtering,
         task,
         fxt_config,
     ) -> None:
-        # Dataset will have "train_0", "train_1", "val_0", ..., "test_1" subsets
-        mock_dm_subsets = {f"{name}_{idx}": MagicMock() for name in ["train", "val", "test"] for idx in range(2)}
-        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+        # Make filter_by_subset return a non-empty MagicMock for each subset
+        mock_subset = MagicMock()
+        mock_subset.__len__ = lambda _: 10
+        mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
+        mock_dm_dataset.return_value.format = "datumaro"
 
         module = OTXDataModule(
             task=task,
-            data_format=fxt_config.data_format,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -140,19 +118,18 @@ class TestOTXDataModule:
         self,
         mock_dm_dataset,
         mock_otx_dataset_factory,
-        mock_data_filtering,
         fxt_config,
     ) -> None:
-        # Dataset will have "train_0", "train_1", "val_0", ..., "test_1" subsets
-        mock_dm_subsets = {f"{name}_{idx}": MagicMock() for name in ["train", "val", "test"] for idx in range(2)}
-        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+        mock_subset = MagicMock()
+        mock_subset.__len__ = lambda _: 10
+        mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
+        mock_dm_dataset.return_value.format = "datumaro"
         fxt_config.train_subset.input_size = None
         fxt_config.val_subset.input_size = None
         fxt_config.test_subset.input_size = (800, 800)
 
         OTXDataModule(
             task=OTXTaskType.MULTI_CLASS_CLS,
-            data_format=fxt_config.data_format,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -192,13 +169,14 @@ class TestOTXDataModule:
         self,
         mock_dm_dataset,
         mock_otx_dataset_factory,
-        mock_data_filtering,
         fxt_real_tv_cls_config,
         tmpdir,
     ) -> None:
         # Dataset will have "train", "val", and "test" subsets
-        mock_dm_subsets = {name: MagicMock() for name in ["train", "val", "test"]}
-        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+        mock_subset = MagicMock()
+        mock_subset.__len__ = lambda _: 10
+        mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
+        mock_dm_dataset.return_value.format = "datumaro"
         module = OTXDataModule(**fxt_real_tv_cls_config, input_size=(240, 240))
         logger = CSVLogger(tmpdir)
         logger.log_hyperparams(module.hparams_initial)
@@ -236,7 +214,6 @@ class TestOTXDataModule:
             mock_dataset = MagicMock()
             mock_dataset.label_info = label_info or MagicMock()
             mock_dataset.task_type = task
-            mock_dataset.data_format = "coco"
             mock_dataset.image_color_channel = "RGB"
             mock_dataset.transforms = transforms or []
             mock_dataset_item = MagicMock(

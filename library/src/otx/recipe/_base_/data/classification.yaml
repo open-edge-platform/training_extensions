@@ -2,12 +2,11 @@ task: MULTI_CLASS_CLS
 input_size:
   - 224
   - 224
-data_format: imagenet_with_subset_dirs
 unannotated_items_ratio: 0.0
 train_subset:
   subset_name: train
   batch_size: 64
-  num_workers: 0
+  num_workers: 2
   augmentations_cpu:
     - class_path: torchvision.transforms.v2.RandomResizedCrop
       init_args:
@@ -51,7 +50,7 @@ train_subset:
 val_subset:
   subset_name: val
   batch_size: 64
-  num_workers: 0
+  num_workers: 2
   augmentations_cpu:
     - class_path: torchvision.transforms.v2.Resize
       init_args:
@@ -79,7 +78,7 @@ val_subset:
 test_subset:
   subset_name: test
   batch_size: 64
-  num_workers: 0
+  num_workers: 2
   augmentations_cpu:
     - class_path: torchvision.transforms.v2.Resize
       init_args:

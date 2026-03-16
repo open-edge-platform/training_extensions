@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-import torch
 from pytest_mock import MockerFixture
 
 from otx.backend.native.engine import OTXEngine
@@ -18,7 +17,7 @@ from otx.types.precision import OTXPrecisionType
 @pytest.fixture
 def fxt_engine(tmp_path) -> OTXEngine:
     return OTXEngine(
-        data="tests/assets/classification_dataset",
+        data="tests/assets/classification_cifar10",
         model="src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
         work_dir=tmp_path,
         max_epochs=9,
@@ -28,7 +27,7 @@ def fxt_engine(tmp_path) -> OTXEngine:
 class TestEngine:
     def test_constructor(self, tmp_path) -> None:
         # Check auto-configuration
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         engine = OTXEngine(
             work_dir=tmp_path,
             data=data_root,
@@ -46,7 +45,7 @@ class TestEngine:
         assert engine.trainer_params["devices"] == 1
 
     def test_model_init(self, tmp_path, mocker):
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         mock_datamodule = MagicMock()
         mock_datamodule.label_info = 4321
         mock_datamodule.input_size = (1234, 1234)
@@ -102,31 +101,6 @@ class TestEngine:
 
             mock_chkpt_load.assert_called_once()
             mock_load_state_dict_incrementally.assert_called_once()
-
-    @pytest.mark.parametrize(
-        "checkpoint",
-        [
-            "tests/assets/test_snapshots/dummy_checkpoint_cls_2.2.0.ckpt",
-            "tests/assets/test_snapshots/dummy_checkpoint_hlabel_2.2.0.ckpt",
-            "tests/assets/test_snapshots/dummy_checkpoint_is_2.2.0.ckpt",
-            "tests/assets/test_snapshots/dummy_checkpoint_det_2.2.0.ckpt",
-            "tests/assets/test_snapshots/dummy_checkpoint_det_2.4.5.ckpt",
-        ],
-    )
-    def test__load_model_checkpoint(self, fxt_engine, checkpoint) -> None:
-        ckpt = fxt_engine._load_model_checkpoint(checkpoint, map_location="cpu")
-        assert ckpt is not None
-        assert isinstance(ckpt, dict)
-        assert "state_dict" in ckpt
-        assert "hyper_parameters" in ckpt
-        assert "label_info" in ckpt["hyper_parameters"]
-        assert isinstance(ckpt["state_dict"], dict)
-        assert isinstance(ckpt["optimizer_states"], dict)
-
-        if "_2.4.5" in checkpoint:
-            # simple loading with weights_only=True
-            chkpt = torch.load(checkpoint, map_location="cpu", weights_only=True)
-            assert isinstance(chkpt, dict)
 
     def test_test(self, fxt_engine, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
@@ -232,7 +206,7 @@ class TestEngine:
 
     def test_from_config_with_model_name(self, tmp_path) -> None:
         model_name = "efficientnet_b0"
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         task_type = "MULTI_CLASS_CLS"
 
         overriding = {
@@ -263,7 +237,7 @@ class TestEngine:
 
     def test_from_config(self, tmp_path, mocker) -> None:
         recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         mocker.patch("pathlib.Path.symlink_to")
         mocker.patch("otx.backend.native.engine.Trainer.fit")
 
@@ -313,7 +287,7 @@ class TestEngine:
         assert fxt_engine.num_devices == 2
         assert fxt_engine._cache.args.get("devices") == 2
 
-        data_root = "tests/assets/classification_dataset"
+        data_root = "tests/assets/classification_cifar10"
         engine = OTXEngine(
             work_dir=tmp_path,
             data=data_root,

@@ -950,7 +950,10 @@ class OTXModel(LightningModule):
         elif preprocessing_params is None:
             data_input_params = default
         else:
-            msg = f"preprocessing_params should be either dict or DataInputParams, but got {type(preprocessing_params)} instead."
+            msg = (
+                f"preprocessing_params should be either dict or DataInputParams, "
+                f"but got {type(preprocessing_params)} instead."
+            )
             raise TypeError(msg)
 
         # Validate

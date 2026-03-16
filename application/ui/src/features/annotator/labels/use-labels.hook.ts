@@ -93,9 +93,9 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
             return;
         }
 
-        if (selectedAnnotations.size > 0) {
-            const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
+        const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
+        if (selectedAnnotationsList.length > 0) {
             const allAnnotationsHaveLabel = selectedAnnotationsList.every((annotation) =>
                 annotation.labels.some((l) => l.id === label.id)
             );

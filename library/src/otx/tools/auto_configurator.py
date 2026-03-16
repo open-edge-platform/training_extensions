@@ -217,8 +217,8 @@ class AutoConfigurator:
             model_name (str | None): The name of the model to retrieve. If None, the default model will be used.
             label_info (LabelInfoTypes | None): The meta information about the labels.
                 If provided, the number of classes will be updated in the model's configuration.
-            data_input_params (DataInputParams | dict | None, optional): The data input parameters containing the input size,
-                input mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters
+                containing the input size, input mean and std.
 
         Returns:
             OTXModel: The instantiated OTXModel instance.
@@ -345,7 +345,6 @@ class AutoConfigurator:
         warn(msg, stacklevel=1)
         return OTXDataModule(
             task=datamodule.task,
-            data_format=datamodule.data_format,
             data_root=datamodule.data_root,
             train_subset=datamodule.train_subset,
             val_subset=datamodule.val_subset,

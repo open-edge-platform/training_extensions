@@ -128,14 +128,16 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
 
     const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
 
-    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] = useTrainingConfiguration({
-        modelArchitectureId: selectedModelArchitectureId,
-        modelRevisionId: selectedModelRevisionId,
-    });
-
     const modelRevisions = useMemo(() => {
         return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
     }, [allModelRevisions, selectedModelArchitectureId]);
+
+    const selectedModelRevision = modelRevisions.find((modelRevision) => modelRevision.id === selectedModelRevisionId);
+
+    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] = useTrainingConfiguration({
+        modelArchitectureId: selectedModelArchitectureId,
+        modelRevisionId: selectedModelRevision?.value ?? null,
+    });
 
     const onSelectModelArchitectureId = (modelArchitectureId: string | null) => {
         setSelectedModelArchitectureId(modelArchitectureId);

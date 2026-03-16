@@ -1,0 +1,105 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { screen, waitFor } from '@testing-library/react';
+import { getMockedPrepareImportDatasetJob } from 'mocks/mock-job';
+import { HttpResponse } from 'msw';
+import { render } from 'test-utils/render';
+
+import { http } from '../../api/utils';
+import { Job } from '../../constants/shared-types';
+import { server } from '../../msw-node-setup';
+import { LoadingImportDataset } from './loading-import-dataset.component';
+
+const stagedDatasetId = 'staged-dataset-123';
+
+describe('LoadingImportDataset', () => {
+    const renderApp = ({
+        job,
+        status = 200,
+        fileName = 'test.zip',
+        onSuccess,
+        deleteEntry,
+    }: {
+        job: Job;
+        status?: number;
+        fileName?: string;
+        onSuccess: () => void;
+        deleteEntry: () => void;
+    }) => {
+        server.use(http.get('/api/jobs/{job_id}', () => HttpResponse.json(job, { status })));
+
+        return render(
+            <LoadingImportDataset
+                size={0}
+                jobId={job.job_id}
+                fileName={fileName}
+                onSuccess={onSuccess}
+                deleteEntry={deleteEntry}
+                stagedDatasetId={stagedDatasetId}
+            />
+        );
+    };
+
+    it('renders failed job state and displays job message and error', async () => {
+        const job = getMockedPrepareImportDatasetJob({
+            status: 'FAILED',
+            message: 'Import failed due to validation error',
+            error: 'Dataset validation failed: missing required fields',
+        });
+
+        const mockedDeleteImportEntry = vi.fn();
+        renderApp({ job, onSuccess: vi.fn(), deleteEntry: mockedDeleteImportEntry });
+
+        expect(await screen.findByText('Import failed due to validation error')).toBeVisible();
+        expect(await screen.findByText('Dataset validation failed: missing required fields')).toBeVisible();
+        expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
+    });
+
+    it('renders active job state when job is running', async () => {
+        const fileName = 'dataset.zip';
+        const job = getMockedPrepareImportDatasetJob({
+            status: 'RUNNING',
+            progress: 55.8,
+            message: 'Preparing dataset for import',
+        });
+
+        renderApp({ job, fileName, onSuccess: vi.fn(), deleteEntry: vi.fn() });
+
+        expect(await screen.findByText(`${fileName} file is being processed for import`)).toBeVisible();
+        expect(await screen.findByText('56%')).toBeVisible();
+    });
+
+    it('renders completed import state and calls onSuccess when job is done', async () => {
+        const fileName = 'dataset.zip';
+        const job = getMockedPrepareImportDatasetJob({ status: 'DONE' });
+
+        const mockedOnSuccess = vi.fn();
+        const mockedDeleteImportEntry = vi.fn();
+        renderApp({ job, fileName, onSuccess: mockedOnSuccess, deleteEntry: mockedDeleteImportEntry });
+
+        expect(await screen.findByText(`${fileName} file has been imported successfully`)).toBeVisible();
+
+        await waitFor(() => {
+            expect(mockedOnSuccess).toHaveBeenCalled();
+            expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
+        });
+    });
+
+    it('renders failed state when job status query fails with error', async () => {
+        const mockedOnSuccess = vi.fn();
+        const mockedDeleteImportEntry = vi.fn();
+
+        renderApp({
+            job: { job_id: '123', detail: 'Job not found' } as unknown as Job,
+            status: 404,
+            onSuccess: mockedOnSuccess,
+            deleteEntry: mockedDeleteImportEntry,
+        });
+
+        expect(await screen.findByText('An error occurred during import.')).toBeVisible();
+        expect(await screen.findByText('Job not found')).toBeVisible();
+        expect(mockedOnSuccess).not.toHaveBeenCalled();
+        expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
+    });
+});

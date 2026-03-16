@@ -493,7 +493,7 @@ class GetiConfigConverter:
             engine, train_kwargs = converter.instantiate(
                 config=config,
                 work_dir="otx-workspace",
-                data_root="tests/assets/car_tree_bug",
+                data_root="tests/assets/detection_coco",
             )
 
         Train the model::

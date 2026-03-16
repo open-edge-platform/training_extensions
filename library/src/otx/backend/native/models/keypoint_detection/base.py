@@ -32,8 +32,8 @@ class OTXKeypointDetectionModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams | dict | None, optional): Parameters for image data preprocessing. If None is given,
-            default parameters for the specific model will be used.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image data
+            preprocessing. If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -111,11 +111,11 @@ class OTXKeypointDetectionModel(OTXModel):
             inverted_scale = max(kp_scale_h, kp_scale_w)
             kp_scale_h = kp_scale_w = inverted_scale
             # decode kps
-            kps = torch.as_tensor(output[0], device=self.device) * torch.tensor(
+            kps = torch.as_tensor(output[0], dtype=torch.float32, device=self.device) * torch.tensor(
                 [kp_scale_w, kp_scale_h],
                 device=self.device,
             )
-            score = torch.as_tensor(output[1], device=self.device)
+            score = torch.as_tensor(output[1], dtype=torch.float32, device=self.device)
             visible_keypoints = torch.cat([kps, score.unsqueeze(1) > visibility_threshold], dim=1)
             keypoints.append(visible_keypoints)
             scores.append(score)

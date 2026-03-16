@@ -2,7 +2,6 @@ task: INSTANCE_SEGMENTATION
 input_size:
   - 1024
   - 1024
-data_format: coco_instances
 unannotated_items_ratio: 0.0
 
 train_subset:

@@ -42,7 +42,7 @@ class DataAugSwitch:
     respectively.
 
     Args:
-        policy_epochs (list[int]): List of 2 epoch boundaries ``[p0, p1]``:
+        policy_epochs (list[int]): List of 3 epoch boundaries ``[p0, p1]``:
             - ``epoch < p0``: ``no_aug``
             - ``p0 <= epoch < p1``: ``strong_aug_1`` or ``strong_aug_2`` (random)
             - ``epoch >= p1``: ``light_aug``
@@ -67,7 +67,7 @@ class DataAugSwitch:
             "strong_aug_2": { ... },
             "light_aug": { ... },
         }
-        switch = DataAugSwitch([4, 29, 50], policies, input_size=[640, 640])
+        switch = DataAugSwitch([4, 29], policies, input_size=[640, 640])
     """
 
     def __init__(
@@ -94,7 +94,6 @@ class DataAugSwitch:
             # Build CPU pipeline via SubsetConfig → CPUAugmentationPipeline
             cpu_subset = SubsetConfig(
                 augmentations_cpu=cpu_aug_configs,
-                batch_size=1,
                 subset_name=name,
                 input_size=self.input_size,  # type: ignore[arg-type]
             )

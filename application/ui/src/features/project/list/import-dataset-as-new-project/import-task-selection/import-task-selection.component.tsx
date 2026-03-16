@@ -6,7 +6,7 @@ import { useActionState, useState } from 'react';
 import { Flex, Form, Item, Picker, Text, TextField, View } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 import { useProjects } from 'hooks/api/project.hook';
-import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useStagedDatasetSuspense } from 'hooks/api/staged-dataset.hook';
 import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
 import { TaskType } from '../../../../../constants/shared-types';
@@ -29,10 +29,10 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
         task_type: importEntry?.project?.task_type ?? defaultTaskType,
     };
 
-    return useActionState<{ name: string; task_type: string }, FormData>(async (_prevState, formData) => {
+    return useActionState<{ name: string; task_type: TaskType }, FormData>(async (_prevState, formData) => {
         const project = {
-            name: String(formData.get('name')),
-            task_type: String(formData.get('task_type')),
+            name: String(formData.get('name')).trim(),
+            task_type: formData.get('task_type') as TaskType,
         };
 
         setCurrentStep('labelMapping');
@@ -43,14 +43,14 @@ const useFormConfig = (stagedDatasetId: string, defaultTaskType: TaskType) => {
 
 export const ImportTaskSelection = ({ stagedDatasetId }: ImportTaskSelectionProps) => {
     const { data: projects } = useProjects();
-    const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
+    const { data: stagedDataset } = useStagedDatasetSuspense(stagedDatasetId);
 
     const defaultTaskType = getRecommendedTaskType(stagedDataset?.metadata?.annotation_type);
     const [formState, submitAction] = useFormConfig(stagedDatasetId, defaultTaskType);
     const [name, setName] = useState(formState.name);
 
     const validationErrorMessage = validateProjectName(
-        name,
+        name.trim(),
         projects.map((project) => project.name)
     );
 

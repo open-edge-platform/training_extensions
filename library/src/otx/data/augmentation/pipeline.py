@@ -26,6 +26,7 @@ from lightning.pytorch.cli import instantiate_class
 from omegaconf import DictConfig
 from torch import nn
 
+from otx.config.data import IntensityConfig
 from otx.data.augmentation.intensity import build_intensity_transform
 from otx.data.entity.sample import OTXSample
 from otx.data.utils import import_object_from_module
@@ -188,8 +189,6 @@ class CPUAugmentationPipeline(nn.Module):
         aug_configs = config.augmentations_cpu
         intensity_config = getattr(config, "intensity", None)
         if isinstance(intensity_config, dict):
-            from otx.config.data import IntensityConfig
-
             intensity_config = IntensityConfig(**intensity_config)
 
         augmentations: list[nn.Module] = []
@@ -204,9 +203,6 @@ class CPUAugmentationPipeline(nn.Module):
             for aug_config in aug_configs:
                 cfg = copy(aug_config)
                 if isinstance(cfg, (dict, DictConfig)):
-                    if not cfg.get("enable", True):
-                        continue
-                    cfg.pop("enable", None)
                     # Handle input_size placeholder
                     cfg = cls._configure_input_size(dict(cfg), input_size)
 
@@ -575,9 +571,6 @@ class GPUAugmentationPipeline(nn.Module):
         for aug_config in aug_configs:
             cfg = copy(aug_config)
             if isinstance(cfg, (dict, DictConfig)):
-                if not cfg.get("enable", True):
-                    continue
-                cfg.pop("enable", None)
                 # Handle input_size placeholder
                 cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)  # noqa: SLF001
 

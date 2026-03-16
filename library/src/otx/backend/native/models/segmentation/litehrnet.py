@@ -104,7 +104,10 @@ class LiteHRNet(OTXSegmentationModel):
             pad_value=0,
             swap_rgb=False,
             via_onnx=False,
-            onnx_export_configuration={"operator_export_type": OperatorExportTypes.ONNX_ATEN_FALLBACK},
+            onnx_export_configuration={
+                "operator_export_type": OperatorExportTypes.ONNX_ATEN_FALLBACK,
+                "dynamo": False,
+            },
             output_names=["preds", "feature_vector"] if self.explain_mode else None,
         )
 
