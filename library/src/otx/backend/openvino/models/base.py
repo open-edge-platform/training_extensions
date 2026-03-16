@@ -241,9 +241,13 @@ class OVModel:
         quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)
 
         if ptq_config.get("max_drop") is not None:
+            validation_dataset = nncf.Dataset(data_module.val_dataloader(), self.transform_fn)
+            validation_fn = self._create_validation_fn(data_module)
             compressed_model = nncf.quantize_with_accuracy_control(
                 ov_model,
                 quantization_dataset,
+                validation_dataset,
+                validation_fn,
                 **ptq_config,
             )
         else:
@@ -256,6 +260,54 @@ class OVModel:
         openvino.save_model(compressed_model, output_model_path)
 
         return output_model_path
+
+    def _create_validation_fn(self, data_module: OTXDataModule):
+        """Create a validation function for accuracy-aware quantization.
+
+        The returned function computes accuracy on the validation set using the model's
+        metric callable. It is compatible with ``nncf.quantize_with_accuracy_control``.
+
+        Args:
+            data_module (OTXDataModule): Data module providing the validation dataloader.
+
+        Returns:
+            Callable: A function ``(compiled_model, validation_dataset) -> (float, None)``
+            where the float is the primary accuracy metric value.
+        """
+
+        def validation_fn(compiled_model: openvino.CompiledModel, validation_dataset) -> tuple[float, None]:
+            """Evaluate the compiled OpenVINO model on the validation dataset.
+
+            Args are unused but required by the NNCF interface to match the expected signature.
+
+            Args:
+                compiled_model: Compiled OpenVINO model provided by NNCF.
+                validation_dataset: Validation dataset (unused – we use the dataloader directly).
+
+            Returns:
+                Tuple of (metric_value, None).
+            """
+            metric = self.metric_callable(data_module.label_info)
+
+            val_dataloader = data_module.val_dataloader()
+            for data_batch in val_dataloader:
+                preds = self.forward(data_batch, async_inference=False)
+                metric_inputs = self.prepare_metric_inputs(preds, data_batch)
+                if isinstance(metric_inputs, list):
+                    for mi in metric_inputs:
+                        metric.update(**mi)
+                else:
+                    metric.update(**metric_inputs)
+
+            results = self.compute_metrics(metric)
+            # Take the first scalar metric value as the accuracy indicator
+            metric_value = next(iter(results.values()))
+            if isinstance(metric_value, torch.Tensor):
+                metric_value = metric_value.item()
+
+            return float(metric_value), None
+
+        return validation_fn
 
     def transform_fn(self, data_batch: OTXSampleBatch) -> np.array:
         """Transform data for PTQ.
