@@ -1,19 +1,19 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ReactNode, RefObject, useRef } from 'react';
 
-import { Item, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
+import { DOMRefValue, Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, View } from '@geti/ui';
 
 import { useTrainModel } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
 import { Training } from './training/training.component';
 
-type ContentWrapperProps = { children: ReactNode };
+type ContentWrapperProps = { children: ReactNode; ref: RefObject<DOMRefValue<HTMLDivElement> | null> };
 
-const ContentWrapper = ({ children }: ContentWrapperProps) => {
+const ContentWrapper = ({ children, ref }: ContentWrapperProps) => {
     return (
-        <View backgroundColor={'gray-50'} overflow={'hidden auto'} height={'100%'}>
+        <View ref={ref} backgroundColor={'gray-50'} overflow={'hidden auto'} height={'100%'}>
             {children}
         </View>
     );
@@ -26,6 +26,8 @@ type TabProps = {
 
 export const AdvancedSettings = () => {
     const { trainingConfiguration, onTrainingConfigurationChange, defaultTrainingConfiguration } = useTrainModel();
+    const containerRef = useRef<DOMRefValue<HTMLDivElement>>(null);
+    const unwrappedContainerRef = useUnwrapDOMRef(containerRef);
 
     // Should never happen, but just in case, to prevent errors in the UI
     if (trainingConfiguration === undefined || defaultTrainingConfiguration === undefined) {
@@ -37,6 +39,7 @@ export const AdvancedSettings = () => {
             name: 'Data management',
             children: (
                 <DataManagement
+                    containerRef={unwrappedContainerRef}
                     trainingConfiguration={trainingConfiguration}
                     defaultTrainingConfiguration={defaultTrainingConfiguration}
                     onTrainingConfigurationChange={onTrainingConfigurationChange}
@@ -61,7 +64,7 @@ export const AdvancedSettings = () => {
             <TabPanels marginTop={'size-250'} UNSAFE_style={{ overflow: 'hidden' }}>
                 {(tab: TabProps) => (
                     <Item key={tab.name} textValue={tab.name}>
-                        <ContentWrapper>{tab.children}</ContentWrapper>
+                        <ContentWrapper ref={containerRef}>{tab.children}</ContentWrapper>
                     </Item>
                 )}
             </TabPanels>

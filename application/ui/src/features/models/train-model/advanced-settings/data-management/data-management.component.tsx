@@ -1,11 +1,12 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, RefObject, SetStateAction } from 'react';
 
 import { View } from '@geti/ui';
 
 import { TrainingConfiguration } from '../../../../../constants/shared-types';
+import { LazyLoadSection } from '../components/lazy-load-section.component';
 import { DataAugmentation } from './data-augmentation/data-augmentation.component';
 import { getDataAugmentationParameters } from './data-augmentation/utils';
 import { Filters } from './filters/filters.component';
@@ -16,12 +17,14 @@ import { TrainingSubsets } from './training-subsets/training-subsets.component';
 import { getSubsetSplitParameters } from './training-subsets/utils';
 
 type DataManagementProps = {
+    containerRef: RefObject<HTMLDivElement | null>;
     trainingConfiguration: TrainingConfiguration;
     defaultTrainingConfiguration: TrainingConfiguration;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
 export const DataManagement = ({
+    containerRef,
     trainingConfiguration,
     defaultTrainingConfiguration,
     onTrainingConfigurationChange,
@@ -51,17 +54,21 @@ export const DataManagement = ({
             )}
 
             {dataAugmentationParameters !== undefined && (
-                <DataAugmentation
-                    dataAugmentationParameters={dataAugmentationParameters}
-                    onTrainingConfigurationChange={onTrainingConfigurationChange}
-                />
+                <LazyLoadSection rootRef={containerRef}>
+                    <DataAugmentation
+                        dataAugmentationParameters={dataAugmentationParameters}
+                        onTrainingConfigurationChange={onTrainingConfigurationChange}
+                    />
+                </LazyLoadSection>
             )}
 
             {filtersParameters !== undefined && (
-                <Filters
-                    filtersParameters={filtersParameters}
-                    onTrainingConfigurationChange={onTrainingConfigurationChange}
-                />
+                <LazyLoadSection rootRef={containerRef}>
+                    <Filters
+                        filtersParameters={filtersParameters}
+                        onTrainingConfigurationChange={onTrainingConfigurationChange}
+                    />
+                </LazyLoadSection>
             )}
         </View>
     );
