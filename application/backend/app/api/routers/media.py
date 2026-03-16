@@ -160,15 +160,15 @@ def add_media(
 ) -> MediaView:
     """Add a new media to the dataset by uploading an image or a video"""
     name, extension = file_name_and_extension
-    format_ = _parse_media_format(extension)
+    media_format = _parse_media_format(extension)
     try:
-        if isinstance(format_, ImageFormat):
+        if isinstance(media_format, ImageFormat):
             media = media_service.create_image(
                 ImageMetadata(
                     project_id=project.id,
                     data=file.file,
                     name=name,
-                    image_format=format_,
+                    image_format=media_format,
                 )
             )
             dataset_service.create_dataset_item(
@@ -183,7 +183,7 @@ def add_media(
                 project_id=project.id,
                 data=file.file,
                 name=name,
-                video_format=format_,
+                video_format=media_format,
             )
         return MediaViewAdapter.validate_python(media, from_attributes=True)
     except InvalidImageError:

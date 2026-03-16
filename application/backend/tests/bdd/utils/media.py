@@ -2,10 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import secrets
+from enum import StrEnum
+from itertools import count as iter_count
 from pathlib import Path
 
 import cv2
 import numpy as np
+from datumaro.experimental import LazyImage, LazyVideoFrame, MediaInfo
 from PIL import Image
 
 
@@ -48,3 +51,38 @@ def generate_random_video(
 
     out.release()
     return video_path
+
+
+class MediaType(StrEnum):
+    IMAGE = "image"
+    VIDEO_FRAME = "video frame"
+
+
+class MediaProvider:
+    """Knows how to produce a (lazy_media, media_info) pair for a given media type."""
+
+    def __init__(self, media_type: str, tmp_path: Path) -> None:
+        self._media_type = media_type
+        self._frame_counter = iter_count()
+        self._video_path: Path | None = None
+
+        match media_type:
+            case MediaType.IMAGE:
+                self._media_dir = tmp_path / "images"
+                self._media_dir.mkdir(parents=True, exist_ok=True)
+            case MediaType.VIDEO_FRAME:
+                self._media_dir = tmp_path / "videos"
+                self._media_dir.mkdir(parents=True, exist_ok=True)
+                self._video_path = generate_random_video(self._media_dir)
+            case _:
+                raise ValueError(f"Unsupported media type: '{media_type}'")
+
+    def next(self, subset: str) -> tuple[LazyImage | LazyVideoFrame, MediaInfo]:
+        """Return the next (lazy_media, media_info) pair."""
+        if self._media_type == "image":
+            path = generate_random_image(output_path=self._media_dir, suffix=subset)
+            return LazyImage(path), MediaInfo(width=640, height=480)
+
+        frame_idx = next(self._frame_counter)
+        lazy = LazyVideoFrame(video_path=str(self._video_path), frame_index=frame_idx)
+        return lazy, MediaInfo.from_media(lazy)

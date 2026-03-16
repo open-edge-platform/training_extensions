@@ -18,10 +18,10 @@ from tests.bdd.utils import export_dataset, prepare_dataset
 def step_project_is_exported(context: Context, export_format: str) -> None:
     """Add multiple random unannotated images to the dataset."""
     project = cast(ProjectView, context.project)
-    job = export_dataset(
-        base_url=str(context.base_url), project_id=str(project.id), export_format=DatasetFormat(export_format.lower())
-    )
+    export_format = DatasetFormat(export_format.lower())
+    job = export_dataset(base_url=str(context.base_url), project_id=str(project.id), export_format=export_format)
     context.dataset_id = cast(ExportDatasetMetadata, job.metadata).dataset_id
+    context.export_format = export_format
 
 
 @when("I prepare the staged dataset archive for import")  # pyrefly: ignore
