@@ -1,7 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, Picker, ToggleButton } from '@geti/ui';
+import { Key } from 'react';
+
+import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti/ui';
+import { MoreMenu } from '@geti/ui/icons';
 
 import { TrainModel } from '../../train-model/train-model.component';
 import { useModelListing } from '../provider/model-listing-provider';
@@ -21,6 +24,19 @@ export const Header = () => {
         showFailedModels,
         onToggleShowFailedModels,
     } = useModelListing();
+
+    const handleOptionsAction = (key: Key) => {
+        switch (key) {
+            case 'pin-active':
+                onPinActiveToggle();
+                break;
+            case 'show-failed':
+                onToggleShowFailedModels();
+                break;
+            default:
+                break;
+        }
+    };
 
     return (
         <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
@@ -50,15 +66,17 @@ export const Header = () => {
                 </Picker>
             </Flex>
 
-            <Flex gap={'size-100'}>
-                <ToggleButton isEmphasized isSelected={pinActive} onChange={onPinActiveToggle}>
-                    Pin active model on top
-                </ToggleButton>
-
-                <ToggleButton isEmphasized isSelected={showFailedModels} onChange={onToggleShowFailedModels}>
-                    Show failed models
-                </ToggleButton>
-            </Flex>
+            <MenuTrigger>
+                <ActionButton isQuiet aria-label={'Model listing options'}>
+                    <MoreMenu />
+                </ActionButton>
+                <Menu onAction={handleOptionsAction} aria-label={'Model listing options menu'}>
+                    <Item key={'pin-active'}>
+                        {pinActive ? 'Unpin active model from top' : 'Pin active model on top'}
+                    </Item>
+                    <Item key={'show-failed'}>{showFailedModels ? 'Hide failed models' : 'Show failed models'}</Item>
+                </Menu>
+            </MenuTrigger>
 
             <Flex marginStart={'auto'} gap={'size-100'}>
                 <ExpandableSearch value={searchBy} onChange={onSearchChange} />
