@@ -13,7 +13,12 @@ export const ImageFolder = ({ defaultState }: ImageFolderProps) => {
     return (
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
-            <TextField isRequired width={'100%'} label='Name' name='name' defaultValue={defaultState?.name} />
+            <TextField
+                width={'100%'}
+                label='Name'
+                name='name'
+                defaultValue={defaultState?.name || 'Images folder source'}
+            />
 
             <Flex direction='row' gap='size-200'>
                 <TextField

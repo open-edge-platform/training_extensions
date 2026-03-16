@@ -17,7 +17,7 @@ export const LocalFolder = ({ defaultState }: LocalFolderProps) => {
             <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
 
             <Flex gap='size-200'>
-                <TextField isRequired label='Name' name='name' defaultValue={defaultState.name} />
+                <TextField label='Name' name='name' defaultValue={defaultState.name || 'Local folder sink'} />
             </Flex>
 
             <Flex>
