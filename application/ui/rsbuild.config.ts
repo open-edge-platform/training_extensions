@@ -46,8 +46,19 @@ export default defineConfig({
         },
     },
     html: {
+        template: './public/index.html',
         title: 'Geti Tune',
         favicon: './src/assets/icons/build-icon.svg',
+        meta: {
+            description:
+                'Geti Tune helps you create and manage computer vision projects for datasets, models, and inference.',
+        },
+    },
+    performance: {
+        preload: {
+            type: 'initial',
+            include: [/roboto-flex-v30-latin-regular.*\.woff2$/],
+        },
     },
     tools: {
         rspack: {
