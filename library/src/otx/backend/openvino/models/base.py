@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for base model entity used in OTX."""
 
@@ -8,8 +8,9 @@ import contextlib
 import inspect
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
+import nncf
 import numpy as np
 import openvino
 import torch
@@ -207,8 +208,6 @@ class OVModel:
         Returns:
             Path: Path to the optimized model.
         """
-        import nncf
-
         output_model_path = output_dir / (optimized_model_name + ".xml")
 
         def check_if_quantized(model: openvino.Model) -> bool:
@@ -261,7 +260,9 @@ class OVModel:
 
         return output_model_path
 
-    def _create_validation_fn(self, data_module: OTXDataModule):
+    def _create_validation_fn(
+        self, data_module: OTXDataModule
+    ) -> Callable[[openvino.CompiledModel, Any], tuple[float, None]]:
         """Create a validation function for accuracy-aware quantization.
 
         The returned function computes accuracy on the validation set using the
@@ -310,14 +311,14 @@ class OVModel:
 
         def validation_fn(
             compiled_model: openvino.CompiledModel,
-            validation_dataset,  # noqa: ARG001 – required by NNCF signature
+            validation_dataset: nncf.Dataset,  # noqa: ARG001 required by NNCF signature
         ) -> tuple[float, None]:
             """Evaluate the compiled OpenVINO model on the validation dataset.
 
             Args:
                 compiled_model: Compiled OpenVINO model provided by NNCF during
                     accuracy-aware quantization.
-                validation_dataset: Validation NNCF dataset (unused – we iterate
+                validation_dataset: Validation NNCF dataset (unused, we iterate
                     via the dataloader for proper batching and transforms).
 
             Returns:
