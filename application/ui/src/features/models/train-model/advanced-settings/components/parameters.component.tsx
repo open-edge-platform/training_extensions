@@ -322,7 +322,7 @@ const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGro
         const [enableParameter, ...configurableParameters] = parameters.parameters;
 
         return (
-            <ParametersContainer gap={'size-150'}>
+            <ParametersContainer gap={'size-150'} isReadOnly={isReadOnly}>
                 <Parameter
                     header={parameters.name}
                     description={parameters.description}
