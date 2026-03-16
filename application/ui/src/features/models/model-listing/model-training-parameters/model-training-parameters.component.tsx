@@ -57,16 +57,19 @@ export const ModelTrainingParameters = ({ modelId }: ModelTrainingParametersProp
     return (
         <Grid columns={['1fr', '1fr', '1fr']} gap={'size-200'}>
             <Box
+                testId={'Box-LEARNING PARAMETERS'}
                 customClasses={classes.box}
                 title={'LEARNING PARAMETERS'}
                 content={<TrainingConfigurationParametersList parameters={trainingGroup?.parameters || []} />}
             />
             <Box
+                testId={'Box-FILTERS'}
                 customClasses={classes.box}
                 title={'FILTERS'}
                 content={<TrainingConfigurationParametersList parameters={filteringGroup?.parameters || []} />}
             />
             <Box
+                testId={'Box-AUGMENTATIONS'}
                 customClasses={classes.box}
                 title={'AUGMENTATIONS'}
                 content={<TrainingConfigurationParametersList parameters={augmentationGroup?.parameters || []} />}
