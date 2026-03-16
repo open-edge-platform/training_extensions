@@ -110,22 +110,6 @@ def detect_image_dtype(image_path: str | Path) -> str:
 _SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}
 
 
-def _rebuild_typed_sample(
-    base_cls: type[Sample],
-    storage_dtype: str,
-    state: dict,
-) -> Sample:
-    """Reconstruct a dynamically-typed sample instance from pickle.
-
-    Called by ``__reduce__`` on instances of dynamic sample classes created
-    by :func:`with_image_dtype`.
-    """
-    cls = with_image_dtype(base_cls, storage_dtype)
-    obj = object.__new__(cls)
-    obj.__dict__.update(state)
-    return obj
-
-
 def with_image_dtype(
     sample_cls: type[Sample],
     storage_dtype: str,
@@ -139,6 +123,11 @@ def with_image_dtype(
     ``image`` class-variable with the requested Polars dtype.  The subclass is
     cached so repeated calls with the same arguments return the same class
     object (important for Datumaro schema identity comparisons).
+
+    The dynamic class is used only during dataset construction
+    (``dm_subset.convert_to_schema(sample_type)``) and is **not** stored on
+    the dataset instance, so it never needs to survive pickle across
+    DataLoader worker boundaries.
 
     Args:
         sample_cls: One of the concrete sample classes (e.g.
@@ -162,39 +151,24 @@ def with_image_dtype(
     if cache_key in _SAMPLE_DTYPE_CACHE:
         return _SAMPLE_DTYPE_CACHE[cache_key]
 
-    # Read the original ImageField from the class attribute.
-    # Datumaro Sample subclasses are NOT standard @dataclass instances, so we
-    # access the class-level ``image`` attribute directly instead of going
-    # through ``__dataclass_fields__``.
     orig_image = getattr(sample_cls, "image", None)
     channels_first = getattr(orig_image, "channels_first", True)
     fmt = getattr(orig_image, "format", "RGB")
 
     new_image_default = image_field(dtype=pl_dtype, channels_first=channels_first, format=fmt)
 
-    # Create a thin subclass that only overrides the ``image`` class-variable.
     new_cls_name = f"{sample_cls.__name__}_{storage_dtype}"
     new_cls: type[Sample] = type(  # type: ignore[assignment]
         new_cls_name,
         (sample_cls,),
         {"image": new_image_default},
     )
-
-    # --- Pickle support ---
-    # Instances use _rebuild_typed_sample() to recreate the dynamic class on
-    # unpickle.  The class *type itself* is pickled by name lookup
-    # (module + qualname); see the module-level ``__getattr__`` in
-    # ``otx.data.entity.sample`` which lazily recreates dynamic classes
-    # in freshly-spawned DataLoader workers (PEP 562).
-    _base, _dtype_str = sample_cls, storage_dtype
-
-    def _instance_reduce(self: Sample) -> tuple:
-        return (_rebuild_typed_sample, (_base, _dtype_str, self.__dict__))
-
-    new_cls.__reduce__ = _instance_reduce  # type: ignore[attr-defined]
     new_cls.__module__ = sample_cls.__module__
     new_cls.__qualname__ = new_cls_name
 
+    # Make the class discoverable by pickle in the current process.
+    # In spawned workers the module-level __getattr__ (PEP 562) in
+    # otx.data.entity.sample handles the lookup instead.
     parent_module = sys.modules.get(sample_cls.__module__)
     if parent_module is not None:
         setattr(parent_module, new_cls_name, new_cls)

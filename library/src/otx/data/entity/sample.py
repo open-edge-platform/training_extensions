@@ -371,19 +371,19 @@ class OTXPrediction:
     saliency_map: torch.Tensor | None = None
 
 
-# PEP 562 module __getattr__: lazily recreate dynamic sample dtype variants
-# (e.g. ``ClassificationSample_uint16``) when pickle looks them up in a
-# freshly-spawned DataLoader worker process.
-_DTYPE_SUFFIXES = ("_uint16", "_int16", "_float32")
-
-
 def __getattr__(name: str) -> type:
-    """Recreate a dynamic sample class on first lookup (pickle support)."""
-    for tag in _DTYPE_SUFFIXES:
-        if name.endswith(tag):
-            base_cls = globals().get(name[: -len(tag)])
+    """PEP 562 hook: recreate dynamic sample-dtype classes for pickle.
+
+    ``with_image_dtype()`` creates subclasses like ``ClassificationSample_uint16``
+    at runtime.  When a DataLoader worker (spawned process) unpickles the
+    dataset, Python looks up these classes by name on this module.  In a fresh
+    process they don't exist yet, so this hook recreates them on demand.
+    """
+    for suffix in ("_uint16", "_int16", "_float32"):
+        if name.endswith(suffix):
+            base_cls = globals().get(name[: -len(suffix)])
             if base_cls is not None and isinstance(base_cls, type):
                 from otx.data.entity.utils import with_image_dtype
 
-                return with_image_dtype(base_cls, tag[1:])  # strip leading '_'
+                return with_image_dtype(base_cls, suffix[1:])  # strip leading '_'
     raise AttributeError(name)

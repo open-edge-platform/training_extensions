@@ -153,11 +153,9 @@ class OTXDataset(TorchDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        sample_type: type[OTXSample] | type = OTXSample,
     ) -> None:
         self.transforms = transforms
         self.stack_images = stack_images
-        self.sample_type = sample_type
         self.max_refetch = max_refetch
         self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset

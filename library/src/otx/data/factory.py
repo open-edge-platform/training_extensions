@@ -128,7 +128,7 @@ class OTXDatasetFactory:
 
         from otx.data.entity.utils import detect_image_dtype
 
-        # 1. Try file-based detection (works for image-on-disk datasets)
+        # 1. Try file-based detection
         try:
             first_item = next(iter(dm_subset))
             path = getattr(first_item.media, "path", None) if hasattr(first_item, "media") else None

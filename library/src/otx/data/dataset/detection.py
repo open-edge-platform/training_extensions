@@ -53,7 +53,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
-            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,

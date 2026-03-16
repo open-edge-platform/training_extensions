@@ -61,7 +61,6 @@ class OTXSegmentationDataset(OTXDataset):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            sample_type=sample_type,
         )
 
         labels = list(dm_subset.schema.attributes["masks"].categories.labels)
