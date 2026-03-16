@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { Key, ReactNode } from 'react';
 
 import {
     Content,
@@ -18,10 +18,11 @@ import {
 } from '@geti/ui';
 import { isBoolean, isFunction } from 'lodash-es';
 
-import type {
+import {
     ConfigurableParameter,
     ConfigurableParameterGroup,
     NumberEnumConfigurableParameter,
+    StringEnumConfigurableParameter,
 } from '../../../../../constants/shared-types';
 import { isParameter, isParameterGroup } from '../../../model-listing/model-training-parameters/utils';
 import { isBoolEnableParameter } from '../utils';
@@ -143,20 +144,27 @@ const ParameterReadOnly = ({ parameter, marginStart }: ParameterReadOnlyProps) =
     );
 };
 
-export const NumberEnumParameterField = ({
+export const EnumParameterField = <T extends NumberEnumConfigurableParameter | StringEnumConfigurableParameter>({
     parameter,
     onChange,
     isDisabled,
 }: {
-    parameter: NumberEnumConfigurableParameter;
-    onChange: (parameter: NumberEnumConfigurableParameter) => void;
+    parameter: T;
+    onChange: (parameter: T) => void;
     isDisabled?: boolean;
 }) => {
-    const handleChange = (value: NumberEnumConfigurableParameter['value']) => {
-        onChange({
-            ...parameter,
-            value,
-        });
+    const handleChange = (value: Key) => {
+        if (parameter.value_type === 'str') {
+            onChange({
+                ...parameter,
+                value: value.toString(),
+            });
+        } else {
+            onChange({
+                ...parameter,
+                value: Number(value),
+            });
+        }
     };
 
     if (parameter.allowed_values.length < 4) {
@@ -176,7 +184,7 @@ export const NumberEnumParameterField = ({
         <Picker
             items={items}
             selectedKey={parameter.value.toString()}
-            onSelectionChange={(key) => handleChange(key as NumberEnumConfigurableParameter['value'])}
+            onSelectionChange={(key) => key !== null && handleChange(key)}
             aria-label={`Select ${parameter.name}`}
         >
             {(item) => (
