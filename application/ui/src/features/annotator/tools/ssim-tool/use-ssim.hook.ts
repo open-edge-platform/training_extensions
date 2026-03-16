@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { RunSSIMProps as ToolRunSSIMProps, SSIMMatch as ToolSSIMMatch } from '@geti/smart-tools';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -157,12 +157,12 @@ export const useSSIM = (enabled = true) => {
     const [previewThreshold, setPreviewThreshold] = useState<number | null>(null);
     const [ssimProps, setSSIMProps] = useState<RunSSIMProps | null>(null);
 
-    useEffect(() => {
-        setPreviewThreshold(null);
-    }, [toolState.threshold]);
-
     const updateToolState = useCallback(
         (updatedProperties: Partial<SSIMState>, shapeType: SSIMShapeType = 'rectangle') => {
+            if (updatedProperties.threshold !== undefined) {
+                setPreviewThreshold(null);
+            }
+
             setToolState((currentState) => {
                 const newState = { ...currentState, ...updatedProperties };
                 const matches = newState.matches.slice(0, newState.threshold);

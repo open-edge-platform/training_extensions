@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Flex, NumberField, RangeSlider, type RangeValue } from '@geti/ui';
 
@@ -35,21 +35,8 @@ export const RangeParameterField = ({
     name,
     step,
 }: RangeParameterFieldProps) => {
-    const [parameterValue, setParameterValue] = useState<RangeValue<number>>({
-        start: value[0],
-        end: value[1],
-    });
-
-    useEffect(() => {
-        if (value === null) {
-            setParameterValue(value);
-        } else {
-            setParameterValue({
-                start: value[0],
-                end: value[1],
-            });
-        }
-    }, [value]);
+    const [draftRange, setDraftRange] = useState<RangeValue<number> | null>(null);
+    const parameterValue = draftRange ?? (value === null ? null : { start: value[0], end: value[1] });
 
     const fieldStep = getStep({ step, maxValue: defaultValue[1], minValue: defaultValue[0] });
     const decimalPlaces = (fieldStep.toString().split('.')[1] || '').length;
@@ -59,6 +46,7 @@ export const RangeParameterField = ({
             return;
         }
 
+        setDraftRange(null);
         onChange([parameterValue.start, parameterValue.end]);
     };
 
@@ -66,14 +54,14 @@ export const RangeParameterField = ({
         const { start, end } = inputValue;
         // Prevent start and end from being equal
         if (end - start >= fieldStep) {
-            setParameterValue({ start, end });
+            setDraftRange({ start, end });
         }
     };
 
     const handleNumberChange = (start: number, end: number): void => {
         // Prevent start and end from being equal
         if (end - start >= fieldStep) {
-            setParameterValue({ start, end });
+            setDraftRange(null);
             onChange([start, end]);
         }
     };
@@ -86,13 +74,13 @@ export const RangeParameterField = ({
                 value={parameterValue?.start}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
-                onChange={(start) => handleNumberChange(start, parameterValue.end)}
+                onChange={(start) => handleNumberChange(start, parameterValue?.end ?? defaultValue[1])}
                 isDisabled={isDisabled}
                 aria-label={`Change ${name} start range value`}
                 formatOptions={{ maximumFractionDigits: decimalPlaces }}
             />
             <RangeSlider
-                value={parameterValue}
+                value={parameterValue ?? undefined}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
                 defaultValue={{ start: defaultValue[0], end: defaultValue[1] }}
@@ -107,10 +95,10 @@ export const RangeParameterField = ({
             <NumberField
                 isQuiet
                 step={fieldStep}
-                value={parameterValue.end}
+                value={parameterValue?.end}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
-                onChange={(end) => handleNumberChange(parameterValue.start, end)}
+                onChange={(end) => handleNumberChange(parameterValue?.start ?? defaultValue[0], end)}
                 isDisabled={isDisabled}
                 aria-label={`Change ${name} end range value`}
                 formatOptions={{ maximumFractionDigits: decimalPlaces }}
