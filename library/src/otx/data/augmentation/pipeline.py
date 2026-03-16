@@ -642,6 +642,22 @@ class GPUAugmentationPipeline(nn.Module):
             # Semantic seg masks: (C, H, W) where C is often 1 or num_classes
             # We add channel dim to all masks for consistency with Kornia
             masks = [m.unsqueeze(0) for m in masks]  # (N, H, W) -> (N, 1, H, W)
+
+        # Kornia expects keypoints as a single (B, N, 2) tensor, not a list.
+        # Pad variable-length per-sample keypoints to N_max and stack.
+        kp_counts: list[int] | None = None
+        if keypoints is not None and "keypoints" in self._data_keys:
+            kp_counts = [kp.shape[0] for kp in keypoints]
+            max_n = max(kp_counts) if kp_counts else 0
+            padded = []
+            for kp in keypoints:
+                if kp.shape[0] < max_n:
+                    pad = torch.zeros(max_n - kp.shape[0], 2, device=kp.device, dtype=kp.dtype)
+                    padded.append(torch.cat([kp, pad], dim=0))
+                else:
+                    padded.append(kp)
+            keypoints = torch.stack(padded)  # type: ignore[assignment]  # (B, N_max, 2)
+
         # Map data key names to actual data
         data_map = {
             "input": images,
@@ -684,7 +700,12 @@ class GPUAugmentationPipeline(nn.Module):
                 mask_results = [m.squeeze(0) for m in mask_results]  # (1, N, H, W) -> (N, H, W)
                 output["masks"] = mask_results
             elif key == "keypoints":
-                output["keypoints"] = results[i]
+                # Unstack (B, N_max, 2) back to list and trim padding
+                kp_result = results[i]
+                if kp_counts is not None and isinstance(kp_result, torch.Tensor) and kp_result.dim() == 3:
+                    output["keypoints"] = [kp_result[j, :kp_counts[j]] for j in range(len(kp_counts))]
+                else:
+                    output["keypoints"] = kp_result
 
         # Sanitize geometric annotations after Kornia transforms.
         if output["images"] is not None:
