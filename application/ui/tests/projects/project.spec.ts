@@ -1,35 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Page } from '@playwright/test';
 import { HttpResponse } from 'msw';
 
 import { getMockedProject } from '../../mocks/mock-project';
 import { expect, http, test } from '../fixtures';
-
-const fillProjectForm = async ({
-    page,
-    name,
-    task,
-    labelNames,
-}: {
-    page: Page;
-    name: string;
-    task: string;
-    labelNames: string[];
-}) => {
-    // Set the project name
-    await page.getByRole('textbox', { name: 'Project name input' }).fill(name);
-
-    // Select task
-    await page.getByLabel(task, { exact: true }).click();
-
-    // Add the rest of the labels
-    for (let i = 0; i < labelNames.length; i++) {
-        await page.getByRole('textbox', { name: 'Create label input' }).fill(labelNames[i]);
-        await page.getByRole('button', { name: /Create label/ }).click();
-    }
-};
+import { ProjectPage } from './project-page';
 
 test.describe('Project', () => {
     test.beforeEach(({ network }) => {
@@ -45,7 +21,9 @@ test.describe('Project', () => {
     });
 
     test('displays the list of projects', async ({ page }) => {
-        await page.goto('/projects');
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.gotoList();
 
         await expect(page.getByText('Project 1')).toBeVisible();
         await expect(page.getByText('Project 2')).toBeVisible();
@@ -53,10 +31,11 @@ test.describe('Project', () => {
     });
 
     test('creates a project', async ({ page, network }) => {
-        await page.goto('/projects/new');
+        const projectPage = new ProjectPage(page);
 
-        await fillProjectForm({
-            page,
+        await projectPage.gotoCreate();
+
+        await projectPage.fillProjectForm({
             name: 'New Project',
             task: 'instance_segmentation',
             labelNames: ['Person', 'Animal'],
@@ -106,22 +85,72 @@ test.describe('Project', () => {
         await expect(page.getByText('Person')).toBeVisible();
         await expect(page.getByText('Animal')).toBeVisible();
 
-        await page.getByRole('button', { name: /Create project/ }).click();
+        await projectPage.getCreateProjectButton().click();
 
         // Correctly navigated to dataset page
         await page.waitForURL(/dataset/);
 
         // Go back to project list and confirm the project was created
-        await page.goto('/projects');
+        await projectPage.gotoList();
 
         await expect(page.getByText('New Project')).toBeVisible();
     });
 
+    test('shows warning for multi-class classification based on label count', async ({ page, network }) => {
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.gotoCreate();
+
+        await projectPage.fillProjectForm({
+            name: 'Multi-class project labels check',
+            task: 'classification',
+            classificationType: 'Single-label',
+            labelNames: ['Person'],
+        });
+
+        await expect(projectPage.getCreateProjectButton()).toBeEnabled();
+        await projectPage.getCreateProjectButton().click();
+
+        await expect(projectPage.getMultiLabelValidationMessage()).toBeVisible();
+
+        // Close the notification
+        const toast = page
+            .getByLabel('toast')
+            .filter({ hasText: 'At least 2 labels are required for single-label classification' });
+        await toast.getByRole('button').first().click();
+
+        await projectPage.addLabel('Car');
+
+        network.use(
+            http.post('/api/projects', ({ response }) => {
+                return response(201).json(
+                    getMockedProject({
+                        id: 'single-label-project-id',
+                        name: 'Multi-class project labels check',
+                        task: {
+                            task_type: 'classification',
+                            exclusive_labels: true,
+                            labels: [
+                                { id: '1', color: 'red', name: 'Person' },
+                                { id: '2', color: 'blue', name: 'Car' },
+                            ],
+                        },
+                    })
+                );
+            })
+        );
+
+        await projectPage.getCreateProjectButton().click();
+        await page.waitForURL(/dataset/);
+    });
+
     test('deletes a project', async ({ page, network }) => {
-        await page.goto('/projects');
+        const projectPage = new ProjectPage(page);
+
+        await projectPage.gotoList();
 
         // Open menu options
-        await page.getByTestId('id-3').click();
+        await projectPage.openProjectMenu('id-3');
 
         network.use(
             http.get('/api/projects', () => {
@@ -138,8 +167,8 @@ test.describe('Project', () => {
             })
         );
 
-        await page.getByText(/Delete/).click();
-        await page.getByRole('button', { name: /Delete/ }).click();
+        await projectPage.clickDeleteMenuAction();
+        await projectPage.confirmDeleteProject();
 
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
 

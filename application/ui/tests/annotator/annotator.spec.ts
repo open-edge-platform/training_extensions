@@ -59,7 +59,8 @@ test.describe('Annotator', () => {
         await test.step('Draw an annotation', async () => {
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+
+            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
         });
 
         await test.step('Change annotation label by clicking label badge', async () => {
@@ -73,7 +74,7 @@ test.describe('Annotator', () => {
 
             await page.getByRole('button', { name: `Label ${blueLabel.name}` }).click();
 
-            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(1);
             await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toHaveAttribute(
                 'aria-pressed',
                 'true'
@@ -84,7 +85,7 @@ test.describe('Annotator', () => {
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox({ x: 300, y: 200, width: 150, height: 150 });
 
-            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(2);
         });
 
         await test.step('Change second annotation to red label', async () => {
@@ -92,15 +93,12 @@ test.describe('Annotator', () => {
             await page.getByLabel('annotation rect').nth(3).click();
             await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
         });
 
         await test.step('Verify both annotations have correct labels', async () => {
-            await page.getByLabel('annotation rect').nth(2).click();
-            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
-
-            await page.getByLabel('annotation rect').nth(3).click();
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(1);
+            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
         });
     });
 
@@ -346,7 +344,7 @@ test.describe('Annotator', () => {
             // If polygon tool persisted, we should be able to draw immediately without reselecting
             await polygonTool.drawPolygon(smallPolygon);
 
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(1);
         });
 
         await test.step('Navigate back to first media item', async () => {
@@ -360,7 +358,7 @@ test.describe('Annotator', () => {
             // Draw another polygon to verify tool is still active
             await polygonTool.drawPolygon(smallPolygon);
 
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(1);
         });
 
         await test.step('Verify tool resets when switching modes', async () => {
@@ -377,7 +375,7 @@ test.describe('Annotator', () => {
 
             // Verify polygon tool is active by drawing a polygon without manually selecting it
             await polygonTool.drawPolygon(smallPolygon);
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(2)).toBeInViewport();
+            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(2);
         });
     });
 

@@ -10,10 +10,12 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
+import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
 
 const mockDeleteAnnotations = vi.fn();
 const mockUpdateAnnotations = vi.fn();
+const mockSetSelectedLabelId = vi.fn();
 
 vi.mock('../../../shared/annotator/annotation-visibility-provider.component', () => ({
     useAnnotationVisibility: () => ({
@@ -26,6 +28,15 @@ vi.mock('../../../shared/annotator/annotation-actions-provider.component', () =>
         updateAnnotations: mockUpdateAnnotations,
         deleteAnnotations: mockDeleteAnnotations,
         isReadOnlyMode: false,
+    }),
+}));
+
+vi.mock('../annotator-labels-provider.component', () => ({
+    useAnnotatorLabels: () => ({
+        labels: [],
+        selectedLabel: null,
+        selectedLabelId: 'empty-label',
+        setSelectedLabelId: mockSetSelectedLabelId,
     }),
 }));
 
@@ -61,7 +72,7 @@ describe('AnnotationShapeWithLabels', () => {
         const annotation = getMockedAnnotation({
             id: 'full-image-annotation',
             shape: { type: 'full_image' },
-            labels: [getMockedLabel({ id: 'label-1', name: 'No object' })],
+            labels: [getMockedLabel({ id: EMPTY_LABEL_ID, name: 'No object' })],
         });
 
         render(<AnnotationShapeWithLabels annotation={annotation} />);
@@ -69,6 +80,7 @@ describe('AnnotationShapeWithLabels', () => {
 
         expect(mockDeleteAnnotations).toHaveBeenCalledWith(['full-image-annotation']);
         expect(mockUpdateAnnotations).not.toHaveBeenCalled();
+        expect(mockSetSelectedLabelId).toHaveBeenCalledWith(null);
     });
 
     it('keeps non-full-image behavior unchanged in detection projects', async () => {

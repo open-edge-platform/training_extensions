@@ -36,6 +36,7 @@
 .modelBadge {
     color: var(--spectrum-global-color-gray-800);
     background-color: var(--spectrum-global-color-gray-200);
+    font-weight: normal;
 
     & span[class*='Badge-label'] {
         padding-inline-end: var(--spectrum-global-dimension-size-75);
