@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, RefObject, SetStateAction } from 'react';
 
 import { View } from '@geti/ui';
 
@@ -17,12 +17,14 @@ import { TrainingSubsets } from './training-subsets/training-subsets.component';
 import { getSubsetSplitParameters } from './training-subsets/utils';
 
 type DataManagementProps = {
+    containerRef: RefObject<HTMLDivElement | null>;
     trainingConfiguration: TrainingConfiguration;
     defaultTrainingConfiguration: TrainingConfiguration;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
 export const DataManagement = ({
+    containerRef,
     trainingConfiguration,
     defaultTrainingConfiguration,
     onTrainingConfigurationChange,
@@ -52,7 +54,7 @@ export const DataManagement = ({
             )}
 
             {dataAugmentationParameters !== undefined && (
-                <LazyLoadSection>
+                <LazyLoadSection rootRef={containerRef}>
                     <DataAugmentation
                         dataAugmentationParameters={dataAugmentationParameters}
                         onTrainingConfigurationChange={onTrainingConfigurationChange}
@@ -61,7 +63,7 @@ export const DataManagement = ({
             )}
 
             {filtersParameters !== undefined && (
-                <LazyLoadSection>
+                <LazyLoadSection rootRef={containerRef}>
                     <Filters
                         filtersParameters={filtersParameters}
                         onTrainingConfigurationChange={onTrainingConfigurationChange}

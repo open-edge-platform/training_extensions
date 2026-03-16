@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export const useIsVisible = ({
     element,
@@ -12,22 +12,28 @@ export const useIsVisible = ({
 }): boolean => {
     const [isVisible, setIsVisible] = useState<boolean>(false);
 
+    const optionsRef = useRef(options);
+
     useEffect(() => {
-        if (!element) return;
+        optionsRef.current = options;
+    }, [options]);
+
+    useEffect(() => {
+        if (!element || isVisible) return;
 
         const observer = new IntersectionObserver(([entry]) => {
             if (entry.isIntersecting) {
                 setIsVisible(true);
                 observer.disconnect();
             }
-        }, options);
+        }, optionsRef.current);
 
         observer.observe(element);
 
         return () => {
             observer.disconnect();
         };
-    }, [element, options]);
+    }, [element, isVisible]);
 
     return isVisible;
 };

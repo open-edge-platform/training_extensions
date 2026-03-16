@@ -1,21 +1,17 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useRef, useState } from 'react';
+import { ReactNode, RefObject, useState } from 'react';
 
 import { useIsVisible } from 'hooks/use-is-visible.hook';
 
 type LazyLoadSectionProps = {
     children: ReactNode;
+    rootRef: RefObject<HTMLDivElement | null>;
 };
 
-export const LazyLoadSection = ({ children }: LazyLoadSectionProps) => {
+export const LazyLoadSection = ({ children, rootRef }: LazyLoadSectionProps) => {
     const [container, setContainer] = useState<HTMLDivElement | null>(null);
-    const rootRef = useRef<Element | null>(null);
-
-    if (rootRef.current === null) {
-        rootRef.current = document.querySelector('[data-testid="advanced-settings-scroll-container"]');
-    }
 
     const isVisible = useIsVisible({
         element: container,
