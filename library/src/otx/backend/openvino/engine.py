@@ -353,7 +353,7 @@ class OVEngine(Engine):
             subset="train",
         )
 
-        ptq_config = {}
+        ptq_config: dict[str, int | float] = {}
         if max_data_subset_size is not None:
             ptq_config["subset_size"] = max_data_subset_size
         if max_drop is not None:
