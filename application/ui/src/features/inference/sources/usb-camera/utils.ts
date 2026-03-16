@@ -5,7 +5,7 @@ import type { USBCameraSourceConfig } from '../../../../constants/shared-types';
 
 export const getUsbCameraInitialConfig = (): USBCameraSourceConfig => ({
     id: '',
-    name: '',
+    name: 'USB camera source',
     source_type: 'usb_camera',
     device_id: 0,
 });

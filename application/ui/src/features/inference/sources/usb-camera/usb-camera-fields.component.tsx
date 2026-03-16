@@ -15,7 +15,7 @@ type UsbCameraProps = {
 };
 
 export const UsbCamera = ({ defaultState }: UsbCameraProps) => {
-    const [name, setName] = useState(defaultState?.name || 'USB camera source');
+    const [name, setName] = useState(defaultState?.name);
     const isSystemName = useRef(isEmpty(defaultState?.name));
 
     const {
