@@ -48,7 +48,7 @@ class MaskRCNN(OTXInstanceSegModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels used in the model.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
@@ -74,7 +74,7 @@ class MaskRCNN(OTXInstanceSegModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "maskrcnn_resnet_50",
             "maskrcnn_efficientnet_b2b",

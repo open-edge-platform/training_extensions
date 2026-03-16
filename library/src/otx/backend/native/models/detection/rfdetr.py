@@ -88,7 +88,7 @@ class RFDETR(RFDETRMixin, OTXDetectionModel):  # pyrefly: ignore[inconsistent-in
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "rfdetr_nano",
             "rfdetr_small",

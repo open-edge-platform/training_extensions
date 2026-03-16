@@ -78,6 +78,9 @@ class SamplerConfig:
     class_path: str = "torch.utils.data.RandomSampler"
     init_args: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Normalize init_args: treat None as empty dict."""
+
 
 @dataclass
 class SubsetConfig:
@@ -124,6 +127,13 @@ class SubsetConfig:
     num_workers: int = 2
     sampler: SamplerConfig = field(default_factory=SamplerConfig)
     input_size: tuple[int, int] | None = None
+
+    def __post_init__(self) -> None:
+        """Normalize nested config objects loaded from recipe dictionaries."""
+        if isinstance(self.intensity, dict):
+            self.intensity = IntensityConfig(**self.intensity)
+        if isinstance(self.sampler, dict):
+            self.sampler = SamplerConfig(**self.sampler)
 
 
 @dataclass

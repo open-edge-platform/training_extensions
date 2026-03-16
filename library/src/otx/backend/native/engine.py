@@ -30,7 +30,7 @@ from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallbac
 from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.backend.native.callbacks.iteration_timer import IterationTimer
 from otx.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
-from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.models.base import OTXModel
 from otx.backend.native.tools import adapt_batch_size
 from otx.backend.native.utils.cache import TrainerArgumentsCache
 from otx.config.device import DeviceConfig
@@ -140,11 +140,15 @@ class OTXEngine(Engine):
                     "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
-            get_model_args["data_input_params"] = DataInputParams(
-                input_size=input_size,
-                mean=self._datamodule.input_mean,
-                std=self._datamodule.input_std,
-            )
+            # Only pass what the datamodule knows; mean/std may be None when
+            # normalization lives in the augmentation pipeline. Model defaults
+            # fill in any missing values inside _configure_preprocessing_params.
+            params: dict[str, Any] = {"input_size": input_size}
+            if self._datamodule.input_mean is not None:
+                params["mean"] = self._datamodule.input_mean
+            if self._datamodule.input_std is not None:
+                params["std"] = self._datamodule.input_std
+            get_model_args["data_input_params"] = params
 
             model = self._auto_configurator.get_model(**get_model_args)
 

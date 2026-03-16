@@ -36,7 +36,7 @@ class OTXMultilabelClsModel(OTXModel):
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         model_name (str, optional): Name of the model. Defaults to "multilabel_classification_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -48,7 +48,7 @@ class OTXMultilabelClsModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | Sequence,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "multiclass_classification_model",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

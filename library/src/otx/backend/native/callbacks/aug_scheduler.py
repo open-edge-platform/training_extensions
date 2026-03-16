@@ -42,7 +42,7 @@ class DataAugSwitch:
     respectively.
 
     Args:
-        policy_epochs (list[int]): List of 3 epoch boundaries ``[p0, p1, p2]``:
+        policy_epochs (list[int]): List of 2 epoch boundaries ``[p0, p1]``:
             - ``epoch < p0``: ``no_aug``
             - ``p0 <= epoch < p1``: ``strong_aug_1`` or ``strong_aug_2`` (random)
             - ``epoch >= p1``: ``light_aug``
@@ -76,8 +76,8 @@ class DataAugSwitch:
         policies: dict[str, dict[str, Any]],
         input_size: tuple[int, int] | list[int] | None = None,
     ) -> None:
-        if len(policy_epochs) != 3:
-            msg = "Expected 3 policy epochs for 4-stage scheduler (e.g., [4, 29, 50])"
+        if len(policy_epochs) != 2:
+            msg = "Expected 2 policy epochs for 3-stage scheduler (e.g., [4, 29])"
             raise ValueError(msg)
 
         self.policy_epochs = policy_epochs
@@ -134,7 +134,7 @@ class DataAugSwitch:
         dataset worker can get a different variant per sample.
         """
         e = self.epoch
-        p0, p1, _ = self.policy_epochs
+        p0, p1 = self.policy_epochs
         if e < p0:
             return "no_aug"
         if p0 <= e < p1:
@@ -145,7 +145,7 @@ class DataAugSwitch:
     def current_gpu_policy_name(self) -> str:
         """Get deterministic policy name used for GPU pipeline selection."""
         e = self.epoch
-        p0, p1, _ = self.policy_epochs
+        p0, p1 = self.policy_epochs
         if e < p0:
             return "no_aug"
         if p0 <= e < p1:

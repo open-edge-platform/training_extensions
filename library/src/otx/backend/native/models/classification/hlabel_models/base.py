@@ -40,7 +40,7 @@ class OTXHlabelClsModel(OTXModel):
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
-        data_input_params (DataInputParams | None, optional): Parameters for image data preprocessing. If None is given,
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image data preprocessing. If None is given,
             default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -56,7 +56,7 @@ class OTXHlabelClsModel(OTXModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "hlabel_classification_model",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

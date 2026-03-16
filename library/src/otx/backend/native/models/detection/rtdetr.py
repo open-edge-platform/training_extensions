@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 import torch
 from torch import Tensor, nn
@@ -47,7 +47,7 @@ class RTDETR(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None, uses _default_preprocessing_params.
         model_name (literal, optional): Name of the model to use. Defaults to "rtdetr_50".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -70,7 +70,7 @@ class RTDETR(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"] = "rtdetr_50",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -139,7 +139,7 @@ class RTDETR(OTXDetectionModel):
         # Stack images if they're in list format
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(  # type: ignore[assignment]
-                entity.images,
+                cast("list[torch.Tensor]", entity.images),
                 entity.imgs_info,  # type: ignore[arg-type]
                 pad_size_divisor=pad_size_divisor,
                 pad_value=pad_value,

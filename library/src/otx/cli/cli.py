@@ -15,7 +15,6 @@ from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, namespace_
 from rich.console import Console
 
 from otx import OTX_LOGO, __version__
-from otx.backend.native.models.base import DataInputParams
 from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
@@ -322,11 +321,15 @@ class OTXCLI:
                     "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
-            model_config.init_args["data_input_params"] = DataInputParams(
-                input_size=self.datamodule.input_size,
-                mean=self.datamodule.input_mean,
-                std=self.datamodule.input_std,
-            ).as_dict()
+            # Only pass what the datamodule knows; mean/std may be None when
+            # normalization lives in the augmentation pipeline. Model defaults
+            # fill in any missing values inside _configure_preprocessing_params.
+            _dip: dict[str, Any] = {"input_size": self.datamodule.input_size}
+            if self.datamodule.input_mean is not None:
+                _dip["mean"] = self.datamodule.input_mean
+            if self.datamodule.input_std is not None:
+                _dip["std"] = self.datamodule.input_std
+            model_config.init_args["data_input_params"] = _dip
 
             # Instantiate the model and needed components
             self.model = self.instantiate_model(model_config=model_config)

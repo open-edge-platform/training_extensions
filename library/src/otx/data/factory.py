@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from datumaro.experimental.legacy import convert_from_legacy
@@ -19,6 +20,8 @@ if TYPE_CHECKING:
     from datumaro.experimental import Dataset as DatasetNew
 
     from otx.config.data import SubsetConfig
+
+logger = logging.getLogger(__name__)
 
 
 __all__ = ["OTXDatasetFactory", "TransformLibFactory"]
@@ -64,10 +67,9 @@ class OTXDatasetFactory:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
 
-        # Extract storage_dtype from IntensityConfig for 16-bit image support
-        storage_dtype = "uint8"
-        if hasattr(cfg_subset, "intensity") and cfg_subset.intensity is not None:
-            storage_dtype = cfg_subset.intensity.storage_dtype
+        # Auto-detect storage dtype from the first image's file header.
+        # Reads only metadata (e.g. PNG IHDR), no pixel data is decoded.
+        storage_dtype = cls._detect_storage_dtype(dm_subset)
 
         common_kwargs = {
             "dm_subset": dm_subset,
@@ -126,3 +128,24 @@ class OTXDatasetFactory:
             return OTXKeypointDetectionDataset(**common_kwargs)
 
         raise NotImplementedError(task)
+
+    @staticmethod
+    def _detect_storage_dtype(dm_subset: DmDataset | DatasetNew) -> str:
+        """Probe the first image's file header to detect its bit depth.
+
+        Uses ``PIL.Image.open`` which reads **only the file header** —
+        no pixel data is decoded, so this is essentially free.
+
+        Returns:
+            ``"uint8"``, ``"uint16"``, or ``"float32"``.
+        """
+        from otx.data.entity.utils import detect_image_dtype
+
+        try:
+            first_item = next(iter(dm_subset))
+            path = getattr(first_item.media, "path", None) if hasattr(first_item, "media") else None
+            if path is not None:
+                return detect_image_dtype(path)
+        except (StopIteration, Exception):
+            pass
+        return "uint8"

@@ -114,6 +114,7 @@ class TestOTXSegmentationModel:
         customized_outputs = model._customize_outputs(outputs, batch_data_entity)
         assert isinstance(customized_outputs, OTXPredictionBatch)
         assert len(customized_outputs.scores) == 0
+        assert isinstance(customized_outputs.images, torch.Tensor)
         assert customized_outputs.images.shape == (2, 3, 224, 224)
         assert customized_outputs.imgs_info == []
 

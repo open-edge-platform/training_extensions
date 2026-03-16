@@ -59,7 +59,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
     @pytest.fixture
     def data_aug_switch(self, sample_policies):
         """Create a DataAugSwitch instance."""
-        switch = DataAugSwitch([4, 29, 50], sample_policies)
+        switch = DataAugSwitch([4, 29], sample_policies)
         shared_epoch = Value("i", 0)
         switch.set_shared_epoch(shared_epoch)
         return switch
@@ -258,7 +258,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
     def test_error_handling_without_shared_epoch(self, detection_dataset, sample_policies):
         """Test error handling when DataAugSwitch doesn't have shared epoch set."""
         # Create switch without shared epoch
-        switch = DataAugSwitch([4, 29, 50], sample_policies)
+        switch = DataAugSwitch([4, 29], sample_policies)
         detection_dataset.set_data_aug_switch(switch)
 
         # This should raise an error when trying to access current_policy_name

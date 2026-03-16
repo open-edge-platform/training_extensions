@@ -152,6 +152,60 @@ def test_engine_from_tile_recipe(
     assert engine.datamodule.tile_config.overlap == ov_model.model.tiles_overlap
 
 
+def test_16bit_classification(
+    tmp_path: Path,
+    fxt_accelerator: str,
+    fxt_target_dataset_per_task: dict,
+) -> None:
+    """Test end-to-end training on 16-bit PNG images.
+
+    Uses a lightweight classification model (tv_mobilenet_v3_small) with a
+    synthetic 16-bit uint16 dataset. The factory auto-detects the 16-bit dtype
+    from the PNG file header — no explicit storage_dtype override is needed.
+    Verifies train → test → predict → export → OV-inference.
+    """
+    import inspect
+
+    import otx
+
+    recipe = (
+        Path(inspect.getfile(otx)).parent
+        / "recipe"
+        / "classification"
+        / "multi_class_cls"
+        / "tv_mobilenet_v3_small.yaml"
+    )
+    data_root = fxt_target_dataset_per_task["multi_class_cls_16bit"]
+
+    engine = OTXEngine.from_config(
+        config_path=str(recipe), data_root=data_root, work_dir=tmp_path / "cls_16bit", device=fxt_accelerator
+    )
+
+    assert isinstance(engine.model, OTXModel)
+    assert isinstance(engine.datamodule, OTXDataModule)
+
+    train_metric = engine.train(max_epochs=2)
+    assert len(train_metric) > 0
+
+    test_metric = engine.test()
+    assert len(test_metric) > 0
+
+    predict_result = engine.predict()
+    assert len(predict_result) > 0
+
+    # Export and OV inference
+    exported_model_path = engine.export()
+    assert exported_model_path.exists()
+
+    ov_engine = create_engine(
+        data=engine.datamodule,
+        model=exported_model_path,
+        work_dir=tmp_path / "cls_16bit" / "export",
+    )
+    test_metric_ov = ov_engine.test()
+    assert len(test_metric_ov) > 0
+
+
 METRIC_NAME = {
     OTXTaskType.MULTI_CLASS_CLS: "val/accuracy",
 }

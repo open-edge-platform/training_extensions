@@ -146,9 +146,10 @@ class GPUAugmentationCallback(Callback):
         if batch.keypoints is not None:
             keypoints_xy = []
             keypoints_visibility = []
+            _images = typing.cast("torch.Tensor", batch.images)
             for kps in batch.keypoints:
                 if kps is None:
-                    keypoints_xy.append(torch.empty((0, 2), device=batch.images.device, dtype=batch.images.dtype))
+                    keypoints_xy.append(torch.empty((0, 2), device=_images.device, dtype=_images.dtype))
                     keypoints_visibility.append(None)
                     continue
                 keypoints_xy.append(kps[:, :2])

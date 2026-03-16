@@ -67,7 +67,6 @@ class OTXKeypointDetectionDataset(OTXDataset):
             max_refetch=max_refetch,
             stack_images=stack_images,
             data_format=data_format,
-            storage_dtype=storage_dtype,
         )
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(

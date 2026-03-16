@@ -1,21 +1,213 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Utility functions for OTX data entities."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import struct
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
+import polars as pl
 import torch
 import torch.utils._pytree as pytree
+from datumaro.experimental.dataset import Sample
+from datumaro.experimental.fields import image_field
 
 if TYPE_CHECKING:
-    from otx.data.entity import ImageInfo
-    from otx.data.entity.sample import OTXSample
+    from collections.abc import Iterable
+
+    from otx.data.entity.base import ImageInfo
+
+# High-bit-depth converter registration
+from otx.data.entity import _highbit_converter as _highbit_converter  # noqa: F401
 
 
-def register_pytree_node(cls: type[OTXSample]) -> type[OTXSample]:
+#: Map from IntensityConfig.storage_dtype strings to Polars dtype instances.
+STORAGE_DTYPE_MAP: dict[str, pl.DataType] = {
+    "uint8": pl.UInt8(),
+    "uint16": pl.UInt16(),
+    "int16": pl.Int16(),
+    "float32": pl.Float32(),
+}
+
+#: PIL modes that indicate high-bit-depth (>8-bit) images.
+_PIL_16BIT_MODES = frozenset({"I", "I;16", "I;16B", "I;16L", "I;16N"})
+_PIL_FLOAT_MODES = frozenset({"F"})
+
+#: Magic bytes for image format detection.
+_PNG_SIGNATURE = b"\x89PNG"
+_JPEG_SIGNATURE = b"\xff\xd8"
+_TIFF_LE = b"II"
+_TIFF_BE = b"MM"
+
+
+def detect_image_dtype(image_path: str | Path) -> str:
+    """Detect the storage dtype of an image from its file header.
+
+    Reads **only file metadata** — no pixel data is ever decoded:
+
+    * **PNG**: parses the IHDR chunk (25 bytes) for ``bit_depth``.
+    * **TIFF**: checks the ``BitsPerSample`` tag via PIL header.
+    * **JPEG**: always ``"uint8"`` (JPEG is 8-bit by design).
+    * **Other**: falls back to ``PIL.Image.open().mode`` (header only).
+
+    Args:
+        image_path: Path to a single image file.
+
+    Returns:
+        One of ``"uint8"``, ``"uint16"``, or ``"float32"``.
+    """
+    path = Path(image_path)
+
+    # Read the first 8 bytes to identify the format.
+    with path.open("rb") as f:
+        sig = f.read(8)
+
+    # PNG: IHDR bit_depth is at byte offset 24
+    if sig[:4] == _PNG_SIGNATURE:
+        with path.open("rb") as f:
+            f.seek(24)  # signature(8) + length(4) + "IHDR"(4) + width(4) + height(4)
+            bit_depth = struct.unpack("B", f.read(1))[0]
+        return "uint16" if bit_depth == 16 else "uint8"
+
+    # JPEG: always 8-bit
+    if sig[:2] == _JPEG_SIGNATURE:
+        return "uint8"
+
+    # TIFF: check BitsPerSample tag via PIL
+    if sig[:2] in (_TIFF_LE, _TIFF_BE):
+        from PIL import Image
+
+        with Image.open(path) as img:
+            if img.mode in _PIL_16BIT_MODES:
+                return "uint16"
+            if img.mode in _PIL_FLOAT_MODES:
+                return "float32"
+            tag_v2 = getattr(img, "tag_v2", None)
+            if tag_v2 and 258 in tag_v2:  # 258 = BitsPerSample
+                bits = tag_v2[258]
+                if isinstance(bits, tuple):
+                    bits = bits[0]
+                if bits == 16:
+                    return "uint16"
+        return "uint8"
+
+    # Fallback: PIL mode (reliable for grayscale 16-bit)
+    from PIL import Image
+
+    with Image.open(path) as img:
+        mode = img.mode
+    if mode in _PIL_16BIT_MODES:
+        return "uint16"
+    if mode in _PIL_FLOAT_MODES:
+        return "float32"
+    return "uint8"
+
+
+#: Cache for dynamically created sample classes to avoid re-creation.
+_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}
+
+
+def _rebuild_typed_sample(
+    base_cls: type[Sample],
+    storage_dtype: str,
+    state: dict,
+) -> Sample:
+    """Reconstruct a dynamically-typed sample instance from pickle.
+
+    Called by ``__reduce__`` on instances of dynamic sample classes created
+    by :func:`with_image_dtype`.
+    """
+    cls = with_image_dtype(base_cls, storage_dtype)
+    obj = object.__new__(cls)
+    obj.__dict__.update(state)
+    return obj
+
+
+def with_image_dtype(
+    sample_cls: type[Sample],
+    storage_dtype: str,
+) -> type[Sample]:
+    """Create a variant of *sample_cls* whose ``image`` field uses *storage_dtype*.
+
+    When ``storage_dtype == "uint8"`` (the default) the original class is
+    returned unchanged — zero overhead for the common case.
+
+    For other dtypes a thin **dynamic subclass** is created that overrides the
+    ``image`` class-variable with the requested Polars dtype.  The subclass is
+    cached so repeated calls with the same arguments return the same class
+    object (important for Datumaro schema identity comparisons).
+
+    Args:
+        sample_cls: One of the concrete sample classes (e.g.
+            :class:`ClassificationSample`, :class:`DetectionSample`).
+        storage_dtype: A key from :data:`STORAGE_DTYPE_MAP` — ``"uint8"``,
+            ``"uint16"``, ``"int16"``, or ``"float32"``.
+
+    Returns:
+        Either *sample_cls* itself (uint8) or a dynamically created subclass
+        with the overridden ``image`` field.
+    """
+    if storage_dtype == "uint8":
+        return sample_cls
+
+    pl_dtype = STORAGE_DTYPE_MAP.get(storage_dtype)
+    if pl_dtype is None:
+        msg = f"Unsupported storage_dtype={storage_dtype!r}. Supported values: {list(STORAGE_DTYPE_MAP)}"
+        raise ValueError(msg)
+
+    cache_key = (sample_cls, storage_dtype)
+    if cache_key in _SAMPLE_DTYPE_CACHE:
+        return _SAMPLE_DTYPE_CACHE[cache_key]
+
+    # Read the original ImageField from the class attribute.
+    # Datumaro Sample subclasses are NOT standard @dataclass instances, so we
+    # access the class-level ``image`` attribute directly instead of going
+    # through ``__dataclass_fields__``.
+    orig_image = getattr(sample_cls, "image", None)
+    channels_first = getattr(orig_image, "channels_first", True)
+    fmt = getattr(orig_image, "format", "RGB")
+
+    new_image_default = image_field(dtype=pl_dtype, channels_first=channels_first, format=fmt)
+
+    # Create a thin subclass that only overrides the ``image`` class-variable.
+    new_cls_name = f"{sample_cls.__name__}_{storage_dtype}"
+    new_cls: type[Sample] = type(  # type: ignore[assignment]
+        new_cls_name,
+        (sample_cls,),
+        {"image": new_image_default},
+    )
+
+    # --- Pickle support -------------------------------------------------
+    # Python pickle serialises class *references* (e.g. OTXDataset.sample_type)
+    # by (module, qualname) lookup — this cannot be overridden.  We therefore
+    # register the dynamic class in the parent module namespace so pickle can
+    # find it.  Additionally, __reduce__ on *instances* provides a
+    # reconstruction path via with_image_dtype() for extra robustness.
+    _base, _dtype_str = sample_cls, storage_dtype  # close over for __reduce__
+
+    def _instance_reduce(self: Sample) -> tuple:
+        return (_rebuild_typed_sample, (_base, _dtype_str, self.__dict__))
+
+    new_cls.__reduce__ = _instance_reduce  # type: ignore[attr-defined]
+    new_cls.__module__ = sample_cls.__module__
+    new_cls.__qualname__ = new_cls_name
+
+    parent_module = sys.modules.get(sample_cls.__module__)
+    if parent_module is not None:
+        setattr(parent_module, new_cls_name, new_cls)
+
+    # Register with pytree so torchvision v2 transforms work
+    register_pytree_node(new_cls)
+
+    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls
+    return new_cls
+
+
+def register_pytree_node(cls: type[Sample]) -> type[Sample]:
     """Decorator to register an OTX data entity with PyTorch's PyTree.
 
     This decorator should be applied to every OTX data entity, as TorchVision V2 transforms
@@ -29,8 +221,26 @@ def register_pytree_node(cls: type[OTXSample]) -> type[OTXSample]:
             class MulticlassClsDataEntity(OTXDataEntity):
                 ...
     """
-    flatten_fn = lambda obj: (list(obj.values()), list(obj.keys()))
-    unflatten_fn = lambda values, context: cls(**dict(zip(context, values)))
+
+    def flatten_fn(obj: object) -> tuple[list[Any], list[str]]:
+        obj_dict = dict(obj.__dict__)
+
+        missing_keys = set(obj.__class__.__annotations__.keys()) - set(obj_dict.keys())
+        for key in missing_keys:
+            obj_dict[key] = getattr(obj, key)
+
+        return (list(obj_dict.values()), list(obj_dict.keys()))
+
+    def unflatten_fn(values: Iterable[Any], context: Any) -> object:  # noqa: ANN401
+        kwargs = dict(zip(context, values))
+        # Extract _img_info to set after construction (since __post_init__ would overwrite it)
+        img_info = kwargs.pop("_img_info", None)
+        obj = cls(**kwargs)
+        # Restore _img_info if it was present (preserves transformed img_info)
+        if img_info is not None:
+            object.__setattr__(obj, "_img_info", img_info)
+        return obj
+
     pytree.register_pytree_node(
         cls,
         flatten_fn=flatten_fn,

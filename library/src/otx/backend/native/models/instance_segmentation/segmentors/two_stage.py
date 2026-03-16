@@ -9,6 +9,8 @@ Please refer to https://github.com/open-mmlab/mmdetection/
 
 from __future__ import annotations
 
+from typing import cast
+
 import torch
 from torch import Tensor, nn
 
@@ -156,7 +158,7 @@ class TwoStageDetector(nn.Module):
         Returns:
             dict: A dictionary of loss components
         """
-        x = self.extract_feat(batch_inputs.images)
+        x = self.extract_feat(cast("Tensor", batch_inputs.images))
 
         # Copy data entity and set gt_labels to 0 in RPN
         rpn_entity = OTXSampleBatch(
@@ -218,7 +220,7 @@ class TwoStageDetector(nn.Module):
         if not self.with_bbox:
             msg = "Bbox head is not implemented."
             raise NotImplementedError(msg)
-        x = self.extract_feat(entity.images)
+        x = self.extract_feat(cast("Tensor", entity.images))
 
         rpn_results_list = self.rpn_head.predict(x, entity, rescale=False)
 

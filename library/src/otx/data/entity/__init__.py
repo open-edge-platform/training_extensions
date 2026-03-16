@@ -9,7 +9,6 @@ from .sample import (
     OTXPredictionBatch,
     OTXSample,
     OTXSampleBatch,
-    collate_fn,
 )
 from .tile import (
     TileBatchDetDataEntity,
@@ -32,5 +31,4 @@ __all__ = [
     "TileBatchSegDataEntity",
     "TileDetDataEntity",
     "TileSegDataEntity",
-    "collate_fn",
 ]

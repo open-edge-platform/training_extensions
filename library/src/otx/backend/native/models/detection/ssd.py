@@ -53,7 +53,7 @@ class SSD(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
             This parameter contains image input size, mean, and std, that is used to preprocess the input image.
             If None is given, default parameters for the specific model will be used.
             In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
@@ -75,7 +75,7 @@ class SSD(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["ssd_mobilenetv2"] = "ssd_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

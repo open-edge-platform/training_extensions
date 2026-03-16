@@ -223,6 +223,8 @@ class TransformsUpdater:
         "sigma": "std",
         "max_rotate_degree": "degrees",
         "scaling_ratio_range": "scale",
+        "crop_ratio_range": "scale",
+        "aspect_ratio_range": "ratio",
         "max_translate_ratio": "translate",
         "max_shear_degree": "shear",
     }
@@ -644,8 +646,8 @@ class GetiConfigConverter:
             raise ValueError(msg)
         model_config["init_args"]["data_input_params"] = DataInputParams(
             input_size=datamodule.input_size,
-            mean=datamodule.input_mean,
-            std=datamodule.input_std,
+            mean=datamodule.input_mean if datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=datamodule.input_std if datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False, skip={"label_info"})

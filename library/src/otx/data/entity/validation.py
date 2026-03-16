@@ -16,20 +16,34 @@ if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
-def validate_images(image_batch: torch.Tensor) -> None:
+def validate_images(image_batch: torch.Tensor | list[torch.Tensor]) -> None:
     """Validate the image batch."""
-    if not isinstance(image_batch, torch.Tensor):
-        msg = f"Image batch must be a torch.Tensor. Got {type(image_batch)}"
+    if not isinstance(image_batch, (torch.Tensor, list)):
+        msg = f"Image batch must be a torch.Tensor or a list of torch.Tensors. Got {type(image_batch)}"
         raise TypeError(msg)
-    if image_batch.dtype != torch.float32:
-        msg = f"Image batch must have dtype float32. Found {image_batch.dtype}"
-        raise ValueError(msg)
-    if image_batch.ndim != 4:
-        msg = f"Image batch must have 4 dimensions (BCHW), got {image_batch.ndim}"
-        raise ValueError(msg)
-    if image_batch.shape[1] not in [1, 3]:
-        msg = f"Image batch must have 1 or 3 channels, got {image_batch.shape[1]}"
-        raise ValueError(msg)
+    if isinstance(image_batch, torch.Tensor):
+        if image_batch.dtype != torch.float32:
+            msg = f"Image batch must have dtype float32. Found {image_batch.dtype}"
+            raise ValueError(msg)
+        if image_batch.ndim != 4:
+            msg = f"Image batch must have 4 dimensions (BCHW), got {image_batch.ndim}"
+            raise ValueError(msg)
+        if image_batch.shape[1] not in [1, 3]:
+            msg = f"Image batch must have 1 or 3 channels, got {image_batch.shape[1]}"
+            raise ValueError(msg)
+    if isinstance(image_batch, list):
+        if not all(isinstance(img, torch.Tensor) for img in image_batch):
+            msg = "All items in image batch list must be torch.Tensors"
+            raise TypeError(msg)
+        if not all(img.dtype == torch.float32 for img in image_batch):
+            msg = "All images in batch must have dtype float32"
+            raise ValueError(msg)
+        if not all(img.ndim == 3 for img in image_batch):
+            msg = "All images in batch must have 3 dimensions (CHW)"
+            raise ValueError(msg)
+        if not all(img.shape[0] in [1, 3] for img in image_batch):
+            msg = "All images in batch must have 1 or 3 channels"
+            raise ValueError(msg)
 
 
 def validate_labels(label_batch: list[torch.Tensor | None]) -> None:

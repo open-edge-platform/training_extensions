@@ -9,16 +9,14 @@ overrides:
     - data.test_subset.augmentations_cpu
 
   data:
+    stack_images: false
     train_subset:
-      to_tv_image: true
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.ToImage
     val_subset:
-      to_tv_image: true
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.ToImage
     test_subset:
-      to_tv_image: true
       batch_size: 64
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.ToImage

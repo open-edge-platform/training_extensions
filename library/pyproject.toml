@@ -51,7 +51,7 @@ dependencies = [
     "pyyaml==6.0.3",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
-    "kornia",
+    "kornia~=0.8.2",
     # NOTE: rf-detr is consumed from a specific commit that includes export fixes
     # for torch>=2.10 and dynamo export support. Once the upstream roboflow/rf-detr
     # repository publishes a tagged release with these changes, migrate to the

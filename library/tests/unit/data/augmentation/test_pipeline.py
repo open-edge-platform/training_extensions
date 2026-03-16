@@ -1043,9 +1043,11 @@ class TestGPUAugmentationCallback:
 
         callback = GPUAugmentationCallback()
         # _val_pipeline is None by default
+        assert callback._val_pipeline is None
         batch = MagicMock()
         callback.on_validation_batch_start(MagicMock(), MagicMock(), batch, batch_idx=0)
-        # No error, batch not modified
+        # Should still be None (no pipeline was created)
+        assert callback._val_pipeline is None
 
     def test_on_test_batch_start_disabled(self):
         """If no test pipeline, test batches should not be augmented."""

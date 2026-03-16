@@ -35,7 +35,7 @@ class DFine(RTDETR):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None, uses _default_preprocessing_params.
         model_name (literal, optional): Name of the model to use. Defaults to "dfine_hgnetv2_x".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -60,7 +60,7 @@ class DFine(RTDETR):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "dfine_hgnetv2_n",
             "dfine_hgnetv2_s",

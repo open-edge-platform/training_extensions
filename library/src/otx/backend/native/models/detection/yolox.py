@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 from torch.export import Dim
 
@@ -31,6 +31,7 @@ from otx.types.precision import OTXPrecisionType
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
@@ -53,7 +54,7 @@ class YOLOX(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
             This parameter contains image input size, mean, and std, that is used to preprocess the input image.
             If None is given, default parameters for the specific model will be used.
             In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
@@ -83,7 +84,7 @@ class YOLOX(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"] = "yolox_s",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -220,7 +221,8 @@ class YOLOX(OTXDetectionModel):
             # The CPU pipeline always scales images to [0, 1] float.
             # YOLOX-S/L/X pretrained weights expect [0, 255] float, so rescale here.
             # We create a new entity so the original (with [0, 1] images) remains intact
-            inputs["entity"] = dataclasses.replace(inputs["entity"], images=entity.images.mul(255.0))
+            images_255 = cast("torch.Tensor", entity.images).mul(255.0)
+            inputs["entity"] = dataclasses.replace(inputs["entity"], images=images_255)
             return inputs
 
         return super()._customize_inputs(entity)

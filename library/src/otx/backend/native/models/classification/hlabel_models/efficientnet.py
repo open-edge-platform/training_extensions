@@ -36,7 +36,7 @@ class EfficientNetHLabelCls(OTXHlabelClsModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "efficientnet_b0",
             "efficientnet_b1",

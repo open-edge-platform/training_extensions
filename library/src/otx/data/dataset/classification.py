@@ -69,7 +69,6 @@ class OTXMulticlassClsDataset(OTXDataset):
             max_refetch=max_refetch,
             stack_images=stack_images,
             data_format=data_format,
-            storage_dtype=storage_dtype,
         )
 
         labels = dm_subset.schema.attributes["label"].categories.labels
@@ -150,7 +149,6 @@ class OTXMultilabelClsDataset(OTXDataset):
             max_refetch=max_refetch,
             stack_images=stack_images,
             data_format=data_format,
-            storage_dtype=storage_dtype,
         )
 
         labels = dm_subset.schema.attributes["label"].categories.labels
@@ -267,7 +265,6 @@ class OTXHlabelClsDataset(OTXDataset):
             max_refetch=max_refetch,
             stack_images=stack_images,
             data_format=data_format,
-            storage_dtype=storage_dtype,
         )
         self.dm_categories = dm_subset.schema.attributes["label"].categories
         self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)

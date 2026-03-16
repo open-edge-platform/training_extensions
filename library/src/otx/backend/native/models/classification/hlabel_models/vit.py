@@ -55,7 +55,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
         model_name (str): Name of the Vision Transformer model to use.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         optimizer (OptimizerCallable): Callable for the optimizer.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
         metric (MetricCallable): Callable for the metric.
@@ -67,7 +67,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "vit-tiny",
             "vit-small",

@@ -70,10 +70,6 @@ overrides:
             ratio:
               - 0.75
               - 1.34
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-            scale: true
       # GPU-stage: Pixel-level augmentations (Kornia)
       augmentations_gpu:
         - class_path: kornia.augmentation.RandomHorizontalFlip

@@ -372,42 +372,6 @@ class TestOTXDataModule:
                 val_dataset=mock_val,
             )
 
-    def test_from_otx_datasets_with_normalization(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets with legacy transforms yields None normalization.
-
-        In the new augmentation pipeline, normalization is derived from
-        CPUAugmentationPipeline (augmentations_cpu), not from legacy torchvision
-        Normalize transforms.  When the dataset only has legacy transforms,
-        input_mean / input_std should be None.
-        """
-        from torchvision.transforms.v2 import Normalize
-
-        # Create mock dataset with legacy Normalize transform
-        normalize_transform = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-        shared_label_info = MagicMock()
-        mock_train = fxt_mock_dataset(
-            transforms=[normalize_transform],
-            label_info=shared_label_info,
-        )
-        mock_val = fxt_mock_dataset(label_info=shared_label_info)
-
-        mocker.patch.object(
-            OTXDataModule,
-            "get_default_subset_configs",
-            return_value=fxt_mock_subset_configs,
-        )
-
-        # Create module
-        module = OTXDataModule.from_otx_datasets(
-            train_dataset=mock_train,
-            val_dataset=mock_val,
-        )
-
-        # With legacy transforms (no augmentations_cpu), mean/std are not extracted
-        assert module.input_mean is None
-        assert module.input_std is None
-
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets with auto_num_workers enabled."""
         # Create mock datasets

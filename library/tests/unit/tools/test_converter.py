@@ -10,6 +10,13 @@ from otx.tools.converter import GetiConfigConverter
 from tests.integration.api.geti_otx_config_utils import OTXConfig
 
 
+def _class_paths(config: dict, subset: str = "train_subset") -> tuple[list[str], list[str]]:
+    subset_cfg = config["data"][subset]
+    cpu = [aug["class_path"] for aug in subset_cfg.get("augmentations_cpu", [])]
+    gpu = [aug["class_path"] for aug in subset_cfg.get("augmentations_gpu", [])]
+    return cpu, gpu
+
+
 class TestGetiConfigConverter:
     def test_convert(self):
         otx_config = OTXConfig.from_yaml_file(Path("tests/assets/geti/model_configs/detection.yaml"))
@@ -21,9 +28,9 @@ class TestGetiConfigConverter:
         assert config["data"]["test_subset"]["batch_size"] == 8
         assert config["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.001
         assert config["max_epochs"] == 100
-        assert config["data"]["train_subset"]["num_workers"] == 2
-        assert config["data"]["val_subset"]["num_workers"] == 2
-        assert config["data"]["test_subset"]["num_workers"] == 2
+        assert config["data"]["train_subset"]["num_workers"] == 4
+        assert config["data"]["val_subset"]["num_workers"] == 4
+        assert config["data"]["test_subset"]["num_workers"] == 4
         assert config["callbacks"][1]["init_args"]["patience"] == 10
         assert not config["data"]["tile_config"]["enable_tiler"]
         assert config["data"]["tile_config"]["overlap"] == 0.2
@@ -47,39 +54,35 @@ class TestGetiConfigConverter:
             GetiConfigConverter.convert(asdict(otx_config))
 
     def test_classification_augs(self, tmp_path):
-        supported_augs_list_for_configuration = [
-            "otx.data.augmentation.transforms.EfficientNetRandomCrop",
-            "torchvision.transforms.v2.RandomPhotometricDistort",
-            "otx.data.augmentation.transforms.RandomAffine",
-            "otx.data.augmentation.transforms.RandomFlip",
-            "torchvision.transforms.v2.RandomVerticalFlip",
-            "otx.data.augmentation.transforms.RandomGaussianBlur",
-            "otx.data.augmentation.transforms.RandomGaussianNoise",
+        supported_gpu_augs = [
+            "kornia.augmentation.ColorJiggle",
+            "kornia.augmentation.RandomAffine",
+            "kornia.augmentation.RandomVerticalFlip",
+            "kornia.augmentation.RandomGaussianBlur",
+            "kornia.augmentation.RandomGaussianNoise",
         ]
         cfg_path = Path("tests/assets/geti/model_configs/classification.yaml")
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 9
-        # default values
-        list_of_all_augs = []
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in [
-                "otx.data.augmentation.transforms.RandomFlip",
-                "otx.data.augmentation.transforms.EfficientNetRandomCrop",
-            ]:
-                assert aug["enable"]
-            list_of_all_augs.append(aug["class_path"])
-        # check if all supported augs are in the config
-        for configuable_aug in supported_augs_list_for_configuration:
-            assert configuable_aug in list_of_all_augs, f"{configuable_aug} is missing for configuration."
+        cpu_paths, gpu_paths = _class_paths(default_config)
+        assert cpu_paths == [
+            "torchvision.transforms.v2.RandomResizedCrop",
+        ]
+        assert gpu_paths == [
+            "kornia.augmentation.RandomHorizontalFlip",
+            "kornia.augmentation.Normalize",
+        ]
+
         # change config from geti to enable all augs
         for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():  # pyrefly: ignore
             aug["enable"] = True
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 9
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in supported_augs_list_for_configuration:
-                assert aug["enable"]
+        cpu_paths, gpu_paths = _class_paths(default_config)
+        assert cpu_paths == [
+            "torchvision.transforms.v2.RandomResizedCrop",
+        ]
+        for configurable_aug in supported_gpu_augs:
+            assert configurable_aug in gpu_paths, f"{configurable_aug} is missing for configuration."
 
         # disable EfficientNetRandomCrop
         for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"][  # pyrefly: ignore
@@ -93,16 +96,12 @@ class TestGetiConfigConverter:
                 aug_conf["hue"] = [-0.1, 0.1]
 
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 9
-        found = False
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            assert aug["class_path"] != supported_augs_list_for_configuration[0]
-            if aug["class_path"] == "otx.data.augmentation.transforms.Resize":
-                found = True
-            if aug["class_path"] == "torchvision.transforms.v2.RandomPhotometricDistort":
-                assert aug["init_args"]["contrast"] == [0.0, 3.0]
-                assert aug["init_args"]["hue"] == [-0.1, 0.1]
-        assert found
+        cpu_augs = default_config["data"]["train_subset"]["augmentations_cpu"]
+        gpu_augs = default_config["data"]["train_subset"]["augmentations_gpu"]
+        assert cpu_augs[0]["class_path"] == "otx.data.augmentation.transforms.Resize"
+        color_jitter = next(aug for aug in gpu_augs if aug["class_path"] == "kornia.augmentation.ColorJiggle")
+        assert color_jitter["init_args"]["contrast"] == [0.0, 3.0]
+        assert color_jitter["init_args"]["hue"] == [-0.1, 0.1]
 
         # instantiate
         data_root = "tests/assets/classification_dataset"
@@ -111,44 +110,46 @@ class TestGetiConfigConverter:
             work_dir=tmp_path,
             data_root=data_root,
         )
-        assert len(engine.datamodule.train_subset.transforms) == 9
+
+        assert len(engine.datamodule.train_subset.augmentations_cpu) == 1  # Resize
+        assert len(engine.datamodule.train_subset.augmentations_gpu) == 7
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
+        assert (
+            len(engine.datamodule.train_dataloader().dataset.transforms.augmentations) == 2
+        )  # +1 for intensity transform
 
     def test_detection_augs(self, tmp_path):
-        supported_augs_list_for_configuration = [
-            "torchvision.transforms.v2.RandomIoUCrop",
-            "torchvision.transforms.v2.RandomPhotometricDistort",
-            "otx.data.augmentation.transforms.RandomAffine",
-            "otx.data.augmentation.transforms.RandomFlip",
-            "torchvision.transforms.v2.RandomVerticalFlip",
-            "otx.data.augmentation.transforms.RandomGaussianBlur",
-            "otx.data.augmentation.transforms.RandomGaussianNoise",
+        supported_gpu_augs = [
+            "kornia.augmentation.RandomAffine",
+            "kornia.augmentation.RandomVerticalFlip",
+            "kornia.augmentation.RandomGaussianBlur",
+            "kornia.augmentation.RandomGaussianNoise",
         ]
         cfg_path = Path("tests/assets/geti/model_configs/detection.yaml")
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
-        # default values
-        list_of_all_augs = []
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in [
-                "otx.data.augmentation.transforms.RandomFlip",
-                "torchvision.transforms.v2.RandomIoUCrop",
-            ]:
-                assert aug["enable"]
-            list_of_all_augs.append(aug["class_path"])
-        # check if all supported augs are in the config
-        for configuable_aug in supported_augs_list_for_configuration:
-            assert configuable_aug in list_of_all_augs, f"{configuable_aug} is missing for configuration."
+        cpu_paths, gpu_paths = _class_paths(default_config)
+        assert cpu_paths == [
+            "torchvision.transforms.v2.RandomIoUCrop",
+            "torchvision.transforms.v2.SanitizeBoundingBoxes",
+            "otx.data.augmentation.transforms.Resize",
+        ]
+        assert gpu_paths == [
+            "kornia.augmentation.RandomHorizontalFlip",
+            "kornia.augmentation.Normalize",
+        ]
+
         # change config from geti to enable all augs
         for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():  # pyrefly: ignore
             aug["enable"] = True
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in supported_augs_list_for_configuration:
-                assert aug["enable"]
+        cpu_paths, gpu_paths = _class_paths(default_config)
+        assert cpu_paths == [
+            "torchvision.transforms.v2.RandomIoUCrop",
+            "otx.data.augmentation.transforms.Resize",
+        ]
+        for configurable_aug in supported_gpu_augs:
+            assert configurable_aug in gpu_paths, f"{configurable_aug} is missing for configuration."
 
         # disable iou_random_crop
         for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"][  # pyrefly: ignore
@@ -161,12 +162,14 @@ class TestGetiConfigConverter:
                 aug_conf["contrast"] = [0.0, 3.0]
                 aug_conf["hue"] = [-0.1, 0.1]
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] == "torchvision.transforms.v2.RandomPhotometricDistort":
-                assert aug["init_args"]["contrast"] == [0.0, 3.0]
-                assert aug["init_args"]["hue"] == [-0.1, 0.1]
-                break
+        cpu_augs = default_config["data"]["train_subset"]["augmentations_cpu"]
+        gpu_augs = default_config["data"]["train_subset"]["augmentations_gpu"]
+        assert [aug["class_path"] for aug in cpu_augs] == [
+            "otx.data.augmentation.transforms.Resize",
+        ]
+        color_jitter = next(aug for aug in gpu_augs if aug["class_path"] == "kornia.augmentation.ColorJiggle")
+        assert color_jitter["init_args"]["contrast"] == [0.0, 3.0]
+        assert color_jitter["init_args"]["hue"] == [-0.1, 0.1]
 
         # instantiate
         data_root = "tests/assets/car_tree_bug"
@@ -175,17 +178,22 @@ class TestGetiConfigConverter:
             work_dir=tmp_path,
             data_root=data_root,
         )
-        assert len(engine.datamodule.train_subset.transforms) == 10
+        assert len(engine.datamodule.train_subset.augmentations_cpu) == 1
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
         assert (
-            len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
-        )  # 10 - disabled iou_random_crop
+            len(engine.datamodule.train_dataloader().dataset.transforms.augmentations) == 2
+        )  # +1 for intensity transform
 
     def test_instance_seg_augs(self, tmp_path):
         cfg_path = Path("tests/assets/geti/model_configs/instance_segmentation.yaml")
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
+        cpu_paths, gpu_paths = _class_paths(default_config)
+        assert cpu_paths == ["otx.data.augmentation.transforms.Resize"]
+        assert gpu_paths == [
+            "kornia.augmentation.RandomHorizontalFlip",
+            "kornia.augmentation.Normalize",
+        ]
 
         # instantiate
         data_root = "tests/assets/car_tree_bug"
@@ -194,12 +202,13 @@ class TestGetiConfigConverter:
             work_dir=tmp_path,
             data_root=data_root,
         )
-        assert len(engine.datamodule.train_subset.transforms) == 10
+        assert len(engine.datamodule.train_subset.augmentations_cpu) == 1
+        assert len(engine.datamodule.train_subset.augmentations_gpu) == 2
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 5
-        assert (  # Resize, ToDtype, Pad, Normalize
-            len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 4
-        )
+        assert (
+            len(engine.datamodule.train_dataloader().dataset.transforms.augmentations) == 2
+        )  # +1 for intensity transform
+        assert len(engine.datamodule.val_dataloader().dataset.transforms.augmentations) == 2
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"
@@ -216,9 +225,9 @@ class TestGetiConfigConverter:
         assert engine.datamodule.train_subset.batch_size == 4
         assert engine.datamodule.val_subset.batch_size == 4
         assert engine.datamodule.test_subset.batch_size == 8
-        assert engine.datamodule.train_subset.num_workers == 2
-        assert engine.datamodule.val_subset.num_workers == 2
-        assert engine.datamodule.test_subset.num_workers == 2
+        assert engine.datamodule.train_subset.num_workers == 4
+        assert engine.datamodule.val_subset.num_workers == 4
+        assert engine.datamodule.test_subset.num_workers == 4
         assert not engine.datamodule.tile_config.enable_tiler
         assert engine.datamodule.tile_config.enable_adaptive_tiling
         assert engine.datamodule.input_size == (992, 800)

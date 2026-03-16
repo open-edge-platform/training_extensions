@@ -6,11 +6,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence, cast
 
 import polars as pl
 import torch
-import torch.utils._pytree as pytree
 from datumaro.experimental.dataset import Sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import (
@@ -27,6 +26,12 @@ from datumaro.experimental.fields import (
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
+from otx.data.entity.utils import (
+    STORAGE_DTYPE_MAP,
+    detect_image_dtype,
+    register_pytree_node,
+    with_image_dtype,
+)
 from otx.data.entity.validation import (
     validate_bboxes,
     validate_feature_vectors,
@@ -40,133 +45,6 @@ from otx.data.entity.validation import (
 
 if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
-
-
-# ---------------------------------------------------------------------------
-# Dtype helpers for 16-bit image support
-# ---------------------------------------------------------------------------
-
-#: Map from IntensityConfig.storage_dtype strings to Polars dtype instances.
-STORAGE_DTYPE_MAP: dict[str, pl.DataType] = {
-    "uint8": pl.UInt8(),
-    "uint16": pl.UInt16(),
-    "int16": pl.Int16(),
-    "float32": pl.Float32(),
-}
-
-
-def with_image_dtype(
-    sample_cls: type[Sample],
-    storage_dtype: str,
-) -> type[Sample]:
-    """Create a variant of *sample_cls* whose ``image`` field uses *storage_dtype*.
-
-    When ``storage_dtype == "uint8"`` (the default) the original class is
-    returned unchanged — zero overhead for the common case.
-
-    For other dtypes a thin **dynamic subclass** is created that overrides the
-    ``image`` class-variable with the requested Polars dtype.  The subclass is
-    cached so repeated calls with the same arguments return the same class
-    object (important for Datumaro schema identity comparisons).
-
-    Args:
-        sample_cls: One of the concrete sample classes (e.g.
-            :class:`ClassificationSample`, :class:`DetectionSample`).
-        storage_dtype: A key from :data:`STORAGE_DTYPE_MAP` — ``"uint8"``,
-            ``"uint16"``, ``"int16"``, or ``"float32"``.
-
-    Returns:
-        Either *sample_cls* itself (uint8) or a dynamically created subclass
-        with the overridden ``image`` field.
-    """
-    if storage_dtype == "uint8":
-        return sample_cls
-
-    pl_dtype = STORAGE_DTYPE_MAP.get(storage_dtype)
-    if pl_dtype is None:
-        msg = f"Unsupported storage_dtype={storage_dtype!r}. Supported values: {list(STORAGE_DTYPE_MAP)}"
-        raise ValueError(msg)
-
-    cache_key = (sample_cls, storage_dtype)
-    if cache_key in _SAMPLE_DTYPE_CACHE:
-        return _SAMPLE_DTYPE_CACHE[cache_key]
-
-    # Detect the original image_field kwargs by inspecting the existing field
-    orig_image_field = sample_cls.__dataclass_fields__["image"]  # type: ignore[attr-defined]
-    orig_default = orig_image_field.default
-    # The original default is an ImageField dataclass produced by image_field().
-    # We need to reconstruct it with the new dtype.
-    channels_first = getattr(orig_default, "channels_first", True)
-    fmt = getattr(orig_default, "format", "RGB")
-
-    new_image_default = image_field(dtype=pl_dtype, channels_first=channels_first, format=fmt)
-
-    # Create a new dataclass that inherits from sample_cls with overridden image field
-    new_cls_name = f"{sample_cls.__name__}_{storage_dtype}"
-
-    # We use dataclass inheritance: the new class just overrides the image field
-    new_cls: type[Sample] = dataclass(  # type: ignore[arg-type]
-        type(
-            new_cls_name,
-            (sample_cls,),
-            {
-                "__annotations__": {"image": tv_tensors.Image | torch.Tensor},
-                "image": new_image_default,
-            },
-        )
-    )
-
-    # Register with pytree so torchvision v2 transforms work
-    register_pytree_node(new_cls)
-
-    _SAMPLE_DTYPE_CACHE[cache_key] = new_cls
-    return new_cls
-
-
-#: Cache for dynamically created sample classes to avoid re-creation
-_SAMPLE_DTYPE_CACHE: dict[tuple[type, str], type[Sample]] = {}
-
-
-def register_pytree_node(cls: type[Sample]) -> type[Sample]:
-    """Decorator to register an OTX data entity with PyTorch's PyTree.
-
-    This decorator should be applied to every OTX data entity, as TorchVision V2 transforms
-    use the PyTree to flatten and unflatten the data entity during runtime.
-
-    Example:
-        `MulticlassClsDataEntity` example ::
-
-            @register_pytree_node
-            @dataclass
-            class MulticlassClsDataEntity(OTXDataEntity):
-                ...
-    """
-
-    def flatten_fn(obj: object) -> tuple[list[Any], list[str]]:
-        obj_dict = dict(obj.__dict__)
-
-        missing_keys = set(obj.__class__.__annotations__.keys()) - set(obj_dict.keys())
-        for key in missing_keys:
-            obj_dict[key] = getattr(obj, key)
-
-        return (list(obj_dict.values()), list(obj_dict.keys()))
-
-    def unflatten_fn(values: list[Any], context: list[str]) -> object:
-        kwargs = dict(zip(context, values))
-        # Extract _img_info to set after construction (since __post_init__ would overwrite it)
-        img_info = kwargs.pop("_img_info", None)
-        obj = cls(**kwargs)
-        # Restore _img_info if it was present (preserves transformed img_info)
-        if img_info is not None:
-            obj._img_info = img_info
-        return obj
-
-    pytree.register_pytree_node(
-        cls,
-        flatten_fn=flatten_fn,
-        unflatten_fn=unflatten_fn,
-    )
-    return cls
 
 
 @register_pytree_node
@@ -346,27 +224,6 @@ class KeypointSample(OTXSample):
         )
 
 
-def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
-    """Collate OTXSamples into a batch.
-
-    Args:
-        samples: List of OTXSamples to batch
-
-    Returns:
-        Batched OTXSampleBatch with stacked tensors
-    """
-    images = torch.stack([sample.image for sample in samples])
-
-    return OTXSampleBatch(
-        images=images,
-        labels=[s.label for s in samples] if hasattr(samples[0], "label") else None,  # type: ignore[missing-attribute]
-        bboxes=[s.bboxes for s in samples] if hasattr(samples[0], "bboxes") else None,  # type: ignore[missing-attribute]
-        keypoints=[s.keypoints for s in samples] if hasattr(samples[0], "keypoints") else None,  # type: ignore[missing-attribute]
-        masks=[s.masks for s in samples] if hasattr(samples[0], "masks") else None,  # type: ignore[missing-attribute]
-        imgs_info=[sample.img_info for sample in samples],
-    )
-
-
 @dataclass
 class OTXSampleBatch:
     """OTX sample batch implementation.
@@ -380,7 +237,7 @@ class OTXSampleBatch:
         imgs_info: Sequence of image information, optional.
     """
 
-    images: torch.Tensor
+    images: torch.Tensor | tv_tensors.Image | list[torch.Tensor] | list[tv_tensors.Image]
     labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
@@ -390,6 +247,8 @@ class OTXSampleBatch:
     @property
     def batch_size(self) -> int:
         """Get the number of samples in the batch."""
+        if isinstance(self.images, list):
+            return len(self.images)
         return self.images.shape[0]
 
     def __post_init__(self) -> None:
@@ -398,7 +257,7 @@ class OTXSampleBatch:
 
     def _validate(self) -> None:
         """Validate the batch fields."""
-        validate_images(self.images)
+        validate_images(cast("torch.Tensor | list[torch.Tensor]", self.images))
         if self.labels is not None:
             validate_labels(self.labels)
         if self.bboxes is not None:
@@ -496,7 +355,7 @@ class OTXPrediction:
         saliency_map: The saliency map for XAI, optional.
     """
 
-    image: torch.Tensor
+    image: torch.Tensor | tv_tensors.Image
     img_info: ImageInfo | None = None
     label: torch.Tensor | None = None
     masks: Mask | None = None

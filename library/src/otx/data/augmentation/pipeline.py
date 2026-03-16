@@ -187,6 +187,10 @@ class CPUAugmentationPipeline(nn.Module):
         input_size = getattr(config, "input_size", None)
         aug_configs = config.augmentations_cpu
         intensity_config = getattr(config, "intensity", None)
+        if isinstance(intensity_config, dict):
+            from otx.config.data import IntensityConfig
+
+            intensity_config = IntensityConfig(**intensity_config)
 
         augmentations: list[nn.Module] = []
 
@@ -200,6 +204,9 @@ class CPUAugmentationPipeline(nn.Module):
             for aug_config in aug_configs:
                 cfg = copy(aug_config)
                 if isinstance(cfg, (dict, DictConfig)):
+                    if not cfg.get("enable", True):
+                        continue
+                    cfg.pop("enable", None)
                     # Handle input_size placeholder
                     cfg = cls._configure_input_size(dict(cfg), input_size)
 
@@ -568,6 +575,9 @@ class GPUAugmentationPipeline(nn.Module):
         for aug_config in aug_configs:
             cfg = copy(aug_config)
             if isinstance(cfg, (dict, DictConfig)):
+                if not cfg.get("enable", True):
+                    continue
+                cfg.pop("enable", None)
                 # Handle input_size placeholder
                 cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)  # noqa: SLF001
 

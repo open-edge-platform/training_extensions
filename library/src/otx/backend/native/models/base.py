@@ -65,9 +65,9 @@ logger = logging.getLogger()
 class DataInputParams:
     """Parameters of the input data such as input size, mean, and std."""
 
-    input_size: tuple[int, int] | None = None
-    mean: tuple[float, float, float] | None = None
-    std: tuple[float, float, float] | None = None
+    input_size: tuple[int, int]
+    mean: tuple[float, float, float]
+    std: tuple[float, float, float]
 
     def as_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -931,24 +931,27 @@ class OTXModel(LightningModule):
         preprocessing_params: DataInputParams | dict | None = None,
     ) -> DataInputParams:
         """Check the validity of the preprocessing parameters."""
-        if isinstance(preprocessing_params, dict):
-            data_input_params = DataInputParams(**preprocessing_params)
-        elif isinstance(preprocessing_params, DataInputParams):
-            data_input_params = preprocessing_params
-        else:
-            # `preprocessing_params` is None
-            data_input_params = DataInputParams()
-
-        default_data_input_params = (
+        default = (
             self._default_preprocessing_params[self.model_name]
             if isinstance(self._default_preprocessing_params, dict)
             else self._default_preprocessing_params
         )
 
-        # Assign default values if not given in `preprocessing_params`
-        data_input_params.input_size = data_input_params.input_size or default_data_input_params.input_size
-        data_input_params.mean = data_input_params.mean or default_data_input_params.mean
-        data_input_params.std = data_input_params.std or default_data_input_params.std
+        if isinstance(preprocessing_params, dict):
+            # Merge with model defaults for any missing keys so callers can pass
+            # a partial dict (e.g. only input_size) without knowing mean/std upfront.
+            data_input_params = DataInputParams(
+                input_size=preprocessing_params.get("input_size") or default.input_size,
+                mean=preprocessing_params.get("mean") or default.mean,
+                std=preprocessing_params.get("std") or default.std,
+            )
+        elif isinstance(preprocessing_params, DataInputParams):
+            data_input_params = preprocessing_params
+        elif preprocessing_params is None:
+            data_input_params = default
+        else:
+            msg = f"preprocessing_params should be either dict or DataInputParams, but got {type(preprocessing_params)} instead."
+            raise TypeError(msg)
 
         # Validate
         if data_input_params.mean is None:

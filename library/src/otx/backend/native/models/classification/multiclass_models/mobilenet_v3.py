@@ -30,7 +30,7 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
 
     Args:
         label_info (LabelInfoTypes): The label information.
-        data_input_params (DataInputParams | None, optional): The data input parameters
+        data_input_params (DataInputParams | dict | None, optional): The data input parameters
             such as input size and normalization. If None is given,
             default parameters for the specific model will be used.
         model_name (Literal["mobilenetv3_large", "mobilenetv3_small"], optional): The model name.
@@ -45,7 +45,7 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

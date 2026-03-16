@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import abc
+from functools import partial
 from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
 import torch
@@ -61,11 +62,13 @@ def _collect_optional_attr(items: list[OTXSample], attr_name: str) -> list | Non
     return values if any(value is not None for value in values) else None
 
 
-def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
+def _default_collate_fn(items: list[OTXSample], stack_images: bool = True) -> OTXSampleBatch:
     """Collate OTXSample items into an OTXSampleBatch.
 
     Args:
         items: List of OTXSample items to batch
+        stack_images: Whether to stack images into a single tensor or keep as a list of tensors. Defaults to True.
+
     Returns:
         Batched OTXSample items with stacked tensors
     """
@@ -99,12 +102,10 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         img = _ensure_chw_format(img)
         image_tensors.append(img)
 
-    # Always stack images into a single BCHW tensor.
-    # All images must have the same spatial dimensions at this point.
-    # If they don't, it means the resize / augmentation pipeline is misconfigured.
     if len(image_tensors) == 0:
-        images = torch.empty(0)
-    else:
+        msg = "No images found in batch. Ensure that the dataset and pipeline are configured correctly."
+        raise ValueError(msg)
+    if stack_images:
         images = torch.stack(image_tensors)
         # Safety: ensure stacked tensor is BCHW. If it's in BHWC or BHCW, fix it.
         if images.ndim == 4:
@@ -114,6 +115,8 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
             # BHCW -> BCHW (channels at dim=2)
             elif images.shape[2] in (1, 3) and images.shape[1] not in (1, 3):
                 images = images.permute(0, 2, 1, 3)
+    else:
+        images = image_tensors
 
     return OTXSampleBatch(
         images=images,
@@ -149,14 +152,12 @@ class OTXDataset(TorchDataset):
         stack_images: bool = True,
         data_format: str = "",
         sample_type: type = OTXSample,
-        storage_dtype: str = "uint8",
     ) -> None:
         self.transforms = transforms
         self.stack_images = stack_images
         self.sample_type = sample_type
         self.max_refetch = max_refetch
         self.data_format = data_format
-        self.storage_dtype = storage_dtype
         self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset
 
@@ -225,7 +226,7 @@ class OTXDataset(TorchDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect samples into a batch in data loader."""
-        return _default_collate_fn
+        return partial(_default_collate_fn, stack_images=self.stack_images)
 
     @abc.abstractmethod
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:

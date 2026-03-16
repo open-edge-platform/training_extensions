@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence, cast
 
 import torch
 from torchmetrics import Metric, MetricCollection
@@ -405,12 +405,9 @@ class OTXDetectionModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""
-        if self.data_input_params.input_size is None:
-            msg = "input_size should not be None."
-            raise ValueError(msg)
-        input_size = self.data_input_params.input_size
-        images = torch.stack([torch.rand(3, *input_size) for _ in range(batch_size)])
-        infos = [ImageInfo(img_idx=i, img_shape=input_size, ori_shape=input_size) for i in range(batch_size)]
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
+        img_shape = (images.shape[2], images.shape[3])
+        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def forward_explain(self, inputs: OTXSampleBatch | OTXTileBatchDataEntity) -> OTXPredictionBatch:
@@ -442,7 +439,7 @@ class OTXDetectionModel(OTXModel):
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor]:
         """Forward func of the BaseDetector instance, which located in is in OTXDetectionModel().model."""
-        backbone_feat = self.extract_feat(entity.images)
+        backbone_feat = self.extract_feat(cast("torch.Tensor", entity.images))
         bbox_head_feat = self.bbox_head.forward(backbone_feat)
 
         # Process the first output form bbox detection head: classification scores

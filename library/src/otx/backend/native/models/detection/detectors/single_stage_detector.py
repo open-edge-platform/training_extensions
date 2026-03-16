@@ -11,7 +11,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/d
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import torch
 
@@ -148,7 +148,7 @@ class SingleStageDetector(BaseModule):
         Returns:
             dict: A dictionary of loss components.
         """
-        x = self.extract_feat(entity.images)
+        x = self.extract_feat(cast("torch.Tensor", entity.images))
         # TODO (sungchul): compare .loss with other forwards and remove duplicated code
         outputs: dict[str, Tensor] = self.bbox_head.prepare_loss_inputs(x, entity)
 
@@ -182,7 +182,7 @@ class SingleStageDetector(BaseModule):
                 - bboxes (Tensor): Has a shape (num_instances, 4),
                     the last dimension 4 arrange as (x1, y1, x2, y2).
         """
-        x = self.extract_feat(entity.images)
+        x = self.extract_feat(cast("torch.Tensor", entity.images))
         return self.bbox_head.predict(x, entity, rescale=rescale)
 
     def export(

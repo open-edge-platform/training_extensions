@@ -60,7 +60,7 @@ def _make_minimal_policies(
     }
 
 
-POLICY_EPOCHS = [4, 23, 40]
+POLICY_EPOCHS = [4, 23]
 
 
 # ===================================================================
@@ -104,8 +104,8 @@ class TestDataAugSwitch:
             assert len(switch.policies[name]["gpu_aug_configs"]) >= 1
 
     def test_init_invalid_policy_epochs_length(self, policies):
-        with pytest.raises(ValueError, match="Expected 3 policy epochs"):
-            DataAugSwitch([4, 29], policies)
+        with pytest.raises(ValueError, match="Expected 2 policy epochs"):
+            DataAugSwitch([4, 29, 50], policies)
 
     def test_init_no_input_size(self, policies):
         switch = DataAugSwitch(POLICY_EPOCHS, policies, input_size=None)

@@ -150,6 +150,7 @@ def fxt_asset_dir() -> Path:
 def fxt_target_dataset_per_task() -> dict:
     return {
         "multi_class_cls": "tests/assets/classification_dataset",
+        "multi_class_cls_16bit": "tests/assets/classification_dataset_16bit",
         "multi_label_cls": "tests/assets/multilabel_classification",
         "h_label_cls": "tests/assets/hlabel_classification",
         "detection": "tests/assets/car_tree_bug",

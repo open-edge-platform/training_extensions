@@ -19,6 +19,7 @@ overrides:
     - data.val_subset.augmentations_cpu
     - data.test_subset.augmentations_cpu
   data:
+    stack_images: false
     train_subset:
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.ToImage
