@@ -13,7 +13,12 @@ type ContentWrapperProps = { children: ReactNode };
 
 const ContentWrapper = ({ children }: ContentWrapperProps) => {
     return (
-        <View backgroundColor={'gray-50'} overflow={'hidden auto'} height={'100%'}>
+        <View
+            backgroundColor={'gray-50'}
+            overflow={'hidden auto'}
+            height={'100%'}
+            data-testid={'advanced-settings-scroll-container'}
+        >
             {children}
         </View>
     );

@@ -6,6 +6,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { View } from '@geti/ui';
 
 import { TrainingConfiguration } from '../../../../../constants/shared-types';
+import { LazyLoadSection } from '../components/lazy-load-section.component';
 import { DataAugmentation } from './data-augmentation/data-augmentation.component';
 import { getDataAugmentationParameters } from './data-augmentation/utils';
 import { Filters } from './filters/filters.component';
@@ -51,17 +52,21 @@ export const DataManagement = ({
             )}
 
             {dataAugmentationParameters !== undefined && (
-                <DataAugmentation
-                    dataAugmentationParameters={dataAugmentationParameters}
-                    onTrainingConfigurationChange={onTrainingConfigurationChange}
-                />
+                <LazyLoadSection>
+                    <DataAugmentation
+                        dataAugmentationParameters={dataAugmentationParameters}
+                        onTrainingConfigurationChange={onTrainingConfigurationChange}
+                    />
+                </LazyLoadSection>
             )}
 
             {filtersParameters !== undefined && (
-                <Filters
-                    filtersParameters={filtersParameters}
-                    onTrainingConfigurationChange={onTrainingConfigurationChange}
-                />
+                <LazyLoadSection>
+                    <Filters
+                        filtersParameters={filtersParameters}
+                        onTrainingConfigurationChange={onTrainingConfigurationChange}
+                    />
+                </LazyLoadSection>
             )}
         </View>
     );
