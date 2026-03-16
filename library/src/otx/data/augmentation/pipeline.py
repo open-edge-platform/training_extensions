@@ -379,14 +379,14 @@ class CPUAugmentationPipeline(nn.Module):
 
         TorchVision v2 expects standard field names like `boxes`/`labels`; we
         map to those before calling the transform and map back afterward.
+        We also keep `img_info` in sync when the image size changes.
         """
         # Build a dict of transformable fields with torchvision-friendly keys.
-        # NOTE: img_info is metadata (original H×W), NOT a spatial tensor —
-        # passing it to torchvision causes query_size() to find conflicting
-        # dimensions after a resize, so we deliberately exclude it here.
         transformable: dict[str, Any] = {}
         if (image := getattr(inputs, "image", None)) is not None:
             transformable["image"] = image
+        if (img_info := getattr(inputs, "img_info", None)) is not None:
+            transformable["img_info"] = img_info
         if (masks := getattr(inputs, "masks", None)) is not None:
             transformable["masks"] = masks
         if (bboxes := getattr(inputs, "bboxes", None)) is not None:
@@ -403,10 +403,14 @@ class CPUAugmentationPipeline(nn.Module):
             result = transform(transformable["image"])
             inputs.image = result
         else:
+            # Reverse mapping: torchvision key → OTXSample attribute name
+            tv_to_otx = {"boxes": "bboxes", "labels": "label"}
+
             result = transform(transformable)
             if isinstance(result, dict):
                 for key, value in result.items():
-                    setattr(inputs, key, value)
+                    attr = tv_to_otx.get(key, key)
+                    setattr(inputs, attr, value)
             else:
                 # Single result, assume it's the image
                 inputs.image = result

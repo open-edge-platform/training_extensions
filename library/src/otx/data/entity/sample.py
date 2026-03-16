@@ -371,37 +371,19 @@ class OTXPrediction:
     saliency_map: torch.Tensor | None = None
 
 
-# ---------------------------------------------------------------------------
-# Module-level __getattr__ for pickle support of dynamic sample types.
-#
-# ``with_image_dtype()`` creates dynamic subclasses like
-# ``ClassificationSample_uint16`` and registers them in this module's
-# namespace.  When a spawned DataLoader worker unpickles such a class
-# reference, the class doesn't exist yet in the fresh process.
-# Python's module ``__getattr__`` hook lets us intercept the lookup
-# and recreate the class on demand.
-# ---------------------------------------------------------------------------
-
-# Known storage dtype suffixes (must match ``STORAGE_DTYPE_MAP`` keys)
-_KNOWN_STORAGE_DTYPES: tuple[str, ...] = ("uint16", "int16", "float32")
+# PEP 562 module __getattr__: lazily recreate dynamic sample dtype variants
+# (e.g. ``ClassificationSample_uint16``) when pickle looks them up in a
+# freshly-spawned DataLoader worker process.
+_DTYPE_SUFFIXES = ("_uint16", "_int16", "_float32")
 
 
-def __getattr__(name: str) -> Any:  # noqa: ANN401
-    """Lazily reconstruct dynamic sample dtype variants on first access.
-
-    This allows ``pickle`` to unpickle classes like
-    ``ClassificationSample_uint16`` in freshly-spawned worker processes
-    without requiring them to have been explicitly created beforehand.
-    """
-    for suffix in _KNOWN_STORAGE_DTYPES:
-        tag = f"_{suffix}"
+def __getattr__(name: str) -> type:
+    """Recreate a dynamic sample class on first lookup (pickle support)."""
+    for tag in _DTYPE_SUFFIXES:
         if name.endswith(tag):
-            base_name = name[: -len(tag)]
-            base_cls = globals().get(base_name)
+            base_cls = globals().get(name[: -len(tag)])
             if base_cls is not None and isinstance(base_cls, type):
                 from otx.data.entity.utils import with_image_dtype
 
-                return with_image_dtype(base_cls, suffix)
-
-    msg = f"module {__name__!r} has no attribute {name!r}"
-    raise AttributeError(msg)
+                return with_image_dtype(base_cls, tag[1:])  # strip leading '_'
+    raise AttributeError(name)

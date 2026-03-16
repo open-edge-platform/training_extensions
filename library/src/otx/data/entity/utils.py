@@ -180,13 +180,13 @@ def with_image_dtype(
         {"image": new_image_default},
     )
 
-    # --- Pickle support -------------------------------------------------
-    # Python pickle serialises class *references* (e.g. OTXDataset.sample_type)
-    # by (module, qualname) lookup — this cannot be overridden.  We therefore
-    # register the dynamic class in the parent module namespace so pickle can
-    # find it.  Additionally, __reduce__ on *instances* provides a
-    # reconstruction path via with_image_dtype() for extra robustness.
-    _base, _dtype_str = sample_cls, storage_dtype  # close over for __reduce__
+    # --- Pickle support ---
+    # Instances use _rebuild_typed_sample() to recreate the dynamic class on
+    # unpickle.  The class *type itself* is pickled by name lookup
+    # (module + qualname); see the module-level ``__getattr__`` in
+    # ``otx.data.entity.sample`` which lazily recreates dynamic classes
+    # in freshly-spawned DataLoader workers (PEP 562).
+    _base, _dtype_str = sample_cls, storage_dtype
 
     def _instance_reduce(self: Sample) -> tuple:
         return (_rebuild_typed_sample, (_base, _dtype_str, self.__dict__))
