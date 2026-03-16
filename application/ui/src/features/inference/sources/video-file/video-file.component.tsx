@@ -3,10 +3,7 @@
 
 import { Flex, TextField } from '@geti/ui';
 
-import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
 import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
-
-import classes from './video-file.module.scss';
 
 type VideoFileProps = {
     defaultState?: VideoFileSourceConfig;
@@ -26,16 +23,6 @@ export const VideoFile = ({ defaultState }: VideoFileProps) => {
                     label='Video file path'
                     defaultValue={String(defaultState?.video_path)}
                 />
-
-                <Flex
-                    height={'size-400'}
-                    alignSelf={'end'}
-                    alignItems={'center'}
-                    justifyContent={'center'}
-                    UNSAFE_className={classes.folderIcon}
-                >
-                    <Folder />
-                </Flex>
             </Flex>
         </Flex>
     );

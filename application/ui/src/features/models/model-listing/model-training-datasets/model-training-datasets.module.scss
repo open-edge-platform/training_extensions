@@ -1,3 +1,9 @@
+.box {
+    min-width: 0;
+    min-height: var(--spectrum-global-dimension-size-5000);
+    flex: 1;
+}
+
 .boxHeading {
     padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-200);
     background-color: var(--spectrum-global-color-gray-200);

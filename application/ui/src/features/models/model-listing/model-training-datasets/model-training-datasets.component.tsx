@@ -1,12 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
+import { ActionButton, Flex, Text, View } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
+import { Box } from '../components/box/box.component';
 import { SubsetGallery } from './subset-gallery.component';
 
 import classes from './model-training-datasets.module.scss';
@@ -51,24 +52,19 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
     const subsetPercentage = totalItems > 0 ? totalCount / totalItems : 0;
 
     return (
-        <Flex
-            minWidth={0}
-            flex={1}
-            direction={'column'}
-            height={'100%'}
-            minHeight={'size-5000'}
-            justifyContent={'center'}
-        >
-            <Flex UNSAFE_className={classes.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
-                <Flex gap={'size-100'} alignItems={'center'}>
-                    <Heading level={5}>
+        <Box
+            customClasses={classes.box}
+            headingClassName={classes.boxHeading}
+            contentClassName={classes.boxContent}
+            title={
+                <Flex gap={'size-50'}>
+                    <View>
                         {title} {formatter.format(subsetPercentage)}
-                    </Heading>
+                    </View>
                     <Text UNSAFE_className={classes.totalCount}>({totalCount})</Text>
                 </Flex>
-            </Flex>
-
-            <Content UNSAFE_className={classes.boxContent}>
+            }
+            content={
                 <SubsetGallery
                     items={items}
                     datasetRevisionId={datasetRevisionId}
@@ -77,8 +73,8 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
                     isFetchingNextPage={isFetchingNextPage}
                     isPending={isPending}
                 />
-            </Content>
-        </Flex>
+            }
+        />
     );
 };
 
