@@ -379,9 +379,11 @@ class CPUAugmentationPipeline(nn.Module):
 
         TorchVision v2 expects standard field names like `boxes`/`labels`; we
         map to those before calling the transform and map back afterward.
-        We also keep `img_info` in sync when the image size changes.
         """
-        # Build a dict of transformable fields with torchvision-friendly keys
+        # Build a dict of transformable fields with torchvision-friendly keys.
+        # NOTE: img_info is metadata (original H×W), NOT a spatial tensor —
+        # passing it to torchvision causes query_size() to find conflicting
+        # dimensions after a resize, so we deliberately exclude it here.
         transformable: dict[str, Any] = {}
         if (image := getattr(inputs, "image", None)) is not None:
             transformable["image"] = image
@@ -391,8 +393,6 @@ class CPUAugmentationPipeline(nn.Module):
             transformable["boxes"] = bboxes
         if (label := getattr(inputs, "label", None)) is not None:
             transformable["labels"] = label
-        if (img_info := getattr(inputs, "img_info", None)) is not None:
-            transformable["img_info"] = img_info
 
         if not transformable:
             return inputs

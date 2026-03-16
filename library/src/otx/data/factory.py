@@ -114,16 +114,21 @@ class OTXDatasetFactory:
 
     @staticmethod
     def _detect_storage_dtype(dm_subset: Dataset) -> str:
-        """Probe the first image's file header to detect its bit depth.
+        """Detect image storage bit depth from file header or dataset schema.
 
-        Uses ``PIL.Image.open`` which reads **only the file header** —
-        no pixel data is decoded, so this is essentially free.
+        First tries to probe the first image's file header via PIL (reads only
+        metadata, no pixel data decoded).  If that is not available (e.g. for
+        parquet-backed datasets with no media paths), falls back to the image
+        field dtype declared in the dataset schema.
 
         Returns:
             ``"uint8"``, ``"uint16"``, or ``"float32"``.
         """
+        import polars as pl
+
         from otx.data.entity.utils import detect_image_dtype
 
+        # 1. Try file-based detection (works for image-on-disk datasets)
         try:
             first_item = next(iter(dm_subset))
             path = getattr(first_item.media, "path", None) if hasattr(first_item, "media") else None
@@ -131,4 +136,17 @@ class OTXDatasetFactory:
                 return detect_image_dtype(path)
         except (StopIteration, Exception):  # noqa: S110
             pass
+
+        # 2. Fall back to schema-declared image dtype (parquet datasets)
+        try:
+            img_attr = dm_subset.schema.attributes.get("image")
+            if img_attr is not None and hasattr(img_attr, "field"):
+                dtype = getattr(img_attr.field, "dtype", None)
+                if dtype == pl.UInt16:
+                    return "uint16"
+                if dtype in (pl.Float32, pl.Float64):
+                    return "float32"
+        except Exception:  # noqa: S110
+            pass
+
         return "uint8"

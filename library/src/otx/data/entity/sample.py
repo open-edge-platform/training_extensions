@@ -369,3 +369,39 @@ class OTXPrediction:
     scores: torch.Tensor | None = None
     feature_vector: torch.Tensor | None = None
     saliency_map: torch.Tensor | None = None
+
+
+# ---------------------------------------------------------------------------
+# Module-level __getattr__ for pickle support of dynamic sample types.
+#
+# ``with_image_dtype()`` creates dynamic subclasses like
+# ``ClassificationSample_uint16`` and registers them in this module's
+# namespace.  When a spawned DataLoader worker unpickles such a class
+# reference, the class doesn't exist yet in the fresh process.
+# Python's module ``__getattr__`` hook lets us intercept the lookup
+# and recreate the class on demand.
+# ---------------------------------------------------------------------------
+
+# Known storage dtype suffixes (must match ``STORAGE_DTYPE_MAP`` keys)
+_KNOWN_STORAGE_DTYPES: tuple[str, ...] = ("uint16", "int16", "float32")
+
+
+def __getattr__(name: str) -> Any:  # noqa: ANN401
+    """Lazily reconstruct dynamic sample dtype variants on first access.
+
+    This allows ``pickle`` to unpickle classes like
+    ``ClassificationSample_uint16`` in freshly-spawned worker processes
+    without requiring them to have been explicitly created beforehand.
+    """
+    for suffix in _KNOWN_STORAGE_DTYPES:
+        tag = f"_{suffix}"
+        if name.endswith(tag):
+            base_name = name[: -len(tag)]
+            base_cls = globals().get(base_name)
+            if base_cls is not None and isinstance(base_cls, type):
+                from otx.data.entity.utils import with_image_dtype
+
+                return with_image_dtype(base_cls, suffix)
+
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
