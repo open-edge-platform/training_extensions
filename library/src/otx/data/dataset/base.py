@@ -20,7 +20,7 @@ from otx.data.entity.sample import OTXSample, OTXSampleBatch
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
-    from datumaro import Dataset as DmDataset
+    from datumaro.experimental import Dataset
 
 Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
@@ -135,7 +135,7 @@ class OTXDataset(TorchDataset):
     functionality for data transformation, image decoding, and label handling.
 
     Args:
-        dm_subset (DmDataset): Datumaro subset of a dataset.
+        dm_subset (Dataset): Datumaro subset of a dataset.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int, optional): Maximum number of times to attempt fetching a valid image. Defaults to 1000.
         stack_images (bool, optional): Whether to stack images in the collate function in OTXBatchData entity.
@@ -145,7 +145,7 @@ class OTXDataset(TorchDataset):
 
     def __init__(
         self,
-        dm_subset: DmDataset,
+        dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
