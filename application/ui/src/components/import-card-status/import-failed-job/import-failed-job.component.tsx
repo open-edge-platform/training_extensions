@@ -34,7 +34,14 @@ export const ImportFailedJob = ({
         <JobStatusCard
             title={`Import dataset - ${fileName} - ${formatBytes(size)}`}
             actionButtons={
-                <Button variant='secondary' style='fill' aria-label='close import dataset status' onPress={handleClose}>
+                <Button
+                    variant='secondary'
+                    style='fill'
+                    aria-label='close import dataset status'
+                    onPress={handleClose}
+                    isPending={deleteFileMutation.isPending}
+                    isDisabled={deleteFileMutation.isPending}
+                >
                     Close
                 </Button>
             }

@@ -16,7 +16,7 @@ import { useImportDatasetDialog } from '../../providers/import-dataset-dialog-pr
 import { ImportDatasetButtons } from './import-dataset-buttons/import-dataset-buttons.component';
 import { ImportErrorBoundary } from './import-error-boundary.component';
 import { ImportLabelMapping } from './import-label-mapping/import-label-mapping.component';
-import { ImportLoadingCard } from './import-loadind-card.component';
+import { ImportLoadingCard } from './import-loading-card.component';
 import { ImportProcess } from './import-process/import-process.component';
 import { ImportTaskSelection } from './import-task-selection/import-task-selection.component';
 import { ProgressStepper } from './progress-stepper/progress-stepper.component';

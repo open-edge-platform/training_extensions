@@ -85,10 +85,18 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
 
             <View padding={'size-200'} borderRadius={'regular'} backgroundColor={'gray-75'}>
                 <Flex justifyContent={'center'} gap={'size-200'}>
-                    <DatasetStatistics totalMediaItems={totalImages} totalAnnotatedItems={totalAnnotatedImages} />
+                    <DatasetStatistics
+                        label='images'
+                        totalMediaItems={totalImages}
+                        totalAnnotatedItems={totalAnnotatedImages}
+                    />
 
                     {totalFrames > 0 && (
-                        <DatasetStatistics totalMediaItems={totalFrames} totalAnnotatedItems={totalAnnotatedFrames} />
+                        <DatasetStatistics
+                            label='frames'
+                            totalMediaItems={totalFrames}
+                            totalAnnotatedItems={totalAnnotatedFrames}
+                        />
                     )}
                 </Flex>
 

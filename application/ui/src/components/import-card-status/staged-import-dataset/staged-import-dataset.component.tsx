@@ -5,10 +5,10 @@ import { Button } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
+import { getErrorMessage } from '../../../query-client/query-client';
 import { formatBytes } from '../../../shared/util';
 import { DeleteStagedFileConfirmation } from '../../delete-staged-file-confirmation/delete-staged-file-confirmation.component';
 import { JobStatusCard } from '../../job-status-card/job-status-card.component';
-import { getErrorMessage } from '../../util';
 import { ImportFailedJob } from '../import-failed-job/import-failed-job.component';
 
 type StagedImportDatasetProps = {
