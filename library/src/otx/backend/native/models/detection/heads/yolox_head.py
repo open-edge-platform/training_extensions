@@ -408,12 +408,29 @@ class YOLOXHeadModule(BaseDenseHead):
             # without emitting the ONNX NonMaxSuppression op.
             # All ops are static (no dynamic_topk / torch.where) → NPU-compatible.
             #
-            # NOTE: we intentionally avoid ``scores.max(dim=-1)`` here because
-            # its *indices* output is I64 and on Intel NPU (ARL / MTL) the
-            # I64 TopK/ArgMax silently returns all-zeros, labelling every
-            # detection as class 0.  Instead we use ``amax`` (FP32-only) for
-            # the max scores and compute argmax via ``_fp32_argmax`` after
-            # gathering the per-class scores for the selected top-K anchors.
+            # ── NPU compatibility notes ──────────────────────────────────
+            #
+            # ── NPU compatibility notes ──────────────────────────────────
+            #
+            # 1) TopK ranking and the output score use ``scores``
+            #    (Sigmoid(cls) × Sigmoid(objectness)) — this preserves the
+            #    foreground / background separation that objectness provides.
+            #
+            # 2) Label (argmax) computation uses ``cls_scores`` (Sigmoid
+            #    only, no objectness).  On Intel NPU (ARL / MTL) the
+            #    objectness factor can be ~0 for many anchors due to FP16
+            #    truncation.  ``Sigmoid(cls) * 0`` = 0 for every class, so
+            #    argmax returns class 0 for all detections.  Since
+            #    objectness is a scalar per anchor it does not change the
+            #    relative ranking between classes at the same anchor —
+            #    ``argmax(Sigmoid(cls))`` ≡ ``argmax(Sigmoid(cls) * obj)``
+            #    — so dropping it is mathematically safe.
+            #
+            # 3) We avoid ``scores.max(dim=-1)`` / ``torch.argmax`` because
+            #    their *indices* output is I64 and on NPU the I64 TopK /
+            #    ArgMax silently returns all-zeros.  Instead we use ``amax``
+            #    (FP32-only) for max scores and ``_fp32_argmax`` for labels.
+            # ─────────────────────────────────────────────────────────────
             max_scores = scores.amax(dim=-1)  # (B, N) — FP32 only, no I64 indices
 
             # Zero out detections below score threshold
@@ -429,13 +446,14 @@ class YOLOXHeadModule(BaseDenseHead):
             topk_bboxes = bboxes[batch_inds, topk_inds]  # (B, K, 4)
 
             # NPU-compatible FP32 label computation:
-            # Gather the full per-class score vectors (FP32 data, I64 indices
-            # — Gather with I64 *indices* works on NPU; only I64 *data* is
-            # broken), then compute argmax entirely in FP32.
-            num_classes = scores.shape[-1]
+            # Gather from ``cls_scores`` (Sigmoid only, no objectness) so
+            # that argmax is not affected by NPU objectness truncation.
+            # Gather uses I64 *indices* which work on NPU; only I64 *data*
+            # is broken.  Then compute argmax entirely in FP32.
+            num_classes = cls_scores.shape[-1]
             topk_inds_expanded = topk_inds.unsqueeze(-1).expand(-1, -1, num_classes)
-            topk_all_scores = torch.gather(scores, 1, topk_inds_expanded)  # (B, K, C)
-            topk_labels = _fp32_argmax(topk_all_scores)  # (B, K) FP32
+            topk_cls_scores = torch.gather(cls_scores, 1, topk_inds_expanded)  # (B, K, C)
+            topk_labels = _fp32_argmax(topk_cls_scores)  # (B, K) FP32
 
             # Concat score to boxes -> (B, K, 5) [x1, y1, x2, y2, score]
             dets = torch.cat([topk_bboxes, topk_scores.unsqueeze(-1)], dim=-1)
