@@ -289,26 +289,29 @@ def load_ov_model(xml_path: str, device: str = "CPU", with_nms: bool = True) -> 
     # reshape the model to a fixed batch=1 before compilation.
     config: dict = {}
     if device_upper == "NPU":
-        # Check for dynamic output shapes — NMS models have variable-length outputs
-        # (the number of detections is unknown at compile time), which the VPUX
-        # compiler cannot handle.  The symptom is StridedSlice nodes with
-        # INT64_MAX upper bounds propagating into Concat, producing negative dims.
-        # Solution: export the model WITHOUT NMS (--no_nms) so outputs are fully
-        # static ([B, anchors, 4] + [B, anchors, C]), then apply NMS on CPU.
+        # Step 1: resolve the dynamic batch dimension first.
+        # The non-NMS export path produces outputs like [?,100,5] where ? is
+        # just the batch dim.  Reshaping the input to batch=1 propagates
+        # through the graph and makes all shapes fully static.
+        input_shape = model.inputs[0].partial_shape
+        if input_shape.is_dynamic:
+            static_shape = [d.get_length() if not d.is_dynamic else 1
+                            for d in input_shape]
+            model.reshape({model.inputs[0]: static_shape})
+            print(f"[OV] NPU: reshaped input to static {static_shape}")
+
+        # Step 2: after resolving batch, check for truly dynamic outputs
+        # (e.g. NMS-based models where the number of detections is unknown).
         for out in model.outputs:
             ps = out.partial_shape
             if ps.is_dynamic:
                 if with_nms:
-                    # User asked for NMS outputs and the model has them — but NPU
-                    # can't handle dynamic shapes at all.
                     fix_hint = (
                         "Fix: re-export the model WITHOUT NMS, then run with\n"
                         "  --no_nms --ov_device NPU\n"
                         "NMS will be applied on CPU after NPU inference."
                     )
                 else:
-                    # User passed --no_nms but the loaded XML was exported WITH
-                    # NMS — its outputs are dynamic regardless of the script flag.
                     fix_hint = (
                         "You passed --no_nms, but the OV model you loaded was\n"
                         "exported WITH NMS (it has dynamic output shapes).\n"
@@ -330,13 +333,6 @@ def load_ov_model(xml_path: str, device: str = "CPU", with_nms: bool = True) -> 
                 )
 
         config["PERFORMANCE_HINT"] = "LATENCY"
-        # Ensure static input shape for NPU (batch=1 is fixed at export time anyway)
-        input_shape = model.inputs[0].partial_shape
-        if input_shape.is_dynamic:
-            static_shape = [d.get_length() if not d.is_dynamic else 1
-                            for d in input_shape]
-            model.reshape({model.inputs[0]: static_shape})
-            print(f"[OV] NPU: reshaped input to static {static_shape}")
 
     compiled = core.compile_model(model, device_upper, config)
     print(f"[OV] Compiled on: {device_upper}")
