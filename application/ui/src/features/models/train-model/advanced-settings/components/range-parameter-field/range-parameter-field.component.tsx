@@ -41,13 +41,11 @@ export const RangeParameterField = ({
     const fieldStep = getStep({ step, maxValue: defaultValue[1], minValue: defaultValue[0] });
     const decimalPlaces = (fieldStep.toString().split('.')[1] || '').length;
 
-    const handleRangeChangeEnd = (): void => {
-        if (draftRange === null) {
-            return;
-        }
+    const handleRangeChangeEnd = (inputValue: RangeValue<number>): void => {
+        const { start, end } = inputValue;
 
         setDraftRange(null);
-        onChange([draftRange.start, draftRange.end]);
+        onChange([start, end]);
     };
 
     const handleRangeChange = (inputValue: RangeValue<number>): void => {
