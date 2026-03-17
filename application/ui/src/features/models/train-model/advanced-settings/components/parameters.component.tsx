@@ -25,7 +25,7 @@ import {
     StringEnumConfigurableParameter,
 } from '../../../../../constants/shared-types';
 import { isParameter, isParameterGroup } from '../../../model-listing/model-training-parameters/utils';
-import { isBoolEnableParameter } from '../utils';
+import { isBoolEnableParameter, isEnumNumberParameter, isEnumStringParameter, isNumberParameter } from '../utils';
 import { BooleanParameterField } from './boolean-parameter-field.component';
 import { NumberParameterField } from './number-parameter-field.component';
 import { RangeParameterField } from './range-parameter-field/range-parameter-field.component';
@@ -144,21 +144,54 @@ const ParameterReadOnly = ({ parameter, marginStart }: ParameterReadOnlyProps) =
     );
 };
 
-export const EnumParameterField = <T extends NumberEnumConfigurableParameter | StringEnumConfigurableParameter>({
+const StringEnumParameterField = ({
     parameter,
     onChange,
     isDisabled,
 }: {
-    parameter: T;
-    onChange: (parameter: T) => void;
+    parameter: StringEnumConfigurableParameter;
+    onChange: (parameter: StringEnumConfigurableParameter) => void;
     isDisabled?: boolean;
 }) => {
     const handleChange = (value: Key) => {
-        const newValue = parameter.value_type === 'str' ? value.toString() : Number(value);
-
         onChange({
             ...parameter,
-            value: newValue,
+            value: value.toString(),
+        });
+    };
+
+    const items = parameter.allowed_values.map((value) => ({ value }));
+
+    return (
+        <Picker
+            isDisabled={isDisabled}
+            items={items}
+            selectedKey={parameter.value.toString()}
+            onSelectionChange={(key) => key !== null && handleChange(key)}
+            aria-label={`Select ${parameter.name}`}
+        >
+            {(item) => (
+                <Item key={item.value}>
+                    <Text>{item.value}</Text>
+                </Item>
+            )}
+        </Picker>
+    );
+};
+
+export const NumberEnumParameterField = ({
+    parameter,
+    onChange,
+    isDisabled,
+}: {
+    parameter: NumberEnumConfigurableParameter;
+    onChange: (parameter: NumberEnumConfigurableParameter) => void;
+    isDisabled?: boolean;
+}) => {
+    const handleChange = (value: Key) => {
+        onChange({
+            ...parameter,
+            value: Number(value),
         });
     };
 
@@ -192,27 +225,33 @@ export const EnumParameterField = <T extends NumberEnumConfigurableParameter | S
 };
 
 const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps) => {
-    if (parameter.value_type === 'float' || parameter.value_type === 'int') {
-        if (parameter.allowed_values === null) {
-            const handleChange = (value: number) => {
-                onChange({
-                    ...parameter,
-                    value,
-                });
-            };
+    if (isEnumStringParameter(parameter)) {
+        return <StringEnumParameterField parameter={parameter} onChange={onChange} isDisabled={isDisabled} />;
+    }
 
-            return (
-                <NumberParameterField
-                    value={parameter.value}
-                    minValue={parameter.min_value ?? null}
-                    maxValue={parameter.max_value ?? null}
-                    onChange={handleChange}
-                    type={parameter.value_type}
-                    isDisabled={isDisabled}
-                    name={parameter.name}
-                />
-            );
-        }
+    if (isEnumNumberParameter(parameter)) {
+        return <NumberEnumParameterField parameter={parameter} onChange={onChange} />;
+    }
+
+    if (isNumberParameter(parameter)) {
+        const handleChange = (value: number) => {
+            onChange({
+                ...parameter,
+                value,
+            });
+        };
+
+        return (
+            <NumberParameterField
+                value={parameter.value}
+                minValue={parameter.min_value ?? null}
+                maxValue={parameter.max_value ?? null}
+                onChange={handleChange}
+                type={parameter.value_type}
+                isDisabled={isDisabled}
+                name={parameter.name}
+            />
+        );
     }
 
     if (parameter.value_type === 'float_range') {
@@ -301,22 +340,24 @@ const ParametersList = ({ parameters, onChange, isReadOnly }: ParametersListProp
 const ParametersContainer = ({
     children,
     isReadOnly,
-    gap = 'size-300',
+    columnGap = 'size-300',
+    rowGap = 'size-300',
 }: {
     children: ReactNode;
     isReadOnly?: boolean;
-    gap?: DimensionValue;
+    columnGap?: DimensionValue;
+    rowGap?: DimensionValue;
 }) => {
-    const columns = isReadOnly ? ['max-content', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
+    const columns = isReadOnly ? ['size-3000', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
 
     return (
-        <Grid columns={columns} gap={gap} alignItems={'center'}>
+        <Grid columns={columns} columnGap={columnGap} rowGap={rowGap} alignItems={'center'}>
             {children}
         </Grid>
     );
 };
 
-const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGroupListProps) => {
+export const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGroupListProps) => {
     if (
         isParameterGroup(parameters) &&
         isParameter(parameters.parameters[0]) &&
@@ -325,7 +366,7 @@ const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGro
         const [enableParameter, ...configurableParameters] = parameters.parameters;
 
         return (
-            <ParametersContainer gap={'size-150'} isReadOnly={isReadOnly}>
+            <ParametersContainer rowGap={'size-150'} isReadOnly={isReadOnly}>
                 <Parameter
                     header={parameters.name}
                     description={parameters.description}

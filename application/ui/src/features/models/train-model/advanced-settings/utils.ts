@@ -10,6 +10,7 @@ import {
     NumberConfigurableParameter,
     NumberEnumConfigurableParameter,
     StringConfigurableParameter,
+    StringEnumConfigurableParameter,
     type ConfigurableParameterGroup,
     type TrainingConfigurationParameter,
 } from '../../../../constants/shared-types';
@@ -49,7 +50,7 @@ export const isEnumNumberParameter = (input: ConfigurableParameter): input is Nu
     return isNumberParameter(input) && input.allowed_values != null;
 };
 
-export const isEnumStringParameter = (input: ConfigurableParameter): input is StringConfigurableParameter => {
+export const isEnumStringParameter = (input: ConfigurableParameter): input is StringEnumConfigurableParameter => {
     return isStringParameter(input) && input.allowed_values != null;
 };
 
@@ -60,6 +61,22 @@ export const isEnumParameter = (input: ConfigurableParameter): input is EnumConf
 export const isConfigurationParameter = (input: unknown): input is ConfigurableParameter => {
     return isObject(input) && 'key' in input && 'name' in input && 'description' in input;
 };
+
+export const deepReplaceParameter = (
+    parameters: TrainingConfigurationParameter[],
+    updated: ConfigurableParameter,
+    targetGroupKey: string,
+    currentGroupKey?: string
+): TrainingConfigurationParameter[] =>
+    parameters.map((parameter) => {
+        if (isParameterGroup(parameter)) {
+            return {
+                ...parameter,
+                parameters: deepReplaceParameter(parameter.parameters, updated, targetGroupKey, parameter.key),
+            };
+        }
+        return parameter.key === updated.key && currentGroupKey === targetGroupKey ? updated : parameter;
+    });
 
 export const replaceByKey = (
     parameters: TrainingConfigurationParameter[],

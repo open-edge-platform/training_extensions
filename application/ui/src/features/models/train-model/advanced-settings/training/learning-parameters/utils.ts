@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    ConfigurableParameter,
     ConfigurableParameterGroup,
     NumberEnumConfigurableParameter,
     TrainingConfiguration,
@@ -10,12 +11,36 @@ import {
 import { findGroupByKey, isParameter } from '../../../../model-listing/model-training-parameters/utils';
 import { isEnumNumberParameter } from '../../utils';
 
-export type LearningConfigurationParameters = ConfigurableParameterGroup;
+type LearningConfigurationGroupParameters = Omit<ConfigurableParameterGroup, 'parameters'> & {
+    parameters: ConfigurableParameter[];
+};
+
+export type LearningConfigurationParameters = (ConfigurableParameter | LearningConfigurationGroupParameters)[];
+
+export type LearningConfigurationGroup = Omit<ConfigurableParameterGroup, 'parameters'> & {
+    parameters: LearningConfigurationParameters;
+};
 
 export const getLearningParameters = (
     trainingConfiguration: TrainingConfiguration
-): LearningConfigurationParameters | undefined => {
-    return findGroupByKey(trainingConfiguration.parameters, 'training');
+): LearningConfigurationGroup | undefined => {
+    const trainingParameters = findGroupByKey(trainingConfiguration.parameters, 'training');
+
+    if (trainingParameters === undefined) return undefined;
+
+    return {
+        ...trainingParameters,
+        parameters: trainingParameters.parameters.map((parameter) => {
+            if (isParameter(parameter)) {
+                return parameter;
+            }
+
+            return {
+                ...parameter,
+                parameters: parameter.parameters.filter(isParameter),
+            };
+        }),
+    };
 };
 
 export const isInputSizeWidthParameter = (
@@ -38,3 +63,27 @@ export const getInputSizeWidthParameter = (
 export const getInputSizeHeightParameter = (
     parameters: TrainingConfigurationParameter[]
 ): NumberEnumConfigurableParameter | undefined => parameters.find(isInputSizeHeightParameter);
+
+export const groupDependentParameters = (parameters: ConfigurableParameter[]): ConfigurableParameter[] => {
+    return parameters
+        .reduce<ConfigurableParameter[][]>((acc, curr) => {
+            if (isParameter(curr) && curr.depends_on == null) {
+                const parametersDependingOnCurr = parameters.filter((parameter) => {
+                    return (
+                        isParameter(parameter) &&
+                        parameter.depends_on != null &&
+                        parameter.depends_on[curr.key] === curr.value
+                    );
+                });
+
+                return [...acc, [curr, ...parametersDependingOnCurr]];
+            }
+
+            if (isParameter(curr) && curr.depends_on != null) {
+                return acc;
+            }
+
+            return [...acc, [curr]];
+        }, [])
+        .flatMap((group) => group);
+};
