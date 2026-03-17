@@ -72,7 +72,7 @@ class MultilabelClassificationSample(BaseSample):
         confidence: Array of confidence scores for each label. Only for model predictions.
     """
 
-    label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
+    label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True, is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
     @staticmethod
