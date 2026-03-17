@@ -7,7 +7,7 @@
 
 # UI files
 !ui/src
-!ui/public/index.html
+!ui/public
 !ui/packages
 !ui/package.json
 !ui/package-lock.json
