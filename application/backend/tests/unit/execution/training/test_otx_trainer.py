@@ -402,7 +402,7 @@ class TestOTXTrainerCreateTrainingDataset:
                     "batch_size": 8,
                     "num_workers": 4,
                     "sampler": {"class_path": "torch.utils.data.RandomSampler"},
-                    "transforms": [
+                    "augmentations_cpu": [
                         {"class_path": "torchvision.transforms.v2.RandomHorizontalFlip", "init_args": {"p": 0.5}}
                     ],
                 },
@@ -410,23 +410,23 @@ class TestOTXTrainerCreateTrainingDataset:
                     "batch_size": 4,
                     "num_workers": 2,
                     "sampler": {"class_path": "torch.utils.data.RandomSampler"},
-                    "transforms": [],
+                    "augmentations_cpu": [],
                 },
                 "test_subset": {
                     "batch_size": 2,
                     "num_workers": 1,
                     "sampler": {"class_path": "torch.utils.data.RandomSampler"},
-                    "transforms": [],
+                    "augmentations_cpu": [],
                 },
             }
         }
 
-        # Mock TorchVisionTransformLib.generate to return mock transforms
+        # Mock TransformLibFactory.generate to return mock transforms
         mock_train_transforms = [Mock()]
         mock_val_transforms = [Mock()]
         mock_test_transforms = [Mock()]
 
-        with patch("app.execution.training.otx_trainer.TorchVisionTransformLib.generate") as mock_generate:
+        with patch("app.execution.training.otx_trainer.TransformLibFactory.generate") as mock_generate:
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 
             # Mock the __get_otx_dataset_class_by_task_type method to return a proper mock class

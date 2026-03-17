@@ -21,9 +21,6 @@ if TYPE_CHECKING:
 
     from otx.data.entity.base import ImageInfo
 
-# High-bit-depth converter registration
-from otx.data.entity import _highbit_converter as _highbit_converter  # noqa: PLC0414
-
 #: Map from IntensityConfig.storage_dtype strings to Polars dtype instances.
 STORAGE_DTYPE_MAP: dict[str, pl.DataType] = {
     "uint8": pl.UInt8(),

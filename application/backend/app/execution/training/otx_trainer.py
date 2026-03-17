@@ -24,8 +24,8 @@ from otx.data.dataset import (
     OTXMultilabelClsDataset,
 )
 from otx.data.dataset.base import OTXDataset
+from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.metrics import MetricCallable
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
@@ -229,7 +229,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             subset_cfg_data["input_size"] = training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = TorchVisionTransformLib.generate(  # pyrefly: ignore[bad-assignment]
+            subset_config.transforms = TransformLibFactory.generate(  # pyrefly: ignore[bad-assignment]
                 subset_config
             )
             return subset_config
@@ -368,8 +368,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         model_cfg["init_args"]["label_info"] = otx_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
             input_size=cast(tuple[int, int], otx_datamodule.input_size),
-            mean=otx_datamodule.input_mean,
-            std=otx_datamodule.input_std,
+            mean=otx_datamodule.input_mean if otx_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=otx_datamodule.input_std if otx_datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False)
