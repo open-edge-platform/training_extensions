@@ -8,7 +8,10 @@ import { useAnnotationActions } from '../../../shared/annotator/annotation-actio
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 
-export const useAnnotatorMediaTransition = (onSelectedMediaItem: (item: Media) => void) => {
+type UseAnnotatorMediaTransitionProps = {
+    onSelectedMediaItem: (item: Media) => void;
+};
+export const useAnnotatorMediaTransition = ({ onSelectedMediaItem }: UseAnnotatorMediaTransitionProps) => {
     const { setMediaItem } = useSelectedMediaItem();
     const { setSelectedAnnotations } = useSelectedAnnotations();
     const { resetAnnotations } = useAnnotationActions();

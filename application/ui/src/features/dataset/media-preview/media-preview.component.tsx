@@ -36,7 +36,7 @@ type MediaPreviewContentProps = {
     fetchNextPage: () => void;
 };
 
-type MediaPreviewScopedContentProps = {
+type MediaPreviewPanelsProps = {
     mode: AnnotatorMode;
     changeAnnotatorMode: (mode: AnnotatorMode) => void;
     items: Media[];
@@ -47,7 +47,7 @@ type MediaPreviewScopedContentProps = {
     fetchNextPage: () => void;
 };
 
-const MediaPreviewScopedContent = ({
+const MediaPreviewPanels = ({
     mode,
     changeAnnotatorMode,
     items,
@@ -56,9 +56,9 @@ const MediaPreviewScopedContent = ({
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-}: MediaPreviewScopedContentProps) => {
+}: MediaPreviewPanelsProps) => {
     const { mediaItem } = useSelectedMediaItem();
-    const handleMediaTransition = useAnnotatorMediaTransition(onSelectedMediaItem);
+    const handleMediaTransition = useAnnotatorMediaTransition({ onSelectedMediaItem });
 
     return (
         <>
@@ -116,7 +116,7 @@ const MediaPreviewContent = ({
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <MediaPreviewScopedContent
+                <MediaPreviewPanels
                     mode={mode}
                     changeAnnotatorMode={setMode}
                     items={items}
