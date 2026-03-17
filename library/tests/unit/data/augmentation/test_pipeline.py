@@ -20,6 +20,8 @@ from otx.config.data import IntensityConfig, SubsetConfig
 from otx.data.augmentation.pipeline import (
     CPUAugmentationPipeline,
     GPUAugmentationPipeline,
+    _configure_input_size,
+    _eval_input_size_str,
     _IntensityAdapter,
 )
 
@@ -249,36 +251,36 @@ class TestCPUAugmentationPipelineInputSize:
     """Tests for _configure_input_size and _eval_input_size_str."""
 
     def test_eval_simple_tuple(self):
-        result = CPUAugmentationPipeline._eval_input_size_str("(224, 224)")
+        result = _eval_input_size_str("(224, 224)")
         assert result == (224, 224)
 
     def test_eval_multiplication(self):
-        result = CPUAugmentationPipeline._eval_input_size_str("(224, 224) * 2")
+        result = _eval_input_size_str("(224, 224) * 2")
         assert result == (448, 448)
 
     def test_eval_division(self):
-        result = CPUAugmentationPipeline._eval_input_size_str("(400, 400) / 2")
+        result = _eval_input_size_str("(400, 400) / 2")
         assert result == (200, 200)
 
     def test_eval_int(self):
-        result = CPUAugmentationPipeline._eval_input_size_str("224")
+        result = _eval_input_size_str("224")
         assert result == 224
 
     def test_eval_negative(self):
-        result = CPUAugmentationPipeline._eval_input_size_str("-1")
+        result = _eval_input_size_str("-1")
         assert result == -1
 
     def test_eval_bad_syntax_raises(self):
         """Addition is not supported in the safe eval — should raise SyntaxError."""
         with pytest.raises(SyntaxError, match="Bad syntax"):
-            CPUAugmentationPipeline._eval_input_size_str("(224, 224) + 1")
+            _eval_input_size_str("(224, 224) + 1")
 
     def test_configure_input_size_no_placeholder(self):
         cfg = {
             "class_path": "torchvision.transforms.v2.Resize",
             "init_args": {"size": [224, 224]},
         }
-        result = CPUAugmentationPipeline._configure_input_size(cfg, (320, 320))
+        result = _configure_input_size(cfg, (320, 320))
         assert result["init_args"]["size"] == [224, 224]
 
     def test_configure_input_size_missing_raises(self):
@@ -287,11 +289,11 @@ class TestCPUAugmentationPipelineInputSize:
             "init_args": {"size": "$(input_size)"},
         }
         with pytest.raises(RuntimeError, match="input_size is set to None"):
-            CPUAugmentationPipeline._configure_input_size(cfg, None)
+            _configure_input_size(cfg, None)
 
     def test_configure_input_size_no_init_args(self):
         cfg = {"class_path": "torchvision.transforms.v2.RandomHorizontalFlip"}
-        result = CPUAugmentationPipeline._configure_input_size(cfg, (224, 224))
+        result = _configure_input_size(cfg, (224, 224))
         assert result == cfg
 
 

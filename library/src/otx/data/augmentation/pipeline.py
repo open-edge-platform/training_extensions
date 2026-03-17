@@ -72,6 +72,117 @@ _DTYPE_TO_BIT_DEPTH: dict[str, int] = {
 }
 
 
+def _eval_input_size_str(str_to_eval: str) -> tuple[int, ...] | int:
+    """Safely evaluate an arithmetic expression involving ``$(input_size)``.
+
+    Only multiplication and division are supported.  Operands may be
+    constants or tuples.  The result is rounded to ``int``.
+
+    Args:
+        str_to_eval: String expression to evaluate.
+
+    Returns:
+        Evaluated result as int or tuple of ints.
+    """
+    bin_ops: dict[type, Callable[[Any, Any], Any]] = {
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+    }
+    un_ops: dict[type, Callable[[Any], Any]] = {
+        ast.USub: operator.neg,
+        ast.UAdd: operator.pos,
+    }
+    available_ops = tuple(bin_ops) + tuple(un_ops) + (ast.BinOp, ast.UnaryOp)
+
+    tree = ast.parse(str_to_eval, mode="eval")
+
+    def _eval(node: Any) -> Any:  # noqa: ANN401
+        if isinstance(node, ast.Expression):
+            return _eval(node.body)
+        if isinstance(node, ast.Constant):
+            return node.value
+        if isinstance(node, ast.Tuple):
+            return torch.tensor([_eval(val) for val in node.elts])
+        if isinstance(node, ast.BinOp) and type(node.op) in bin_ops:
+            left = _eval(node.left)
+            right = _eval(node.right)
+            return bin_ops[type(node.op)](left, right)
+        if isinstance(node, ast.UnaryOp) and type(node.op) in un_ops:
+            operand = _eval(node.operand) if isinstance(node.operand, available_ops) else node.operand.value
+            return un_ops[type(node.op)](operand)
+        msg = f"Bad syntax, {type(node)}. Available operations for calculating input size are {available_ops}"
+        raise SyntaxError(msg)
+
+    ret = _eval(tree)
+    if isinstance(ret, torch.Tensor):
+        return tuple(ret.round().int().tolist())
+    return round(ret)
+
+
+def _configure_input_size(
+    cfg: dict[str, Any],
+    input_size: int | tuple[int, int] | None,
+) -> dict[str, Any]:
+    """Replace ``$(input_size)`` placeholders in augmentation config ``init_args``.
+
+    Input size should be specified as ``$(input_size)``
+    (e.g. ``$(input_size) * 0.5``).  Only simple multiplication or division
+    evaluation is supported.  The function decides whether to pass a ``tuple``
+    or ``int`` based on the type-hint of the target argument.  Floating-point
+    values are rounded to ``int``.
+
+    Args:
+        cfg: Augmentation config dict with ``class_path`` and ``init_args``.
+        input_size: Target input size ``(H, W)`` or single ``int``.
+
+    Returns:
+        Config with placeholders replaced by actual values.
+    """
+    init_args = cfg.get("init_args", {})
+    if not init_args:
+        return cfg
+
+    _input_size: tuple[int, int] | None = None
+    if input_size is not None:
+        _input_size = (input_size, input_size) if isinstance(input_size, int) else tuple(input_size)  # type: ignore[assignment]
+
+    def check_type(value: Any, expected_type: Any) -> bool:  # noqa: ANN401
+        try:
+            typeguard.check_type(value, expected_type)
+        except typeguard.TypeCheckError:
+            return False
+        return True
+
+    model_cls = None
+    for key, val in init_args.items():
+        if not (isinstance(val, str) and "$(input_size)" in val):
+            continue
+
+        if input_size is None:
+            msg = (
+                f"{cfg['class_path'].split('.')[-1]} initial argument has `$(input_size)`, "
+                "but input_size is set to None."
+            )
+            raise RuntimeError(msg)
+
+        if model_cls is None:
+            model_cls = import_object_from_module(cfg["class_path"])
+
+        available_types = typing.get_type_hints(model_cls.__init__).get(key)
+
+        if available_types is None or check_type(_input_size, available_types):
+            # Pass tuple[int, int]
+            init_args[key] = _eval_input_size_str(val.replace("$(input_size)", str(_input_size)))
+        elif check_type(_input_size[0], available_types):  # type: ignore[index]
+            # Pass int
+            init_args[key] = _eval_input_size_str(val.replace("$(input_size)", str(_input_size[0])))  # type: ignore[index]
+        else:
+            msg = f"{key} argument should be able to get int or tuple[int, int], but it can get {available_types}"
+            raise RuntimeError(msg)
+
+    return cfg
+
+
 class _IntensityAdapter(nn.Module):
     """Wrap an intensity transform and stamp ``img_info.bit_depth``.
 
@@ -204,7 +315,7 @@ class CPUAugmentationPipeline(nn.Module):
                 cfg = copy(aug_config)
                 if isinstance(cfg, (dict, DictConfig)):
                     # Handle input_size placeholder
-                    cfg = cls._configure_input_size(dict(cfg), input_size)
+                    cfg = _configure_input_size(dict(cfg), input_size)
 
                     # Instantiate the transform
                     transform = cls._dispatch_transform(cfg)
@@ -236,123 +347,6 @@ class CPUAugmentationPipeline(nn.Module):
 
         msg = f"CPUAugmentationPipeline accepts only DictConfig | dict | nn.Module, got {type(cfg_transform)}."
         raise TypeError(msg)
-
-    @classmethod
-    def _configure_input_size(
-        cls,
-        cfg: dict[str, Any],
-        input_size: int | tuple[int, int] | None,
-    ) -> dict[str, Any]:
-        """Evaluate the input_size and replace the placeholder in the init_args.
-
-        Input size should be specified as $(input_size). (e.g. $(input_size) * 0.5)
-        Only simple multiplication or division evaluation is supported. For example,
-        $(input_size) * -0.5    => supported
-        $(input_size) * 2.1 / 3 => supported
-        $(input_size) + 1       => not supported
-        The function decides to pass tuple type or int type based on the type hint of the argument.
-        float point values are rounded to int.
-
-        Args:
-            cfg: Augmentation config dict with class_path and init_args.
-            input_size: Target input size (H, W) or single int.
-
-        Returns:
-            Config with placeholders replaced by actual values.
-        """
-        init_args = cfg.get("init_args", {})
-        if not init_args:
-            return cfg
-
-        _input_size: tuple[int, int] | None = None
-        if input_size is not None:
-            _input_size = (input_size, input_size) if isinstance(input_size, int) else tuple(input_size)  # type: ignore[assignment]
-
-        def check_type(value: Any, expected_type: Any) -> bool:  # noqa: ANN401
-            try:
-                typeguard.check_type(value, expected_type)
-            except typeguard.TypeCheckError:
-                return False
-            return True
-
-        model_cls = None
-        for key, val in init_args.items():
-            if not (isinstance(val, str) and "$(input_size)" in val):
-                continue
-
-            if input_size is None:
-                msg = (
-                    f"{cfg['class_path'].split('.')[-1]} initial argument has `$(input_size)`, "
-                    "but input_size is set to None."
-                )
-                raise RuntimeError(msg)
-
-            if model_cls is None:
-                model_cls = import_object_from_module(cfg["class_path"])
-
-            available_types = typing.get_type_hints(model_cls.__init__).get(key)
-
-            if available_types is None or check_type(_input_size, available_types):
-                # Pass tuple[int, int]
-                init_args[key] = cls._eval_input_size_str(val.replace("$(input_size)", str(_input_size)))
-            elif check_type(_input_size[0], available_types):  # type: ignore[index]
-                # Pass int
-                init_args[key] = cls._eval_input_size_str(val.replace("$(input_size)", str(_input_size[0])))  # type: ignore[index]
-            else:
-                msg = f"{key} argument should be able to get int or tuple[int, int], but it can get {available_types}"
-                raise RuntimeError(msg)
-
-        return cfg
-
-    @classmethod
-    def _eval_input_size_str(cls, str_to_eval: str) -> tuple[int, ...] | int:
-        """Safe eval function for _configure_input_size.
-
-        The function is implemented for `_configure_input_size`, so implementation is aligned to it as below
-        - Only multiplication or division evaluation are supported.
-        - Only constant and tuple can be operand.
-        - tuple is changed to numpy array before evaluation.
-        - result value is rounded to int.
-
-        Args:
-            str_to_eval: String expression to evaluate.
-
-        Returns:
-            Evaluated result as int or tuple of ints.
-        """
-        bin_ops: dict[type, Callable[[Any, Any], Any]] = {
-            ast.Mult: operator.mul,
-            ast.Div: operator.truediv,
-        }
-        un_ops: dict[type, Callable[[Any], Any]] = {
-            ast.USub: operator.neg,
-            ast.UAdd: operator.pos,
-        }
-        available_ops = tuple(bin_ops) + tuple(un_ops) + (ast.BinOp, ast.UnaryOp)
-
-        tree = ast.parse(str_to_eval, mode="eval")
-
-        def _eval(node: Any) -> Any:  # noqa: ANN401
-            if isinstance(node, ast.Expression):
-                return _eval(node.body)
-            if isinstance(node, ast.Constant):
-                return node.value
-            if isinstance(node, ast.Tuple):
-                return torch.tensor([_eval(val) for val in node.elts])
-            if isinstance(node, ast.BinOp) and type(node.op) in bin_ops:
-                left = _eval(node.left)
-                right = _eval(node.right)
-                return bin_ops[type(node.op)](left, right)
-            if isinstance(node, ast.UnaryOp) and type(node.op) in un_ops:
-                operand = _eval(node.operand) if isinstance(node.operand, available_ops) else node.operand.value
-                return un_ops[type(node.op)](operand)
-            msg = f"Bad syntax, {type(node)}. Available operations for calculating input size are {available_ops}"
-            raise SyntaxError(msg)
-
-        ret = _eval(tree)
-        if isinstance(ret, torch.Tensor):
-            return tuple(ret.round().int().tolist())
-        return round(ret)
 
     def _is_native_torchvision_transform(self, transform: nn.Module) -> bool:
         """Return True if the transform should be applied via ``_apply_native_transform``.
@@ -576,7 +570,7 @@ class GPUAugmentationPipeline(nn.Module):
             cfg = copy(aug_config)
             if isinstance(cfg, (dict, DictConfig)):
                 # Handle input_size placeholder
-                cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)  # noqa: SLF001
+                cfg = _configure_input_size(dict(cfg), input_size)
 
                 # Instantiate the transform
                 transform = cls._dispatch_transform(cfg)
@@ -644,7 +638,6 @@ class GPUAugmentationPipeline(nn.Module):
             masks = [m.unsqueeze(0) for m in masks]  # (N, H, W) -> (N, 1, H, W)
 
         # Kornia expects keypoints as a single (B, N, 2) tensor, not a list.
-        # All samples share the same skeleton, so keypoint counts are identical — just stack.
         if keypoints is not None and "keypoints" in self._data_keys:
             keypoints = torch.stack(keypoints)  # type: ignore[assignment]  # (B, N, 2)
 
