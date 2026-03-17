@@ -39,7 +39,6 @@ export const FrameStep = ({ isDisabled, step, onChangeStep, defaultFps }: FrameS
                 onPress={handleFpsToggle}
                 position={'relative'}
                 aria-label={'Toggle frame mode'}
-                id={`toggle-frame-mode-id-${step}`}
             >
                 <Fps />
                 <View
@@ -50,7 +49,6 @@ export const FrameStep = ({ isDisabled, step, onChangeStep, defaultFps }: FrameS
                     paddingX={'size-50'}
                     UNSAFE_className={classes.frameStepBadge}
                     data-testid={'frame-mode-indicator-id'}
-                    id={'frame-mode-indicator-id'}
                 >
                     {isAllMode ? FRAME_MODE.ALL_FRAMES : FRAME_MODE.ONE_FRAME}
                 </View>
