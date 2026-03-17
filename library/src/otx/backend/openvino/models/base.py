@@ -16,7 +16,7 @@ import openvino
 import torch
 from jsonargparse import ArgumentParser
 from model_api.adapters import OpenvinoAdapter, create_core
-from model_api.models import Model
+from model_api.models import ImageModel, Model
 from model_api.tilers import Tiler
 from torch import Tensor
 
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from model_api.models.result import Result
-    from torchmetrics import Metric
+    from torchmetrics import Metric, MetricCollection
 
     from otx.data.module import OTXDataModule
     from otx.metrics import MetricCallable, MetricInput
@@ -297,7 +297,7 @@ class OVModel:
             infer_request = compiled_model.create_infer_request()
             outputs: list[Result] = []
             for image in numpy_inputs:
-                model_ref = self.model.model if isinstance(self.model, Tiler) else self.model
+                model_ref: ImageModel = self.model.model if isinstance(self.model, Tiler) else self.model  # type: ignore[assignment]
                 resized = model_ref.resize(image, (model_ref.w, model_ref.h))
                 resized = model_ref.input_transform(resized)
                 input_tensor = model_ref._change_layout(resized)  # noqa: SLF001
@@ -357,7 +357,7 @@ class OVModel:
         """
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
-        model = self.model.model if isinstance(self.model, Tiler) else self.model
+        model: ImageModel = self.model.model if isinstance(self.model, Tiler) else self.model  # type: ignore[assignment]
         resized_image = model.resize(image, (model.w, model.h))
         resized_image = model.input_transform(resized_image)
         return model._change_layout(resized_image)  # noqa: SLF001
@@ -414,22 +414,22 @@ class OVModel:
         """
         raise NotImplementedError
 
-    def compute_metrics(self, metric: Metric) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
         """Compute metrics using the provided metric object.
 
         Args:
-            metric (Metric): Metric object.
+            metric (Metric | MetricCollection): Metric object.
 
         Returns:
             dict: Computed metrics.
         """
         return self._compute_metrics(metric)
 
-    def _compute_metrics(self, metric: Metric, **compute_kwargs) -> dict:
+    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict:
         """Compute metrics with additional arguments.
 
         Args:
-            metric (Metric): Metric object.
+            metric (Metric | MetricCollection): Metric object.
             **compute_kwargs: Additional arguments for metric computation.
 
         Returns:

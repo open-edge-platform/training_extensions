@@ -22,7 +22,7 @@ from otx.types.task import OTXTaskType
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import InstanceSegmentationResult
-    from torchmetrics import Metric
+    from torchmetrics import Metric, MetricCollection
 
     from otx.metrics import MetricCallable
     from otx.types import PathLike
@@ -211,11 +211,11 @@ class OVInstanceSegmentationModel(OVModel):
             )
         return {"preds": pred_info, "target": target_info}
 
-    def compute_metrics(self, metric: Metric) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
         """Compute evaluation metrics for the model.
 
         Args:
-            metric (Metric): Metric object to compute the evaluation metrics.
+            metric (Metric | MetricCollection): Metric object to compute the evaluation metrics.
 
         Returns:
             dict: Computed metrics.

@@ -12,7 +12,6 @@ from otx.backend.openvino.engine import OVEngine
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.metrics.types import MetricCallable
-from otx.types.task import OTXTaskType
 
 from app.core.run import ExecutionContext
 from app.execution.quantization.otx_quantizer import OTXQuantizer, QuantizationDependencies
@@ -865,37 +864,3 @@ class TestOTXQuantizerHelpers:
         model.variants.append(deleted_int8)
 
         assert OTXQuantizer._get_int8_variant(model) is None
-
-    @pytest.mark.parametrize(
-        "task_type,exclusive_labels,expected",
-        [
-            (TaskType.CLASSIFICATION, True, OTXTaskType.MULTI_CLASS_CLS),
-            (TaskType.CLASSIFICATION, False, OTXTaskType.MULTI_LABEL_CLS),
-            (TaskType.DETECTION, False, OTXTaskType.DETECTION),
-            (TaskType.INSTANCE_SEGMENTATION, False, OTXTaskType.INSTANCE_SEGMENTATION),
-        ],
-    )
-    def test_get_otx_task_type_by_task(self, task_type, exclusive_labels, expected):
-        task = Task(task_type=task_type, exclusive_labels=exclusive_labels)
-        result = OTXQuantizer._OTXQuantizer__get_otx_task_type_by_task(task)
-        assert result == expected
-
-    def test_get_otx_task_type_unsupported(self):
-        task = Mock(spec=Task)
-        task.task_type = "semantic_segmentation"
-        with pytest.raises(ValueError, match="Unsupported task type"):
-            OTXQuantizer._OTXQuantizer__get_otx_task_type_by_task(task)
-
-    @pytest.mark.parametrize(
-        "task_type,exclusive_labels,expected_callable",
-        [
-            (TaskType.CLASSIFICATION, True, MultiClassClsMetricCallable),
-            (TaskType.CLASSIFICATION, False, MultiLabelClsMetricCallable),
-            (TaskType.DETECTION, False, MeanAPCallable),
-            (TaskType.INSTANCE_SEGMENTATION, False, MaskRLEMeanAPCallable),
-        ],
-    )
-    def test_get_metric_by_task(self, task_type, exclusive_labels, expected_callable):
-        task = Task(task_type=task_type, exclusive_labels=exclusive_labels)
-        result = OTXQuantizer._OTXQuantizer__get_metric_by_task(task)
-        assert result is expected_callable

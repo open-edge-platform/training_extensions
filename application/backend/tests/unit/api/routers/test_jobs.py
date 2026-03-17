@@ -13,6 +13,8 @@ from starlette import status
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
 from app.api.schemas.jobs import JobRequestAdapter
+from app.api.schemas.jobs.quantization import QuantizationRequest
+from app.api.schemas.jobs.training import TrainingRequest
 from app.core.jobs import JobQueue
 from app.core.jobs.control_plane import CancellationResult
 from app.core.jobs.models import Job, JobStatus, JobType
@@ -92,7 +94,7 @@ class TestJobEndpoints:
 
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.json()["job_id"]
-        job_request = cast(TrainingJob, job_request)
+        job_request = cast(TrainingRequest, job_request)
         fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()
         assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-deit-tiny"
@@ -125,6 +127,7 @@ class TestJobEndpoints:
 
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.json()["job_id"]
+        job_request = cast(QuantizationRequest, job_request)
         fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()
         submitted_job = fxt_jobs_queue.submit.call_args[0][0]
