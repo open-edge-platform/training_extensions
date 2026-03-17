@@ -154,17 +154,12 @@ export const EnumParameterField = <T extends NumberEnumConfigurableParameter | S
     isDisabled?: boolean;
 }) => {
     const handleChange = (value: Key) => {
-        if (parameter.value_type === 'str') {
-            onChange({
-                ...parameter,
-                value: value.toString(),
-            });
-        } else {
-            onChange({
-                ...parameter,
-                value: Number(value),
-            });
-        }
+        const newValue = parameter.value_type === 'str' ? value.toString() : Number(value);
+
+        onChange({
+            ...parameter,
+            value: newValue,
+        });
     };
 
     if (parameter.allowed_values.length < 4) {
