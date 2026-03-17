@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
 
 
-# Monkey-patch to fix transform_matrix slicing for list masks
+_KORNIA_PATCHED = False
 _original_transform_list = ops.MaskSequentialOps.transform_list
 
 
@@ -48,19 +48,23 @@ def _fixed_transform_list(cls, input, module, param, extra_args=None):  # noqa: 
         params = cls.get_instance_module_param(param)
         params_i = deepcopy(params)
         for i, inp in enumerate(input):
-            params_i["batch_prob"] = params["batch_prob"][i : i + 1]  # Keep tensor shape
-            # FIX: Slice transform_matrix for index i
+            params_i["batch_prob"] = params["batch_prob"][i : i + 1]
             transform_i = module.transform_matrix[i : i + 1] if module.transform_matrix is not None else None
             tfm_inp = module.transform_masks(
                 inp, params=params_i, flags=module.flags, transform=transform_i, **extra_args
             )
             tfm_input.append(tfm_inp)
         return tfm_input
-    # Use original for non-geometric
     return _original_transform_list.__func__(cls, input, module, param, extra_args)  # type: ignore[attr-defined]
 
 
-ops.MaskSequentialOps.transform_list = classmethod(_fixed_transform_list)  # type: ignore[assignment]
+def _ensure_kornia_patched() -> None:
+    """Apply the Kornia MaskSequentialOps monkey-patch on first use."""
+    global _KORNIA_PATCHED  # noqa: PLW0603
+    if _KORNIA_PATCHED:
+        return
+    ops.MaskSequentialOps.transform_list = classmethod(_fixed_transform_list)  # type: ignore[assignment]
+    _KORNIA_PATCHED = True
 
 
 # Mapping from storage_dtype string to bit depth.
@@ -476,6 +480,7 @@ class GPUAugmentationPipeline(nn.Module):
         # Build Kornia AugmentationSequential for efficient batch processing
         self.aug_sequential: K.AugmentationSequential | None = None
         if self._augmentations_list:
+            _ensure_kornia_patched()
             # Cast to Any because Kornia stubs restrict to _AugmentationBase but
             # any nn.Module works at runtime.
             _augs: Any = self._augmentations_list
