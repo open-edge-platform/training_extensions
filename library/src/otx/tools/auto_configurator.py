@@ -346,7 +346,6 @@ class AutoConfigurator:
         warn(msg, stacklevel=1)
         return OTXDataModule(
             task=datamodule.task,
-            data_format=datamodule.data_format,
             data_root=datamodule.data_root,
             train_subset=datamodule.train_subset,
             val_subset=datamodule.val_subset,

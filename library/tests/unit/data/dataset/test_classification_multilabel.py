@@ -32,7 +32,6 @@ class TestOTXMultilabelClsDataset:
         dataset = OTXMultilabelClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         # Ensure we convert to the expected schema
@@ -44,7 +43,6 @@ class TestOTXMultilabelClsDataset:
         dataset = OTXMultilabelClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         # Empty labels (float) must produce all-zero vector
@@ -72,7 +70,6 @@ class TestOTXMultilabelClsDataset:
         dataset = OTXMultilabelClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            data_format="arrow",
         )
 
         dataset.dm_subset.__len__ = Mock(return_value=4)

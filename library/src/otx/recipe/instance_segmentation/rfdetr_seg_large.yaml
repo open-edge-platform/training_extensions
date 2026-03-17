@@ -70,7 +70,6 @@ overrides:
     - data.test_subset.transforms
   data:
     task: INSTANCE_SEGMENTATION
-    data_format: coco_instances
     input_size:
       - 504
       - 504

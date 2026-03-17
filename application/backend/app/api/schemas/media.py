@@ -136,6 +136,18 @@ class SetMediaAnnotations(BaseModel):
     }
 
 
+class BulkDeleteMedia(BaseModel):
+    """Schema for deleting multiple media at once"""
+
+    media_ids: list[UUID]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {"media_ids": ["d476573e-d43c-42a6-9327-199a9aa75c33", "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"]}
+        }
+    }
+
+
 class MediaAnnotations(BaseModel):
     """
     Media annotations with information about source

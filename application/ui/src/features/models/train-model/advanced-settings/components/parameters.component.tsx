@@ -1,22 +1,56 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { Key, ReactNode } from 'react';
 
-import { Content, ContextualHelp, Grid, Item, minmax, Picker, Text, ToggleButtons, View } from '@geti/ui';
+import {
+    Content,
+    ContextualHelp,
+    DimensionValue,
+    Flex,
+    Grid,
+    Item,
+    minmax,
+    Picker,
+    Text,
+    ToggleButtons,
+    View,
+} from '@geti/ui';
 import { isBoolean, isFunction } from 'lodash-es';
 
-import type { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../constants/shared-types';
+import {
+    ConfigurableParameter,
+    ConfigurableParameterGroup,
+    NumberEnumConfigurableParameter,
+    StringEnumConfigurableParameter,
+} from '../../../../../constants/shared-types';
+import { isParameter, isParameterGroup } from '../../../model-listing/model-training-parameters/utils';
 import { isBoolEnableParameter } from '../utils';
 import { BooleanParameterField } from './boolean-parameter-field.component';
 import { NumberParameterField } from './number-parameter-field.component';
 import { RangeParameterField } from './range-parameter-field/range-parameter-field.component';
 import { ResetButton } from './reset-button.component';
 
+type ParameterGroupWithParameters = Omit<ConfigurableParameterGroup, 'parameters'> & {
+    parameters: ConfigurableParameter[];
+};
+
 type ParametersProps = {
     parameters: ConfigurableParameter[];
     onChange: (parameter: ConfigurableParameter) => void;
     isReadOnly?: boolean;
+};
+
+type ParametersGroupProps = {
+    parameters: ParameterGroupWithParameters[];
+    onChange: (groupKey: string, parameter: ConfigurableParameter) => void;
+    isReadOnly?: boolean;
+};
+
+type ParametersGroupListProps = {
+    parameters: ParameterGroupWithParameters;
+    onChange: (parameter: ConfigurableParameter) => void;
+    isReadOnly: boolean;
 };
 
 const ParameterTooltip = ({ text }: { text: string }) => {
@@ -30,10 +64,12 @@ const ParameterTooltip = ({ text }: { text: string }) => {
 };
 
 type ParameterProps = {
+    header: string;
+    description: string;
     parameter: ConfigurableParameter;
     onChange: (parameter: ConfigurableParameter) => void;
     isDisabled?: boolean;
-    marginStart?: string;
+    marginStart?: DimensionValue;
     isReadOnly: boolean;
 };
 
@@ -48,14 +84,14 @@ type ParameterLayoutProps = {
     description: string;
     onReset?: () => void;
     children: ReactNode;
-    marginStart?: string;
+    marginStart?: DimensionValue;
 };
 
 type ParameterNameProps = {
     name: string;
     description: string;
     gridColumn?: string;
-    marginStart?: string;
+    marginStart?: DimensionValue;
 };
 
 export const ParameterName = ({ name, description, marginStart, gridColumn }: ParameterNameProps) => {
@@ -79,7 +115,7 @@ const ParameterLayout = ({ header, children, description, onReset, marginStart }
 
 type ParameterReadOnlyProps = {
     parameter: Pick<ConfigurableParameter, 'value' | 'name' | 'description'>;
-    marginStart?: string;
+    marginStart?: DimensionValue;
 };
 
 type ParameterReadOnlyValueProps = Pick<ConfigurableParameter, 'value' | 'name'>;
@@ -108,19 +144,21 @@ const ParameterReadOnly = ({ parameter, marginStart }: ParameterReadOnlyProps) =
     );
 };
 
-export const NumberEnumParameterField = ({
+export const EnumParameterField = <T extends NumberEnumConfigurableParameter | StringEnumConfigurableParameter>({
     parameter,
     onChange,
     isDisabled,
 }: {
-    parameter: NumberEnumConfigurableParameter;
-    onChange: (parameter: NumberEnumConfigurableParameter) => void;
+    parameter: T;
+    onChange: (parameter: T) => void;
     isDisabled?: boolean;
 }) => {
-    const handleChange = (value: NumberEnumConfigurableParameter['value']) => {
+    const handleChange = (value: Key) => {
+        const newValue = parameter.value_type === 'str' ? value.toString() : Number(value);
+
         onChange({
             ...parameter,
-            value,
+            value: newValue,
         });
     };
 
@@ -141,7 +179,7 @@ export const NumberEnumParameterField = ({
         <Picker
             items={items}
             selectedKey={parameter.value.toString()}
-            onSelectionChange={(key) => handleChange(key as NumberEnumConfigurableParameter['value'])}
+            onSelectionChange={(key) => key !== null && handleChange(key)}
             aria-label={`Select ${parameter.name}`}
         >
             {(item) => (
@@ -217,7 +255,15 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
     return null;
 };
 
-export const Parameter = ({ parameter, onChange, isDisabled, marginStart, isReadOnly }: ParameterProps) => {
+export const Parameter = ({
+    header,
+    description,
+    parameter,
+    onChange,
+    isDisabled,
+    marginStart,
+    isReadOnly,
+}: ParameterProps) => {
     if (isReadOnly) {
         return <ParameterReadOnly parameter={parameter} marginStart={marginStart} />;
     }
@@ -227,12 +273,7 @@ export const Parameter = ({ parameter, onChange, isDisabled, marginStart, isRead
     };
 
     return (
-        <ParameterLayout
-            header={parameter.name}
-            description={parameter.description}
-            onReset={handleReset}
-            marginStart={marginStart}
-        >
+        <ParameterLayout header={header} description={description} onReset={handleReset} marginStart={marginStart}>
             <ParameterField parameter={parameter} onChange={onChange} isDisabled={isDisabled} />
         </ParameterLayout>
     );
@@ -245,31 +286,88 @@ type ParametersListProps = {
 };
 
 const ParametersList = ({ parameters, onChange, isReadOnly }: ParametersListProps) => {
-    if (isBoolEnableParameter(parameters[0])) {
-        return parameters.map((parameter, index) => (
-            <Parameter
-                key={parameter.name}
-                parameter={parameter}
-                onChange={onChange}
-                isDisabled={index > 0 && !parameters[0].value}
-                marginStart={index > 0 ? 'size-150' : undefined}
-                isReadOnly={isReadOnly}
-            />
-        ));
-    }
-
     return parameters.map((parameter) => (
-        <Parameter key={parameter.name} parameter={parameter} onChange={onChange} isReadOnly={isReadOnly} />
+        <Parameter
+            key={parameter.name}
+            header={parameter.name}
+            description={parameter.description}
+            parameter={parameter}
+            onChange={onChange}
+            isReadOnly={isReadOnly}
+        />
     ));
 };
 
-const ParametersContainer = ({ children, isReadOnly }: { children: ReactNode; isReadOnly?: boolean }) => {
-    const columns = isReadOnly ? ['size-3000', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
+const ParametersContainer = ({
+    children,
+    isReadOnly,
+    gap = 'size-300',
+}: {
+    children: ReactNode;
+    isReadOnly?: boolean;
+    gap?: DimensionValue;
+}) => {
+    const columns = isReadOnly ? ['max-content', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
 
     return (
-        <Grid columns={columns} gap={'size-300'} alignItems={'center'}>
+        <Grid columns={columns} gap={gap} alignItems={'center'}>
             {children}
         </Grid>
+    );
+};
+
+const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGroupListProps) => {
+    if (
+        isParameterGroup(parameters) &&
+        isParameter(parameters.parameters[0]) &&
+        isBoolEnableParameter(parameters.parameters[0])
+    ) {
+        const [enableParameter, ...configurableParameters] = parameters.parameters;
+
+        return (
+            <ParametersContainer gap={'size-150'} isReadOnly={isReadOnly}>
+                <Parameter
+                    header={parameters.name}
+                    description={parameters.description}
+                    parameter={enableParameter}
+                    onChange={onChange}
+                    isReadOnly={isReadOnly}
+                />
+                {configurableParameters.map((configParameter) => (
+                    <Parameter
+                        marginStart={'size-200'}
+                        key={configParameter.key}
+                        header={configParameter.name}
+                        description={configParameter.description}
+                        parameter={configParameter}
+                        onChange={onChange}
+                        isReadOnly={isReadOnly}
+                        isDisabled={!enableParameter.value}
+                    />
+                ))}
+            </ParametersContainer>
+        );
+    }
+
+    return <Parameters parameters={parameters.parameters} onChange={onChange} isReadOnly={isReadOnly} />;
+};
+
+export const ParametersGroup = ({ parameters, onChange, isReadOnly = false }: ParametersGroupProps) => {
+    const handleChange = (groupKey: string) => (parameter: ConfigurableParameter) => {
+        onChange(groupKey, parameter);
+    };
+
+    return (
+        <Flex direction={'column'} gap={'size-300'}>
+            {parameters.map((parameterGroup) => (
+                <ParametersGroupList
+                    key={parameterGroup.key}
+                    parameters={parameterGroup}
+                    onChange={handleChange(parameterGroup.key)}
+                    isReadOnly={isReadOnly}
+                />
+            ))}
+        </Flex>
     );
 };
 

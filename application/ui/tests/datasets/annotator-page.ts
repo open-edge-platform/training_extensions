@@ -93,7 +93,7 @@ export class AnnotatorPage {
         return this.page.getByTestId('annotation-layer');
     }
 
-    async getAnnotationsListItems(label: 'annotation rect' | 'prediction rect') {
+    async getAnnotationsListItems(label: 'annotation rect' | 'prediction rect' | 'annotation polygon') {
         return this.getAnnotationsList()
             .getByLabel(label)
             .evaluateAll((nodes) => nodes.filter((node) => !node.closest('mask')));

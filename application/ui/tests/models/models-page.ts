@@ -47,12 +47,20 @@ export class ModelsPage {
         await this.page.getByRole('button', { name: 'Start' }).click();
     }
 
+    async openModelListingOptionsMenu() {
+        await this.page.getByRole('button', { name: 'Model listing options' }).click();
+    }
+
     async togglePinActiveModel() {
-        await this.page.getByRole('button', { name: 'Pin active model on top' }).click();
+        await this.openModelListingOptionsMenu();
+        await this.page
+            .getByRole('menuitem', { name: /Pin active model on top|Unpin active model from top/ })
+            .click();
     }
 
     async toggleShowHideFailedModels() {
-        await this.page.getByRole('button', { name: 'Show failed models' }).click();
+        await this.openModelListingOptionsMenu();
+        await this.page.getByRole('menuitem', { name: /Show failed models|Hide failed models/ }).click();
     }
 
     getSearchInput() {

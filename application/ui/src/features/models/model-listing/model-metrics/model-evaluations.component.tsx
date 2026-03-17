@@ -1,9 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Fragment } from 'react';
-
-import { Divider, Flex, Text } from '@geti/ui';
+import { Grid, Text } from '@geti/ui';
 
 import type { Evaluation } from '../../../../constants/shared-types';
 import { Box } from '../components/box/box.component';
@@ -20,28 +18,32 @@ type ModelEvaluationMetrics = {
 export const ModelEvaluations = ({ evaluations }: ModelEvaluationMetrics) => {
     const testingMetrics = getTestingMetrics(evaluations);
 
-    return (
-        <Box
-            title={'Evaluations'}
-            content={
-                <Flex alignItems={'center'}>
-                    {testingMetrics.length > 0 ? (
-                        testingMetrics.map(({ name, value }, index) => (
-                            <Fragment key={name}>
-                                {index > 0 && <Divider marginX={'size-300'} orientation={'vertical'} size={'S'} />}
+    if (testingMetrics.length === 0) {
+        return (
+            <Box
+                title={'Evaluations'}
+                content={
+                    <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-900)' }}>
+                        Testing evaluation metrics are not available
+                    </Text>
+                }
+            />
+        );
+    }
 
-                                <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-900)' }}>
-                                    {`${name}: ${formatEvaluationValue(value)}`}
-                                </Text>
-                            </Fragment>
-                        ))
-                    ) : (
+    return (
+        <Grid columns={['1fr', '1fr', '1fr']} gap={'size-200'}>
+            {testingMetrics.map(({ name, value }) => (
+                <Box
+                    key={name}
+                    title={name}
+                    content={
                         <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-900)' }}>
-                            Testing evaluation metrics are not available
+                            {formatEvaluationValue(value)}
                         </Text>
-                    )}
-                </Flex>
-            }
-        />
+                    }
+                />
+            ))}
+        </Grid>
     );
 };

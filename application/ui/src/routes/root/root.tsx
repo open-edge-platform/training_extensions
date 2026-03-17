@@ -3,7 +3,7 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Button, Heading, IllustratedMessage, IntelBrandedLoading, Toast, View } from '@geti/ui';
+import { Button, Heading, IllustratedMessage, IntelBrandedLoading, View } from '@geti/ui';
 import { CloudErrorIcon } from '@geti/ui/icons';
 import { Outlet } from 'react-router';
 
@@ -52,7 +52,6 @@ export const RootLayout = () => {
         <Suspense fallback={<IntelBrandedLoading />}>
             <HealthCheck>
                 <Outlet />
-                <Toast />
             </HealthCheck>
         </Suspense>
     );

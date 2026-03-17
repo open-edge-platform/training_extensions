@@ -1,0 +1,78 @@
+{
+  "version": "2.0.0",
+  "schema": {
+    "attributes": {
+      "image": {
+        "type": [
+          {
+            "name": "ndarray",
+            "module": "numpy"
+          },
+          {
+            "name": "Image",
+            "module": "torchvision.tv_tensors._image"
+          },
+          {
+            "name": "Tensor",
+            "module": "torch"
+          }
+        ],
+        "type_module": "__union__",
+        "field": {
+          "type": "ImageField",
+          "semantic": "default",
+          "dtype": "UInt8",
+          "channels_first": false,
+          "format": "RGB"
+        }
+      },
+      "subset": {
+        "type": "Subset",
+        "type_module": "datumaro.experimental.fields.datasets",
+        "field": {
+          "type": "SubsetField",
+          "semantic": "default",
+          "categories": null,
+          "dtype": "Categorical"
+        }
+      },
+      "masks": {
+        "type": "Mask",
+        "type_module": "torchvision.tv_tensors._mask",
+        "field": {
+          "type": "MaskField",
+          "semantic": "default",
+          "dtype": "UInt8",
+          "channels_first": true,
+          "has_channels_dim": true
+        }
+      },
+      "dm_image_info": {
+        "type": "ImageInfo",
+        "type_module": "datumaro.experimental.fields.images",
+        "field": {
+          "type": "ImageInfoField",
+          "semantic": "default",
+          "dtype": "Struct({'width': Int32, 'height': Int32})"
+        }
+      }
+    },
+    "categories": {
+      "masks": {
+        "type": "MaskCategories",
+        "labels": ["background", "pet", "boundary"],
+        "colormap": {
+          "0": [0, 0, 0],
+          "1": [128, 0, 0],
+          "2": [0, 128, 0]
+        }
+      }
+    }
+  },
+  "object_columns": [],
+  "videos": {
+    "fields": [],
+    "export_mode": "copy",
+    "original_paths": {}
+  }
+}
