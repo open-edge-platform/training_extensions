@@ -493,16 +493,24 @@ test.describe('Annotator', () => {
         await test.step('Select annotation on media 1', async () => {
             await page.getByRole('button', { name: 'selection tool' }).click();
             await page.getByLabel('annotation rect').nth(1).click();
+
+            const selectedAnnotations = annotatorPage.getAnnotationsList().getByLabel('selected annotation');
+            await expect(selectedAnnotations).toHaveCount(1);
         });
 
-        await test.step('Switch to media 2 and back to media 1', async () => {
+        await test.step('Switch to media 2 and back to media 1 resets selection', async () => {
             const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
             await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
 
             await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
             await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+
+            const selectedAnnotations = annotatorPage.getAnnotationsList().getByLabel('selected annotation');
+            await expect(selectedAnnotations).toHaveCount(0);
         });
     });
 
