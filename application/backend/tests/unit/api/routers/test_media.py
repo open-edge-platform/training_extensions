@@ -1581,7 +1581,9 @@ class TestMediaEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json() == {
-            "detail": "Too many media items to predict. Please reduce the number of media or frame range size."
+            "detail": "Too many media items to predict, requested number is 11 while limit is 3. "
+            + "Please reduce the number of media or frame range size or set "
+            + "INFERENCE_MEDIA_LIMIT environment variable with higher value ."
         }
 
         fxt_media_prediction_service.predict_media.assert_not_called()

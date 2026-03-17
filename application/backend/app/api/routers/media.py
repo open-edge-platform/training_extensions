@@ -553,7 +553,10 @@ def media_predict(
     if items_count > inference_media_limit:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Too many media items to predict. Please reduce the number of media or frame range size.",
+            detail=f"Too many media items to predict, requested number is {items_count} "
+            f"while limit is {inference_media_limit}. "
+            f"Please reduce the number of media or frame range size or set INFERENCE_MEDIA_LIMIT "
+            f"environment variable with higher value .",
         )
 
     try:

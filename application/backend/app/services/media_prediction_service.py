@@ -83,9 +83,10 @@ class MediaPredictionService(BaseSessionManagedService):
 
         media_ids: list[UUID] = [media_request.media_id for media_request in request.media]
         media_list = self._media_service.get_media_by_ids(project_id=project.id, media_ids=media_ids)
+        media_dict: dict[UUID, Media] = {media.id: media for media in media_list}
 
         for media_request in request.media:
-            media = next((media for media in media_list if media.id == media_request.media_id), None)
+            media = media_dict.get(media_request.media_id, None)
             if media is None:
                 raise ResourceNotFoundError(ResourceType.MEDIA, str(media_request.media_id))
             if media_request.range is None:
@@ -136,6 +137,7 @@ class MediaPredictionService(BaseSessionManagedService):
         try:
             dataset_item = self._dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=media.id)
             if not dataset_item.user_reviewed:
+                logger.debug(f"Updating predictions for {str(media.id)}.")
                 self._dataset_service.set_dataset_item_annotations(
                     project=project,
                     dataset_item_id=dataset_item.id,
@@ -143,9 +145,13 @@ class MediaPredictionService(BaseSessionManagedService):
                     user_reviewed=False,
                     prediction_model_id=model_id,
                 )
+            else:
+                logger.debug(f"Dataset item {str(media.id)} is already annotated and reviewed by user, skipping.")
             return
         except ResourceNotFoundError:
             pass
+
+        logger.debug(f"Creating dataset item for {str(media.id)}.")
         self._dataset_service.create_dataset_item(
             project_id=project.id,
             task=project.task,
@@ -197,6 +203,20 @@ class MediaPredictionService(BaseSessionManagedService):
         project: Project,
         request: MediaListPredictionRequest,
     ) -> BatchInferenceResult:
+        """
+        Perform batch inference for a number of media. Media can be an image, annotated frame or video frame range.
+        Method loads media metadata and binaries with extracting frames from video if needed and passes
+        binaries to the inference service.
+        As soon as inference is done, results are converted and stored as dataset items if save_predictions is set to
+        True.
+
+        Args:
+            project: Project object containing project information.
+            request: Batch inference request object.
+
+        Returns:
+            BatchInferenceResult object with list of media prediction results.
+        """
         logger.debug("Performing batch inference using model {}", request.model_id)
 
         loaded_media = self._load_media(project=project, request=request)
