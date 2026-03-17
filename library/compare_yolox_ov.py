@@ -289,48 +289,48 @@ def load_ov_model(xml_path: str, device: str = "CPU", with_nms: bool = True) -> 
     # reshape the model to a fixed batch=1 before compilation.
     config: dict = {}
     if device_upper == "NPU":
-        # Step 1: resolve the dynamic batch dimension first.
-        # The non-NMS export path produces outputs like [?,100,5] where ? is
-        # just the batch dim.  Reshaping the input to batch=1 propagates
-        # through the graph and makes all shapes fully static.
-        input_shape = model.inputs[0].partial_shape
-        if input_shape.is_dynamic:
-            static_shape = [d.get_length() if not d.is_dynamic else 1
-                            for d in input_shape]
-            model.reshape({model.inputs[0]: static_shape})
-            print(f"[OV] NPU: reshaped input to static {static_shape}")
+        # # Step 1: resolve the dynamic batch dimension first.
+        # # The non-NMS export path produces outputs like [?,100,5] where ? is
+        # # just the batch dim.  Reshaping the input to batch=1 propagates
+        # # through the graph and makes all shapes fully static.
+        # input_shape = model.inputs[0].partial_shape
+        # if input_shape.is_dynamic:
+        #     static_shape = [d.get_length() if not d.is_dynamic else 1
+        #                     for d in input_shape]
+        #     model.reshape({model.inputs[0]: static_shape})
+        #     print(f"[OV] NPU: reshaped input to static {static_shape}")
 
         # Step 2: after resolving batch, check for truly dynamic outputs
         # (e.g. NMS-based models where the number of detections is unknown).
-        for out in model.outputs:
-            ps = out.partial_shape
-            if ps.is_dynamic:
-                if with_nms:
-                    fix_hint = (
-                        "Fix: re-export the model WITHOUT NMS, then run with\n"
-                        "  --no_nms --ov_device NPU\n"
-                        "NMS will be applied on CPU after NPU inference."
-                    )
-                else:
-                    fix_hint = (
-                        "You passed --no_nms, but the OV model you loaded was\n"
-                        "exported WITH NMS (it has dynamic output shapes).\n"
-                        "The --no_nms script flag only controls how this script\n"
-                        "interprets results; it cannot change the model's graph.\n\n"
-                        "Options:\n"
-                        "  1. Re-export from the checkpoint WITHOUT NMS, then use\n"
-                        "       --no_nms --ov_device NPU   (recommended)\n"
-                        "  2. Use the current (NMS) model on CPU/GPU:\n"
-                        "       --with_nms --ov_device CPU"
-                    )
-                raise RuntimeError(
-                    f"\n\n[NPU] Cannot compile model on NPU: output '{out.any_name}' "
-                    f"has dynamic shape {ps}.\n"
-                    "NPU requires fully static shapes. Models with dynamic outputs\n"
-                    "(e.g. from NMS or strided-slice Focus ops) cannot be compiled\n"
-                    "by the VPUX compiler.\n\n"
-                    + fix_hint + "\n"
-                )
+        # for out in model.outputs:
+        #     ps = out.partial_shape
+        #     if ps.is_dynamic:
+        #         if with_nms:
+        #             fix_hint = (
+        #                 "Fix: re-export the model WITHOUT NMS, then run with\n"
+        #                 "  --no_nms --ov_device NPU\n"
+        #                 "NMS will be applied on CPU after NPU inference."
+        #             )
+        #         else:
+        #             fix_hint = (
+        #                 "You passed --no_nms, but the OV model you loaded was\n"
+        #                 "exported WITH NMS (it has dynamic output shapes).\n"
+        #                 "The --no_nms script flag only controls how this script\n"
+        #                 "interprets results; it cannot change the model's graph.\n\n"
+        #                 "Options:\n"
+        #                 "  1. Re-export from the checkpoint WITHOUT NMS, then use\n"
+        #                 "       --no_nms --ov_device NPU   (recommended)\n"
+        #                 "  2. Use the current (NMS) model on CPU/GPU:\n"
+        #                 "       --with_nms --ov_device CPU"
+        #             )
+        #         raise RuntimeError(
+        #             f"\n\n[NPU] Cannot compile model on NPU: output '{out.any_name}' "
+        #             f"has dynamic shape {ps}.\n"
+        #             "NPU requires fully static shapes. Models with dynamic outputs\n"
+        #             "(e.g. from NMS or strided-slice Focus ops) cannot be compiled\n"
+        #             "by the VPUX compiler.\n\n"
+        #             + fix_hint + "\n"
+        #         )
 
         config["PERFORMANCE_HINT"] = "LATENCY"
 
