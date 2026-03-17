@@ -158,7 +158,7 @@ export const PolygonTool = () => {
             onPointerDown={onPointerDown}
             onPointerMove={mode === PolygonMode.Eraser ? onPointerMoveRemove : onPointerMove}
             onPointerLeave={mode === PolygonMode.Eraser ? onPointerMoveRemove : onPointerMove}
-            style={{ cursor: `url(/icons/cursor/${toolIcon.icon}.png) ${toolIcon.offset}, auto` }}
+            style={{ cursor: `url(${toolIcon.cursorUrl}) ${toolIcon.offset}, auto` }}
         >
             {polygon !== null && !isEmpty(polygon.points) && (
                 <PolygonDraw
