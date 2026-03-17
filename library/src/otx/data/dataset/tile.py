@@ -23,7 +23,7 @@ from otx.data.entity.tile import (
 )
 from otx.types.task import OTXTaskType
 
-from .base import OTXDataset
+from .base import OTXDataset, _ensure_chw_format
 
 if TYPE_CHECKING:
     from otx.config.data import TileConfig
@@ -168,6 +168,8 @@ class OTXTileDataset(OTXDataset):
 
         tile_entities: list[OTXSample] = []
         for tile in tile_ds:
+            # Fix datumaro HWC→CHW format issue for tile images
+            tile.image = _ensure_chw_format(tile.image)
             # apply the same transforms as the original dataset
             object.__setattr__(tile.tile, "source_sample_idx", parent_idx)
             transformed_tile = self._apply_transforms(tile)
