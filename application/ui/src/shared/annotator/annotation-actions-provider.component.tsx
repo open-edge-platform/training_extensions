@@ -56,7 +56,6 @@ export const AnnotationActionsProvider = ({
     mode,
     isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
-    const mediaItemKey = isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
         meta: {
@@ -100,15 +99,10 @@ export const AnnotationActionsProvider = ({
     };
 
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
-    const prevMediaItemKeyRef = useRef(mediaItemKey);
 
-    // Reset annotations when source annotations change or when switching media/frame.
-    if (
-        prevMediaItemKeyRef.current !== mediaItemKey ||
-        !isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)
-    ) {
+    // Reset annotations when source annotations change.
+    if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
         undoRedoActions.reset(initialAnnotations);
-        prevMediaItemKeyRef.current = mediaItemKey;
         prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
     }
 
