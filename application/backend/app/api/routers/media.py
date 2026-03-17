@@ -1,7 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
-import os.path
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -35,7 +34,7 @@ from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType,
 from app.services import DatasetService, MediaPredictionService, MediaService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
-from app.services.media_prediction_service import VideoRangeError
+from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
 from app.services.media_service import InvalidImageError, MediaFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
@@ -545,7 +544,9 @@ def media_predict(
         [
             1
             if media_request.range is None
-            else len(range(media_request.range.start_frame, media_request.range.end_frame, media_request.range.stride))
+            else len(
+                range(media_request.range.start_frame, media_request.range.end_frame + 1, media_request.range.stride)
+            )
             for media_request in request.media
         ]
     )
@@ -559,3 +560,5 @@ def media_predict(
         return media_prediction_service.predict_media(project=project, request=request)
     except VideoRangeError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except BinaryNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

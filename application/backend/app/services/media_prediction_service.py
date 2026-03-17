@@ -5,6 +5,7 @@ from uuid import UUID
 
 import cv2
 import numpy as np
+from loguru import logger
 from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
@@ -21,6 +22,11 @@ from .media_service import MediaService
 class VideoRangeError(ResourceError):
     def __init__(self, resource_id: str, message: str):
         super().__init__(ResourceType.MEDIA, resource_id, message)
+
+
+class BinaryNotFoundError(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 @dataclass(frozen=True)
@@ -48,14 +54,17 @@ class MediaPredictionService(BaseSessionManagedService):
 
     def _load_media_binary(self, project_id: UUID, media: Media) -> np.ndarray:
         binary_path = self._media_service.get_media_binary_path(project_id=project_id, media=media)
-        return cv2.cvtColor(cv2.imread(binary_path), cv2.COLOR_BGR2RGB)  # pyrefly: ignore[no-matching-overload]
+        binary_data = cv2.imread(binary_path)
+        if binary_data is None:
+            raise BinaryNotFoundError(f"Media {str(media.id)} binary cannot be found")
+        return cv2.cvtColor(binary_data, cv2.COLOR_BGR2RGB)
 
     def _load_frame_range(
         self, project: Project, video: Video, video_range: VideoRange
     ) -> list[VideoFrame | NotAnnotatedVideoFrame]:
         video_frames: list[VideoFrame | NotAnnotatedVideoFrame] = []
 
-        frame_indexes = list(range(video_range.start_frame, video_range.end_frame, video_range.stride))
+        frame_indexes = list(range(video_range.start_frame, video_range.end_frame + 1, video_range.stride))
         annotated_frames = self._media_service.search_video_frames_by_video_id_and_indexes(
             project=project, video_id=video.id, frame_indexes=frame_indexes
         )
@@ -109,7 +118,7 @@ class MediaPredictionService(BaseSessionManagedService):
                     project=project, video=video_frame.video, frame_index=video_frame.frame_index
                 )
                 frame_images[video_frame] = frame_image
-                binary_data = cv2.cvtColor(np.asarray(frame_image), cv2.COLOR_BGR2RGB)
+                binary_data = np.asarray(frame_image)
             inputs.append(
                 BatchInferenceInput(
                     media_id=video_frame.video_id, data=binary_data, frame_index=video_frame.frame_index
@@ -164,6 +173,7 @@ class MediaPredictionService(BaseSessionManagedService):
                 for pred in batch_inference_result.predictions
                 if pred.media.id == frame.video_id and pred.media.frame_index == frame.frame_index
             )
+            logger.debug("Prediction is {}, frame is {}", prediction, frame)
             if isinstance(frame, VideoFrame):
                 self._create_or_update_dataset_item(
                     project=project, media=frame, prediction=prediction, model_id=model_id
@@ -187,7 +197,13 @@ class MediaPredictionService(BaseSessionManagedService):
         project: Project,
         request: MediaListPredictionRequest,
     ) -> BatchInferenceResult:
+        logger.debug("Performing batch inference using model {}", request.model_id)
+
         loaded_media = self._load_media(project=project, request=request)
+        logger.debug(
+            "Loaded {} media and {} video frames", len(loaded_media.single_media), len(loaded_media.video_frames)
+        )
+
         inputs, frame_images = self._convert_to_inference_input(project=project, loaded_media=loaded_media)
 
         labels = self._label_service.list_all(project_id=project.id)
@@ -198,6 +214,7 @@ class MediaPredictionService(BaseSessionManagedService):
         batch_inference_result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
 
         if request.save_predictions:
+            logger.debug("Saving inference results as dataset items")
             self._create_dataset_items(
                 project=project,
                 loaded_media=loaded_media,

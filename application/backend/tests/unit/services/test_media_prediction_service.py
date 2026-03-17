@@ -86,9 +86,13 @@ class TestMediaPredictionServiceUnit:
 
         # Assert that one annotated and one unannotated frame is returned
         fxt_media_service.search_video_frames_by_video_id_and_indexes.assert_called_once_with(
-            project=project, video_id=video.id, frame_indexes=[0, 1]
+            project=project, video_id=video.id, frame_indexes=[0, 1, 2]
         )
-        assert result == [video_frame, NotAnnotatedVideoFrame(video=video, frame_index=1)]
+        assert result == [
+            video_frame,
+            NotAnnotatedVideoFrame(video=video, frame_index=1),
+            NotAnnotatedVideoFrame(video=video, frame_index=2),
+        ]
 
     def test_load_media(self, fxt_media_prediction_service, fxt_media_service):
         model_id = uuid4()
@@ -341,7 +345,7 @@ class TestMediaPredictionServiceUnit:
         task = MagicMock(spec=Task)
         project = MagicMock(spec=Project, id=uuid4(), task=task)
 
-        loaded_media = MagicMock(spec=LoadedMedia)
+        loaded_media = LoadedMedia(single_media=[], video_frames=[])
         inputs = MagicMock(spec=list)
         frame_images = MagicMock(spec=dict)
         labels = MagicMock(spec=list)
