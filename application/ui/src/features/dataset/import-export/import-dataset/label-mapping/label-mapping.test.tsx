@@ -47,8 +47,12 @@ describe('LabelMapping', () => {
                     ready_for_import: true,
                     size: 10,
                     metadata: {
-                        num_items: 10,
+                        num_images: 10,
+                        num_frames: 8,
                         num_annotations: 10,
+                        num_videos: 1,
+                        num_annotated_frames: 5,
+                        num_annotated_images: 9,
                         annotation_type: 'polygon',
                         labels: datasetLabels,
                     },

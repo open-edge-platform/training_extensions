@@ -46,8 +46,21 @@ export default defineConfig({
         },
     },
     html: {
+        template: './public/index.html',
         title: 'Geti Tune',
         favicon: './src/assets/icons/build-icon.svg',
+        meta: {
+            description:
+                'Geti provides a "recipe" for every supported task type, which consolidates ' +
+                'necessary information to build a model. Model templates are validated on ' +
+                'various datasets and serve as a one-stop shop for obtaining the best models in general.',
+        },
+    },
+    performance: {
+        preload: {
+            type: 'initial',
+            include: [/roboto-flex-v30-latin-regular.*\.woff2$/],
+        },
     },
     tools: {
         rspack: {

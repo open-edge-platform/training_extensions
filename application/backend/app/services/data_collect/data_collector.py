@@ -12,6 +12,7 @@ from app.models import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCol
 from app.models.media import ImageFormat
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
+from app.services.media_service import ImageMetadata
 from app.stream.stream_data import InferenceData
 
 
@@ -204,11 +205,13 @@ class DataCollector:
             annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
 
             media = media_service.create_image(
-                project_id=project.id,
-                data=frame_data,
-                name=f"{timestamp:.4f}".replace(".", "_"),
-                format=ImageFormat.JPG,
-                source_id=pipeline.source_id,
+                ImageMetadata(
+                    project_id=project.id,
+                    data=frame_data,
+                    name=f"{timestamp:.4f}".replace(".", "_"),
+                    image_format=ImageFormat.JPG,
+                    source_id=pipeline.source_id,
+                )
             )
             dataset_service.create_dataset_item(
                 project_id=project.id,

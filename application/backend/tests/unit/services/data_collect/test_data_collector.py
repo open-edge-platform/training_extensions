@@ -25,6 +25,7 @@ from app.services.data_collect.data_collector import (
     DataCollector,
     FixedRatePolicyChecker,
 )
+from app.services.media_service import ImageMetadata
 
 
 class TestFixedRatePolicyCheckerUnit:
@@ -184,13 +185,13 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_called_once_with(
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
-        mock_create_image.assert_called_once_with(
-            project_id=project.id,
-            data=ANY,
-            name="1735689601_0000",
-            format=ImageFormat.JPG,
-            source_id=pipeline.source_id,
-        )
+        mock_create_image.assert_called_once()
+        metadata: ImageMetadata = mock_create_image.call_args.args[0]
+        assert metadata.project_id == project.id
+        assert metadata.name == "1735689601_0000"
+        assert metadata.image_format == ImageFormat.JPG
+        assert metadata.source_id == pipeline.source_id
+        assert metadata.data is not None
         mock_create_dataset_item.assert_called_once_with(
             project_id=project.id,
             task=project.task,
@@ -246,13 +247,13 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_called_once_with(
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
-        mock_create_image.assert_called_once_with(
-            project_id=project.id,
-            data=ANY,
-            name="1735689601_0000",
-            format=ImageFormat.JPG,
-            source_id=pipeline.source_id,
-        )
+        mock_create_image.assert_called_once()
+        metadata: ImageMetadata = mock_create_image.call_args.args[0]
+        assert metadata.project_id == project.id
+        assert metadata.name == "1735689601_0000"
+        assert metadata.image_format == ImageFormat.JPG
+        assert metadata.source_id == pipeline.source_id
+        assert metadata.data is not None
         mock_create_dataset_item.assert_called_once_with(
             project_id=project.id,
             task=project.task,

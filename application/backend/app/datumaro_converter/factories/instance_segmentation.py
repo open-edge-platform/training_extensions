@@ -9,32 +9,67 @@ from datumaro.experimental.fields import ImageInfo, Subset
 from loguru import logger
 from numpy import ndarray
 
-from app.datumaro_converter.domain import InstanceSegmentationSample
+from app.datumaro_converter.domain import InstanceSegmentationImportExportSample, InstanceSegmentationTrainingSample
 from app.datumaro_converter.utils import ShapeConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Polygon
+from app.utils.typing import NDArrayFloat32, NDArrayInt
 
-from .sample_factory import SampleFactory
+from .sample_factory import SampleFactory, SampleMode
+
+InstanceSegmentationSample = InstanceSegmentationImportExportSample | InstanceSegmentationTrainingSample
 
 
 class InstanceSegmentationSampleFactory(SampleFactory[InstanceSegmentationSample]):
     """Knows how to create instance segmentation samples."""
 
-    sample_type = InstanceSegmentationSample
+    _sample_type_map = {
+        SampleMode.TRAINING: InstanceSegmentationTrainingSample,
+        SampleMode.IMPORT_EXPORT: InstanceSegmentationImportExportSample,
+    }
+
+    def __create_sample_for_mode(
+        self,
+        dataset_item: DatasetItem,
+        media: Media,
+        media_path: str,
+        label: NDArrayInt | None = None,
+        confidence: NDArrayFloat32 | None = None,
+        polygons: NDArrayFloat32 | None = None,
+        user_reviewed: bool = False,
+    ) -> InstanceSegmentationSample | None:
+        label = np.array([]) if label is None else label
+        polygons = np.array([]) if polygons is None else polygons
+        match self._mode:
+            case SampleMode.IMPORT_EXPORT:
+                media_item, media_info = self._get_dm_media_with_info(media, media_path)
+                return InstanceSegmentationImportExportSample(
+                    id=str(dataset_item.id),
+                    media=media_item,
+                    media_info=media_info,
+                    subset=Subset[dataset_item.subset.name],
+                    label=label,
+                    polygons=polygons,
+                    confidence=confidence,
+                    user_reviewed=user_reviewed,
+                )
+            case SampleMode.TRAINING:
+                return InstanceSegmentationTrainingSample(
+                    id=str(dataset_item.id),
+                    image=LazyImage(media_path),
+                    image_info=ImageInfo(width=media.width, height=media.height),
+                    subset=Subset[dataset_item.subset.name],
+                    label=label,
+                    polygons=polygons,
+                    confidence=confidence,
+                )
+            case _:
+                raise ValueError(f"Unsupported sample mode: {self._mode}")
 
     def create_sample(
-        self, dataset_item: DatasetItem, media: Media, image_path: str
+        self, dataset_item: DatasetItem, media: Media, media_path: str
     ) -> InstanceSegmentationSample | None:
         if dataset_item.annotation_data is None:
-            return InstanceSegmentationSample(
-                id=str(dataset_item.id),
-                image=LazyImage(image_path),
-                image_info=ImageInfo(width=media.width, height=media.height),
-                subset=Subset[dataset_item.subset.name],
-                polygons=np.array([]),
-                label=np.array([]),
-                confidence=None,
-                user_reviewed=False,
-            )
+            return self.__create_sample_for_mode(dataset_item, media, media_path)
 
         polygons = self._extract_polygons(dataset_item.annotation_data)
         label_indices = self._extract_label_indices(dataset_item)
@@ -47,14 +82,13 @@ class InstanceSegmentationSampleFactory(SampleFactory[InstanceSegmentationSample
 
         confidences = self._extract_confidences(dataset_item.annotation_data)
 
-        return InstanceSegmentationSample(
-            id=str(dataset_item.id),
-            image=LazyImage(image_path),
-            image_info=ImageInfo(width=media.width, height=media.height),
-            polygons=polygons,
+        return self.__create_sample_for_mode(
+            dataset_item=dataset_item,
+            media=media,
+            media_path=media_path,
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
-            subset=Subset[dataset_item.subset.name],
+            polygons=polygons,
             user_reviewed=True,
         )
 
