@@ -85,6 +85,7 @@ RUN npm ci --audit=false --ignore-scripts
 COPY --link application/ui/tsconfig.json ./
 COPY --link application/ui/rsbuild.config.ts ./
 COPY --link application/ui/src/ src/
+COPY --link application/ui/public/index.html ./public/index.html
 
 ########
 # Web UI
