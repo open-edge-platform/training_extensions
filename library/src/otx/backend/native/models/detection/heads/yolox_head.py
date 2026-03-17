@@ -442,14 +442,16 @@ class YOLOXHeadModule(BaseDenseHead):
             keep_top_k = int(cfg["max_per_img"])  # type: ignore[index]
             topk_scores, topk_inds = torch.topk(max_scores, keep_top_k, dim=1)
 
-            batch_inds = torch.arange(batch_size, device=bboxes.device).view(-1, 1).long()
-            topk_bboxes = bboxes[batch_inds, topk_inds]  # (B, K, 4)
+            # ── NPU-safe gather (no advanced indexing) ───────────────
+            # Advanced indexing like bboxes[batch_inds, topk_inds] traces
+            # to GatherND with a runtime I64 batch index tensor.  On NPU
+            # this causes DEVICE_LOST.  torch.gather along dim=1 is fully
+            # static — the compiler knows the axis at compile time and
+            # only the index *values* vary at runtime.
+            topk_inds_bboxes = topk_inds.unsqueeze(-1).expand(-1, -1, 4)  # (B, K, 4)
+            topk_bboxes = torch.gather(bboxes, 1, topk_inds_bboxes)       # (B, K, 4)
 
             # NPU-compatible FP32 label computation:
-            # Gather from ``cls_scores`` (Sigmoid only, no objectness) so
-            # that argmax is not affected by NPU objectness truncation.
-            # Gather uses I64 *indices* which work on NPU; only I64 *data*
-            # is broken.  Then compute argmax entirely in FP32.
             num_classes = cls_scores.shape[-1]
             topk_inds_expanded = topk_inds.unsqueeze(-1).expand(-1, -1, num_classes)
             topk_cls_scores = torch.gather(cls_scores, 1, topk_inds_expanded)  # (B, K, C)
