@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import tempfile
+from collections.abc import Callable
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -13,10 +14,18 @@ import pytest
 from fastapi import status
 from PIL import Image as PILImage
 
-from app.api.dependencies import get_dataset_service, get_media_service
+from app.api.dependencies import (
+    get_dataset_service,
+    get_inference_media_limit,
+    get_media_prediction_service,
+    get_media_service,
+)
 from app.api.schemas.media import ImageView, MediaViewAdapter, SetMediaAnnotations, VideoFrameView, VideoView
 from app.main import app
 from app.models import (
+    BatchInferenceMedia,
+    BatchInferencePrediction,
+    BatchInferenceResult,
     DatasetItem,
     DatasetItemAnnotation,
     DatasetItemAnnotationStatus,
@@ -27,9 +36,10 @@ from app.models import (
     Video,
     VideoFrame,
 )
-from app.models.media import ImageFormat, VideoFormat
-from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
+from app.models.media import ImageFormat, MediaListPredictionRequest, MediaPredictionRequest, VideoFormat, VideoRange
+from app.services import DatasetService, MediaPredictionService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
+from app.services.media_prediction_service import VideoRangeError
 from app.services.media_service import ImageMetadata, MediaFilters
 
 
@@ -94,6 +104,21 @@ def fxt_dataset_service() -> MagicMock:
     dataset_service = MagicMock(spec=DatasetService)
     app.dependency_overrides[get_dataset_service] = lambda: dataset_service
     return dataset_service
+
+
+@pytest.fixture
+def fxt_media_prediction_service() -> MagicMock:
+    media_prediction_service = MagicMock(spec=MediaPredictionService)
+    app.dependency_overrides[get_media_prediction_service] = lambda: media_prediction_service
+    return media_prediction_service
+
+
+@pytest.fixture
+def fxt_inference_media_limit() -> Callable[[int], None]:
+    def set_limit(limit: int) -> None:
+        app.dependency_overrides[get_inference_media_limit] = lambda: limit
+
+    return set_limit
 
 
 def test_convert_image_to_view(fxt_image_media) -> None:
@@ -1444,3 +1469,124 @@ class TestMediaEndpoints:
             frame_index_from=1,
             frame_index_to=9,
         )
+
+    @pytest.mark.parametrize("save_predictions", [True, False])
+    def test_media_predict(
+        self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client, save_predictions
+    ) -> None:
+        label_id = uuid4()
+        model_id = uuid4()
+        media_id = uuid4()
+        request = MediaListPredictionRequest(
+            model_id=model_id,
+            media=[MediaPredictionRequest(media_id=media_id, range=None)],
+            save_predictions=save_predictions,
+            device="AUTO",
+        )
+
+        fxt_inference_media_limit(10)
+
+        fxt_media_prediction_service.predict_media.return_value = BatchInferenceResult(
+            predictions=[
+                BatchInferencePrediction(
+                    media=BatchInferenceMedia(id=media_id),
+                    prediction=[
+                        DatasetItemAnnotation(
+                            labels=[LabelReference(id=label_id)],
+                            shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                        )
+                    ],
+                )
+            ]
+        )
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/media:predict",
+            json=request.model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "predictions": [
+                {
+                    "media": {
+                        "id": str(media_id),
+                        "frame_index": None,
+                    },
+                    "prediction": [
+                        {
+                            "confidences": None,
+                            "labels": [
+                                {
+                                    "id": str(label_id),
+                                },
+                            ],
+                            "shape": {
+                                "height": 10,
+                                "type": "rectangle",
+                                "width": 10,
+                                "x": 0,
+                                "y": 0,
+                            },
+                        },
+                    ],
+                },
+            ]
+        }
+
+        fxt_media_prediction_service.predict_media.assert_called_once_with(project=fxt_get_project, request=request)
+
+    def test_media_predict_video_range_error(
+        self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client
+    ) -> None:
+        media_id = uuid4()
+        request = MediaListPredictionRequest(
+            model_id=uuid4(),
+            media=[MediaPredictionRequest(media_id=media_id, range=None)],
+            save_predictions=True,
+            device="AUTO",
+        )
+
+        fxt_inference_media_limit(10)
+
+        fxt_media_prediction_service.predict_media.side_effect = VideoRangeError(
+            resource_id=str(media_id), message="Frame range can be specified only for videos."
+        )
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/media:predict",
+            json=request.model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {"detail": "Frame range can be specified only for videos."}
+
+        fxt_media_prediction_service.predict_media.assert_called_once_with(project=fxt_get_project, request=request)
+
+    def test_media_predict_limit_exceeded(
+        self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client
+    ) -> None:
+        media_id = uuid4()
+        request = MediaListPredictionRequest(
+            model_id=uuid4(),
+            media=[
+                MediaPredictionRequest(media_id=media_id, range=VideoRange(start_frame=0, end_frame=100, stride=10))
+            ],
+            save_predictions=True,
+            device="AUTO",
+        )
+
+        fxt_inference_media_limit(3)
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/media:predict",
+            json=request.model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            "detail": "Too many media items to predict, requested number is 11 while limit is 3. "
+            + "Please reduce the number of media or frame range size or set "
+            + "INFERENCE_MEDIA_LIMIT environment variable with higher value ."
+        }
+
+        fxt_media_prediction_service.predict_media.assert_not_called()

@@ -68,6 +68,18 @@ class Settings(BaseSettings):
     ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
     webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
 
+    # Inference
+    inference_media_limit: int = Field(
+        default=10,
+        alias="INFERENCE_MEDIA_LIMIT",
+        description="Maximum number for images or video frames passed for inference",
+    )
+    inference_model_ttl: int = Field(
+        default=60,
+        alias="INFERENCE_MODEL_TTL",
+        description="Time to live for a model loaded for inference, before unloading",
+    )
+
     @property
     def database_url(self) -> str:
         """Get database URL"""
