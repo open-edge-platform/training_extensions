@@ -229,7 +229,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             subset_cfg_data["input_size"] = training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = TransformLibFactory.generate(  # pyrefly: ignore[bad-assignment]
+            subset_config.transforms = TransformLibFactory.generate(  # pyrefly: ignore[missing-attribute,bad-assignment]
                 subset_config
             )
             return subset_config
@@ -291,15 +291,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
             logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
             otx_training_dataset = otx_dataset_class(
                 dm_subset=dm_training_dataset,
-                transforms=train_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_validation_dataset = otx_dataset_class(
                 dm_subset=dm_validation_dataset,
-                transforms=val_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_testing_dataset = otx_dataset_class(
                 dm_subset=dm_testing_dataset,
-                transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
             return DatasetInfo(
