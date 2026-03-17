@@ -5,7 +5,7 @@
 
 The script:
 1. Creates synthetic 32x32 RGB images stored as ``uint16`` tensors
-   (values in 0–65535 range) with two classes: "circle" and "square".
+   (values in 0-65535 range) with two classes: "circle" and "square".
 2. Wraps every image in a ``ClassificationSample``.
 3. Stores all samples in a ``datumaro.experimental.Dataset``.
 4. Exports the dataset to disk with ``export_dataset``.
@@ -69,14 +69,10 @@ def _make_square_image(h: int, w: int) -> torch.Tensor:
 def _generate_image(label_idx: int, seed: int) -> torch.Tensor:
     """Generate a synthetic 3xHxW uint16 image for the given class."""
     torch.manual_seed(seed)
-    if label_idx == 0:
-        img = _make_circle_image(IMAGE_SIZE, IMAGE_SIZE)
-    else:
-        img = _make_square_image(IMAGE_SIZE, IMAGE_SIZE)
+    img = _make_circle_image(IMAGE_SIZE, IMAGE_SIZE) if label_idx == 0 else _make_square_image(IMAGE_SIZE, IMAGE_SIZE)
     # Add slight random noise to make images unique
     noise = torch.randint(0, 1000, (3, IMAGE_SIZE, IMAGE_SIZE), dtype=torch.int32)
-    img = (img + noise).clamp(0, 65535).to(torch.int32)
-    return img
+    return (img + noise).clamp(0, 65535).to(torch.int32)
 
 
 def _build_dataset() -> Dataset:

@@ -89,6 +89,11 @@ _TASK_SPECS: list[_TaskSpec] = [
         recipe_name="rtmpose_tiny",
         dataset_dir="keypoint_detection_coco",
     ),
+    _TaskSpec(
+        task=OTXTaskType.MULTI_CLASS_CLS,
+        recipe_name="tv_mobilenet_v3_small",
+        dataset_dir="classification_dataset_16bit",
+    ),
 ]
 
 
@@ -117,7 +122,10 @@ def _resolve_recipe(spec: _TaskSpec) -> str:
 
 def _id_fn(spec: _TaskSpec) -> str:
     """Readable test-ID for ``pytest.mark.parametrize``."""
-    return f"{spec.task.value}-{spec.recipe_name}"
+    base = f"{spec.task.value}-{spec.recipe_name}"
+    if "16bit" in spec.dataset_dir:
+        return f"{base}-16bit"
+    return base
 
 
 # Filter specs based on ``--task`` CLI option (populated via ``pytest.TASK_LIST``
