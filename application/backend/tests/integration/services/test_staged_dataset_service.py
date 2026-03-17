@@ -6,12 +6,12 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from datumaro.experimental import Dataset, LazyImage, export_dataset
+from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, MediaInfo, export_dataset
 from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.export_import import ExportMode
-from datumaro.experimental.fields import ImageInfo, Subset
+from datumaro.experimental.fields import Subset
 
-from app.datumaro_converter import ClassificationSample
+from app.datumaro_converter import MulticlassClassificationImportExportSample
 from app.models import AnnotationType, DatasetFormat
 from app.models.dataset import DatasetMetadata
 from app.services import StagedDatasetService
@@ -28,15 +28,16 @@ def _make_dataset_archive(root: Path, file_name: str, content: bytes = b"data") 
 
 def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
     dataset_id = uuid4()
-    ds_dir = root / str(dataset_id) / "dataset"
-    ds_dir.mkdir(parents=True)
+    parent_dir = root / str(dataset_id)
+    parent_dir.mkdir(parents=True)
+    ds_dir = parent_dir / "dataset"
     categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-    dataset = Dataset(ClassificationSample, categories=categories)
+    dataset = Dataset(MulticlassClassificationImportExportSample, categories=categories)
     dataset.append(
-        ClassificationSample(
+        MulticlassClassificationImportExportSample(
             id=str(uuid4()),
-            image=LazyImage(ds_dir / "images/image1.jpg"),
-            image_info=ImageInfo(width=200, height=200),
+            media=LazyImage(ds_dir / "images/image1.jpg"),
+            media_info=MediaInfo(width=200, height=200),
             label=0,
             subset=Subset.TRAINING,
             confidence=0.9,
@@ -44,17 +45,28 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
         )
     )
     dataset.append(
-        ClassificationSample(
+        MulticlassClassificationImportExportSample(
             id=str(uuid4()),
-            image=LazyImage(ds_dir / "images/image2.jpg"),
-            image_info=ImageInfo(width=200, height=200),
+            media=LazyImage(ds_dir / "images/image2.jpg"),
+            media_info=MediaInfo(width=200, height=200),
             label=1,
             subset=Subset.TRAINING,
             confidence=0.8,
             user_reviewed=True,
         )
     )
-    export_dataset(dataset, ds_dir, export_images=ExportMode.SKIP)
+    dataset.append(
+        MulticlassClassificationImportExportSample(
+            id=str(uuid4()),
+            media=LazyVideoFrame(video_path=ds_dir / "videos/video1.mp4", frame_index=10),
+            media_info=MediaInfo(width=200, height=200),
+            label=0,
+            subset=Subset.TRAINING,
+            confidence=0.9,
+            user_reviewed=True,
+        )
+    )
+    export_dataset(dataset, ds_dir, export_images=ExportMode.SKIP, export_videos=ExportMode.SKIP)
     return dataset_id, ds_dir
 
 
@@ -137,9 +149,13 @@ class TestStagedDatasetServiceIntegration:
         assert geti_ds.format == DatasetFormat.GETI
         assert geti_ds.filename == str(geti_path)
         assert geti_ds.metadata == DatasetMetadata(
-            num_items=2,
+            num_images=2,
+            num_frames=1,
+            num_videos=1,
             annotation_type=AnnotationType.LABEL,
-            num_annotations=2,
+            num_annotations=3,
+            num_annotated_images=2,
+            num_annotated_frames=1,
             labels=["bird", "cat", "dog"],
         )
 
@@ -194,9 +210,13 @@ class TestStagedDatasetServiceIntegration:
         assert result.compressed is False
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
-            num_items=2,
+            num_images=2,
+            num_frames=1,
+            num_videos=1,
             annotation_type=AnnotationType.LABEL,
-            num_annotations=2,
+            num_annotations=3,
+            num_annotated_images=2,
+            num_annotated_frames=1,
             labels=["bird", "cat", "dog"],
         )
 

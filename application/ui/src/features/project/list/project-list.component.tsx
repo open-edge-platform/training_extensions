@@ -29,8 +29,8 @@ const ProjectGrid = () => {
         >
             <NewProjectMenu />
 
-            {projects.data.map((item) => (
-                <ProjectCard key={item.id} item={item} />
+            {projects.data.map((item, index) => (
+                <ProjectCard key={item.id} item={item} prioritizeImage={index === 0} />
             ))}
         </Grid>
     );

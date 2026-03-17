@@ -3,7 +3,7 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField } from '@geti/ui';
+import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField, toast } from '@geti/ui';
 import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
@@ -42,6 +42,9 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         projects.map((project) => project.name)
     );
 
+    const isMultiClassProject = isClassificationTask(selectedTask) && classificationTaskType === 'single-label';
+    const needsMinimumNumberOfLabels = isMultiClassProject && labels.length < 2;
+
     const isCreateProjectDisabled =
         selectedTask === null || validationErrorMessage !== undefined || labels.length === 0;
 
@@ -49,6 +52,15 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         e.preventDefault();
 
         if (isCreateProjectDisabled) {
+            return;
+        }
+
+        if (needsMinimumNumberOfLabels) {
+            toast({
+                message: 'At least 2 labels are required for single-label classification',
+                type: 'warning',
+            });
+
             return;
         }
 

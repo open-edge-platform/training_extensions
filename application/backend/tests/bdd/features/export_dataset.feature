@@ -13,21 +13,25 @@ Feature: Export Dataset
       | Chardonnay      | 6        | 2          | 2       |
       | Sauvignon Blanc | 6        | 2          | 2       |
       | Cabernet Franc  | 6        | 2          | 2       |
+    And the project contains the following video frame distribution:
+      | Label           | Training | Validation | Testing |
+      | Chardonnay      | 2        | 1          | 1       |
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
-    And the staged dataset with name=<archive name> has <expected images> images
+    And the staged dataset with name=<archive name> has <image count> images
+    And the staged dataset with name=<archive name> has <frame count> video frames
 
     Examples:
-      | export format | archive name     | filters                                                    | expected images |
-      | YOLO          | dataset-yolo.zip | { }                                                        | 30              |
-      | YOLO          | dataset-yolo.zip | { "subsets": ["training", "testing"] }                     | 24              |
-      | YOLO          | dataset-yolo.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
-      | GETI          | dataset-geti.zip | { }                                                        | 30              |
-      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }                     | 24              |
-      | GETI          | dataset-geti.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
-      | COCO          | dataset-coco.zip | { }                                                        | 30              |
-      | COCO          | dataset-coco.zip | { "subsets": ["training", "testing"] }                     | 24              |
-      | COCO          | dataset-coco.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10              |
+      | export format | archive name     | filters                                                    | image count | frame count |
+      | YOLO          | dataset-yolo.zip | { }                                                        | 34          | 0           |
+      | YOLO          | dataset-yolo.zip | { "subsets": ["training", "testing"] }                     | 27          | 0           |
+      | YOLO          | dataset-yolo.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 14          | 0           |
+      | GETI          | dataset-geti.zip | { }                                                        | 30          | 4           |
+      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }                     | 24          | 3           |
+      | GETI          | dataset-geti.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 10          | 4           |
+      | COCO          | dataset-coco.zip | { }                                                        | 34          | 0           |
+      | COCO          | dataset-coco.zip | { "subsets": ["training", "testing"] }                     | 27          | 0           |
+      | COCO          | dataset-coco.zip | { "labels": ["Chardonnay"], "include_unannotated": false } | 14          | 0           |
 
   @export @classification
   Scenario Outline: Export classification project dataset
@@ -36,18 +40,23 @@ Feature: Export Dataset
       | Label | Training | Validation | Testing |
       | cat   | 5        | 5          | 5       |
       | dog   | 5        | 5          | 5       |
+    And the project contains the following video frame distribution:
+      | Label | Training | Validation | Testing |
+      | cat   | 3        | 1          | 1       |
+      | dog   | 3        | 1          | 1       |
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
-    And the staged dataset with name=<archive name> has <expected images> images
+    And the staged dataset with name=<archive name> has <image count> images
+    And the staged dataset with name=<archive name> has <frame count> video frames
 
     Examples:
-      | export format | archive name     | filters                                             | expected images |
-      | GETI          | dataset-geti.zip | { }                                                 | 30              |
-      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }              | 20              |
-      | GETI          | dataset-geti.zip | { "labels": ["cat"], "include_unannotated": false } | 15              |
-#     | VOC    | dataset-voc.zip      | { }                                                 | 30              |
-#     | VOC    | dataset-voc.zip      | { "subsets": ["training", "testing"] }              | 20              |
-#     | VOC    | dataset-voc.zip      | { "labels": ["cat"], "include_unannotated": false } | 15              |
+      | export format | archive name     | filters                                             | image count | frame count |
+      | GETI          | dataset-geti.zip | { }                                                 | 30          | 10          |
+      | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }              | 20          | 8           |
+      | GETI          | dataset-geti.zip | { "labels": ["cat"], "include_unannotated": false } | 15          | 5           |
+#     | VOC    | dataset-voc.zip      | { }                                                 | 40        | 0      |
+#     | VOC    | dataset-voc.zip      | { "subsets": ["training", "testing"] }              | 28        | 0      |
+#     | VOC    | dataset-voc.zip      | { "labels": ["cat"], "include_unannotated": false } | 20        | 0      |
 
   @export @segmentation
   Scenario Outline: Export segmentation project dataset
@@ -56,15 +65,20 @@ Feature: Export Dataset
       | Label  | Training | Validation | Testing |
       | car    | 7        | 5          | 3       |
       | person | 7        | 5          | 3       |
+    And the project contains the following video frame distribution:
+      | Label  | Training | Validation | Testing |
+      | car    | 1        | 1          | 1       |
+      | person | 1        | 1          | 1       |
     When I export the project dataset in <export format> format with filters=<filters>
     Then the staged dataset archive <archive name> should exist
-    And the staged dataset with name=<archive name> has <expected images> images
+    And the staged dataset with name=<archive name> has <image count> images
+    And the staged dataset with name=<archive name> has <frame count> video frames
 
     Examples:
-      | export format | archive name     | filters                       | expected images |
-      | GETI          | dataset-geti.zip | { }                           | 30              |
-      | GETI          | dataset-geti.zip | { "subsets": ["validation"] } | 10              |
-      | GETI          | dataset-geti.zip | { "labels": ["person"] }      | 30              |
-      | COCO          | dataset-coco.zip | { }                           | 30              |
-      | COCO          | dataset-coco.zip | { "subsets": ["validation"] } | 10              |
-      | COCO          | dataset-coco.zip | { "labels": ["person"] }      | 30              |
+      | export format | archive name     | filters                       | image count | frame count |
+      | GETI          | dataset-geti.zip | { }                           | 30           | 6          |
+      | GETI          | dataset-geti.zip | { "subsets": ["validation"] } | 10           | 2          |
+      | GETI          | dataset-geti.zip | { "labels": ["person"] }      | 30           | 6          |
+      | COCO          | dataset-coco.zip | { }                           | 36           | 0          |
+      | COCO          | dataset-coco.zip | { "subsets": ["validation"] } | 12           | 0          |
+      | COCO          | dataset-coco.zip | { "labels": ["person"] }      | 36           | 0          |

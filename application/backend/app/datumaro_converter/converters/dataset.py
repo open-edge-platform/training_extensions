@@ -24,7 +24,7 @@ class DatasetConverter:
     Attributes:
         _factory: The SampleFactory that knows how to create specific sample types.
         _get_items: Callback function to retrieve batches of dataset items and media.
-        _get_path: Callback function to resolve image file paths for dataset items.
+        _get_path: Callback function to resolve media file paths for dataset items.
         _batch_size: Number of items to process in each batch.
 
     Example:
@@ -32,7 +32,7 @@ class DatasetConverter:
         >>> converter = DatasetConverter(
         ...     sample_factory=factory,
         ...     get_dataset_items_and_media=lambda offset, limit: fetch_items(offset, limit),
-        ...     get_image_path=lambda item: f"/images/{item.id}.jpg",
+        ...     get_media_path=lambda item: f"/images/{item.id}.jpg",
         ...     batch_size=100
         ... )
         >>> dataset = converter.convert()
@@ -42,12 +42,12 @@ class DatasetConverter:
         self,
         sample_factory: SampleFactory,
         get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
-        get_image_path: Callable[[DatasetItem], str],
+        get_media_path: Callable[[Media], str],
         batch_size: int = CONVERSION_BATCH_SIZE,
     ):
         self._factory = sample_factory
         self._get_items = get_dataset_items_and_media
-        self._get_path = get_image_path
+        self._get_path = get_media_path
         self._batch_size = batch_size
 
     def convert(self) -> Dataset:
@@ -95,10 +95,10 @@ class DatasetConverter:
             self._process_item(dataset, dataset_item, media)
 
     def _process_item(self, dataset: Dataset, dataset_item: DatasetItem, media: Media):
-        image_path = self._get_path(dataset_item)
+        media_path = self._get_path(media)
 
         try:
-            sample = self._factory.create_sample(dataset_item, media, image_path)
+            sample = self._factory.create_sample(dataset_item, media, media_path)
         except Exception:
             logger.error("Failed conversion: item={}, type={}", dataset_item.id, self._factory.sample_type)
             raise

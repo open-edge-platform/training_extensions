@@ -40,6 +40,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         modelRevisions,
         isAdvancedSettingsMode,
         onToggleAdvancedSettingsMode,
+        trainingConfiguration,
     } = useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
@@ -48,6 +49,8 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
 
     const isStartButtonDisabled =
         isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null;
+
+    const isAdvancedSettingsModeDisabled = selectedModelArchitectureId === null || trainingConfiguration === undefined;
 
     const trainModel = () => {
         if (isStartButtonDisabled) return;
@@ -115,9 +118,23 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     <Button variant={'secondary'} onPress={onClose}>
                         Cancel
                     </Button>
-                    <Button variant={'primary'} onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}>
-                        {isAdvancedSettingsMode ? 'Back' : 'Advanced settings'}
-                    </Button>
+                    {isAdvancedSettingsMode ? (
+                        <Button
+                            variant={'primary'}
+                            onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
+                        >
+                            Back
+                        </Button>
+                    ) : (
+                        <Button
+                            variant={'primary'}
+                            isDisabled={isAdvancedSettingsModeDisabled}
+                            onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
+                        >
+                            Advanced settings
+                        </Button>
+                    )}
+
                     <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
                         Start
                     </Button>

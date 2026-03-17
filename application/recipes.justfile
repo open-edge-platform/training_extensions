@@ -1,3 +1,4 @@
+set unstable
 
 # Demo project archives hosted in S3
 demo_project_urls := "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/apples-tomatoes-classification.zip https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-detection.zip https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/horses-segmentation.zip"
@@ -8,6 +9,22 @@ demo_video_urls := "https://storage.geti.intel.com/test-data/geti/demo-videos/pr
 # Cache directories
 demo_archives_dir := "data/.demo_cache/archives"
 demo_videos_dir := "data/.demo_cache/videos"
+
+# Install uv
+install-uv:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    REPO_ROOT=$(git rev-parse --show-toplevel)
+    UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/')
+    if command -v uv > /dev/null; then
+        INSTALLED_VERSION=$(uv --version | awk '{print $2}')
+        if [[ "$INSTALLED_VERSION" == "$UV_VERSION" ]]; then
+            exit 0
+        else
+            echo "uv version mismatch: installed=${INSTALLED_VERSION}, required=${UV_VERSION}. Reinstalling..."
+        fi
+    fi
+    curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh" | sh
 
 # Download a file from a URL to a destination directory (skips if already present)
 [private]

@@ -85,6 +85,7 @@ export const NumberParameterField = ({
     return (
         <Flex gap={'size-100'}>
             <Slider
+                aria-label={`Change ${name} slider`}
                 value={parameterValue}
                 minValue={minValue}
                 maxValue={maxValue}
