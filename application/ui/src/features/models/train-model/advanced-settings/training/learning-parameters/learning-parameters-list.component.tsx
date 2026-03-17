@@ -44,7 +44,7 @@ export const LearningParametersList = ({
     learningParameters,
     onTrainingConfigurationChange,
 }: LearningParametersListProps) => {
-    const [inputSizeParameters, restParameters] = partition(learningParameters.parameters, isInputSizeParameter);
+    const [inputSizeParameters] = partition(learningParameters.parameters, isInputSizeParameter);
 
     const handleInputSizeParametersChange = (newParameters: ConfigurableParameter[]) => {
         onTrainingConfigurationChange((config) => {

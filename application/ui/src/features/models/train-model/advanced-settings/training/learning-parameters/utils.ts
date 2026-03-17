@@ -18,12 +18,12 @@ export const getLearningParameters = (
     return findGroupByKey(trainingConfiguration.parameters, 'training');
 };
 
-const isInputSizeWidthParameter = (
+export const isInputSizeWidthParameter = (
     parameter: TrainingConfigurationParameter
 ): parameter is NumberEnumConfigurableParameter =>
     isParameter(parameter) && isEnumNumberParameter(parameter) && parameter.key === 'input_size_width';
 
-const isInputSizeHeightParameter = (
+export const isInputSizeHeightParameter = (
     parameter: TrainingConfigurationParameter
 ): parameter is NumberEnumConfigurableParameter =>
     isParameter(parameter) && isEnumNumberParameter(parameter) && parameter.key === 'input_size_height';
