@@ -6,7 +6,10 @@ import { get, isBoolean, isNumber, isObject } from 'lodash-es';
 import {
     BoolConfigurableParameter,
     ConfigurableParameter,
+    EnumConfigurableParameter,
     NumberConfigurableParameter,
+    NumberEnumConfigurableParameter,
+    StringConfigurableParameter,
     type ConfigurableParameterGroup,
     type TrainingConfigurationParameter,
 } from '../../../../constants/shared-types';
@@ -30,13 +33,8 @@ export const isBoolParameter = (input: unknown): input is BoolConfigurableParame
     return isObject(input) && get(input, 'value_type') === 'bool' && isBoolean(get(input, 'value'));
 };
 
-export const isEnumParameter = (input: unknown) => {
-    return (
-        isObject(input) &&
-        get(input, 'type') === 'enum' &&
-        get(input, 'allowed_values') !== undefined &&
-        get(input, 'value') !== undefined
-    );
+export const isStringParameter = (input: ConfigurableParameter): input is StringConfigurableParameter => {
+    return input.value_type === 'str';
 };
 
 export const isNumberParameter = (input: unknown): input is NumberConfigurableParameter => {
@@ -45,6 +43,18 @@ export const isNumberParameter = (input: unknown): input is NumberConfigurablePa
         (get(input, 'value_type') === 'float' || get(input, 'value_type') === 'int') &&
         isNumber(get(input, 'value'))
     );
+};
+
+export const isEnumNumberParameter = (input: ConfigurableParameter): input is NumberEnumConfigurableParameter => {
+    return isNumberParameter(input) && input.allowed_values != null;
+};
+
+export const isEnumStringParameter = (input: ConfigurableParameter): input is StringConfigurableParameter => {
+    return isStringParameter(input) && input.allowed_values != null;
+};
+
+export const isEnumParameter = (input: ConfigurableParameter): input is EnumConfigurableParameter => {
+    return isEnumNumberParameter(input) || isEnumStringParameter(input);
 };
 
 export const isConfigurationParameter = (input: unknown): input is ConfigurableParameter => {

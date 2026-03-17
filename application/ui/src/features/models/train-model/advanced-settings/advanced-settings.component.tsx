@@ -48,7 +48,13 @@ export const AdvancedSettings = () => {
         },
         {
             name: 'Training',
-            children: <Training />,
+            children: (
+                <Training
+                    trainingConfiguration={trainingConfiguration}
+                    defaultTrainingConfiguration={defaultTrainingConfiguration}
+                    onTrainingConfigurationChange={onTrainingConfigurationChange}
+                />
+            ),
         },
     ];
 
