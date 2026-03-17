@@ -2,15 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import polars as pl
-from datumaro.experimental import LazyImage, Sample, register_sample
+from datumaro.experimental import LazyImage, LazyVideoFrame, MediaInfo, Sample, register_sample
 from datumaro.experimental.fields import (
-    ImageInfo,
     Subset,
     bbox_field,
     bool_field,
-    image_info_field,
-    image_path_field,
     label_field,
+    media_info_field,
+    media_path_field,
     numeric_field,
     polygon_field,
     string_field,
@@ -21,27 +20,27 @@ from app.models import AnnotationType
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 
-class BaseSample(Sample):
+class BaseImportExportSample(Sample):
     """
-    Base sample class with shared attributes.
+    Base sample class for import/export with shared attributes.
 
     Attributes:
         id: Unique identifier of the sample
-        image: Path to the image
-        image_info: Image information (width, height)
+        media: Path to the media (image or video frame)
+        media_info: Media information (width, height, etc.)
         subset: Subset name to which the sample belongs to
         user_reviewed: Whether the sample is annotated (True) or unannotated (False)
     """
 
-    id: str | None = string_field(semantic="id")  # todo: make required for training
-    image: LazyImage = image_path_field()
-    image_info: ImageInfo = image_info_field()
+    id: str | None = string_field(semantic="id")
+    media: LazyImage | LazyVideoFrame = media_path_field()
+    media_info: MediaInfo = media_info_field()
     subset: Subset = subset_field()
-    user_reviewed: bool | None = bool_field(semantic="user_reviewed")  # todo: keep only for import/export
+    user_reviewed: bool | None = bool_field(semantic="user_reviewed")
 
 
 @register_sample
-class ClassificationSample(BaseSample):
+class MulticlassClassificationImportExportSample(BaseImportExportSample):
     """
     Sample for multiclass classification datasets.
 
@@ -63,7 +62,7 @@ class ClassificationSample(BaseSample):
 
 
 @register_sample
-class MultilabelClassificationSample(BaseSample):
+class MultilabelClassificationImportExportSample(BaseImportExportSample):
     """
     Sample for multilabel classification datasets.
 
@@ -85,7 +84,7 @@ class MultilabelClassificationSample(BaseSample):
 
 
 @register_sample
-class DetectionSample(BaseSample):
+class DetectionImportExportSample(BaseImportExportSample):
     """
     Sample for object detection datasets.
 
@@ -109,7 +108,7 @@ class DetectionSample(BaseSample):
 
 
 @register_sample
-class InstanceSegmentationSample(BaseSample):
+class InstanceSegmentationImportExportSample(BaseImportExportSample):
     """
     Sample for instance segmentation datasets.
 

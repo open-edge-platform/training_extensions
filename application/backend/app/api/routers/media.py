@@ -27,7 +27,7 @@ from app.models.media import ImageFormat, MediaType, NotAnnotatedVideoFrame, Vid
 from app.services import DatasetService, MediaService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
-from app.services.media_service import InvalidImageError, MediaFilters
+from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
 
@@ -160,14 +160,16 @@ def add_media(
 ) -> MediaView:
     """Add a new media to the dataset by uploading an image or a video"""
     name, extension = file_name_and_extension
-    format = _parse_media_format(extension)
+    media_format = _parse_media_format(extension)
     try:
-        if isinstance(format, ImageFormat):
+        if isinstance(media_format, ImageFormat):
             media = media_service.create_image(
-                project_id=project.id,
-                data=file.file,
-                name=name,
-                format=format,
+                ImageMetadata(
+                    project_id=project.id,
+                    data=file.file,
+                    name=name,
+                    image_format=media_format,
+                )
             )
             dataset_service.create_dataset_item(
                 project_id=project.id,
@@ -181,7 +183,7 @@ def add_media(
                 project_id=project.id,
                 data=file.file,
                 name=name,
-                format=format,
+                video_format=media_format,
             )
         return MediaViewAdapter.validate_python(media, from_attributes=True)
     except InvalidImageError:
@@ -446,6 +448,7 @@ def set_media_annotations(
             prediction_model_id=None,
         )
         return MediaAnnotations(
+            media_id=media.id,
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,

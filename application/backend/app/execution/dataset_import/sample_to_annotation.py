@@ -5,16 +5,21 @@ import numpy as np
 from datumaro.experimental.categories import LabelCategories
 
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    DetectionImportExportSample,
+    InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
+    MultilabelClassificationImportExportSample,
 )
 from app.datumaro_converter.domain import LabelIndex
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
-SampleType = ClassificationSample | MultilabelClassificationSample | DetectionSample | InstanceSegmentationSample
+SampleType = (
+    MulticlassClassificationImportExportSample
+    | DetectionImportExportSample
+    | InstanceSegmentationImportExportSample
+    | MultilabelClassificationImportExportSample
+)
 
 
 class DatumaroSampleToGetiAnnotationConverter:
@@ -96,13 +101,13 @@ class DatumaroSampleToGetiAnnotationConverter:
             ValueError: If the sample format is invalid or unsupported.
         """
         match sample:
-            case ClassificationSample(label=label, confidence=confidence):
+            case MulticlassClassificationImportExportSample(label=label, confidence=confidence):
                 return self.__convert_classification_sample(label, confidence)
-            case MultilabelClassificationSample(label=labels, confidence=confidences):
+            case MultilabelClassificationImportExportSample(label=labels, confidence=confidences):
                 return self.__convert_multilabel_sample(labels, confidences)
-            case DetectionSample(label=labels, bboxes=bboxes, confidence=confidences):
+            case DetectionImportExportSample(label=labels, bboxes=bboxes, confidence=confidences):
                 return self.__convert_detection_sample(labels, bboxes, confidences)
-            case InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences):
+            case InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=confidences):
                 return self.__convert_segmentation_sample(labels, polygons, confidences)
             case _:
                 raise ValueError(f"Unsupported sample type: {type(sample)}")
