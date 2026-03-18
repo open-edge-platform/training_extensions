@@ -149,7 +149,7 @@ class Settings(BaseSettings):
         if v:
             if not isinstance(v, str):
                 raise TypeError("stun_server must be a string.")
-            if not (v.startswith("stun:") or v.startswith("stuns:")):
+            if not (v.startswith(("stun:", "stuns:"))):
                 raise ValueError("stun_server must be a full ICE URL starting with 'stun:' or 'stuns:'.")
         return v
 
