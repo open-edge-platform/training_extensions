@@ -107,11 +107,44 @@ _setup_demo force_import="": install-uv
     just setup-demo-sinks
     echo "Demo setup complete."
 
+# Run coturn server
+[arg("coturn-host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
+[arg("coturn-port", long="coturn-port", help="Coturn server listening port (default: 443)")]
+[arg("coturn-image", long="coturn-image", help="Coturn server Docker image to use (default: quay.io/coturn/coturn)")]
+run-coturn coturn-host="" coturn-port="443" coturn-image="quay.io/coturn/coturn": install-uv
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    EXTERNAL_IP=""
+    if [[ -n "{{ coturn-host }}" ]]; then
+        EXTERNAL_IP="{{ coturn-host }}"
+    else
+        EXTERNAL_IP=`uv run python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
+    fi
+    echo "Running coturn server on port {{ coturn-port }} with external IP $EXTERNAL_IP..."
+
+    docker run --rm --detach \
+        --network=host \
+        --name coturn-server \
+        {{ coturn-image }} \
+        -n \
+        --listening-port={{ coturn-port }} \
+        --external-ip=$EXTERNAL_IP \
+        --user=user:password \
+        --realm=my-realm \
+        --no-udp \
+        --log-file=stdout \
+        --verbose
+
+# Stop coturn server
+stop-coturn:
+    @echo "Stopping coturn server..."
+    @docker stop coturn-server || true
+
 # Run the application server as standalone (for development and testing)
 [arg("host", long="host", help="Host address to bind the server to")]
 [arg("port", long="port", help="Port number to bind the server to")]
 [arg("webrtc_advertise_ip", long="webrtc-advertise-ip", help="Public IP address to advertise for WebRTC connections")]
-[arg("ice_servers", long="ice-servers", help="ICE servers configuration as a JSON string")]
 [arg("log_level", long="log-level", help="Log level (e.g. DEBUG, INFO, WARNING, ERROR)")]
 [arg("log_dir", long="log-dir", help="Directory for log files")]
 [arg("data_dir", long="data-dir", help="Directory for application data")]
@@ -119,7 +152,12 @@ _setup_demo force_import="": install-uv
 [arg("clean", long="clean", value="true", help="Delete all existing data and reset the database before starting")]
 [arg("setup_demo", long="setup-demo", value="true", help="Import demo projects, videos, and sinks before starting")]
 [arg("force_import", long="force-import", value="true", help="Bypass schema version checks during import (requires --setup-demo)")]
-run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" ice_servers="" log_level="" log_dir="" data_dir="" no_proxy="": install-uv
+[arg("enable_coturn", long="coturn", help="Enable coturn server for WebRTC relay (only needed if the server is behind a restrictive NAT)")]
+[arg("coturn_host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
+[arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
+[arg("coturn_image", long="coturn-image", help="Coturn server Docker image to use (default: quay.io/coturn/coturn)")]
+[arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
+run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" log_level="" log_dir="" data_dir="" no_proxy="" enable_coturn="false" coturn_host="" coturn_port="443" coturn_image="quay.io/coturn/coturn" stun_server="": install-uv
     #!/usr/bin/env bash
     set -euo pipefail
     export PYTHONUNBUFFERED=1
@@ -155,9 +193,6 @@ run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_adverti
     if [[ -n "{{ webrtc_advertise_ip }}" ]]; then
         export WEBRTC_ADVERTISE_IP="{{ webrtc_advertise_ip }}"
     fi
-    if [[ -n "{{ ice_servers }}" ]]; then
-        export ICE_SERVERS="{{ ice_servers }}"
-    fi
     if [[ -n "{{ log_level }}" ]]; then
         export LOG_LEVEL="{{ log_level }}"
     fi
@@ -171,5 +206,19 @@ run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_adverti
         export no_proxy="{{ no_proxy }}"
     fi
 
+    if [[ "{{ enable_coturn }}" == "true" ]]; then
+        export COTURN_PORT="{{ coturn_port }}"
+        if [[ -n "{{ coturn_host }}" ]]; then
+            export COTURN_HOST="{{ coturn_host }}"
+        else
+            export COTURN_HOST=`uv run python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
+        fi
+        just run-coturn --coturn-host $COTURN_HOST --coturn-port {{ coturn_port }} --coturn-image {{ coturn_image }}
+    fi
+    if [[ -n "{{ stun_server }}" ]]; then
+        export STUN_SERVER="{{ stun_server }}"
+    fi
+
     echo "Starting FastAPI server..."
-    exec uv run {{ app-main }}
+    trap 'kill $(jobs -p) 2>/dev/null || true; {{ if enable_coturn == "true" { "just stop-coturn" } else { "" } }}' EXIT
+    uv run {{ app-main }}
