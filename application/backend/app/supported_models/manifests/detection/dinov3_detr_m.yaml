@@ -1,0 +1,37 @@
+id: object-detection-dinov3-detr-m
+name: DINOv3-DETR-M
+
+pretrained_weights:
+  url: https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_m_coco.pth
+  sha_sum: 3ef951bfc71b177df65009d97506b3ed50a3b3b306729cc4584e37dc222c6706
+
+description: "DINOv3-DETR is an efficient end-to-end object detection transformer that leverages the DEIMv2 training framework with a DINOv3 backbone, achieving strong accuracy with fewer parameters."
+stats:
+  gigaflops: 52
+  trainable_parameters: 18
+  benchmark_metrics:
+    coco_map_50_95: 53.0
+
+hyperparameters:
+  training:
+    learning_rate: 0.0004
+    weight_decay: 0.0001
+    scheduler:
+      factor: 0.5
+      patience: 10
+      warmup:
+        enable: true
+        epochs: 30
+    allowed_values_input_size:
+      - 640
+    input_size_width: 640
+    input_size_height: 640
+  dataset_preparation:
+    augmentation: # will be configurable with the future release
+      iou_random_crop: null
+      random_affine: null
+      random_horizontal_flip: null
+      random_vertical_flip: null
+      gaussian_blur: null
+      color_jitter: null
+      gaussian_noise: null

@@ -119,6 +119,36 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
+    "object-detection-rfdetr-s": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_small.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-rfdetr-m": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_medium.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-rfdetr-l": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_large.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-dinov3-detr-s": {
+        "recipe_path": RECIPE_PATH / "detection" / "deimv2_s.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-dinov3-detr-m": {
+        "recipe_path": RECIPE_PATH / "detection" / "deimv2_m.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-dinov3-detr-l": {
+        "recipe_path": RECIPE_PATH / "detection" / "deimv2_l.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
     # INSTANCE_SEGMENTATION
     "instance-segmentation-mask-rcnn-swin-t": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
@@ -138,6 +168,21 @@ TEMPLATE_ID_MAPPING = {
     "instance-segmentation-mask-rcnn-resnet50": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
         "status": ModelStatus.BALANCE,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-s": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-m": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_medium.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-l": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_large.yaml",
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
 }
