@@ -39,7 +39,11 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("shm-size", long="shm-size", help="Size of /dev/shm inside the container (e.g. 256m, 4g). Defaults to 8g")]
 [arg("passthrough-devices", long="passthrough-devices", help="Space-separated list of additional device paths to pass through to the container (e.g. '/dev/video0 /dev/video1')")]
 [arg("volumes", long="volumes", help="Space-separated list of host:container path mappings to mount (e.g. '/host/path:/container/path /host/path2:/container/path2')")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" shm-size="8g" passthrough-devices="" volumes="":
+[arg("enable_coturn", long="coturn", help="Enable coturn server for WebRTC relay (only needed if the server is behind a restrictive NAT)")]
+[arg("coturn_host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
+[arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
+[arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
+run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -64,6 +68,21 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
     REMOVE_FLAG=""
     if [[ "{{ remove }}" == "true" ]]; then
         REMOVE_FLAG="--rm"
+    fi
+
+    COTURN_ENV=""
+    if [[ "{{ enable_coturn }}" == "true" ]]; then
+        if [[ -n "{{ coturn_host }}" ]]; then
+            COTURN_HOST="{{ coturn_host }}"
+        else
+            COTURN_HOST=`uv run python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
+        fi
+        COTURN_ENV="--env COTURN_HOST=$COTURN_HOST --env COTURN_PORT={{ coturn_port }}"
+    fi
+
+    STUN_ENV=""
+    if [[ -n "{{ stun_server }}" ]]; then
+        STUN_ENV="--env STUN_SERVER={{ stun_server }}"
     fi
 
     # Resolve Python interpreter
@@ -129,6 +148,8 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
         --env HOST={{ host }} \
         --env PORT={{ port }} \
         --env WEBRTC_ADVERTISE_IP="${HOST_IP}" \
+        $COTURN_ENV \
+        $STUN_ENV \
         --sysctl net.ipv4.ip_local_port_range="{{ replace(webrtc-ports, '-', ' ') }}" \
         --volume {{ data-volume }}:/application/data/ \
         --volume {{ logs-volume }}:/application/logs/ \

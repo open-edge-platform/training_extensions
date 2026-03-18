@@ -65,8 +65,14 @@ class Settings(BaseSettings):
     gpu_slots: int = Field(default=1, alias="GPU_SLOTS", description="Number of GPU slots available for model tuning")
 
     # WebRTC
-    ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
     webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
+
+    # Simplified WebRTC config
+    coturn_host: str | None = Field(default=None, alias="COTURN_HOST")
+    coturn_port: int = Field(default=3478, alias="COTURN_PORT")
+    coturn_username: str = Field(default="user", alias="COTURN_USERNAME")
+    coturn_password: str = Field(default="password", alias="COTURN_PASSWORD")
+    stun_server: str | None = Field(default=None, alias="STUN_SERVER")
 
     # Inference
     inference_media_limit: int = Field(
@@ -79,6 +85,24 @@ class Settings(BaseSettings):
         alias="INFERENCE_MODEL_TTL",
         description="Time to live for a model loaded for inference, before unloading",
     )
+
+    @property
+    def ice_servers(self) -> list[dict]:
+        """Compute ICE servers from coturn and STUN configuration."""
+        servers = []
+        if self.coturn_host:
+            servers.append(
+                {
+                    "urls": f"turn:{self.coturn_host}:{self.coturn_port}?transport=tcp",
+                    "username": self.coturn_username,
+                    "credential": self.coturn_password,
+                }
+            )
+
+        if self.stun_server:
+            servers.append({"urls": self.stun_server})
+
+        return servers
 
     @property
     def database_url(self) -> str:
