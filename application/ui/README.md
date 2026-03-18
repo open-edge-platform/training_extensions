@@ -26,7 +26,7 @@ npm install
 ### Development
 
 ```bash
-npm run start         # Start dev server at localhost:3000
+npm run start        # Start dev server at localhost:3000
 npm run server       # Start backend at localhost:7860 (separate terminal)
 ```
 
