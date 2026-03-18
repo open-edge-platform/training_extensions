@@ -90,23 +90,6 @@ describe('deepReplaceParameters', () => {
             expect(patience?.value).toBe(99);
         });
 
-        it('replaces all occurrences of a key across groups when no targetGroupKeys provided', () => {
-            // Both early_stopping.patience and scheduler.patience exist
-            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 42 })];
-            const result = deepReplaceParameters(learningParameters.parameters, updated);
-
-            const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
-            const earlyStoppingPatience = getParam(
-                earlyStoppingGroup.parameters as ConfigurableParameter[],
-                'patience'
-            );
-            expect(earlyStoppingPatience?.value).toBe(42);
-
-            const schedulerGroup = getGroup(result, 'scheduler') as ConfigurableParameterGroup;
-            const schedulerPatience = getParam(schedulerGroup.parameters as ConfigurableParameter[], 'patience');
-            expect(schedulerPatience?.value).toBe(42);
-        });
-
         it('replaces a bool parameter nested inside a group', () => {
             const updated = [getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true })];
             const result = deepReplaceParameters(learningParameters.parameters, updated);

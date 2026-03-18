@@ -6,6 +6,7 @@ import { get, isBoolean, isNumber, isObject } from 'lodash-es';
 import type {
     BoolConfigurableParameter,
     ConfigurableParameter,
+    ConfigurableParameterGroup,
     EnumConfigurableParameter,
     NumberConfigurableParameter,
     NumberEnumConfigurableParameter,
@@ -13,10 +14,11 @@ import type {
     StringEnumConfigurableParameter,
     TrainingConfigurationParameter,
 } from '../../../../constants/shared-types';
-import { isParameterGroup } from '../../model-listing/model-training-parameters/utils';
+import { isParameter, isParameterGroup } from '../../model-listing/model-training-parameters/utils';
 
 const getDecimalPoints = (value: number): number => {
-    return Math.abs(Math.ceil(Math.log10(value)));
+    // When log10 returns 0 (log10(1) = 0) we need to return 1
+    return Math.abs(Math.ceil(Math.log10(value))) || 1;
 };
 
 export const getFloatingPointStep = (minValue: number, maxValue: number): number => {
@@ -100,4 +102,18 @@ export const deepReplaceParameters = (
 
         return updatedParameter ?? parameter;
     });
+};
+
+export type ParametersEnableGroupParameters = ConfigurableParameterGroup & {
+    parameters: [BoolConfigurableParameter, ...ConfigurableParameterGroup[]];
+};
+
+export const isBoolEnableParameterGroup = (
+    parameter: TrainingConfigurationParameter
+): parameter is ParametersEnableGroupParameters => {
+    return (
+        isParameterGroup(parameter) &&
+        isParameter(parameter.parameters[0]) &&
+        isBoolEnableParameter(parameter.parameters[0])
+    );
 };

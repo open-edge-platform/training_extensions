@@ -263,5 +263,35 @@ export const learningParameters: LearningConfigurationGroup = getMockedConfigura
                 }),
             ],
         }),
+        getMockedConfigurationParameter({
+            type: 'parameter',
+            key: 'input_size_width',
+            name: 'Input size width',
+            description:
+                'Width size in pixels for model input images. Determines the horizontal resolution at which images ' +
+                'are processed.',
+            depends_on: null,
+            value_type: 'int',
+            value: 992,
+            default_value: 992,
+            min_value: 0,
+            max_value: null,
+            allowed_values: [128, 256, 384, 512, 640, 800, 992, 1024],
+        }),
+        getMockedConfigurationParameter({
+            type: 'parameter',
+            key: 'input_size_height',
+            name: 'Input size height',
+            description:
+                'Height size in pixels for model input images. Determines the vertical resolution at which images ' +
+                'are processed.',
+            depends_on: null,
+            value_type: 'int',
+            value: 800,
+            default_value: 800,
+            min_value: 0,
+            max_value: null,
+            allowed_values: [128, 256, 384, 512, 640, 800, 992, 1024],
+        }),
     ],
 }) as LearningConfigurationGroup;

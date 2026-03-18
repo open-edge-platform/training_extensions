@@ -19,15 +19,20 @@ import {
 import { isBoolean, isFunction } from 'lodash-es';
 
 import {
-    BoolConfigurableParameter,
     ConfigurableParameter,
     ConfigurableParameterGroup,
     NumberEnumConfigurableParameter,
     StringEnumConfigurableParameter,
     TrainingConfigurationParameter,
 } from '../../../../../constants/shared-types';
-import { isParameter, isParameterGroup } from '../../../model-listing/model-training-parameters/utils';
-import { isBoolEnableParameter, isEnumNumberParameter, isEnumStringParameter, isNumberParameter } from '../utils';
+import { isParameter } from '../../../model-listing/model-training-parameters/utils';
+import {
+    isBoolEnableParameterGroup,
+    isEnumNumberParameter,
+    isEnumStringParameter,
+    isNumberParameter,
+    ParametersEnableGroupParameters,
+} from '../utils';
 import { BooleanParameterField } from './boolean-parameter-field.component';
 import { NumberParameterField } from './number-parameter-field.component';
 import { RangeParameterField } from './range-parameter-field/range-parameter-field.component';
@@ -51,10 +56,6 @@ type ParametersGroupProps = {
     parentGroupKeys?: string[];
 };
 
-type ParametersEnableGroupParameters = ConfigurableParameterGroup & {
-    parameters: [BoolConfigurableParameter, ...ConfigurableParameterGroup[]];
-};
-
 type ParametersEnableGroupProps = {
     parameters: ParametersEnableGroupParameters;
     onChange: (parameter: ConfigurableParameter, groupKeys?: string[]) => void;
@@ -64,6 +65,17 @@ type ParametersEnableGroupProps = {
 };
 
 type ParameterProps = {
+    header: string;
+    description: string;
+    parameter: ConfigurableParameter;
+    onChange: (parameter: ConfigurableParameter) => void;
+    isDisabled?: boolean;
+    marginStart?: DimensionValue;
+    isReadOnly: boolean;
+};
+
+type SingleParameterProps = {
+    id?: string;
     header: string;
     description: string;
     parameter: ConfigurableParameter;
@@ -181,7 +193,7 @@ const StringEnumParameterField = ({
             aria-label={`Select ${parameter.name}`}
         >
             {(item) => (
-                <Item key={item.value}>
+                <Item key={item.value} textValue={item.value}>
                     <Text>{item.value}</Text>
                 </Item>
             )}
@@ -226,7 +238,7 @@ export const NumberEnumParameterField = ({
             aria-label={`Select ${parameter.name}`}
         >
             {(item) => (
-                <Item key={item.value}>
+                <Item key={item.value} textValue={item.value.toString()}>
                     <Text>{item.value}</Text>
                 </Item>
             )}
@@ -333,26 +345,27 @@ const ParametersContainer = ({
     isReadOnly,
     columnGap = 'size-300',
     rowGap = 'size-300',
+    id,
 }: {
     children: ReactNode;
     isReadOnly?: boolean;
     columnGap?: DimensionValue;
     rowGap?: DimensionValue;
+    id?: string;
 }) => {
     const columns = isReadOnly ? ['size-3000', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
 
     return (
-        <Grid columns={columns} columnGap={columnGap} rowGap={rowGap} alignItems={'center'} gridColumn={'1/-1'}>
+        <Grid
+            columns={columns}
+            columnGap={columnGap}
+            rowGap={rowGap}
+            alignItems={'center'}
+            gridColumn={'1/-1'}
+            data-testid={id}
+        >
             {children}
         </Grid>
-    );
-};
-
-const isBoolEnableGroup = (parameter: TrainingConfigurationParameter): parameter is ParametersEnableGroupParameters => {
-    return (
-        isParameterGroup(parameter) &&
-        isParameter(parameter.parameters[0]) &&
-        isBoolEnableParameter(parameter.parameters[0])
     );
 };
 
@@ -376,6 +389,7 @@ export const ParametersEnableGroup = ({
             key={parameters.key}
             rowGap={configurableParameters.length > 0 ? 'size-150' : 'size-0'}
             isReadOnly={isReadOnly}
+            id={createTestId(parentGroupKeys, parameters.key)}
         >
             <Parameter
                 header={parameters.name}
@@ -398,6 +412,18 @@ export const ParametersEnableGroup = ({
     );
 };
 
+const createTestId = (keys: string[] | undefined, parameterKey: string) => {
+    if (keys === undefined) {
+        return undefined;
+    }
+
+    if (keys.length > 0) {
+        return `${keys.join('-')}-${parameterKey}`;
+    }
+
+    return parameterKey;
+};
+
 export const ParametersGroup = ({
     parametersGroup,
     onChange,
@@ -412,7 +438,7 @@ export const ParametersGroup = ({
         onChange(parameter, currentGroupKeys);
     };
 
-    if (isBoolEnableGroup(parametersGroup)) {
+    if (isBoolEnableParameterGroup(parametersGroup)) {
         return (
             <ParametersEnableGroup
                 parameters={parametersGroup}
@@ -430,6 +456,7 @@ export const ParametersGroup = ({
                 if (isParameter(parameter)) {
                     return (
                         <SingleParameter
+                            id={createTestId(currentGroupKeys, parameter.key)}
                             key={parameter.key}
                             header={parameter.name}
                             description={parameter.description}
@@ -442,7 +469,7 @@ export const ParametersGroup = ({
                     );
                 }
 
-                if (isBoolEnableGroup(parameter)) {
+                if (isBoolEnableParameterGroup(parameter)) {
                     return (
                         <ParametersEnableGroup
                             key={parameter.key}
@@ -472,6 +499,7 @@ export const ParametersGroup = ({
 };
 
 const SingleParameter = ({
+    id,
     parameter,
     onChange,
     isReadOnly,
@@ -479,9 +507,9 @@ const SingleParameter = ({
     marginStart,
     header,
     description,
-}: ParameterProps) => {
+}: SingleParameterProps) => {
     return (
-        <ParametersContainer key={parameter.name}>
+        <ParametersContainer key={parameter.name} id={id} isReadOnly={isReadOnly}>
             <Parameter
                 header={header}
                 description={description}
@@ -513,6 +541,7 @@ export const Parameters = ({
 
                     return (
                         <SingleParameter
+                            id={createTestId(parentGroupKeys, parameter.key)}
                             key={parameter.key}
                             header={parameter.name}
                             description={parameter.description}
