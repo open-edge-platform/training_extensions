@@ -195,6 +195,34 @@ In addition to the examples above, please refer to the documentation for tutoria
 
 ---
 
+## Application (Geti)
+
+Requirements:
+
+- `just`: See [just](https://github.com/casey/just)
+- `uv`: See [uv](https://github.com/astral-sh/uv)
+
+**Docker:**
+```bash
+cd application
+just build-image --accelerator cpu     # or cuda, xpu
+just run-image --accelerator cpu       # serves on port 7860
+```
+
+**Local dev:**
+```bash
+# Backend (requires uv)
+cd application/backend
+just run-server                        # starts dev server on :7860
+
+# UI (requires Node.js >= 24.2)
+cd application/ui
+npm install
+npm run start                          # starts dev server on :3000
+```
+
+---
+
 ### Release History
 
 Please refer to the [CHANGELOG.md](CHANGELOG.md)
