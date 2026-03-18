@@ -34,7 +34,11 @@ const getEnumFieldParameter = (name: string) => {
     return screen.getByRole('button', { name: new RegExp(`Select ${name}`) });
 };
 
-const expectNumberParameter = async (parameter: NumberConfigurableParameter, groupKey: string) => {
+const expectNumberParameter = async (
+    parameter: NumberConfigurableParameter,
+    groupKey: string,
+    user: ReturnType<typeof userEvent.setup>
+) => {
     const step = getStep({
         type: parameter.value_type,
         maxValue: parameter.max_value ?? null,
@@ -50,7 +54,7 @@ const expectNumberParameter = async (parameter: NumberConfigurableParameter, gro
 
     expect(getParameter(parameter.name, wrapper)).toHaveValue(parameter.value.toString());
 
-    await userEvent.click(wrapper.getByRole('button', { name: `Increase Change ${parameter.name}` }));
+    await user.click(wrapper.getByRole('button', { name: `Increase Change ${parameter.name}` }));
 
     expect(getParameter(parameter.name, wrapper)).toHaveValue((parameter.value + step).toString());
 
@@ -83,6 +87,7 @@ describe('LearningParameters', () => {
     };
 
     it('updates tag to "Modified" when at least one parameter is changed, otherwise is "Default"', async () => {
+        const user = userEvent.setup();
         render(<App learningParameters={learningParameters} />);
 
         const maxEpochsParameter = learningParameters.parameters[0] as NumberConfigurableParameter;
@@ -90,7 +95,7 @@ describe('LearningParameters', () => {
         expect(screen.getByLabelText('Learning parameters tag')).toHaveTextContent('Default');
 
         expect(getParameter(maxEpochsParameter.name)).toHaveValue(maxEpochsParameter.value.toString());
-        await userEvent.click(screen.getByRole('button', { name: `Increase Change ${maxEpochsParameter.name}` }));
+        await user.click(screen.getByRole('button', { name: `Increase Change ${maxEpochsParameter.name}` }));
 
         expect(getParameter(maxEpochsParameter.name)).toHaveValue((maxEpochsParameter.value + 1).toString());
         expect(screen.getByLabelText('Learning parameters tag')).toHaveTextContent('Modified');
@@ -119,6 +124,7 @@ describe('LearningParameters', () => {
     });
 
     it('updates parameters and resets them to default properly', async () => {
+        const user = userEvent.setup();
         const parametersWithoutInputSizeParameters = {
             ...learningParameters,
             parameters: learningParameters.parameters.filter((parameter) => !isInputSizeParameter(parameter)),
@@ -128,7 +134,7 @@ describe('LearningParameters', () => {
 
         for (const parameter of parametersWithoutInputSizeParameters.parameters) {
             if (isNumberParameter(parameter)) {
-                await expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key);
+                await expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key, user);
             } else if (isBoolEnableParameterGroup(parameter)) {
                 const [enableParameter, ...restParameters] = parameter.parameters;
 
@@ -146,7 +152,7 @@ describe('LearningParameters', () => {
 
                 for (const restParameter of restParameters) {
                     if (isNumberParameter(restParameter)) {
-                        await expectNumberParameter(restParameter, parameter.key);
+                        await expectNumberParameter(restParameter, parameter.key, user);
                     }
                 }
 
@@ -160,7 +166,7 @@ describe('LearningParameters', () => {
                     }
                 }
 
-                await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+                await user.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
             }
         }
     });
