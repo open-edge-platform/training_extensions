@@ -1,22 +1,16 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 
 import { Flex } from '@geti/ui';
 import { partition } from 'lodash-es';
 
 import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
-import { isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
-import { Parameter, Parameters, ParametersGroup } from '../../components/parameters.component';
+import { Parameters } from '../../components/parameters.component';
 import { deepReplaceParameter, replaceByKey } from '../../utils';
 import { InputSizeParameters } from './input-size-parameters.component';
-import {
-    groupDependentParameters,
-    isInputSizeParameter,
-    LearningConfigurationGroup,
-    LearningConfigurationParameters,
-} from './utils';
+import { groupDependentParameters, isInputSizeParameter, LearningConfigurationGroup } from './utils';
 
 const changeInputSizeParameters = (
     trainingConfiguration: TrainingConfiguration,
@@ -40,46 +34,6 @@ const changeInputSizeParameters = (
     return { parameters };
 };
 
-type LearningParametersListProps = {
-    learningParameters: LearningConfigurationParameters;
-    onParameterChange: (parameter: ConfigurableParameter, groupKey: string) => void;
-    isReadOnly: boolean;
-};
-
-const LearningParametersList = ({ learningParameters, onParameterChange, isReadOnly }: LearningParametersListProps) => {
-    return <Parameters parameters={learningParameters} onChange={onParameterChange} isReadOnly={isReadOnly} />;
-
-    /*  return (
-        <Flex direction={'column'} gap={'size-300'}>
-            {learningParameters.map((learningParameter) => {
-                if (isParameterGroup(learningParameter)) {
-                    const groupedParameters = groupDependentParameters(learningParameter.parameters);
-
-                    return (
-                        <ParametersGroup
-                            key={learningParameter.key}
-                            parametersGroup={learningParameter}
-                            onChange={onParameterChange}
-                        />
-                    );
-                }
-
-                return (
-                    <Parameters.Container key={learningParameter.key} isReadOnly={isReadOnly}>
-                        <Parameter
-                            header={learningParameter.name}
-                            description={learningParameter.description}
-                            parameter={learningParameter}
-                            onChange={(parameter) => onParameterChange(parameter, learningParameter.key)}
-                            isReadOnly={isReadOnly}
-                        />
-                    </Parameters.Container>
-                );
-            })}
-        </Flex>
-    );*/
-};
-
 type LearningParametersListContainerProps = {
     learningParameters: LearningConfigurationGroup;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
@@ -93,6 +47,11 @@ export const LearningParametersListContainer = ({
 }: LearningParametersListContainerProps) => {
     const [inputSizeParameters, restParameters] = partition(learningParameters.parameters, isInputSizeParameter);
 
+    const learningParametersBasedOnDependency = useMemo(
+        () => groupDependentParameters(restParameters),
+        [restParameters]
+    );
+
     const handleInputSizeParametersChange = (newParameters: ConfigurableParameter[]) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
@@ -101,7 +60,7 @@ export const LearningParametersListContainer = ({
         });
     };
 
-    const handleParameterChange = (parameter: ConfigurableParameter, groupKey: string) => {
+    const handleParameterChange = (parameter: ConfigurableParameter, groupKeys?: string[]) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
 
@@ -110,7 +69,7 @@ export const LearningParametersListContainer = ({
                 'training',
                 (group) => ({
                     ...group,
-                    parameters: deepReplaceParameter(group.parameters, parameter, groupKey),
+                    parameters: deepReplaceParameter(group.parameters, parameter, groupKeys),
                 })
             );
 
@@ -125,9 +84,9 @@ export const LearningParametersListContainer = ({
                 onInputSizeParameterChange={handleInputSizeParametersChange}
                 isReadOnly={isReadOnly}
             />
-            <LearningParametersList
-                learningParameters={restParameters}
-                onParameterChange={handleParameterChange}
+            <Parameters
+                parameters={learningParametersBasedOnDependency}
+                onChange={handleParameterChange}
                 isReadOnly={isReadOnly}
             />
         </Flex>

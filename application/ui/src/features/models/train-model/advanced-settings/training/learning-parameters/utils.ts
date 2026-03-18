@@ -2,27 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    ConfigurableParameter,
     ConfigurableParameterGroup,
     NumberEnumConfigurableParameter,
     TrainingConfiguration,
     TrainingConfigurationParameter,
 } from '../../../../../../constants/shared-types';
-import { findGroupByKey, isParameter } from '../../../../model-listing/model-training-parameters/utils';
+import {
+    findGroupByKey,
+    isParameter,
+    isParameterGroup,
+} from '../../../../model-listing/model-training-parameters/utils';
 import { isEnumNumberParameter } from '../../utils';
 
-/*
-type LearningConfigurationGroupParameters = Omit<ConfigurableParameterGroup, 'parameters'> & {
-    parameters: ConfigurableParameter[];
-};
-*/
-
-export type LearningConfigurationParameters = TrainingConfigurationParameter[];
+export type LearningConfigurationParameters = TrainingConfigurationParameter;
 export type LearningConfigurationGroup = ConfigurableParameterGroup;
-
-/*export type LearningConfigurationGroup = Omit<ConfigurableParameterGroup, 'parameters'> & {
-    parameters: LearningConfigurationParameters;
-};*/
 
 export const getLearningParameters = (
     trainingConfiguration: TrainingConfiguration
@@ -51,9 +44,11 @@ export const getInputSizeHeightParameter = (
     parameters: TrainingConfigurationParameter[]
 ): NumberEnumConfigurableParameter | undefined => parameters.find(isInputSizeHeightParameter);
 
-export const groupDependentParameters = (parameters: ConfigurableParameter[]): ConfigurableParameter[] => {
+export const groupDependentParameters = (
+    parameters: LearningConfigurationParameters[]
+): LearningConfigurationParameters[] => {
     return parameters
-        .reduce<ConfigurableParameter[][]>((acc, curr) => {
+        .reduce<LearningConfigurationParameters[][]>((acc, curr) => {
             if (isParameter(curr) && curr.depends_on == null) {
                 const parametersDependingOnCurr = parameters.filter((parameter) => {
                     return (
@@ -68,6 +63,12 @@ export const groupDependentParameters = (parameters: ConfigurableParameter[]): C
 
             if (isParameter(curr) && curr.depends_on != null) {
                 return acc;
+            }
+
+            if (isParameterGroup(curr)) {
+                const groupedParameters = groupDependentParameters(curr.parameters);
+
+                return [...acc, [{ ...curr, parameters: groupedParameters }]];
             }
 
             return [...acc, [curr]];

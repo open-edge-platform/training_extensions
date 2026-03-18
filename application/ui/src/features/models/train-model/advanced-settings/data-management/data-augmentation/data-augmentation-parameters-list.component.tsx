@@ -5,7 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import { ConfigurableParameter, type TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { ParametersGroup } from '../../components/parameters.component';
-import { replaceByKey } from '../../utils';
+import { deepReplaceParameter, replaceByKey } from '../../utils';
 import { DataAugmentationConfigurableParameters } from './utils';
 
 type DataAugmentationParametersListProps = {
@@ -15,7 +15,7 @@ type DataAugmentationParametersListProps = {
 
 const changeDataAugmentationParameters = (
     trainingConfiguration: TrainingConfiguration,
-    parameterGroupKey: string,
+    parameterGroupKeys: string[],
     newParameter: ConfigurableParameter
 ): TrainingConfiguration => {
     const parameters: TrainingConfiguration['parameters'] = replaceByKey(
@@ -23,15 +23,7 @@ const changeDataAugmentationParameters = (
         'dataset_preparation',
         (datasetPreparationGroup) => ({
             ...datasetPreparationGroup,
-            parameters: replaceByKey(datasetPreparationGroup.parameters, 'augmentation', (augmentationGroup) => ({
-                ...augmentationGroup,
-                parameters: replaceByKey(augmentationGroup.parameters, parameterGroupKey, (parameterGroup) => ({
-                    ...parameterGroup,
-                    parameters: parameterGroup.parameters.map((parameter) =>
-                        parameter.key === newParameter.key ? newParameter : parameter
-                    ),
-                })),
-            })),
+            parameters: deepReplaceParameter(datasetPreparationGroup.parameters, newParameter, parameterGroupKeys),
         })
     );
 
@@ -44,11 +36,12 @@ export const DataAugmentationParametersList = ({
     dataAugmentationParameters,
     onTrainingConfigurationChange,
 }: DataAugmentationParametersListProps) => {
-    const handleAugmentationParameterChange = (parameter: ConfigurableParameter, groupKey: string) => {
+    const handleAugmentationParameterChange = (parameter: ConfigurableParameter, groupKeys?: string[]) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
+            if (groupKeys === undefined || groupKeys.length === 0) return config;
 
-            return changeDataAugmentationParameters(config, groupKey, parameter);
+            return changeDataAugmentationParameters(config, groupKeys, parameter);
         });
     };
 

@@ -65,17 +65,29 @@ export const isConfigurationParameter = (input: unknown): input is ConfigurableP
 export const deepReplaceParameter = (
     parameters: TrainingConfigurationParameter[],
     updated: ConfigurableParameter,
-    targetGroupKey: string,
-    currentGroupKey?: string
+    targetGroupKeys?: string[],
+    currentGroupKeys: string[] = []
 ): TrainingConfigurationParameter[] =>
     parameters.map((parameter) => {
         if (isParameterGroup(parameter)) {
             return {
                 ...parameter,
-                parameters: deepReplaceParameter(parameter.parameters, updated, targetGroupKey, parameter.key),
+                parameters: deepReplaceParameter(parameter.parameters, updated, targetGroupKeys, [
+                    ...currentGroupKeys,
+                    parameter.key,
+                ]),
             };
         }
-        return parameter.key === updated.key && currentGroupKey === targetGroupKey ? updated : parameter;
+
+        if (targetGroupKeys !== undefined && targetGroupKeys.length > 0) {
+            const keysMatch =
+                targetGroupKeys.length === currentGroupKeys.length &&
+                targetGroupKeys.every((key, index) => key === currentGroupKeys[index]);
+
+            return parameter.key === updated.key && keysMatch ? updated : parameter;
+        }
+
+        return parameter.key === updated.key ? updated : parameter;
     });
 
 export const replaceByKey = (
