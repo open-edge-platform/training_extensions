@@ -143,6 +143,16 @@ class Settings(BaseSettings):
             return Path(prefixed_path) if isinstance(v, Path) else prefixed_path
         return v
 
+    @field_validator("stun_server")
+    def validate_stun_server(cls, v: str | None) -> str | None:
+        """Ensure that STUN server, if set, is a full ICE URL starting with stun: or stuns:."""
+        if v:
+            if not isinstance(v, str):
+                raise TypeError("stun_server must be a string.")
+            if not (v.startswith("stun:") or v.startswith("stuns:")):
+                raise ValueError("stun_server must be a full ICE URL starting with 'stun:' or 'stuns:'.")
+        return v
+
 
 @lru_cache
 def get_settings() -> Settings:
