@@ -200,11 +200,8 @@ def update_tiling(tiling_dict: dict | None, config: dict) -> None:
 
     config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
     if tiling_dict["enable"]:
-        config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
-        config["data"]["tile_config"]["tile_size"] = (
-            tiling_dict["tile_size"],
-            tiling_dict["tile_size"],
-        )
+        config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["enable_adaptive_tiling"]
+        config["data"]["tile_config"]["tile_size"] = (tiling_dict["tile_size"], tiling_dict["tile_size"])
         config["data"]["tile_config"]["overlap"] = tiling_dict["tile_overlap"]
 
 
