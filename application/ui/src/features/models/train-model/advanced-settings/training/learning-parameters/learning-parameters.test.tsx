@@ -14,6 +14,7 @@ import { isBoolEnableParameterGroup, isNumberParameter } from '../../utils';
 import { LearningParameters } from './learning-parameters.component';
 import { learningParameters } from './mocks';
 import {
+    getInputSizeHeightParameter,
     getInputSizeWidthParameter,
     getLearningParameters,
     isInputSizeHeightParameter,
@@ -169,7 +170,7 @@ describe('LearningParameters', () => {
             render(<App learningParameters={learningParameters} />);
 
             const inputSizeWidthParameter = getInputSizeWidthParameter(learningParameters.parameters);
-            const inputSizeHeightParameter = getInputSizeWidthParameter(learningParameters.parameters);
+            const inputSizeHeightParameter = getInputSizeHeightParameter(learningParameters.parameters);
 
             if (!inputSizeWidthParameter || !inputSizeHeightParameter) {
                 throw new Error('Input size parameters not found');
@@ -218,7 +219,7 @@ describe('LearningParameters', () => {
 
         it('resets both input size parameters to default values', () => {
             const inputSizeWidthParameter = getInputSizeWidthParameter(learningParameters.parameters);
-            const inputSizeHeightParameter = getInputSizeWidthParameter(learningParameters.parameters);
+            const inputSizeHeightParameter = getInputSizeHeightParameter(learningParameters.parameters);
 
             if (!inputSizeWidthParameter || !inputSizeHeightParameter) {
                 throw new Error('Input size parameters not found');

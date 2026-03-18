@@ -105,7 +105,7 @@ export const deepReplaceParameters = (
 };
 
 export type ParametersEnableGroupParameters = ConfigurableParameterGroup & {
-    parameters: [BoolConfigurableParameter, ...ConfigurableParameterGroup[]];
+    parameters: [BoolConfigurableParameter, ...TrainingConfigurationParameter[]];
 };
 
 export const isBoolEnableParameterGroup = (

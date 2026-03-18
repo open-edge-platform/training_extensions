@@ -252,7 +252,7 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
     }
 
     if (isEnumNumberParameter(parameter)) {
-        return <NumberEnumParameterField parameter={parameter} onChange={onChange} />;
+        return <NumberEnumParameterField parameter={parameter} onChange={onChange} isDisabled={isDisabled} />;
     }
 
     if (isNumberParameter(parameter)) {
