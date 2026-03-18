@@ -520,15 +520,18 @@ class TestOTXTrainerCreateTrainingDataset:
         # Verify SubsetConfig objects were created correctly
         assert dataset_info.otx_training_subset_config.batch_size == 8
         assert dataset_info.otx_training_subset_config.num_workers == 4
-        assert dataset_info.otx_training_subset_config.transforms == mock_train_transforms  # pyrefly: ignore[missing-attribute]
+        # pyrefly: ignore[missing-attribute]
+        assert dataset_info.otx_training_subset_config.transforms == mock_train_transforms
 
         assert dataset_info.otx_validation_subset_config.batch_size == 4
         assert dataset_info.otx_validation_subset_config.num_workers == 2
-        assert dataset_info.otx_validation_subset_config.transforms == mock_val_transforms  # pyrefly: ignore[missing-attribute]
+        # pyrefly: ignore[missing-attribute]
+        assert dataset_info.otx_validation_subset_config.transforms == mock_val_transforms
 
         assert dataset_info.otx_testing_subset_config.batch_size == 2
         assert dataset_info.otx_testing_subset_config.num_workers == 1
-        assert dataset_info.otx_testing_subset_config.transforms == mock_test_transforms  # pyrefly: ignore[missing-attribute]
+        # pyrefly: ignore[missing-attribute]
+        assert dataset_info.otx_testing_subset_config.transforms == mock_test_transforms
 
 
 class TestOTXTrainerPrepareModel:
