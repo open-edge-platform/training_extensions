@@ -42,12 +42,14 @@ const changeInputSizeParameters = (
 
 type LearningParametersListProps = {
     learningParameters: LearningConfigurationParameters;
-    onParameterChange: (groupKey: string, parameter: ConfigurableParameter) => void;
+    onParameterChange: (parameter: ConfigurableParameter, groupKey: string) => void;
     isReadOnly: boolean;
 };
 
 const LearningParametersList = ({ learningParameters, onParameterChange, isReadOnly }: LearningParametersListProps) => {
-    return (
+    return <Parameters parameters={learningParameters} onChange={onParameterChange} isReadOnly={isReadOnly} />;
+
+    /*  return (
         <Flex direction={'column'} gap={'size-300'}>
             {learningParameters.map((learningParameter) => {
                 if (isParameterGroup(learningParameter)) {
@@ -56,7 +58,7 @@ const LearningParametersList = ({ learningParameters, onParameterChange, isReadO
                     return (
                         <ParametersGroup
                             key={learningParameter.key}
-                            parameters={[{ ...learningParameter, parameters: groupedParameters }]}
+                            parametersGroup={learningParameter}
                             onChange={onParameterChange}
                         />
                     );
@@ -68,14 +70,14 @@ const LearningParametersList = ({ learningParameters, onParameterChange, isReadO
                             header={learningParameter.name}
                             description={learningParameter.description}
                             parameter={learningParameter}
-                            onChange={(parameter) => onParameterChange(learningParameter.key, parameter)}
+                            onChange={(parameter) => onParameterChange(parameter, learningParameter.key)}
                             isReadOnly={isReadOnly}
                         />
                     </Parameters.Container>
                 );
             })}
         </Flex>
-    );
+    );*/
 };
 
 type LearningParametersListContainerProps = {
@@ -99,7 +101,7 @@ export const LearningParametersListContainer = ({
         });
     };
 
-    const handleParameterChange = (groupKey: string, parameter: ConfigurableParameter) => {
+    const handleParameterChange = (parameter: ConfigurableParameter, groupKey: string) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
 

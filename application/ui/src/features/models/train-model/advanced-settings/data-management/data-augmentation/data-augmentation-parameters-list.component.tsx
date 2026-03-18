@@ -44,7 +44,7 @@ export const DataAugmentationParametersList = ({
     dataAugmentationParameters,
     onTrainingConfigurationChange,
 }: DataAugmentationParametersListProps) => {
-    const handleAugmentationParameterChange = (groupKey: string, parameter: ConfigurableParameter) => {
+    const handleAugmentationParameterChange = (parameter: ConfigurableParameter, groupKey: string) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
 
@@ -53,9 +53,6 @@ export const DataAugmentationParametersList = ({
     };
 
     return (
-        <ParametersGroup
-            parameters={dataAugmentationParameters.parameters}
-            onChange={handleAugmentationParameterChange}
-        />
+        <ParametersGroup parametersGroup={dataAugmentationParameters} onChange={handleAugmentationParameterChange} />
     );
 };

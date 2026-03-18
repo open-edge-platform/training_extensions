@@ -11,36 +11,23 @@ import {
 import { findGroupByKey, isParameter } from '../../../../model-listing/model-training-parameters/utils';
 import { isEnumNumberParameter } from '../../utils';
 
+/*
 type LearningConfigurationGroupParameters = Omit<ConfigurableParameterGroup, 'parameters'> & {
     parameters: ConfigurableParameter[];
 };
+*/
 
-export type LearningConfigurationParameters = (ConfigurableParameter | LearningConfigurationGroupParameters)[];
+export type LearningConfigurationParameters = TrainingConfigurationParameter[];
+export type LearningConfigurationGroup = ConfigurableParameterGroup;
 
-export type LearningConfigurationGroup = Omit<ConfigurableParameterGroup, 'parameters'> & {
+/*export type LearningConfigurationGroup = Omit<ConfigurableParameterGroup, 'parameters'> & {
     parameters: LearningConfigurationParameters;
-};
+};*/
 
 export const getLearningParameters = (
     trainingConfiguration: TrainingConfiguration
 ): LearningConfigurationGroup | undefined => {
-    const trainingParameters = findGroupByKey(trainingConfiguration.parameters, 'training');
-
-    if (trainingParameters === undefined) return undefined;
-
-    return {
-        ...trainingParameters,
-        parameters: trainingParameters.parameters.map((parameter) => {
-            if (isParameter(parameter)) {
-                return parameter;
-            }
-
-            return {
-                ...parameter,
-                parameters: parameter.parameters.filter(isParameter),
-            };
-        }),
-    };
+    return findGroupByKey(trainingConfiguration.parameters, 'training');
 };
 
 export const isInputSizeWidthParameter = (

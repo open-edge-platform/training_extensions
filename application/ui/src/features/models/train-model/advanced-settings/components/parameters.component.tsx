@@ -19,10 +19,12 @@ import {
 import { isBoolean, isFunction } from 'lodash-es';
 
 import {
+    BoolConfigurableParameter,
     ConfigurableParameter,
     ConfigurableParameterGroup,
     NumberEnumConfigurableParameter,
     StringEnumConfigurableParameter,
+    TrainingConfigurationParameter,
 } from '../../../../../constants/shared-types';
 import { isParameter, isParameterGroup } from '../../../model-listing/model-training-parameters/utils';
 import { isBoolEnableParameter, isEnumNumberParameter, isEnumStringParameter, isNumberParameter } from '../utils';
@@ -36,21 +38,30 @@ type ParameterGroupWithParameters = Omit<ConfigurableParameterGroup, 'parameters
 };
 
 type ParametersProps = {
-    parameters: ConfigurableParameter[];
-    onChange: (parameter: ConfigurableParameter) => void;
+    parameters: TrainingConfigurationParameter[];
+    onChange: (parameter: ConfigurableParameter, groupKey?: string) => void;
     isReadOnly?: boolean;
+    isDisabled?: boolean;
+    marginStart?: DimensionValue;
 };
 
 type ParametersGroupProps = {
-    parameters: ParameterGroupWithParameters[];
-    onChange: (groupKey: string, parameter: ConfigurableParameter) => void;
+    parametersGroup: ConfigurableParameterGroup;
+    onChange: (parameter: ConfigurableParameter, groupKey: string) => void;
     isReadOnly?: boolean;
+    isDisabled?: boolean;
+    marginStart?: DimensionValue;
 };
 
-type ParametersGroupListProps = {
-    parameters: ParameterGroupWithParameters;
-    onChange: (parameter: ConfigurableParameter) => void;
+type ParametersEnableGroupParameters = ConfigurableParameterGroup & {
+    parameters: [BoolConfigurableParameter, ...ConfigurableParameterGroup[]];
+};
+
+type ParametersEnableGroupProps = {
+    parameters: ParametersEnableGroupParameters;
+    onChange: (parameter: ConfigurableParameter, groupKey: string) => void;
     isReadOnly: boolean;
+    isDisabled?: boolean;
 };
 
 const ParameterTooltip = ({ text }: { text: string }) => {
@@ -357,66 +368,155 @@ const ParametersContainer = ({
     );
 };
 
-export const ParametersGroupList = ({ parameters, onChange, isReadOnly }: ParametersGroupListProps) => {
-    if (
-        isParameterGroup(parameters) &&
-        isParameter(parameters.parameters[0]) &&
-        isBoolEnableParameter(parameters.parameters[0])
-    ) {
-        const [enableParameter, ...configurableParameters] = parameters.parameters;
+const isBoolEnableGroup = (parameter: TrainingConfigurationParameter): parameter is ParametersEnableGroupParameters => {
+    return (
+        isParameterGroup(parameter) &&
+        isParameter(parameter.parameters[0]) &&
+        isBoolEnableParameter(parameter.parameters[0])
+    );
+};
 
-        return (
-            <ParametersContainer rowGap={'size-150'} isReadOnly={isReadOnly}>
-                <Parameter
-                    header={parameters.name}
-                    description={parameters.description}
-                    parameter={enableParameter}
+export const ParametersEnableGroup = ({ parameters, onChange, isReadOnly, isDisabled }: ParametersEnableGroupProps) => {
+    const handleChange = (groupKey: string) => (parameter: ConfigurableParameter) => {
+        onChange(parameter, groupKey);
+    };
+
+    const [enableParameter, ...configurableParameters] = parameters.parameters;
+
+    return (
+        <ParametersContainer
+            key={parameters.key}
+            rowGap={configurableParameters.length > 0 ? 'size-150' : 'size-0'}
+            isReadOnly={isReadOnly}
+        >
+            <Parameter
+                header={parameters.name}
+                description={parameters.description}
+                parameter={enableParameter}
+                onChange={handleChange(parameters.key)}
+                isReadOnly={isReadOnly}
+                isDisabled={isDisabled}
+            />
+
+            <Flex direction={'column'} gap={'size-150'}>
+                <Parameters
+                    parameters={configurableParameters}
                     onChange={onChange}
                     isReadOnly={isReadOnly}
+                    isDisabled={!enableParameter.value}
+                    marginStart={'size-200'}
                 />
-                {configurableParameters.map((configParameter) => (
-                    <Parameter
-                        marginStart={'size-200'}
-                        key={configParameter.key}
-                        header={configParameter.name}
-                        description={configParameter.description}
-                        parameter={configParameter}
-                        onChange={onChange}
-                        isReadOnly={isReadOnly}
-                        isDisabled={!enableParameter.value}
-                    />
-                ))}
-            </ParametersContainer>
+            </Flex>
+        </ParametersContainer>
+    );
+};
+
+export const ParametersGroup = ({
+    parametersGroup,
+    onChange,
+    isReadOnly = false,
+    isDisabled,
+    marginStart,
+}: ParametersGroupProps) => {
+    const handleChange = (groupKey: string) => (parameter: ConfigurableParameter) => {
+        onChange(parameter, groupKey);
+    };
+
+    if (isBoolEnableGroup(parametersGroup)) {
+        return (
+            <ParametersEnableGroup
+                parameters={parametersGroup}
+                onChange={onChange}
+                isReadOnly={isReadOnly}
+                isDisabled={isDisabled}
+            />
         );
     }
 
-    return <Parameters parameters={parameters.parameters} onChange={onChange} isReadOnly={isReadOnly} />;
-};
-
-export const ParametersGroup = ({ parameters, onChange, isReadOnly = false }: ParametersGroupProps) => {
-    const handleChange = (groupKey: string) => (parameter: ConfigurableParameter) => {
-        onChange(groupKey, parameter);
-    };
-
     return (
         <Flex direction={'column'} gap={'size-300'}>
-            {parameters.map((parameterGroup) => (
-                <ParametersGroupList
-                    key={parameterGroup.key}
-                    parameters={parameterGroup}
-                    onChange={handleChange(parameterGroup.key)}
-                    isReadOnly={isReadOnly}
-                />
-            ))}
+            {parametersGroup.parameters.map((parameter) => {
+                if (isParameter(parameter)) {
+                    return (
+                        <ParametersContainer key={parameter.name}>
+                            <Parameter
+                                header={parameter.name}
+                                description={parameter.description}
+                                parameter={parameter}
+                                onChange={handleChange(parameter.key)}
+                                isReadOnly={isReadOnly}
+                                isDisabled={isDisabled}
+                                marginStart={marginStart}
+                            />
+                        </ParametersContainer>
+                    );
+                }
+
+                if (isBoolEnableGroup(parameter)) {
+                    return (
+                        <ParametersEnableGroup
+                            key={parameter.key}
+                            parameters={parameter}
+                            onChange={onChange}
+                            isReadOnly={isReadOnly}
+                            isDisabled={isDisabled}
+                        />
+                    );
+                }
+
+                return (
+                    <Parameters
+                        key={parameter.key}
+                        parameters={parameter.parameters}
+                        onChange={onChange}
+                        isReadOnly={isReadOnly}
+                        isDisabled={isDisabled}
+                        marginStart={marginStart}
+                    />
+                );
+            })}
         </Flex>
     );
 };
 
-export const Parameters = ({ parameters, onChange, isReadOnly = false }: ParametersProps) => {
+export const Parameters = ({
+    parameters,
+    onChange,
+    isReadOnly = false,
+    isDisabled = false,
+    marginStart,
+}: ParametersProps) => {
     return (
-        <ParametersContainer>
-            <ParametersList parameters={parameters} onChange={onChange} isReadOnly={isReadOnly} />
-        </ParametersContainer>
+        <>
+            {parameters.map((parameter) => {
+                if (isParameter(parameter)) {
+                    return (
+                        <ParametersContainer key={parameter.name}>
+                            <Parameter
+                                header={parameter.name}
+                                description={parameter.description}
+                                parameter={parameter}
+                                onChange={onChange}
+                                isReadOnly={isReadOnly}
+                                isDisabled={isDisabled}
+                                marginStart={marginStart}
+                            />
+                        </ParametersContainer>
+                    );
+                }
+
+                return (
+                    <ParametersGroup
+                        key={parameter.key}
+                        parametersGroup={parameter}
+                        onChange={onChange}
+                        isReadOnly={isReadOnly}
+                        isDisabled={isDisabled}
+                        marginStart={marginStart}
+                    />
+                );
+            })}
+        </>
     );
 };
 
