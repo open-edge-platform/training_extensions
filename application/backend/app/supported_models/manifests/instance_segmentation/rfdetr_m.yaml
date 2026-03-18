@@ -1,3 +1,6 @@
+capabilities:
+  tiling: false
+
 id: instance-segmentation-rfdetr-m
 name: RF-DETR-Seg-M
 

@@ -1,3 +1,6 @@
+capabilities:
+  tiling: false
+
 id: object-detection-rfdetr-l
 name: RF-DETR-L
 

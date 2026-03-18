@@ -1,3 +1,6 @@
+capabilities:
+  tiling: false
+
 id: instance-segmentation-rfdetr-xl
 name: RF-DETR-Seg-XL
 

@@ -1,3 +1,6 @@
+capabilities:
+  tiling: false
+
 id: object-detection-deim-d-fine-l
 name: DEIM-D-FINE-L
 

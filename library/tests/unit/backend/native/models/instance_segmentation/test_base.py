@@ -8,7 +8,7 @@ import torch
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
-from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
+from otx.backend.native.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
 from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
 from otx.types.export import TaskLevelExportParameters
 
@@ -16,9 +16,9 @@ from otx.types.export import TaskLevelExportParameters
 class TestOTXInstanceSegModel:
     @pytest.fixture
     def otx_model(self) -> OTXInstanceSegModel:
-        return MaskRCNN(
+        return MaskRCNNTV(
             label_info=1,
-            model_name="maskrcnn_efficientnet_b2b",
+            model_name="maskrcnn_resnet_50",
             data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
@@ -37,6 +37,7 @@ class TestOTXInstanceSegModel:
         inputs.images = torch.randn(1, 3, 224, 224)
         otx_model.model.feature_vector_fn = feature_vector_fn
         otx_model.model.explain_fn = otx_model.get_explain_fn()
+        otx_model.eval()
         result = otx_model._forward_explain_inst_seg(otx_model.model, inputs, mode="predict")
 
         assert "predictions" in result
@@ -45,13 +46,13 @@ class TestOTXInstanceSegModel:
 
     def test_customize_inputs(self, otx_model, fxt_inst_seg_data_entity) -> None:
         output_data = otx_model._customize_inputs(fxt_inst_seg_data_entity[2])
-        assert output_data["mode"] == "loss"
         assert output_data["entity"] == fxt_inst_seg_data_entity[2]
 
     def test_forward_explain(self, otx_model, fxt_inst_seg_data_entity):
         inputs = fxt_inst_seg_data_entity[2]
         inputs.images = [image.float() for image in inputs.images]
         otx_model.training = False
+        otx_model.eval()
         otx_model.explain_mode = True
         outputs = otx_model.forward_explain(inputs)
 

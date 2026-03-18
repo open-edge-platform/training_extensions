@@ -1,3 +1,6 @@
+capabilities:
+  tiling: false
+
 id: object-detection-dinov3-detr-m
 name: DINOv3-DETR-M
 
