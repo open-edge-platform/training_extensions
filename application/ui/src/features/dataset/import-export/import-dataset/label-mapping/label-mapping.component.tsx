@@ -65,15 +65,13 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
     const projectLabels = selectedProject?.task?.labels ?? [];
 
     const { data: stagedDataset } = useStagedDataset(stagedDatasetId);
+
     const datasetLabels = stagedDataset?.metadata?.labels ?? [];
     const totalImages = stagedDataset?.metadata?.num_images ?? 0;
+    const totalAnnotatedImages = stagedDataset?.metadata?.num_annotated_images ?? 0;
+
     const totalFrames = stagedDataset?.metadata?.num_frames ?? 0;
-    const totalDatasetItems = totalImages + totalFrames;
-    /*
-        Todo: update with totalAnnotatedImages
-        https://github.com/open-edge-platform/training_extensions/issues/5595#issuecomment-3958446137
-    */
-    const totalAnnotatedItems = stagedDataset?.metadata?.num_annotations ?? 0;
+    const totalAnnotatedFrames = stagedDataset?.metadata?.num_annotated_frames ?? 0;
 
     const [formState, submitAction] = useFormConfig({
         datasetLabels,
@@ -86,7 +84,21 @@ export const LabelMapping = ({ stagedDatasetId }: LabelMappingProps) => {
             <Heading>Imported dataset statistics</Heading>
 
             <View padding={'size-200'} borderRadius={'regular'} backgroundColor={'gray-75'}>
-                <DatasetStatistics totalMediaItems={totalDatasetItems} totalAnnotatedItems={totalAnnotatedItems} />
+                <Flex justifyContent={'center'} gap={'size-200'}>
+                    <DatasetStatistics
+                        label='images'
+                        totalMediaItems={totalImages}
+                        totalAnnotatedItems={totalAnnotatedImages}
+                    />
+
+                    {totalFrames > 0 && (
+                        <DatasetStatistics
+                            label='frames'
+                            totalMediaItems={totalFrames}
+                            totalAnnotatedItems={totalAnnotatedFrames}
+                        />
+                    )}
+                </Flex>
 
                 <FormatWarning annotationType={stagedDataset?.metadata?.annotation_type} />
             </View>
