@@ -21,7 +21,7 @@ INST_SEG_LIST = [recipe for recipe in RECIPE_LIST_ALL if "instance_segmentation"
 EXPLAIN_MODEL_LIST = MC_ML_CLS + DETECTION_LIST + INST_SEG_LIST
 
 MEAN_TORCH_OV_DIFF = 150
-UNSUPPORTED_MODEL_SUBSTRS = ("dino", "mobilenet_v4", "rtmdet_tiny", "rfdetr")
+UNSUPPORTED_MODEL_SUBSTRS = ("dino", "rfdetr")
 
 
 @pytest.mark.parametrize(
