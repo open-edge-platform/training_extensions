@@ -7,10 +7,10 @@ pretrained_weights:
 
 description: "DINOv2 is a self-supervised vision transformer model trained with a combination of discriminative and generative pretraining objectives. It produces robust, general-purpose visual features that transfer well to classification tasks. Fine-tuning uses DoRA (Weight-Decomposed Low-Rank Adaptation) for parameter-efficient training, making it especially effective for small-dataset regimes."
 stats:
-  gigaflops: 4.6
+  gigaflops: 4.7
   trainable_parameters: 22
   benchmark_metrics:
-    imagenet_top1_accuracy: 79.4
+    imagenet_top1_accuracy: 80.9
 
 hyperparameters:
   training:
