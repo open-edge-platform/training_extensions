@@ -3,7 +3,7 @@
 
 import { get, isBoolean, isNumber, isObject } from 'lodash-es';
 
-import {
+import type {
     BoolConfigurableParameter,
     ConfigurableParameter,
     EnumConfigurableParameter,
@@ -11,8 +11,7 @@ import {
     NumberEnumConfigurableParameter,
     StringConfigurableParameter,
     StringEnumConfigurableParameter,
-    type ConfigurableParameterGroup,
-    type TrainingConfigurationParameter,
+    TrainingConfigurationParameter,
 } from '../../../../constants/shared-types';
 import { isParameterGroup } from '../../model-listing/model-training-parameters/utils';
 
@@ -62,17 +61,21 @@ export const isConfigurationParameter = (input: unknown): input is ConfigurableP
     return isObject(input) && 'key' in input && 'name' in input && 'description' in input;
 };
 
-export const deepReplaceParameter = (
+export const deepReplaceParameters = (
     parameters: TrainingConfigurationParameter[],
-    updated: ConfigurableParameter,
+    updatedParameters: ConfigurableParameter[],
     targetGroupKeys?: string[],
     currentGroupKeys: string[] = []
-): TrainingConfigurationParameter[] =>
-    parameters.map((parameter) => {
+): TrainingConfigurationParameter[] => {
+    if (updatedParameters.length === 0) {
+        return parameters;
+    }
+
+    return parameters.map((parameter) => {
         if (isParameterGroup(parameter)) {
             return {
                 ...parameter,
-                parameters: deepReplaceParameter(parameter.parameters, updated, targetGroupKeys, [
+                parameters: deepReplaceParameters(parameter.parameters, updatedParameters, targetGroupKeys, [
                     ...currentGroupKeys,
                     parameter.key,
                 ]),
@@ -84,20 +87,17 @@ export const deepReplaceParameter = (
                 targetGroupKeys.length === currentGroupKeys.length &&
                 targetGroupKeys.every((key, index) => key === currentGroupKeys[index]);
 
-            return parameter.key === updated.key && keysMatch ? updated : parameter;
+            if (keysMatch) {
+                const updatedParameter = updatedParameters.find((updatedParam) => updatedParam.key === parameter.key);
+
+                return updatedParameter ?? parameter;
+            }
+
+            return parameter;
         }
 
-        return parameter.key === updated.key ? updated : parameter;
-    });
+        const updatedParameter = updatedParameters.find((updatedParam) => updatedParam.key === parameter.key);
 
-export const replaceByKey = (
-    parameters: TrainingConfigurationParameter[],
-    key: string,
-    replace: (match: ConfigurableParameterGroup) => ConfigurableParameterGroup
-): TrainingConfigurationParameter[] =>
-    parameters.map((parameter) => {
-        if (isParameterGroup(parameter) && parameter.key === key) {
-            return replace(parameter);
-        }
-        return parameter;
+        return updatedParameter ?? parameter;
     });
+};

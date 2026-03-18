@@ -342,7 +342,7 @@ const ParametersContainer = ({
     const columns = isReadOnly ? ['size-3000', '1fr'] : ['size-3000', minmax('size-3400', '1fr'), 'size-400'];
 
     return (
-        <Grid columns={columns} columnGap={columnGap} rowGap={rowGap} alignItems={'center'}>
+        <Grid columns={columns} columnGap={columnGap} rowGap={rowGap} alignItems={'center'} gridColumn={'1/-1'}>
             {children}
         </Grid>
     );
@@ -386,16 +386,14 @@ export const ParametersEnableGroup = ({
                 isDisabled={isDisabled}
             />
 
-            <Flex direction={'column'} gap={'size-150'}>
-                <Parameters
-                    parameters={configurableParameters}
-                    onChange={onChange}
-                    isReadOnly={isReadOnly}
-                    isDisabled={!enableParameter.value}
-                    marginStart={'size-200'}
-                    parentGroupKeys={currentGroupKeys}
-                />
-            </Flex>
+            <Parameters
+                parameters={configurableParameters}
+                onChange={onChange}
+                isReadOnly={isReadOnly}
+                isDisabled={!enableParameter.value}
+                marginStart={'size-200'}
+                parentGroupKeys={currentGroupKeys}
+            />
         </ParametersContainer>
     );
 };

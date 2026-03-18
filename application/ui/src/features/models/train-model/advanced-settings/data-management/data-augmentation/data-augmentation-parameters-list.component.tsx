@@ -5,7 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import { ConfigurableParameter, type TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { ParametersGroup } from '../../components/parameters.component';
-import { deepReplaceParameter, replaceByKey } from '../../utils';
+import { deepReplaceParameters } from '../../utils';
 import { DataAugmentationConfigurableParameters } from './utils';
 
 type DataAugmentationParametersListProps = {
@@ -18,13 +18,10 @@ const changeDataAugmentationParameters = (
     parameterGroupKeys: string[],
     newParameter: ConfigurableParameter
 ): TrainingConfiguration => {
-    const parameters: TrainingConfiguration['parameters'] = replaceByKey(
+    const parameters: TrainingConfiguration['parameters'] = deepReplaceParameters(
         trainingConfiguration.parameters,
-        'dataset_preparation',
-        (datasetPreparationGroup) => ({
-            ...datasetPreparationGroup,
-            parameters: deepReplaceParameter(datasetPreparationGroup.parameters, newParameter, parameterGroupKeys),
-        })
+        [newParameter],
+        ['dataset_preparation', ...parameterGroupKeys]
     );
 
     return {
@@ -36,10 +33,9 @@ export const DataAugmentationParametersList = ({
     dataAugmentationParameters,
     onTrainingConfigurationChange,
 }: DataAugmentationParametersListProps) => {
-    const handleAugmentationParameterChange = (parameter: ConfigurableParameter, groupKeys?: string[]) => {
+    const handleAugmentationParameterChange = (parameter: ConfigurableParameter, groupKeys: string[] = []) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
-            if (groupKeys === undefined || groupKeys.length === 0) return config;
 
             return changeDataAugmentationParameters(config, groupKeys, parameter);
         });

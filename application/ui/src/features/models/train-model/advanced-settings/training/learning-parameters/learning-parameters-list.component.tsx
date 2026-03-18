@@ -8,27 +8,19 @@ import { partition } from 'lodash-es';
 
 import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Parameters } from '../../components/parameters.component';
-import { deepReplaceParameter, replaceByKey } from '../../utils';
+import { deepReplaceParameters } from '../../utils';
 import { InputSizeParameters } from './input-size-parameters.component';
 import { isInputSizeParameter, LearningConfigurationGroup, reorderDependentParameters } from './utils';
 
-const changeInputSizeParameters = (
+const changeLearningParameters = (
     trainingConfiguration: TrainingConfiguration,
-    newParameters: ConfigurableParameter[]
+    newParameters: ConfigurableParameter[],
+    groupKeys: string[]
 ): TrainingConfiguration => {
-    const parameters: TrainingConfiguration['parameters'] = replaceByKey(
+    const parameters: TrainingConfiguration['parameters'] = deepReplaceParameters(
         trainingConfiguration.parameters,
-        'training',
-        (parameterGroup) => {
-            return {
-                ...parameterGroup,
-                parameters: parameterGroup.parameters.map((parameter) => {
-                    const newParameter = newParameters.find(({ key }) => key === parameter.key);
-
-                    return newParameter ?? parameter;
-                }),
-            };
-        }
+        newParameters,
+        ['training', ...groupKeys]
     );
 
     return { parameters };
@@ -52,29 +44,20 @@ export const LearningParametersListContainer = ({
         [restParameters]
     );
 
-    const handleInputSizeParametersChange = (newParameters: ConfigurableParameter[]) => {
+    const handleLearningParametersChange = (updatedParameters: ConfigurableParameter[], groupKeys: string[]) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
 
-            return changeInputSizeParameters(config, newParameters);
+            return changeLearningParameters(config, updatedParameters, groupKeys);
         });
     };
 
-    const handleParameterChange = (parameter: ConfigurableParameter, groupKeys?: string[]) => {
-        onTrainingConfigurationChange((config) => {
-            if (config === undefined) return;
+    const handleLearningParameterChange = (newParameter: ConfigurableParameter, groupKeys: string[] = []) => {
+        handleLearningParametersChange([newParameter], groupKeys);
+    };
 
-            const parameters: TrainingConfiguration['parameters'] = replaceByKey(
-                config.parameters,
-                'training',
-                (group) => ({
-                    ...group,
-                    parameters: deepReplaceParameter(group.parameters, parameter, groupKeys),
-                })
-            );
-
-            return { parameters };
-        });
+    const handleInputSizeParametersChange = (updatedParameters: ConfigurableParameter[]) => {
+        handleLearningParametersChange(updatedParameters, []);
     };
 
     return (
@@ -86,7 +69,7 @@ export const LearningParametersListContainer = ({
             />
             <Parameters
                 parameters={learningParametersBasedOnDependency}
-                onChange={handleParameterChange}
+                onChange={handleLearningParameterChange}
                 isReadOnly={isReadOnly}
             />
         </Flex>

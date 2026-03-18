@@ -13,7 +13,7 @@ import {
 } from '../../../../constants/shared-types';
 import { isParameterGroup } from '../../model-listing/model-training-parameters/utils';
 import { learningParameters } from './training/learning-parameters/mocks';
-import { deepReplaceParameter } from './utils';
+import { deepReplaceParameters } from './utils';
 
 const getParam = (params: ConfigurableParameter[], key: string): ConfigurableParameter | undefined =>
     params.find((p) => p.key === key) as ConfigurableParameter | undefined;
@@ -21,43 +21,58 @@ const getParam = (params: ConfigurableParameter[], key: string): ConfigurablePar
 const getGroup = (params: TrainingConfigurationParameter[], key: string): ConfigurableParameterGroup | undefined =>
     params.find((p) => isParameterGroup(p) && p.key === key) as ConfigurableParameterGroup | undefined;
 
-describe('deepReplaceParameter', () => {
+describe('deepReplaceParameters', () => {
     describe('top-level parameter replacement', () => {
         it('replaces a top-level parameter by key', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 50 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 50 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             const replaced = getParam(result as ConfigurableParameter[], 'max_epochs');
             expect(replaced?.value).toBe(50);
         });
 
         it('does not affect other top-level parameters when replacing one', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 99 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 99 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             const batchSize = getParam(result as ConfigurableParameter[], 'batch_size');
             expect(batchSize?.value).toBe(4);
         });
 
         it('replaces a float top-level parameter', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'float', key: 'learning_rate', value: 0.01 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [
+                getMockedConfigurationParameter({ value_type: 'float', key: 'learning_rate', value: 0.01 }),
+            ];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             const replaced = getParam(result as ConfigurableParameter[], 'learning_rate');
             expect(replaced?.value).toBe(0.01);
         });
 
+        it('replaces multiple top-level parameters in a single call', () => {
+            const updated = [
+                getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 50 }),
+                getMockedConfigurationParameter({ value_type: 'int', key: 'batch_size', value: 16 }),
+            ];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
+
+            const maxEpochs = getParam(result as ConfigurableParameter[], 'max_epochs');
+            const batchSize = getParam(result as ConfigurableParameter[], 'batch_size');
+            expect(maxEpochs?.value).toBe(50);
+            expect(batchSize?.value).toBe(16);
+        });
+
         it('returns original array length unchanged', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             expect(result).toHaveLength(learningParameters.parameters.length);
         });
 
         it('does not mutate the original parameters array', () => {
             const original = learningParameters.parameters;
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 });
-            deepReplaceParameter(original, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 })];
+            deepReplaceParameters(original, updated);
 
             const maxEpochs = getParam(original as ConfigurableParameter[], 'max_epochs');
             expect(maxEpochs?.value).toBe(200);
@@ -66,8 +81,8 @@ describe('deepReplaceParameter', () => {
 
     describe('nested parameter replacement (no targetGroupKeys)', () => {
         it('replaces a parameter nested inside a group when no targetGroupKeys provided', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 99 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 99 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             // early_stopping.patience should be replaced
             const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
@@ -77,8 +92,8 @@ describe('deepReplaceParameter', () => {
 
         it('replaces all occurrences of a key across groups when no targetGroupKeys provided', () => {
             // Both early_stopping.patience and scheduler.patience exist
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 42 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 42 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
             const earlyStoppingPatience = getParam(
@@ -93,20 +108,35 @@ describe('deepReplaceParameter', () => {
         });
 
         it('replaces a bool parameter nested inside a group', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             const gradientClipGroup = getGroup(result, 'gradient_clip') as ConfigurableParameterGroup;
             const enable = getParam(gradientClipGroup.parameters as ConfigurableParameter[], 'enable');
             expect(enable?.value).toBe(true);
+        });
+
+        it('replaces multiple parameters in different groups in a single call', () => {
+            const updated = [
+                getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 42 }),
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true }),
+            ];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
+
+            const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
+            expect(getParam(earlyStoppingGroup.parameters as ConfigurableParameter[], 'patience')?.value).toBe(42);
+            expect(getParam(earlyStoppingGroup.parameters as ConfigurableParameter[], 'enable')?.value).toBe(true);
+
+            const schedulerGroup = getGroup(result, 'scheduler') as ConfigurableParameterGroup;
+            expect(getParam(schedulerGroup.parameters as ConfigurableParameter[], 'patience')?.value).toBe(42);
         });
     });
 
     describe('targeted replacement using targetGroupKeys', () => {
         it('replaces only the parameter in the specific group when targetGroupKeys is provided', () => {
             // Replace patience only in early_stopping
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 77 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, ['early_stopping']);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 77 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, ['early_stopping']);
 
             const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
             const earlyStoppingPatience = getParam(
@@ -122,8 +152,8 @@ describe('deepReplaceParameter', () => {
         });
 
         it('replaces only the parameter in scheduler group when targetGroupKeys targets scheduler', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 55 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, ['scheduler']);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 55 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, ['scheduler']);
 
             const schedulerGroup = getGroup(result, 'scheduler') as ConfigurableParameterGroup;
             const schedulerPatience = getParam(schedulerGroup.parameters as ConfigurableParameter[], 'patience');
@@ -137,10 +167,26 @@ describe('deepReplaceParameter', () => {
             expect(earlyStoppingPatience?.value).toBe(10); // original value from mocks
         });
 
+        it('replaces multiple parameters within the targeted group in a single call', () => {
+            const updated = [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true }),
+                getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 77 }),
+            ];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, ['early_stopping']);
+
+            const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
+            expect(getParam(earlyStoppingGroup.parameters as ConfigurableParameter[], 'patience')?.value).toBe(77);
+            expect(getParam(earlyStoppingGroup.parameters as ConfigurableParameter[], 'enable')?.value).toBe(true);
+
+            // scheduler.patience should remain unchanged
+            const schedulerGroup = getGroup(result, 'scheduler') as ConfigurableParameterGroup;
+            expect(getParam(schedulerGroup.parameters as ConfigurableParameter[], 'patience')?.value).toBe(5);
+        });
+
         it('replaces a deeply nested parameter using a multi-level targetGroupKeys path', () => {
             // scheduler.warmup.enable
-            const updated = getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, ['scheduler', 'warmup']);
+            const updated = [getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, ['scheduler', 'warmup']);
 
             const schedulerGroup = getGroup(result, 'scheduler') as ConfigurableParameterGroup;
             const warmupGroup = getGroup(schedulerGroup.parameters, 'warmup') as ConfigurableParameterGroup;
@@ -160,8 +206,8 @@ describe('deepReplaceParameter', () => {
 
         it('does not replace parameter when targetGroupKeys path does not match actual nesting', () => {
             // Try to replace max_epochs using a wrong group key
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, ['nonexistent_group']);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, ['nonexistent_group']);
 
             const maxEpochs = getParam(result as ConfigurableParameter[], 'max_epochs');
             // max_epochs is top-level so currentGroupKeys would be [] which does not match ['nonexistent_group']
@@ -170,8 +216,11 @@ describe('deepReplaceParameter', () => {
 
         it('does not replace parameter when targetGroupKeys length mismatches current depth', () => {
             // patience is at depth 1 inside early_stopping, passing two-level path should not match
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 1 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, ['training', 'early_stopping']);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'patience', value: 1 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, [
+                'training',
+                'early_stopping',
+            ]);
 
             const earlyStoppingGroup = getGroup(result, 'early_stopping') as ConfigurableParameterGroup;
             const patience = getParam(earlyStoppingGroup.parameters as ConfigurableParameter[], 'patience');
@@ -181,8 +230,8 @@ describe('deepReplaceParameter', () => {
 
     describe('edge cases', () => {
         it('returns unchanged array when key does not exist in parameters', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'nonexistent_key', value: 1 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'nonexistent_key', value: 1 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated);
 
             // All original values should remain
             const maxEpochs = getParam(result as ConfigurableParameter[], 'max_epochs');
@@ -190,10 +239,18 @@ describe('deepReplaceParameter', () => {
         });
 
         it('handles an empty parameters array', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 });
-            const result = deepReplaceParameter([], updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 })];
+            const result = deepReplaceParameters([], updated);
 
             expect(result).toEqual([]);
+        });
+
+        it('handles an empty updatedParameters list', () => {
+            const result = deepReplaceParameters(learningParameters.parameters, []);
+
+            const maxEpochs = getParam(result as ConfigurableParameter[], 'max_epochs');
+            expect(maxEpochs?.value).toBe(200);
+            expect(result).toHaveLength(learningParameters.parameters.length);
         });
 
         it('handles a flat list of parameters with no groups', () => {
@@ -201,11 +258,26 @@ describe('deepReplaceParameter', () => {
                 getMockedConfigurationParameter({ value_type: 'int', key: 'alpha', value: 1 }),
                 getMockedConfigurationParameter({ value_type: 'int', key: 'beta', value: 2 }),
             ];
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'alpha', value: 99 });
-            const result = deepReplaceParameter(params, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'alpha', value: 99 })];
+            const result = deepReplaceParameters(params, updated);
 
             expect((result[0] as ConfigurableParameter).value).toBe(99);
             expect((result[1] as ConfigurableParameter).value).toBe(2);
+        });
+
+        it('replaces all parameters in a flat list when all are in updatedParameters', () => {
+            const params = [
+                getMockedConfigurationParameter({ value_type: 'int', key: 'alpha', value: 1 }),
+                getMockedConfigurationParameter({ value_type: 'int', key: 'beta', value: 2 }),
+            ];
+            const updated = [
+                getMockedConfigurationParameter({ value_type: 'int', key: 'alpha', value: 10 }),
+                getMockedConfigurationParameter({ value_type: 'int', key: 'beta', value: 20 }),
+            ];
+            const result = deepReplaceParameters(params, updated);
+
+            expect((result[0] as ConfigurableParameter).value).toBe(10);
+            expect((result[1] as ConfigurableParameter).value).toBe(20);
         });
 
         it('handles a list with only groups (no top-level leaf parameters)', () => {
@@ -215,16 +287,16 @@ describe('deepReplaceParameter', () => {
                     parameters: [getMockedConfigurationParameter({ value_type: 'int', key: 'x', value: 10 })],
                 }),
             ];
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'x', value: 42 });
-            const result = deepReplaceParameter(params, updated);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'x', value: 42 })];
+            const result = deepReplaceParameters(params, updated);
 
             const groupA = getGroup(result, 'group_a') as ConfigurableParameterGroup;
             expect((groupA.parameters[0] as ConfigurableParameter).value).toBe(42);
         });
 
         it('preserves all other fields of the group when replacing a nested parameter', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, ['gradient_accumulation']);
+            const updated = [getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: true })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, ['gradient_accumulation']);
 
             const gradAccGroup = getGroup(result, 'gradient_accumulation') as ConfigurableParameterGroup;
             expect(gradAccGroup.name).toBe('Gradient accumulation');
@@ -236,16 +308,18 @@ describe('deepReplaceParameter', () => {
             // Empty targetGroupKeys means targetGroupKeys.length === 0, so the
             // `if (targetGroupKeys !== undefined && targetGroupKeys.length > 0)` branch is skipped
             // and matching falls through to the key-only comparison
-            const updated = getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, []);
+            const updated = [getMockedConfigurationParameter({ value_type: 'int', key: 'max_epochs', value: 1 })];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, []);
 
             const maxEpochs = getParam(result as ConfigurableParameter[], 'max_epochs');
             expect(maxEpochs?.value).toBe(1);
         });
 
         it('replaces parameter at top level when targetGroupKeys is undefined', () => {
-            const updated = getMockedConfigurationParameter({ value_type: 'float', key: 'weight_decay', value: 0.001 });
-            const result = deepReplaceParameter(learningParameters.parameters, updated, undefined);
+            const updated = [
+                getMockedConfigurationParameter({ value_type: 'float', key: 'weight_decay', value: 0.001 }),
+            ];
+            const result = deepReplaceParameters(learningParameters.parameters, updated, undefined);
 
             const replaced = getParam(result as ConfigurableParameter[], 'weight_decay');
             expect(replaced?.value).toBe(0.001);
