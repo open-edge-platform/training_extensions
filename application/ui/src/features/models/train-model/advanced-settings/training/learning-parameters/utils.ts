@@ -44,7 +44,7 @@ export const getInputSizeHeightParameter = (
     parameters: TrainingConfigurationParameter[]
 ): NumberEnumConfigurableParameter | undefined => parameters.find(isInputSizeHeightParameter);
 
-export const groupDependentParameters = (
+export const reorderDependentParameters = (
     parameters: LearningConfigurationParameters[]
 ): LearningConfigurationParameters[] => {
     return parameters
@@ -66,7 +66,7 @@ export const groupDependentParameters = (
             }
 
             if (isParameterGroup(curr)) {
-                const groupedParameters = groupDependentParameters(curr.parameters);
+                const groupedParameters = reorderDependentParameters(curr.parameters);
 
                 return [...acc, [{ ...curr, parameters: groupedParameters }]];
             }

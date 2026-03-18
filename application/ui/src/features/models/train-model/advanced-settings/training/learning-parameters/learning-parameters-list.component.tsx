@@ -10,7 +10,7 @@ import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../
 import { Parameters } from '../../components/parameters.component';
 import { deepReplaceParameter, replaceByKey } from '../../utils';
 import { InputSizeParameters } from './input-size-parameters.component';
-import { groupDependentParameters, isInputSizeParameter, LearningConfigurationGroup } from './utils';
+import { isInputSizeParameter, LearningConfigurationGroup, reorderDependentParameters } from './utils';
 
 const changeInputSizeParameters = (
     trainingConfiguration: TrainingConfiguration,
@@ -48,7 +48,7 @@ export const LearningParametersListContainer = ({
     const [inputSizeParameters, restParameters] = partition(learningParameters.parameters, isInputSizeParameter);
 
     const learningParametersBasedOnDependency = useMemo(
-        () => groupDependentParameters(restParameters),
+        () => reorderDependentParameters(restParameters),
         [restParameters]
     );
 
