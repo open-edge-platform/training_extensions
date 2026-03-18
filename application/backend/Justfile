@@ -111,7 +111,7 @@ _setup_demo force_import="": install-uv
 [arg("coturn-host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
 [arg("coturn-port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("coturn-image", long="coturn-image", help="Coturn server Docker image to use (default: quay.io/coturn/coturn)")]
-run-coturn coturn-host="" coturn-port="443" coturn-image="quay.io/coturn/coturn":
+run-coturn coturn-host="" coturn-port="443" coturn-image="quay.io/coturn/coturn": install-uv
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -145,7 +145,6 @@ stop-coturn:
 [arg("host", long="host", help="Host address to bind the server to")]
 [arg("port", long="port", help="Port number to bind the server to")]
 [arg("webrtc_advertise_ip", long="webrtc-advertise-ip", help="Public IP address to advertise for WebRTC connections")]
-[arg("ice_servers", long="ice-servers", help="ICE servers configuration as a JSON string")]
 [arg("log_level", long="log-level", help="Log level (e.g. DEBUG, INFO, WARNING, ERROR)")]
 [arg("log_dir", long="log-dir", help="Directory for log files")]
 [arg("data_dir", long="data-dir", help="Directory for application data")]
@@ -158,7 +157,7 @@ stop-coturn:
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("coturn_image", long="coturn-image", help="Coturn server Docker image to use (default: quay.io/coturn/coturn)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
-run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" ice_servers="" log_level="" log_dir="" data_dir="" no_proxy="" enable_coturn="false" coturn_host="" coturn_port="443" coturn_image="quay.io/coturn/coturn" stun_server="": install-uv
+run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_advertise_ip="" log_level="" log_dir="" data_dir="" no_proxy="" enable_coturn="false" coturn_host="" coturn_port="443" coturn_image="quay.io/coturn/coturn" stun_server="": install-uv
     #!/usr/bin/env bash
     set -euo pipefail
     export PYTHONUNBUFFERED=1
@@ -194,9 +193,6 @@ run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_adverti
     if [[ -n "{{ webrtc_advertise_ip }}" ]]; then
         export WEBRTC_ADVERTISE_IP="{{ webrtc_advertise_ip }}"
     fi
-    if [[ -n "{{ ice_servers }}" ]]; then
-        export ICE_SERVERS="{{ ice_servers }}"
-    fi
     if [[ -n "{{ log_level }}" ]]; then
         export LOG_LEVEL="{{ log_level }}"
     fi
@@ -225,4 +221,4 @@ run-server clean="" setup_demo="" force_import="" host="" port="" webrtc_adverti
 
     echo "Starting FastAPI server..."
     trap 'kill $(jobs -p) 2>/dev/null || true; {{ if enable_coturn == "true" { "just stop-coturn" } else { "" } }}' EXIT
-    exec uv run {{ app-main }}
+    uv run {{ app-main }}

@@ -70,21 +70,6 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
         REMOVE_FLAG="--rm"
     fi
 
-    COTURN_ENV=""
-    if [[ "{{ enable_coturn }}" == "true" ]]; then
-        if [[ -n "{{ coturn_host }}" ]]; then
-            COTURN_HOST="{{ coturn_host }}"
-        else
-            COTURN_HOST=`uv run python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
-        fi
-        COTURN_ENV="--env COTURN_HOST=$COTURN_HOST --env COTURN_PORT={{ coturn_port }}"
-    fi
-
-    STUN_ENV=""
-    if [[ -n "{{ stun_server }}" ]]; then
-        STUN_ENV="--env STUN_SERVER={{ stun_server }}"
-    fi
-
     # Resolve Python interpreter
     if command -v uv > /dev/null && uv run python --version > /dev/null 2>&1; then
         PYTHON="uv run python"
@@ -93,6 +78,21 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
     else
         echo "Error: No Python interpreter found. Run 'just install-uv' to install it through uv." >&2
         exit 1
+    fi
+
+    COTURN_ENV=""
+    if [[ "{{ enable_coturn }}" == "true" ]]; then
+        if [[ -n "{{ coturn_host }}" ]]; then
+            COTURN_HOST="{{ coturn_host }}"
+        else
+            COTURN_HOST=`$PYTHON -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
+        fi
+        COTURN_ENV="--env COTURN_HOST=$COTURN_HOST --env COTURN_PORT={{ coturn_port }}"
+    fi
+
+    STUN_ENV=""
+    if [[ -n "{{ stun_server }}" ]]; then
+        STUN_ENV="--env STUN_SERVER={{ stun_server }}"
     fi
 
     HOST_IP=$($PYTHON -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()")

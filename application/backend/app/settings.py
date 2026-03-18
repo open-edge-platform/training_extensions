@@ -69,7 +69,7 @@ class Settings(BaseSettings):
 
     # Simplified WebRTC config
     coturn_host: str | None = Field(default=None, alias="COTURN_HOST")
-    coturn_port: int = Field(default=3478, alias="COTURN_PORT")
+    coturn_port: int = Field(default=443, alias="COTURN_PORT")
     coturn_username: str = Field(default="user", alias="COTURN_USERNAME")
     coturn_password: str = Field(default="password", alias="COTURN_PASSWORD")
     stun_server: str | None = Field(default=None, alias="STUN_SERVER")
