@@ -559,7 +559,8 @@ class TestMediaServiceIntegration:
         assert os.path.exists(binary_file_path)
         assert created_media.size == os.path.getsize(binary_file_path)
 
-        stored_exif = PILImage.open(binary_file_path).getexif()
+        with PILImage.open(binary_file_path) as stored_image:
+            stored_exif = stored_image.getexif()
         assert stored_exif is not None
         if format != ImageFormat.BMP:  # BMP images do not support EXIF information
             assert stored_exif[ExifTags.Base.Software] == "Intel Geti"
