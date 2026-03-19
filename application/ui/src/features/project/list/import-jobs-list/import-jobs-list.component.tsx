@@ -50,47 +50,41 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {preparingImportsQueue.map(({ size, fileName, stagedDatasetId, prepareJobId }) => {
-                return (
-                    <PrepareImportDataset
-                        key={`prepare-${stagedDatasetId}`}
-                        size={size}
-                        fileName={fileName}
-                        jobId={prepareJobId}
-                        stagedDatasetId={stagedDatasetId}
-                        onSuccess={() => updateImportEntryStep(stagedDatasetId, 'taskTypeSelection')}
-                        deleteEntry={() => deleteImportEntry(stagedDatasetId)}
-                    />
-                );
-            })}
+            {preparingImportsQueue.map(({ size, fileName, stagedDatasetId, prepareJobId }) => (
+                <PrepareImportDataset
+                    key={`prepare-${stagedDatasetId}`}
+                    size={size}
+                    fileName={fileName}
+                    jobId={prepareJobId}
+                    stagedDatasetId={stagedDatasetId}
+                    onSuccess={() => updateImportEntryStep(stagedDatasetId, 'taskTypeSelection')}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                />
+            ))}
 
-            {taskTypeSelectionImportsQueue.map(({ fileName, stagedDatasetId }) => {
-                return (
-                    <StagedImportDataset
-                        key={`task-type-${stagedDatasetId}`}
-                        fileName={fileName}
-                        message={'Select task type'}
-                        stagedDatasetId={stagedDatasetId}
-                        onOpen={() => handleOpen('taskTypeSelection', stagedDatasetId)}
-                        primaryButtonLabel={'Select task type'}
-                        deleteEntry={() => deleteImportEntry(stagedDatasetId)}
-                    />
-                );
-            })}
+            {taskTypeSelectionImportsQueue.map(({ fileName, stagedDatasetId }) => (
+                <StagedImportDataset
+                    key={`task-type-${stagedDatasetId}`}
+                    fileName={fileName}
+                    message={'Select task type'}
+                    stagedDatasetId={stagedDatasetId}
+                    onOpen={() => handleOpen('taskTypeSelection', stagedDatasetId)}
+                    primaryButtonLabel={'Select task type'}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                />
+            ))}
 
-            {labelMappingImportsQueue.map(({ fileName, stagedDatasetId }) => {
-                return (
-                    <StagedImportDataset
-                        key={`label-mapping-${stagedDatasetId}`}
-                        fileName={fileName}
-                        message={'Map labels for the uploaded dataset'}
-                        stagedDatasetId={stagedDatasetId}
-                        onOpen={() => handleOpen('labelMapping', stagedDatasetId)}
-                        primaryButtonLabel={'Map labels'}
-                        deleteEntry={() => deleteImportEntry(stagedDatasetId)}
-                    />
-                );
-            })}
+            {labelMappingImportsQueue.map(({ fileName, stagedDatasetId }) => (
+                <StagedImportDataset
+                    key={`label-mapping-${stagedDatasetId}`}
+                    fileName={fileName}
+                    message={'Map labels for the uploaded dataset'}
+                    stagedDatasetId={stagedDatasetId}
+                    onOpen={() => handleOpen('labelMapping', stagedDatasetId)}
+                    primaryButtonLabel={'Map labels'}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                />
+            ))}
 
             {importingJobQueue.map(({ size, fileName, stagedDatasetId, importJobId }) => (
                 <LoadingImportDataset

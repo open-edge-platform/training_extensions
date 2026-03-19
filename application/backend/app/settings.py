@@ -65,8 +65,14 @@ class Settings(BaseSettings):
     gpu_slots: int = Field(default=1, alias="GPU_SLOTS", description="Number of GPU slots available for model tuning")
 
     # WebRTC
-    ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
     webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
+
+    # Simplified WebRTC config
+    coturn_host: str | None = Field(default=None, alias="COTURN_HOST")
+    coturn_port: int = Field(default=443, alias="COTURN_PORT")
+    coturn_username: str = Field(default="user", alias="COTURN_USERNAME")
+    coturn_password: str = Field(default="password", alias="COTURN_PASSWORD")
+    stun_server: str | None = Field(default=None, alias="STUN_SERVER")
 
     # Inference
     inference_media_limit: int = Field(
@@ -79,6 +85,24 @@ class Settings(BaseSettings):
         alias="INFERENCE_MODEL_TTL",
         description="Time to live for a model loaded for inference, before unloading",
     )
+
+    @property
+    def ice_servers(self) -> list[dict]:
+        """Compute ICE servers from coturn and STUN configuration."""
+        servers = []
+        if self.coturn_host:
+            servers.append(
+                {
+                    "urls": f"turn:{self.coturn_host}:{self.coturn_port}?transport=tcp",
+                    "username": self.coturn_username,
+                    "credential": self.coturn_password,
+                }
+            )
+
+        if self.stun_server:
+            servers.append({"urls": self.stun_server})
+
+        return servers
 
     @property
     def database_url(self) -> str:
@@ -117,6 +141,16 @@ class Settings(BaseSettings):
             # If application is running in pyinstaller bundle, adjust the path accordingly.
             prefixed_path = os.path.join(getattr(sys, "_MEIPASS", ""), v)
             return Path(prefixed_path) if isinstance(v, Path) else prefixed_path
+        return v
+
+    @field_validator("stun_server")
+    def validate_stun_server(cls, v: str | None) -> str | None:
+        """Ensure that STUN server, if set, is a full ICE URL starting with stun: or stuns:."""
+        if v:
+            if not isinstance(v, str):
+                raise TypeError("stun_server must be a string.")
+            if not (v.startswith(("stun:", "stuns:"))):
+                raise ValueError("stun_server must be a full ICE URL starting with 'stun:' or 'stuns:'.")
         return v
 
 
