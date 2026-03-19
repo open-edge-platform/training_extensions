@@ -5,7 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import { ConfigurableParameter, type TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { ParametersGroup } from '../../components/parameters.component';
-import { replaceByKey } from '../../utils';
+import { deepReplaceParameters } from '../../utils';
 import { DataAugmentationConfigurableParameters } from './utils';
 
 type DataAugmentationParametersListProps = {
@@ -15,24 +15,13 @@ type DataAugmentationParametersListProps = {
 
 const changeDataAugmentationParameters = (
     trainingConfiguration: TrainingConfiguration,
-    parameterGroupKey: string,
+    parameterGroupKeys: string[],
     newParameter: ConfigurableParameter
 ): TrainingConfiguration => {
-    const parameters: TrainingConfiguration['parameters'] = replaceByKey(
+    const parameters: TrainingConfiguration['parameters'] = deepReplaceParameters(
         trainingConfiguration.parameters,
-        'dataset_preparation',
-        (datasetPreparationGroup) => ({
-            ...datasetPreparationGroup,
-            parameters: replaceByKey(datasetPreparationGroup.parameters, 'augmentation', (augmentationGroup) => ({
-                ...augmentationGroup,
-                parameters: replaceByKey(augmentationGroup.parameters, parameterGroupKey, (parameterGroup) => ({
-                    ...parameterGroup,
-                    parameters: parameterGroup.parameters.map((parameter) =>
-                        parameter.key === newParameter.key ? newParameter : parameter
-                    ),
-                })),
-            })),
-        })
+        [newParameter],
+        ['dataset_preparation', ...parameterGroupKeys]
     );
 
     return {
@@ -44,18 +33,15 @@ export const DataAugmentationParametersList = ({
     dataAugmentationParameters,
     onTrainingConfigurationChange,
 }: DataAugmentationParametersListProps) => {
-    const handleAugmentationParameterChange = (groupKey: string, parameter: ConfigurableParameter) => {
+    const handleAugmentationParameterChange = (parameter: ConfigurableParameter, groupKeys: string[] = []) => {
         onTrainingConfigurationChange((config) => {
             if (config === undefined) return;
 
-            return changeDataAugmentationParameters(config, groupKey, parameter);
+            return changeDataAugmentationParameters(config, groupKeys, parameter);
         });
     };
 
     return (
-        <ParametersGroup
-            parameters={dataAugmentationParameters.parameters}
-            onChange={handleAugmentationParameterChange}
-        />
+        <ParametersGroup parametersGroup={dataAugmentationParameters} onChange={handleAugmentationParameterChange} />
     );
 };

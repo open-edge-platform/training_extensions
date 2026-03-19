@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import torch
 from torch import LongTensor
 from torch.utils._pytree import register_pytree_node
 from torchvision import tv_tensors
-from torchvision.tv_tensors import Image, Mask
+from torchvision.tv_tensors import Mask
 
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
@@ -299,6 +299,7 @@ def fxt_h_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXPredic
 def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
+    fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
@@ -310,13 +311,13 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         label=fake_labels,
     )
     batch_data_entity = OTXSampleBatch(
-        images=[Image(fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        images=[Image(fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
@@ -330,6 +331,7 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
 def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
+    fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
@@ -344,14 +346,14 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         label=fake_labels,
     )
     batch_data_entity = OTXSampleBatch(
-        images=[Image(data=fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        images=[Image(data=fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
@@ -364,7 +366,8 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
 @pytest.fixture(scope="session")
 def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     img_size = (32, 32)
-    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.uint8).numpy()
+    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
+    fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_masks = Mask(torch.randint(low=0, high=2, size=img_size, dtype=torch.uint8))
     # define data entity
@@ -374,12 +377,12 @@ def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         masks=fake_masks,
     )
     batch_data_entity = OTXSampleBatch(
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=fake_images,
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=fake_images,
         imgs_info=[fake_image_info],
         masks=[fake_masks],
         scores=[],

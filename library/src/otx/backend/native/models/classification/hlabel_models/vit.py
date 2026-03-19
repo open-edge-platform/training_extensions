@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ViT model implementation."""
@@ -55,7 +55,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
         model_name (str): Name of the Vision Transformer model to use.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         optimizer (OptimizerCallable): Callable for the optimizer.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
         metric (MetricCallable): Callable for the metric.
@@ -67,7 +67,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "vit-tiny",
             "vit-small",
@@ -101,6 +101,9 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()
         if not isinstance(self.label_info, HLabelInfo):
             raise TypeError(self.label_info)
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         init_cfg = [
             {"std": 0.2, "layer": "Linear", "type": "TruncNormal"},
             {"bias": 0.0, "val": 1.0, "layer": "LayerNorm", "type": "Constant"},

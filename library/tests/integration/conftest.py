@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 from __future__ import annotations
@@ -150,6 +150,7 @@ def fxt_asset_dir() -> Path:
 def fxt_target_dataset_per_task() -> dict:
     return {
         "multi_class_cls": "tests/assets/classification_cifar10",
+        "multi_class_cls_16bit": "tests/assets/classification_dataset_16bit",
         "multi_label_cls": "tests/assets/multilabel_classification_coco",
         "h_label_cls": "tests/assets/hierarchical_classification_cifar100",
         "detection": "tests/assets/detection_coco",

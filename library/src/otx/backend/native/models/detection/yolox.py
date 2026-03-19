@@ -1,11 +1,12 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """YOLOX model implementations."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+import dataclasses
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 from torch.export import Dim
 
@@ -30,11 +31,19 @@ from otx.types.precision import OTXPrecisionType
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
+
+
+# YOLOX-S/L/X pretrained weights (MMDet) were trained on raw [0, 255] BGR images —
+# no ImageNet normalization was applied during pretraining.
+# These models are NOT compatible with 16-bit images because the uint8 pixel range
+# assumption is baked into the weights.
+_RAW_UINT8_MODELS: frozenset[str] = frozenset({"yolox_s", "yolox_l", "yolox_x"})
 
 
 class YOLOX(OTXDetectionModel):
@@ -45,7 +54,7 @@ class YOLOX(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
             This parameter contains image input size, mean, and std, that is used to preprocess the input image.
             If None is given, default parameters for the specific model will be used.
             In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
@@ -75,7 +84,7 @@ class YOLOX(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"] = "yolox_s",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -129,14 +138,6 @@ class YOLOX(OTXDetectionModel):
         load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
-
-    def _customize_inputs(
-        self,
-        entity: OTXSampleBatch,
-        pad_size_divisor: int = 32,
-        pad_value: int = 114,  # YOLOX uses 114 as pad_value
-    ) -> dict[str, Any]:
-        return super()._customize_inputs(entity=entity, pad_size_divisor=pad_size_divisor, pad_value=pad_value)
 
     @property
     def _exporter(self) -> OTXModelExporter:
@@ -197,12 +198,31 @@ class YOLOX(OTXDetectionModel):
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
         return {
-            "yolox_tiny": DataInputParams(
-                input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-            ),
-            # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
-            # issue: https://github.com/open-edge-platform/training_extensions/issues/5023
+            "yolox_tiny": DataInputParams(input_size=(640, 640), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
         }
+
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
+        if self.model_name in _RAW_UINT8_MODELS:
+            if entity.imgs_info is not None:
+                for info in entity.imgs_info:
+                    if info is not None and getattr(info, "bit_depth", 8) > 8:
+                        msg = (
+                            f"YOLOX ({self.model_name}) does not support images with bit_depth > 8. "
+                            f"Got bit_depth={info.bit_depth}. "
+                            "Pretrained weights require [0, 255] uint8-range inputs. "
+                            "Use yolox_tiny or a model with normalization for 16-bit images."
+                        )
+                        raise RuntimeError(msg)
+
+            inputs = super()._customize_inputs(entity)
+            # The CPU pipeline always scales images to [0, 1] float.
+            # YOLOX-S/L/X pretrained weights expect [0, 255] float, so rescale here.
+            # We create a new entity so the original (with [0, 1] images) remains intact
+            images_255 = cast("torch.Tensor", entity.images).mul(255.0)
+            inputs["entity"] = dataclasses.replace(inputs["entity"], images=images_255)
+            return inputs
+
+        return super()._customize_inputs(entity)

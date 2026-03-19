@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
@@ -22,7 +22,6 @@ from otx.data.module import (
     OTXDataModule,
     OTXTaskType,
 )
-from otx.data.transform_libs.torchvision import Compose, RandomFlip
 
 
 class TestOTXDataModule:
@@ -350,36 +349,6 @@ class TestOTXDataModule:
                 val_dataset=mock_val,
             )
 
-    def test_from_otx_datasets_with_normalization(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets correctly extracts normalization parameters."""
-        from torchvision.transforms.v2 import Normalize
-
-        # Create mock dataset with Normalize transform
-        normalize_transform = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-        shared_label_info = MagicMock()
-        mock_train = fxt_mock_dataset(
-            transforms=[normalize_transform],
-            label_info=shared_label_info,
-        )
-        mock_val = fxt_mock_dataset(label_info=shared_label_info)
-
-        mocker.patch.object(
-            OTXDataModule,
-            "get_default_subset_configs",
-            return_value=fxt_mock_subset_configs,
-        )
-
-        # Create module
-        module = OTXDataModule.from_otx_datasets(
-            train_dataset=mock_train,
-            val_dataset=mock_val,
-        )
-
-        # Assertions - normalization params should be extracted
-        assert module.input_mean == tuple(normalize_transform.mean)
-        assert module.input_std == tuple(normalize_transform.std)
-
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets with auto_num_workers enabled."""
         # Create mock datasets
@@ -413,37 +382,20 @@ class TestOTXDataModule:
         assert module.device == DeviceType.auto  # Default value
 
     @pytest.mark.parametrize(
-        "transforms_source",
+        ("transforms_source", "expected"),
         [
-            None,
-            [
-                {"class_path": "otx.data.transform_libs.torchvision.RandomFlip", "init_args": {"probability": 0.5}},
-                {
-                    "class_path": "otx.data.transform_libs.torchvision.Normalize",
-                    "init_args": {"mean": [123.675, 116.28, 103.53], "std": [58.395, 57.12, 57.375]},
-                },
-            ],
-            [
-                RandomFlip(probability=0.5),
-                Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-            ],
-            Compose(
-                [
-                    RandomFlip(probability=0.5),
-                    Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-                ]
+            (None, (None, None)),
+            (
+                [Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375])],
+                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
             ),
         ],
-        ids=["from None", "from list of configs", "from list of objects", "from compose"],
+        ids=["no normalize", "with normalize"],
     )
-    def test_extract_normalization_params(self, transforms_source) -> None:
-        """Test _extract_normalization_params with various transform sources."""
-        mean, std = OTXDataModule.extract_normalization_params(transforms_source)
+    def test_extract_normalization_params(self, transforms_source, expected) -> None:
+        """Test CPUAugmentationPipeline._extract_normalization_params."""
+        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 
-        # Assertions based on expected values
-        if transforms_source is None:
-            assert mean == (0.0, 0.0, 0.0)
-            assert std == (1.0, 1.0, 1.0)
-        else:
-            assert mean == (123.675, 116.28, 103.53)
-            assert std == (58.395, 57.12, 57.375)
+        pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
+        result = (pipeline.mean, pipeline.std)
+        assert result == expected

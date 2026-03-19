@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for detection model entity used in OTX."""
@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence, cast
 
 import torch
 from torchmetrics import Metric, MetricCollection
@@ -25,7 +25,6 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.tile import OTXTileBatchDataEntity
-from otx.data.entity.utils import stack_batch
 from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
 from otx.types.export import TaskLevelExportParameters
@@ -81,9 +80,8 @@ class OTXDetectionModel(OTXModel):
     ) -> None:
         super().__init__(
             label_info=label_info,
-            model_name=model_name,
-            task=OTXTaskType.DETECTION,
             data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -182,21 +180,11 @@ class OTXDetectionModel(OTXModel):
     def _customize_inputs(
         self,
         entity: OTXSampleBatch,
-        pad_size_divisor: int = 32,
-        pad_value: int = 0,
     ) -> dict[str, Any]:
-        if isinstance(entity.images, list):
-            entity.images, entity.imgs_info = stack_batch(  # type: ignore[assignment]
-                entity.images,
-                entity.imgs_info,  # type: ignore[arg-type]
-                pad_size_divisor=pad_size_divisor,
-                pad_value=pad_value,
-            )
         inputs: dict[str, Any] = {}
 
         inputs["entity"] = entity
         inputs["mode"] = "loss" if self.training else "predict"
-
         return inputs
 
     def _customize_outputs(
@@ -417,16 +405,9 @@ class OTXDetectionModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""
-        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
-        infos = []
-        for i, img in enumerate(images):
-            infos.append(
-                ImageInfo(
-                    img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
-                ),
-            )
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
+        img_shape = (images.shape[2], images.shape[3])
+        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def forward_explain(self, inputs: OTXSampleBatch | OTXTileBatchDataEntity) -> OTXPredictionBatch:
@@ -458,7 +439,7 @@ class OTXDetectionModel(OTXModel):
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor]:
         """Forward func of the BaseDetector instance, which located in is in OTXDetectionModel().model."""
-        backbone_feat = self.extract_feat(entity.images)
+        backbone_feat = self.extract_feat(cast("torch.Tensor", entity.images))
         bbox_head_feat = self.bbox_head.forward(backbone_feat)
 
         # Process the first output form bbox detection head: classification scores
@@ -551,4 +532,9 @@ class OTXDetectionModel(OTXModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
+
+    @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.DETECTION

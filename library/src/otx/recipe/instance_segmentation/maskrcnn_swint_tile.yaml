@@ -50,12 +50,10 @@ callbacks:
 
 overrides:
   max_epochs: 100
-
   data:
     input_size:
       - 1344
       - 1344
-
     tile_config:
       enable_tiler: true
       enable_adaptive_tiling: true
@@ -63,34 +61,42 @@ overrides:
     train_subset:
       batch_size: 4
       num_workers: 8
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
-            keep_ratio: false
-            scale: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.Pad
+            size: $(input_size)
+            keep_aspect_ratio: false
+        - class_path: torchvision.transforms.v2.RandomHorizontalFlip
           init_args:
-            pad_to_square: false
-            size_divisor: 32
+            p: 0.5
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+      augmentations_gpu: []
+
     val_subset:
       num_workers: 4
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
-            keep_ratio: false
-            scale: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.Pad
+            size: $(input_size)
+            keep_aspect_ratio: false
+        - class_path: torchvision.transforms.v2.Normalize
           init_args:
-            pad_to_square: false
-            size_divisor: 32
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+      augmentations_gpu: []
+
     test_subset:
       num_workers: 4
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
-            keep_ratio: false
-            scale: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.Pad
+            size: $(input_size)
+            keep_aspect_ratio: false
+        - class_path: torchvision.transforms.v2.Normalize
           init_args:
-            pad_to_square: false
-            size_divisor: 32
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+      augmentations_gpu: []
