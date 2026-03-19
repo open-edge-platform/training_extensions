@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
-from app.models import DatasetFormat, ExportDatasetJobParams
+from app.models import DatasetFormat, DatasetItemAnnotationStatus, ExportDatasetJobParams
 from app.services import DatasetRevisionService, DatasetService
 
 
@@ -58,10 +58,11 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         with self._db_session_factory() as session:
             if export_params.dataset_id is None:
                 self._dataset_service.set_db_session(session)
+                annotation_status = None if export_params.include_unannotated else DatasetItemAnnotationStatus.REVIEWED
                 dataset = self._dataset_service.get_dm_dataset(
                     project_id=export_params.project_id,
                     task=export_params.task,
-                    annotation_status=None,
+                    annotation_status=annotation_status,
                     sample_mode=SampleMode.IMPORT_EXPORT,
                 )
             else:

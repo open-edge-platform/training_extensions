@@ -13,7 +13,14 @@ from datumaro.experimental.fields import Subset
 
 from app.datumaro_converter import SampleMode
 from app.execution import ExportDataset
-from app.models import DatasetFormat, DatasetItemSubset, ExportDatasetJobParams, Task, TaskType
+from app.models import (
+    DatasetFormat,
+    DatasetItemAnnotationStatus,
+    DatasetItemSubset,
+    ExportDatasetJobParams,
+    Task,
+    TaskType,
+)
 
 
 @pytest.fixture
@@ -45,15 +52,16 @@ def fxt_export_params() -> ExportDatasetJobParams:
 
 class TestDatasetExporter:
     @pytest.mark.parametrize(
-        "subsets, labels",
+        "include_unannotated, subsets, labels",
         [
-            ([DatasetItemSubset.TESTING], ["label1"]),
-            ([DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], ["label1", "label2"]),
-            (None, None),
+            (True, [DatasetItemSubset.TESTING], ["label1"]),
+            (False, [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], ["label1", "label2"]),
+            (True, None, None),
         ],
     )
     def test_prepare_project_dataset(
         self,
+        include_unannotated: bool,
         subsets: list[DatasetItemSubset] | None,
         labels: list[str] | None,
         fxt_export: ExportDataset,
@@ -65,6 +73,7 @@ class TestDatasetExporter:
         dataset.filter_by_subset.return_value = dataset
         dataset.filter_by_labels.return_value = dataset
         fxt_dataset_service.get_dm_dataset.return_value = dataset
+        fxt_export_params.include_unannotated = include_unannotated
         fxt_export_params.subsets = subsets
         fxt_export_params.labels = labels
 
@@ -73,7 +82,7 @@ class TestDatasetExporter:
         fxt_dataset_service.get_dm_dataset.assert_called_once_with(
             project_id=fxt_export_params.project_id,
             task=fxt_export_params.task,
-            annotation_status=None,
+            annotation_status=None if include_unannotated else DatasetItemAnnotationStatus.REVIEWED,
             sample_mode=SampleMode.IMPORT_EXPORT,
         )
         if subsets:
