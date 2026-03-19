@@ -6,12 +6,16 @@ import type {
     ConfigurableParameter,
     ConfigurableParameterGroup,
     NumberConfigurableParameter,
+    StringConfigurableParameter,
     TrainingConfigurationParameter,
 } from '../src/constants/shared-types';
 
 export function getMockedConfigurationParameter(
     parameter: Partial<NumberConfigurableParameter> & Required<Pick<NumberConfigurableParameter, 'value_type'>>
 ): NumberConfigurableParameter;
+export function getMockedConfigurationParameter(
+    parameter: Partial<StringConfigurableParameter> & Required<Pick<StringConfigurableParameter, 'value_type'>>
+): StringConfigurableParameter;
 export function getMockedConfigurationParameter(
     parameter: Partial<BoolConfigurableParameter> & Required<Pick<BoolConfigurableParameter, 'value_type'>>
 ): BoolConfigurableParameter;
@@ -31,6 +35,21 @@ export function getMockedConfigurationParameter(
             description: 'This is a mocked configuration parameter',
             default_value: 50,
             allowed_values: null,
+            depends_on: null,
+            ...parameter,
+        };
+    }
+
+    if (parameter.value_type === 'str') {
+        return {
+            type: 'parameter',
+            value: 'mocked_value',
+            key: 'mocked_string_parameter',
+            name: 'Mocked String Parameter',
+            description: 'This is a mocked string configuration parameter',
+            default_value: 'default_mocked_value',
+            allowed_values: null,
+            depends_on: null,
             ...parameter,
         };
     }
@@ -43,6 +62,7 @@ export function getMockedConfigurationParameter(
             name: 'Mocked Bool Parameter',
             description: 'This is a mocked boolean configuration parameter',
             default_value: false,
+            depends_on: null,
             ...parameter,
         };
     }

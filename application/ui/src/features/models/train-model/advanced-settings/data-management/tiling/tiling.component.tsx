@@ -8,7 +8,7 @@ import { Grid, minmax, Text, View } from '@geti/ui';
 import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { Parameters } from '../../components/parameters.component';
-import { replaceByKey } from '../../utils';
+import { deepReplaceParameters } from '../../utils';
 import { TilingModes } from './tiling-modes.component';
 import {
     getAdaptiveTilingParameter,
@@ -33,33 +33,10 @@ const changeTilingParameters = (
     trainingConfiguration: TrainingConfiguration,
     newConfigurationParameters: ConfigurableParameter[]
 ): TrainingConfiguration => {
-    const parameters: TrainingConfiguration['parameters'] = replaceByKey(
+    const parameters: TrainingConfiguration['parameters'] = deepReplaceParameters(
         trainingConfiguration.parameters,
-        'dataset_preparation',
-        (datasetParameterGroup) => ({
-            ...datasetParameterGroup,
-            parameters: replaceByKey(
-                datasetParameterGroup.parameters,
-                'augmentation',
-                (augmentationParameterGroup) => ({
-                    ...augmentationParameterGroup,
-                    parameters: replaceByKey(
-                        augmentationParameterGroup.parameters,
-                        'tiling',
-                        (tilingParametersGroup) => ({
-                            ...tilingParametersGroup,
-                            parameters: tilingParametersGroup.parameters.map((tilingParameter) => {
-                                const newParameter = newConfigurationParameters.find(
-                                    ({ key }) => key === tilingParameter.key
-                                );
-
-                                return newParameter ?? tilingParameter;
-                            }),
-                        })
-                    ),
-                })
-            ),
-        })
+        newConfigurationParameters,
+        ['dataset_preparation', 'augmentation', 'tiling']
     );
 
     return { parameters };
