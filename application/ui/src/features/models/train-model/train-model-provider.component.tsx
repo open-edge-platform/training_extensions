@@ -15,7 +15,7 @@ import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions
 import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetModels } from '../hooks/api/use-get-models.hook';
-import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+import { useGetTrainingDevices } from './api/use-get-training-devices';
 import { useTrainingConfiguration } from './use-training-configuration';
 
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
