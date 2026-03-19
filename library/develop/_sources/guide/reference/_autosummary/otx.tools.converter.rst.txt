@@ -14,12 +14,6 @@ otx.tools.converter
    .. autosummary::
    
       update_augmentations
-      update_batch_size
-      update_early_stopping
-      update_input_size
-      update_learning_rate
-      update_num_iters
-      update_tiling
    
    
 
@@ -30,7 +24,9 @@ otx.tools.converter
    .. autosummary::
    
       GetiConfigConverter
+      HyperparametersUpdater
       ModelStatus
+      TransformsUpdater
    
    
 

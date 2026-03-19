@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.backend.native.models.detection.ssd</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2023-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
@@ -310,7 +310,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
-<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.</span>
+<span class="sd">        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.</span>
 <span class="sd">            This parameter contains image input size, mean, and std, that is used to preprocess the input image.</span>
 <span class="sd">            If None is given, default parameters for the specific model will be used.</span>
 <span class="sd">            In most cases you don&#39;t need to set this parameter unless you change the image size or pretrained weights.</span>
@@ -332,7 +332,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ssd_mobilenetv2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ssd_mobilenetv2&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -470,7 +470,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get new anchors for SSD from OTXDataset.&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2._container</span><span class="w"> </span><span class="kn">import</span> <span class="n">Compose</span>
 
-        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.transform_libs.torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resize</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.augmentation.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resize</span>
 
         <span class="n">target_wh</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">transforms</span><span class="p">,</span> <span class="n">Compose</span><span class="p">):</span>
@@ -478,6 +478,9 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Resize</span><span class="p">):</span>
                     <span class="n">target_wh</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">scale</span>
         <span class="k">if</span> <span class="n">target_wh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;input_size should not be None.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">target_wh</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">))</span>  <span class="c1"># type: ignore[assignment]</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot get target_wh from the dataset. Assign it with the default value: </span><span class="si">{</span><span class="n">target_wh</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -640,7 +643,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">864</span><span class="p">,</span> <span class="mi">864</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">864</span><span class="p">,</span> <span class="mi">864</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span></div>
 
 </pre></div>
 

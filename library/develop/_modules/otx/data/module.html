@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.data.module</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2023-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;LightningDataModule extension for OTX.&quot;&quot;&quot;</span>
@@ -263,19 +263,18 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental.export_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_dataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental.fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">Subset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span><span class="p">,</span> <span class="n">TileConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.augmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">CPUAugmentationPipeline</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.transform_libs.torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">TorchVisionTransformLib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adaptive_num_workers</span><span class="p">,</span> <span class="n">instantiate_sampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
@@ -374,8 +373,18 @@
                 <span class="k">if</span> <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>  <span class="c1"># type: ignore[assignment]</span>
 
-        <span class="c1"># Extract mean and std from Normalize transform</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_normalization_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">)</span>
+        <span class="c1"># Derive mean/std from the CPU pipeline&#39;s Normalize transform.</span>
+        <span class="c1"># If no Normalize is present (e.g. GPU-only normalization via Kornia),</span>
+        <span class="c1"># leave as None so models fall back to their own defaults.</span>
+        <span class="c1"># The GPUAugmentationCallback.setup() will later override the model&#39;s</span>
+        <span class="c1"># mean/std with the GPU pipeline&#39;s values if applicable.</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="p">,</span> <span class="s2">&quot;augmentations_cpu&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">cpu_pipeline</span> <span class="o">=</span> <span class="n">CPUAugmentationPipeline</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_mean</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">cpu_pipeline</span><span class="o">.</span><span class="n">mean</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_std</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">cpu_pipeline</span><span class="o">.</span><span class="n">std</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_mean</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup_otx_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
@@ -439,58 +448,6 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">label_infos</span><span class="p">))</span>
-
-<div class="viewcode-block" id="OTXDataModule.extract_normalization_params">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.extract_normalization_params">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">extract_normalization_params</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">transforms_source</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Compose</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract mean and std from the dataset transforms.</span>
-
-<span class="sd">        Specifically, this method looks for a Normalize transform in the provided transforms, and extracts</span>
-<span class="sd">        the mean and std values used for normalization.</span>
-<span class="sd">        If not found, it returns default values of mean=(0.0, 0.0, 0.0) and std=(1.0, 1.0, 1.0).</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            transforms_source: Transforms applied to the dataset.</span>
-<span class="sd">                Should be specified as an iterable of transform descriptors (jsonargparse-like) or a Compose object</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Tuple of (mean, std) tuples.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">mean</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="n">std</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">transforms_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">transforms_source</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
-            <span class="n">transforms_iterable</span> <span class="o">=</span> <span class="n">transforms_source</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transforms_source</span><span class="p">,</span> <span class="n">Compose</span><span class="p">):</span>
-            <span class="n">transforms_iterable</span> <span class="o">=</span> <span class="n">transforms_source</span><span class="o">.</span><span class="n">transforms</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Transforms should be given as an iterable or a Compose object, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">transforms_source</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">transforms_iterable</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;Normalize&quot;</span> <span class="ow">in</span> <span class="n">transform</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-                <span class="c1"># CLI case with jsonargparse</span>
-                <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-                <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
-                <span class="k">break</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Normalize</span><span class="p">):</span>
-                <span class="c1"># torchvision.transforms case</span>
-                <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">mean</span>
-                <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">std</span>
-                <span class="k">break</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">std</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Expected mean and std to have length 3, got mean=</span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">, std=</span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">mean</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span></div>
-
 
 <div class="viewcode-block" id="OTXDataModule.from_otx_datasets">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.from_otx_datasets">[docs]</a>
@@ -603,9 +560,9 @@
             <span class="k">if</span> <span class="n">subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Use provided subset config</span>
                 <span class="n">subset_to_assign</span> <span class="o">=</span> <span class="n">subset</span>
-                <span class="k">if</span> <span class="n">subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="s2">&quot;augmentations_cpu&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The provided </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> SubsetConfig contains transforms which will be overridden &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;The provided </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> SubsetConfig contains augmentations_cpu which will be overridden &quot;</span>
                         <span class="s2">&quot;by the transforms of the provided OTXDataset. When building OTXDataModule from &quot;</span>
                         <span class="s2">&quot;pre-constructed datasets, developers should set up the transforms when creating the datasets.&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -615,16 +572,20 @@
                     <span class="n">default_subset_configs</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_default_subset_configs</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
                 <span class="n">subset_to_assign</span> <span class="o">=</span> <span class="n">default_subset_configs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">]</span>
 
-            <span class="c1"># Override transforms with the ones from the pre-constructed dataset</span>
-            <span class="n">subset_to_assign</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">transforms</span>  <span class="c1"># type: ignore[assignment]</span>
+            <span class="c1"># The pre-constructed datasets already have their transforms configured.</span>
+            <span class="c1"># No need to override - just set the subset config.</span>
 
             <span class="c1"># Set the &#39;train_subset&#39;, &#39;val_subset&#39;, &#39;test_subset&#39; attributes</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">,</span> <span class="n">subset_to_assign</span><span class="p">)</span>
 
-        <span class="c1"># Extract normalization parameters from train dataset transforms if available</span>
-        <span class="n">instance</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span> <span class="n">instance</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">extract_normalization_params</span><span class="p">(</span>
-            <span class="n">instance</span><span class="o">.</span><span class="n">train_subset</span><span class="o">.</span><span class="n">transforms</span>
-        <span class="p">)</span>
+        <span class="c1"># Derive normalization params from the CPU pipeline&#39;s Normalize transform if available.</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">train_subset</span><span class="p">,</span> <span class="s2">&quot;augmentations_cpu&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">_cpu_pipeline</span> <span class="o">=</span> <span class="n">CPUAugmentationPipeline</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">train_subset</span><span class="p">)</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">input_mean</span> <span class="o">=</span> <span class="n">_cpu_pipeline</span><span class="o">.</span><span class="n">mean</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="n">_cpu_pipeline</span><span class="o">.</span><span class="n">std</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">input_mean</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Save hyperparameters</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">save_hyperparameters</span><span class="p">(</span>
@@ -694,7 +655,6 @@
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;input size is not specified in both the config file and the DataModule constructor.&quot;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">subset_config_dict</span> <span class="o">=</span> <span class="n">SubsetConfig</span><span class="p">(</span><span class="o">**</span><span class="n">subset_config_dict</span><span class="p">)</span>
-            <span class="n">subset_config_dict</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">TorchVisionTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">subset_config_dict</span><span class="p">)</span>
             <span class="n">subset_dicts</span><span class="p">[</span><span class="n">subset_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">subset_config_dict</span>
         <span class="k">return</span> <span class="n">subset_dicts</span></div>
 
@@ -726,6 +686,7 @@
             <span class="s2">&quot;persistent_workers&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
             <span class="s2">&quot;sampler&quot;</span><span class="p">:</span> <span class="n">sampler</span><span class="p">,</span>
             <span class="s2">&quot;shuffle&quot;</span><span class="p">:</span> <span class="n">sampler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;prefetch_factor&quot;</span><span class="p">:</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s2">&quot;multiprocessing_context&quot;</span><span class="p">:</span> <span class="n">_MP_CONTEXT</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">}</span>
 

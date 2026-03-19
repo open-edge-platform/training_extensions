@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.backend.native.models.segmentation.litehrnet</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2023-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;LiteHRNet model implementations.&quot;&quot;&quot;</span>
@@ -291,7 +291,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the hierarchical labels.</span>
-<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.</span>
+<span class="sd">        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.</span>
 <span class="sd">        model_name (Literal, optional): Name of the model. Defaults to &quot;lite_hrnet_18&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
@@ -304,7 +304,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;lite_hrnet_s&quot;</span><span class="p">,</span> <span class="s2">&quot;lite_hrnet_18&quot;</span><span class="p">,</span> <span class="s2">&quot;lite_hrnet_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lite_hrnet_18&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>

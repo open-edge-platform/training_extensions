@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.cli.utils.jsonargparse</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2023-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;Functions related to jsonargparse.&quot;&quot;&quot;</span>
@@ -502,18 +502,23 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">configs</span> <span class="ow">or</span> <span class="n">configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
+
+    <span class="n">base_list</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">override_class_paths</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">overrides</span><span class="p">:</span>
         <span class="n">class_path</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">class_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;class_path is required in the override list.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">override_class_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">class_path</span><span class="p">)</span>
 
-        <span class="n">item</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">class_path</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">base_list</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">class_path</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">Namespace</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">converted_target</span> <span class="o">=</span> <span class="n">dict_to_namespace</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">if</span> <span class="n">convert_dict_to_namespace</span> <span class="k">else</span> <span class="n">target</span>
-            <span class="n">configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">converted_target</span><span class="p">)</span></div>
+            <span class="n">base_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">converted_target</span><span class="p">)</span></div>
 
 
 

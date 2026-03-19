@@ -307,7 +307,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;multi_class&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_label&quot;</span><span class="p">,</span> <span class="s2">&quot;h_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;multi_class&quot;</span><span class="p">,</span>
         <span class="n">freeze_backbone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;mobilenetv3_large&quot;</span><span class="p">,</span> <span class="s2">&quot;mobilenetv3_small&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mobilenetv3_large&quot;</span><span class="p">,</span>
@@ -326,8 +326,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            label_info (LabelInfoTypes): The label information.</span>
-<span class="sd">            data_input_params (DataInputParams | dict): The data input parameters that consists</span>
-<span class="sd">                of input size, mean and std.</span>
+<span class="sd">            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists</span>
+<span class="sd">                of input size, mean and std. Defaults to None.</span>
 <span class="sd">            freeze_backbone (bool, optional): Whether to freeze the backbone during training. Defaults to False.</span>
 <span class="sd">                Note: only multiclass classification supports this argument.</span>
 <span class="sd">            model_name (str, optional): The model name. Defaults to &quot;mobilenetv3_large&quot;.</span>
@@ -345,8 +345,8 @@
 <span class="sd">        ...     task=&quot;multi_class&quot;,</span>
 <span class="sd">        ...     label_info=10,</span>
 <span class="sd">        ...     data_input_params={&quot;input_size&quot;: (224, 224),</span>
-<span class="sd">        ...                        &quot;mean&quot;: [123.675, 116.28, 103.53],</span>
-<span class="sd">        ...                        &quot;std&quot;: [58.395, 57.12, 57.375]},</span>
+<span class="sd">        ...                        &quot;mean&quot;: [0.485, 0.456, 0.406],</span>
+<span class="sd">        ...                        &quot;std&quot;: [0.229, 0.224, 0.225]},</span>
 <span class="sd">        ...     model_name=&quot;mobilenetv3_small&quot;,</span>
 <span class="sd">        ... )</span>
 
@@ -355,8 +355,8 @@
 <span class="sd">        ...     task=&quot;multi_label&quot;,</span>
 <span class="sd">        ...     model_name=&quot;mobilenetv3_large&quot;,</span>
 <span class="sd">        ...     data_input_params={&quot;input_size&quot;: (224, 224),</span>
-<span class="sd">        ...                        &quot;mean&quot;: [123.675, 116.28, 103.53],</span>
-<span class="sd">        ...                        &quot;std&quot;: [58.395, 57.12, 57.375]},</span>
+<span class="sd">        ...                        &quot;mean&quot;: [0.485, 0.456, 0.406],</span>
+<span class="sd">        ...                        &quot;std&quot;: [0.229, 0.224, 0.225]},</span>
 <span class="sd">        ...     label_info=[1, 5, 10]  # Multi-label setup</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -380,7 +380,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;multi_class&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_label&quot;</span><span class="p">,</span> <span class="s2">&quot;h_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;multi_class&quot;</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
             <span class="s2">&quot;efficientnet_b0&quot;</span><span class="p">,</span>
@@ -409,8 +409,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            label_info (LabelInfoTypes): The label information.</span>
-<span class="sd">            data_input_params (DataInputParams | dict): The data input parameters that consists</span>
-<span class="sd">                of input size, mean and std.</span>
+<span class="sd">            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists</span>
+<span class="sd">                of input size, mean and std. Defaults to None.</span>
 <span class="sd">            freeze_backbone (bool, optional): Whether to freeze the backbone during training. Defaults to False.</span>
 <span class="sd">                Note: only multiclass classification supports this argument.</span>
 <span class="sd">            model_name (Literal[&quot;efficientnet_b0&quot;, &quot;efficientnet_b1&quot;, &quot;efficientnet_b2&quot;, &quot;efficientnet_b3&quot;,</span>
@@ -455,7 +455,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;multi_class&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_label&quot;</span><span class="p">,</span> <span class="s2">&quot;h_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;multi_class&quot;</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tf_efficientnetv2_s.in21k&quot;</span><span class="p">,</span>
         <span class="n">freeze_backbone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -484,8 +484,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            label_info (LabelInfoTypes): The label information.</span>
-<span class="sd">            data_input_params (DataInputParams | dict): The data input parameters that consists</span>
-<span class="sd">                of input size, mean and std.</span>
+<span class="sd">            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists</span>
+<span class="sd">                of input size, mean and std. Defaults to None.</span>
 <span class="sd">            freeze_backbone (bool, optional): Whether to freeze the backbone during training.</span>
 <span class="sd">                Note: only multiclass classification supports this argument. Defaults to False.</span>
 <span class="sd">            model_name (str, optional): The model name. Defaults to &quot;tf_efficientnetv2_s.in21k&quot;.</span>
@@ -548,7 +548,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;multi_class&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_label&quot;</span><span class="p">,</span> <span class="s2">&quot;h_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;multi_class&quot;</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;efficientnet_v2_s&quot;</span><span class="p">,</span>
         <span class="n">freeze_backbone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -573,8 +573,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            label_info (LabelInfoTypes): The label information.</span>
-<span class="sd">            data_input_params (DataInputParams | dict): The data input parameters that consists</span>
-<span class="sd">                of input size, mean and std.</span>
+<span class="sd">            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists</span>
+<span class="sd">                of input size, mean and std. Defaults to None.</span>
 <span class="sd">            freeze_backbone (bool, optional): Whether to freeze the backbone during training.</span>
 <span class="sd">                Note: only multiclass classification supports this argument. Defaults to False.</span>
 <span class="sd">            model_name (str, optional): The model name. Defaults to &quot;efficientnet_v2_s&quot;.</span>
@@ -636,7 +636,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;multi_class&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_label&quot;</span><span class="p">,</span> <span class="s2">&quot;h_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;multi_class&quot;</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
             <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
@@ -668,8 +668,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            label_info (LabelInfoTypes): The label information.</span>
-<span class="sd">            data_input_params (DataInputParams | dict): The data input parameters that consists</span>
-<span class="sd">                of input size, mean and std.</span>
+<span class="sd">            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists</span>
+<span class="sd">                of input size, mean and std. Defaults to None.</span>
 <span class="sd">            freeze_backbone (bool, optional): Whether to freeze the backbone during training.</span>
 <span class="sd">                Note: only multiclass classification supports this argument. Defaults to False.</span>
 <span class="sd">            model_name (Literal[&quot;vit-tiny&quot;, &quot;vit-small&quot;, &quot;vit-base&quot;, &quot;vit-large&quot;,</span>

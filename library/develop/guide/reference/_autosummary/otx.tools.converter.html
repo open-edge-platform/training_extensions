@@ -397,24 +397,6 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_augmentations" title="otx.tools.converter.update_augmentations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_augmentations</span></code></a>(augmentation_params, config)</p></td>
 <td><p>Update augmentations in the config.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_batch_size" title="otx.tools.converter.update_batch_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_batch_size</span></code></a>(param_value, config)</p></td>
-<td><p>Update batch size in the config.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_early_stopping" title="otx.tools.converter.update_early_stopping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_early_stopping</span></code></a>(early_stopping_cfg, config)</p></td>
-<td><p>Update early stopping parameters in the config.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_input_size" title="otx.tools.converter.update_input_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_input_size</span></code></a>(height, width, config)</p></td>
-<td><p>Update input size in the config.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_learning_rate" title="otx.tools.converter.update_learning_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_learning_rate</span></code></a>(param_value, config)</p></td>
-<td><p>Update learning rate in the config.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_num_iters" title="otx.tools.converter.update_num_iters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_num_iters</span></code></a>(param_value, config)</p></td>
-<td><p>Update max_epochs in the config.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_tiling" title="otx.tools.converter.update_tiling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_tiling</span></code></a>(tiling_dict, config)</p></td>
-<td><p>Update tiling parameters in the config.</p></td>
-</tr>
 </tbody>
 </table>
 <p class="rubric">Classes</p>
@@ -423,8 +405,14 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.GetiConfigConverter" title="otx.tools.converter.GetiConfigConverter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetiConfigConverter</span></code></a>()</p></td>
 <td><p>Convert Geti model manifest to OTXv2 recipe dictionary.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.ModelStatus" title="otx.tools.converter.ModelStatus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelStatus</span></code></a>(value[, names, module, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.HyperparametersUpdater" title="otx.tools.converter.HyperparametersUpdater"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HyperparametersUpdater</span></code></a>()</p></td>
+<td><p>Handles training hyperparameter updates (learning rate, batch size, etc.).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.ModelStatus" title="otx.tools.converter.ModelStatus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelStatus</span></code></a>(value[, names, module, ...])</p></td>
 <td><p>Enum for model status.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.TransformsUpdater" title="otx.tools.converter.TransformsUpdater"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TransformsUpdater</span></code></a>()</p></td>
+<td><p>Handles augmentation updates for the new CPU/GPU augmentation pipeline.</p></td>
 </tr>
 </tbody>
 </table>
@@ -509,68 +497,101 @@ We expect a config file with ModelTemplate information in json form.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="otx.tools.converter.HyperparametersUpdater">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">HyperparametersUpdater</span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#HyperparametersUpdater"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.HyperparametersUpdater" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Handles training hyperparameter updates (learning rate, batch size, etc.).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.tools.converter.HyperparametersUpdater.update">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hyperparameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#HyperparametersUpdater.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.HyperparametersUpdater.update" title="Link to this definition">#</a></dt>
+<dd><p>Update hyperparameters in the config.</p>
+<p>Supported keys:
+- learning_rate: float
+- batch_size: int
+- max_epochs: int (alias for num_iters)
+- early_stopping: dict with keys {enable, patience}
+- input_size: tuple (height, width)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hyperparameters</strong> – Dict of hyperparameter updates.</p></li>
+<li><p><strong>config</strong> – The full OTX config dictionary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="otx.tools.converter.ModelStatus">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">ModelStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#ModelStatus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.ModelStatus" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <p>Enum for model status.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.tools.converter.TransformsUpdater">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">TransformsUpdater</span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#TransformsUpdater"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.TransformsUpdater" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Handles augmentation updates for the new CPU/GPU augmentation pipeline.</p>
+<p>Maps Geti augmentation names to OTX/kornia/torchvision class paths and the
+pipeline stage (cpu or gpu). Parameters come directly from the Geti model template;
+only a few Geti param names need renaming to match kornia’s API.</p>
+<p>Example Geti model template augmentation section:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">random_affine</span><span class="p">:</span>
+    <span class="n">enable</span><span class="p">:</span> <span class="n">false</span>
+    <span class="n">max_rotate_degree</span><span class="p">:</span> <span class="mf">10.0</span>
+    <span class="n">max_translate_ratio</span><span class="p">:</span> <span class="mf">0.1</span>
+    <span class="n">scaling_ratio_range</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]</span>
+    <span class="n">max_shear_degree</span><span class="p">:</span> <span class="mf">2.0</span>
+<span class="n">color_jitter</span><span class="p">:</span>
+    <span class="n">enable</span><span class="p">:</span> <span class="n">false</span>
+    <span class="n">brightness</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.875</span><span class="p">,</span> <span class="mf">1.125</span><span class="p">]</span>
+    <span class="n">probability</span><span class="p">:</span> <span class="mf">0.5</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.tools.converter.TransformsUpdater.update">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">augmentation_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#TransformsUpdater.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.TransformsUpdater.update" title="Link to this definition">#</a></dt>
+<dd><p>Update augmentations in the config based on Geti model template.</p>
+<p>For each augmentation in augmentation_params:
+- If enable=True and aug exists in config -&gt; update its parameters
+- If enable=True and aug does NOT exist -&gt; add it with template params
+- If enable=False and aug exists -&gt; remove it
+- If enable=False and aug does NOT exist -&gt; no-op</p>
+<p>Special case: disabling random_resize_crop replaces it with plain Resize.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>augmentation_params</strong> – Dict mapping Geti aug names to their parameter dicts.</p></li>
+<li><p><strong>config</strong> – The full OTX config dictionary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.tools.converter.TransformsUpdater.update_tiling">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_tiling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#TransformsUpdater.update_tiling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.TransformsUpdater.update_tiling" title="Link to this definition">#</a></dt>
+<dd><p>Update tiling parameters in the config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiling_dict</strong> – Dict with keys: enable, adaptive_tiling, tile_size, tile_overlap.</p></li>
+<li><p><strong>config</strong> – The full OTX config dictionary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="otx.tools.converter.update_augmentations">
 <span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_augmentations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">augmentation_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_augmentations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_augmentations" title="Link to this definition">#</a></dt>
 <dd><p>Update augmentations in the config.</p>
-<p class="rubric">Example</p>
-<dl>
-<dt>augmentation_params = {</dt><dd><dl class="simple">
-<dt>random_affine = {</dt><dd><p>“enable”: True,
-“scaling_ratio_range”: [0.1, 2.0]</p>
-</dd>
-</dl>
-<p>},
-gaussian_blur = {</p>
-<blockquote>
-<div><p>“enable”: True,
-“kernel_size”: 5</p>
-</div></blockquote>
-</dd>
-</dl>
-<p>}</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="otx.tools.converter.update_batch_size">
-<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_batch_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_batch_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_batch_size" title="Link to this definition">#</a></dt>
-<dd><p>Update batch size in the config.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="otx.tools.converter.update_early_stopping">
-<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_early_stopping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">early_stopping_cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_early_stopping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_early_stopping" title="Link to this definition">#</a></dt>
-<dd><p>Update early stopping parameters in the config.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="otx.tools.converter.update_input_size">
-<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_input_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_input_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_input_size" title="Link to this definition">#</a></dt>
-<dd><p>Update input size in the config.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="otx.tools.converter.update_learning_rate">
-<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_learning_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_learning_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_learning_rate" title="Link to this definition">#</a></dt>
-<dd><p>Update learning rate in the config.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="otx.tools.converter.update_num_iters">
-<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_num_iters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_num_iters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_num_iters" title="Link to this definition">#</a></dt>
-<dd><p>Update max_epochs in the config.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="otx.tools.converter.update_tiling">
-<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_tiling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_tiling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_tiling" title="Link to this definition">#</a></dt>
-<dd><p>Update tiling parameters in the config.</p>
+<p>Delegates to TransformsUpdater which handles the new CPU/GPU augmentation pipeline.</p>
 </dd></dl>
 
 </section>
@@ -661,6 +682,26 @@ gaussian_blur = {</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.tools.converter.HyperparametersUpdater">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     HyperparametersUpdater
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.tools.converter.HyperparametersUpdater.update">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       HyperparametersUpdater.update()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#otx.tools.converter.ModelStatus">
    <code class="docutils literal notranslate">
     <span class="pre">
@@ -670,64 +711,39 @@ gaussian_blur = {</p>
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.tools.converter.TransformsUpdater">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     TransformsUpdater
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.tools.converter.TransformsUpdater.update">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       TransformsUpdater.update()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.tools.converter.TransformsUpdater.update_tiling">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       TransformsUpdater.update_tiling()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#otx.tools.converter.update_augmentations">
    <code class="docutils literal notranslate">
     <span class="pre">
      update_augmentations()
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.tools.converter.update_batch_size">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     update_batch_size()
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.tools.converter.update_early_stopping">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     update_early_stopping()
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.tools.converter.update_input_size">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     update_input_size()
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.tools.converter.update_learning_rate">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     update_learning_rate()
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.tools.converter.update_num_iters">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     update_num_iters()
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.tools.converter.update_tiling">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     update_tiling()
     </span>
    </code>
   </a>

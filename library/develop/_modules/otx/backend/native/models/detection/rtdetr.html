@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.backend.native.models.detection.rtdetr</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024-2025 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2024-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;RTDetr model implementations.&quot;&quot;&quot;</span>
@@ -282,7 +282,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXBatchLossEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span> <span class="n">OTXSampleBatch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">stack_batch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -304,7 +303,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
-<span class="sd">        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.</span>
+<span class="sd">        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.</span>
 <span class="sd">            If None, uses _default_preprocessing_params.</span>
 <span class="sd">        model_name (literal, optional): Name of the model to use. Defaults to &quot;rtdetr_50&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
@@ -327,7 +326,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;rtdetr_18&quot;</span><span class="p">,</span> <span class="s2">&quot;rtdetr_50&quot;</span><span class="p">,</span> <span class="s2">&quot;rtdetr_101&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;rtdetr_50&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -370,6 +369,9 @@
             <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
         <span class="p">]</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;input_size should not be None.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">DETR</span><span class="p">(</span>
             <span class="n">multi_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">multi_scale</span><span class="p">,</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span>
@@ -390,15 +392,6 @@
         <span class="n">pad_size_divisor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
         <span class="n">pad_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="c1"># Stack images if they&#39;re in list format</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span> <span class="o">=</span> <span class="n">stack_batch</span><span class="p">(</span>  <span class="c1"># type: ignore[assignment]</span>
-                <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
-                <span class="n">pad_size_divisor</span><span class="o">=</span><span class="n">pad_size_divisor</span><span class="p">,</span>
-                <span class="n">pad_value</span><span class="o">=</span><span class="n">pad_value</span><span class="p">,</span>
-            <span class="p">)</span>
-
         <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># prepare bboxes for the model</span>
         <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

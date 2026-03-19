@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.backend.openvino.models.base</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023-2025 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2023-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="sd">&quot;&quot;&quot;Class definition for base model entity used in OTX.&quot;&quot;&quot;</span>
 
@@ -695,16 +695,9 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            OTXSampleBatch: Dummy input data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
-        <span class="n">infos</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
-            <span class="n">infos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ImageInfo</span><span class="p">(</span>
-                    <span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                    <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                    <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                <span class="p">),</span>
-            <span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)])</span>
+        <span class="n">img_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+        <span class="n">infos</span> <span class="o">=</span> <span class="p">[</span><span class="n">ImageInfo</span><span class="p">(</span><span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span> <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">OTXSampleBatch</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span></div>
 
 

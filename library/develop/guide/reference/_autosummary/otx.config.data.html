@@ -394,17 +394,160 @@
 <p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.config.data.SamplerConfig" title="otx.config.data.SamplerConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SamplerConfig</span></code></a>(class_path, init_args, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.config.data.IntensityConfig" title="otx.config.data.IntensityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IntensityConfig</span></code></a>([storage_dtype, max_value, ...])</p></td>
+<td><p>Configuration for intensity mapping (uint8, uint16, or other high-bit-depth inputs).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.config.data.SamplerConfig" title="otx.config.data.SamplerConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SamplerConfig</span></code></a>(class_path, init_args, ...)</p></td>
 <td><p>Configuration class for defining the sampler used in the data loading process.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SubsetConfig</span></code></a>(batch_size, subset_name, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SubsetConfig</span></code></a>(batch_size, subset_name, ...)</p></td>
 <td><p>DTO for dataset subset configuration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.config.data.TileConfig" title="otx.config.data.TileConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileConfig</span></code></a>([enable_tiler, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.config.data.TileConfig" title="otx.config.data.TileConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileConfig</span></code></a>([enable_tiler, ...])</p></td>
 <td><p>DTO for tiler configuration.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.config.data.</span></span><span class="sig-name descname"><span class="pre">IntensityConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">storage_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'uint8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scale_to_unit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile_low</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile_high</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/config/data.html#IntensityConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.config.data.IntensityConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Configuration for intensity mapping (uint8, uint16, or other high-bit-depth inputs).</p>
+<p>Controls how raw pixel values are converted to float32 [0, 1] before augmentations.
+For standard uint8 images the default <code class="docutils literal notranslate"><span class="pre">mode=&quot;scale_to_unit&quot;</span></code> divides by 255.
+For high-bit-depth inputs (uint16 thermal, medical, etc.) select an appropriate mode.</p>
+<dl class="simple">
+<dt>Supported modes:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;scale_to_unit&quot;</span></code>: Divide by <code class="docutils literal notranslate"><span class="pre">max_value</span></code> and clamp to [0, 1].
+Default for both uint8 (max_value=255) and uint16 (max_value=65535).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;window&quot;</span></code>: Window/level mapping for CT-style imaging.
+Clips to <code class="docutils literal notranslate"><span class="pre">[window_center</span> <span class="pre">-</span> <span class="pre">window_width/2,</span> <span class="pre">window_center</span> <span class="pre">+</span> <span class="pre">window_width/2]</span></code>
+then normalizes to [0, 1].</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;percentile&quot;</span></code>: Per-image percentile clipping for microscopy / variable-range data.
+Clips to <code class="docutils literal notranslate"><span class="pre">[percentile_low,</span> <span class="pre">percentile_high]</span></code> quantiles then normalizes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;range_scale&quot;</span></code>: Multiply by <code class="docutils literal notranslate"><span class="pre">scale_factor</span></code>, clip to <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code>,
+normalize to [0, 1].  Designed for thermal cameras where raw pixel values
+need a conversion factor and a physical temperature range (see <code class="docutils literal notranslate"><span class="pre">process_raw_thermal.py</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.storage_dtype">
+<span class="sig-name descname"><span class="pre">storage_dtype</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.storage_dtype" title="Link to this definition">#</a></dt>
+<dd><p>Input storage dtype: <code class="docutils literal notranslate"><span class="pre">&quot;uint8&quot;</span></code> | <code class="docutils literal notranslate"><span class="pre">&quot;uint16&quot;</span></code> | <code class="docutils literal notranslate"><span class="pre">&quot;int16&quot;</span></code> | <code class="docutils literal notranslate"><span class="pre">&quot;float32&quot;</span></code>.
+Determines the Polars/Datumaro schema used for image decode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.max_value">
+<span class="sig-name descname"><span class="pre">max_value</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.max_value" title="Link to this definition">#</a></dt>
+<dd><p>Maximum raw value for <code class="docutils literal notranslate"><span class="pre">&quot;scale_to_unit&quot;</span></code> mode.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> = auto (255 for uint8, 65535 for uint16, 32767 for int16).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.mode" title="Link to this definition">#</a></dt>
+<dd><p>Intensity mapping mode (see above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.window_center">
+<span class="sig-name descname"><span class="pre">window_center</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.window_center" title="Link to this definition">#</a></dt>
+<dd><p>Center of the intensity window (<code class="docutils literal notranslate"><span class="pre">&quot;window&quot;</span></code> mode).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.window_width">
+<span class="sig-name descname"><span class="pre">window_width</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.window_width" title="Link to this definition">#</a></dt>
+<dd><p>Width of the intensity window (<code class="docutils literal notranslate"><span class="pre">&quot;window&quot;</span></code> mode).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.percentile_low">
+<span class="sig-name descname"><span class="pre">percentile_low</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.percentile_low" title="Link to this definition">#</a></dt>
+<dd><p>Low percentile for clipping (<code class="docutils literal notranslate"><span class="pre">&quot;percentile&quot;</span></code> mode, default 1.0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.percentile_high">
+<span class="sig-name descname"><span class="pre">percentile_high</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.percentile_high" title="Link to this definition">#</a></dt>
+<dd><p>High percentile for clipping (<code class="docutils literal notranslate"><span class="pre">&quot;percentile&quot;</span></code> mode, default 99.0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.scale_factor">
+<span class="sig-name descname"><span class="pre">scale_factor</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.scale_factor" title="Link to this definition">#</a></dt>
+<dd><p>Multiplicative factor applied to raw pixels before clipping
+(<code class="docutils literal notranslate"><span class="pre">&quot;range_scale&quot;</span></code> mode, e.g. 0.4 for thermal Kelvin conversion).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.min_value">
+<span class="sig-name descname"><span class="pre">min_value</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.min_value" title="Link to this definition">#</a></dt>
+<dd><p>Minimum physical value after scaling, used as clip lower bound
+(<code class="docutils literal notranslate"><span class="pre">&quot;range_scale&quot;</span></code> mode, e.g. 295.15 K).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.IntensityConfig.repeat_channels">
+<span class="sig-name descname"><span class="pre">repeat_channels</span></span><a class="headerlink" href="#otx.config.data.IntensityConfig.repeat_channels" title="Link to this definition">#</a></dt>
+<dd><p>If &gt; 0, repeat single-channel images to this many channels
+(e.g. 3 for pretrained RGB backbones). 0 = no repeat.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="otx.config.data.SamplerConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.config.data.</span></span><span class="sig-name descname"><span class="pre">SamplerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_path:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'torch.utils.data.RandomSampler'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_args:</span> <span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/config/data.html#SamplerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.config.data.SamplerConfig" title="Link to this definition">#</a></dt>
@@ -420,7 +563,7 @@ providing limited functionality.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="otx.config.data.SubsetConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.config.data.</span></span><span class="sig-name descname"><span class="pre">SubsetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms:</span> <span class="pre">list[dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_lib_type:</span> <span class="pre">~otx.types.transformer_libs.TransformLibType</span> <span class="pre">=</span> <span class="pre">TransformLibType.TORCHVISION</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler:</span> <span class="pre">~otx.config.data.SamplerConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size:</span> <span class="pre">tuple[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/config/data.html#SubsetConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.config.data.SubsetConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.config.data.</span></span><span class="sig-name descname"><span class="pre">SubsetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augmentations_cpu:</span> <span class="pre">list[dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augmentations_gpu:</span> <span class="pre">list[dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity:</span> <span class="pre">~otx.config.data.IntensityConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler:</span> <span class="pre">~otx.config.data.SamplerConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size:</span> <span class="pre">tuple[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/config/data.html#SubsetConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.config.data.SubsetConfig" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>DTO for dataset subset configuration.</p>
 <dl class="py attribute">
@@ -446,25 +589,38 @@ providing limited functionality.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="otx.config.data.SubsetConfig.transforms">
-<span class="sig-name descname"><span class="pre">transforms</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.transforms" title="Link to this definition">#</a></dt>
-<dd><p>List of transforms to apply.
-For <cite>TransformLibType.TORCHVISION</cite>, accepts a list of <cite>torchvision.transforms.v2.*</cite> objects
-or a <cite>torchvision.transforms.v2.Compose</cite> object.</p>
+<dt class="sig sig-object py" id="otx.config.data.SubsetConfig.augmentations_cpu">
+<span class="sig-name descname"><span class="pre">augmentations_cpu</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.augmentations_cpu" title="Link to this definition">#</a></dt>
+<dd><p>CPU-stage augmentations using torchvision.transforms.v2.
+These run in Dataset workers before collate. Must output fixed-size tensors for batching.
+Examples: Resize, RandomResizedCrop, intensity mapping transforms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]] | Compose</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="otx.config.data.SubsetConfig.transform_lib_type">
-<span class="sig-name descname"><span class="pre">transform_lib_type</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.transform_lib_type" title="Link to this definition">#</a></dt>
-<dd><p>Specifies the transform library type used.</p>
+<dt class="sig sig-object py" id="otx.config.data.SubsetConfig.augmentations_gpu">
+<span class="sig-name descname"><span class="pre">augmentations_gpu</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.augmentations_gpu" title="Link to this definition">#</a></dt>
+<dd><p>GPU-stage augmentations using Kornia.
+These run after batch transfer to GPU via Lightning Callback.
+Examples: RandomHorizontalFlip, ColorJiggle, Normalize.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>TransformLibType</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.config.data.SubsetConfig.intensity">
+<span class="sig-name descname"><span class="pre">intensity</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.intensity" title="Link to this definition">#</a></dt>
+<dd><p>High-bit-depth intensity mapping configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#otx.config.data.IntensityConfig" title="otx.config.data.IntensityConfig">IntensityConfig</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -492,21 +648,10 @@ or a <cite>torchvision.transforms.v2.Compose</cite> object.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="otx.config.data.SubsetConfig.to_tv_image">
-<span class="sig-name descname"><span class="pre">to_tv_image</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.to_tv_image" title="Link to this definition">#</a></dt>
-<dd><p>Whether to convert images to torch tensors.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="otx.config.data.SubsetConfig.input_size">
 <span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#otx.config.data.SubsetConfig.input_size" title="Link to this definition">#</a></dt>
 <dd><p>Input size expected by the model.
-If <cite>$(input_size)</cite> is present in transforms, it will be replaced with this value.</p>
+If <cite>$(input_size)</cite> is present in augmentations, it will be replaced with this value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>] | None</p>
@@ -520,19 +665,20 @@ train_subset_config = SubsetConfig(</p>
 <blockquote>
 <div><p>batch_size=64,
 subset_name=”train”,
-transforms=v2.Compose(</p>
+augmentations_cpu=[</p>
 <blockquote>
-<div><dl class="simple">
-<dt>[</dt><dd><p>v2.RandomResizedCrop(size=(224, 224), antialias=True),
-v2.RandomHorizontalFlip(p=0.5),
-v2.ToDtype(torch.float32, scale=True),
-v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),</p>
-</dd>
-</dl>
-<p>],</p>
+<div><p>{“class_path”: “torchvision.transforms.v2.RandomResizedCrop”, “init_args”: {“size”: (224, 224)}},</p>
 </div></blockquote>
-<p>),
-transform_lib_type=TransformLibType.TORCHVISION,
+<p>],
+augmentations_gpu=[</p>
+<blockquote>
+<div><p>{“class_path”: “kornia.augmentation.RandomHorizontalFlip”, “init_args”: {“p”: 0.5}},
+{“class_path”: “kornia.augmentation.Normalize”, “init_args”: {“mean”: [0.485, 0.456, 0.406],</p>
+<blockquote>
+<div><p>“std”: [0.229, 0.224, 0.225]}},</p>
+</div></blockquote>
+</div></blockquote>
+<p>],
 num_workers=2,</p>
 </div></blockquote>
 <section id="id5">
@@ -594,6 +740,107 @@ num_workers=2,</p>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     IntensityConfig
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.storage_dtype">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.storage_dtype
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.max_value">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.max_value
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.mode">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.mode
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.window_center">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.window_center
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.window_width">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.window_width
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.percentile_low">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.percentile_low
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.percentile_high">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.percentile_high
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.scale_factor">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.scale_factor
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.min_value">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.min_value
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.IntensityConfig.repeat_channels">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       IntensityConfig.repeat_channels
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#otx.config.data.SamplerConfig">
    <code class="docutils literal notranslate">
     <span class="pre">
@@ -630,19 +877,28 @@ num_workers=2,</p>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.config.data.SubsetConfig.transforms">
+    <a class="reference internal nav-link" href="#otx.config.data.SubsetConfig.augmentations_cpu">
      <code class="docutils literal notranslate">
       <span class="pre">
-       SubsetConfig.transforms
+       SubsetConfig.augmentations_cpu
       </span>
      </code>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.config.data.SubsetConfig.transform_lib_type">
+    <a class="reference internal nav-link" href="#otx.config.data.SubsetConfig.augmentations_gpu">
      <code class="docutils literal notranslate">
       <span class="pre">
-       SubsetConfig.transform_lib_type
+       SubsetConfig.augmentations_gpu
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.config.data.SubsetConfig.intensity">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SubsetConfig.intensity
       </span>
      </code>
     </a>
@@ -661,15 +917,6 @@ num_workers=2,</p>
      <code class="docutils literal notranslate">
       <span class="pre">
        SubsetConfig.sampler
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.config.data.SubsetConfig.to_tv_image">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SubsetConfig.to_tv_image
       </span>
      </code>
     </a>

@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.data.dataset.classification</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2025 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2025-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;Module for OTXClassificationDatasets using new Datumaro experimental Dataset.&quot;&quot;&quot;</span>
@@ -264,7 +264,6 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_dtype</span><span class="p">,</span> <span class="n">to_image</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">Transforms</span>
@@ -273,6 +272,7 @@
     <span class="n">ClassificationMultiLabelSample</span><span class="p">,</span>
     <span class="n">ClassificationSample</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">with_image_dtype</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -290,11 +290,11 @@
 <span class="sd">    multi-class classification training and inference.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        dm_subset (DmDataset): Datumaro dataset subset containing the data items.</span>
+<span class="sd">        dm_subset (Dataset): Datumaro dataset subset containing the data items.</span>
 <span class="sd">        transforms (Transforms, optional): Transformations to apply to the data.</span>
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
-<span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
+
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If an image has multiple labels (multi-label case).</span>
@@ -314,17 +314,15 @@
         <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">storage_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationSample</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">with_image_dtype</span><span class="p">(</span><span class="n">ClassificationSample</span><span class="p">,</span> <span class="n">storage_dtype</span><span class="p">)</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
-            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
             <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
-            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>  <span class="c1"># type: ignore[missing-attribute]</span>
@@ -380,7 +378,7 @@
 <span class="sd">        transforms (Transforms, optional): Transform operations to apply to the data items.</span>
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
-<span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
+
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        num_classes (int): Number of classes in the dataset.</span>
@@ -400,16 +398,15 @@
         <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">storage_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationMultiLabelSample</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">with_image_dtype</span><span class="p">(</span><span class="n">ClassificationMultiLabelSample</span><span class="p">,</span> <span class="n">storage_dtype</span><span class="p">)</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
             <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
-            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>  <span class="c1"># type: ignore[missing-attribute]</span>
@@ -421,8 +418,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationMultiLabelSample</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_dm_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="n">item</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_onehot</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">)),</span> <span class="n">ignored_labels</span><span class="o">=</span><span class="p">[])</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
@@ -494,7 +490,7 @@
 <span class="sd">        transforms (Transforms, optional): Transform operations to apply to the data items.</span>
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
-<span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
+
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        label_info (HLabelInfo): HLabelInfo containing hierarchical label structure information.</span>
@@ -519,20 +515,18 @@
         <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">storage_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">ClassificationHierarchicalSample</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">with_image_dtype</span><span class="p">(</span><span class="n">ClassificationHierarchicalSample</span><span class="p">,</span> <span class="n">storage_dtype</span><span class="p">)</span>
         <span class="n">label_categories</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span>
         <span class="c1"># Pass target categories manually to ensure HierarchicalLabelCategories are not converted to regular Labels.</span>
         <span class="n">target_categories</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_categories</span><span class="p">}</span> <span class="k">if</span> <span class="n">label_categories</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">,</span> <span class="n">target_categories</span><span class="o">=</span><span class="n">target_categories</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
-            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
             <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
-            <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">:</span> <span class="n">HierarchicalLabelCategories</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span>  <span class="c1"># type: ignore[assignment]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">HLabelInfo</span><span class="o">.</span><span class="n">from_dm_label_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_categories</span><span class="p">)</span>
@@ -545,8 +539,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationHierarchicalSample</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_dm_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="n">item</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_label_to_hlabel_format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">),</span> <span class="p">[]))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 

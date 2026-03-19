@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.data.dataset.tile</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2024-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;OTX tile dataset.&quot;&quot;&quot;</span>
@@ -278,7 +278,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">_ensure_chw_format</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
@@ -318,10 +318,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            OTXTileDataset: Tile dataset.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">subset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">subset</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">subset</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="k">if</span> <span class="n">subset</span> <span class="o">==</span> <span class="n">Subset</span><span class="o">.</span><span class="n">TRAINING</span><span class="p">:</span>
             <span class="n">dm_dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dm_subset</span>
-            <span class="n">dm_dataset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+            <span class="n">dm_dataset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="n">create_tiling_transform</span><span class="p">(</span>
                     <span class="n">TilingConfig</span><span class="p">(</span>
                         <span class="n">tile_height</span><span class="o">=</span><span class="n">tile_config</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
@@ -331,9 +331,9 @@
                     <span class="p">),</span>
                     <span class="n">threshold_drop_ann</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">dm_dataset</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dm_dataset</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
             <span class="p">)</span>
-            <span class="n">dm_dataset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">create_filtering_transform</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dm_dataset</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">dm_dataset</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">create_filtering_transform</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dm_dataset</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
             <span class="n">dataset</span><span class="o">.</span><span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_dataset</span>
             <span class="k">return</span> <span class="n">dataset</span>
 
@@ -364,7 +364,6 @@
             <span class="n">dataset</span><span class="o">.</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">dataset</span><span class="o">.</span><span class="n">max_refetch</span><span class="p">,</span>
             <span class="n">dataset</span><span class="o">.</span><span class="n">stack_images</span><span class="p">,</span>
-            <span class="n">dataset</span><span class="o">.</span><span class="n">to_tv_image</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="n">tile_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span> <span class="o">=</span> <span class="n">dataset</span>
@@ -406,8 +405,8 @@
 <span class="sd">            A tuple containing two lists:</span>
 <span class="sd">            - tile_entities (list[OTXSample]): List of tile entities.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parent_slice_ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">parent_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+        <span class="n">parent_slice_ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">parent_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
             <span class="n">create_tiling_transform</span><span class="p">(</span>
                 <span class="n">TilingConfig</span><span class="p">(</span>
                     <span class="n">tile_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
@@ -417,12 +416,12 @@
                 <span class="p">),</span>
                 <span class="n">threshold_drop_ann</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
             <span class="p">),</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subset</span> <span class="o">==</span> <span class="n">Subset</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">:</span>
             <span class="c1"># NOTE: filter validation tiles with annotations only to avoid evaluation on empty tiles.</span>
-            <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">tile_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">create_filtering_transform</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">tile_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">create_filtering_transform</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
 
             <span class="c1"># if tile dataset is empty it means objects are too big to fit in any tile, in this case include full image</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_ds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -430,6 +429,8 @@
 
         <span class="n">tile_entities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OTXSample</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">tile</span> <span class="ow">in</span> <span class="n">tile_ds</span><span class="p">:</span>
+            <span class="c1"># Fix datumaro HWC→CHW format issue for tile images</span>
+            <span class="n">tile</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">_ensure_chw_format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
             <span class="c1"># apply the same transforms as the original dataset</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">tile</span><span class="p">,</span> <span class="s2">&quot;source_sample_idx&quot;</span><span class="p">,</span> <span class="n">parent_idx</span><span class="p">)</span>
             <span class="n">transformed_tile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
@@ -481,9 +482,9 @@
         <span class="k">return</span> <span class="n">TileDetDataEntity</span><span class="p">(</span>
             <span class="n">num_tiles</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tile_entities</span><span class="p">),</span>
             <span class="n">entity_list</span><span class="o">=</span><span class="n">tile_entities</span><span class="p">,</span>
-            <span class="n">ori_img_info</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span>
-            <span class="n">ori_bboxes</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">ori_labels</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">ori_img_info</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">ori_bboxes</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">ori_labels</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="p">)</span>
 
 
@@ -529,10 +530,10 @@
         <span class="k">return</span> <span class="n">TileInstSegDataEntity</span><span class="p">(</span>
             <span class="n">num_tiles</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tile_entities</span><span class="p">),</span>
             <span class="n">entity_list</span><span class="o">=</span><span class="n">tile_entities</span><span class="p">,</span>
-            <span class="n">ori_img_info</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span>
-            <span class="n">ori_bboxes</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">ori_labels</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-            <span class="n">ori_masks</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>
+            <span class="n">ori_img_info</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">ori_bboxes</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">ori_labels</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">ori_masks</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="p">)</span>
 
 
@@ -573,8 +574,8 @@
         <span class="k">return</span> <span class="n">TileSegDataEntity</span><span class="p">(</span>
             <span class="n">num_tiles</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tile_entities</span><span class="p">),</span>
             <span class="n">entity_list</span><span class="o">=</span><span class="n">tile_entities</span><span class="p">,</span>
-            <span class="n">ori_img_info</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span>
-            <span class="n">ori_masks</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>
+            <span class="n">ori_img_info</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">ori_masks</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="p">)</span>
 </pre></div>
 

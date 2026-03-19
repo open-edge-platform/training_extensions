@@ -17,6 +17,7 @@ otx.config.data
 
    .. autosummary::
    
+      IntensityConfig
       SamplerConfig
       SubsetConfig
       TileConfig

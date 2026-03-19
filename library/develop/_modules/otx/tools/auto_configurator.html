@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.tools.auto_configurator</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024-2025 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2024-2026 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;Auto-Configurator class &amp; util functions for OTX Auto-Configuration.&quot;&quot;&quot;</span>
@@ -471,7 +471,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModel</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieves the OTXModel instance based on the provided model name and meta information.</span>
 
@@ -479,8 +479,8 @@
 <span class="sd">            model_name (str | None): The name of the model to retrieve. If None, the default model will be used.</span>
 <span class="sd">            label_info (LabelInfoTypes | None): The meta information about the labels.</span>
 <span class="sd">                If provided, the number of classes will be updated in the model&#39;s configuration.</span>
-<span class="sd">            data_input_params (DataInputParams | None): The data input parameters containing the input size,</span>
-<span class="sd">                input mean and std.</span>
+<span class="sd">            data_input_params (DataInputParams | dict | None, optional): The data input parameters</span>
+<span class="sd">                containing the input size, input mean and std.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            OTXModel: The instantiated OTXModel instance.</span>
@@ -508,7 +508,9 @@
         <span class="n">model_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="n">data_input_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">model_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;data_input_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_input_params</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+            <span class="n">model_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;data_input_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">data_input_params</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_input_params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">data_input_params</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">datamodule</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># get data_input_params info from datamodule</span>
             <span class="k">if</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -518,8 +520,8 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">model_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;data_input_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataInputParams</span><span class="p">(</span>
                 <span class="n">input_size</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
-                <span class="n">mean</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span>
-                <span class="n">std</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_std</span><span class="p">,</span>
+                <span class="n">mean</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_mean</span> <span class="k">if</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">input_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">std</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_std</span> <span class="k">if</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">input_std</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
             <span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
         <span class="n">model_cls</span> <span class="o">=</span> <span class="n">get_model_cls_from_config</span><span class="p">(</span><span class="n">Namespace</span><span class="p">(</span><span class="n">model_config</span><span class="p">))</span>
@@ -600,14 +602,11 @@
         <span class="n">ov_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_default_config</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="n">ov_config_path</span><span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
         <span class="n">subset_config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">datamodule</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">)</span>
         <span class="n">subset_config</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span>
-        <span class="n">subset_config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transform_lib_type&quot;</span><span class="p">]</span>
-        <span class="n">subset_config</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transforms&quot;</span><span class="p">]</span>
-        <span class="n">subset_config</span><span class="o">.</span><span class="n">to_tv_image</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;to_tv_image&quot;</span><span class="p">]</span>
+        <span class="n">subset_config</span><span class="o">.</span><span class="n">augmentations_cpu</span> <span class="o">=</span> <span class="n">ov_config</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">][</span><span class="s2">&quot;augmentations_cpu&quot;</span><span class="p">]</span>
         <span class="n">datamodule</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;For OpenVINO IR models, Update the following </span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> transforms: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">transforms</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> transform_lib_type: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">transform_lib_type</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> augmentations_cpu: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">augmentations_cpu</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> batch_size: </span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;And the tiler is disabled.&quot;</span>
         <span class="p">)</span>
