@@ -15,7 +15,7 @@ from torchvision.ops import RoIAlign
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.common.backbones import ResNet, build_model_including_pytorchcv
+from otx.backend.native.models.common.backbones import build_model_including_pytorchcv
 from otx.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
 from otx.backend.native.models.common.utils.assigners import MaxIoUAssigner
 from otx.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
@@ -50,7 +50,7 @@ class MaskRCNN(OTXInstanceSegModel):
         label_info (LabelInfoTypes): Information about the labels used in the model.
         data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
-        model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
+        model_name (str, optional): Name of the model. Defaults to "maskrcnn_efficientnet_b2b".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
             Defaults to DefaultSchedulerCallable.
@@ -62,8 +62,6 @@ class MaskRCNN(OTXInstanceSegModel):
     """
 
     _pretrained_weights: ClassVar[dict[str, Any]] = {
-        "maskrcnn_resnet_50": "https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_mstrain-poly_3x_coco/"
-        "mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth",
         "maskrcnn_efficientnet_b2b": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
         "models/instance_segmentation/v2/efficientnet_b2b-mask_rcnn-576x576.pth",
         "maskrcnn_swin_tiny": "https://download.openmmlab.com/mmdetection/v2.0/swin/"
@@ -76,10 +74,9 @@ class MaskRCNN(OTXInstanceSegModel):
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams | None = None,
         model_name: Literal[
-            "maskrcnn_resnet_50",
             "maskrcnn_efficientnet_b2b",
             "maskrcnn_swin_tiny",
-        ] = "maskrcnn_resnet_50",
+        ] = "maskrcnn_efficientnet_b2b",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
@@ -308,10 +305,6 @@ class MaskRCNN(OTXInstanceSegModel):
     def _build_backbone(self) -> nn.Module:
         """Builds the backbone for the model."""
         backbone_cfg: dict[str, Any] = {
-            "maskrcnn_resnet_50": {
-                "depth": 50,
-                "frozen_stages": 1,
-            },
             "maskrcnn_swin_tiny": {
                 "drop_path_rate": 0.2,
                 "patch_norm": True,
@@ -326,11 +319,6 @@ class MaskRCNN(OTXInstanceSegModel):
                 "normalization": partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True),
             },
         }
-
-        if "resnet" in self.model_name:
-            return ResNet(
-                **backbone_cfg[self.model_name],
-            )
 
         if "efficientnet" in self.model_name:
             cfg = backbone_cfg[self.model_name]
@@ -390,9 +378,6 @@ class MaskRCNN(OTXInstanceSegModel):
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
         return {
-            "maskrcnn_resnet_50": DataInputParams(
-                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-            ),
             # TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b
             # differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.
             # issue: https://github.com/open-edge-platform/training_extensions/issues/5023

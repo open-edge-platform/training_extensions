@@ -77,15 +77,15 @@ class TestClassIncrementalMixin:
     ) -> None:
         maskrcnn = MaskRCNN(
             label_info=3,
-            model_name="maskrcnn_resnet_50",
+            model_name="maskrcnn_efficientnet_b2b",
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         input_tensors = [
-            torch.randn([4, 256, 144, 256]),
-            torch.randn([4, 256, 72, 128]),
-            torch.randn([4, 256, 36, 64]),
-            torch.randn([4, 256, 18, 32]),
-            torch.randn([4, 256, 9, 16]),
+            torch.randn([4, 80, 144, 256]),
+            torch.randn([4, 80, 72, 128]),
+            torch.randn([4, 80, 36, 64]),
+            torch.randn([4, 80, 18, 32]),
+            torch.randn([4, 80, 9, 16]),
         ]
         roi_criterion = ROICriterion(
             num_classes=3,
