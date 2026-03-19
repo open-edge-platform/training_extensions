@@ -123,19 +123,30 @@ describe('LearningParameters', () => {
         expect(getParameter('Minimum learning rate')).toBeInTheDocument();
     });
 
-    it('updates parameters and resets them to default properly', async () => {
-        const user = userEvent.setup({ delay: null });
+    describe('updates parameters and resets them to default properly', () => {
         const parametersWithoutInputSizeParameters = {
             ...learningParameters,
             parameters: learningParameters.parameters.filter((parameter) => !isInputSizeParameter(parameter)),
         };
+        const user = userEvent.setup();
 
-        render(<App learningParameters={parametersWithoutInputSizeParameters} />);
+        const numberParameters = parametersWithoutInputSizeParameters.parameters.filter(isNumberParameter);
+        const enableGroupParameters =
+            parametersWithoutInputSizeParameters.parameters.filter(isBoolEnableParameterGroup);
 
-        for (const parameter of parametersWithoutInputSizeParameters.parameters) {
-            if (isNumberParameter(parameter)) {
-                await expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key, user);
-            } else if (isBoolEnableParameterGroup(parameter)) {
+        it('updates and resets number parameters', () => {
+            render(<App learningParameters={parametersWithoutInputSizeParameters} />);
+
+            for (const parameter of numberParameters) {
+                expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key, user);
+            }
+        });
+
+        it.each(enableGroupParameters.map((p) => [p.name, p]))(
+            'updates and resets enable group: %s',
+            (_name, parameter) => {
+                render(<App learningParameters={parametersWithoutInputSizeParameters} />);
+
                 const [enableParameter, ...restParameters] = parameter.parameters;
 
                 const groupContainer = within(screen.getByTestId(parameter.key));
@@ -150,12 +161,6 @@ describe('LearningParameters', () => {
 
                 expect(toggleEnableParameter).toBeChecked();
 
-                for (const restParameter of restParameters) {
-                    if (isNumberParameter(restParameter)) {
-                        await expectNumberParameter(restParameter, parameter.key, user);
-                    }
-                }
-
                 fireEvent.click(toggleEnableParameter);
 
                 expect(toggleEnableParameter).not.toBeChecked();
@@ -166,9 +171,9 @@ describe('LearningParameters', () => {
                     }
                 }
 
-                await user.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+                fireEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
             }
-        }
+        );
     });
 
     describe('Input size parameters', () => {
