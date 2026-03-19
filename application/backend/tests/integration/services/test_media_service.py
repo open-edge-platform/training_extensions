@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 import cv2
 import numpy as np
 import pytest
+from PIL import ExifTags
 from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
@@ -524,6 +525,7 @@ class TestMediaServiceIntegration:
     ) -> None:
         """Test creating a media."""
         image = PILImage.new("RGB", (1024, 768))
+        image.getexif()[ExifTags.Base.Software] = "Intel Geti"
 
         project, pipeline = fxt_project_with_pipeline
 
@@ -556,6 +558,11 @@ class TestMediaServiceIntegration:
         binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
         assert os.path.exists(binary_file_path)
         assert created_media.size == os.path.getsize(binary_file_path)
+
+        stored_exif = PILImage.open(binary_file_path).getexif()
+        assert stored_exif is not None
+        if format != ImageFormat.BMP:  # BMP images do not support EXIF information
+            assert stored_exif[ExifTags.Base.Software] == "Intel Geti"
 
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
