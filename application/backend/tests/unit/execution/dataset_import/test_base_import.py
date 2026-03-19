@@ -173,14 +173,9 @@ class TestBaseDatasetImport:
                 ValueError,
                 match=f"Dataset type {sample_type.__name__} conversion to {target_type.__name__} is not supported.",
             ),
-            patch(
-                "app.execution.dataset_import.base_import.import_dataset", return_value=expected_dataset
-            ) as mock_import,
+            patch("app.execution.dataset_import.base_import.import_dataset", return_value=expected_dataset),
         ):
-            result = fxt_dummy_import._prepare_dataset(staged_dataset_id=dataset_id, task=task)
-
-            mock_import.assert_called_once_with(str(dataset_dir))
-            assert result == converted_dataset
+            fxt_dummy_import._prepare_dataset(staged_dataset_id=dataset_id, task=task)
 
     @pytest.mark.parametrize(
         "sample_type, task",

@@ -94,11 +94,14 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
         dataset = import_dataset(str(staged_dataset_path))
         dataset_type = dataset.dtype
         target_type = self.__get_sample_by_task(task=task)
-        if dataset_type in self.SUPPORTED_CONVERSIONS and target_type not in self.SUPPORTED_CONVERSIONS[dataset_type]:
-            raise ValueError(
-                f"Dataset type {dataset_type.__name__} conversion to {target_type.__name__} is not supported."
-            )
-        if target_type and target_type != dataset_type:
+        if target_type != dataset_type:
+            if (
+                dataset_type in self.SUPPORTED_CONVERSIONS
+                and target_type not in self.SUPPORTED_CONVERSIONS[dataset_type]
+            ):
+                raise ValueError(
+                    f"Dataset type {dataset_type.__name__} conversion to {target_type.__name__} is not supported."
+                )
             dataset = dataset.convert_to_schema(target_type)
         return dataset
 
