@@ -14,6 +14,7 @@ import { HttpResponse } from 'msw';
 import { handlers, http } from '../src/api/utils';
 import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { PolygonToolPage } from './annotator/polygon-tool-page';
+import { VideoPage } from './annotator/video-page';
 import { AnnotatorPage } from './datasets/annotator-page';
 import { StreamPage } from './inference/stream-page';
 import { JobsPage } from './jobs/jobs-page';
@@ -46,6 +47,7 @@ interface Fixtures {
     jobsPage: JobsPage;
     polygonTool: PolygonToolPage;
     boundingBoxTool: BoundingBoxToolPage;
+    videoPage: VideoPage;
     annotatorPage: AnnotatorPage;
 }
 
@@ -211,6 +213,10 @@ const test = testBase.extend<Fixtures>({
     polygonTool: async ({ page }, use) => {
         const polygonTool = new PolygonToolPage(page);
         await use(polygonTool);
+    },
+    videoPage: async ({ page }, use) => {
+        const videoPage = new VideoPage(page);
+        await use(videoPage);
     },
     annotatorPage: async ({ page }, use) => {
         const annotatorPage = new AnnotatorPage(page);

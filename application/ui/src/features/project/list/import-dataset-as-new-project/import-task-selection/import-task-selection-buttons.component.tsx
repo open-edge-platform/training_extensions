@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup } from '@geti/ui';
-import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { useDeleteStagedDataset, useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { TASK_SELECTION_FORM_ID } from './util';
 
@@ -17,9 +17,11 @@ export const ImportTaskSelectionButtons = ({
     onClose,
     deleteEntry,
 }: ImportTaskSelectionButtonsProps) => {
+    const stagedDatasetQuery = useStagedDataset(stagedDatasetId);
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, onSuccess: onClose, deleteEntry });
 
     const isPending = deleteFileMutation.isPending;
+    const isDisabled = isPending || stagedDatasetQuery.isFetching;
 
     const handleDeleteJob = () => {
         deleteFileMutation.mutate();
@@ -27,15 +29,15 @@ export const ImportTaskSelectionButtons = ({
 
     return (
         <ButtonGroup>
-            <Button variant='negative' isPending={isPending} isDisabled={isPending} onPress={handleDeleteJob}>
+            <Button variant='negative' isPending={isPending} isDisabled={isDisabled} onPress={handleDeleteJob}>
                 Delete
             </Button>
 
-            <Button onPress={onClose} isPending={isPending} isDisabled={isPending} variant='secondary'>
+            <Button onPress={onClose} isPending={isPending} isDisabled={isDisabled} variant='secondary'>
                 Hide
             </Button>
 
-            <Button type='submit' form={TASK_SELECTION_FORM_ID} variant='primary'>
+            <Button type='submit' form={TASK_SELECTION_FORM_ID} variant='primary' isDisabled={isDisabled}>
                 Next
             </Button>
         </ButtonGroup>

@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 from uuid import uuid4
 
@@ -33,17 +34,21 @@ class TestInferenceServer:
             spec=ModelVariant, id=model_variant_id, format=ModelFormat.OPENVINO, precision=ModelPrecision.FP16
         )
 
-        model_service = MagicMock(spec=ModelService)
-        model_service.get_model_variants.return_value = [model_variant]
-        model_service.get_model_binary_files.return_value = (True, (tmp_path / "model.xml", tmp_path / "model.bin"))
-
-        inference_server = InferenceServer(model_service=model_service)
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
 
         model = MagicMock(spec=Model)
 
-        with patch("model_api.models.Model.create_model") as mock_create_model:
-            mock_create_model.return_value = model
-
+        with (
+            patch("model_api.models.Model.create_model", return_value=model) as mock_create_model,
+            patch.object(
+                target=ModelService, attribute="get_model_variants", return_value=[model_variant]
+            ) as mock_get_model_variants,
+            patch.object(
+                target=ModelService,
+                attribute="get_model_binary_files",
+                return_value=(True, (tmp_path / "model.xml", tmp_path / "model.bin")),
+            ) as mock_get_model_binary_files,
+        ):
             model_loaded = inference_server.set_inference_model(
                 project_id=project_id, model_id=model_id, device=device, ttl=60
             )
@@ -56,8 +61,8 @@ class TestInferenceServer:
                 and inference_server._loaded_model.device == device
             )
 
-            model_service.get_model_variants.assert_called_once_with(project_id=project_id, model_id=model_id)
-            model_service.get_model_binary_files.assert_called_once_with(
+            mock_get_model_variants.assert_called_once_with(project_id=project_id, model_id=model_id)
+            mock_get_model_binary_files.assert_called_once_with(
                 project_id=project_id, model_id=model_id, model_variant_id=model_variant_id
             )
             mock_create_model.assert_called_once_with(model=str(tmp_path / "model.xml"), device=device, nstreams="2")
@@ -69,7 +74,7 @@ class TestInferenceServer:
 
         model = MagicMock(spec=Model)
 
-        inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
             id=model_id, model=model, device=device, load_timestamp=datetime.now()
         )
@@ -84,7 +89,7 @@ class TestInferenceServer:
         assert inference_server._loaded_model.device == device
 
     def test_get_status_idle(self, tmp_path) -> None:
-        inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = None
 
         status = inference_server.get_status()
@@ -97,7 +102,7 @@ class TestInferenceServer:
 
         model = MagicMock(spec=Model)
 
-        inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
             id=model_id, model=model, device=device, load_timestamp=datetime.now()
         )
@@ -116,7 +121,7 @@ class TestInferenceServer:
     def test_stop(self, tmp_path) -> None:
         model = MagicMock(spec=Model)
 
-        inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
             id=uuid4(), model=model, device="AUTO", load_timestamp=datetime.now()
         )
@@ -129,7 +134,7 @@ class TestInferenceServer:
         label = MagicMock(spec=Label)
         input = MagicMock(spec=BatchInferenceInput)
 
-        inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = None
 
         with pytest.raises(RuntimeError):
@@ -147,7 +152,7 @@ class TestInferenceServer:
 
         annotation = MagicMock(spec=DatasetItemAnnotation)
 
-        inference_server = InferenceServer(model_service=MagicMock(spec=ModelService))
+        inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
             id=uuid4(), model=model, device="AUTO", load_timestamp=datetime.now()
         )

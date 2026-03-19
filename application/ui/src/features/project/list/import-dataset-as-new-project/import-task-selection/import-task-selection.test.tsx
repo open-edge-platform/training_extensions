@@ -56,8 +56,12 @@ describe('ImportTaskSelection', () => {
                     size: 123,
                     metadata: {
                         labels: [],
-                        num_items: 0,
+                        num_images: 10,
+                        num_frames: 8,
                         num_annotations: 0,
+                        num_videos: 1,
+                        num_annotated_frames: 5,
+                        num_annotated_images: 9,
                         annotation_type: annotationType,
                     },
                     compressed: true,

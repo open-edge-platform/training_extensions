@@ -16,9 +16,15 @@ Feature: Import Dataset As New Project
     And the dataset is ready for import in staging directory
     When I import the dataset as a new detection project with name "grapes" and labels ["Chardonnay", "Sauvignon Blanc"]
     Then the project "grapes" is created with labels ["Chardonnay", "Sauvignon Blanc"]
-    And the project contains 7 annotated images labeled "Chardonnay"
-    And the project contains 7 annotated images labeled "Sauvignon Blanc"
-    And the project contains 7 unannotated images
+    And the project statistics are:
+      | Metric                 | Count |
+      | images                 | 21    |
+      | annotated_images       | 14    |
+      | annotated_video_frames | 0     |
+    And the project contains the following annotation instances:
+      | Label           | Instances |
+      | Chardonnay      | 7         |
+      | Sauvignon Blanc | 7         |
 
   @import_as_new_project @classification
   Scenario: Import classification dataset as a new project
@@ -30,8 +36,14 @@ Feature: Import Dataset As New Project
     And the dataset is ready for import in staging directory
     When I import the dataset as a new classification project with name "animals" and labels ["cat"]
     Then the project "animals" is created with labels ["cat"]
-    And the project contains 5 annotated images labeled "cat"
-    And the project contains 5 unannotated images
+    And the project statistics are:
+      | Metric                 | Count |
+      | images                 | 10    |
+      | annotated_images       | 5     |
+      | annotated_video_frames | 0     |
+    And the project contains the following annotation instances:
+      | Label | Instances |
+      | cat   | 5         |
 
   @import_as_new_project @multilabel
   Scenario: Import multilabel classification dataset as a new project
@@ -43,8 +55,15 @@ Feature: Import Dataset As New Project
     And the dataset is ready for import in staging directory
     When I import the dataset as a new multilabel project with name "animals" and labels ["cat", "dog"]
     Then the project "animals" is created with labels ["cat", "dog"]
-    And the project contains 3 annotated images labeled "cat"
-    And the project contains 3 annotated images labeled "dog"
+    And the project statistics are:
+      | Metric                 | Count |
+      | images                 | 6     |
+      | annotated_images       | 6     |
+      | annotated_video_frames | 0     |
+    And the project contains the following annotation instances:
+      | Label | Instances |
+      | cat   | 3         |
+      | dog   | 3         |
 
   @import_as_new_project @segmentation
   Scenario: Import segmentation dataset as a new project
@@ -56,5 +75,12 @@ Feature: Import Dataset As New Project
     And the dataset is ready for import in staging directory
     When I import the dataset as a new instance_segmentation project with name "traffic" and labels ["car", "person"]
     Then the project "traffic" is created with labels ["car", "person"]
-    And the project contains 6 annotated images labeled "car"
-    And the project contains 6 annotated images labeled "person"
+    And the project statistics are:
+      | Metric                 | Count |
+      | images                 | 12    |
+      | annotated_images       | 12    |
+      | annotated_video_frames | 0     |
+    And the project contains the following annotation instances:
+      | Label  | Instances |
+      | car    | 6         |
+      | person | 6         |

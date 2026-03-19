@@ -26,6 +26,7 @@ from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
+from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
 from app.execution.common.otx_converters import (
     get_metric_by_task,
@@ -256,7 +257,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
                     # Create a dataset revision including only the items with user-verified annotations, then save it
                     logger.info("Creating a new dataset revision with user-verified annotated items")
                     dm_dataset = self._dataset_service.get_dm_dataset(
-                        project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                        project_id=project_id,
+                        task=task,
+                        annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                        sample_mode=SampleMode.TRAINING,
                     )
                     dataset_revision_id = self._dataset_revision_service.save_revision(
                         project_id=project_id, dataset=dm_dataset

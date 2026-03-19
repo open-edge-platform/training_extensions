@@ -17,6 +17,7 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 
 from app.core.run import ExecutionContext
+from app.datumaro_converter import SampleMode
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -472,6 +473,7 @@ class TestOTXTrainerCreateTrainingDataset:
                     project_id=project_id,
                     task=task,
                     annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                    sample_mode=SampleMode.TRAINING,
                 )
                 fxt_dataset_revision_service.save_revision.assert_called_once_with(
                     project_id=project_id,

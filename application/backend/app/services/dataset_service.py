@@ -9,7 +9,7 @@ from uuid import UUID
 import datumaro.experimental as dm
 from sqlalchemy.orm import Session
 
-from app.datumaro_converter import convert_dataset
+from app.datumaro_converter import SampleMode, convert_dataset
 from app.db.schema import DatasetItemDB, MediaDB
 from app.models import (
     DatasetItem,
@@ -26,7 +26,7 @@ from app.models import (
     TaskType,
 )
 from app.models.dataset import DatasetStatistics
-from app.models.media import MediaAdapter
+from app.models.media import MediaAdapter, VideoFrame
 from app.repositories import DatasetItemRepository
 from app.services.media_service import MediaService
 
@@ -323,6 +323,7 @@ class DatasetService(BaseSessionManagedService):
         project_id: UUID,
         task: Task,
         annotation_status: DatasetItemAnnotationStatus | None,
+        sample_mode: SampleMode,
     ) -> dm.Dataset:
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
@@ -330,13 +331,18 @@ class DatasetService(BaseSessionManagedService):
                 filters=DatasetItemFilters(limit=limit, offset=offset, annotation_status=annotation_status),
             )
 
-        def _get_image_path(item: DatasetItem) -> str:
-            return str(self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=item.id))
+        def _get_media_path(media: Media) -> str:
+            if isinstance(media, VideoFrame):
+                return str(
+                    self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=media.video_id)
+                )
+            return str(self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=media.id))
 
         labels = self._label_service.list_all(project_id=project_id)
         return convert_dataset(
             task=task,
             labels=labels,
             get_dataset_items_and_media=get_dataset_items_and_media,
-            get_image_path=_get_image_path,
+            get_media_path=_get_media_path,
+            sample_mode=sample_mode,
         )
