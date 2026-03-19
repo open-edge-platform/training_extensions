@@ -243,16 +243,16 @@ class OVModel:
             validation_dataset = nncf.Dataset(data_module.val_dataloader(), self.transform_fn)
             validation_fn = self._create_validation_fn(data_module)
             compressed_model = nncf.quantize_with_accuracy_control(
-                ov_model,
-                quantization_dataset,
-                validation_dataset,
-                validation_fn,
+                model=ov_model,
+                calibration_dataset=quantization_dataset,
+                validation_dataset=validation_dataset,
+                validation_fn=validation_fn,
                 **ptq_config,
             )
         else:
             compressed_model = nncf.quantize(
-                ov_model,
-                quantization_dataset,
+                model=ov_model,
+                calibration_dataset=quantization_dataset,
                 **ptq_config,
             )
 

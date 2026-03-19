@@ -17,32 +17,26 @@ from loguru import logger
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig
-from otx.data.dataset import (
-    OTXDetectionDataset,
-    OTXInstanceSegDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
-)
 from otx.data.dataset.base import OTXDataset
 from otx.data.module import OTXDataModule
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
-from otx.metrics import MetricCallable
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
-from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step
+from app.execution.common.otx_converters import (
+    get_metric_by_task,
+    get_otx_dataset_class_by_task_type,
+    get_otx_task_type_by_task,
+)
 from app.models import (
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
     EvaluationResult,
     Task,
-    TaskType,
     TrainingJobParams,
     TrainingStatus,
 )
@@ -199,7 +193,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             geti_training_config = training_config.model_dump(exclude_none=True)
             geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
             geti_training_config["model_manifest_id"] = training_params.model_architecture_id
-            geti_training_config["sub_task_type"] = self.__get_otx_task_type_by_task(task)
+            geti_training_config["sub_task_type"] = get_otx_task_type_by_task(task)
             geti_config_path = self.__build_model_config_path(self._data_dir, project_id, training_params.model_id)
             geti_config_path.parent.mkdir(parents=True, exist_ok=True)
             with open(geti_config_path, "w") as f:
@@ -282,8 +276,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
             test_subset_config = build_subset_config("test")
 
             # Wrap them into OTXDataset instances
-            otx_task_type = self.__get_otx_task_type_by_task(task)
-            otx_dataset_class = self.__get_otx_dataset_class_by_task_type(otx_task_type)
+            otx_task_type = get_otx_task_type_by_task(task)
+            otx_dataset_class = get_otx_dataset_class_by_task_type(otx_task_type)
             logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
             otx_training_dataset = otx_dataset_class(
                 dm_subset=dm_training_dataset,
@@ -420,7 +414,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
     ) -> None:
         """Evaluate the trained model on the testing set"""
         logger.info("Evaluating the model on the testing set...")
-        metrics = otx_engine.test(checkpoint=model_checkpoint_path, metric=self.__get_metric_by_task(task))
+        metrics = otx_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
@@ -634,50 +628,6 @@ class OTXTrainer(Execution[TrainingJobParams]):
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
         return cls.__base_model_path(data_dir, project_id, model_id) / "config.yaml"
-
-    @classmethod
-    def __get_otx_task_type_by_task(cls, task: Task) -> OTXTaskType:
-        """Map internal Task to OTXTaskType."""
-        match task.task_type:
-            case TaskType.CLASSIFICATION:
-                if task.exclusive_labels:
-                    return OTXTaskType.MULTI_CLASS_CLS
-                return OTXTaskType.MULTI_LABEL_CLS
-            case TaskType.DETECTION:
-                return OTXTaskType.DETECTION
-            case TaskType.INSTANCE_SEGMENTATION:
-                return OTXTaskType.INSTANCE_SEGMENTATION
-            case _:
-                raise ValueError(f"Unsupported task type: {task.task_type}")
-
-    @classmethod
-    def __get_metric_by_task(cls, task: Task) -> MetricCallable:
-        """Map internal Task to Metric."""
-        match task.task_type:
-            case TaskType.CLASSIFICATION:
-                if task.exclusive_labels:
-                    return MultiClassClsMetricCallable
-                return MultiLabelClsMetricCallable
-            case TaskType.DETECTION:
-                return MeanAPCallable
-            case TaskType.INSTANCE_SEGMENTATION:
-                return MaskRLEMeanAPCallable
-            case _:
-                raise ValueError(f"Unsupported task type: {task.task_type}")
-
-    @classmethod
-    def __get_otx_dataset_class_by_task_type(cls, otx_task_type: OTXTaskType) -> type[OTXDataset]:
-        """Get the OTXDataset class corresponding to the given OTXTaskType."""
-        otx_task_type_to_class: dict[OTXTaskType, type[OTXDataset]] = {
-            OTXTaskType.MULTI_CLASS_CLS: OTXMulticlassClsDataset,
-            OTXTaskType.MULTI_LABEL_CLS: OTXMultilabelClsDataset,
-            OTXTaskType.DETECTION: OTXDetectionDataset,
-            OTXTaskType.INSTANCE_SEGMENTATION: OTXInstanceSegDataset,
-        }
-        try:
-            return otx_task_type_to_class[otx_task_type]
-        except KeyError:
-            raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
 
     def __update_model_revision_training_status(
         self,

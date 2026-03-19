@@ -11,28 +11,21 @@ from datumaro.experimental.fields import Subset
 from loguru import logger
 from otx.backend.openvino.engine import OVEngine
 from otx.config.data import SamplerConfig, SubsetConfig
-from otx.data.dataset import (
-    OTXDetectionDataset,
-    OTXInstanceSegDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
-)
-from otx.data.dataset.base import OTXDataset
 from otx.data.module import OTXDataModule
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
-from otx.metrics import MetricCallable
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.tools.converter import GetiConfigConverter
-from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step
+from app.execution.common.otx_converters import (
+    get_metric_by_task,
+    get_otx_dataset_class_by_task_type,
+    get_otx_task_type_by_task,
+)
 from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingStatus
 from app.models.jobs.quantization_job import QuantizationJobParams
 from app.models.model_revision import ModelFormat, ModelPrecision, ModelVariant
 from app.models.project import Task
-from app.models.task import TaskType
 from app.services import DatasetRevisionService, ModelService, ProjectService, TrainingConfigurationService
 
 
@@ -92,9 +85,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         if existing_int8 is not None:
             raise ValueError(f"Model {params.model_id} already has a quantized (INT8) variant")
 
-        logger.info(
-            "Model {} validated for quantization (architecture={})", params.model_id, model.architecture
-        )  # pyrefly: ignore[missing-attribute]
+        logger.info("Model {} validated for quantization (architecture={})", model.id, model.architecture)
         return model
 
     @step("Prepare Calibration Dataset", 20)
@@ -126,7 +117,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         geti_training_config = training_config.model_dump(exclude_none=True)
         geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
         geti_training_config["model_manifest_id"] = model.architecture
-        geti_training_config["sub_task_type"] = self.__get_otx_task_type_by_task(task)
+        geti_training_config["sub_task_type"] = get_otx_task_type_by_task(task)
 
         converter = GetiConfigConverter()
         otx_training_config = converter.convert(geti_training_config)
@@ -160,8 +151,8 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         test_subset_config = build_subset_config("test")
 
         # Wrap into OTXDataset instances
-        otx_task_type = self.__get_otx_task_type_by_task(task)
-        otx_dataset_class = self.__get_otx_dataset_class_by_task_type(otx_task_type)
+        otx_task_type = get_otx_task_type_by_task(task)
+        otx_dataset_class = get_otx_dataset_class_by_task_type(otx_task_type)
 
         otx_training_dataset = otx_dataset_class(
             dm_subset=dm_training_dataset,
@@ -248,7 +239,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
     ) -> None:
         """Evaluate the quantized model on the testing subset."""
         logger.info("Evaluating the quantized model on the testing set...")
-        metrics = ov_engine.test(checkpoint=quantized_model_path, metric=self.__get_metric_by_task(task))
+        metrics = ov_engine.test(checkpoint=quantized_model_path, metric=get_metric_by_task(task))
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
@@ -372,47 +363,3 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
             if variant.precision == ModelPrecision.INT8 and not variant.files_deleted:
                 return variant
         return None
-
-    @classmethod
-    def __get_otx_task_type_by_task(cls, task: Task) -> OTXTaskType:
-        """Map internal Task to OTXTaskType."""
-        match task.task_type:
-            case TaskType.CLASSIFICATION:
-                if task.exclusive_labels:
-                    return OTXTaskType.MULTI_CLASS_CLS
-                return OTXTaskType.MULTI_LABEL_CLS
-            case TaskType.DETECTION:
-                return OTXTaskType.DETECTION
-            case TaskType.INSTANCE_SEGMENTATION:
-                return OTXTaskType.INSTANCE_SEGMENTATION
-            case _:
-                raise ValueError(f"Unsupported task type: {task.task_type}")
-
-    @classmethod
-    def __get_metric_by_task(cls, task: Task) -> MetricCallable:
-        """Map internal Task to Metric."""
-        match task.task_type:
-            case TaskType.CLASSIFICATION:
-                if task.exclusive_labels:
-                    return MultiClassClsMetricCallable
-                return MultiLabelClsMetricCallable
-            case TaskType.DETECTION:
-                return MeanAPCallable
-            case TaskType.INSTANCE_SEGMENTATION:
-                return MaskRLEMeanAPCallable
-            case _:
-                raise ValueError(f"Unsupported task type: {task.task_type}")
-
-    @classmethod
-    def __get_otx_dataset_class_by_task_type(cls, otx_task_type: OTXTaskType) -> type[OTXDataset]:
-        """Get the OTXDataset class corresponding to the given OTXTaskType."""
-        otx_task_type_to_class: dict[OTXTaskType, type[OTXDataset]] = {
-            OTXTaskType.MULTI_CLASS_CLS: OTXMulticlassClsDataset,
-            OTXTaskType.MULTI_LABEL_CLS: OTXMultilabelClsDataset,
-            OTXTaskType.DETECTION: OTXDetectionDataset,
-            OTXTaskType.INSTANCE_SEGMENTATION: OTXInstanceSegDataset,
-        }
-        try:
-            return otx_task_type_to_class[otx_task_type]
-        except KeyError:
-            raise ValueError(f"Unsupported OTX task type: {otx_task_type}")

@@ -21,10 +21,9 @@ class QuantizationRequestParams(BaseModel):
     )
     max_drop: float | None = Field(
         None,
-        description=(
-            "Maximum allowed accuracy drop. If provided, uses nncf.quantize_with_accuracy_control(); "
-            "if omitted, uses nncf.quantize()"
-        ),
+        ge=0,
+        le=1,
+        description="Maximum allowed accuracy drop, expressed as a fraction in range [0-1] where e.g. 0.03 means 3%",
     )
 
     model_config = {

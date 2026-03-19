@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -27,6 +28,8 @@ from otx.types import OTXTaskType, PathLike
 if TYPE_CHECKING:
     from otx.metrics import MetricCallable
     from otx.types.types import ANNOTATIONS, DATA, METRICS, MODEL
+
+logger = logging.getLogger()
 
 
 class OVEngine(Engine):
@@ -358,6 +361,7 @@ class OVEngine(Engine):
             ptq_config["subset_size"] = max_data_subset_size
         if max_drop is not None:
             ptq_config["max_drop"] = max_drop
+        logger.debug(f"PTQ configuration: {ptq_config}")
 
         return model.optimize(
             Path(self.work_dir),
