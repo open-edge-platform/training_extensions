@@ -56,7 +56,7 @@ callbacks:
       data_aug_switch:
         class_path: otx.backend.native.callbacks.aug_scheduler.DataAugSwitch
         init_args:
-          policy_epochs: [4, 40, 72]
+          policy_epochs: [4, 40]
           input_size: [640, 640]
           policies:
             no_aug:

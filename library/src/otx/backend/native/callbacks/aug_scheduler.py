@@ -155,11 +155,9 @@ class DataAugSwitch:
             return "no_aug"
         return "light_aug"
 
-    @property
-    def current_cpu_pipeline(self) -> CPUAugmentationPipeline:
-        """Get the CPU augmentation pipeline for the current policy."""
-        name = self.current_policy_name
-        return self.policies[name]["cpu_pipeline"]
+    def get_cpu_pipeline(self, policy_name: str) -> CPUAugmentationPipeline:
+        """Get the CPU augmentation pipeline for a specific policy."""
+        return self.policies[policy_name]["cpu_pipeline"]
 
     def get_gpu_aug_configs(self, policy_name: str) -> list[dict[str, Any]]:
         """Get raw GPU augmentation configs for a given policy.
@@ -208,8 +206,8 @@ class AugmentationSchedulerCallback(Callback):
        ``GPUAugmentationCallback`` for the active policy.
 
     The CPU pipeline swap happens lazily in each dataset worker via
-    ``DataAugSwitchMixin._apply_augmentation_switch()`` which reads
-    ``DataAugSwitch.current_cpu_pipeline``.
+    ``DataAugSwitchMixin._apply_augmentation_switch()`` which calls
+    ``DataAugSwitch.get_cpu_pipeline()``.
 
     Args:
         data_aug_switch: The DataAugSwitch that manages policies.
@@ -225,7 +223,6 @@ class AugmentationSchedulerCallback(Callback):
         """Find and cache reference to GPUAugmentationCallback for GPU pipeline swaps."""
         from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 
-        self.device = pl_module.device
         for callback in trainer.callbacks:  # type: ignore[union-attr]
             if isinstance(callback, GPUAugmentationCallback):
                 self._gpu_aug_callback = callback
@@ -249,23 +246,21 @@ class AugmentationSchedulerCallback(Callback):
         if self._gpu_aug_callback is None or self.data_aug_switch is None:
             return
 
-        gpu_configs = self.data_aug_switch.get_gpu_aug_configs(policy_name)
-        if not gpu_configs:
-            logger.info(f"Policy '{policy_name}' has no GPU augmentations, keeping current GPU pipeline")
-            return
-
-        # Get data_keys from the existing pipeline
+        # Get data_keys from the existing pipeline before overwriting
         data_keys = None
         if self._gpu_aug_callback._train_pipeline is not None:  # noqa: SLF001
             data_keys = self._gpu_aug_callback._train_pipeline.data_keys  # noqa: SLF001
 
         new_pipeline = self.data_aug_switch.build_gpu_pipeline(policy_name, data_keys=data_keys)
-
         # Move to same device as model
-        new_pipeline = new_pipeline.to(self.device)
-
+        new_pipeline = new_pipeline.to(pl_module.device)
+        # Assign the new pipeline to the GPUAugmentationCallback
         self._gpu_aug_callback._train_pipeline = new_pipeline  # noqa: SLF001
-        logger.info(f"Swapped GPU augmentation pipeline to policy '{policy_name}'")
+        # Log the change. If the new pipeline has no augmentations, it will have aug_sequential = None.
+        if new_pipeline.aug_sequential is not None:
+            logger.info(f"Swapped GPU augmentation pipeline to policy '{policy_name}'")
+        else:
+            logger.info(f"No GPU augmentations for policy '{policy_name}'; cleared GPU pipeline")
 
     def set_data_aug_switch(self, data_aug_switch: DataAugSwitch) -> None:
         """Set or update the DataAugSwitch instance."""

@@ -34,7 +34,6 @@ class TestDataAugSwitchMixin:
         """A mock DataAugSwitch that returns predictable CPU pipeline."""
         s = MagicMock(spec=DataAugSwitch)
         s.current_policy_name = "no_aug"
-        s.current_cpu_pipeline = MagicMock(spec=CPUAugmentationPipeline)
         return s
 
     # -- lazy init -------------------------------------------------------
@@ -75,10 +74,13 @@ class TestDataAugSwitchMixin:
         assert dataset.transforms is None
 
     def test_apply_sets_transforms_to_cpu_pipeline(self, dataset, mock_switch):
+        expected_pipeline = MagicMock(spec=CPUAugmentationPipeline)
+        mock_switch.get_cpu_pipeline.return_value = expected_pipeline
         dataset.set_data_aug_switch(mock_switch)
         policy = dataset._apply_augmentation_switch()
         assert policy == "no_aug"
-        assert dataset.transforms is mock_switch.current_cpu_pipeline
+        assert dataset.transforms is expected_pipeline
+        mock_switch.get_cpu_pipeline.assert_called_once_with("no_aug")
 
     def test_apply_follows_policy_changes(self, dataset, mock_switch):
         dataset.set_data_aug_switch(mock_switch)
@@ -86,14 +88,14 @@ class TestDataAugSwitchMixin:
         # First call → no_aug
         pipeline_no_aug = MagicMock(spec=CPUAugmentationPipeline)
         mock_switch.current_policy_name = "no_aug"
-        mock_switch.current_cpu_pipeline = pipeline_no_aug
+        mock_switch.get_cpu_pipeline.return_value = pipeline_no_aug
         dataset._apply_augmentation_switch()
         assert dataset.transforms is pipeline_no_aug
 
         # Policy changes → strong_aug_1
         pipeline_strong = MagicMock(spec=CPUAugmentationPipeline)
         mock_switch.current_policy_name = "strong_aug_1"
-        mock_switch.current_cpu_pipeline = pipeline_strong
+        mock_switch.get_cpu_pipeline.return_value = pipeline_strong
         policy = dataset._apply_augmentation_switch()
         assert policy == "strong_aug_1"
         assert dataset.transforms is pipeline_strong
@@ -119,10 +121,11 @@ class TestDataAugSwitchMixin:
 
         mock = MagicMock(spec=DataAugSwitch)
         mock.current_policy_name = "light_aug"
-        mock.current_cpu_pipeline = MagicMock(spec=CPUAugmentationPipeline)
+        expected_pipeline = MagicMock(spec=CPUAugmentationPipeline)
+        mock.get_cpu_pipeline.return_value = expected_pipeline
         ds.set_data_aug_switch(mock)
 
         assert ds.has_dynamic_augmentation
         policy = ds._apply_augmentation_switch()
         assert policy == "light_aug"
-        assert ds.transforms is mock.current_cpu_pipeline
+        assert ds.transforms is expected_pipeline

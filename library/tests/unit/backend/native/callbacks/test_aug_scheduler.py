@@ -175,21 +175,21 @@ class TestDataAugSwitch:
         switch_with_epoch.epoch = 23
         assert switch_with_epoch.current_policy_name == "light_aug"
 
-    # -- current_cpu_pipeline -------------------------------------------
+    # -- get_cpu_pipeline -----------------------------------------------
 
-    def test_current_cpu_pipeline_returns_correct_type(self, switch_with_epoch):
-        switch_with_epoch.epoch = 0
-        assert isinstance(switch_with_epoch.current_cpu_pipeline, CPUAugmentationPipeline)
+    def test_get_cpu_pipeline_returns_correct_type(self, switch_with_epoch):
+        pipeline = switch_with_epoch.get_cpu_pipeline("no_aug")
+        assert isinstance(pipeline, CPUAugmentationPipeline)
 
-    def test_current_cpu_pipeline_changes_with_policy(self, switch_with_epoch):
-        switch_with_epoch.epoch = 0
-        no_aug_pipeline = switch_with_epoch.current_cpu_pipeline
+    def test_get_cpu_pipeline_returns_different_per_policy(self, switch_with_epoch):
+        no_aug = switch_with_epoch.get_cpu_pipeline("no_aug")
+        light_aug = switch_with_epoch.get_cpu_pipeline("light_aug")
+        assert isinstance(no_aug, CPUAugmentationPipeline)
+        assert isinstance(light_aug, CPUAugmentationPipeline)
 
-        switch_with_epoch.epoch = 30
-        light_aug_pipeline = switch_with_epoch.current_cpu_pipeline
-
-        assert isinstance(no_aug_pipeline, CPUAugmentationPipeline)
-        assert isinstance(light_aug_pipeline, CPUAugmentationPipeline)
+    def test_get_cpu_pipeline_invalid_name_raises(self, switch_with_epoch):
+        with pytest.raises(KeyError):
+            switch_with_epoch.get_cpu_pipeline("nonexistent_policy")
 
     # -- get_gpu_aug_configs --------------------------------------------
 
@@ -403,7 +403,12 @@ class TestAugmentationSchedulerCallback:
         cb = AugmentationSchedulerCallback(data_aug_switch=switch)
         cb._gpu_aug_callback = mock_gpu_cb
         cb._swap_gpu_pipeline("no_aug", mock_pl_module)
-        assert mock_gpu_cb._train_pipeline is original_pipeline
+
+        # After the fix, empty-config policies should clear the GPU pipeline
+        # instead of keeping stale transforms from the previous policy.
+        assert mock_gpu_cb._train_pipeline is not original_pipeline
+        assert isinstance(mock_gpu_cb._train_pipeline, GPUAugmentationPipeline)
+        assert mock_gpu_cb._train_pipeline.aug_sequential is None
 
     # -- full training simulation ----------------------------------------
 
