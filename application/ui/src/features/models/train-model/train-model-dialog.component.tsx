@@ -24,7 +24,7 @@ import { AdvancedSettings } from './advanced-settings/advanced-settings.componen
 import { useTrainModelMutation } from './api/use-train-model-mutation';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
 import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
-import { useTrainModel } from './train-model-provider.component';
+import { useTrainModelState } from './train-model-provider.component';
 
 type TrainModelDialogProps = {
     onClose: () => void;

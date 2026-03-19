@@ -16,7 +16,7 @@ import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetModels } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingDevices } from './api/use-get-training-devices';
-import { useTrainingConfiguration } from './use-training-configuration';
+import { useTrainingConfiguration } from './hooks/use-training-configuration';
 
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
 type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { value: string | null };
@@ -179,7 +179,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     );
 };
 
-export const useTrainModel = () => {
+export const useTrainModelState = () => {
     const context = use(TrainModelContext);
 
     if (context === null) {
