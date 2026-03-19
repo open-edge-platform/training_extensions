@@ -16,9 +16,7 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
 
     return $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
         params: {
-            path: {
-                project_id,
-            },
+            path: { project_id },
             query: {
                 annotation_status: options?.annotationStatus,
                 limit: options?.limit,
