@@ -4,7 +4,6 @@
 import { useState } from 'react';
 
 import { fireEvent, screen, Screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { render } from 'test-utils/render';
 import { describe } from 'vitest';
 
@@ -34,11 +33,15 @@ const getEnumFieldParameter = (name: string) => {
     return screen.getByRole('button', { name: new RegExp(`Select ${name}`) });
 };
 
-const expectNumberParameter = async (
-    parameter: NumberConfigurableParameter,
-    groupKey: string,
-    user: ReturnType<typeof userEvent.setup>
-) => {
+const pressButton = (element: HTMLElement) => {
+    fireEvent.pointerDown(element, { pointerType: 'mouse', button: 0 });
+    fireEvent.mouseDown(element, { button: 0 });
+    fireEvent.pointerUp(element, { pointerType: 'mouse', button: 0 });
+    fireEvent.mouseUp(element, { button: 0 });
+    fireEvent.click(element, { button: 0 });
+};
+
+const expectNumberParameter = (parameter: NumberConfigurableParameter, groupKey: string) => {
     const step = getStep({
         type: parameter.value_type,
         maxValue: parameter.max_value ?? null,
@@ -54,7 +57,7 @@ const expectNumberParameter = async (
 
     expect(getParameter(parameter.name, wrapper)).toHaveValue(parameter.value.toString());
 
-    await user.click(wrapper.getByRole('button', { name: `Increase Change ${parameter.name}` }));
+    pressButton(wrapper.getByRole('button', { name: `Increase Change ${parameter.name}` }));
 
     expect(getParameter(parameter.name, wrapper)).toHaveValue((parameter.value + step).toString());
 
@@ -86,8 +89,7 @@ describe('LearningParameters', () => {
         );
     };
 
-    it('updates tag to "Modified" when at least one parameter is changed, otherwise is "Default"', async () => {
-        const user = userEvent.setup();
+    it('updates tag to "Modified" when at least one parameter is changed, otherwise is "Default"', () => {
         render(<App learningParameters={learningParameters} />);
 
         const maxEpochsParameter = learningParameters.parameters[0] as NumberConfigurableParameter;
@@ -95,7 +97,7 @@ describe('LearningParameters', () => {
         expect(screen.getByLabelText('Learning parameters tag')).toHaveTextContent('Default');
 
         expect(getParameter(maxEpochsParameter.name)).toHaveValue(maxEpochsParameter.value.toString());
-        await user.click(screen.getByRole('button', { name: `Increase Change ${maxEpochsParameter.name}` }));
+        pressButton(screen.getByRole('button', { name: `Increase Change ${maxEpochsParameter.name}` }));
 
         expect(getParameter(maxEpochsParameter.name)).toHaveValue((maxEpochsParameter.value + 1).toString());
         expect(screen.getByLabelText('Learning parameters tag')).toHaveTextContent('Modified');
@@ -128,7 +130,6 @@ describe('LearningParameters', () => {
             ...learningParameters,
             parameters: learningParameters.parameters.filter((parameter) => !isInputSizeParameter(parameter)),
         };
-        const user = userEvent.setup();
 
         const numberParameters = parametersWithoutInputSizeParameters.parameters.filter(isNumberParameter);
         const enableGroupParameters =
@@ -138,7 +139,7 @@ describe('LearningParameters', () => {
             render(<App learningParameters={parametersWithoutInputSizeParameters} />);
 
             for (const parameter of numberParameters) {
-                expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key, user);
+                expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key);
             }
         });
 
