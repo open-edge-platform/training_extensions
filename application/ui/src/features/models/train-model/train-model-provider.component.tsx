@@ -21,7 +21,7 @@ import { useTrainingConfiguration } from './hooks/use-training-configuration';
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
 type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { value: string | null };
 
-type TrainModelContextProps = {
+export type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 
     activeModelArchitectureId: string | undefined;
