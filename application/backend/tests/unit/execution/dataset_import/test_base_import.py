@@ -18,7 +18,13 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.core.jobs.models import JobParams
-from app.datumaro_converter import MulticlassClassificationImportExportSample
+from app.datumaro_converter import (
+    DetectionImportExportSample,
+    InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
+    MultilabelClassificationImportExportSample,
+)
+from app.datumaro_converter.domain.samples.import_export import BaseImportExportSample
 from app.execution.dataset_import.base_import import BaseDatasetImport
 from app.models import DatasetItemAnnotation, DatasetItemSubset, FullImage, Label, LabelReference, Task, TaskType
 from app.models.media import ImageFormat, MediaType, VideoFormat
@@ -101,8 +107,56 @@ class TestBaseDatasetImport:
         with pytest.raises(ValueError, match="Staged dataset directory does not exist"):
             fxt_dummy_import._prepare_dataset(staged_dataset_id=uuid4(), task=Task(task_type=TaskType.CLASSIFICATION))
 
-    def test_prepare_dataset_success(
+    @pytest.mark.parametrize(
+        "sample_type, target_type, task",
+        [
+            (
+                InstanceSegmentationImportExportSample,
+                MulticlassClassificationImportExportSample,
+                Task(exclusive_labels=True, task_type=TaskType.CLASSIFICATION),
+            ),
+            (
+                DetectionImportExportSample,
+                MulticlassClassificationImportExportSample,
+                Task(exclusive_labels=True, task_type=TaskType.CLASSIFICATION),
+            ),
+            (
+                MultilabelClassificationImportExportSample,
+                InstanceSegmentationImportExportSample,
+                Task(task_type=TaskType.INSTANCE_SEGMENTATION),
+            ),
+            (
+                MultilabelClassificationImportExportSample,
+                DetectionImportExportSample,
+                Task(task_type=TaskType.DETECTION),
+            ),
+            (
+                MultilabelClassificationImportExportSample,
+                DetectionImportExportSample,
+                Task(exclusive_labels=True, task_type=TaskType.DETECTION),
+            ),
+            (
+                MulticlassClassificationImportExportSample,
+                InstanceSegmentationImportExportSample,
+                Task(task_type=TaskType.INSTANCE_SEGMENTATION),
+            ),
+            (
+                MulticlassClassificationImportExportSample,
+                DetectionImportExportSample,
+                Task(task_type=TaskType.DETECTION),
+            ),
+            (
+                MulticlassClassificationImportExportSample,
+                DetectionImportExportSample,
+                Task(exclusive_labels=True, task_type=TaskType.DETECTION),
+            ),
+        ],
+    )
+    def test_prepare_dataset_error(
         self,
+        sample_type: type[BaseImportExportSample],
+        target_type: type[BaseImportExportSample],
+        task: Task,
         fxt_dummy_import: DummyDatasetImport,
         fxt_staged_datasets_dir: Path,
     ) -> None:
@@ -110,15 +164,52 @@ class TestBaseDatasetImport:
         dataset_dir = fxt_staged_datasets_dir / str(dataset_id) / "dataset"
         dataset_dir.mkdir(parents=True)
         expected_dataset = Mock(spec=Dataset)
+        expected_dataset.dtype = sample_type
+        converted_dataset = Mock(spec=Dataset)
+        expected_dataset.convert_to_schema.return_value = converted_dataset
+
+        with (
+            pytest.raises(
+                ValueError,
+                match=f"Dataset type {sample_type.__name__} conversion to {target_type.__name__} is not supported.",
+            ),
+            patch(
+                "app.execution.dataset_import.base_import.import_dataset", return_value=expected_dataset
+            ) as mock_import,
+        ):
+            result = fxt_dummy_import._prepare_dataset(staged_dataset_id=dataset_id, task=task)
+
+            mock_import.assert_called_once_with(str(dataset_dir))
+            assert result == converted_dataset
+
+    @pytest.mark.parametrize(
+        "sample_type, task",
+        [
+            (InstanceSegmentationImportExportSample, Task(task_type=TaskType.CLASSIFICATION)),
+            (InstanceSegmentationImportExportSample, Task(task_type=TaskType.DETECTION)),
+            (DetectionImportExportSample, Task(task_type=TaskType.CLASSIFICATION)),
+            (DetectionImportExportSample, Task(task_type=TaskType.INSTANCE_SEGMENTATION)),
+        ],
+    )
+    def test_prepare_dataset_success(
+        self,
+        sample_type: type[BaseImportExportSample],
+        task: Task,
+        fxt_dummy_import: DummyDatasetImport,
+        fxt_staged_datasets_dir: Path,
+    ) -> None:
+        dataset_id = uuid4()
+        dataset_dir = fxt_staged_datasets_dir / str(dataset_id) / "dataset"
+        dataset_dir.mkdir(parents=True)
+        expected_dataset = Mock(spec=Dataset)
+        expected_dataset.dtype = sample_type
         converted_dataset = Mock(spec=Dataset)
         expected_dataset.convert_to_schema.return_value = converted_dataset
 
         with patch(
             "app.execution.dataset_import.base_import.import_dataset", return_value=expected_dataset
         ) as mock_import:
-            result = fxt_dummy_import._prepare_dataset(
-                staged_dataset_id=dataset_id, task=Task(task_type=TaskType.CLASSIFICATION)
-            )
+            result = fxt_dummy_import._prepare_dataset(staged_dataset_id=dataset_id, task=task)
 
             mock_import.assert_called_once_with(str(dataset_dir))
             assert result == converted_dataset
