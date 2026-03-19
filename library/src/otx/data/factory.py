@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Factory classes for dataset and transforms."""
@@ -134,8 +134,10 @@ class OTXDatasetFactory:
             path = getattr(first_item.media, "path", None) if hasattr(first_item, "media") else None
             if path is not None:
                 return detect_image_dtype(path)
-        except (StopIteration, Exception):  # noqa: S110
+        except StopIteration:
             pass
+        except (OSError, ValueError, TypeError) as exc:
+            logger.debug(f"File-based dtype detection failed, falling back to schema: {exc}")
 
         # 2. Fall back to schema-declared image dtype (parquet datasets)
         try:
@@ -146,7 +148,7 @@ class OTXDatasetFactory:
                     return "uint16"
                 if dtype in (pl.Float32, pl.Float64):
                     return "float32"
-        except Exception:  # noqa: S110
-            pass
+        except (AttributeError, TypeError) as exc:
+            logger.debug(f"Schema-based dtype detection failed: {exc}")
 
         return "uint8"

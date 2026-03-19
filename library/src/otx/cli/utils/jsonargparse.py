@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Functions related to jsonargparse."""
@@ -247,23 +247,6 @@ def list_override(configs: Namespace, key: str, overrides: list, convert_dict_to
         else:
             converted_target = dict_to_namespace(target) if convert_dict_to_namespace else target
             base_list.append(converted_target)
-
-    item_by_cp: dict[str, Any] = {}
-    for item in base_list:
-        cp = item["class_path"]
-        if cp is not None:
-            item_by_cp[cp] = item
-
-    override_cp_set = set(override_class_paths)
-    ordered: list = []
-    # First: base-only items, preserving base order
-    ordered.extend(item for item in base_list if item["class_path"] not in override_cp_set)
-    # Then: items in the override, in the override's order
-    ordered.extend(item_by_cp[cp] for cp in override_class_paths if cp in item_by_cp)
-
-    # Replace the list contents in-place so the Namespace reference stays valid
-    base_list.clear()
-    base_list.extend(ordered)
 
 
 def apply_override(cfg: Namespace, overrides: Namespace) -> None:

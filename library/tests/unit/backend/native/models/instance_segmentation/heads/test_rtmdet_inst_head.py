@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Unit test of rtmdet_ins_heads of OTX Instance Segmentation tasks."""
 
