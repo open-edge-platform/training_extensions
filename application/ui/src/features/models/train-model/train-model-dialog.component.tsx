@@ -21,8 +21,8 @@ import { useMatch } from 'react-router';
 import { paths } from '../../../constants/paths';
 import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
 import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
-import { useTrainModelMutation } from './api/use-train-model-mutation';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
+import { useTrainModel } from './hooks/use-train-model';
 import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
 import { useTrainModelState } from './train-model-provider.component';
 
@@ -34,38 +34,24 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const {
         selectedTrainingDevice,
         selectedModelArchitectureId,
-        selectedDatasetRevisionId,
-        selectedModelRevisionId,
-        datasetRevisions,
-        modelRevisions,
         isAdvancedSettingsMode,
         onToggleAdvancedSettingsMode,
         trainingConfiguration,
-    } = useTrainModel();
-    const trainModelMutation = useTrainModelMutation();
+    } = useTrainModelState();
     const projectId = useProjectIdentifier();
     const isModelsPage = useMatch(paths.project.models.pattern);
     const isTrainingDisabled = useIsTrainingButtonDisabled();
 
+    const { trainModel, isPending } = useTrainModel();
+
     const isStartButtonDisabled =
-        isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null;
+        isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null || isPending;
 
     const isAdvancedSettingsModeDisabled = selectedModelArchitectureId === null || trainingConfiguration === undefined;
 
-    const trainModel = () => {
-        if (isStartButtonDisabled) return;
-
-        const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
-        const parentModelRevisionId = modelRevisions.find((revision) => revision.id === selectedModelRevisionId)?.value;
-
-        trainModelMutation.mutate(
-            {
-                datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
-                parentModelRevisionId: parentModelRevisionId === undefined ? null : parentModelRevisionId,
-                device: selectedTrainingDevice,
-                modelArchitectureId: selectedModelArchitectureId,
-            },
-            () => {
+    const handleTrainModel = () => {
+        trainModel({
+            onSuccess: () => {
                 onClose();
 
                 toast({
@@ -83,8 +69,8 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     ),
                     type: 'success',
                 });
-            }
-        );
+            },
+        });
     };
 
     return (
@@ -135,7 +121,12 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                         </Button>
                     )}
 
-                    <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
+                    <Button
+                        variant={'accent'}
+                        onPress={handleTrainModel}
+                        isDisabled={isStartButtonDisabled}
+                        isPending={isPending}
+                    >
                         Start
                     </Button>
                 </ButtonGroup>
