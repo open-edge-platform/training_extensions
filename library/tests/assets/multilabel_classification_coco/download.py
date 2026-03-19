@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Download a ~50-sample COCO 2017 subset for multi-label classification.
@@ -121,7 +121,7 @@ def _build_samples(
         if not unique_cats:
             continue
 
-        label_indices = np.array([cat_id_to_idx[c] for c in unique_cats], dtype=np.uint8)
+        label_indices = torch.tensor([cat_id_to_idx[c] for c in unique_cats], dtype=torch.long)
 
         sample = ClassificationMultiLabelSample(
             image=image,

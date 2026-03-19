@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests of the OpenVINO base model."""
 
@@ -19,7 +19,7 @@ class TestOVModel:
     @pytest.fixture
     def input_batch(self) -> OTXSampleBatch:
         image = [torch.rand(3, 10, 10) for _ in range(3)]
-        return OTXSampleBatch(images=image, labels=[])
+        return OTXSampleBatch(images=torch.stack(image), labels=[])
 
     @pytest.fixture
     def model(self, get_dummy_ov_cls_model) -> OVModel:

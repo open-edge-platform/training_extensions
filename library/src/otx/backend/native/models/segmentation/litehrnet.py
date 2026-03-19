@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """LiteHRNet model implementations."""
@@ -34,7 +34,7 @@ class LiteHRNet(OTXSegmentationModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the hierarchical labels.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         model_name (Literal, optional): Name of the model. Defaults to "lite_hrnet_18".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -47,7 +47,7 @@ class LiteHRNet(OTXSegmentationModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["lite_hrnet_s", "lite_hrnet_18", "lite_hrnet_x"] = "lite_hrnet_18",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

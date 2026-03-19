@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Auto-Configurator class & util functions for OTX Auto-Configuration."""
@@ -209,7 +209,7 @@ class AutoConfigurator:
         self,
         model_name: str | None = None,
         label_info: LabelInfoTypes | None = None,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
     ) -> OTXModel:
         """Retrieves the OTXModel instance based on the provided model name and meta information.
 
@@ -217,8 +217,8 @@ class AutoConfigurator:
             model_name (str | None): The name of the model to retrieve. If None, the default model will be used.
             label_info (LabelInfoTypes | None): The meta information about the labels.
                 If provided, the number of classes will be updated in the model's configuration.
-            data_input_params (DataInputParams | None): The data input parameters containing the input size,
-                input mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters
+                containing the input size, input mean and std.
 
         Returns:
             OTXModel: The instantiated OTXModel instance.
@@ -246,7 +246,9 @@ class AutoConfigurator:
         model_config = deepcopy(self.config["model"])
 
         if data_input_params is not None:
-            model_config["init_args"]["data_input_params"] = data_input_params.as_dict()
+            model_config["init_args"]["data_input_params"] = (
+                data_input_params if isinstance(data_input_params, dict) else data_input_params.as_dict()
+            )
         elif (datamodule := self.get_datamodule()) is not None:
             # get data_input_params info from datamodule
             if datamodule.input_size is None:
@@ -256,8 +258,8 @@ class AutoConfigurator:
                 raise ValueError(msg)
             model_config["init_args"]["data_input_params"] = DataInputParams(
                 input_size=datamodule.input_size,
-                mean=datamodule.input_mean,
-                std=datamodule.input_std,
+                mean=datamodule.input_mean if datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+                std=datamodule.input_std if datamodule.input_std is not None else (1.0, 1.0, 1.0),
             ).as_dict()
 
         model_cls = get_model_cls_from_config(Namespace(model_config))
@@ -332,14 +334,11 @@ class AutoConfigurator:
         ov_config = self._load_default_config(config_path=ov_config_path)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         subset_config.batch_size = ov_config[f"{subset}_subset"]["batch_size"]
-        subset_config.transform_lib_type = ov_config[f"{subset}_subset"]["transform_lib_type"]
-        subset_config.transforms = ov_config[f"{subset}_subset"]["transforms"]
-        subset_config.to_tv_image = ov_config[f"{subset}_subset"]["to_tv_image"]
+        subset_config.augmentations_cpu = ov_config[f"{subset}_subset"]["augmentations_cpu"]
         datamodule.tile_config.enable_tiler = False
         msg = (
             f"For OpenVINO IR models, Update the following {subset} \n"
-            f"\t transforms: {subset_config.transforms} \n"
-            f"\t transform_lib_type: {subset_config.transform_lib_type} \n"
+            f"\t augmentations_cpu: {subset_config.augmentations_cpu} \n"
             f"\t batch_size: {subset_config.batch_size} \n"
             "And the tiler is disabled."
         )

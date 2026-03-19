@@ -1,11 +1,10 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
 from pathlib import Path
 
 import pytest
-import torch
 
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.data.module import OTXDataModule
@@ -16,7 +15,6 @@ from otx.tools.auto_configurator import (
 )
 from otx.types.label import LabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
-from otx.types.transformer_libs import TransformLibType
 from otx.utils.utils import should_pass_label_info
 
 
@@ -165,24 +163,9 @@ class TestAutoConfigurator:
         auto_configurator = AutoConfigurator(data_root=data_root, task="DETECTION")
 
         datamodule = auto_configurator.get_datamodule()
-        assert datamodule.test_subset.transforms == [
-            {
-                "class_path": "otx.data.transform_libs.torchvision.Resize",
-                "init_args": {
-                    "scale": (800, 992),
-                },
-            },
-            {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": torch.float32}},
-            {
-                "class_path": "torchvision.transforms.v2.Normalize",
-                "init_args": {"mean": [0.0, 0.0, 0.0], "std": [255.0, 255.0, 255.0]},
-            },
-        ]
-
-        assert datamodule.test_subset.transform_lib_type == TransformLibType.TORCHVISION
+        # The detection base config has augmentations_cpu with Resize
+        assert any("Resize" in aug.get("class_path", "") for aug in datamodule.test_subset.augmentations_cpu)
 
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(datamodule, subset="test")
-        assert updated_datamodule.test_subset.transforms == [{"class_path": "torchvision.transforms.v2.ToImage"}]
-
-        assert updated_datamodule.test_subset.transform_lib_type == TransformLibType.TORCHVISION
+        assert updated_datamodule.test_subset.augmentations_cpu == [{"class_path": "torchvision.transforms.v2.ToImage"}]
         assert not updated_datamodule.tile_config.enable_tiler

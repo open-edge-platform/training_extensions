@@ -4,74 +4,35 @@ input_size:
   - 512
 unannotated_items_ratio: 0.0
 ignore_index: 255
+
 train_subset:
   subset_name: train
   batch_size: 8
   num_workers: 4
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: otx.data.transform_libs.torchvision.RandomResizedCrop
+  augmentations_cpu:
+    - class_path: torchvision.transforms.v2.RandomResizedCrop
       init_args:
-        scale: $(input_size)
-        crop_ratio_range:
+        size: $(input_size)
+        scale:
           - 0.2
           - 1.0
-        aspect_ratio_range:
+        ratio:
           - 0.5
           - 2.0
-        transform_mask: true
-    - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
-      enable: true
-      init_args:
-        brightness_delta: 32
-        contrast:
-          - 0.5
-          - 1.5
-        saturation:
-          - 0.5
-          - 1.5
-        hue_delta: 18
-        probability: 0.5
-    - class_path: otx.data.transform_libs.torchvision.RandomAffine
-      enable: false
-      init_args:
-        max_rotate_degree: 10.0
-        max_translate_ratio: 0.1
-        scaling_ratio_range:
-          - 0.5
-          - 1.5
-        max_shear_degree: 2.0
-    - class_path: otx.data.transform_libs.torchvision.RandomFlip
-      enable: true
-      init_args:
-        probability: 0.5
-    - class_path: torchvision.transforms.v2.RandomVerticalFlip
-      enable: false
+  augmentations_gpu:
+    - class_path: kornia.augmentation.RandomHorizontalFlip
       init_args:
         p: 0.5
-    - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
-      enable: false
+    - class_path: kornia.augmentation.Normalize
       init_args:
-        kernel_size: 5
-        sigma:
-          - 0.1
-          - 2.0
-        probability: 0.5
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-        scale: false
-    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
-      enable: false
-      init_args:
-        mean: 0.0
-        sigma: 0.1
-        probability: 0.5
-    - class_path: torchvision.transforms.v2.Normalize
-      init_args:
-        mean: [123.675, 116.28, 103.53]
-        std: [58.395, 57.12, 57.375]
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -80,20 +41,23 @@ val_subset:
   subset_name: val
   batch_size: 8
   num_workers: 4
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+  augmentations_cpu:
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
-        scale: $(input_size)
-        transform_mask: true
-    - class_path: torchvision.transforms.v2.ToDtype
+        size: $(input_size)
+        keep_aspect_ratio: false
+        resize_targets: true
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
       init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.Normalize
-      init_args:
-        mean: [123.675, 116.28, 103.53]
-        std: [58.395, 57.12, 57.375]
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -102,20 +66,23 @@ test_subset:
   subset_name: test
   num_workers: 4
   batch_size: 8
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+  augmentations_cpu:
+    - class_path: otx.data.augmentation.transforms.Resize
       init_args:
-        scale: $(input_size)
-        transform_mask: true
-    - class_path: torchvision.transforms.v2.ToDtype
+        size: $(input_size)
+        keep_aspect_ratio: false
+        resize_targets: true
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
       init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.Normalize
-      init_args:
-        mean: [123.675, 116.28, 103.53]
-        std: [58.395, 57.12, 57.375]
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
