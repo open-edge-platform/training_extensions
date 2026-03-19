@@ -6,7 +6,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from datumaro.experimental import Dataset
-from datumaro.experimental.data_formats.base import DataFormat, save_dataset
+from datumaro.experimental.data_formats.base import DataFormat
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import Subset
 from loguru import logger
@@ -84,7 +84,7 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         target_dir.mkdir(parents=True, exist_ok=True)
         match export_format:
             case DatasetFormat.COCO | DatasetFormat.YOLO:
-                save_dataset(
+                export_dataset(
                     dataset=dataset,
                     data_format=get_dm_format(export_format),
                     output_path=str(target_dir / f"dataset-{export_format}.zip"),
