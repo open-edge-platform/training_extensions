@@ -18,7 +18,13 @@ install-uv:
     UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/')
     if command -v uv > /dev/null; then
         INSTALLED_VERSION=$(uv --version | awk '{print $2}')
-        if [[ "$INSTALLED_VERSION" == "$UV_VERSION" ]]; then
+        REQ_MAJOR=$(echo "$UV_VERSION" | cut -d. -f1)
+        REQ_MINOR=$(echo "$UV_VERSION" | cut -d. -f2)
+        REQ_PATCH=$(echo "$UV_VERSION" | cut -d. -f3)
+        INST_MAJOR=$(echo "$INSTALLED_VERSION" | cut -d. -f1)
+        INST_MINOR=$(echo "$INSTALLED_VERSION" | cut -d. -f2)
+        INST_PATCH=$(echo "$INSTALLED_VERSION" | cut -d. -f3)
+        if [[ "$INST_MAJOR" == "$REQ_MAJOR" && "$INST_MINOR" == "$REQ_MINOR" && "$INST_PATCH" -ge "$REQ_PATCH" ]]; then
             exit 0
         else
             echo "uv version mismatch: installed=${INSTALLED_VERSION}, required=${UV_VERSION}. Reinstalling..."
