@@ -89,16 +89,7 @@ test.describe('Import dataset to project', () => {
                     items: [],
                     pagination: { total: 0, count: 0, limit: 10, offset: 0 },
                 });
-            })
-        );
-    });
-
-    test('import dataset with default label mapping', async ({ page, network, importDatasetPage }) => {
-        let prepareJobPollCount = 0;
-        let importJobPollCount = 0;
-        let deletedStagedDatasetId: string | undefined;
-
-        network.use(
+            }),
             http.post('/api/staged_datasets', () => {
                 return HttpResponse.json(getMockedStagedDataset({ id: STAGED_DATASET_ID }), { status: 201 });
             }),
@@ -111,7 +102,16 @@ test.describe('Import dataset to project', () => {
                     getMockedJob({ job_id: PREPARE_JOB_ID, job_type: 'prepare_dataset_for_import' }),
                     { status: 201 }
                 );
-            }),
+            })
+        );
+    });
+
+    test('import dataset with default label mapping', async ({ page, network, importDatasetPage }) => {
+        let prepareJobPollCount = 0;
+        let importJobPollCount = 0;
+        let deletedStagedDatasetId: string | undefined;
+
+        network.use(
             http.get('/api/jobs/{job_id}', ({ params }) => {
                 const jobId = params.job_id as string;
 
@@ -169,6 +169,86 @@ test.describe('Import dataset to project', () => {
 
             await expect(importDatasetPage.getImportStatusText('my-dataset.zip', 'success')).toBeHidden();
             await expect.poll(() => deletedStagedDatasetId).toBe(STAGED_DATASET_ID);
+        });
+    });
+
+    test('cancel import job removes staged files', async ({ page, network, importDatasetPage }) => {
+        let prepareJobPollCount = 0;
+
+        network.use(
+            http.get('/api/jobs/{job_id}', ({ params }) => {
+                const jobId = params.job_id as string;
+
+                if (jobId === IMPORT_JOB_ID) {
+                    return HttpResponse.json(importingJob, { status: 200 });
+                }
+
+                prepareJobPollCount += 1;
+                const job = prepareJobPollCount <= 2 ? prepareJob : prepareDoneJob;
+                return HttpResponse.json(job, { status: 200 });
+            }),
+            http.post('/api/jobs/{job_id}:cancel', () => {
+                return HttpResponse.json(getMockedJob({ ...importingJob, status: 'CANCELLED' }), { status: 200 });
+            }),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
+                return new HttpResponse(null, { status: 204 });
+            })
+        );
+
+        await page.goto(`projects/${mockedProject.id}/dataset`);
+
+        await importDatasetPage.openImportDialog();
+
+        await test.step('Upload and complete preparation', async () => {
+            await importDatasetPage.loadZipFile('my-dataset.zip');
+            await expect(importDatasetPage.getPreparingStatus()).toBeVisible();
+            await expect(importDatasetPage.getStatisticsHeading()).toBeVisible();
+        });
+
+        await test.step('Submit import', async () => {
+            await importDatasetPage.submit();
+            await expect(importDatasetPage.getDialog()).toBeHidden();
+        });
+
+        await test.step('Cancel the running import job', async () => {
+            await expect(importDatasetPage.getImportStatusText('my-dataset.zip', 'processing')).toBeVisible();
+            await importDatasetPage.cancelJobFromStatusCard();
+
+            await expect(importDatasetPage.getImportStatusText('my-dataset.zip', 'processing')).toBeHidden();
+        });
+    });
+
+    test('cancel prepare job removes staged files', async ({ page, network, importDatasetPage }) => {
+        network.use(
+            http.post('/api/jobs', async () => {
+                return HttpResponse.json(
+                    getMockedJob({ job_id: PREPARE_JOB_ID, job_type: 'prepare_dataset_for_import' }),
+                    { status: 201 }
+                );
+            }),
+            http.get('/api/jobs/{job_id}', () => {
+                return HttpResponse.json(prepareJob, { status: 200 });
+            }),
+            http.post('/api/jobs/{job_id}:cancel', () => {
+                return HttpResponse.json(getMockedJob({ ...prepareJob, status: 'CANCELLED' }), { status: 200 });
+            }),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
+                return new HttpResponse(null, { status: 204 });
+            })
+        );
+
+        await page.goto(`projects/${mockedProject.id}/dataset`);
+
+        await importDatasetPage.openImportDialog();
+
+        await test.step('Upload dataset zip file', async () => {
+            await importDatasetPage.loadZipFile('my-dataset.zip');
+        });
+
+        await test.step('Cancel the prepare job from dialog', async () => {
+            await expect(importDatasetPage.getPreparingStatus()).toBeVisible();
+            await importDatasetPage.cancelPrepareJobInDialog();
+            await expect(importDatasetPage.getDialog()).toBeHidden();
         });
     });
 });

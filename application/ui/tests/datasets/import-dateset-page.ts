@@ -58,4 +58,19 @@ export class ImportDatasetPage {
     async closeImportStatus() {
         await this.page.getByRole('button', { name: /close import dataset status/i }).click();
     }
+
+    async cancelPrepareJobInDialog() {
+        await this.getDialog().getByRole('button', { name: 'Cancel' }).click();
+    }
+
+    async cancelJobFromStatusCard() {
+        await this.page.getByRole('button', { name: /cancel job dialog/i, exact: true }).click();
+
+        const alertDialog = this.page.getByRole('alertdialog');
+        await alertDialog.getByRole('button', { name: /Cancel Job/i, exact: true }).click();
+    }
+
+    getProcessingStatusText(filename: string) {
+        return this.page.getByText(`${filename} file is being processed for import`);
+    }
 }
