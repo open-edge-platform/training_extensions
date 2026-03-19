@@ -159,6 +159,8 @@ class DatasetItemRepository:
             .values(
                 annotation_data=None,
                 updated_at=datetime.now(UTC),
+                user_reviewed=False,
+                prediction_model_id=None,
             )
         )
         result = cast(CursorResult, self.db.execute(stmt))
@@ -200,6 +202,22 @@ class DatasetItemRepository:
 
     def delete_labels(self, dataset_item_id: str) -> None:
         stmt = delete(DatasetItemLabelDB).where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
+        self.db.execute(stmt)
+
+    def find_items_by_label_id(self, label_id: str) -> list[DatasetItemDB]:
+        """Find all dataset items that reference a given label via the dataset_items_labels table."""
+        stmt = (
+            self._base_select()
+            .join(DatasetItemLabelDB, DatasetItemLabelDB.dataset_item_id == DatasetItemDB.id)
+            .where(DatasetItemLabelDB.label_id == label_id)
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def delete_label_from_items(self, label_id: str) -> None:
+        """Delete a label reference from the dataset_items_labels table for all items."""
+        stmt = delete(DatasetItemLabelDB).where(
+            DatasetItemLabelDB.label_id == label_id,
+        )
         self.db.execute(stmt)
 
     def list_unassigned_items(self) -> list[DatasetItemLabelDB]:
