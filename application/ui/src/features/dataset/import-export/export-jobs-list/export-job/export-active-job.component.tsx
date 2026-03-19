@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Loading, Text, View } from '@geti/ui';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
 import { useExportDataset } from 'hooks/localStorage/use-export-dataset.hook';
 
@@ -17,15 +18,25 @@ type ExportActiveJobProps = {
 
 export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
     const isRunning = isJobRunning(job);
-    const progress = getJobProgress(job?.progress);
     const { removeLsExportId } = useExportDataset();
+
+    const removeStagedDatasetMutation = useDeleteStagedDataset({
+        stagedDatasetId: job.metadata.dataset_id,
+        deleteEntry: () => removeLsExportId(job.job_id),
+    });
+
+    const progress = getJobProgress(job?.progress);
+
+    const handleRemove = () => {
+        removeStagedDatasetMutation.mutate();
+    };
 
     return (
         <BottomProgressBar progress={progress}>
             <View padding='size-150'>
                 <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
                     <ExportJobDetails metadata={job.metadata} datasetName={datasetName} />
-                    <CancelJobConfirmation jobId={job.job_id} onRemove={() => removeLsExportId(job.job_id)} />
+                    <CancelJobConfirmation jobId={job.job_id} onRemove={handleRemove} />
                 </Flex>
 
                 <Text>Dataset is being processed in order to export it</Text>

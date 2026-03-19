@@ -68,7 +68,7 @@ export const DatasetStatistics = ({ label, totalMediaItems, totalAnnotatedItems 
                     </PieChart>
                     <Flex direction='column' UNSAFE_className={classes.totalMedia}>
                         <Text UNSAFE_className={classes.totalMediaItems}>{totalMediaItems}</Text>
-                        <Text UNSAFE_className={classes.mediaSubtitle}>Images</Text>
+                        <Text UNSAFE_className={classes.mediaSubtitle}>{label}</Text>
                     </Flex>
                 </Flex>
 
@@ -81,7 +81,9 @@ export const DatasetStatistics = ({ label, totalMediaItems, totalAnnotatedItems 
                 >
                     <Text>Annotated</Text>
                     <Text>{percentageAnnotated}%</Text>
-                    <Text>{totalAnnotatedItems} images</Text>
+                    <Text>
+                        {totalAnnotatedItems} {label}
+                    </Text>
                 </Flex>
             </Flex>
         </View>
