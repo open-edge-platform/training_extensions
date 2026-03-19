@@ -52,19 +52,17 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {preparingImportsQueue.map(({ size, fileName, stagedDatasetId, prepareJobId }) => {
-                return (
-                    <PrepareImportDataset
-                        key={`prepare-${stagedDatasetId}`}
-                        size={size}
-                        fileName={fileName}
-                        jobId={prepareJobId}
-                        stagedDatasetId={stagedDatasetId}
-                        onSuccess={() => updateImportEntryStep(stagedDatasetId, 'labelMapping')}
-                        deleteEntry={() => deleteImportEntry(stagedDatasetId)}
-                    />
-                );
-            })}
+            {preparingImportsQueue.map(({ size, fileName, stagedDatasetId, prepareJobId }) => (
+                <PrepareImportDataset
+                    key={`prepare-${stagedDatasetId}`}
+                    size={size}
+                    fileName={fileName}
+                    jobId={prepareJobId}
+                    stagedDatasetId={stagedDatasetId}
+                    onSuccess={() => updateImportEntryStep(stagedDatasetId, 'labelMapping')}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                />
+            ))}
 
             {stagedImportsQueue.map(({ fileName, stagedDatasetId }) => (
                 <StagedImportDataset

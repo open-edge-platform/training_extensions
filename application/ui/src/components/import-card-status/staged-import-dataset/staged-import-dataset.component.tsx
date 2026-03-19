@@ -1,12 +1,15 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
+import { Button } from '@geti/ui';
 import { InfoOutline } from '@geti/ui/icons';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
+import { getErrorMessage } from '../../../query-client/query-client';
 import { formatBytes } from '../../../shared/util';
 import { DeleteStagedFileConfirmation } from '../../delete-staged-file-confirmation/delete-staged-file-confirmation.component';
+import { JobStatusCard } from '../../job-status-card/job-status-card.component';
+import { ImportFailedJob } from '../import-failed-job/import-failed-job.component';
 
 type StagedImportDatasetProps = {
     message: string;
@@ -25,39 +28,34 @@ export const StagedImportDataset = ({
     onOpen,
     deleteEntry,
 }: StagedImportDatasetProps) => {
-    const { error, isError, data: stagedDataset } = useStagedDataset(stagedDatasetId);
+    const { error, isError, isFetching, data: stagedDataset } = useStagedDataset(stagedDatasetId);
+
+    if (isError) {
+        return (
+            <ImportFailedJob
+                size={0}
+                fileName={fileName}
+                error={getErrorMessage(error)}
+                message={'An error occurred during staged file reading'}
+                stagedDatasetId={stagedDatasetId}
+                deleteEntry={deleteEntry}
+            />
+        );
+    }
 
     return (
-        <View
-            position='relative'
-            borderColor='gray-200'
-            borderRadius='regular'
-            backgroundColor='gray-75'
-            borderWidth='thin'
-        >
-            <View padding='size-150'>
-                <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                    <Text UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}>
-                        Import dataset - {fileName} - {formatBytes(stagedDataset?.size ?? 0)}
-                    </Text>
-
-                    <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                        <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} deleteEntry={deleteEntry} />
-
-                        <Button onPress={onOpen} isDisabled={isError}>
-                            {primaryButtonLabel}
-                        </Button>
-                    </Flex>
-                </Flex>
-
-                <Divider size='S' marginY='size-150' />
-
-                <Flex alignItems='center' gap='size-100'>
-                    <InfoOutline width={16} height={16} />
-
-                    <Text>{isError ? `Error: ${error?.detail}` : message}</Text>
-                </Flex>
-            </View>
-        </View>
+        <JobStatusCard
+            title={`Import dataset - ${fileName} - ${formatBytes(stagedDataset?.size ?? 0)}`}
+            actionButtons={
+                <>
+                    <DeleteStagedFileConfirmation stagedDatasetId={stagedDatasetId} deleteEntry={deleteEntry} />
+                    <Button onPress={onOpen} isPending={isFetching} isDisabled={isFetching}>
+                        {primaryButtonLabel}
+                    </Button>
+                </>
+            }
+            bottomIcon={<InfoOutline width={16} height={16} />}
+            bottomLeftMessage={message}
+        />
     );
 };

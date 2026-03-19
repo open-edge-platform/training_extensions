@@ -1,11 +1,12 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
+import { Button } from '@geti/ui';
 import { CheckCircleOutlined } from '@geti/ui/icons';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { formatBytes } from '../../../shared/util';
+import { JobStatusCard } from '../../job-status-card/job-status-card.component';
 
 import classes from './import-job-done.module.scss';
 
@@ -24,32 +25,23 @@ export const ImportJobDone = ({ fileName, size, stagedDatasetId, deleteEntry }: 
     };
 
     return (
-        <View padding='size-150'>
-            <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                <Text UNSAFE_style={{ fontWeight: 500, fontSize: dimensionValue('size-200') }}>
-                    Import dataset - {fileName} - {formatBytes(size)}
-                </Text>
-
-                <Flex justifyContent='space-between' alignItems='center' gap='size-250'>
-                    <Button
-                        variant='secondary'
-                        style='fill'
-                        aria-label='close import dataset status'
-                        onPress={handleClose}
-                    >
-                        Close
-                    </Button>
-                </Flex>
-            </Flex>
-
-            <Text>{fileName} file has been imported successfully</Text>
-            <Divider size='S' marginY='size-150' />
-
-            <Flex alignItems='center' gap='size-100'>
-                <CheckCircleOutlined className={classes.checkIcon} width={16} height={16} />
-
-                <Text>Ready</Text>
-            </Flex>
-        </View>
+        <JobStatusCard
+            title={`Import dataset - ${fileName} - ${formatBytes(size)}`}
+            actionButtons={
+                <Button
+                    variant='secondary'
+                    style='fill'
+                    aria-label='close import dataset status'
+                    onPress={handleClose}
+                    isPending={deleteFileMutation.isPending}
+                    isDisabled={deleteFileMutation.isPending}
+                >
+                    Close
+                </Button>
+            }
+            message={`${fileName} file has been imported successfully`}
+            bottomLeftMessage={'Ready'}
+            bottomIcon={<CheckCircleOutlined className={classes.checkIcon} width={16} height={16} />}
+        />
     );
 };
