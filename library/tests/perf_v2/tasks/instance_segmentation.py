@@ -19,7 +19,7 @@ TASK_TYPE = OTXTaskType.INSTANCE_SEGMENTATION
 
 
 MODEL_TEST_CASES = [
-    ModelInfo(task=TASK_TYPE.value, name="maskrcnn_r50_tv", category="other"),
+    ModelInfo(task=TASK_TYPE.value, name="maskrcnn_r50", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="rfdetr_seg_medium", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="rfdetr_seg_large", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="rfdetr_seg_small", category="other"),

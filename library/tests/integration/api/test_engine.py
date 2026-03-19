@@ -71,12 +71,12 @@ _TASK_SPECS: list[_TaskSpec] = [
     ),
     _TaskSpec(
         task=OTXTaskType.DETECTION,
-        recipe_name="ssd_mobilenetv2",
+        recipe_name="yolox_s",
         dataset_dir="detection_coco",
     ),
     _TaskSpec(
         task=OTXTaskType.INSTANCE_SEGMENTATION,
-        recipe_name="rtmdet_inst_tiny",
+        recipe_name="rfdetr_seg_small",
         dataset_dir="instance_segmentation_coco",
     ),
     _TaskSpec(

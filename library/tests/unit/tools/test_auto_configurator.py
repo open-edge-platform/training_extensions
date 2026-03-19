@@ -138,7 +138,7 @@ class TestAutoConfigurator:
         )
         model = auto_configurator.get_model(
             label_info=label_info,
-            data_input_params=DataInputParams((256, 256), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((288, 288), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         assert isinstance(model, OTXModel)
 
@@ -169,13 +169,22 @@ class TestAutoConfigurator:
             {
                 "class_path": "otx.data.transform_libs.torchvision.Resize",
                 "init_args": {
-                    "scale": (800, 992),
+                    "scale": (640, 640),
+                    "keep_ratio": True,
+                    "is_numpy_to_tvtensor": False,
+                },
+            },
+            {
+                "class_path": "otx.data.transform_libs.torchvision.Pad",
+                "init_args": {
+                    "pad_to_square": True,
+                    "pad_val": 114,
                 },
             },
             {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": torch.float32}},
             {
                 "class_path": "torchvision.transforms.v2.Normalize",
-                "init_args": {"mean": [0.0, 0.0, 0.0], "std": [255.0, 255.0, 255.0]},
+                "init_args": {"mean": [0.0, 0.0, 0.0], "std": [1.0, 1.0, 1.0]},
             },
         ]
 

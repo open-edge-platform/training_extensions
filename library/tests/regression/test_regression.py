@@ -482,7 +482,7 @@ class TestInstanceSegmentation(BaseTest):
     # Test case parametrization for model
     MODEL_TEST_CASES = [  # noqa: RUF012
         ModelTestCase(task="instance_segmentation", name="maskrcnn_efficientnetb2b"),
-        ModelTestCase(task="instance_segmentation", name="maskrcnn_r50_tv"),
+        ModelTestCase(task="instance_segmentation", name="maskrcnn_r50"),
         ModelTestCase(task="instance_segmentation", name="maskrcnn_swint"),
     ]
     # Test case parametrization for dataset

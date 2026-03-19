@@ -64,7 +64,7 @@ TEMPLATE_ID_MAPPING = {
         "default": False,
     },
     "image-classification-efficientnet-b3": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b3.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
@@ -171,7 +171,7 @@ TEMPLATE_ID_MAPPING = {
         "default": False,
     },
     "instance-segmentation-mask-rcnn-resnet50": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
