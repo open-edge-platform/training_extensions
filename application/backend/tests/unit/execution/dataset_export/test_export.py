@@ -84,6 +84,7 @@ class TestDatasetExporter:
             task=fxt_export_params.task,
             annotation_status=None if include_unannotated else DatasetItemAnnotationStatus.REVIEWED,
             sample_mode=SampleMode.IMPORT_EXPORT,
+            keep_predictions=False,
         )
         if subsets:
             dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])

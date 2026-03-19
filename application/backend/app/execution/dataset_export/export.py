@@ -64,6 +64,7 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
                     task=export_params.task,
                     annotation_status=annotation_status,
                     sample_mode=SampleMode.IMPORT_EXPORT,
+                    keep_predictions=False,
                 )
             else:
                 self._dataset_revision_service.set_db_session(session)
