@@ -124,7 +124,7 @@ describe('LearningParameters', () => {
     });
 
     it('updates parameters and resets them to default properly', async () => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({ delay: null });
         const parametersWithoutInputSizeParameters = {
             ...learningParameters,
             parameters: learningParameters.parameters.filter((parameter) => !isInputSizeParameter(parameter)),
