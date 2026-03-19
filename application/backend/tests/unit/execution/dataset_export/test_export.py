@@ -13,14 +13,7 @@ from datumaro.experimental.fields import Subset
 
 from app.datumaro_converter import SampleMode
 from app.execution import ExportDataset
-from app.models import (
-    DatasetFormat,
-    DatasetItemAnnotationStatus,
-    DatasetItemSubset,
-    ExportDatasetJobParams,
-    Task,
-    TaskType,
-)
+from app.models import DatasetFormat, DatasetItemSubset, ExportDatasetJobParams, Task, TaskType
 
 
 @pytest.fixture
@@ -80,7 +73,7 @@ class TestDatasetExporter:
         fxt_dataset_service.get_dm_dataset.assert_called_once_with(
             project_id=fxt_export_params.project_id,
             task=fxt_export_params.task,
-            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            annotation_status=None,
             sample_mode=SampleMode.IMPORT_EXPORT,
         )
         if subsets:
