@@ -86,7 +86,7 @@ jobs:
             -f docker/Dockerfile \
             --target runtime-base \
             --cache-from type=gha,scope=shared \
-            --cache-to type=gha,mode=max,scope=shared \
+            --cache-to type=gha,mode=max,scope=shared,compression=zstd,compression-level=3,ignore-error=true \
             --output type=cacheonly
 
   build:
@@ -147,7 +147,7 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           DEVICE: ${{ matrix.device }}
           BUILDX_CACHE_FROM: "type=gha,scope=${{ matrix.device }} type=gha,scope=shared"
-          BUILDX_CACHE_TO: "type=gha,mode=max,scope=${{ matrix.device }}"
+          BUILDX_CACHE_TO: "type=gha,mode=max,scope=${{ matrix.device }},compression=zstd,compression-level=3,ignore-error=true"
 
       - name: Run simple checks on the built image
         working-directory: application
