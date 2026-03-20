@@ -39,6 +39,9 @@ def step(name: str, complete: float = 0.0) -> Callable[[Callable[..., T]], Calla
             self.update_message(f"Started: {name}")
             try:
                 result = func(self, *args, **kwargs)
+            except ExecutionErr as e:
+                self.update_message(str(e), level="ERROR")
+                raise
             except Exception:
                 self.update_message(f"Failed: {name}", level="ERROR")
                 raise
@@ -52,6 +55,10 @@ def step(name: str, complete: float = 0.0) -> Callable[[Callable[..., T]], Calla
         return wrapper
 
     return decorator
+
+
+class ExecutionErr(Exception):
+    """Raised when an execution step fails in an expected, user-facing way."""
 
 
 JobParamsT = TypeVar("JobParamsT", bound=JobParams)
