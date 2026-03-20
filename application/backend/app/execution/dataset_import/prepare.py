@@ -38,8 +38,7 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
         staged_datasets_dir: Path to the directory containing staged dataset archives.
 
     Raises:
-        ValueError: If the dataset archive is not found, cannot be extracted, or has an invalid format.
-        NotImplementedError: If attempting to import VOC format (not yet supported).
+        ExecutionErr: If the dataset archive is not found, cannot be extracted, or has an invalid format.
     """
 
     params_type = PrepareDatasetForImportJobParams
