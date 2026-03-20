@@ -1,6 +1,3 @@
-capabilities:
-  tiling: false
-
 id: instance-segmentation-rfdetr-s
 name: RF-DETR-Seg-S
 
@@ -15,6 +12,9 @@ stats:
   benchmark_metrics:
     coco_map_50_95: 43.1
     coco_map_50: 66.2
+
+capabilities:
+  tiling: false
 
 hyperparameters:
   training:

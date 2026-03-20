@@ -1,6 +1,3 @@
-capabilities:
-  tiling: false
-
 id: object-detection-deim-d-fine-m
 name: DEIM-D-FINE-M
 
@@ -14,6 +11,9 @@ stats:
   trainable_parameters: 19
   benchmark_metrics:
     coco_map_50_95: 52.7
+
+capabilities:
+  tiling: false
 
 hyperparameters:
   training:

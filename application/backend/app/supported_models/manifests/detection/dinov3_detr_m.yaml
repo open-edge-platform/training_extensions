@@ -1,6 +1,3 @@
-capabilities:
-  tiling: false
-
 id: object-detection-dinov3-detr-m
 name: DINOv3-DETR-M
 
@@ -14,6 +11,9 @@ stats:
   trainable_parameters: 18.1
   benchmark_metrics:
     coco_map_50_95: 53.0
+
+capabilities:
+  tiling: false
 
 hyperparameters:
   training:

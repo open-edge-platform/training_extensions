@@ -1,6 +1,3 @@
-capabilities:
-  tiling: false
-
 id: object-detection-rfdetr-m
 name: RF-DETR-M
 
@@ -15,6 +12,9 @@ stats:
   benchmark_metrics:
     coco_map_50_95: 54.7
     coco_map_50: 73.6
+
+capabilities:
+  tiling: false
 
 hyperparameters:
   training:
