@@ -404,8 +404,8 @@ class TestOTXTrainerCreateTrainingDataset:
         else:
             fxt_dataset_revision_service.get_latest_uptodate_dataset_revision.return_value = None
 
-        # Create a training configuration matching the expected structure
-        training_config = {
+        # Create an otx training configuration dict matching the expected structure
+        otx_training_config = {
             "data": {
                 "input_size": (640, 640),
                 "train_subset": {
@@ -430,6 +430,12 @@ class TestOTXTrainerCreateTrainingDataset:
                 },
             }
         }
+
+        # Create a TrainingConfiguration with filtering disabled (default)
+        training_config = TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
+        )
 
         # Mock TransformLibFactory.generate to return mock transforms
         mock_train_transforms = [Mock()]
@@ -460,6 +466,7 @@ class TestOTXTrainerCreateTrainingDataset:
                 dataset_info = otx_trainer.prepare_training_dataset(
                     project_id=project_id,
                     task=task,
+                    otx_training_config=otx_training_config,
                     training_config=training_config,
                     dataset_revision_id=dataset_revision_id,
                 )
