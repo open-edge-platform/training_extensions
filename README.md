@@ -1,228 +1,84 @@
+<!-- markdownlint-disable MD013 MD033 MD041 MD042 -->
 <div align="center">
 
-# OpenVINO™ Training Extensions
+<img src="assets/geti-header.png" alt="Geti™ - A framework to rapidly build and deploy computer vision AI models">
 
----
+<br>
 
-[Key Features](#key-features) •
-[Installation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html) •
-[Documentation](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
-[License](#license)
-
-[![PyPI](https://img.shields.io/pypi/v/getitune)](https://pypi.org/project/getitune)
-
-<!-- markdownlint-disable MD042 -->
-
-[![python](https://img.shields.io/badge/python-3.11%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.7%2B-orange)]()
-[![openvino](https://img.shields.io/badge/openvino-2025.2-purple)]()
-
-<!-- markdownlint-enable  MD042 -->
-
+[![Daily checks](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/daily.yml)
+[![Docker build](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/build.yaml)
 [![Codecov](https://codecov.io/gh/open-edge-platform/training_extensions/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/open-edge-platform/training_extensions)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/open-edge-platform/training_extensions/badge)](https://securityscorecards.dev/viewer/?uri=github.com/open-edge-platform/training_extensions)
-[![Pre-Merge Test](https://github.com/open-edge-platform/training_extensions/actions/workflows/pre_merge.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/pre_merge.yaml)
-[![Build Docs](https://github.com/open-edge-platform/training_extensions/actions/workflows/docs.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/docs.yaml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Downloads](https://static.pepy.tech/personalized-badge/getitune?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/getitune)
-
----
 
 </div>
 
 ## Introduction
 
-OpenVINO™ Training Extensions is a low-code transfer learning framework for Computer Vision.
-The API & CLI commands of the framework allows users to train, infer, optimize and deploy models easily and quickly even with low expertise in the deep learning field.
-OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on [PyTorch](https://pytorch.org) and [OpenVINO™ toolkit](https://software.intel.com/en-us/openvino-toolkit).
+Developing AI models from scratch is often slow, complex, and resource-intensive. Managing datasets, training pipelines,
+optimization, and deployment typically requires stitching together multiple tools and workflows.
 
-OpenVINO™ Training Extensions provides a "recipe" for every supported task type, which consolidates necessary information to build a model.
-Model templates are validated on various datasets and serve one-stop shop for obtaining the best models in general.
+Geti™ offers a unified, end-to-end solution for building computer vision models, optimized for Intel® hardware but
+flexible enough to run on a variety of platforms. With Geti, you can easily manage your datasets, fine-tune and quantize
+models, and deploy them for inference — all within a single framework.
 
-Starting with OTX v2.4.5, we introduced a new repository structure and a more flexible backend concept. We're excited to present support for multiple backends — beginning with the OpenVINO™ backend, while all previous OTX functionality is now organized under the "native" backend.
+As a product, Geti™ consists of two components:
 
-In the future, we plan to integrate popular third-party libraries such as `Anomalib <https://github.com/open-edge-platform/anomalib>_`, `Transformers <https://huggingface.co/docs/transformers/index>_`, and more — seamlessly integrated into the repository.
-This will enable users to train, test, export, and optimize a wide variety of models from different backends using the same CLI commands and unified API, without the need for reimplementation.
+- **Geti™ Application** [[source]](application): A full-stack web application with an intuitive interface that covers the complete AI model
+  lifecycle, from dataset preparation to model training to deployment and inference at the edge.
+  This is ideal for users who want a turnkey solution to build and deploy models without needing to write code
+  or manage complex pipelines.
+- **Geti™ Library** (`getitune`) [[source]](library): A Python library that provides the building blocks for model fine-tuning and optimization, as well
+  as several SOTA model architectures with their training pipelines.
+  This is ideal for developers who want to integrate Geti's capabilities into their own applications or extend it with
+  custom functionality.
 
-### Key Features
+<p align="center">
+ <img src="assets/geti-model-lifecycle.jpg" width="600" alt="Geti™ - Learning Cycle"/>
+</p>
 
-OpenVINO™ Training Extensions supports the following computer vision tasks:
+> [!IMPORTANT]
+> Information for `otx` users: this repo (`open-edge-platform/training_extensions`) previously hosted the OpenVINO
+> Training Extensions project, namely `otx`; the development of that library now continues under the new name
+> `getitune` in the `library` folder, as part of the broader Geti™ framework. The package will be published on PyPI
+> as [`getitune`](https://pypi.org/project/getitune/), while the old package `otx` will be deprecated but still
+> available for download.
 
-- **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
-- **Object detection** including rotated bounding box and tiling support
-- **Semantic segmentation** including tiling algorithm support
-- **Instance segmentation** including tiling algorithm support
-- **Anomaly recognition** tasks including anomaly classification, detection and segmentation
+## Key Features
 
-OpenVINO™ Training Extensions provides the following usability features:
+- **Iterative Model Improvement**: Geti™ enables users to start building computer vision models with as few as 10-20
+  images and iterate on those models in a rapid, feedback-driven loop. This allows you to quickly see results and make
+  improvements without needing a large initial dataset; you can add more data as you go, and the predictions from the
+  current model can help you annotate new data faster.
+- **Multiple Computer Vision Tasks**: the Geti™ application supports image classification, object detection and instance
+  segmentation, while the Geti™ library unlocks even more use cases by also including hierarchical classification,
+  rotated object detection, semantic segmentation and keypoint detection.
+- **Smart Annotations**: Geti™ includes powerful annotation tools that support both manual and semi-automated labeling
+  by means of state-of-the-art AI models like SAM (Segment Anything Model). This significantly reduces the time and
+  effort required to create high-quality training datasets.
+- **Dataset Import & Export**: Geti™ supports importing and exporting datasets in common formats like COCO, Pascal VOC,
+  and YOLO, making it easy to integrate with other tools and workflows.
+- **Model Optimization**: Geti™ provides built-in support for quantization and optimization techniques that can reduce
+  model size and improve inference speed, making it easier to deploy models on resource-constrained edge devices.
+- **Hardware Acceleration**: Geti™ is optimized for modern Intel® hardware with AI capabilities, such as Intel® Arc™
+  GPUs and Intel® Core™ Ultra processors. Every trained model is automatically exported with
+  [OpenVINO™](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) and it can be
+  deployed for inference across the full Intel® XPU portfolio.
+- **Inference Stream (NEW)**: Geti™ application includes a built-in inference pipeline that allows you to enable your
+  trained models for real-time inference on video streams, with support for various input sources (cameras, video files,
+  RTSP stream, ...). The predictions are visualized directly in the web application, and you can also configure it
+  to forward the results to different destinations (folder, MQTT, webhook, ...) for easy integration with other systems.
 
-- Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to utilize Intel GPUs for training and testing.
-- [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
-- **Distributed training** to accelerate the training process when you have multiple GPUs
-- **Mixed-precision training** to save GPUs memory and use larger batch sizes
-- **Class incremental learning** to add new classes to the existing model
-- **Model deployment** to OpenVINO™ IR and ONNX formats and inference with [OpenVINO™ ModelAPI](https://github.com/open-edge-platform/model_api)
-- **Multiple backend support** to easily adapt models from third-party implementations into the OpenVINO™ Training Extensions repository.
+## Documentation
 
----
+| Component       | README                                         | Documentation |
+| --------------- | ---------------------------------------------- | ------------- |
+| **Library**     | [library/README.md](library/README.md)         | Coming soon!  |
+| **Application** | [application/README.md](application/README.md) | Coming soon!  |
 
-## Installation
+## Community
 
-Please refer to the [installation guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html).
-If you want to make changes to the library, then a local installation is recommended.
-
-<details>
-<summary>Install from PyPI</summary>
-Installing the library with pip or uv is the easiest way to get started with getitune.
-
-```bash
-# Without GPU support (CPU only)
-pip install getitune[cpu]
-
-# With Intel GPU support (XPU)
-pip install getitune[xpu]
-
-# With NVIDIA GPU support (CUDA)
-pip install getitune[cuda]
-```
-
-</details>
-
-<details>
-<summary>Install from source</summary>
-To install from source, you need to clone the repository and install the library with pip or uv.
-It is recommended to use a virtual environment to avoid conflicts with other packages.
-
-```bash
-# Clone the repository
-git clone https://github.com/open-edge-platform/training_extensions.git
-cd training_extensions
-
-# Install (optional: pass the '-e' flag for editable mode
-# If you have an Intel GPU, use 'xpu' to enable support.
-# If you have an NVIDIA GPU, use 'cuda' to enable support.
-pip install -e .[cpu]
-```
-
-</details>
-
----
-
-## Quick-Start
-
-OpenVINO™ Training Extensions supports both API and CLI-based training. The API is more flexible and allows for more customization, while the CLI training utilizes command line interfaces, and might be easier for those who would like to use OpenVINO™ Training Extensions off-the-shelf.
-
-For the CLI, the commands below provide subcommands, how to use each subcommand, and more:
-
-```bash
-# See available subcommands
-getitune --help
-
-# Print help messages from the train subcommand
-getitune train --help
-
-# Print help messages for more details
-getitune train --help -v   # Print required parameters
-getitune train --help -vv  # Print all configurable parameters
-```
-
-You can find details with examples in the [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html). and [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
-
-Below is how to train with auto-configuration, which is provided to users with datasets and tasks:
-
-<details>
-<summary>API Usage</summary>
-
-```python
-from getitune.engine import create_engine
-
-# get all the available recipes for all tasks
-from getitune.backend.native.cli.utils import list_models
-model_lists = list_models(print_table=True)
-
-# instantiate native getitune engine with atss model for object detection
-engine = create_engine(data="path/to/dataset/root", model="src/getitune/recipe/detection/atss_mobilenetv2.yaml")
-engine.train()
-engine.test()
-exported_path = engine.export()
-
-# by default all artifacts are stored in "./getitune-workspace" directory.
-# working directory can be specified
-engine = create_engine(data="path/to/dataset/root", model="src/getitune/recipe/detection/atss_mobilenetv2.yaml", work_dir="my_workdir")
-
-
-# openvino backend is used to validate and optimize exported OpenVINO IR models
-ov_engine = create_engine(data="path/to/dataset/root", model=exported_path)
-ov_engine.test()
-ov_engine.optimize()
-
-```
-
-For more examples, see documentation: [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
-
-</details>
-
-<details>
-<summary> CLI Usage </summary>
-
-```bash
-# get all recipes list
-getitune find
-
-# getitune train
-getitune train --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
-
-# by default, working directory is "./getitune-workspace". It can be specified with "--work_dir" parameter
-getitune test --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
-getitune export --config src/getitune/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint getitune-workspace/.latest/train/best_checkpoint.ckpt
-
-# or using work_dir
-getitune test --work_dir getitune-workspace/.latest/train
-getitune export --work_dir getitune-workspace/.latest/train
-
-# directly from working directory
-cd getitune-workspace
-getitune test
-getitune export
-
-```
-
-For more examples, see documentation: [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
-
-</details>
-
-In addition to the examples above, please refer to the documentation for tutorials on using custom models, training parameter overrides, and [tutorial per task types](https://open-edge-platform.github.io/training_extensions/latest/guide/tutorials/base/how_to_train/index.html), etc.
-
----
-
-### Release History
-
-Please refer to the [CHANGELOG.md](CHANGELOG.md)
-
----
-
-## License
-
-OpenVINO™ Toolkit is licensed under [Apache License Version 2.0](LICENSE).
-By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
-
----
-
-## Issues / Discussions
-
-Please use [Issues](https://github.com/open-edge-platform/training_extensions/issues/new/choose) tab for your bug reporting, feature requesting, or any questions.
-
----
-
-## Disclaimer
-
-Intel is committed to respecting human rights and avoiding complicity in human rights abuses.
-See Intel's [Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html).
-Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
-
----
-
-## Contributing
+- To report a bug or submit a feature request, please open a [GitHub issue](https://github.com/open-edge-platform/training_extensions/issues).
+- Ask questions via [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions).
 
 For those who would like to contribute to the library, see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
@@ -231,5 +87,3 @@ Thank you! we appreciate your support!
 <a href="https://github.com/open-edge-platform/training_extensions/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=open-edge-platform/training_extensions" alt="Contributors" />
 </a>
-
----
