@@ -306,7 +306,8 @@ def fxt_training_configuration_view_json() -> dict:
                                 "key": "color_jitter",
                                 "name": "Color jitter",
                                 "description": (
-                                    "Randomly adjust brightness, contrast, saturation, and hue of the image."
+                                    "Randomly adjust brightness, contrast, saturation, and hue of the image. "
+                                    "Applied after resize."
                                 ),
                                 "parameters": [
                                     {

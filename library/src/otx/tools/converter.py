@@ -199,7 +199,7 @@ class TransformsUpdater:
         },
         "iou_random_crop": {
             "class_paths": [
-                "torchvision.transforms.v2.RandomIoUCrop",
+                "otx.data.augmentation.transforms.RandomIoUCrop",
             ],
             "stage": "cpu",
         },
@@ -214,6 +214,18 @@ class TransformsUpdater:
         "mosaic": {
             "class_paths": ["otx.data.augmentation.transforms.CachedMosaic"],
             "stage": "cpu",
+        },
+        "random_erasing": {
+            "class_paths": ["kornia.augmentation.RandomErasing"],
+            "stage": "gpu",
+        },
+        "random_grayscale": {
+            "class_paths": ["kornia.augmentation.RandomGrayscale"],
+            "stage": "gpu",
+        },
+        "random_sharpness": {
+            "class_paths": ["kornia.augmentation.RandomSharpness"],
+            "stage": "gpu",
         },
     }
 
