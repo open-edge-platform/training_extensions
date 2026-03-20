@@ -130,26 +130,28 @@ class OTXTrainer(Execution[TrainingJobParams]):
         If a parent model revision ID is provided, it fetches the weights from the parent model.
         Otherwise, it retrieves the base weights for the specified model architecture.
         """
-        parent_model_revision_id = training_params.parent_model_revision_id
-        task = training_params.task
-        model_architecture_id = training_params.model_architecture_id
-        project_id = training_params.project_id
-        if parent_model_revision_id is None:
-            return self._base_weights_service.get_local_weights_path(
-                task=task.task_type, model_manifest_id=model_architecture_id
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            parent_model_revision_id = training_params.parent_model_revision_id
+            task = training_params.task
+            model_architecture_id = training_params.model_architecture_id
+            project_id = training_params.project_id
+            if parent_model_revision_id is None:
+                return self._base_weights_service.get_local_weights_path(
+                    task=task.task_type, model_manifest_id=model_architecture_id
+                )
+
+            parent_variants = self._model_service.get_model_variants(
+                project_id=project_id, model_id=parent_model_revision_id
             )
+            parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
+            weights_path = self.__build_model_weights_path(
+                self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
+            )
+            if not weights_path.exists():
+                raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
 
-        parent_variants = self._model_service.get_model_variants(
-            project_id=project_id, model_id=parent_model_revision_id
-        )
-        parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
-        weights_path = self.__build_model_weights_path(
-            self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
-        )
-        if not weights_path.exists():
-            raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
-
-        return weights_path
+            return weights_path
 
     @step("Assign Dataset Subsets")
     def assign_subsets(self, training_config: TrainingConfiguration, project_id: UUID) -> None:
