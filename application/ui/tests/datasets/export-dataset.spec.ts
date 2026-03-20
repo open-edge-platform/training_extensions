@@ -148,7 +148,7 @@ test.describe('Export dataset', () => {
         });
     });
 
-    test('cancel export job removes staged files', async ({ network, page }) => {
+    test('cancel export job', async ({ network, page }) => {
         network.use(
             http.get('/api/jobs/{job_id}', () => {
                 return HttpResponse.json(exportingJob, { status: 200 });

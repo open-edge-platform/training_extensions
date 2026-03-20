@@ -36,7 +36,7 @@ export const ImportDatasetToProject = () => {
     return (
         <DialogContainer onDismiss={datasetImportDialogState.close}>
             {datasetImportDialogState.isOpen && (
-                <Dialog aria-label={'Create project from dataset'} width={800}>
+                <Dialog aria-label={'Import dataset to project'} width={800}>
                     <Heading>Import dataset</Heading>
                     <Divider />
                     <Content

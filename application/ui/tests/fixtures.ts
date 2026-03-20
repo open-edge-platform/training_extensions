@@ -16,7 +16,7 @@ import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { PolygonToolPage } from './annotator/polygon-tool-page';
 import { VideoPage } from './annotator/video-page';
 import { AnnotatorPage } from './datasets/annotator-page';
-import { ImportDatasetPage } from './datasets/import-dateset-page';
+import { ImportDatasetPage } from './datasets/import-dataset-page';
 import { StreamPage } from './inference/stream-page';
 import { JobsPage } from './jobs/jobs-page';
 import { ModelsPage } from './models/models-page';
