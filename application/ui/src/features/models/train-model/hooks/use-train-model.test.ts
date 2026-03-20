@@ -93,7 +93,7 @@ describe('useTrainModel', () => {
             });
 
             // Give the async path a chance to fire — it should not.
-            await new Promise((r) => setTimeout(r, 50));
+            await new Promise((resolve) => setTimeout(resolve, 50));
             expect(trainSpy).not.toHaveBeenCalled();
         });
 
@@ -109,7 +109,7 @@ describe('useTrainModel', () => {
                 result.current.trainModel({ onSuccess: vi.fn() });
             });
 
-            await new Promise((r) => setTimeout(r, 50));
+            await new Promise((resolve) => setTimeout(resolve, 50));
             expect(trainSpy).not.toHaveBeenCalled();
         });
     });
@@ -301,7 +301,7 @@ describe('useTrainModel', () => {
                 result.current.trainModel({ onSuccess });
             });
 
-            await new Promise((r) => setTimeout(r, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(onSuccess).not.toHaveBeenCalled();
         });
 
@@ -316,7 +316,7 @@ describe('useTrainModel', () => {
                 result.current.trainModel({ onSuccess });
             });
 
-            await new Promise((r) => setTimeout(r, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(onSuccess).not.toHaveBeenCalled();
         });
 
