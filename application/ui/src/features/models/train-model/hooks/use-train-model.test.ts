@@ -8,7 +8,10 @@ import { vi } from 'vitest';
 
 import { getMockedJob } from '../../../../../mocks/mock-job';
 import { http } from '../../../../api/utils';
+import { ConfigurableParameter, ConfigurableParameterGroup } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
+import { findGroupByKey } from '../../model-listing/model-training-parameters/utils';
+import { deepReplaceParameters } from '../advanced-settings/utils';
 import { TrainModelContextProps } from '../train-model-provider.component';
 import { mockedTrainingConfiguration } from './mocks';
 import { useTrainModel } from './use-train-model';
@@ -28,10 +31,13 @@ const DEFAULT_STATE: Partial<TrainModelContextProps> = {
 
 const mockTrainModelState = vi.hoisted(() => vi.fn(() => DEFAULT_STATE));
 
-vi.mock('../train-model-provider.component', () => ({
-    ...vi.importActual('../train-model-provider.component'),
-    useTrainModelState: mockTrainModelState,
-}));
+vi.mock('../train-model-provider.component', async () => {
+    const actualImport = await vi.importActual('../train-model-provider.component');
+    return {
+        ...actualImport,
+        useTrainModelState: mockTrainModelState,
+    };
+});
 
 vi.mock('hooks/use-project-identifier.hook', () => ({
     useProjectIdentifier: () => 'project-123',
@@ -223,16 +229,20 @@ describe('useTrainModel', () => {
     });
 
     describe('configuration update + training', () => {
+        const datasetPreparationGroup = findGroupByKey(
+            mockedTrainingConfiguration.parameters,
+            'dataset_preparation'
+        ) as ConfigurableParameterGroup;
+        const subsetSplit = findGroupByKey(datasetPreparationGroup?.parameters, 'subset_split')
+            ?.parameters as ConfigurableParameter[];
+        const updatedSubsetSplitTraining = { ...subsetSplit[0], value: 90 } as ConfigurableParameter;
+
         const changedConfiguration = {
-            ...mockedTrainingConfiguration,
-            parameters: [
-                {
-                    ...mockedTrainingConfiguration.parameters[0],
-                    // Mutate one nested value to mark it as "changed", the easiest way is to change the key, not nested value.
-                    key: 'dataset_preparation_modified',
-                },
-                ...mockedTrainingConfiguration.parameters.slice(1),
-            ],
+            parameters: deepReplaceParameters(
+                mockedTrainingConfiguration.parameters,
+                [updatedSubsetSplitTraining],
+                ['dataset_preparation', 'subset_split']
+            ),
         };
 
         beforeEach(() => {
