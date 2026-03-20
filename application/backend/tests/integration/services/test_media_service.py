@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 import cv2
 import numpy as np
 import pytest
+from PIL import ExifTags
 from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
@@ -21,7 +22,7 @@ from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
-from app.services.media_service import InvalidImageError, MediaFilters, MediaService
+from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters, MediaService
 
 
 @pytest.fixture
@@ -524,15 +525,18 @@ class TestMediaServiceIntegration:
     ) -> None:
         """Test creating a media."""
         image = PILImage.new("RGB", (1024, 768))
+        image.getexif()[ExifTags.Base.Software] = "Intel Geti"
 
         project, pipeline = fxt_project_with_pipeline
 
         created_media = fxt_media_service.create_image(
-            project_id=project.id,
-            name="test",
-            format=format,
-            data=image,
-            source_id=pipeline.source_id if use_pipeline_source else None,
+            ImageMetadata(
+                project_id=project.id,
+                name="test",
+                image_format=format,
+                data=image,
+                source_id=pipeline.source_id if use_pipeline_source else None,
+            )
         )
 
         media = db_session.get(MediaDB, str(created_media.id))
@@ -554,6 +558,12 @@ class TestMediaServiceIntegration:
         binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
         assert os.path.exists(binary_file_path)
         assert created_media.size == os.path.getsize(binary_file_path)
+
+        with PILImage.open(binary_file_path) as stored_image:
+            stored_exif = stored_image.getexif()
+        assert stored_exif is not None
+        if format != ImageFormat.BMP:  # BMP images do not support EXIF information
+            assert stored_exif[ExifTags.Base.Software] == "Intel Geti"
 
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
@@ -583,7 +593,7 @@ class TestMediaServiceIntegration:
                 created_media = fxt_media_service.create_video(
                     project_id=project.id,
                     name="test",
-                    format=format,
+                    video_format=format,
                     data=data,
                     source_id=pipeline.source_id if use_pipeline_source else None,
                 )
@@ -623,10 +633,12 @@ class TestMediaServiceIntegration:
 
         with pytest.raises(InvalidImageError):
             fxt_media_service.create_image(
-                project_id=project.id,
-                name="test",
-                format=ImageFormat.JPG,
-                data=BytesIO(b"123"),
+                ImageMetadata(
+                    project_id=project.id,
+                    name="test",
+                    image_format=ImageFormat.JPG,
+                    data=BytesIO(b"123"),
+                )
             )
 
     @pytest.mark.parametrize(

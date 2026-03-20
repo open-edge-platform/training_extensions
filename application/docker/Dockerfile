@@ -38,10 +38,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
 
-##########
-# GPU Base
-##########
-FROM backend-base AS gpu-base
+###########
+# CUDA Base
+###########
+FROM backend-base AS cuda-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
@@ -85,16 +85,14 @@ RUN npm ci --audit=false --ignore-scripts
 COPY --link application/ui/tsconfig.json ./
 COPY --link application/ui/rsbuild.config.ts ./
 COPY --link application/ui/src/ src/
+COPY --link application/ui/public/ public/
 
 ########
 # Web UI
 ########
 FROM web-ui-base AS web-ui
 
-ARG ASSET_PREFIX=""
-ENV ASSET_PREFIX=${ASSET_PREFIX}
-ARG PUBLIC_API_BASE_URL=""
-ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
+ENV ASSET_PREFIX="/html"
 
 RUN npm run build
 
@@ -103,13 +101,20 @@ RUN npm run build
 #########################
 FROM python:3.13-slim@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS runtime-base
 
-ARG STATIC_FILES_DIR=""
-ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
 ARG UID=10001
 ARG USER_NAME="non-root"
 
+ENV STATIC_FILES_DIR="/application/html"
+ENV DATA_DIR="/application/data"
+ENV LOG_DIR="/application/logs"
+ENV PYTHONPATH=/application/backend
+
 # Create secure non-root user
 RUN useradd -l -u ${UID} ${USER_NAME}
+
+# Create directory and set ownership so mounting a volume works correctly
+RUN mkdir -p ${DATA_DIR} && chown ${UID}:${UID} ${DATA_DIR}
+RUN mkdir -p ${LOG_DIR} && chown ${UID}:${UID} ${LOG_DIR}
 
 # Common system deps (CPU/GPU/XPU all need these)
 # TODO: remove 'git' once all dependencies are available on PyPI
@@ -133,10 +138,7 @@ RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
     /application \
     /home/${USER_NAME}
 
-EXPOSE 7860
-
 WORKDIR /application/backend
-ENV PYTHONPATH=/application/backend
 
 USER ${USER_NAME}
 
@@ -145,14 +147,14 @@ CMD ["uv", "run", "app/main.py"]
 ######################
 # Server (CPU version)
 ######################
-FROM runtime-base AS geti-tune-cpu
+FROM runtime-base AS geti-cpu
 
 COPY --from=cpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 ######################
-# Server (GPU version)
+# Server (CUDA version)
 ######################
-FROM runtime-base AS geti-tune-gpu
+FROM runtime-base AS geti-cuda
 
 USER root
 
@@ -171,12 +173,12 @@ RUN apt-get update \
 
 USER ${USER_NAME}
 
-COPY --from=gpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 #######################
 ## Server (XPU version)
 #######################
-FROM runtime-base AS geti-tune-xpu
+FROM runtime-base AS geti-xpu
 
 USER root
 

@@ -6,12 +6,13 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from datumaro.experimental import Dataset
-from datumaro.experimental.data_formats.base import DataFormat, save_dataset
+from datumaro.experimental.data_formats.base import DataFormat
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import Subset
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
 from app.models import DatasetFormat, DatasetItemAnnotationStatus, ExportDatasetJobParams
 from app.services import DatasetRevisionService, DatasetService
@@ -61,6 +62,7 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
                     project_id=export_params.project_id,
                     task=export_params.task,
                     annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                    sample_mode=SampleMode.IMPORT_EXPORT,
                 )
             else:
                 self._dataset_revision_service.set_db_session(session)
@@ -82,7 +84,7 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         target_dir.mkdir(parents=True, exist_ok=True)
         match export_format:
             case DatasetFormat.COCO | DatasetFormat.YOLO:
-                save_dataset(
+                export_dataset(
                     dataset=dataset,
                     data_format=get_dm_format(export_format),
                     output_path=str(target_dir / f"dataset-{export_format}.zip"),

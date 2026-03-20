@@ -93,7 +93,7 @@ export const EditPolygon = ({ annotation, zoom }: EditPolygonProps) => {
                     annotation={{ ...annotation, shape }}
                     onComplete={() => onComplete(shape)}
                 >
-                    <AnnotationShapeRenderer annotation={{ ...annotation, shape }} />
+                    <AnnotationShapeRenderer annotation={{ ...annotation, shape }} hideLabels />
                 </TranslateShape>
             </svg>
 

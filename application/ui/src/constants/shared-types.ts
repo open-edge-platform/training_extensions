@@ -91,18 +91,17 @@ export type FloatConfigurableRangeParameter = components['schemas']['FloatRangeP
 
 export type NumberConfigurableParameter = IntConfigurableParameter | FloatConfigurableParameter;
 
-type EnumerableConfigurableParameter = StringConfigurableParameter | NumberConfigurableParameter;
-
-type CreateEnumerableConfigurableParameterType<T extends EnumerableConfigurableParameter> = Omit<
-    T,
-    'allowed_values' | 'value' | 'default_value'
-> & {
-    allowed_values: Exclude<T['allowed_values'], null | undefined>;
-    value: Exclude<T['value'], null | undefined>;
-    default_value: Exclude<T['default_value'], null | undefined>;
-};
+type CreateEnumerableConfigurableParameterType<T extends StringConfigurableParameter | NumberConfigurableParameter> =
+    Omit<T, 'allowed_values' | 'value' | 'default_value'> & {
+        allowed_values: Exclude<T['allowed_values'], null | undefined>;
+        value: Exclude<T['value'], null | undefined>;
+        default_value: Exclude<T['default_value'], null | undefined>;
+    };
 
 export type NumberEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<NumberConfigurableParameter>;
+export type StringEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<StringConfigurableParameter>;
+
+export type EnumConfigurableParameter = StringEnumConfigurableParameter | NumberEnumConfigurableParameter;
 
 export type ConfigurableParameter =
     | BoolConfigurableParameter

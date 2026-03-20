@@ -1,0 +1,262 @@
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { useState } from 'react';
+
+import { fireEvent, screen, Screen, within } from '@testing-library/react';
+import { render } from 'test-utils/render';
+import { describe } from 'vitest';
+
+import { NumberConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
+import { getStep } from '../../components/number-parameter-field.component';
+import { isBoolEnableParameterGroup, isNumberParameter } from '../../utils';
+import { LearningParameters } from './learning-parameters.component';
+import { learningParameters } from './mocks';
+import {
+    getInputSizeHeightParameter,
+    getInputSizeWidthParameter,
+    getLearningParameters,
+    isInputSizeHeightParameter,
+    isInputSizeParameter,
+    LearningConfigurationGroup,
+} from './utils';
+
+const getParameter = (name: string, selector: Screen | ReturnType<typeof within> = screen) => {
+    return selector.queryByRole('textbox', { name: `Change ${name}` });
+};
+
+const resetParameter = (name: string, selector: Screen | ReturnType<typeof within> = screen) => {
+    fireEvent.click(selector.getByRole('button', { name: `Reset ${name}` }));
+};
+
+const getEnumFieldParameter = (name: string) => {
+    return screen.getByRole('button', { name: new RegExp(`Select ${name}`) });
+};
+
+const pressButton = (element: HTMLElement) => {
+    fireEvent.pointerDown(element, { pointerType: 'mouse', button: 0 });
+    fireEvent.mouseDown(element, { button: 0 });
+    fireEvent.pointerUp(element, { pointerType: 'mouse', button: 0 });
+    fireEvent.mouseUp(element, { button: 0 });
+    fireEvent.click(element, { button: 0 });
+};
+
+const expectNumberParameter = (parameter: NumberConfigurableParameter, groupKey: string) => {
+    const step = getStep({
+        type: parameter.value_type,
+        maxValue: parameter.max_value ?? null,
+        minValue: parameter.min_value ?? null,
+    });
+
+    let selector = document.body;
+    if (parameter.key === 'patience') {
+        selector = screen.getByTestId(`${groupKey}-patience`);
+    }
+
+    const wrapper = within(selector);
+
+    expect(getParameter(parameter.name, wrapper)).toHaveValue(parameter.value.toString());
+
+    pressButton(wrapper.getByRole('button', { name: `Increase Change ${parameter.name}` }));
+
+    expect(getParameter(parameter.name, wrapper)).toHaveValue((parameter.value + step).toString());
+
+    resetParameter(parameter.name, wrapper);
+    expect(getParameter(parameter.name, wrapper)).toHaveValue(parameter.default_value.toString());
+};
+
+const expectDisabledNumberParameter = (
+    parameter: NumberConfigurableParameter,
+    selector: Screen | ReturnType<typeof within> = screen
+) => {
+    expect(getParameter(parameter.name, selector)).toBeDisabled();
+};
+
+describe('LearningParameters', () => {
+    const App = (props: { learningParameters: LearningConfigurationGroup }) => {
+        const [trainingConfiguration, setTrainingConfiguration] = useState<TrainingConfiguration | undefined>({
+            parameters: [props.learningParameters],
+        });
+
+        return (
+            <LearningParameters
+                learningParameters={
+                    getLearningParameters(trainingConfiguration ?? { parameters: [] }) ?? props.learningParameters
+                }
+                defaultLearningParameters={props.learningParameters}
+                onTrainingConfigurationChange={setTrainingConfiguration}
+            />
+        );
+    };
+
+    it('updates tag to "Modified" when at least one parameter is changed, otherwise is "Default"', () => {
+        render(<App learningParameters={learningParameters} />);
+
+        const maxEpochsParameter = learningParameters.parameters[0] as NumberConfigurableParameter;
+
+        expect(screen.getByLabelText('Learning parameters tag')).toHaveTextContent('Default');
+
+        expect(getParameter(maxEpochsParameter.name)).toHaveValue(maxEpochsParameter.value.toString());
+        pressButton(screen.getByRole('button', { name: `Increase Change ${maxEpochsParameter.name}` }));
+
+        expect(getParameter(maxEpochsParameter.name)).toHaveValue((maxEpochsParameter.value + 1).toString());
+        expect(screen.getByLabelText('Learning parameters tag')).toHaveTextContent('Modified');
+    });
+
+    it('shows dependent parameters based on "scheduler type" value', () => {
+        render(<App learningParameters={learningParameters} />);
+
+        const schedulerType = getEnumFieldParameter('Scheduler type');
+
+        expect(schedulerType).toHaveTextContent('reduce_lr_on_plateau');
+
+        expect(getParameter('Factor')).toBeInTheDocument();
+        expect(getParameter('Patience', within(screen.getByTestId('scheduler-patience')))).toBeInTheDocument();
+        expect(getParameter('Minimum learning rate')).not.toBeInTheDocument();
+
+        fireEvent.click(schedulerType);
+
+        fireEvent.click(screen.getByRole('option', { name: 'cosine_annealing' }));
+
+        expect(schedulerType).toHaveTextContent('cosine_annealing');
+
+        expect(getParameter('Factor')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('scheduler-patience')).not.toBeInTheDocument();
+        expect(getParameter('Minimum learning rate')).toBeInTheDocument();
+    });
+
+    describe('updates parameters and resets them to default properly', () => {
+        const parametersWithoutInputSizeParameters = {
+            ...learningParameters,
+            parameters: learningParameters.parameters.filter((parameter) => !isInputSizeParameter(parameter)),
+        };
+
+        const numberParameters = parametersWithoutInputSizeParameters.parameters.filter(isNumberParameter);
+        const enableGroupParameters =
+            parametersWithoutInputSizeParameters.parameters.filter(isBoolEnableParameterGroup);
+
+        it('updates and resets number parameters', () => {
+            render(<App learningParameters={parametersWithoutInputSizeParameters} />);
+
+            for (const parameter of numberParameters) {
+                expectNumberParameter(parameter, parametersWithoutInputSizeParameters.key);
+            }
+        });
+
+        it.each(enableGroupParameters.map((p) => [p.name, p]))(
+            'updates and resets enable group: %s',
+            (_name, parameter) => {
+                render(<App learningParameters={parametersWithoutInputSizeParameters} />);
+
+                const [enableParameter, ...restParameters] = parameter.parameters;
+
+                const groupContainer = within(screen.getByTestId(parameter.key));
+
+                const toggleEnableParameter = groupContainer.getByRole('switch', {
+                    name: `Toggle ${enableParameter.name}`,
+                });
+
+                if (!enableParameter.value) {
+                    fireEvent.click(toggleEnableParameter);
+                }
+
+                expect(toggleEnableParameter).toBeChecked();
+
+                fireEvent.click(toggleEnableParameter);
+
+                expect(toggleEnableParameter).not.toBeChecked();
+
+                for (const restParameter of restParameters) {
+                    if (isNumberParameter(restParameter)) {
+                        expectDisabledNumberParameter(restParameter, groupContainer);
+                    }
+                }
+
+                fireEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+            }
+        );
+    });
+
+    describe('Input size parameters', () => {
+        it('updates input size parameters', () => {
+            render(<App learningParameters={learningParameters} />);
+
+            const inputSizeWidthParameter = getInputSizeWidthParameter(learningParameters.parameters);
+            const inputSizeHeightParameter = getInputSizeHeightParameter(learningParameters.parameters);
+
+            if (!inputSizeWidthParameter || !inputSizeHeightParameter) {
+                throw new Error('Input size parameters not found');
+            }
+
+            const parameters = [inputSizeWidthParameter, inputSizeHeightParameter];
+
+            parameters.forEach((parameter) => {
+                const parameterSelector = getEnumFieldParameter(parameter.name);
+
+                expect(parameterSelector).toHaveTextContent(parameter.value.toString());
+
+                fireEvent.click(parameterSelector);
+
+                parameter.allowed_values.forEach((value) => {
+                    expect(screen.getByRole('option', { name: value.toString() })).toBeInTheDocument();
+                });
+
+                fireEvent.keyDown(screen.getByRole('listbox', { name: `Select ${parameter.name}` }), { key: 'Escape' });
+            });
+
+            fireEvent.click(getEnumFieldParameter(inputSizeWidthParameter.name));
+            fireEvent.click(screen.getByRole('option', { name: '1024' }));
+            expect(getEnumFieldParameter(inputSizeWidthParameter.name)).toHaveTextContent('1024');
+
+            fireEvent.click(getEnumFieldParameter(inputSizeHeightParameter.name));
+            fireEvent.click(screen.getByRole('option', { name: '256' }));
+            expect(getEnumFieldParameter(inputSizeHeightParameter.name)).toHaveTextContent('256');
+        });
+
+        it('does not display input size parameters if there is only one of them', () => {
+            const newLearningParameters = {
+                ...learningParameters,
+                parameters: learningParameters.parameters.filter((parameter) => !isInputSizeHeightParameter(parameter)),
+            };
+
+            render(<App learningParameters={newLearningParameters} />);
+
+            expect(
+                screen.queryByRole('button', { name: new RegExp(`Select Input size width`) })
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('button', { name: new RegExp(`Select Input size height`) })
+            ).not.toBeInTheDocument();
+        });
+
+        it('resets both input size parameters to default values', () => {
+            const inputSizeWidthParameter = getInputSizeWidthParameter(learningParameters.parameters);
+            const inputSizeHeightParameter = getInputSizeHeightParameter(learningParameters.parameters);
+
+            if (!inputSizeWidthParameter || !inputSizeHeightParameter) {
+                throw new Error('Input size parameters not found');
+            }
+
+            render(<App learningParameters={learningParameters} />);
+
+            fireEvent.click(getEnumFieldParameter(inputSizeWidthParameter.name));
+            fireEvent.click(screen.getByRole('option', { name: '1024' }));
+
+            expect(getEnumFieldParameter(inputSizeWidthParameter.name)).toHaveTextContent('1024');
+
+            fireEvent.click(getEnumFieldParameter(inputSizeHeightParameter.name));
+            fireEvent.click(screen.getByRole('option', { name: '1024' }));
+
+            expect(getEnumFieldParameter(inputSizeHeightParameter.name)).toHaveTextContent('1024');
+
+            fireEvent.click(screen.getByRole('button', { name: 'Reset Input size' }));
+
+            expect(getEnumFieldParameter(inputSizeWidthParameter.name)).toHaveTextContent(
+                inputSizeWidthParameter.default_value.toString()
+            );
+            expect(getEnumFieldParameter(inputSizeHeightParameter.name)).toHaveTextContent(
+                inputSizeHeightParameter.default_value.toString()
+            );
+        });
+    });
+});

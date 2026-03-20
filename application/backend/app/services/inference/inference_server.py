@@ -4,15 +4,17 @@ import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
 from loguru import logger
 from model_api.models import Model
 
+from app.db import get_db_session
 from app.models import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult, Label
 from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
-from app.services import ModelService, ResourceNotFoundError, ResourceType
+from app.services import ResourceNotFoundError, ResourceType
 from app.services.data_collect.prediction_converter import convert_prediction
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
@@ -35,8 +37,8 @@ class InferenceServer:
     to ensure efficient inference operations.
     """
 
-    def __init__(self, model_service: ModelService) -> None:
-        self._model_service = model_service
+    def __init__(self, data_dir: Path) -> None:
+        self._data_dir = data_dir
         self._loaded_model: _LoadedModel | None = None
         self._loading_model: bool = False
         self._lock = threading.Lock()
@@ -67,35 +69,42 @@ class InferenceServer:
                 return False  # same model and device, no need to reload
             self._loading_model = True
 
-            format = ModelFormat.OPENVINO
-            precision = ModelPrecision.FP16
-            logger.info("Loading model {} with format {} on device {}", model_id, format, device)
-            model_variants = self._model_service.get_model_variants(project_id=project_id, model_id=model_id)
-            model_variant = next(
-                (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
-            )
-            if not model_variant:
-                raise ResourceNotFoundError(
-                    resource_type=ResourceType.MODEL,
-                    resource_id=f"{model_id} with format {format.value} and precision {precision}",
-                )
-            files_exist, paths = self._model_service.get_model_binary_files(
-                project_id=project_id, model_id=model_id, model_variant_id=model_variant.id
-            )
-            if not files_exist:
-                raise ResourceNotFoundError(
-                    resource_type=ResourceType.MODEL,
-                    resource_id=f"{model_id} with format {format.value}",
-                )
-            model_xml_path, _ = paths
+            with get_db_session() as db:
+                from app.services import ModelService
 
-            model = Model.create_model(
-                model=str(model_xml_path),
-                device=device,
-                nstreams=MODELAPI_NSTREAMS,
-            )
-            self._loaded_model = _LoadedModel(id=model_id, model=model, device=device, load_timestamp=datetime.now())
-            return True
+                model_service = ModelService(data_dir=self._data_dir, db_session=db)
+
+                format = ModelFormat.OPENVINO
+                precision = ModelPrecision.FP16
+                logger.info("Loading model {} with format {} on device {}", model_id, format, device)
+                model_variants = model_service.get_model_variants(project_id=project_id, model_id=model_id)
+                model_variant = next(
+                    (mv for mv in model_variants if mv.format == format and mv.precision == precision), None
+                )
+                if not model_variant:
+                    raise ResourceNotFoundError(
+                        resource_type=ResourceType.MODEL,
+                        resource_id=f"{model_id} with format {format.value} and precision {precision}",
+                    )
+                files_exist, paths = model_service.get_model_binary_files(
+                    project_id=project_id, model_id=model_id, model_variant_id=model_variant.id
+                )
+                if not files_exist:
+                    raise ResourceNotFoundError(
+                        resource_type=ResourceType.MODEL,
+                        resource_id=f"{model_id} with format {format.value}",
+                    )
+                model_xml_path, _ = paths
+
+                model = Model.create_model(
+                    model=str(model_xml_path),
+                    device=device,
+                    nstreams=MODELAPI_NSTREAMS,
+                )
+                self._loaded_model = _LoadedModel(
+                    id=model_id, model=model, device=device, load_timestamp=datetime.now()
+                )
+                return True
         finally:
             self._loading_model = False
             self._lock.release()

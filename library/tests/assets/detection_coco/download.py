@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Download a ~50-sample COCO 2017 subset for object detection.
@@ -130,7 +130,7 @@ def _build_samples(
         sample = DetectionSample(
             image=image,
             label=torch.tensor(labels_list, dtype=torch.long),
-            bboxes=np.array(bboxes_list, dtype=np.float32),
+            bboxes=torch.tensor(bboxes_list, dtype=torch.float32),
             dm_image_info=DmImageInfo(width=IMG_SIZE, height=IMG_SIZE),
             subset=subset,
         )

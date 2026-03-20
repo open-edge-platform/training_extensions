@@ -48,6 +48,25 @@ class MediaFilters:
     subset: str | None = None
 
 
+@dataclass(frozen=True)
+class ImageMetadata:
+    project_id: UUID
+    name: str
+    image_format: ImageFormat
+    data: Image.Image | np.ndarray | BinaryIO | BytesIO
+    media_type: MediaType = MediaType.IMAGE
+    source_id: UUID | None = None
+    video_id: UUID | None = None
+    frame_idx: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.media_type == MediaType.VIDEO_FRAME:
+            if self.video_id is None:
+                raise ValueError("video_id must be provided when media_type is VIDEO_FRAME")
+            if self.frame_idx is None:
+                raise ValueError("frame_idx must be provided when media_type is VIDEO_FRAME")
+
+
 class MediaService(BaseSessionManagedService):
     def __init__(self, data_dir: Path, db_session: Session | None = None) -> None:
         super().__init__(db_session)
@@ -79,43 +98,41 @@ class MediaService(BaseSessionManagedService):
 
     def create_image(
         self,
-        project_id: UUID,
-        name: str,
-        format: ImageFormat,
-        data: Image.Image | np.ndarray | BinaryIO | BytesIO,
-        source_id: UUID | None = None,
+        metadata: ImageMetadata,
     ) -> Media:
         """Creates a new media (image)"""
         media_id = uuid4()
-        match data:
+        match metadata.data:
             case Image.Image():
-                image = data
+                image = metadata.data
             case np.ndarray():
-                image = self._read_image_from_ndarray(data)
+                image = self._read_image_from_ndarray(metadata.data)
             case _:
-                image = self._read_image_from_binary(data)
+                image = self._read_image_from_binary(metadata.data)
 
-        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        dataset_dir = self.projects_dir / f"{metadata.project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        binary_path = dataset_dir / f"{media_id}.{format}"
-        image.save(binary_path)
+        binary_path = dataset_dir / f"{media_id}.{metadata.image_format}"
+        image.save(binary_path, exif=image.getexif())
 
         try:
             MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
 
             media = MediaDB(
                 id=str(media_id),
-                project_id=str(project_id),
-                type=MediaType.IMAGE,
-                name=name,
-                format=str(format),
+                project_id=str(metadata.project_id),
+                type=metadata.media_type,
+                name=metadata.name,
+                format=str(metadata.image_format),
                 width=image.width,
                 height=image.height,
                 size=os.path.getsize(binary_path),
-                source_id=str(source_id) if source_id is not None else None,
+                source_id=str(metadata.source_id) if metadata.source_id is not None else None,
+                video_id=str(metadata.video_id) if metadata.video_id is not None else None,
+                frame_index=metadata.frame_idx,
             )
 
-            repo = MediaRepository(project_id=str(project_id), db=self.db_session)
+            repo = MediaRepository(project_id=str(metadata.project_id), db=self.db_session)
             db_media = repo.save(media)
         except Exception as e:
             binary_path.unlink(missing_ok=True)
@@ -126,7 +143,7 @@ class MediaService(BaseSessionManagedService):
         self,
         project_id: UUID,
         name: str,
-        format: VideoFormat,
+        video_format: VideoFormat,
         data: BinaryIO,
         source_id: UUID | None = None,
     ) -> Media:
@@ -135,7 +152,7 @@ class MediaService(BaseSessionManagedService):
 
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        binary_path = dataset_dir / f"{media_id}.{format}"
+        binary_path = dataset_dir / f"{media_id}.{video_format}"
 
         data.seek(0)
         with open(binary_path, "wb") as f:
@@ -150,7 +167,7 @@ class MediaService(BaseSessionManagedService):
                 project_id=str(project_id),
                 type=MediaType.VIDEO,
                 name=name,
-                format=str(format),
+                format=str(video_format),
                 width=video_metadata.width,
                 height=video_metadata.height,
                 frame_count=video_metadata.frame_count,

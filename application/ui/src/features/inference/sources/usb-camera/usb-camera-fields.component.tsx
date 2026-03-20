@@ -47,14 +47,7 @@ export const UsbCamera = ({ defaultState }: UsbCameraProps) => {
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
             <TextField isHidden label='name' name='name' value={name} />
-            <TextField
-                isRequired
-                width='100%'
-                label='Name'
-                name='name_display'
-                value={name}
-                onChange={handleNameChange}
-            />
+            <TextField width='100%' label='Name' name='name_display' value={name} onChange={handleNameChange} />
 
             <Flex alignItems='end' gap='size-200'>
                 <Picker

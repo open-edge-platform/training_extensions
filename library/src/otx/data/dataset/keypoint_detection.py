@@ -1,23 +1,19 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTXKeypointDetectionDataset."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, List, Union
+from typing import TYPE_CHECKING
 
 import torch
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
+from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.sample import KeypointSample
-from otx.data.transform_libs.torchvision import Compose
+from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 from otx.types.label import LabelInfo
-
-from .base import OTXDataset
-
-Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
@@ -37,7 +33,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         max_refetch (int, optional): Maximum number of retries when fetching a data item fails.
         image_color_channel (ImageColorChannel, optional): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool, optional): Whether to stack images in batch processing.
-        to_tv_image (bool, optional): Whether to convert images to torchvision format.
+
 
     Example:
         >>> from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
@@ -54,17 +50,15 @@ class OTXKeypointDetectionDataset(OTXDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = KeypointSample
+        sample_type = with_image_dtype(KeypointSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
-            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            to_tv_image=to_tv_image,
         )
         labels = dm_subset.schema.attributes["keypoints"].categories.labels
         self.label_info = LabelInfo(
@@ -74,16 +68,8 @@ class OTXKeypointDetectionDataset(OTXDataset):
         )
 
     def _get_item_impl(self, index: int) -> KeypointSample | None:
-        item = self.dm_subset[index]
-        keypoints = item.keypoints
-        keypoints[:, 2] = torch.clamp(keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
-        item.keypoints = keypoints
-        # Handle image conversion - to_image only permutes numpy arrays, not tensors
-        image = item.image
-        if isinstance(image, torch.Tensor) and image.ndim == 3 and image.shape[-1] in (1, 3):
-            # Image is in HWC format, convert to CHW
-            image = image.permute(2, 0, 1)
-        item.image = to_dtype(to_image(image), torch.float32)
+        item = self._read_dm_item(index)
+        item.keypoints[:, 2] = torch.clamp(item.keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
         return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property

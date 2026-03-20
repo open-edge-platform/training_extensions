@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """EfficientNet-B0 model implementation."""
@@ -36,7 +36,7 @@ class EfficientNetHLabelCls(OTXHlabelClsModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "efficientnet_b0",
             "efficientnet_b1",
@@ -70,6 +70,9 @@ class EfficientNetHLabelCls(OTXHlabelClsModel):
         if not isinstance(self.label_info, HLabelInfo):
             raise TypeError(self.label_info)
 
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         backbone = EfficientNetBackbone(model_name=self.model_name, input_size=self.data_input_params.input_size)
 
         copied_head_config = copy(head_config)

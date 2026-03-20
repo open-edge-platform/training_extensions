@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for base model entity used in OTX."""
@@ -75,7 +75,11 @@ class DataInputParams:
 
     def as_ncwh(self, batch_size: int = 1) -> tuple[int, int, int, int]:
         """Convert input_size to NCWH format."""
-        return (batch_size, 3, *self.input_size)
+        if self.input_size is not None:
+            return (batch_size, 3, *self.input_size)
+
+        msg = "input_size should not be None."
+        raise ValueError(msg)
 
 
 def _default_optimizer_callable(params: params_t) -> Optimizer:
@@ -133,7 +137,6 @@ class OTXModel(LightningModule):
         self,
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | dict | None = None,
-        task: OTXTaskType | None = None,
         model_name: str = "OTXModel",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -159,29 +162,16 @@ class OTXModel(LightningModule):
             torch_compile (bool, optional): Flag to indicate if torch.compile should be used. Defaults to False.
             tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
 
-        Returns:
-            None
         """
         super().__init__()
 
         self._label_info = self._dispatch_label_info(label_info)
         self.model_name = model_name
-        if isinstance(data_input_params, dict):
-            data_input_params = DataInputParams(**data_input_params)
-        elif data_input_params is None:
-            data_input_params = (
-                self._default_preprocessing_params[self.model_name]
-                if isinstance(self._default_preprocessing_params, dict)
-                else self._default_preprocessing_params
-            )
-        self._check_preprocessing_params(data_input_params)
-        self.data_input_params = data_input_params
+        self.data_input_params = self._configure_preprocessing_params(data_input_params)
         self.model = self._create_model()
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
         self.metric_callable = ensure_callable(metric)
-        self._task = task
-
         self.torch_compile = torch_compile
         self._explain_mode = False
 
@@ -189,6 +179,7 @@ class OTXModel(LightningModule):
         if isinstance(tile_config, dict):
             tile_config = TileConfig(**tile_config)
         self._tile_config = tile_config.clone()
+
         self.save_hyperparameters(
             logger=False,
             ignore=["optimizer", "scheduler", "metric", "label_info", "tile_config", "data_input_params"],
@@ -957,40 +948,71 @@ class OTXModel(LightningModule):
 
         raise TypeError(label_info)
 
-    def _check_preprocessing_params(self, preprocessing_params: DataInputParams | None) -> None:
+    def _configure_preprocessing_params(
+        self,
+        preprocessing_params: DataInputParams | dict | None = None,
+    ) -> DataInputParams:
         """Check the validity of the preprocessing parameters."""
-        if preprocessing_params is None:
-            msg = "Data input parameters should not be None."
+        default = (
+            self._default_preprocessing_params[self.model_name]
+            if isinstance(self._default_preprocessing_params, dict)
+            else self._default_preprocessing_params
+        )
+
+        if isinstance(preprocessing_params, dict):
+            # Merge with model defaults for any missing keys so callers can pass
+            # a partial dict (e.g. only input_size) without knowing mean/std upfront.
+            data_input_params = DataInputParams(
+                input_size=preprocessing_params.get("input_size") or default.input_size,
+                mean=preprocessing_params.get("mean") or default.mean,
+                std=preprocessing_params.get("std") or default.std,
+            )
+        elif isinstance(preprocessing_params, DataInputParams):
+            data_input_params = preprocessing_params
+        elif preprocessing_params is None:
+            data_input_params = default
+        else:
+            msg = (
+                f"preprocessing_params should be either dict or DataInputParams, "
+                f"but got {type(preprocessing_params)} instead."
+            )
+            raise TypeError(msg)
+
+        # Validate
+        if data_input_params.mean is None:
+            msg = "Mean must be provided (either explicitly or via model defaults)."
+            raise ValueError(msg)
+        if data_input_params.std is None:
+            msg = "Std must be provided (either explicitly or via model defaults)."
             raise ValueError(msg)
 
-        input_size = preprocessing_params.input_size
-        mean = preprocessing_params.mean
-        std = preprocessing_params.std
-
-        if not (len(mean) == 3 and all(isinstance(m, float) for m in mean)):
-            msg = f"Mean should be a tuple of 3 float values, but got {mean} instead."
+        if not (len(data_input_params.mean) == 3 and all(isinstance(m, float) for m in data_input_params.mean)):
+            msg = f"Mean should be a tuple of 3 float values, but got {data_input_params.mean} instead."
             raise ValueError(msg)
-        if not (len(std) == 3 and all(isinstance(s, float) for s in std)):
-            msg = f"Std should be a tuple of 3 float values, but got {std} instead."
+        if not (len(data_input_params.std) == 3 and all(isinstance(s, float) for s in data_input_params.std)):
+            msg = f"Std should be a tuple of 3 float values, but got {data_input_params.std} instead."
             raise ValueError(msg)
 
-        if not all(0 <= m <= 255 for m in mean):
-            msg = f"Mean values should be in the range [0, 255], but got {mean} instead."
+        if not all(m >= 0 for m in data_input_params.mean):
+            msg = f"Mean values should be non-negative, but got {data_input_params.mean} instead."
             raise ValueError(msg)
-        if not all(0 <= s <= 255 for s in std):
-            msg = f"Std values should be in the range [0, 255], but got {std} instead."
+        if not all(s > 0 for s in data_input_params.std):
+            msg = f"Std values should be positive, but got {data_input_params.std} instead."
             raise ValueError(msg)
 
-        if input_size is not None and (
-            input_size[0] % self.input_size_multiplier != 0 or input_size[1] % self.input_size_multiplier != 0
+        if data_input_params.input_size is not None and (
+            data_input_params.input_size[0] % self.input_size_multiplier != 0
+            or data_input_params.input_size[1] % self.input_size_multiplier != 0
         ):
-            msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {input_size} instead."
+            msg = (
+                f"Input size should be a multiple of {self.input_size_multiplier}, "
+                f"but got {data_input_params.input_size} instead."
+            )
             raise ValueError(msg)
+
+        return data_input_params
 
     @property
+    @abstractmethod
     def task(self) -> OTXTaskType:
         """Get  task type."""
-        if self._task is None:
-            msg = "Task type is not set. Please set the task type before using this model."
-            raise ValueError(msg)
-        return self._task

@@ -22,7 +22,7 @@ type NumberGroupParamsProps = {
 const DEFAULT_INT_STEP = 1;
 const DEFAULT_FLOAT_STEP = 0.1;
 
-const getStep = ({
+export const getStep = ({
     step,
     maxValue,
     minValue,
@@ -85,6 +85,7 @@ export const NumberParameterField = ({
     return (
         <Flex gap={'size-100'}>
             <Slider
+                aria-label={`Change ${name} slider`}
                 value={parameterValue}
                 minValue={minValue}
                 maxValue={maxValue}

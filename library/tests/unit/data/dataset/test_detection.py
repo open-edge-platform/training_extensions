@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit tests for detection dataset."""
@@ -10,7 +10,6 @@ from unittest.mock import Mock
 from datumaro.experimental import Dataset
 
 from otx.data.dataset.detection import OTXDetectionDataset
-from otx.data.entity.sample import DetectionSample
 
 
 class TestOTXDetectionDataset:
@@ -32,15 +31,6 @@ class TestOTXDetectionDataset:
         self.mock_dm_subset.schema = mock_schema
 
         self.mock_transforms = Mock()
-
-    def test_init_sets_sample_type(self):
-        """Test that initialization sets sample_type to DetectionSample."""
-        dataset = OTXDetectionDataset(
-            dm_subset=self.mock_dm_subset,
-            transforms=self.mock_transforms,
-        )
-
-        assert dataset.sample_type == DetectionSample
 
     def test_get_idx_list_per_classes_multiple_classes_per_item(self):
         """Test get_idx_list_per_classes with multiple classes per item."""

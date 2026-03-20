@@ -5,7 +5,7 @@ import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
 
 export const getVideoFileInitialConfig = (): VideoFileSourceConfig => ({
     id: '',
-    name: '',
+    name: 'Video file source',
     source_type: 'video_file',
     video_path: '',
 });

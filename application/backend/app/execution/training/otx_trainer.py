@@ -24,8 +24,8 @@ from otx.data.dataset import (
     OTXMultilabelClsDataset,
 )
 from otx.data.dataset.base import OTXDataset
+from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.metrics import MetricCallable
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
@@ -36,6 +36,7 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
+from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -228,9 +229,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
             subset_cfg_data["input_size"] = training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = TorchVisionTransformLib.generate(  # pyrefly: ignore[bad-assignment]
-                subset_config
-            )
+            # pyrefly: ignore[missing-attribute,bad-assignment]
+            subset_config.transforms = TransformLibFactory.generate(subset_config)
             return subset_config
 
         with self._db_session_factory() as db:
@@ -262,7 +262,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
                     # Create a dataset revision including only the items with user-verified annotations, then save it
                     logger.info("Creating a new dataset revision with user-verified annotated items")
                     dm_dataset = self._dataset_service.get_dm_dataset(
-                        project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                        project_id=project_id,
+                        task=task,
+                        annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                        sample_mode=SampleMode.TRAINING,
                     )
                     dataset_revision_id = self._dataset_revision_service.save_revision(
                         project_id=project_id, dataset=dm_dataset
@@ -287,15 +290,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
             logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
             otx_training_dataset = otx_dataset_class(
                 dm_subset=dm_training_dataset,
-                transforms=train_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_validation_dataset = otx_dataset_class(
                 dm_subset=dm_validation_dataset,
-                transforms=val_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_testing_dataset = otx_dataset_class(
                 dm_subset=dm_testing_dataset,
-                transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
             return DatasetInfo(
@@ -364,8 +367,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         model_cfg["init_args"]["label_info"] = otx_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
             input_size=cast(tuple[int, int], otx_datamodule.input_size),
-            mean=otx_datamodule.input_mean,
-            std=otx_datamodule.input_std,
+            mean=otx_datamodule.input_mean if otx_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=otx_datamodule.input_std if otx_datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False)

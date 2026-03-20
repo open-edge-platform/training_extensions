@@ -114,7 +114,7 @@ jobs:
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: just venv --device "$env:DEVICE"
+        run: just venv --accelerator "$env:DEVICE"
 
       - name: Build OpenAPI spec
         working-directory: application/backend
@@ -124,7 +124,7 @@ jobs:
         working-directory: application/backend
         env:
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: just pyinstaller --device "$env:DEVICE"
+        run: just pyinstaller --accelerator "$env:DEVICE"
 
       # Copy backend artifacts to UI
 
