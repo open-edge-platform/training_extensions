@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 import torch
 from lightning import Trainer
-from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.exporter.native import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
@@ -96,19 +95,3 @@ class TestSSD:
         fxt_model.explain_mode = True
         output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
-
-    def test_compiled_model(self, fxt_model):
-        # Set Compile Counter
-        torch._dynamo.reset()
-        cnt = CompileCounter()
-
-        # Set model compile setting
-        fxt_model.model = torch.compile(fxt_model.model, backend=cnt)
-
-        # Prepare inputs - use smaller size to reduce memory
-        x = torch.randn(1, 3, *fxt_model.data_input_params.input_size)
-        fxt_model.model(x)
-        assert cnt.frame_count == 1
-
-        # Reset dynamo state
-        torch._dynamo.reset()

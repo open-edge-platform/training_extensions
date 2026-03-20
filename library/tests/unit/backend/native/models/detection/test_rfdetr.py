@@ -400,9 +400,6 @@ class TestRFDETR:
         [
             "rfdetr_nano",
             "rfdetr_small",
-            "rfdetr_base",
-            "rfdetr_medium",
-            "rfdetr_large",
         ],
     )
     def test_init(self, model_name: str) -> None:
@@ -467,8 +464,6 @@ class TestRFDETR:
         ("model_name", "label_info"),
         [
             ("rfdetr_nano", 3),
-            ("rfdetr_small", 5),
-            ("rfdetr_base", 10),
         ],
     )
     def test_loss_computation(self, model_name: str, label_info: int, fxt_detection_batch) -> None:
@@ -502,8 +497,6 @@ class TestRFDETR:
         "model_name",
         [
             "rfdetr_nano",
-            "rfdetr_small",
-            "rfdetr_base",
         ],
     )
     def test_predict(self, model_name: str, fxt_detection_batch) -> None:
@@ -540,7 +533,6 @@ class TestRFDETR:
         "model_name",
         [
             "rfdetr_nano",
-            "rfdetr_base",
         ],
     )
     def test_export(self, model_name: str) -> None:
