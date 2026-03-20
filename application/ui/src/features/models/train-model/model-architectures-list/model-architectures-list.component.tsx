@@ -7,7 +7,7 @@ import { Button, Flex } from '@geti/ui';
 
 import { SortModelArchitectures } from '../sort-model-architectures/sort-model-architectures.component';
 import { SORT_OPTIONS, SortingOptions } from '../sort-model-architectures/utils';
-import { useTrainModel } from '../train-model-provider.component';
+import { useTrainModelState } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
 import { getRecommendedModelArchitecturesWithActiveArchitecture } from './utils';
@@ -18,7 +18,7 @@ export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
     const [sortBy, setSortBy] = useState<SortingOptions>(SortingOptions.NAME_ASC);
     const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
-        useTrainModel();
+        useTrainModelState();
 
     const recommendedArchitectures = getRecommendedModelArchitecturesWithActiveArchitecture(
         modelArchitectures,
