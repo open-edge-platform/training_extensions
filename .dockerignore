@@ -1,0 +1,37 @@
+# Only send files needed by application/docker/Dockerfile to the build daemon.
+# The build context is the repo root, so we exclude everything and whitelist.
+
+*
+
+# Backend
+!application/backend/app
+!application/backend/pyproject.toml
+!application/backend/uv.lock
+
+# UI
+!application/ui/src
+!application/ui/public
+!application/ui/packages
+!application/ui/package.json
+!application/ui/package-lock.json
+!application/ui/tsconfig.json
+!application/ui/rsbuild.config.ts
+
+# Nginx config
+!application/docker/nginx.conf
+
+# Library – only what uv needs to resolve deps and build the otx wheel
+!library/pyproject.toml
+!library/MANIFEST.in
+!library/src/otx
+
+# Exclude non-essential files that sneak in via the above whitelists
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.venv
+**/*.pyc
+**/*.pyo
+**/node_modules
+
