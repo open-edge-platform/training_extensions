@@ -6,8 +6,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, call, patch
 from uuid import uuid4
 
+import numpy as np
 import pytest
 import torch
+from datumaro.experimental import Dataset, LazyImage
+from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.fields import ImageInfo, Subset
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.metrics.types import MetricCallable
@@ -18,6 +22,12 @@ from otx.types.task import OTXTaskType
 
 from app.core.run import ExecutionContext
 from app.datumaro_converter import SampleMode
+from app.datumaro_converter.domain.samples.training import (
+    DetectionTrainingSample,
+    InstanceSegmentationTrainingSample,
+    MulticlassClassificationTrainingSample,
+    MultilabelClassificationTrainingSample,
+)
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -943,3 +953,281 @@ class TestOTXTrainerStoreModelArtifacts:
 
         # Check OTX work directory was cleaned up
         assert not otx_work_dir.exists()
+
+
+# ---------------------------------------------------------------------------
+# Helpers shared across TestOTXTrainerFilterDataset
+# ---------------------------------------------------------------------------
+
+_IMG_INFO = ImageInfo(width=100, height=100)
+_DUMMY_IMAGE = LazyImage("/dummy/path/img.jpg")
+# Four categories cover label indices 0-3, which is the maximum used across all test helpers.
+_LABEL_CATEGORIES = LabelCategories(labels=("cat", "dog", "bird", "fish"))
+
+
+def _make_detection_dataset(*bbox_counts: int, subset: Subset = Subset.TRAINING) -> Dataset[DetectionTrainingSample]:
+    """Build a DetectionTrainingSample dataset where each sample has the given number of bboxes."""
+    dataset: Dataset[DetectionTrainingSample] = Dataset(
+        DetectionTrainingSample, categories={"label": _LABEL_CATEGORIES}
+    )
+    for count in bbox_counts:
+        bboxes = np.array([[i * 10, i * 10, i * 10 + 5, i * 10 + 5] for i in range(count)])
+        labels = np.array([0] * count)
+        dataset.append(
+            DetectionTrainingSample(
+                id=str(uuid4()),
+                image=_DUMMY_IMAGE,
+                image_info=_IMG_INFO,
+                subset=subset,
+                bboxes=bboxes,
+                label=labels,
+                confidence=None,
+            )
+        )
+    return dataset
+
+
+def _make_instance_seg_dataset(
+    *polygon_counts: int, subset: Subset = Subset.TRAINING
+) -> Dataset[InstanceSegmentationTrainingSample]:
+    """Build an InstanceSegmentationTrainingSample dataset where each sample has the given number of polygons."""
+    dataset: Dataset[InstanceSegmentationTrainingSample] = Dataset(
+        InstanceSegmentationTrainingSample, categories={"label": _LABEL_CATEGORIES}
+    )
+    for count in polygon_counts:
+        # Each polygon is a simple square represented as 4 (x, y) vertices
+        polygons = np.array([[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] for _ in range(count)], dtype=np.float32)
+        labels = np.array([0] * count)
+        dataset.append(
+            InstanceSegmentationTrainingSample(
+                id=str(uuid4()),
+                image=_DUMMY_IMAGE,
+                image_info=_IMG_INFO,
+                subset=subset,
+                polygons=polygons,
+                label=labels,
+                confidence=None,
+            )
+        )
+    return dataset
+
+
+def _make_multiclass_dataset(
+    *labels: int | None, subset: Subset = Subset.TRAINING
+) -> Dataset[MulticlassClassificationTrainingSample]:
+    """Build a MulticlassClassificationTrainingSample dataset with the given per-sample labels."""
+    dataset: Dataset[MulticlassClassificationTrainingSample] = Dataset(
+        MulticlassClassificationTrainingSample, categories={"label": _LABEL_CATEGORIES}
+    )
+    for lbl in labels:
+        dataset.append(
+            MulticlassClassificationTrainingSample(
+                id=str(uuid4()),
+                image=_DUMMY_IMAGE,
+                image_info=_IMG_INFO,
+                subset=subset,
+                label=lbl,
+                confidence=None,
+            )
+        )
+    return dataset
+
+
+def _make_multilabel_dataset(
+    *label_lists: list[int], subset: Subset = Subset.TRAINING
+) -> Dataset[MultilabelClassificationTrainingSample]:
+    """Build a MultilabelClassificationTrainingSample dataset where each sample has the given label list."""
+    dataset: Dataset[MultilabelClassificationTrainingSample] = Dataset(
+        MultilabelClassificationTrainingSample, categories={"label": _LABEL_CATEGORIES}
+    )
+    for labels in label_lists:
+        dataset.append(
+            MultilabelClassificationTrainingSample(
+                id=str(uuid4()),
+                image=_DUMMY_IMAGE,
+                image_info=_IMG_INFO,
+                subset=subset,
+                label=np.array(labels),
+                confidence=None,
+            )
+        )
+    return dataset
+
+
+def _make_training_config(
+    min_enabled: bool = False,
+    min_value: int = 1,
+    max_enabled: bool = False,
+    max_value: int = 10,
+) -> TrainingConfiguration:
+    return TrainingConfiguration(
+        task_level_parameters=TaskLevelParameters.model_validate(
+            {
+                "dataset_preparation": {
+                    "filtering": {
+                        "min_annotation_objects": {"enable": min_enabled, "value": min_value},
+                        "max_annotation_objects": {"enable": max_enabled, "value": max_value},
+                    }
+                }
+            }
+        ),
+        algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
+    )
+
+
+class TestOTXTrainerFilterDataset:
+    """Unit tests for OTXTrainer._filter_dataset."""
+
+    # ------------------------------------------------------------------
+    # Filtering disabled
+    # ------------------------------------------------------------------
+
+    def test_returns_original_dataset_when_filtering_disabled(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """When both min and max are disabled the exact same dataset object is returned."""
+        task = Task(task_type=TaskType.DETECTION)
+        dataset = _make_detection_dataset(1, 3, 5)
+        training_config = _make_training_config()  # both disabled
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert result is dataset
+
+    # ------------------------------------------------------------------
+    # Detection - bboxes field
+    # ------------------------------------------------------------------
+
+    def test_detection_min_filter_removes_empty_samples(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples with 0 bboxes are removed when min=1 is enabled."""
+        task = Task(task_type=TaskType.DETECTION)
+        dataset = _make_detection_dataset(0, 1, 2, 3)
+        training_config = _make_training_config(min_enabled=True, min_value=1)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 3
+
+    def test_detection_max_filter_removes_crowded_samples(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples exceeding the max bbox count are removed."""
+        task = Task(task_type=TaskType.DETECTION)
+        dataset = _make_detection_dataset(1, 2, 3, 4, 5)
+        training_config = _make_training_config(max_enabled=True, max_value=3)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 3  # 1, 2, 3 bboxes pass; 4, 5 are removed
+
+    def test_detection_min_and_max_filter_keeps_only_range(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Both min and max enabled: only samples within [min, max] survive."""
+        task = Task(task_type=TaskType.DETECTION)
+        dataset = _make_detection_dataset(0, 1, 2, 3, 4, 5)
+        training_config = _make_training_config(min_enabled=True, min_value=2, max_enabled=True, max_value=4)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 3  # 2, 3, 4 pass
+
+    def test_detection_filter_preserves_schema(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """The returned dataset has the same dtype and schema as the input."""
+        task = Task(task_type=TaskType.DETECTION)
+        dataset = _make_detection_dataset(1, 3, 5)
+        training_config = _make_training_config(min_enabled=True, min_value=2)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert result.dtype == dataset.dtype
+        assert result.schema == dataset.schema
+
+    def test_detection_filter_all_removed_returns_empty_dataset(
+        self, fxt_otx_trainer: Callable[[], OTXTrainer]
+    ) -> None:
+        """When every sample is filtered out the result is an empty (but valid) dataset."""
+        task = Task(task_type=TaskType.DETECTION)
+        dataset = _make_detection_dataset(1, 2, 3)
+        training_config = _make_training_config(min_enabled=True, min_value=10)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 0
+
+    # ------------------------------------------------------------------
+    # Instance segmentation - polygons field
+    # ------------------------------------------------------------------
+
+    def test_instance_seg_min_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples below the polygon minimum are removed."""
+        task = Task(task_type=TaskType.INSTANCE_SEGMENTATION)
+        dataset = _make_instance_seg_dataset(0, 1, 2, 3)
+        training_config = _make_training_config(min_enabled=True, min_value=2)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 2  # 2, 3 polygons pass
+
+    def test_instance_seg_max_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples above the polygon maximum are removed."""
+        task = Task(task_type=TaskType.INSTANCE_SEGMENTATION)
+        dataset = _make_instance_seg_dataset(1, 2, 3, 4)
+        training_config = _make_training_config(max_enabled=True, max_value=2)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 2  # 1, 2 polygons pass
+
+    # ------------------------------------------------------------------
+    # Multiclass classification - scalar label field
+    # ------------------------------------------------------------------
+
+    def test_multiclass_min_filter_removes_unlabelled_samples(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples without a label (None) are removed when min is enabled."""
+        task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True)
+        dataset = _make_multiclass_dataset(None, 0, 1, None, 2)
+        training_config = _make_training_config(min_enabled=True, min_value=1)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 3  # the three samples with an actual label survive
+
+    def test_multiclass_max_filter_is_noop(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Max filtering is a no-op for multiclass classification (label is always scalar)."""
+        task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True)
+        dataset = _make_multiclass_dataset(0, 1, 2)
+        training_config = _make_training_config(max_enabled=True, max_value=1)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        # No samples removed - max is meaningless for a scalar label
+        assert len(result.df) == 3
+
+    # ------------------------------------------------------------------
+    # Multilabel classification - label list field
+    # ------------------------------------------------------------------
+
+    def test_multilabel_min_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples with fewer labels than the minimum are removed."""
+        task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
+        dataset = _make_multilabel_dataset([], [0], [0, 1], [0, 1, 2])
+        training_config = _make_training_config(min_enabled=True, min_value=2)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 2  # [0, 1] and [0, 1, 2] pass
+
+    def test_multilabel_max_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Samples with more labels than the maximum are removed."""
+        task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
+        dataset = _make_multilabel_dataset([0], [0, 1], [0, 1, 2])
+        training_config = _make_training_config(max_enabled=True, max_value=2)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 2  # [0] and [0, 1] pass
+
+    def test_multilabel_min_and_max_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+        """Both min and max applied simultaneously on multilabel classification."""
+        task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
+        dataset = _make_multilabel_dataset([], [0], [0, 1], [0, 1, 2], [0, 1, 2, 3])
+        training_config = _make_training_config(min_enabled=True, min_value=1, max_enabled=True, max_value=2)
+
+        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+
+        assert len(result.df) == 2  # [0] and [0, 1] pass
