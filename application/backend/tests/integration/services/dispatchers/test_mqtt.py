@@ -30,13 +30,11 @@ def mqtt_broker():
     compose = DockerCompose("tests/integration/fixtures", compose_file_name="docker-compose.test.mqtt.yaml")
     compose.start()
 
-    # Wait for MQTT broker to be ready - check logs directly
-    mqtt_logs = compose.get_logs("mqtt")
-
     # Wait for the broker to start
-    timeout = 60
+    timeout = 10
     start_time = time.time()
     while time.time() - start_time < timeout:
+        mqtt_logs = compose.get_logs("mqtt")
         if re.search(r"mosquitto version .* starting", mqtt_logs[0] if mqtt_logs else ""):
             break
         time.sleep(1)
