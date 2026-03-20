@@ -1,147 +1,131 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for dataset mixins."""
+"""Tests for dataset mixins (CPU/GPU pipeline architecture)."""
 
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-import torch
-from torchvision.transforms.v2 import Compose, ToDtype
 
+from otx.backend.native.callbacks.aug_scheduler import DataAugSwitch
+from otx.data.augmentation import CPUAugmentationPipeline
 from otx.data.dataset.mixins import DataAugSwitchMixin
-from otx.data.entity.sample import OTXSample
 
 
 class MockDataset(DataAugSwitchMixin):
     """Mock dataset class for testing the mixin."""
 
-    def __init__(self, *args, **kwargs):
-        self.to_tv_image = True
-        self.transforms = None
-
-    def _apply_transforms(self, entity: OTXSample) -> OTXSample:
-        return entity
+    def __init__(self):
+        self.transforms: Any = None
 
 
 class TestDataAugSwitchMixin:
-    """Test cases for DataAugSwitchMixin."""
+    """Test cases for DataAugSwitchMixin with CPU/GPU pipeline."""
 
     @pytest.fixture
-    def mock_dataset(self):
-        """Create a mock dataset with the mixin."""
+    def dataset(self):
         return MockDataset()
 
     @pytest.fixture
-    def mock_data_aug_switch(self):
-        """Create a mock DataAugSwitch."""
-        mock_switch = MagicMock()
-        mock_transforms = Compose([ToDtype(dtype=torch.float32)])
-        mock_switch.current_transforms = (True, mock_transforms)
-        return mock_switch
+    def mock_switch(self):
+        """A mock DataAugSwitch that returns predictable CPU pipeline."""
+        s = MagicMock(spec=DataAugSwitch)
+        s.current_policy_name = "no_aug"
+        return s
 
-    @pytest.fixture
-    def mock_entity(self):
-        """Create a mock OTXSample."""
-        return MagicMock(spec=OTXSample)
+    # -- lazy init -------------------------------------------------------
 
-    def test_lazy_initialization(self, mock_dataset):
-        """Test that mixin initializes lazily."""
-        # Initially, the attribute shouldn't exist
-        assert not hasattr(mock_dataset, "data_aug_switch")
-
-        # After calling has_dynamic_augmentation, it should be initialized
-        assert not mock_dataset.has_dynamic_augmentation
-        assert hasattr(mock_dataset, "data_aug_switch")
-        assert mock_dataset.data_aug_switch is None
-
-    def test_set_data_aug_switch(self, mock_dataset, mock_data_aug_switch):
-        """Test setting data augmentation switch."""
-        mock_dataset.set_data_aug_switch(mock_data_aug_switch)
-        assert mock_dataset.data_aug_switch is mock_data_aug_switch
-
-    def test_has_dynamic_augmentation_false_when_none(self, mock_dataset):
-        """Test has_dynamic_augmentation returns False when no switch is set."""
-        assert not mock_dataset.has_dynamic_augmentation
-
-    def test_has_dynamic_augmentation_true_when_set(self, mock_dataset, mock_data_aug_switch):
-        """Test has_dynamic_augmentation returns True when switch is set."""
-        mock_dataset.set_data_aug_switch(mock_data_aug_switch)
-        assert mock_dataset.has_dynamic_augmentation
-
-    def test_apply_augmentation_switch_with_switch(self, mock_dataset, mock_data_aug_switch, mock_entity):
-        """Test _apply_augmentation_switch when switch is set."""
-        mock_dataset.set_data_aug_switch(mock_data_aug_switch)
-
-        policy_name = mock_dataset._apply_augmentation_switch()
-
-        assert mock_dataset.to_tv_image is mock_data_aug_switch.policies[policy_name]["to_tv_image"]
-        assert mock_dataset.transforms is mock_data_aug_switch.policies[policy_name]["transforms"]
-
-    def test_apply_augmentation_switch_updates_transforms(self, mock_dataset, mock_entity):
-        """Test that augmentation switch properly updates transforms."""
-        # Create a mock switch with specific transforms
-        mock_switch = MagicMock()
-        new_transforms = Compose([ToDtype(dtype=torch.int32)])
-        mock_switch.current_transforms = (False, new_transforms)
-
-        mock_dataset.set_data_aug_switch(mock_switch)
-        policy_name = mock_dataset._apply_augmentation_switch()
-
-        assert mock_dataset.to_tv_image is mock_switch.policies[policy_name]["to_tv_image"]
-        assert mock_dataset.transforms is mock_switch.policies[policy_name]["transforms"]
-
-    def test_multiple_switch_updates(self, mock_dataset):
-        """Test multiple updates to the augmentation switch."""
-        # First switch
-        mock_switch1 = MagicMock()
-        transforms1 = Compose([ToDtype(dtype=torch.float32)])
-        mock_switch1.current_transforms = (True, transforms1)
-
-        mock_dataset.set_data_aug_switch(mock_switch1)
-        policy_name = mock_dataset._apply_augmentation_switch()
-
-        assert mock_dataset.to_tv_image is mock_switch1.policies[policy_name]["to_tv_image"]
-        assert mock_dataset.transforms is mock_switch1.policies[policy_name]["transforms"]
-
-        # Second switch
-        mock_switch2 = MagicMock()
-        transforms2 = Compose([ToDtype(dtype=torch.int32)])
-        mock_switch2.current_transforms = (False, transforms2)
-
-        mock_dataset.set_data_aug_switch(mock_switch2)
-        policy_name = mock_dataset._apply_augmentation_switch()
-
-        assert mock_dataset.to_tv_image is mock_switch2.policies[policy_name]["to_tv_image"]
-        assert mock_dataset.transforms is mock_switch2.policies[policy_name]["transforms"]
-
-    def test_has_dynamic_augmentation_property_edge_cases(self):
-        """Test edge cases for has_dynamic_augmentation property."""
-
-        # Dataset without the attribute (should be lazily initialized)
-        class DatasetWithoutSwitch:
-            pass
-
-        dataset = DatasetWithoutSwitch()
-        dataset._ensure_data_aug_switch_initialized = DataAugSwitchMixin._ensure_data_aug_switch_initialized.__get__(
-            dataset,
-        )
-        dataset.has_dynamic_augmentation = DataAugSwitchMixin.has_dynamic_augmentation.__get__(dataset)
-
+    def test_lazy_initialization(self, dataset):
+        """Attribute should not exist until first access."""
+        assert not hasattr(dataset, "data_aug_switch")
         assert not dataset.has_dynamic_augmentation
-        # After calling has_dynamic_augmentation, the attribute should be initialized
         assert hasattr(dataset, "data_aug_switch")
         assert dataset.data_aug_switch is None
 
-        # Dataset with None value
-        class DatasetWithNoneSwitch:
+    # -- set_data_aug_switch --------------------------------------------
+
+    def test_set_data_aug_switch(self, dataset, mock_switch):
+        dataset.set_data_aug_switch(mock_switch)
+        assert dataset.data_aug_switch is mock_switch
+
+    def test_set_data_aug_switch_replaces(self, dataset, mock_switch):
+        dataset.set_data_aug_switch(mock_switch)
+        new_switch = MagicMock(spec=DataAugSwitch)
+        dataset.set_data_aug_switch(new_switch)
+        assert dataset.data_aug_switch is new_switch
+
+    # -- has_dynamic_augmentation ---------------------------------------
+
+    def test_has_dynamic_false_when_none(self, dataset):
+        assert not dataset.has_dynamic_augmentation
+
+    def test_has_dynamic_true_when_set(self, dataset, mock_switch):
+        dataset.set_data_aug_switch(mock_switch)
+        assert dataset.has_dynamic_augmentation
+
+    # -- _apply_augmentation_switch -------------------------------------
+
+    def test_apply_returns_none_when_no_switch(self, dataset):
+        result = dataset._apply_augmentation_switch()
+        assert result is None
+        assert dataset.transforms is None
+
+    def test_apply_sets_transforms_to_cpu_pipeline(self, dataset, mock_switch):
+        expected_pipeline = MagicMock(spec=CPUAugmentationPipeline)
+        mock_switch.get_cpu_pipeline.return_value = expected_pipeline
+        dataset.set_data_aug_switch(mock_switch)
+        policy = dataset._apply_augmentation_switch()
+        assert policy == "no_aug"
+        assert dataset.transforms is expected_pipeline
+        mock_switch.get_cpu_pipeline.assert_called_once_with("no_aug")
+
+    def test_apply_follows_policy_changes(self, dataset, mock_switch):
+        dataset.set_data_aug_switch(mock_switch)
+
+        # First call → no_aug
+        pipeline_no_aug = MagicMock(spec=CPUAugmentationPipeline)
+        mock_switch.current_policy_name = "no_aug"
+        mock_switch.get_cpu_pipeline.return_value = pipeline_no_aug
+        dataset._apply_augmentation_switch()
+        assert dataset.transforms is pipeline_no_aug
+
+        # Policy changes → strong_aug_1
+        pipeline_strong = MagicMock(spec=CPUAugmentationPipeline)
+        mock_switch.current_policy_name = "strong_aug_1"
+        mock_switch.get_cpu_pipeline.return_value = pipeline_strong
+        policy = dataset._apply_augmentation_switch()
+        assert policy == "strong_aug_1"
+        assert dataset.transforms is pipeline_strong
+
+    def test_apply_does_not_touch_to_tv_image(self, dataset, mock_switch):
+        """to_tv_image should NOT be mutated — GPU pipeline handles normalization."""
+        dataset.to_tv_image = True
+        dataset.set_data_aug_switch(mock_switch)
+        dataset._apply_augmentation_switch()
+        assert dataset.to_tv_image is True
+
+    # -- edge cases -----------------------------------------------------
+
+    def test_mixin_on_plain_class(self):
+        """Mixin works even on a plain class that doesn't inherit OTXDataset."""
+
+        class PlainDataset(DataAugSwitchMixin):
             def __init__(self):
-                self.data_aug_switch = None
+                self.transforms: Any = None
 
-        dataset2 = DatasetWithNoneSwitch()
-        dataset2._ensure_data_aug_switch_initialized = DataAugSwitchMixin._ensure_data_aug_switch_initialized.__get__(
-            dataset2,
-        )
-        dataset2.has_dynamic_augmentation = DataAugSwitchMixin.has_dynamic_augmentation.__get__(dataset2)
+        ds = PlainDataset()
+        assert not ds.has_dynamic_augmentation
 
-        assert not dataset2.has_dynamic_augmentation
+        mock = MagicMock(spec=DataAugSwitch)
+        mock.current_policy_name = "light_aug"
+        expected_pipeline = MagicMock(spec=CPUAugmentationPipeline)
+        mock.get_cpu_pipeline.return_value = expected_pipeline
+        ds.set_data_aug_switch(mock)
+
+        assert ds.has_dynamic_augmentation
+        policy = ds._apply_augmentation_switch()
+        assert policy == "light_aug"
+        assert ds.transforms is expected_pipeline

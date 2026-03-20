@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import paho.mqtt.client as mqtt
 import pytest
+from loguru import logger
 from paho.mqtt.enums import CallbackAPIVersion
 from testcontainers.compose import DockerCompose
 
@@ -29,18 +30,18 @@ def mqtt_broker():
     compose = DockerCompose("tests/integration/fixtures", compose_file_name="docker-compose.test.mqtt.yaml")
     compose.start()
 
-    # Wait for MQTT broker to be ready - check logs directly
-    mqtt_logs = compose.get_logs("mqtt")
-
     # Wait for the broker to start
-    timeout = 30
+    timeout = 10
     start_time = time.time()
     while time.time() - start_time < timeout:
+        mqtt_logs = compose.get_logs("mqtt")
         if re.search(r"mosquitto version .* starting", mqtt_logs[0] if mqtt_logs else ""):
             break
         time.sleep(1)
     else:
         raise TimeoutError("MQTT broker did not start within timeout")
+
+    logger.info("MQTT broker is ready (start took {} seconds)", time.time() - start_time)
 
     # Get the exposed port
     mqtt_port = compose.get_service_port("mqtt", 1883)

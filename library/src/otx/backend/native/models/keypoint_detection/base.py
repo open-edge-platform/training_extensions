@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for keypoint detection model entity used in OTX."""
@@ -32,8 +32,8 @@ class OTXKeypointDetectionModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams | None, optional): Parameters for image data preprocessing. If None is given,
-            default parameters for the specific model will be used.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image data
+            preprocessing. If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -46,7 +46,7 @@ class OTXKeypointDetectionModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "keypoint_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -56,7 +56,6 @@ class OTXKeypointDetectionModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.KEYPOINT_DETECTION,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
@@ -94,6 +93,9 @@ class OTXKeypointDetectionModel(OTXModel):
         if inputs.imgs_info is None:
             msg = "The input image information is not provided."
             raise ValueError(msg)
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         for i, output in enumerate(outputs):
             if not isinstance(output, tuple):
                 raise TypeError(output)
@@ -130,6 +132,9 @@ class OTXKeypointDetectionModel(OTXModel):
     def configure_metric(self) -> None:
         """Configure the metric."""
         super().configure_metric()
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         self._metric.input_size = tuple(self.data_input_params.input_size)
 
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
@@ -209,4 +214,9 @@ class OTXKeypointDetectionModel(OTXModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return DataInputParams(input_size=(512, 512), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+
+    @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.KEYPOINT_DETECTION

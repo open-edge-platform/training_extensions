@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for detection model entity used in OTX."""
@@ -45,7 +45,7 @@ class OTXSegmentationModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -58,7 +58,7 @@ class OTXSegmentationModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "otx_segmentation_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -69,7 +69,6 @@ class OTXSegmentationModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.SEMANTIC_SEGMENTATION,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
@@ -179,11 +178,7 @@ class OTXSegmentationModel(OTXModel):
             raise ValueError(msg)
 
         return [
-            {
-                "preds": pred_mask,
-                "target": target_mask,
-            }
-            for pred_mask, target_mask in zip(preds.masks, inputs.masks)
+            {"preds": pred_mask, "target": target_mask} for pred_mask, target_mask in zip(preds.masks, inputs.masks)
         ]
 
     @staticmethod
@@ -297,4 +292,9 @@ class OTXSegmentationModel(OTXModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))
+        return DataInputParams(input_size=(512, 512), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+
+    @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.SEMANTIC_SEGMENTATION

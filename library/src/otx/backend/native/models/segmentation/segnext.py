@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """SegNext model implementations."""
@@ -30,7 +30,7 @@ class SegNext(OTXSegmentationModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the hierarchical labels.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         model_name (Literal, optional): Name of the model. Defaults to "segnext_small".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -43,7 +43,7 @@ class SegNext(OTXSegmentationModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["segnext_tiny", "segnext_small", "segnext_base"] = "segnext_small",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

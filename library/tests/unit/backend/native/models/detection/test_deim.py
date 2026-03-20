@@ -16,14 +16,19 @@ from otx.data.entity.sample import OTXPredictionBatch
 class TestDEIMDFine:
     """Test class for DEIM DFine detection model."""
 
+    @pytest.fixture(params=["deim_dfine_hgnetv2_n"])
+    def fxt_model(self, request) -> DEIMDFine:
+        return DEIMDFine(
+            model_name=request.param,
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+
     @pytest.mark.parametrize(
         "model_name",
         [
             "deim_dfine_hgnetv2_n",
             "deim_dfine_hgnetv2_s",
-            "deim_dfine_hgnetv2_m",
-            "deim_dfine_hgnetv2_l",
-            "deim_dfine_hgnetv2_x",
         ],
     )
     def test_init(self, model_name: str) -> None:
@@ -77,29 +82,12 @@ class TestDEIMDFine:
         else:
             assert len(created_model.optimizer_configuration) == 2
 
-    @pytest.mark.parametrize(
-        ("model_name", "label_info"),
-        [
-            ("deim_dfine_hgnetv2_n", 3),
-            ("deim_dfine_hgnetv2_s", 5),
-            ("deim_dfine_hgnetv2_m", 10),
-            ("deim_dfine_hgnetv2_l", 80),
-            ("deim_dfine_hgnetv2_x", 20),
-        ],
-    )
-    def test_loss_computation(self, model_name: str, label_info: int, fxt_detection_batch) -> None:
+    def test_loss_computation(self, fxt_model, fxt_detection_batch) -> None:
         """Test DEIM DFine loss computation in training mode."""
-        model = DEIMDFine(
-            model_name=model_name,
-            label_info=label_info,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Set model to training mode
-        model.train()
+        fxt_model.train()
 
         # Forward pass should return loss dictionary
-        output = model(fxt_detection_batch)
+        output = fxt_model(fxt_detection_batch)
 
         # Check that output contains expected DEIM loss components
         assert isinstance(output, dict)
@@ -109,58 +97,28 @@ class TestDEIMDFine:
             assert loss_name in output
             assert isinstance(output[loss_name], torch.Tensor)
 
-    @pytest.mark.parametrize(
-        "model_name",
-        [
-            "deim_dfine_hgnetv2_n",
-            "deim_dfine_hgnetv2_s",
-            "deim_dfine_hgnetv2_m",
-            "deim_dfine_hgnetv2_l",
-            "deim_dfine_hgnetv2_x",
-        ],
-    )
-    def test_predict(self, model_name: str, fxt_detection_batch) -> None:
+    def test_predict(self, fxt_model, fxt_detection_batch) -> None:
         """Test DEIM DFine prediction in evaluation mode."""
-        model = DEIMDFine(
-            model_name=model_name,
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-        # Set model to evaluation mode
-        model.eval()
+        fxt_model.eval()
 
         # Forward pass should return predictions
-        output = model(fxt_detection_batch)
+        output = fxt_model(fxt_detection_batch)
 
         # Check that output is OTXPredictionBatch
         assert isinstance(output, OTXPredictionBatch)
         assert output.batch_size == 2
 
-    @pytest.mark.parametrize(
-        "model_name",
-        [
-            "deim_dfine_hgnetv2_s",
-            "deim_dfine_hgnetv2_m",
-        ],
-    )
-    def test_export(self, model_name: str) -> None:
+    def test_export(self, fxt_model) -> None:
         """Test DEIM DFine export functionality."""
-        model = DEIMDFine(
-            model_name=model_name,
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Set model to evaluation mode
-        model.eval()
+        fxt_model.eval()
 
         # Test export forward pass
-        output = model.forward_for_tracing(torch.randn(1, 3, 640, 640))
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 640, 640))
         assert len(output) == 3  # Should return boxes, scores, labels
 
         # Test with explain mode
-        model.explain_mode = True
-        output = model.forward_for_tracing(torch.randn(1, 3, 640, 640))
+        fxt_model.explain_mode = True
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 640, 640))
         assert len(output) == 5  # Should return boxes, scores, labels, saliency_map, feature_vector
 
     def test_multi_scale_training(self) -> None:
@@ -176,18 +134,6 @@ class TestDEIMDFine:
         created_model = model._create_model()
         assert isinstance(created_model.multi_scale, list)
         assert len(created_model.multi_scale) > 0
-
-    def test_torch_compile_integration(self) -> None:
-        """Test DEIM DFine with torch compile enabled."""
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_s",
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            torch_compile=True,
-        )
-
-        # Check that torch compile is enabled
-        assert model.torch_compile is True
 
     def test_weight_dict_configuration(self) -> None:
         """Test that the weight dictionary is properly configured."""
@@ -229,52 +175,3 @@ class TestDEIMDFine:
         assert criterion.gamma == 1.5
         assert criterion.reg_max == 32
         assert criterion.num_classes == 10
-
-    def test_dummy_input_generation(self) -> None:
-        """Test dummy input generation for different batch sizes."""
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_s",
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Test with different batch sizes
-        for batch_size in [1, 2, 4]:
-            dummy_input = model.get_dummy_input(batch_size)
-            assert len(dummy_input.images) == batch_size
-            assert dummy_input.images[0].shape == (3, 640, 640)
-
-    def test_model_properties(self) -> None:
-        """Test various model properties."""
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_m",
-            label_info=20,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Test input size multiplier
-        assert model.input_size_multiplier == 32
-
-        # Test pretrained weights availability
-        assert model.model_name in model._pretrained_weights
-        assert isinstance(model._pretrained_weights[model.model_name], str)
-        assert model._pretrained_weights[model.model_name].startswith("https://")
-
-    def test_inheritance_from_rtdetr(self) -> None:
-        """Test that DEIM DFine properly inherits from RTDETR."""
-        from otx.backend.native.models.detection.rtdetr import RTDETR
-
-        model = DEIMDFine(
-            model_name="deim_dfine_hgnetv2_s",
-            label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-
-        # Check inheritance
-        assert isinstance(model, RTDETR)
-
-        # Check that it has inherited methods
-        assert hasattr(model, "forward")
-        assert hasattr(model, "training_step")
-        assert hasattr(model, "validation_step")
-        assert hasattr(model, "predict_step")

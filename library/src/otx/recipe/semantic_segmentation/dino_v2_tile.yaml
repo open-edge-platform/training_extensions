@@ -50,38 +50,34 @@ overrides:
       - 518
       - 518
     train_subset:
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
-          init_args:
-            scale: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.Pad
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-            pad_val:
-              img: 0
-              mask: 255
-            transform_mask: true
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+      augmentations_gpu: []
     val_subset:
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
-          init_args:
-            scale: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.Pad
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-            pad_val:
-              img: 0
-              mask: 255
-            transform_mask: true
+            resize_targets: true
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+      augmentations_gpu: []
     test_subset:
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
-          init_args:
-            scale: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.Pad
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-            pad_val:
-              img: 0
-              mask: 255
-            transform_mask: true
+            resize_targets: true
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
+      augmentations_gpu: []

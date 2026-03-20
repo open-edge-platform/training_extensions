@@ -3,11 +3,11 @@
 
 import { useEffect, useState } from 'react';
 
-import { TrainingConfiguration } from '../../../constants/shared-types';
+import { TrainingConfiguration } from '../../../../constants/shared-types';
 import {
     useGetModelArchitectureTrainingConfiguration,
     useGetModelTrainingConfiguration,
-} from '../hooks/api/use-get-model-training-configuration.hook';
+} from '../../hooks/api/use-get-model-training-configuration.hook';
 
 type useTrainingConfigurationProps = {
     modelArchitectureId: string | null;

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Download a ~40-sample CIFAR-100 subset and export it as a hierarchical classification dataset.
@@ -375,7 +375,7 @@ def _build_dataset(
             PILImage.fromarray(img_np).save(images_dir / filename)
 
             # Hierarchical label: only fine label index (hierarchy is encoded in categories)
-            label = np.array([fine_remap[fine_label]], dtype=np.uint8)
+            label = torch.tensor([fine_remap[fine_label]], dtype=torch.long)
 
             sample = ClassificationHierarchicalSample(
                 image=image,

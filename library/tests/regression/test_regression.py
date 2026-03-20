@@ -119,7 +119,7 @@ class BaseTest:
             for _, row in sub_df.iterrows():
                 row = row.dropna()
                 metrics = row.to_dict()
-                mlflow.log_metrics(metrics=metrics, step=int(step))  # type: ignore[arg-type]
+                mlflow.log_metrics(metrics=metrics, step=step)  # pyrefly: ignore[bad-argument-type]
 
         mlflow.log_artifact(local_path=str(metric_csv_file), artifact_path="metrics")
 

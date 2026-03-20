@@ -51,10 +51,6 @@ callbacks:
       filename: "checkpoints/epoch_{epoch:03d}"
 
 overrides:
-  reset:
-    - data.train_subset.transforms
-    - data.val_subset.transforms
-    - data.test_subset.transforms
   gradient_clip_val: 35.0
   data:
     input_size:
@@ -62,121 +58,56 @@ overrides:
       - 416
     train_subset:
       batch_size: 8
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
-          enable: false
-        - class_path: otx.data.transform_libs.torchvision.Resize
-          init_args:
-            scale: $(input_size) * 1.538 # 640x640
-            keep_ratio: true
-            transform_bbox: true
-        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
             random_pop: false
             max_cached_images: 20
-            img_scale: $(input_size) * 1.538 # 640x640
-        - class_path: otx.data.transform_libs.torchvision.RandomAffine
+            img_scale: $(input_size) * 1.538
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
-            border: $(input_size) * 1.538 * -0.5 # 640x640 * -0.5
-        - class_path: otx.data.transform_libs.torchvision.CachedMixUp
-          enable: false
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu:
+        - class_path: kornia.augmentation.RandomAffine
           init_args:
-            img_scale: $(input_size) * 1.538 # 640x640
-            ratio_range:
-              - 1.0
-              - 1.0
-            probability: 0.5
-            random_pop: false
-            max_cached_images: 10
-        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
-          enable: false
-          init_args:
-            brightness:
-              - 0.875
-              - 1.125
-            contrast:
-              - 0.5
-              - 1.5
-            saturation:
-              - 0.5
-              - 1.5
-            hue:
-              - -0.05
-              - 0.05
-            p: 0.5
-        - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
-          enable: false
-        - class_path: otx.data.transform_libs.torchvision.RandomFlip
-          init_args:
-            probability: 0.5
-            is_numpy_to_tvtensor: false
-        - class_path: otx.data.transform_libs.torchvision.Pad
-          init_args:
-            pad_to_square: true
-            pad_val: 114
-        - class_path: torchvision.transforms.v2.RandomVerticalFlip
-          enable: false
+            degrees: 10.0
+            translate: [0.1, 0.1]
+            shear: [-2.0, 2.0]
+            p: 1.0
+        - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
-        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
-          enable: false
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            kernel_size: 5
-            sigma:
-              - 0.1
-              - 2.0
-            probability: 0.5
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
-          enable: false
-          init_args:
-            mean: 0.0
-            sigma: 0.1
-            probability: 0.5
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 8
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: true
-            is_numpy_to_tvtensor: false
-        - class_path: otx.data.transform_libs.torchvision.Pad
+            size: $(input_size)
+            keep_aspect_ratio: true
+            resize_targets: false
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            pad_to_square: true
-            pad_val: 114
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
     test_subset:
       batch_size: 8
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+      augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: true
-            is_numpy_to_tvtensor: false
-        - class_path: otx.data.transform_libs.torchvision.Pad
+            size: $(input_size)
+            keep_aspect_ratio: true
+            resize_targets: false
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            pad_to_square: true
-            pad_val: 114
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]

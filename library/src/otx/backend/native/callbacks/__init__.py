@@ -4,6 +4,7 @@
 """Module for OTX custom callbacks."""
 
 from .batchsize_finder import BatchSizeFinder
+from .gpu_augmentation import GPUAugmentationCallback
 from .lr_monitor import SimpleLearningRateMonitor
 
-__all__ = ["BatchSizeFinder", "SimpleLearningRateMonitor"]
+__all__ = ["BatchSizeFinder", "GPUAugmentationCallback", "SimpleLearningRateMonitor"]

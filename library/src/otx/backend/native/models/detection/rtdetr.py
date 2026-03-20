@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """RTDetr model implementations."""
@@ -27,7 +27,6 @@ from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.data.entity.utils import stack_batch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
@@ -47,7 +46,7 @@ class RTDETR(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None, uses _default_preprocessing_params.
         model_name (literal, optional): Name of the model to use. Defaults to "rtdetr_50".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -70,7 +69,7 @@ class RTDETR(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"] = "rtdetr_50",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -113,6 +112,9 @@ class RTDETR(OTXDetectionModel):
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]
 
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         model = DETR(
             multi_scale=self.multi_scale,
             backbone=backbone,
@@ -133,15 +135,6 @@ class RTDETR(OTXDetectionModel):
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
-        # Stack images if they're in list format
-        if isinstance(entity.images, list):
-            entity.images, entity.imgs_info = stack_batch(  # type: ignore[assignment]
-                entity.images,
-                entity.imgs_info,  # type: ignore[arg-type]
-                pad_size_divisor=pad_size_divisor,
-                pad_value=pad_value,
-            )
-
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
         if entity.bboxes is not None and entity.labels is not None:

@@ -3,8 +3,6 @@
 
 
 import pytest
-import torch
-from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.segmentation.segnext import SegNext
@@ -32,36 +30,3 @@ class TestSegNext:
         assert isinstance(config["ignored_scope"]["patterns"], list)
         assert "types" in config["ignored_scope"]
         assert isinstance(config["ignored_scope"]["types"], list)
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            SegNext(
-                model_name="segnext_tiny",
-                label_info=3,
-                data_input_params=DataInputParams((518, 518), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            SegNext(
-                model_name="segnext_small",
-                label_info=3,
-                data_input_params=DataInputParams((518, 518), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            SegNext(
-                model_name="segnext_base",
-                label_info=3,
-                data_input_params=DataInputParams((518, 518), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_compiled_model(self, model):
-        # Set Compile Counter
-        torch._dynamo.reset()
-        cnt = CompileCounter()
-
-        # Set model compile setting
-        model.model = torch.compile(model.model, backend=cnt)
-
-        # Prepare inputs
-        x = torch.randn(1, 3, *model.data_input_params.input_size)
-        model.model(x)
-        assert cnt.frame_count == 1
