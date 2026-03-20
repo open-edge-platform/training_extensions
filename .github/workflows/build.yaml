@@ -45,10 +45,47 @@ jobs:
               - library/**
               - .github/**
 
+  # Pre-build shared Docker stages (backend-base, web-ui, runtime-base) so that
+  # device-specific builds can reuse them from cache instead of rebuilding independently.
+  # This avoids tripling the work for stages that are identical across cpu/xpu/cuda.
+  build-shared-cache:
+    name: Build shared Docker stages cache
+    runs-on: overflow
+    needs: check_paths
+    if: needs.check_paths.outputs.run_workflow == 'true'
+    permissions:
+      contents: read
+    steps:
+      - *checkout
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build and cache shared stages
+        working-directory: application
+        run: |
+          # Build up to runtime-base (the last shared stage before device-specific targets).
+          # This caches: backend-base, cpu-base (used by geti-cpu), web-ui, runtime-base.
+          # Device-specific stages (cuda-base, xpu-base) are NOT built here since they diverge.
+          docker buildx build \
+            --build-arg http_proxy --build-arg https_proxy --build-arg no_proxy \
+            --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY \
+            "$(git rev-parse --show-toplevel)" \
+            -f docker/Dockerfile \
+            --target runtime-base \
+            --cache-from type=gha,scope=shared \
+            --cache-to type=gha,mode=max,scope=shared \
+            --load
+
   build:
     name: Build and upload docker image (${{ matrix.device }})
     runs-on: overflow
-    needs: check_paths
+    needs:
+      - check_paths
+      - build-shared-cache
     if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
       matrix:
@@ -72,6 +109,9 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
       - name: Install Python, uv and Just
         uses: ./.github/actions/install-common-deps
         with:
@@ -91,12 +131,15 @@ jobs:
       - name: Build image for ${{ matrix.device }}
         working-directory: application
         run: |
-          for TAG in $TAGS ; do
-              just build-image --accelerator $DEVICE --tag $TAG
-          done
+          just build-image \
+            --accelerator $DEVICE \
+            --tag "$(echo "$TAGS" | head -1)" \
+            --extra-tags "$(echo "$TAGS" | tail -n +2 | tr '\n' ' ')"
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DEVICE: ${{ matrix.device }}
+          BUILDX_CACHE_FROM: "type=gha,scope=${{ matrix.device }} type=gha,scope=shared"
+          BUILDX_CACHE_TO: "type=gha,mode=max,scope=${{ matrix.device }}"
 
       - name: Run simple checks on the built image
         working-directory: application
@@ -271,6 +314,7 @@ jobs:
     name: Required Check build
     needs:
       - check_paths
+      - build-shared-cache
       - build
     runs-on: overflow
     env:

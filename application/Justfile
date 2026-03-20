@@ -19,14 +19,42 @@ logs-volume := application-name + "-logs"
 # Build Geti Docker image for a specific training backend
 [arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
 [arg("tag", long="tag", short="t")]
-build-image accelerator="cpu" tag="latest": install-uv
-    @echo "Building docker image for accelerator: {{ accelerator }}"
-    @docker build \
+[arg("extra-tags", long="extra-tags", help="Space-separated list of additional tags to apply to the image")]
+build-image accelerator="cpu" tag="latest" extra-tags="": install-uv
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    IMAGE="{{ application-name }}-{{ accelerator }}"
+
+    CACHE_FROM_ARGS=""
+    if [[ -n "${BUILDX_CACHE_FROM:-}" ]]; then
+        for src in ${BUILDX_CACHE_FROM}; do
+            CACHE_FROM_ARGS="${CACHE_FROM_ARGS} --cache-from ${src}"
+        done
+    fi
+
+    CACHE_TO_ARGS=""
+    if [[ -n "${BUILDX_CACHE_TO:-}" ]]; then
+        for dst in ${BUILDX_CACHE_TO}; do
+            CACHE_TO_ARGS="${CACHE_TO_ARGS} --cache-to ${dst}"
+        done
+    fi
+
+    TAG_ARGS="--tag ${IMAGE}:{{ tag }}"
+    for extra in {{ extra-tags }}; do
+        TAG_ARGS="${TAG_ARGS} --tag ${IMAGE}:${extra}"
+    done
+
+    echo "Building docker image for accelerator: {{ accelerator }}"
+    docker buildx build \
         {{ docker-build-args }} \
         {{ docker-build-context }} \
         -f "{{ justfile_directory() }}/docker/Dockerfile" \
-        --target "{{ application-name }}-{{ accelerator }}" \
-        --tag "{{ application-name }}-{{ accelerator }}:{{ tag }}"
+        --target "${IMAGE}" \
+        ${TAG_ARGS} \
+        ${CACHE_FROM_ARGS} \
+        ${CACHE_TO_ARGS} \
+        --load
 
 # Run Geti as a Docker container for a specific training backend
 [arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]

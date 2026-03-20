@@ -14,13 +14,13 @@ WORKDIR /application/backend
 
 # Build deps (for compiling / Rust-based crates)
 # TODO: remove 'git' once all dependencies are on PyPI
-RUN apt-get update  \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update  \
     && apt-get install -y --no-install-recommends \
         build-essential=12.12 \
         curl=8.14.1-2* \
-        git=1:2.47.3-0* \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+        git=1:2.47.3-0*
 
 # Install Rust toolchain
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -118,14 +118,14 @@ RUN mkdir -p ${LOG_DIR} && chown ${UID}:${UID} ${LOG_DIR}
 
 # Common system deps (CPU/GPU/XPU all need these)
 # TODO: remove 'git' once all dependencies are available on PyPI
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
         git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0t64=2.84.4-3~deb13u2 \
-        libglx-mesa0=25.0.7-2 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+        libglx-mesa0=25.0.7-2
 
 # Backend code + uv from backend-base
 COPY --link application/backend/app /application/backend/app
@@ -158,18 +158,20 @@ FROM runtime-base AS geti-cuda
 
 USER root
 
-RUN apt-get update  \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
     && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && rm -rf cuda-keyring_1.1-1_all.deb \
     && apt-get remove -y wget
 
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
-      nvidia-open=590.48.01-1 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+      nvidia-open=590.48.01-1
 
 USER ${USER_NAME}
 
@@ -190,12 +192,12 @@ RUN echo "deb [arch=amd64 trusted=yes] https://ppa.launchpadcontent.net/kobuk-te
     | tee /etc/apt/sources.list.d/kobuk-intel.list
 
 # hadolint ignore=DL3008
-RUN apt-get update  \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update  \
     && apt-get install -y --no-install-recommends \
         libze-intel-gpu1 libze1 libze-dev intel-metrics-discovery intel-opencl-icd clinfo intel-gsc intel-ocloc \
-        intel-media-va-driver-non-free libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+        intel-media-va-driver-non-free libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
 
 USER ${USER_NAME}
 
