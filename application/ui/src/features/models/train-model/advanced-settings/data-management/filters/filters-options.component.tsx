@@ -30,7 +30,7 @@ const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) =>
     const [enableParameter, configurableParameter] = parameters;
     const isUnlimited = !enableParameter.value;
 
-    const handleUnlimitedChange = (newIsUnlimited: boolean) => {
+    const handleToggleChange = (newIsUnlimited: boolean) => {
         onFilterChange([{ ...enableParameter, value: !newIsUnlimited }, configurableParameter]);
     };
 
@@ -44,6 +44,12 @@ const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) =>
             { ...configurableParameter, value: configurableParameter.default_value },
         ]);
     };
+
+    const toggleName = name.toLocaleLowerCase().includes('minimum')
+        ? `No minimum`
+        : name.toLocaleLowerCase().includes('maximum')
+          ? `No maximum`
+          : `Unlimited`;
 
     return (
         <>
@@ -64,10 +70,10 @@ const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) =>
                 <Checkbox
                     isEmphasized
                     isSelected={isUnlimited}
-                    onChange={handleUnlimitedChange}
+                    onChange={handleToggleChange}
                     aria-label={`Toggle ${configurableParameter.name}`}
                 >
-                    Unlimited
+                    {toggleName}
                 </Checkbox>
             </Flex>
 

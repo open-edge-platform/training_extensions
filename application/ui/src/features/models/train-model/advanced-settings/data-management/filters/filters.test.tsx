@@ -128,7 +128,7 @@ describe('Filters', () => {
         );
     };
 
-    it('disables the filter option when unlimited checkbox is ticked', () => {
+    it('disables the filter option when "no minimum/no maximum" checkbox is ticked', () => {
         render(<App filtersParameters={filtersParameters} />);
 
         const parameters = filtersParameters.parameters.filter(isFilterConfigurableParameterGroup);
