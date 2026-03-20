@@ -1,31 +1,36 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQueryClient } from '@tanstack/react-query';
+import { usePrefetchQuery, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../api/client';
 import { getQueryKey } from '../../query-client/query-client';
 
-export const usePipeline = () => {
-    const projectId = useProjectIdentifier();
-
-    return $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
+const getPipelineQueryOptions = (projectId: string) => {
+    return $api.queryOptions('get', '/api/projects/{project_id}/pipeline', {
+        params: {
+            path: {
+                project_id: projectId,
+            },
+        },
     });
 };
 
+export const usePipeline = () => {
+    const projectId = useProjectIdentifier();
+
+    return useSuspenseQuery(getPipelineQueryOptions(projectId));
+};
+
+export const usePrefetchPipeline = () => {
+    const projectId = useProjectIdentifier();
+
+    return usePrefetchQuery(getPipelineQueryOptions(projectId));
+};
+
 export const useProjectPipeline = (projectId: string) => {
-    return $api.useQuery(
-        'get',
-        '/api/projects/{project_id}/pipeline',
-        {
-            params: { path: { project_id: projectId } },
-        },
-        {
-            retry: false,
-        }
-    );
+    return useQuery({ ...getPipelineQueryOptions(projectId), retry: false });
 };
 
 const POLLING_INTERVAL = 5000;
