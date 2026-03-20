@@ -55,6 +55,7 @@ jobs:
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
       contents: read
+      actions: write # Required for type=gha Docker layer cache
     steps:
       - *checkout
 
@@ -92,6 +93,7 @@ jobs:
         device: [cpu, xpu, cuda]
     permissions:
       contents: read
+      actions: write # Required for type=gha Docker layer cache
     steps:
       - *checkout
 
