@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
     getMockedConfigurationParameter,
@@ -144,6 +144,24 @@ describe('Filters', () => {
 
             expect(getToggleFilter(configurableParameter.name)).not.toBeChecked();
             expect(getFilterParameter(configurableParameter.name)).toBeEnabled();
+        });
+    });
+
+    it('displays "no minimum" for min and "no maximum" for max parameter', () => {
+        render(<App filtersParameters={filtersParameters} />);
+
+        const parameters = filtersParameters.parameters.filter(isFilterConfigurableParameterGroup);
+
+        parameters.forEach((parameterGroup) => {
+            const [_enableParameter, configurableParameter] = parameterGroup.parameters;
+
+            const toggle = getToggleFilter(configurableParameter.name).parentElement as HTMLElement;
+
+            if (parameterGroup.key.includes('min')) {
+                expect(within(toggle).getByText('No minimum')).toBeInTheDocument();
+            } else if (parameterGroup.key.includes('max')) {
+                expect(within(toggle).getByText('No maximum')).toBeInTheDocument();
+            }
         });
     });
 

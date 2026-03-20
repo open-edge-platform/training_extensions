@@ -26,7 +26,7 @@ type FilterOptionProps = {
 };
 
 const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) => {
-    const { description, name, parameters } = filterParameter;
+    const { description, name, parameters, key } = filterParameter;
     const [enableParameter, configurableParameter] = parameters;
     const isUnlimited = !enableParameter.value;
 
@@ -45,9 +45,9 @@ const FilterOption = ({ filterParameter, onFilterChange }: FilterOptionProps) =>
         ]);
     };
 
-    const toggleName = name.toLocaleLowerCase().includes('minimum')
+    const toggleName = key.toLocaleLowerCase().includes('min')
         ? `No minimum`
-        : name.toLocaleLowerCase().includes('maximum')
+        : key.toLocaleLowerCase().includes('max')
           ? `No maximum`
           : `Unlimited`;
 
