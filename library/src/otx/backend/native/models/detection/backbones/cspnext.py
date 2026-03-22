@@ -234,12 +234,6 @@ class CSPNeXt:
     """CSPNeXt factory for detection."""
 
     CSPNEXT_CFG: ClassVar[dict[str, Any]] = {
-        "rtmdet_tiny": {
-            "deepen_factor": 0.167,
-            "widen_factor": 0.375,
-            "normalization": nn.BatchNorm2d,
-            "activation": partial(nn.SiLU, inplace=True),
-        },
         "rtmpose_tiny": {
             "arch": "P5",
             "expand_ratio": 0.5,

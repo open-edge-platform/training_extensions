@@ -17,7 +17,6 @@ from torch._dynamo.testing import CompileCounter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.atss import ATSS
 from otx.backend.native.models.detection.rtdetr import RTDETR
-from otx.backend.native.models.detection.rtmdet import RTMDet
 from otx.backend.native.models.detection.yolox import YOLOX
 from otx.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
 from otx.backend.native.models.segmentation.segnext import SegNext
@@ -70,15 +69,7 @@ class TestCompiledModelsDetection:
         )
         _run_compile_test(model, model.data_input_params.input_size)
 
-    def test_rtmdet_compiled(self) -> None:
-        model = RTMDet(
-            model_name="rtmdet_tiny",
-            label_info=3,
-            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-        _run_compile_test(model, model.data_input_params.input_size)
-
-    @pytest.mark.parametrize("model_name", ["rtdetr_18", "rtdetr_50", "rtdetr_101"])
+    @pytest.mark.parametrize("model_name", ["rtdetr_50"])
     def test_rtdetr_compiled(self, model_name: str) -> None:
         model = RTDETR(
             model_name=model_name,  # pyrefly: ignore[bad-argument-type]

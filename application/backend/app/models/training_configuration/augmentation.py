@@ -130,8 +130,7 @@ class RandomIOUCrop(BaseAugmentationParameter):
         default=1.0,
         title="Probability",
         description=(
-            "Probability of applying IoU random crop. "
-            "A value of 1.0 means the crop is always applied when enabled."
+            "Probability of applying IoU random crop. A value of 1.0 means the crop is always applied when enabled."
         ),
     )
 
@@ -429,8 +428,7 @@ class AugmentationParameters(BaseModel):
         default=None,
         title="Random zoom out",
         description=(
-            "Randomly zoom out the image by placing it on a larger canvas with padding. "
-            "Applied before resize."
+            "Randomly zoom out the image by placing it on a larger canvas with padding. Applied before resize."
         ),
     )
     iou_random_crop: RandomIOUCrop | None = Field(
@@ -473,16 +471,14 @@ class AugmentationParameters(BaseModel):
         default=None,
         title="Random horizontal flip",
         description=(
-            "Randomly flip images horizontally along the vertical axis (swap left and right). "
-            "Applied after resize."
+            "Randomly flip images horizontally along the vertical axis (swap left and right). Applied after resize."
         ),
     )
     random_vertical_flip: RandomVerticalFlip | None = Field(
         default=None,
         title="Random vertical flip",
         description=(
-            "Randomly flip images vertically along the horizontal axis (swap top and bottom). "
-            "Applied after resize."
+            "Randomly flip images vertically along the horizontal axis (swap top and bottom). Applied after resize."
         ),
     )
     color_jitter: ColorJitter | None = Field(
