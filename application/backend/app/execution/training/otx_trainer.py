@@ -18,8 +18,8 @@ from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.dataset.base import OTXDataset
+from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.tools.converter import GetiConfigConverter
 from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
@@ -124,26 +124,28 @@ class OTXTrainer(Execution[TrainingJobParams]):
         If a parent model revision ID is provided, it fetches the weights from the parent model.
         Otherwise, it retrieves the base weights for the specified model architecture.
         """
-        parent_model_revision_id = training_params.parent_model_revision_id
-        task = training_params.task
-        model_architecture_id = training_params.model_architecture_id
-        project_id = training_params.project_id
-        if parent_model_revision_id is None:
-            return self._base_weights_service.get_local_weights_path(
-                task=task.task_type, model_manifest_id=model_architecture_id
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            parent_model_revision_id = training_params.parent_model_revision_id
+            task = training_params.task
+            model_architecture_id = training_params.model_architecture_id
+            project_id = training_params.project_id
+            if parent_model_revision_id is None:
+                return self._base_weights_service.get_local_weights_path(
+                    task=task.task_type, model_manifest_id=model_architecture_id
+                )
+
+            parent_variants = self._model_service.get_model_variants(
+                project_id=project_id, model_id=parent_model_revision_id
             )
+            parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
+            weights_path = self.__build_model_weights_path(
+                self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
+            )
+            if not weights_path.exists():
+                raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
 
-        parent_variants = self._model_service.get_model_variants(
-            project_id=project_id, model_id=parent_model_revision_id
-        )
-        parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
-        weights_path = self.__build_model_weights_path(
-            self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
-        )
-        if not weights_path.exists():
-            raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
-
-        return weights_path
+            return weights_path
 
     @step("Assign Dataset Subsets")
     def assign_subsets(self, training_config: TrainingConfiguration, project_id: UUID) -> None:
@@ -223,9 +225,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
             subset_cfg_data["input_size"] = training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = TorchVisionTransformLib.generate(  # pyrefly: ignore[bad-assignment]
-                subset_config
-            )
+            # pyrefly: ignore[missing-attribute,bad-assignment]
+            subset_config.transforms = TransformLibFactory.generate(subset_config)
             return subset_config
 
         with self._db_session_factory() as db:
@@ -285,15 +286,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
             logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
             otx_training_dataset = otx_dataset_class(
                 dm_subset=dm_training_dataset,
-                transforms=train_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_validation_dataset = otx_dataset_class(
                 dm_subset=dm_validation_dataset,
-                transforms=val_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_testing_dataset = otx_dataset_class(
                 dm_subset=dm_testing_dataset,
-                transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
             return DatasetInfo(
@@ -362,8 +363,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         model_cfg["init_args"]["label_info"] = otx_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
             input_size=cast(tuple[int, int], otx_datamodule.input_size),
-            mean=otx_datamodule.input_mean,
-            std=otx_datamodule.input_std,
+            mean=otx_datamodule.input_mean if otx_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=otx_datamodule.input_std if otx_datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False)

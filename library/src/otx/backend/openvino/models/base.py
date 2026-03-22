@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for base model entity used in OTX."""
 
@@ -517,16 +517,9 @@ class OVModel:
         Returns:
             OTXSampleBatch: Dummy input data.
         """
-        images = [torch.rand(3, 224, 224) for _ in range(batch_size)]
-        infos = []
-        for i, img in enumerate(images):
-            infos.append(
-                ImageInfo(
-                    img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
-                ),
-            )
+        images = torch.stack([torch.rand(3, 224, 224) for _ in range(batch_size)])
+        img_shape = (224, 224)
+        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):

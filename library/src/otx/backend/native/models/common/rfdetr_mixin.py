@@ -206,7 +206,7 @@ class RFDETRMixin:
                     raise TypeError(msg)
             return losses
 
-        image_shapes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
+        image_shapes = [img_info.ori_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores_list, boxes_list, labels_list, masks_list = self.model.postprocess(  # type: ignore[attr-defined]  # pyrefly: ignore[not-callable]
             outputs,
             image_shapes,

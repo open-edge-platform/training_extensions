@@ -7,12 +7,12 @@ import { isEqual } from 'lodash-es';
 
 import { TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';
-import { LearningParametersList } from './learning-parameters-list.component';
-import { LearningConfigurationParameters } from './utils';
+import { LearningParametersListContainer } from './learning-parameters-list.component';
+import { LearningConfigurationGroup } from './utils';
 
 type LearningParametersProps = {
-    learningParameters: LearningConfigurationParameters;
-    defaultLearningParameters?: LearningConfigurationParameters;
+    learningParameters: LearningConfigurationGroup;
+    defaultLearningParameters?: LearningConfigurationGroup;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
@@ -32,7 +32,7 @@ export const LearningParameters = ({
             <Accordion.Content>
                 <Accordion.Description>{learningParameters.description}</Accordion.Description>
                 <Accordion.Divider marginY={'size-250'} />
-                <LearningParametersList
+                <LearningParametersListContainer
                     learningParameters={learningParameters}
                     onTrainingConfigurationChange={onTrainingConfigurationChange}
                 />

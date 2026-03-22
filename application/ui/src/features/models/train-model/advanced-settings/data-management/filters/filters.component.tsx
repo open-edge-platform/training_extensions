@@ -7,7 +7,7 @@ import { Grid, minmax } from '@geti/ui';
 
 import type { ConfigurableParameterGroup, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';
-import { replaceByKey } from '../../utils';
+import { deepReplaceParameters } from '../../utils';
 import { FiltersOptions } from './filters-options.component';
 import {
     checkIfFiltersAreEnabled,
@@ -24,16 +24,11 @@ const changeFilterParameters = (
     trainingConfiguration: TrainingConfiguration,
     { key, newParameters }: { key: string; newParameters: FilterConfigurableParameters }
 ): TrainingConfiguration => ({
-    parameters: replaceByKey(trainingConfiguration.parameters, 'dataset_preparation', (datasetPreparation) => ({
-        ...datasetPreparation,
-        parameters: replaceByKey(datasetPreparation.parameters, 'filtering', (filtering) => ({
-            ...filtering,
-            parameters: replaceByKey(filtering.parameters, key, (filterGroup) => ({
-                ...filterGroup,
-                parameters: newParameters,
-            })),
-        })),
-    })),
+    parameters: deepReplaceParameters(trainingConfiguration.parameters, newParameters, [
+        'dataset_preparation',
+        'filtering',
+        key,
+    ]),
 });
 
 export const Filters = ({ filtersParameters, onTrainingConfigurationChange }: FiltersProps) => {

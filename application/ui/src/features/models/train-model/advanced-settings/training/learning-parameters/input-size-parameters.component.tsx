@@ -4,7 +4,7 @@
 import { Flex } from '@geti/ui';
 
 import { ConfigurableParameter, NumberEnumConfigurableParameter } from '../../../../../../constants/shared-types';
-import { EnumParameterField, Parameter, Parameters } from '../../components/parameters.component';
+import { NumberEnumParameterField, Parameter, Parameters } from '../../components/parameters.component';
 import { getInputSizeHeightParameter, getInputSizeWidthParameter } from './utils';
 
 type InputSizeParameterProps = {
@@ -18,7 +18,7 @@ const InputSizeParameter = ({ inputSizeParameter, onChange, isReadOnly }: InputS
         return <span aria-label={inputSizeParameter.name}>{inputSizeParameter.value}</span>;
     }
 
-    return <EnumParameterField parameter={inputSizeParameter} onChange={onChange} />;
+    return <NumberEnumParameterField parameter={inputSizeParameter} onChange={onChange} />;
 };
 
 type InputSizeParametersProps = {

@@ -53,9 +53,7 @@ export class ModelsPage {
 
     async togglePinActiveModel() {
         await this.openModelListingOptionsMenu();
-        await this.page
-            .getByRole('menuitem', { name: /Pin active model on top|Unpin active model from top/ })
-            .click();
+        await this.page.getByRole('menuitem', { name: /Pin active model on top|Unpin active model from top/ }).click();
     }
 
     async toggleShowHideFailedModels() {

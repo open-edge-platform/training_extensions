@@ -146,12 +146,12 @@ class TestDatasetExporter:
         dataset = MagicMock(spec=Dataset)
         dataset_id = uuid4()
 
-        with patch("app.execution.dataset_export.export.save_dataset") as mock_save_dataset:
+        with patch("app.execution.dataset_export.export.export_dataset") as mock_export_dataset:
             target_dir = fxt_export.export_dataset(dataset_id, dataset, export_format)
 
             assert target_dir
             assert target_dir == fxt_staged_datasets_dir / str(dataset_id)
-            mock_save_dataset.assert_called_once_with(
+            mock_export_dataset.assert_called_once_with(
                 dataset=dataset,
                 data_format=data_format,
                 output_path=str(fxt_staged_datasets_dir / str(dataset_id) / f"dataset-{export_format}.zip"),
