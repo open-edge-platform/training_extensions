@@ -11,8 +11,8 @@ from datumaro.experimental.fields import Subset
 from loguru import logger
 from otx.backend.openvino.engine import OVEngine
 from otx.config.data import SamplerConfig, SubsetConfig
+from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.tools.converter import GetiConfigConverter
 from sqlalchemy.orm import Session
 
@@ -127,11 +127,8 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
             subset_cfg_data["input_size"] = otx_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = (
-                TorchVisionTransformLib.generate(  # pyrefly: ignore[missing-attribute,bad-assignment]
-                    subset_config
-                )
-            )
+            # pyrefly: ignore[missing-attribute,bad-assignment]
+            subset_config.transforms = TransformLibFactory.generate(subset_config)
             return subset_config
 
         # Load the dataset revision
