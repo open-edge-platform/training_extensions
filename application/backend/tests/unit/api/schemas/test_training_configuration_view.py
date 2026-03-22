@@ -10,7 +10,13 @@ from app.models.training_configuration import (
     AlgoLevelTrainingParameters,
     TaskLevelDatasetPreparationParameters,
 )
-from app.models.training_configuration.augmentation import AugmentationParameters, ColorJitter
+from app.models.training_configuration.augmentation import (
+    AugmentationParameters,
+    ColorJitter,
+    RandomErasing,
+    RandomGrayscale,
+    RandomSharpness,
+)
 from app.models.training_configuration.configuration import TaskLevelParameters, TrainingConfiguration
 from app.models.training_configuration.dataset_preparation import (
     Filtering,
@@ -53,7 +59,22 @@ def fxt_training_configuration() -> TrainingConfiguration:
                         saturation=(0.8, 1.2),
                         hue=(-0.05, 0.05),
                         probability=0.6,
-                    )
+                    ),
+                    random_erasing=RandomErasing(
+                        enable=True,
+                        scale=(0.03, 0.25),
+                        ratio=(0.5, 2.0),
+                        probability=0.4,
+                    ),
+                    random_grayscale=RandomGrayscale(
+                        enable=True,
+                        probability=0.2,
+                    ),
+                    random_sharpness=RandomSharpness(
+                        enable=True,
+                        sharpness=0.8,
+                        probability=0.3,
+                    ),
                 )
             ),
             training=AlgoLevelTrainingParameters(
@@ -94,7 +115,22 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                         saturation=(0.9, 1.1),
                         hue=(-0.1, 0.1),
                         probability=0.5,
-                    )
+                    ),
+                    random_erasing=RandomErasing(
+                        enable=False,
+                        scale=(0.02, 0.33),
+                        ratio=(0.3, 3.3),
+                        probability=0.5,
+                    ),
+                    random_grayscale=RandomGrayscale(
+                        enable=False,
+                        probability=0.1,
+                    ),
+                    random_sharpness=RandomSharpness(
+                        enable=False,
+                        sharpness=0.5,
+                        probability=0.5,
+                    ),
                 )
             ),
             training=AlgoLevelTrainingParameters(
@@ -388,6 +424,174 @@ def fxt_training_configuration_view_json() -> dict:
                                             "A value of 0.5 means each image has a 50% chance to be color jittered."
                                         ),
                                         "value": 0.6,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_erasing",
+                                "name": "Random erasing",
+                                "description": (
+                                    "Randomly erase a rectangular region in the image and fill it with a "
+                                    "constant value. "
+                                    "Also known as Cutout. Helps the model learn to rely on broader context "
+                                    "rather than "
+                                    "specific local features. Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "scale",
+                                        "name": "Erasing area scale range",
+                                        "description": (
+                                            "Range (min, max) of the proportion of the image area to erase. "
+                                            "For example, (0.02, 0.33) means erasing between 2% and 33% of the "
+                                            "image area."
+                                        ),
+                                        "value": [0.03, 0.25],
+                                        "default_value": [0.02, 0.33],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "ratio",
+                                        "name": "Erasing aspect ratio range",
+                                        "description": (
+                                            "Range (min, max) of the aspect ratio of the erased area. "
+                                            "For example, (0.3, 3.3) allows the erased rectangle to have "
+                                            "varying proportions."
+                                        ),
+                                        "value": [0.5, 2.0],
+                                        "default_value": [0.3, 3.3],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying random erasing. "
+                                            "A value of 0.5 means each image has a 50% chance to have a "
+                                            "region erased."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_grayscale",
+                                "name": "Random grayscale",
+                                "description": (
+                                    "Randomly convert the image to grayscale. Forces the model to learn "
+                                    "shape and texture "
+                                    "features rather than relying solely on color information. "
+                                    "Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of converting the image to grayscale. "
+                                            "A value of 0.1 means each image has a 10% chance to be "
+                                            "converted to grayscale."
+                                        ),
+                                        "value": 0.2,
+                                        "default_value": 0.1,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_sharpness",
+                                "name": "Random sharpness",
+                                "description": (
+                                    "Randomly adjust the sharpness of the image. Complements Gaussian "
+                                    "blur by also "
+                                    "allowing images to become sharper, improving robustness to varying "
+                                    "image quality. "
+                                    "Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "sharpness",
+                                        "name": "Sharpness factor",
+                                        "description": (
+                                            "Factor controlling the strength of the sharpness adjustment. "
+                                            "A value of 0.0 means no sharpening, higher values increase "
+                                            "the effect. "
+                                            "Typical values are between 0.0 and 1.0."
+                                        ),
+                                        "value": 0.8,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying sharpness adjustment. "
+                                            "A value of 0.5 means each image has a 50% chance to be "
+                                            "sharpened."
+                                        ),
+                                        "value": 0.3,
                                         "default_value": 0.5,
                                         "value_type": "float",
                                         "min_value": 0.0,

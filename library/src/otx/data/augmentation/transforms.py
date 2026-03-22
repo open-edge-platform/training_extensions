@@ -942,7 +942,6 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         sampler_options (list[float] | None, optional): the same as RandomIoUCrop. Defaults to None.
         trials (int, optional): the same as RandomIoUCrop. Defaults to 40.
         p (float, optional): probability of applying the crop. Defaults to 1.0.
-        probability (float | None, optional): legacy alias for `p`. If set, it overrides `p`.
     """
 
     def __init__(
@@ -954,7 +953,6 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         sampler_options: list[float] | None = None,
         trials: int = 40,
         p: float = 1.0,
-        probability: float | None = None,
     ):
         super().__init__(
             min_scale,
@@ -964,8 +962,6 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
             sampler_options,
             trials,
         )
-        if probability is not None:
-            p = probability
         self.p = p
 
     def __call__(self, *inputs: Any) -> Any:  # noqa: ANN401

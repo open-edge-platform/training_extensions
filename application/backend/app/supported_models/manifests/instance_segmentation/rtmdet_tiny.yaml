@@ -38,6 +38,9 @@ hyperparameters:
           - -0.05
           - 0.05
         probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
       random_affine:
         enable: false
         max_rotate_degree: 10.0
@@ -46,9 +49,6 @@ hyperparameters:
           - 0.5
           - 1.5
         max_shear_degree: 2.0
-      random_vertical_flip:
-        enable: false
-        probability: 0.5
       gaussian_blur:
         enable: false
         kernel_size: 5

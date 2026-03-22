@@ -267,7 +267,7 @@ class TestRandomIoUCrop:
 
     def test_probability_zero_passthrough(self):
         """With p=0, input is returned unchanged."""
-        crop = RandomIoUCrop(probability=0.0)
+        crop = RandomIoUCrop(p=0.0)
         image = tv_tensors.Image(torch.rand(3, 100, 100))
         bboxes = tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
             torch.tensor([[10.0, 10.0, 50.0, 50.0]]),
@@ -282,7 +282,7 @@ class TestRandomIoUCrop:
 
     def test_probability_one_applies(self):
         """With p=1, crop always applies (output shape may differ)."""
-        crop = RandomIoUCrop(probability=1.0)
+        crop = RandomIoUCrop(p=1.0)
         image = tv_tensors.Image(torch.rand(3, 100, 100))
         bboxes = tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
             torch.tensor([[10.0, 10.0, 50.0, 50.0]]),
@@ -296,7 +296,7 @@ class TestRandomIoUCrop:
 
     def test_single_input_returns_single(self):
         """With p=0 and single input, returns the input (not a tuple)."""
-        crop = RandomIoUCrop(probability=0.0)
+        crop = RandomIoUCrop(p=0.0)
         image = tv_tensors.Image(torch.rand(3, 50, 50))
         result = crop(image)
         # Single input + skip → returns single tensor
