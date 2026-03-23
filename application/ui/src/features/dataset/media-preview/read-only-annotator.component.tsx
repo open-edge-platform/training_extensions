@@ -56,7 +56,7 @@ export const ReadOnlyAnnotator = ({
                     {onModeChange && (
                         <Toolbar.Container>
                             <Toolbar.Section>
-                                <Flex alignItems={'center'} gap={'size-100'}>
+                                <Flex alignItems={'center'} gap={'size-200'}>
                                     <AnnotatorModes mode={'prediction'} onModeChange={onModeChange} />
                                     {mode === 'prediction' && <PredictionModelSelector />}
                                 </Flex>
