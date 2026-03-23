@@ -38,6 +38,16 @@ class SubsetAssigner:
         Args:
             items (list[DatasetItemWithLabels]): List of dataset items to assign.
             target_ratios (SplitRatios): Desired split ratios for subsets.
+            has_all_subsets_assigned (bool): Whether the project already has at least one item
+                assigned to each of the TRAINING, VALIDATION, and TESTING subsets.
+                - If ``False`` and fewer than 3 items are provided, a ``ValueError`` is raised
+                  because there are not enough items to populate every subset.  After stratification,
+                  ``_ensure_all_subsets_nonempty`` is called to guarantee no subset is left empty.
+                - If ``True``, the minimum-item guard is bypassed (the caller guarantees that each
+                  subset is already covered).  When fewer than 3 items are provided they are
+                  assigned sequentially (TRAINING first, then VALIDATION, then TESTING).
+                  ``_ensure_all_subsets_nonempty`` is *not* called, so stratification may produce
+                  empty folds without raising.
         Returns:
             list[SubsetAssignment]: List of subset assignments for each item.
         """

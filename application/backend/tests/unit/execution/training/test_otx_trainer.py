@@ -374,7 +374,6 @@ class TestOTXTrainerAssignSubsets:
 
         # … and the returned value is forwarded verbatim as the third positional argument
         call_args = fxt_assigner.assign.call_args
-        call_args.args[1] if len(call_args.args) >= 2 else call_args.kwargs.get("target_ratios")
         actual_flag = (
             call_args.args[2] if len(call_args.args) >= 3 else call_args.kwargs.get("has_all_subsets_assigned")
         )
