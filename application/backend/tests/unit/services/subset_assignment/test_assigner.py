@@ -84,14 +84,11 @@ class TestSubsetAssigner:
     ):
         """When has_all_subsets_assigned=True, the minimum-unassigned-items guard is bypassed.
 
-        This means assigning fewer than 3 new items is allowed (the caller guarantees that each
-        subset already has at least one item assigned). This test ensures that path succeeds and
-        returns all provided items without raising a ValueError.
+        When has_all_subsets_assigned=True, the guard is bypassed and the call succeeds even with
+        fewer items than subsets.
         """
-        # Use fewer than 3 items to exercise the bypassed-guard path
         items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(2)]
 
-        # With has_all_subsets_assigned=True, the guard is bypassed entirely - no ValueError
         result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=True)
         assert len(result) == len(items)
 

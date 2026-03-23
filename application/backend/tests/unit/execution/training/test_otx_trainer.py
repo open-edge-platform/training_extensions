@@ -901,8 +901,6 @@ class TestOTXTrainerStoreModelArtifacts:
         project_id = uuid4()
         model_id = uuid4()
 
-        from app.models.model_revision import ModelFormat
-
         pytorch_variant_id = uuid4()
         openvino_variant_id = uuid4()
         onnx_variant_id = uuid4()
