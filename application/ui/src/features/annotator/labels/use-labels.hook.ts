@@ -134,6 +134,7 @@ export const useLabels = ({ isClassification = false, isMultiLabel = false }: Us
         if (isClassification) {
             return annotations.some((annotation) => annotation.labels.some((l) => l.id === label.id));
         }
+
         return selectedLabelId === label.id;
     };
 

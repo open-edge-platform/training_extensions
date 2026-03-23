@@ -7,6 +7,7 @@ import { usePatchPipeline } from '../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
 import { useGetModels } from '../../models/hooks/api/use-get-models.hook';
+import { isSuccessfulModel } from '../../models/model-listing/utils/utils';
 
 export const ActiveModel = () => {
     const { data: models } = useGetModels();
@@ -25,9 +26,7 @@ export const ActiveModel = () => {
         });
     };
 
-    const successfulModels = models.filter(
-        (model) => model.training_info.status === 'successful' && !model.files_deleted
-    );
+    const successfulModels = models.filter((model) => isSuccessfulModel(model) && !model.files_deleted);
 
     return (
         <Picker

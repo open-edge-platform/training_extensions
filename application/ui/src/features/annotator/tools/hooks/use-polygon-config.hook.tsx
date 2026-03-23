@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, RefObject, useEffect, useRef, useState } from 'react';
+import { PointerEvent, RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, getIntersectionPoint } from '@geti/smart-tools/utils';
 import { differenceWith, isEmpty, isEqual, isNil } from 'lodash-es';
@@ -24,7 +24,6 @@ export const usePolygonConfig = ({
     const isMounted = useRef(true);
     const { worker } = useIntelligentScissorsWorker();
 
-    const [polygon, setPolygon] = useState<Polygon | null>(null);
     const [pointerLine, setPointerLine] = useState<Point[]>([]);
     const [lassoSegment, setLassoSegment] = useState<Point[]>([]);
     const [segments, setSegments, undoRedoActions] = useUndoRedoState<Point[][]>([]);
@@ -44,8 +43,11 @@ export const usePolygonConfig = ({
         }
     }, [image, worker]);
 
-    useEffect((): void => setPolygon({ type: 'polygon', points: segments?.flat() }), [segments]);
-    useEffect((): void => setPolygon({ type: 'polygon', points: pointerLine }), [pointerLine]);
+    const polygon = useMemo<Polygon | null>(() => {
+        const points = pointerLine.length > 0 ? pointerLine : segments.flat();
+
+        return points.length > 0 ? { type: 'polygon', points } : null;
+    }, [pointerLine, segments]);
 
     const optimizePolygonOrSegments = async (iPolygon: Polygon): Promise<Polygon> => {
         if (isNil(worker)) {
@@ -86,7 +88,6 @@ export const usePolygonConfig = ({
 
         setPointerLine([]);
         setLassoSegment([]);
-        setPolygon(null);
     };
 
     return {
