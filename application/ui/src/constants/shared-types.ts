@@ -82,6 +82,7 @@ export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input']
 export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
 
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
+export type VideoFramePrediction = components['schemas']['MediaListPredictionRequest'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
 
