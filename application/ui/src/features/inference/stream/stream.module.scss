@@ -9,11 +9,20 @@
     cursor: pointer;
 }
 
-.playButton {
+.playPauseButton {
     display: flex;
-    gap: var(--spectrum-global-dimension-size-400);
     align-items: center;
     padding: var(--spectrum-global-dimension-size-600);
-    position: relative;
     border-radius: var(--spectrum-alias-border-radius-medium);
+}
+
+.pauseOverlay {
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.22);
+    opacity: 0;
+    transition: opacity 120ms ease-in-out;
+}
+
+.pauseOverlay:hover {
+    opacity: 1;
 }
