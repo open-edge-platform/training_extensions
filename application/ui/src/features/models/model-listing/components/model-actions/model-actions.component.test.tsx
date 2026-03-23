@@ -4,8 +4,11 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedModel } from 'mocks/mock-model';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../../../api/utils';
+import { server } from '../../../../../msw-node-setup';
 import { ModelActions } from './model-actions.component';
 
 const mockModel = getMockedModel({
@@ -63,6 +66,20 @@ describe('ModelActions', () => {
     });
 
     it('should show download logs action in training logs dialog', async () => {
+        server.use(
+            http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
+                return new HttpResponse(
+                    '[2025-01-10 10:00:00][INFO ] Initializing\n[2025-01-10 10:00:01][INFO ] Training started',
+                    {
+                        status: 200,
+                        headers: {
+                            'content-type': 'text/plain',
+                        },
+                    }
+                );
+            })
+        );
+
         render(<ModelActions model={mockModel} />);
 
         const menuButton = screen.getByRole('button', { name: 'Model actions' });
@@ -70,9 +87,9 @@ describe('ModelActions', () => {
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'View training logs' }));
 
-        (await screen.findByRole('button', { name: 'Download logs' })).click();
+        await userEvent.click(await screen.findByRole('button', { name: 'Download logs' }));
 
-        expect(screen.getByText('Training logs downloaded successfully')).toBeInTheDocument();
+        expect(await screen.findByText('Training logs downloaded successfully')).toBeInTheDocument();
     });
 
     it('should disable "Set as active" and "Rename" when model is currently training', async () => {
