@@ -5,9 +5,6 @@ on:
     branches:
       - develop
       - release/**
-  push:
-    tags:
-      - "v*"
   pull_request:
   workflow_call:
   workflow_dispatch:
@@ -45,59 +42,13 @@ jobs:
               - library/**
               - .github/**
 
-  # Pre-build shared Docker stages (backend-base, web-ui, runtime-base) so that
-  # device-specific builds can reuse them from cache instead of rebuilding independently.
-  # This avoids tripling the work for stages that are identical across cpu/xpu/cuda.
-  build-shared-cache:
-    name: Build shared Docker stages cache
-    runs-on: overflow
-    needs: check_paths
-    if: needs.check_paths.outputs.run_workflow == 'true'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - *checkout
-
-      - name: Set up Docker
-        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8016837eba79c3b51bf2025379f48b6fc50f1236 # v4.0.0
-
-      - name: Login to GHCR
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and cache shared stages
-        working-directory: application
-        run: |
-          # Build up to runtime-base (the last shared stage before device-specific targets).
-          # This caches: backend-base, cpu-base (used by geti-cpu), web-ui, runtime-base.
-          # Device-specific stages (cuda-base, xpu-base) are NOT built here since they diverge.
-          docker buildx build \
-            --build-arg http_proxy --build-arg https_proxy --build-arg no_proxy \
-            --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY \
-            "$(git rev-parse --show-toplevel)" \
-            -f docker/Dockerfile \
-            --target runtime-base \
-            --cache-from type=registry,ref=${CACHE_REGISTRY}:cache-shared \
-            --cache-to type=registry,ref=${CACHE_REGISTRY}:cache-shared,mode=max,compression=zstd,image-manifest=true,ignore-error=true \
-            --output type=cacheonly
-        env:
-          CACHE_REGISTRY: ghcr.io/${{ github.repository }}
-
   build:
     name: Build and push docker image (${{ matrix.device }})
     runs-on: overflow
-    needs:
-      - check_paths
-      - build-shared-cache
+    needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
+      fail-fast: false
       matrix:
         device: [cpu, xpu, cuda]
     permissions:
@@ -105,13 +56,6 @@ jobs:
       packages: write
     steps:
       - *checkout
-
-      # Install the latest Docker, since the version available by default on the runners may be outdated
-      - name: Set up Docker
-        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8016837eba79c3b51bf2025379f48b6fc50f1236 # v4.0.0
 
       - name: Login to GHCR
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
@@ -132,205 +76,20 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
-      - name: Build and push image for ${{ matrix.device }}
-        working-directory: application
-        run: |
-          TARGET="geti-${DEVICE}"
-
-          CACHE_FROM_ARGS=""
-          for src in ${BUILDX_CACHE_FROM}; do
-              CACHE_FROM_ARGS="${CACHE_FROM_ARGS} --cache-from ${src}"
-          done
-
-          CACHE_TO_ARGS=""
-          for dst in ${BUILDX_CACHE_TO}; do
-              CACHE_TO_ARGS="${CACHE_TO_ARGS} --cache-to ${dst}"
-          done
-
-          TAG_ARGS=""
-          while IFS= read -r tag; do
-              [[ -n "$tag" ]] && TAG_ARGS="${TAG_ARGS} --tag ${tag}"
-          done <<< "$TAGS"
-
-          echo "Building and pushing docker image for accelerator: ${DEVICE}"
-          docker buildx build \
-              --build-arg http_proxy --build-arg https_proxy --build-arg no_proxy \
-              --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY \
-              "$(git rev-parse --show-toplevel)" \
-              -f docker/Dockerfile \
-              --target "${TARGET}" \
-              ${TAG_ARGS} \
-              ${CACHE_FROM_ARGS} \
-              ${CACHE_TO_ARGS} \
-              --push
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DEVICE: ${{ matrix.device }}
-          BUILDX_CACHE_FROM: "type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.device }} type=registry,ref=ghcr.io/${{ github.repository }}:cache-shared"
-          BUILDX_CACHE_TO: "type=registry,ref=ghcr.io/${{ github.repository }}:cache-${{ matrix.device }},mode=max,compression=zstd,image-manifest=true,ignore-error=true"
-
-      - name: Pull image from GHCR
-        run: |
-          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
-          echo "Pulling image: $FIRST_TAG"
-          docker pull "$FIRST_TAG"
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-
-      - name: Run simple checks on the built image
-        working-directory: application
-        run: |
-          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
-          echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
-
-          CONTAINER_NAME="geti-${DEVICE}"
-
-          # Start the container in detached mode
-          docker run --detach --name "$CONTAINER_NAME" --publish 7860:7860 "$FIRST_TAG"
-
-          # Cleanup container on exit
-          cleanup() {
-              echo "--- Container logs ---"
-              docker logs "$CONTAINER_NAME" || true
-              echo "--- Stopping container ---"
-              docker stop "$CONTAINER_NAME" || true
-          }
-          trap cleanup EXIT
-
-          TEST_URL="localhost:7860"
-          echo "Waiting for container to be ready..."
-          HEALTH_OK=false
-          for i in {1..12}; do
-              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
-                  echo "✅ Health check passed!"
-                  HEALTH_OK=true
-                  break
-              fi
-              echo "Attempt $i/12 - waiting 5 seconds..."
-              sleep 5
-          done
-
-          if [[ "$HEALTH_OK" != "true" ]]; then
-              echo "❌ Health check failed after 60 seconds"
-              exit 1
-          fi
-
-          EXPECTED_TITLE="Geti Tune"
-          echo "Checking HTML title..."
-
-          HTML_CONTENT=$(curl -sf $TEST_URL)
-          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
-              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
-          else
-              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
-              echo "Actual HTML content:"
-              echo "$HTML_CONTENT"
-              exit 1
-          fi
-
-          echo "All checks passed successfully!"
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DEVICE: ${{ matrix.device }}
-
-      - name: Get Docker image sizes
-        working-directory: application/docker
-        id: image-sizes
-        if: github.event_name == 'pull_request'
-        run: |
-          mkdir -p image-sizes
-
-          echo "| Image | Size |" > image-sizes/${DEVICE}.md
-          echo "|-------|------|" >> image-sizes/${DEVICE}.md
-
-          for TAG in $TAGS ; do
-            if docker image inspect "$TAG" >/dev/null 2>&1; then
-              size_bytes=$(docker image inspect "$TAG" --format='{{.Size}}')
-              size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
-              echo "| $TAG | $size_readable |" >> image-sizes/${DEVICE}.md
-            fi
-          done
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DEVICE: ${{ matrix.device }}
-
-      - name: Upload image sizes
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - name: Build Docker image
+        uses: ./.github/actions/docker-build
         with:
-          name: image-sizes-${{ matrix.device }}
-          path: application/docker/image-sizes/${{ matrix.device }}.md
-          retention-days: 1
-
-  comment-sizes:
-    name: Comment PR with all image sizes
-    needs: build
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: overflow
-    permissions:
-      pull-requests: write
-    continue-on-error: true
-    steps:
-      - name: Download all image size artifacts
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
-        with:
-          pattern: image-sizes-*
-          merge-multiple: true
-          path: image-sizes
-
-      - name: Combine image sizes and comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-
-            // Read all device size files
-            const sizesDir = 'image-sizes';
-            const files = fs.readdirSync(sizesDir).sort();
-
-            let comment = '## Docker Image Sizes\n\n';
-
-            for (const file of files) {
-              const device = path.basename(file, '.md');
-              const content = fs.readFileSync(path.join(sizesDir, file), 'utf8');
-              comment += `### ${device.toUpperCase()}\n\n${content}\n\n`;
-            }
-
-            // Find existing comment
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existingComment = comments.data.find(comment =>
-              comment.body.includes('## Docker Image Sizes')
-            );
-
-            if (existingComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existingComment.id,
-                body: comment
-              });
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: comment
-              });
-            }
+          device: ${{ matrix.device }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Fork PRs cannot write packages to the upstream org, so disable
+          # cache export to avoid 403 errors from GHCR.
+          cache-write: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}
 
   required_check:
     name: Required Check build
     needs:
       - check_paths
-      - build-shared-cache
       - build
     runs-on: overflow
     env:
