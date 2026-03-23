@@ -5,6 +5,8 @@ import type { components } from '../api/openapi-spec';
 
 export type Label = components['schemas']['LabelView'];
 
+export type Pipeline = components['schemas']['PipelineView'];
+
 export type Model = components['schemas']['ModelView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
@@ -114,3 +116,8 @@ export type ConfigurableParameterGroup = components['schemas']['ConfigurablePara
 export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
 
 export type TrainingConfiguration = components['schemas']['TrainingConfigurationView'];
+
+export type TrainingRequestPayload = components['schemas']['TrainingRequest'];
+export type TrainingConfigurationRequestPayload = {
+    [key: string]: unknown;
+};

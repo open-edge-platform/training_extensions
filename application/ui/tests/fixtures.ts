@@ -16,6 +16,7 @@ import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { PolygonToolPage } from './annotator/polygon-tool-page';
 import { VideoPage } from './annotator/video-page';
 import { AnnotatorPage } from './datasets/annotator-page';
+import { ImportDatasetPage } from './datasets/import-dataset-page';
 import { StreamPage } from './inference/stream-page';
 import { JobsPage } from './jobs/jobs-page';
 import { ModelsPage } from './models/models-page';
@@ -49,6 +50,7 @@ interface Fixtures {
     boundingBoxTool: BoundingBoxToolPage;
     videoPage: VideoPage;
     annotatorPage: AnnotatorPage;
+    importDatasetPage: ImportDatasetPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -221,6 +223,10 @@ const test = testBase.extend<Fixtures>({
     annotatorPage: async ({ page }, use) => {
         const annotatorPage = new AnnotatorPage(page);
         await use(annotatorPage);
+    },
+    importDatasetPage: async ({ page }, use) => {
+        const importDatasetPage = new ImportDatasetPage(page);
+        await use(importDatasetPage);
     },
 });
 

@@ -6,15 +6,15 @@ import { TaskType } from '../constants/shared-types';
 export const getFormatOptions = (taskType: TaskType) => {
     const options: Record<TaskType, { label: string; value: string }[]> = {
         classification: [
-            { label: 'GETI', value: 'geti' },
+            { label: 'Geti', value: 'geti' },
             { label: 'VOC', value: 'voc' },
         ],
         instance_segmentation: [
-            { label: 'GETI', value: 'geti' },
+            { label: 'Geti', value: 'geti' },
             { label: 'COCO', value: 'coco' },
         ],
         detection: [
-            { label: 'GETI', value: 'geti' },
+            { label: 'Geti', value: 'geti' },
             { label: 'YOLO', value: 'yolo' },
             { label: 'COCO', value: 'coco' },
         ],

@@ -68,7 +68,7 @@ export default [
         },
     },
     {
-        files: ['**/*.test.ts', '**/*.test.tsx', '**/*mock*.ts'],
+        files: ['**/*.test.ts', '**/*.test.tsx', '**/*mock*.ts', '**/*.spec.ts'],
         rules: {
             'max-len': ['off'],
         },

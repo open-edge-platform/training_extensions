@@ -18,6 +18,7 @@ import { AnnotatorContainer } from './annotator.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
+import { useAnnotatorMediaTransition } from './use-annotator-media-transition.hook';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
 type MediaPreviewProps = {
@@ -30,9 +31,67 @@ type MediaPreviewContentProps = {
     items: Media[];
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+    fetchNextPage: () => void;
 };
 
-const MediaPreviewContent = ({ items, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
+type MediaPreviewPanelsProps = {
+    mode: AnnotatorMode;
+    changeAnnotatorMode: (mode: AnnotatorMode) => void;
+    items: Media[];
+    onClose: () => void;
+    onSelectedMediaItem: (item: Media) => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+    fetchNextPage: () => void;
+};
+
+const MediaPreviewPanels = ({
+    mode,
+    changeAnnotatorMode,
+    items,
+    onClose,
+    onSelectedMediaItem,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+}: MediaPreviewPanelsProps) => {
+    const { mediaItem } = useSelectedMediaItem();
+    const handleMediaTransition = useAnnotatorMediaTransition({ onSelectedMediaItem });
+
+    return (
+        <>
+            <AnnotatorContainer
+                mode={mode}
+                items={items}
+                onClose={onClose}
+                changeAnnotatorMode={changeAnnotatorMode}
+                onSelectedMediaItem={handleMediaTransition}
+            />
+
+            <View gridArea={'aside'}>
+                <SidebarItems
+                    items={items}
+                    mediaItem={mediaItem}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    fetchNextPage={fetchNextPage}
+                    onSelectedMediaItem={handleMediaTransition}
+                />
+            </View>
+        </>
+    );
+};
+
+const MediaPreviewContent = ({
+    items,
+    onSelectedMediaItem,
+    onClose,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+}: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
     const { mediaItem } = useSelectedMediaItem();
 
@@ -57,12 +116,15 @@ const MediaPreviewContent = ({ items, onSelectedMediaItem, onClose }: MediaPrevi
                 isUserReviewed={isUserReviewed}
                 mode={mode}
             >
-                <AnnotatorContainer
+                <MediaPreviewPanels
                     mode={mode}
+                    changeAnnotatorMode={setMode}
                     items={items}
                     onClose={onClose}
-                    changeAnnotatorMode={setMode}
                     onSelectedMediaItem={onSelectedMediaItem}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    fetchNextPage={fetchNextPage}
                 />
             </AnnotatorProviders>
         </ToolProvider>
@@ -95,19 +157,15 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     ]}
                 >
                     <SelectedMediaItemProvider mediaItem={mediaItem}>
-                        <MediaPreviewContent items={items} onClose={close} onSelectedMediaItem={onSelectedMediaItem} />
-                    </SelectedMediaItemProvider>
-
-                    <View gridArea={'aside'}>
-                        <SidebarItems
+                        <MediaPreviewContent
                             items={items}
-                            mediaItem={mediaItem}
+                            onClose={close}
+                            onSelectedMediaItem={onSelectedMediaItem}
                             hasNextPage={hasNextPage}
                             isFetchingNextPage={isFetchingNextPage}
                             fetchNextPage={fetchNextPage}
-                            onSelectedMediaItem={onSelectedMediaItem}
                         />
-                    </View>
+                    </SelectedMediaItemProvider>
                 </Grid>
             </Content>
         </Dialog>

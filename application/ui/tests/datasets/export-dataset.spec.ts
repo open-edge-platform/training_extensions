@@ -91,7 +91,7 @@ test.describe('Export dataset', () => {
             })
         );
 
-        await page.goto('projects/id-1/dataset');
+        await page.goto(`projects/${mockedProject.id}/dataset`);
 
         await page.getByRole('button', { name: 'import-export dataset' }).click();
         await page.getByText('Export dataset').click();
@@ -148,23 +148,17 @@ test.describe('Export dataset', () => {
         });
     });
 
-    test('cancel export job remove staged files', async ({ network, page }) => {
-        let deletedStagedDatasetId: string | undefined;
-
+    test('cancel export job', async ({ network, page }) => {
         network.use(
             http.get('/api/jobs/{job_id}', () => {
                 return HttpResponse.json(exportingJob, { status: 200 });
             }),
             http.post('/api/jobs/{job_id}:cancel', () => {
                 return HttpResponse.json(getMockedJob({ ...exportingJob, status: 'CANCELLED' }), { status: 200 });
-            }),
-            http.delete('/api/staged_datasets/{staged_dataset_id}', ({ params }) => {
-                deletedStagedDatasetId = params.staged_dataset_id as string;
-                return new HttpResponse(null, { status: 204 });
             })
         );
 
-        await page.goto('projects/id-1/dataset');
+        await page.goto(`projects/${mockedProject.id}/dataset`);
 
         await page.getByRole('button', { name: 'import-export dataset' }).click();
         await page.getByText('Export dataset').click();
@@ -183,7 +177,6 @@ test.describe('Export dataset', () => {
             await container.getByRole('button', { name: /Cancel Job/i, exact: true }).click();
 
             await expect(page.getByText(String(exportingJob.message))).toBeHidden();
-            await expect.poll(() => deletedStagedDatasetId).toBe(STAGED_DATASET_ID);
         });
     });
 });

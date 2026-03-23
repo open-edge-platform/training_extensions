@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useMemo, useRef } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useRef } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEqual } from 'lodash-es';
@@ -56,7 +56,6 @@ export const AnnotationActionsProvider = ({
     mode,
     isReadOnly = false,
 }: AnnotationActionsProviderProps) => {
-    const mediaItemKey = isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
         meta: {
@@ -100,19 +99,12 @@ export const AnnotationActionsProvider = ({
     };
 
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
-    const prevMediaItemKeyRef = useRef(mediaItemKey);
 
-    useEffect(() => {
-        // Reset annotations when source annotations change or when switching media/frame.
-        if (
-            prevMediaItemKeyRef.current !== mediaItemKey ||
-            !isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)
-        ) {
-            undoRedoActions.reset(initialAnnotations);
-            prevMediaItemKeyRef.current = mediaItemKey;
-            prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
-        }
-    }, [mediaItemKey, initialAnnotationsDTO, initialAnnotations, undoRedoActions]);
+    // Reset annotations when source annotations change.
+    if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
+        undoRedoActions.reset(initialAnnotations);
+        prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
+    }
 
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {
@@ -200,7 +192,11 @@ export const AnnotationActionsProvider = ({
         return !isEqual(currentServerAnnotations, initialAnnotationsDTO);
     }, [annotations, initialAnnotationsDTO]);
 
-    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations;
+    const hasEmptyLabelSelection = useMemo(() => {
+        return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
+    }, [annotations]);
+
+    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations || hasEmptyLabelSelection;
 
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';

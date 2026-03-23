@@ -55,7 +55,7 @@ describe('getTilingMode', () => {
                     default_value: false,
                 }),
                 getMockedConfigurationParameter({
-                    key: 'adaptive_tiling',
+                    key: 'enable_adaptive_tiling',
                     value_type: 'bool',
                     name: 'Adaptive tiling',
                     value: true,
@@ -78,7 +78,7 @@ describe('getTilingMode', () => {
                     default_value: false,
                 }),
                 getMockedConfigurationParameter({
-                    key: 'adaptive_tiling',
+                    key: 'enable_adaptive_tiling',
                     value_type: 'bool',
                     name: 'Adaptive tiling',
                     value: false,
@@ -131,7 +131,7 @@ describe('Tiling', () => {
                 default_value: false,
             }),
             getMockedConfigurationParameter({
-                key: 'adaptive_tiling',
+                key: 'enable_adaptive_tiling',
                 value_type: 'bool',
                 name: 'Adaptive tiling',
                 value: false,
