@@ -10,19 +10,7 @@ import { pluginSvgr } from '@rsbuild/plugin-svgr';
 const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 
 const getPublicApiUrl = (): string => {
-    const raw = publicVars['import.meta.env.PUBLIC_API_BASE_URL'];
-
-    if (raw === undefined) {
-        return '';
-    }
-
-    try {
-        const parsed = JSON.parse(raw);
-
-        return typeof parsed === 'string' ? parsed : '';
-    } catch {
-        return '';
-    }
+    return publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '';
 };
 
 // Platform target selection. When building for the Tauri desktop shell we
