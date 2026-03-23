@@ -150,4 +150,30 @@ export class ModelsPage {
     async clickTrainingDatasetsTab() {
         await this.page.getByRole('tab', { name: 'Training datasets' }).click();
     }
+
+    async openAdvancedSettings() {
+        await this.page.getByRole('button', { name: 'Advanced settings' }).click();
+    }
+
+    async openBasicMode() {
+        await this.page.getByRole('button', { name: 'Back' }).click();
+    }
+
+    async openTrainingParameters() {
+        await this.page.getByRole('tab', { name: 'Training' }).click();
+    }
+
+    async updateInputSizeParameters(inputSizeWidth: number, inputSizeHeight: number) {
+        await this.page.getByRole('button', { name: 'Select Input size width' }).click();
+        await this.page
+            .getByRole('listbox', { name: 'Select Input size width' })
+            .getByRole('option', { name: inputSizeWidth.toString() })
+            .click();
+
+        await this.page.getByRole('button', { name: 'Select Input size height' }).click();
+        await this.page
+            .getByRole('listbox', { name: 'Select Input size height' })
+            .getByRole('option', { name: inputSizeHeight.toString() })
+            .click();
+    }
 }

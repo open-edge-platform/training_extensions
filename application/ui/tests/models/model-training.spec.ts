@@ -1,12 +1,17 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { NetworkFixture } from '@msw/playwright';
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedJob } from 'mocks/mock-job';
 import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
+import { TrainingConfigurationRequestPayload, TrainingRequestPayload } from '../../src/constants/shared-types';
+import { deepReplaceParameters } from '../../src/features/models/train-model/advanced-settings/utils';
+import { getTrainingConfigurationUpdatePayload } from '../../src/features/models/train-model/hooks/utils';
 import { expect, http, test } from '../fixtures';
+import { MOCKED_MODEL_TRAINING_CONFIGURATION, MOCKED_TRAINING_CONFIGURATION } from './mocks';
 
 const mockedModelArchitectures = [
     getMockedModelArchitecture({ id: 'Object_Detection_SSD', name: 'Object_Detection_SSD' }),
@@ -67,69 +72,93 @@ const runningTrainingJob = getMockedJob({
     finished_at: null,
 });
 
+const setupNetworkMocks = (network: NetworkFixture) => {
+    let hasStartedTraining = false;
+
+    const state: {
+        submittedJobBody: TrainingRequestPayload | null;
+        submittedTrainingConfiguration: TrainingConfigurationRequestPayload | null;
+    } = {
+        submittedJobBody: null,
+        submittedTrainingConfiguration: null,
+    };
+
+    network.use(
+        http.get('/api/projects/{project_id}/models', () => {
+            return HttpResponse.json(mockedModelRevisions);
+        }),
+        http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
+            if (params.model_id === 'model-training-1') {
+                return HttpResponse.json(
+                    getMockedModel({
+                        id: 'model-training-1',
+                        name: 'ATSS Training Run',
+                        architecture: 'Custom_Object_Detection_Gen3_ATSS',
+                        training_info: {
+                            status: 'in_progress',
+                            label_schema_revision: { labels: [] },
+                            start_time: '2026-01-19T08:15:00.000000+00:00',
+                            end_time: null,
+                            dataset_revision_id: 'dataset-2',
+                        },
+                    })
+                );
+            }
+
+            const model = mockedModelRevisions.find(({ id }) => id === params.model_id);
+            return model ? HttpResponse.json(model) : new HttpResponse(null, { status: 404 });
+        }),
+        http.get('/api/projects/{project_id}/dataset_revisions', () => {
+            return HttpResponse.json(mockedDatasetRevisions);
+        }),
+        http.get('/api/model_architectures', () => {
+            return HttpResponse.json({
+                model_architectures: mockedModelArchitectures,
+                top_picks: {
+                    balance: mockedModelArchitectures[0].id,
+                    speed: mockedModelArchitectures[1].id,
+                    accuracy: mockedModelArchitectures[1].id,
+                },
+            });
+        }),
+        http.get('/api/projects/{project_id}/dataset/items', () => {
+            return HttpResponse.json({
+                items: [
+                    { id: '1', subset: 'training', user_reviewed: false },
+                    { id: '2', subset: 'training', user_reviewed: false },
+                    { id: '3', subset: 'validation', user_reviewed: false },
+                    { id: '4', subset: 'testing', user_reviewed: false },
+                ],
+                pagination: { total: 4, count: 4, limit: 10, offset: 0 },
+            });
+        }),
+        http.get('/api/jobs', () => {
+            return HttpResponse.json(hasStartedTraining ? [runningTrainingJob] : []);
+        }),
+        http.post('/api/jobs', async ({ request }) => {
+            state.submittedJobBody = (await request.json()) as TrainingRequestPayload;
+            hasStartedTraining = true;
+            return HttpResponse.json(runningTrainingJob, { status: 201 });
+        }),
+        http.get('/api/projects/{project_id}/training_configuration', () => {
+            return HttpResponse.json(MOCKED_TRAINING_CONFIGURATION);
+        }),
+        http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', () => {
+            return HttpResponse.json(MOCKED_MODEL_TRAINING_CONFIGURATION);
+        }),
+        http.patch('/api/projects/{project_id}/training_configuration', async ({ request }) => {
+            state.submittedTrainingConfiguration = await request.json();
+
+            return HttpResponse.json({}, { status: 200 });
+        })
+    );
+
+    return state;
+};
+
 test.describe('Model training flow', () => {
-    test('starts training and submits expected payload', async ({ modelsPage, network, page }) => {
-        let hasStartedTraining = false;
-        let submittedJobBody = null;
-
-        network.use(
-            http.get('/api/projects/{project_id}/models', () => {
-                return HttpResponse.json(mockedModelRevisions);
-            }),
-            http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
-                if (params.model_id === 'model-training-1') {
-                    return HttpResponse.json(
-                        getMockedModel({
-                            id: 'model-training-1',
-                            name: 'ATSS Training Run',
-                            architecture: 'Custom_Object_Detection_Gen3_ATSS',
-                            training_info: {
-                                status: 'in_progress',
-                                label_schema_revision: { labels: [] },
-                                start_time: '2026-01-19T08:15:00.000000+00:00',
-                                end_time: null,
-                                dataset_revision_id: 'dataset-2',
-                            },
-                        })
-                    );
-                }
-
-                const model = mockedModelRevisions.find(({ id }) => id === params.model_id);
-                return model ? HttpResponse.json(model) : new HttpResponse(null, { status: 404 });
-            }),
-            http.get('/api/projects/{project_id}/dataset_revisions', () => {
-                return HttpResponse.json(mockedDatasetRevisions);
-            }),
-            http.get('/api/model_architectures', () => {
-                return HttpResponse.json({
-                    model_architectures: mockedModelArchitectures,
-                    top_picks: {
-                        balance: mockedModelArchitectures[0].id,
-                        speed: mockedModelArchitectures[1].id,
-                        accuracy: mockedModelArchitectures[1].id,
-                    },
-                });
-            }),
-            http.get('/api/projects/{project_id}/dataset/items', () => {
-                return HttpResponse.json({
-                    items: [
-                        { id: '1', subset: 'training', user_reviewed: false },
-                        { id: '2', subset: 'training', user_reviewed: false },
-                        { id: '3', subset: 'validation', user_reviewed: false },
-                        { id: '4', subset: 'testing', user_reviewed: false },
-                    ],
-                    pagination: { total: 4, count: 4, limit: 10, offset: 0 },
-                });
-            }),
-            http.get('/api/jobs', () => {
-                return HttpResponse.json(hasStartedTraining ? [runningTrainingJob] : []);
-            }),
-            http.post('/api/jobs', async ({ request }) => {
-                submittedJobBody = await request.json();
-                hasStartedTraining = true;
-                return HttpResponse.json(runningTrainingJob, { status: 201 });
-            })
-        );
+    test('Basic training flow', async ({ modelsPage, network, page }) => {
+        const state = setupNetworkMocks(network);
 
         await modelsPage.goto();
 
@@ -143,7 +172,7 @@ test.describe('Model training flow', () => {
         await expect(page.getByRole('heading', { name: 'Current training' })).toBeVisible();
         await expect(page.getByText('ATSS Training Run')).toBeVisible();
 
-        expect(submittedJobBody).toMatchObject({
+        expect(state.submittedJobBody).toMatchObject({
             job_type: 'train',
             project_id: 'id-1',
             parameters: {
@@ -153,5 +182,88 @@ test.describe('Model training flow', () => {
                 parent_model_revision_id: 'model-rev-1',
             },
         });
+        expect(state.submittedTrainingConfiguration).toBeNull();
+    });
+
+    test('Advanced model training flow', async ({ network, modelsPage }) => {
+        const state = setupNetworkMocks(network);
+
+        await modelsPage.goto();
+        await modelsPage.openTrainModelDialog();
+
+        await test.step('Select model architecture', async () => {
+            await modelsPage.selectModelArchitecture('Custom_Object_Detection_Gen3_ATSS');
+        });
+
+        await test.step('Select dataset revision', async () => {
+            await modelsPage.selectPickerOption('Select dataset', 'Dataset Revision 2');
+        });
+
+        await test.step('Select model revision', async () => {
+            await modelsPage.selectPickerOption('Select model revision', 'ATSS Revision 1');
+        });
+
+        await test.step('Select advanced settings', async () => {
+            await modelsPage.openAdvancedSettings();
+        });
+
+        await test.step('Update any parameter', async () => {
+            await modelsPage.openTrainingParameters();
+            await modelsPage.updateInputSizeParameters(640, 512);
+        });
+
+        await test.step('Start the training', async () => {
+            await modelsPage.startTraining();
+        });
+
+        expect(state.submittedJobBody).toMatchObject({
+            job_type: 'train',
+            project_id: 'id-1',
+            parameters: {
+                device: 'cpu',
+                model_architecture_id: 'Custom_Object_Detection_Gen3_ATSS',
+                dataset_revision_id: 'dataset-2',
+                parent_model_revision_id: 'model-rev-1',
+            },
+        });
+
+        const updatedTrainingConfigurationParameters = deepReplaceParameters(
+            MOCKED_MODEL_TRAINING_CONFIGURATION.parameters,
+            [
+                {
+                    type: 'parameter',
+                    key: 'input_size_width',
+                    name: 'Input size width',
+                    description:
+                        'Width size in pixels for model input images. Determines the horizontal resolution at which images are processed.',
+                    depends_on: null,
+                    value_type: 'int',
+                    value: 640,
+                    default_value: 800,
+                    min_value: 0,
+                    max_value: null,
+                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
+                },
+                {
+                    type: 'parameter',
+                    key: 'input_size_height',
+                    name: 'Input size height',
+                    description:
+                        'Height size in pixels for model input images. Determines the vertical resolution at which images are processed.',
+                    depends_on: null,
+                    value_type: 'int',
+                    value: 512,
+                    default_value: 800,
+                    min_value: 0,
+                    max_value: null,
+                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
+                },
+            ],
+            ['training']
+        );
+
+        expect(state.submittedTrainingConfiguration).toMatchObject(
+            getTrainingConfigurationUpdatePayload({ parameters: updatedTrainingConfigurationParameters })
+        );
     });
 });

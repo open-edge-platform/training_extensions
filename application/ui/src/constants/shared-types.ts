@@ -114,3 +114,8 @@ export type ConfigurableParameterGroup = components['schemas']['ConfigurablePara
 export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
 
 export type TrainingConfiguration = components['schemas']['TrainingConfigurationView'];
+
+export type TrainingRequestPayload = components['schemas']['TrainingRequest'];
+export type TrainingConfigurationRequestPayload = {
+    [key: string]: unknown;
+};
