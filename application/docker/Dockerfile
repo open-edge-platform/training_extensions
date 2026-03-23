@@ -175,6 +175,8 @@ USER ${USER_NAME}
 
 COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
+USER root
+
 # CUDA EULA Compliance Cleanup
 RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     # Define search paths including venv
