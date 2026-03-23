@@ -1075,6 +1075,24 @@ class TestDatasetServiceIntegration:
 
         assert len(dataset_items) == len(expected_names)
 
+    def test_list_dataset_items_with_media_without_predictions(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test listing dataset items when keep_predictions=False removes annotation_data from each item."""
+        project, db_dataset_items = fxt_project_with_annotation_status_items
+
+        dataset_items_with_media = fxt_dataset_service.list_dataset_items_with_media(
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
+            ),
+            keep_predictions=False,
+        )
+
+        assert all(not item[0].annotation_data for item in dataset_items_with_media)
+
     @pytest.mark.parametrize(
         "annotation_status, limit, offset, expected_count",
         [
