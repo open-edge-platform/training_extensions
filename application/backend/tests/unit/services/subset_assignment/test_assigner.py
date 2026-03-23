@@ -24,7 +24,7 @@ class TestSubsetAssigner:
 
     def test_assign_empty_list(self, fxt_assigner, fxt_default_ratios):
         """Test that assigning empty list returns empty list"""
-        result = fxt_assigner.assign([], fxt_default_ratios, has_all_subsets_assigned=False)
+        result = fxt_assigner.assign([], fxt_default_ratios, has_all_subsets_assigned=True)
         assert result == []
 
     def test_assign_returns_all_items(self, fxt_assigner, fxt_default_ratios):
@@ -138,3 +138,28 @@ class TestSubsetAssigner:
 
         # All items are assigned (no items lost)
         assert len(result) == len(items)
+
+    @pytest.mark.parametrize(
+        "num_items, expected_subsets",
+        [
+            (1, [DatasetItemSubset.TRAINING]),
+            (2, [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION]),
+        ],
+    )
+    def test_assign_fewer_than_three_items_assigns_in_subset_order(
+        self, fxt_assigner, fxt_default_ratios, num_items, expected_subsets
+    ):
+        """Test that when fewer than 3 items are provided and all subsets are already assigned,
+        items are assigned in order: TRAINING, VALIDATION, TESTING."""
+        items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(num_items)]
+
+        result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=True)
+
+        assert len(result) == num_items
+        # Verify items are assigned to subsets in the expected order
+        for assignment, expected_subset in zip(result, expected_subsets):
+            assert assignment.subset == expected_subset
+        # Verify all input item IDs are present in the result
+        result_item_ids = {a.item_id for a in result}
+        input_item_ids = {item.item_id for item in items}
+        assert result_item_ids == input_item_ids

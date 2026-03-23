@@ -41,13 +41,19 @@ class SubsetAssigner:
         Returns:
             list[SubsetAssignment]: List of subset assignments for each item.
         """
-        if not items:
-            return []
-        if not has_all_subsets_assigned and len(items) < 3:
-            raise ValueError(
-                "Not all subsets have items assigned, but number of unassigned dataset items is less than number of "
-                "subsets: Training, Validation and Testing."
-            )
+        if len(items) < 3:
+            if not has_all_subsets_assigned:
+                raise ValueError(
+                    "Not all subsets have items assigned, but number of unassigned dataset items is less than number "
+                    "of subsets: Training, Validation and Testing. Each subset requires at least 1 item before "
+                    "training can start."
+                )
+            # If less items are available than subsets, we cannot use stratification, so assign in order to subsets.
+            assignments = []
+            subsets = [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION, DatasetItemSubset.TESTING]
+            for idx in range(len(items)):
+                assignments.append(SubsetAssignment(item_id=items[idx].item_id, subset=subsets[idx]))
+            return assignments
 
         label_matrix = self._mlb.fit_transform([item.labels for item in items])
 
