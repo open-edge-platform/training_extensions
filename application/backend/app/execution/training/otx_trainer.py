@@ -175,7 +175,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
             logger.info("Target subset ratios for unassigned items: {}", target_ratios)
 
             self.update_message("Computing optimal subset assignments")
-            assignments = self._subset_assigner.assign(unassigned_items, target_ratios)
+            has_all_subsets_assigned = self._subset_service.has_all_subsets_assigned(project_id)
+            assignments = self._subset_assigner.assign(unassigned_items, target_ratios, has_all_subsets_assigned)
 
             # Persist assignments
             self.update_message("Persisting subset assignments")

@@ -29,7 +29,9 @@ class SubsetAssigner:
     def __init__(self) -> None:
         self._mlb = MultiLabelBinarizer()
 
-    def assign(self, items: list[DatasetItemWithLabels], target_ratios: SplitRatios) -> list[SubsetAssignment]:
+    def assign(
+        self, items: list[DatasetItemWithLabels], target_ratios: SplitRatios, has_all_subsets_assigned: bool
+    ) -> list[SubsetAssignment]:
         """
         Assigns dataset items to subsets based on target ratios.
 
@@ -41,6 +43,11 @@ class SubsetAssigner:
         """
         if not items:
             return []
+        if not has_all_subsets_assigned and len(items) < 3:
+            raise ValueError(
+                "Not all subsets have items assigned, but number of unassigned dataset items is less than number of "
+                "subsets: Training, Validation and Testing."
+            )
 
         label_matrix = self._mlb.fit_transform([item.labels for item in items])
 
@@ -64,9 +71,23 @@ class SubsetAssigner:
             DatasetItemSubset.TESTING: test_indices,
         }
 
+        if not has_all_subsets_assigned:
+            self._ensure_all_subsets_nonempty(indices_by_subset)
+
         assignments = []
         for subset, indices in indices_by_subset.items():
             for idx in indices:
                 assignments.append(SubsetAssignment(item_id=items[idx].item_id, subset=subset))
 
         return assignments
+
+    @staticmethod
+    def _ensure_all_subsets_nonempty(
+        indices_by_subset: dict[DatasetItemSubset, list[int]],
+    ) -> None:
+        """Ensure every subset has at least one index by moving items from the largest subset."""
+        empty_subsets = [s for s, idx in indices_by_subset.items() if len(idx) == 0]
+        for empty_subset in empty_subsets:
+            largest_subset = max(indices_by_subset, key=lambda s: len(indices_by_subset[s]))
+            moved = indices_by_subset[largest_subset].pop()
+            indices_by_subset[empty_subset].append(moved)
