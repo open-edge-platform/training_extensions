@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Flex, NumberField, RangeSlider, type RangeValue } from '@geti/ui';
 
@@ -35,45 +35,31 @@ export const RangeParameterField = ({
     name,
     step,
 }: RangeParameterFieldProps) => {
-    const [parameterValue, setParameterValue] = useState<RangeValue<number>>({
-        start: value[0],
-        end: value[1],
-    });
-
-    useEffect(() => {
-        if (value === null) {
-            setParameterValue(value);
-        } else {
-            setParameterValue({
-                start: value[0],
-                end: value[1],
-            });
-        }
-    }, [value]);
+    const [draftRange, setDraftRange] = useState<RangeValue<number> | null>(null);
+    const parameterValue = draftRange ?? { start: value[0], end: value[1] };
 
     const fieldStep = getStep({ step, maxValue: defaultValue[1], minValue: defaultValue[0] });
     const decimalPlaces = (fieldStep.toString().split('.')[1] || '').length;
 
-    const handleRangeChangeEnd = (): void => {
-        if (parameterValue === null) {
-            return;
-        }
+    const handleRangeChangeEnd = (inputValue: RangeValue<number>): void => {
+        const { start, end } = inputValue;
 
-        onChange([parameterValue.start, parameterValue.end]);
+        setDraftRange(null);
+        onChange([start, end]);
     };
 
     const handleRangeChange = (inputValue: RangeValue<number>): void => {
         const { start, end } = inputValue;
         // Prevent start and end from being equal
         if (end - start >= fieldStep) {
-            setParameterValue({ start, end });
+            setDraftRange({ start, end });
         }
     };
 
     const handleNumberChange = (start: number, end: number): void => {
         // Prevent start and end from being equal
         if (end - start >= fieldStep) {
-            setParameterValue({ start, end });
+            setDraftRange(null);
             onChange([start, end]);
         }
     };
@@ -83,7 +69,7 @@ export const RangeParameterField = ({
             <NumberField
                 isQuiet
                 step={fieldStep}
-                value={parameterValue?.start}
+                value={parameterValue.start}
                 minValue={defaultValue[0]}
                 maxValue={defaultValue[1]}
                 onChange={(start) => handleNumberChange(start, parameterValue.end)}
