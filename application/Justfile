@@ -19,8 +19,7 @@ logs-volume := application-name + "-logs"
 # Build Geti Docker image for a specific training backend
 [arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
 [arg("tag", long="tag", short="t")]
-[arg("extra-tags", long="extra-tags", help="Space-separated list of additional tags to apply to the image")]
-build-image accelerator="cpu" tag="latest" extra-tags="": install-uv
+build-image accelerator="cpu" tag="latest": install-uv
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -41,9 +40,6 @@ build-image accelerator="cpu" tag="latest" extra-tags="": install-uv
     fi
 
     TAG_ARGS="--tag ${IMAGE}:{{ tag }}"
-    for extra in {{ extra-tags }}; do
-        TAG_ARGS="${TAG_ARGS} --tag ${IMAGE}:${extra}"
-    done
 
     echo "Building docker image for accelerator: {{ accelerator }}"
     docker buildx build \
