@@ -30,6 +30,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 
 # Run Geti as a Docker container for a specific training backend
 [arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
+[arg("reload", long="reload", short="r", value="true", help="Automatically reload the container if it is already running")]
 [arg("tag", long="tag", short="t")]
 [arg("host", long="host", short="h", help="Host address to bind the server to")]
 [arg("port", long="port", short="p", help="Port number to bind the server to")]
@@ -43,7 +44,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
+run-image accelerator="cpu" reload="false" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -58,6 +59,18 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
         echo "Error: Docker image '${IMAGE_NAME}' not found." >&2
         echo "Build it first with: just build-image --accelerator {{ accelerator }} --tag {{ tag }}" >&2
         exit 1
+    fi
+
+    CONTAINER_ID=$(docker ps -q -f "name=^/${CONTAINER_NAME}$")
+    if [[ -n "$CONTAINER_ID" ]]; then
+        if [[ "{{ reload }}" == "true" ]]; then
+            echo "Stopping existing container: ${CONTAINER_NAME}"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+        else
+            echo "Container with such name runs already. Please pass --reload to force container restart" >&2
+            exit 1
+        fi
     fi
 
     DETACH_FLAG=""
