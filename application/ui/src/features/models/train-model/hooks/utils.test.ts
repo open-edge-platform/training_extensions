@@ -50,7 +50,7 @@ describe('getTrainingConfigurationUpdatePayload', () => {
             'dataset_preparation.augmentation.gaussian_noise.sigma': 0.1,
             'dataset_preparation.augmentation.gaussian_noise.probability': 0.5,
             'dataset_preparation.augmentation.tiling.enable': false,
-            'dataset_preparation.augmentation.tiling.adaptive_tiling': true,
+            'dataset_preparation.augmentation.tiling.enable_adaptive_tiling': true,
             'dataset_preparation.augmentation.tiling.tile_size': 400,
             'dataset_preparation.augmentation.tiling.tile_overlap': 0.2,
             'training.max_epochs': 200,

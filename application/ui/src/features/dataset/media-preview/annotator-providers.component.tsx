@@ -9,7 +9,6 @@ import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
-import { isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorLabelsProvider } from '../../annotator/annotator-labels-provider.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
 
@@ -32,28 +31,24 @@ export const AnnotatorProviders = ({
     isReadOnly = false,
     children,
 }: AnnotatorProvidersProps) => {
-    const mediaSelectionResetKey = isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
-
     return (
         <ZoomProvider>
-            <SelectAnnotationProvider resetKey={mediaSelectionResetKey}>
-                <AnnotationVisibilityProvider>
-                    <CanvasSettingsProvider>
-                        <AnnotatorLabelsProvider>
-                            <AnnotationActionsProvider
-                                mediaItem={mediaItem}
-                                initialAnnotationsDTO={initialAnnotationsDTO}
-                                initialPredictionsDTO={initialPredictionsDTO}
-                                isUserReviewed={isUserReviewed}
-                                mode={mode}
-                                isReadOnly={isReadOnly}
-                            >
-                                {children}
-                            </AnnotationActionsProvider>
-                        </AnnotatorLabelsProvider>
-                    </CanvasSettingsProvider>
-                </AnnotationVisibilityProvider>
-            </SelectAnnotationProvider>
+            <AnnotationVisibilityProvider>
+                <CanvasSettingsProvider>
+                    <AnnotatorLabelsProvider>
+                        <AnnotationActionsProvider
+                            mediaItem={mediaItem}
+                            initialAnnotationsDTO={initialAnnotationsDTO}
+                            initialPredictionsDTO={initialPredictionsDTO}
+                            isUserReviewed={isUserReviewed}
+                            mode={mode}
+                            isReadOnly={isReadOnly}
+                        >
+                            <SelectAnnotationProvider>{children}</SelectAnnotationProvider>
+                        </AnnotationActionsProvider>
+                    </AnnotatorLabelsProvider>
+                </CanvasSettingsProvider>
+            </AnnotationVisibilityProvider>
         </ZoomProvider>
     );
 };

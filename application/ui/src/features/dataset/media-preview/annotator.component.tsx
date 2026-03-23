@@ -111,17 +111,12 @@ export const AnnotatorContainer = ({
     items,
     onSelectedMediaItem,
 }: AnnotatorContainerProps) => {
-    const { mediaItem, setMediaItem, image } = useSelectedMediaItem();
-
-    const selectMediaItem = (item: Media) => {
-        setMediaItem(item);
-        onSelectedMediaItem(item);
-    };
+    const { mediaItem, image } = useSelectedMediaItem();
 
     return (
         <VideoPlayerProvider
             videoFrame={isVideoFrame(mediaItem) ? mediaItem : undefined}
-            changeSelectedMediaItem={selectMediaItem}
+            changeSelectedMediaItem={onSelectedMediaItem}
         >
             <Annotator
                 mode={mode}
@@ -130,7 +125,7 @@ export const AnnotatorContainer = ({
                 onClose={onClose}
                 mediaItem={mediaItem}
                 changeAnnotatorMode={changeAnnotatorMode}
-                onSelectedMediaItem={selectMediaItem}
+                onSelectedMediaItem={onSelectedMediaItem}
             />
         </VideoPlayerProvider>
     );

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
 type SelectedAnnotationContextProps = {
     selectedAnnotations: Set<string>;
@@ -20,12 +20,8 @@ export const useSelectedAnnotations = () => {
     return ctx;
 };
 
-export const SelectAnnotationProvider = ({ children, resetKey }: { children: ReactNode; resetKey?: string }) => {
+export const SelectAnnotationProvider = ({ children }: { children: ReactNode }) => {
     const [selectedAnnotations, setSelectedAnnotations] = useState<Set<string>>(new Set());
-
-    useEffect(() => {
-        setSelectedAnnotations(new Set());
-    }, [resetKey]);
 
     return (
         <SelectedAnnotationContext.Provider value={{ selectedAnnotations, setSelectedAnnotations }}>
