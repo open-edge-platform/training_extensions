@@ -185,14 +185,13 @@ class LabelService(BaseSessionManagedService):
             if item.annotation_data is None:
                 continue
 
-            # Remove the label from each annotation shape
+            # Build a fresh list of annotations with the deleted label removed.
+            # Shapes that have no remaining labels are dropped entirely.
             updated_annotations = []
             for annotation in item.annotation_data:
-                filtered_labels = [label for label in annotation.get("labels", []) if label.get("id") != label_id_str]
+                filtered_labels = [lbl for lbl in annotation.get("labels", []) if lbl.get("id") != label_id_str]
                 if filtered_labels:
-                    annotation["labels"] = filtered_labels
-                    updated_annotations.append(annotation)
-                # else: shape has no labels left, drop it entirely
+                    updated_annotations.append({**annotation, "labels": filtered_labels})
 
             if updated_annotations:
                 dataset_item_repo.set_annotation_data(
@@ -202,9 +201,7 @@ class LabelService(BaseSessionManagedService):
                     prediction_model_id=item.prediction_model_id,
                 )
             elif is_multiclass:
-                dataset_item_repo.delete_annotation_data(
-                    obj_id=item.id,
-                )
+                dataset_item_repo.delete_annotation_data(obj_id=item.id)
             else:
                 dataset_item_repo.set_annotation_data(
                     obj_id=item.id,
