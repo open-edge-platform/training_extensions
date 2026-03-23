@@ -31,7 +31,7 @@ hyperparameters:
       max_grad_norm: 0.1
     gradient_accumulation:
       enable: true
-      iters: 4
+      batches: 4
     allowed_values_input_size:
       - 336
       - 432
