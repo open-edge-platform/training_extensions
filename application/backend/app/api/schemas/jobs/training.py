@@ -6,9 +6,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.api.schemas.system import DeviceInfoView
 from app.core.jobs.models import JobType
 from app.models import TrainingJob
-from app.models.system import DeviceInfo
 
 from .base import BaseJobRequest
 
@@ -87,7 +87,7 @@ class TrainingMetadata(BaseModel):
 
     project: ProjectMetadata = Field(..., description="Project associated with the training job")
     model: ModelMetadata = Field(..., description="Model being trained")
-    device: DeviceInfo = Field(..., description="Device associated with the training job")
+    device: DeviceInfoView = Field(..., description="Device associated with the training job")
 
     @model_validator(mode="before")
     @classmethod
@@ -101,6 +101,6 @@ class TrainingMetadata(BaseModel):
                     parent_revision_id=data.params.parent_model_revision_id,
                     dataset_revision_id=data.params.dataset_revision_id,
                 ),
-                "device": data.params.device,
+                "device": DeviceInfoView.model_validate(data.params.device, from_attributes=True),
             }
         return data

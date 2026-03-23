@@ -53,6 +53,10 @@ describe('TrainingModelRow', () => {
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
                 },
+                device: {
+                    type: 'cpu',
+                    name: 'CPU',
+                },
             },
             status: 'RUNNING',
             message: 'Running...',
@@ -99,6 +103,10 @@ describe('TrainingModelRow', () => {
                     architecture: 'Custom_Object_Detection_Gen3_ATSS',
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
+                },
+                device: {
+                    type: 'cpu',
+                    name: 'CPU',
                 },
             },
             status: 'RUNNING',
@@ -157,6 +165,10 @@ describe('TrainingModelRow', () => {
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
                 },
+                device: {
+                    type: 'cpu',
+                    name: 'CPU',
+                },
             },
             status: 'RUNNING',
         });
@@ -186,6 +198,10 @@ describe('TrainingModelRow', () => {
                     architecture: 'Custom_Object_Detection_Gen3_ATSS',
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
+                },
+                device: {
+                    type: 'cpu',
+                    name: 'CPU',
                 },
             },
             status: 'FINISHED',
