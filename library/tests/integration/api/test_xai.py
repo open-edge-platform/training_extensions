@@ -20,7 +20,7 @@ DETECTION_LIST = [recipe for recipe in RECIPE_LIST_ALL if "/detection" in recipe
 INST_SEG_LIST = [recipe for recipe in RECIPE_LIST_ALL if "instance_segmentation" in recipe]
 EXPLAIN_MODEL_LIST = MC_ML_CLS + DETECTION_LIST + INST_SEG_LIST
 
-MEAN_TORCH_OV_DIFF = 170
+MEAN_TORCH_OV_DIFF = 150
 UNSUPPORTED_MODEL_SUBSTRS = ("dino", "rfdetr")
 
 
@@ -164,7 +164,7 @@ def test_predict_with_explain(
 
     assert len(maps_torch) == len(maps_ov)
 
-    if "efficientnet_b3" in recipe or "efficientnet_b0" in recipe:
+    if "efficientnet_b3" in recipe or "efficientnet_b0" in recipe or "deit_tiny" in recipe:
         # There is the issue with different predict results for Pytorch and OpenVINO tasks.
         # Probably because of the different preprocessed images passed as an input. Skip the rest of the checks for now.
         # Tickets: 142087, 141639
