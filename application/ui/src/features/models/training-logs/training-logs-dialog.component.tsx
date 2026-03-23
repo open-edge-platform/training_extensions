@@ -13,9 +13,9 @@ import {
     Text,
     useDialogContainer,
 } from '@geti/ui';
-import { CloseSemiBold } from '@geti/ui/icons';
+import { CloseSemiBold, DownloadIcon } from '@geti/ui/icons';
 
-import { useModelLogs } from './hooks/use-model-logs.hook';
+import { useDownloadModelLogs, useModelLogs } from './hooks/use-model-logs.hook';
 import { useStreamJobLogs } from './hooks/use-stream-job-logs.hook';
 import { LogViewer } from './log-viewer.component';
 
@@ -58,19 +58,32 @@ const HistoricalModelLogs = ({ modelId }: { modelId: string }) => {
 
 export const TrainingLogsDialog = ({ jobId, modelId }: TrainingLogsDialogProps) => {
     const dialogContainer = useDialogContainer();
+    const { downloadModelLogs, isDownloading } = useDownloadModelLogs(modelId);
 
     return (
         <Dialog aria-label={'Training logs'} UNSAFE_className={classes.dialog}>
             <Heading>Training Logs</Heading>
             <Header>
-                <ActionButton
-                    isQuiet
-                    onPress={dialogContainer.dismiss}
-                    aria-label={'Close dialog'}
-                    UNSAFE_className={classes.closeButton}
-                >
-                    <CloseSemiBold width={14} height={14} />
-                </ActionButton>
+                <Flex alignItems={'center'} gap={'size-100'} marginStart={'auto'}>
+                    {modelId && (
+                        <ActionButton
+                            isQuiet
+                            onPress={downloadModelLogs}
+                            aria-label={'Download logs'}
+                            isDisabled={isDownloading}
+                        >
+                            <DownloadIcon />
+                        </ActionButton>
+                    )}
+                    <ActionButton
+                        isQuiet
+                        onPress={dialogContainer.dismiss}
+                        aria-label={'Close dialog'}
+                        UNSAFE_className={classes.closeButton}
+                    >
+                        <CloseSemiBold width={14} height={14} />
+                    </ActionButton>
+                </Flex>
             </Header>
             <Divider />
             <Content UNSAFE_className={classes.contentArea}>

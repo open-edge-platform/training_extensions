@@ -62,6 +62,19 @@ describe('ModelActions', () => {
         expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
     });
 
+    it('should show download logs action in training logs dialog', async () => {
+        render(<ModelActions model={mockModel} />);
+
+        const menuButton = screen.getByRole('button', { name: 'Model actions' });
+        await userEvent.click(menuButton);
+
+        await userEvent.click(screen.getByRole('menuitem', { name: 'View training logs' }));
+
+        (await screen.findByRole('button', { name: 'Download logs' })).click();
+
+        expect(screen.getByText('Training logs downloaded successfully')).toBeInTheDocument();
+    });
+
     it('should disable "Set as active" and "Rename" when model is currently training', async () => {
         const trainingModel = getMockedModel({
             ...mockModel,
