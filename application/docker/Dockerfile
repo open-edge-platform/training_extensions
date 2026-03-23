@@ -171,6 +171,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+USER ${USER_NAME}
+
+COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+
 # CUDA EULA Compliance Cleanup
 RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     # Define search paths including venv
@@ -239,10 +243,6 @@ RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     nsight-* \
     2>/dev/null || true && \
     apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-USER ${USER_NAME}
-
-COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 #######################
 ## Server (XPU version)
