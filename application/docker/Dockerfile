@@ -168,15 +168,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libglib2.0-0t64=2.84.4-3~deb13u2 \
         libglx-mesa0=25.0.7-2
 
-# Backend code + static UI assets
-COPY --link application/backend/app /application/backend/app
-COPY --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
-
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
 
-# Make runtime directories writable for non-root user
-RUN mkdir -p /home/${USER_NAME} && \
+# Create directories and set ownership for the non-root user.
+RUN mkdir -p /application/backend/app ${STATIC_FILES_DIR} /home/${USER_NAME} && \
     chown -R ${UID}:${UID} \
     /application \
     /home/${USER_NAME}
@@ -193,6 +189,10 @@ CMD ["python", "app/main.py"]
 FROM runtime-base AS geti-cpu
 
 COPY --from=cpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+
+# App code + UI assets last – source-only changes only invalidate this layer
+COPY --link application/backend/app /application/backend/app
+COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 
 ######################
 # Server (CUDA version)
@@ -220,76 +220,9 @@ USER ${USER_NAME}
 
 COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
-USER root
-
-# CUDA EULA Compliance Cleanup
-RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
-    # Define search paths including venv
-    SEARCH_PATHS="/usr /opt ${PYTHONPATH}" && \
-    # Add any detected venvs
-    for venv in $(find ${PYTHONPATH} -name "site-packages" -type d 2>/dev/null | sed 's|/lib/python[0-9.]*/site-packages||' | sort -u); do \
-    if [ -d "$venv" ]; then \
-    SEARCH_PATHS="$SEARCH_PATHS $venv"; \
-    fi; \
-    done && \
-    echo "Cleaning CUDA components in: $SEARCH_PATHS" && \
-    # Remove development tools (non-redistributable)
-    find $SEARCH_PATHS -type f \( \
-    -name "nvcc" -o \
-    -name "cuda-gdb" -o \
-    -name "nvprof" -o \
-    -name "nvdisasm" -o \
-    -name "cuobjdump" -o \
-    -name "cuda-memcheck" -o \
-    -name "nsight*" -o \
-    -name "compute-sanitizer" -o \
-    -name "ncu" -o \
-    -name "nv-nsight-cu*" \
-    \) -delete 2>/dev/null || true && \
-    # Remove headers and include directories (non-redistributable)
-    find $SEARCH_PATHS -type d \( \
-    -name "include" -o \
-    -name "headers" \
-    \) -path "*cuda*" -exec rm -rf {} + 2>/dev/null || true && \
-    # Remove NVIDIA package includes specifically
-    find $SEARCH_PATHS -type d -path "*/nvidia/*/include" -exec rm -rf {} + 2>/dev/null || true && \
-    # Remove static libraries (typically non-redistributable)
-    find $SEARCH_PATHS -name "*.a" -path "*cuda*" -delete 2>/dev/null || true && \
-    find $SEARCH_PATHS -name "*.a" -path "*nvidia*" -delete 2>/dev/null || true && \
-    # Remove documentation and samples (non-redistributable)
-    find $SEARCH_PATHS -type d \( \
-    -name "doc" -o \
-    -name "docs" -o \
-    -name "documentation" -o \
-    -name "samples" -o \
-    -name "sample" \
-    \) -path "*cuda*" -exec rm -rf {} + 2>/dev/null || true && \
-    # Remove specific non-redistributable CUPTI components
-    find $SEARCH_PATHS -type f \( \
-    -name "libcheckpoint.so*" -o \
-    -name "libnvperf_host.so*" -o \
-    -name "libnvperf_target.so*" -o \
-    -name "libpcsamplingutil.so*" \
-    \) -path "*cupti*" -delete 2>/dev/null || true && \
-    # Remove cuSolver MG libraries (enterprise feature)
-    find $SEARCH_PATHS -name "libcusolverMg.so*" -delete 2>/dev/null || true && \
-    # Remove Triton NVIDIA backends (development components)
-    find $SEARCH_PATHS -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true && \
-    # System package cleanup
-    apt-get remove -y \
-    cuda-compiler-* \
-    cuda-cuobjdump-* \
-    cuda-gdb-* \
-    cuda-memcheck-* \
-    cuda-nvcc-* \
-    cuda-nvdisasm-* \
-    cuda-nvprof-* \
-    cuda-sanitizer-* \
-    cuda-documentation-* \
-    cuda-samples-* \
-    nsight-* \
-    2>/dev/null || true && \
-    apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+# App code + UI assets last – source-only changes only invalidate this layer
+COPY --link application/backend/app /application/backend/app
+COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 
 #######################
 ## Server (XPU version)
@@ -316,3 +249,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 USER ${USER_NAME}
 
 COPY --from=xpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
+
+# App code + UI assets last – source-only changes only invalidate this layer
+COPY --link application/backend/app /application/backend/app
+COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
+
