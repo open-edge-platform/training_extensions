@@ -1,11 +1,11 @@
 # Model management
 
-Models are the core component of the [inference pipeline](pipeline.md) in Geti Tune, responsible for generating
-predictions on the input data. This document explains how models are created, managed and used in Geti Tune workflows.
+Models are the core component of the [inference pipeline](pipeline.md) in Geti, responsible for generating
+predictions on the input data. This document explains how models are created, managed and used in Geti workflows.
 
 ## Core concepts
 
-In Geti Tune, several key concepts are used to describe and manage models:
+In Geti, several key concepts are used to describe and manage models:
 
 - **Model architecture**: The design and structure of a neural network, such as YOLO, ResNet, or EfficientNet.
   The architecture defines the layers, connections, and computational graph, but does not include any learned parameters.
@@ -29,7 +29,7 @@ In Geti Tune, several key concepts are used to describe and manage models:
 
 ## Model lifecycle
 
-The lifecycle of a model revision in Geti Tune consists of several key stages:
+The lifecycle of a model revision in Geti consists of several key stages:
 
 1. **Task selection during project creation**: When creating a project, the user selects the machine learning task
    (e.g., classification, object detection, semantic segmentation). This determines the type of model architectures
@@ -151,7 +151,7 @@ BASE_DATA_DIR/
 
 ## Training and evaluation
 
-Training a model is a complex, multi-step process, and as such, it is represented by a job in Geti Tune.
+Training a model is a complex, multi-step process, and as such, it is represented by a job in Geti.
 A job is an instance of a structured workflow that performs a specific function (in this case, training a model).
 It runs in the background when resources are available, and eventually finishes after a potentially long but
 finite amount of time; for details about how jobs are scheduled and executed, see [Jobs](jobs.md).
@@ -194,7 +194,7 @@ compared to the ground truth annotations to compute the metrics.
 
 ### Evaluation metrics
 
-The following table lists the evaluation metrics supported by Geti Tune for each task type.
+The following table lists the evaluation metrics supported by Geti for each task type.
 Most of the metrics commonly used in research and industry are included.
 
 | Task Type                 | Metrics                                                   |
@@ -207,7 +207,7 @@ Most of the metrics commonly used in research and industry are included.
 ## Model deletion
 
 Model artifacts, especially the weights, can consume a significant amount of disk space.
-To manage storage effectively, Geti Tune allows users to delete model revisions or just their weights when they
+To manage storage effectively, Geti allows users to delete model revisions or just their weights when they
 are no longer needed. Deleting a model revision removes its metadata from the database and all associated files
 from the filesystem, while deleting just the weights retains the metadata for tracking purposes but frees up
 the disk space used by the weight files.

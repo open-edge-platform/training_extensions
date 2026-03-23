@@ -47,7 +47,7 @@ export default defineConfig({
     },
     html: {
         template: './public/index.html',
-        title: 'Geti Tune',
+        title: 'Geti',
         favicon: './src/assets/icons/build-icon.svg',
         meta: {
             description:

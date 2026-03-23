@@ -3,7 +3,7 @@
 Post-training quantization (PTQ) is a model optimization technique that reduces the precision of model weights
 and activations from floating-point (FP32/FP16) to lower bit-widths (INT8), resulting in smaller model sizes
 and faster inference on compatible hardware. This document describes the architectural design for the model
-quantization feature in Geti Tune.
+quantization feature in Geti.
 
 ## Overview
 

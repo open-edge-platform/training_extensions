@@ -78,7 +78,7 @@ gen-api-spec output-path="openapi.json": install-uv
 [arg("accelerator", short="a", long="accelerator")]
 pyinstaller accelerator="cpu": install-uv
     uv sync --frozen --extra {{accelerator}} --extra mqtt --extra installer
-    uv run pyinstaller --noconfirm geti-tune.spec
+    uv run pyinstaller --noconfirm geti.spec
 
 # -------------------------------------------------------------------------------------------------
 # Development server
@@ -90,7 +90,7 @@ _clean_data: install-uv
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Cleaning existing data..."
-    rm -f data/geti_tune.db
+    rm -f data/geti.db
     rm -rf data/projects/*
     rm -rf data/output/*
     uv run app/cli.py init-db
