@@ -7,7 +7,16 @@ import { getMockedJob } from 'mocks/mock-job';
 import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
-import { TrainingConfigurationRequestPayload, TrainingRequestPayload } from '../../src/constants/shared-types';
+import {
+    NumberEnumConfigurableParameter,
+    TrainingConfigurationRequestPayload,
+    TrainingRequestPayload,
+} from '../../src/constants/shared-types';
+import { findGroupByKey } from '../../src/features/models/model-listing/model-training-parameters/utils';
+import {
+    isInputSizeHeightParameter,
+    isInputSizeWidthParameter,
+} from '../../src/features/models/train-model/advanced-settings/training/learning-parameters/utils';
 import { deepReplaceParameters } from '../../src/features/models/train-model/advanced-settings/utils';
 import { getTrainingConfigurationUpdatePayload } from '../../src/features/models/train-model/hooks/utils';
 import { expect, http, test } from '../fixtures';
@@ -227,37 +236,21 @@ test.describe('Model training flow', () => {
             },
         });
 
+        const trainingParameters =
+            findGroupByKey(MOCKED_MODEL_TRAINING_CONFIGURATION.parameters, 'training')?.parameters ?? [];
+
+        const inputSizeWidthParameter = trainingParameters.find(
+            isInputSizeWidthParameter
+        ) as NumberEnumConfigurableParameter;
+        const inputSizeHeightParameter = trainingParameters.find(
+            isInputSizeHeightParameter
+        ) as NumberEnumConfigurableParameter;
+
         const updatedTrainingConfigurationParameters = deepReplaceParameters(
             MOCKED_MODEL_TRAINING_CONFIGURATION.parameters,
             [
-                {
-                    type: 'parameter',
-                    key: 'input_size_width',
-                    name: 'Input size width',
-                    description:
-                        'Width size in pixels for model input images. Determines the horizontal resolution at which images are processed.',
-                    depends_on: null,
-                    value_type: 'int',
-                    value: 640,
-                    default_value: 800,
-                    min_value: 0,
-                    max_value: null,
-                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
-                },
-                {
-                    type: 'parameter',
-                    key: 'input_size_height',
-                    name: 'Input size height',
-                    description:
-                        'Height size in pixels for model input images. Determines the vertical resolution at which images are processed.',
-                    depends_on: null,
-                    value_type: 'int',
-                    value: 512,
-                    default_value: 800,
-                    min_value: 0,
-                    max_value: null,
-                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
-                },
+                { ...inputSizeWidthParameter, value: 640 },
+                { ...inputSizeHeightParameter, value: 512 },
             ],
             ['training']
         );
@@ -309,37 +302,21 @@ test.describe('Model training flow', () => {
             },
         });
 
+        const trainingParameters =
+            findGroupByKey(MOCKED_MODEL_TRAINING_CONFIGURATION.parameters, 'training')?.parameters ?? [];
+
+        const inputSizeWidthParameter = trainingParameters.find(
+            isInputSizeWidthParameter
+        ) as NumberEnumConfigurableParameter;
+        const inputSizeHeightParameter = trainingParameters.find(
+            isInputSizeHeightParameter
+        ) as NumberEnumConfigurableParameter;
+
         const updatedTrainingConfigurationParameters = deepReplaceParameters(
             MOCKED_TRAINING_CONFIGURATION.parameters,
             [
-                {
-                    type: 'parameter',
-                    key: 'input_size_width',
-                    name: 'Input size width',
-                    description:
-                        'Width size in pixels for model input images. Determines the horizontal resolution at which images are processed.',
-                    depends_on: null,
-                    value_type: 'int',
-                    value: 640,
-                    default_value: 1024,
-                    min_value: 0,
-                    max_value: null,
-                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
-                },
-                {
-                    type: 'parameter',
-                    key: 'input_size_height',
-                    name: 'Input size height',
-                    description:
-                        'Height size in pixels for model input images. Determines the vertical resolution at which images are processed.',
-                    depends_on: null,
-                    value_type: 'int',
-                    value: 512,
-                    default_value: 1024,
-                    min_value: 0,
-                    max_value: null,
-                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
-                },
+                { ...inputSizeWidthParameter, value: 640 },
+                { ...inputSizeHeightParameter, value: 512 },
             ],
             ['training']
         );
