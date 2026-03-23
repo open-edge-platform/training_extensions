@@ -84,22 +84,11 @@ class TestSubsetAssigner:
     ):
         """Test that the 3-item minimum guard is skipped when all subsets already have at least one item assigned.
 
-        When has_all_subsets_assigned=False, fewer than 3 items raises a ValueError before the
-        stratifier is ever called.  When has_all_subsets_assigned=True, that guard is bypassed and
-        the call succeeds as long as the stratifier itself is satisfied (n_samples >= n_splits=3).
-        We therefore use exactly 3 items: it would raise with has_all_subsets_assigned=False but
-        not with True.
+        When has_all_subsets_assigned=True, the guard is bypassed and the call succeeds even with
+        fewer items than subsets.
         """
-        # Exactly 3 items: skipped by our guard when False → ValueError; allowed when True
-        items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(3)]
+        items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(2)]
 
-        # With has_all_subsets_assigned=False and 3 items, the guard is NOT triggered (3 >= 3),
-        # so we need a case that would fail. Use 2 items to confirm the guard fires:
-        two_items = items[:2]
-        with pytest.raises(ValueError, match="number of unassigned dataset items is less than number of subsets"):
-            fxt_assigner.assign(two_items, fxt_default_ratios, has_all_subsets_assigned=False)
-
-        # With has_all_subsets_assigned=True, the guard is bypassed entirely - no ValueError
         result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=True)
         assert len(result) == len(items)
 

@@ -1,14 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, ProjectDB
-from app.models import DatasetItemSubset
+from app.models import DatasetItemSubset, TaskType
 from app.services.subset_assignment import SubsetAssignment, SubsetService
 from tests.integration.project_factory import ProjectTestDataFactory
 
@@ -122,7 +122,6 @@ class TestSubsetServiceIntegration:
     def test_has_all_subsets_assigned_returns_false_when_a_subset_is_missing(
         self,
         fxt_db_projects: list[ProjectDB],
-        fxt_db_labels: list[LabelDB],
         db_session: Session,
         fxt_subset_service: SubsetService,
     ) -> None:
@@ -131,14 +130,9 @@ class TestSubsetServiceIntegration:
           We create a second project that only has TRAINING and VALIDATION items - no TESTING items -
         so has_all_subsets_assigned must return False for it.
         """
-        from uuid import uuid4 as _uuid4
-
-        from app.db.schema import ProjectDB as ProjectDBAlias
-        from app.models import TaskType
-
         # Build a second project with only TRAINING + VALIDATION items (no TESTING)
-        partial_project = ProjectDBAlias(
-            id=str(_uuid4()),
+        partial_project = ProjectDB(
+            id=str(uuid4()),
             name="Partial Subsets Project",
             task_type=TaskType.DETECTION,
             exclusive_labels=False,
@@ -146,15 +140,11 @@ class TestSubsetServiceIntegration:
         db_session.add(partial_project)
         db_session.flush()
 
-        fxt_db_labels[0]
-
         incomplete_distribution = {
             DatasetItemSubset.TRAINING: 3,
             DatasetItemSubset.VALIDATION: 2,
             # DatasetItemSubset.TESTING intentionally absent
         }
-
-        from tests.integration.project_factory import ProjectTestDataFactory
 
         ProjectTestDataFactory(db_session).with_project(partial_project).with_media_and_dataset_items(
             incomplete_distribution
@@ -170,13 +160,8 @@ class TestSubsetServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test that has_all_subsets_assigned returns False when all items are UNASSIGNED."""
-        from uuid import uuid4 as _uuid4
-
-        from app.db.schema import ProjectDB as ProjectDBAlias
-        from app.models import TaskType
-
-        unassigned_project = ProjectDBAlias(
-            id=str(_uuid4()),
+        unassigned_project = ProjectDB(
+            id=str(uuid4()),
             name="All Unassigned Project",
             task_type=TaskType.DETECTION,
             exclusive_labels=False,
@@ -185,7 +170,6 @@ class TestSubsetServiceIntegration:
         db_session.flush()
 
         only_unassigned = {DatasetItemSubset.UNASSIGNED: 5}
-        from tests.integration.project_factory import ProjectTestDataFactory
 
         ProjectTestDataFactory(db_session).with_project(unassigned_project).with_media_and_dataset_items(
             only_unassigned
@@ -200,13 +184,8 @@ class TestSubsetServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test that has_all_subsets_assigned returns False when the project has no dataset items at all."""
-        from uuid import uuid4 as _uuid4
-
-        from app.db.schema import ProjectDB as ProjectDBAlias
-        from app.models import TaskType
-
-        empty_project = ProjectDBAlias(
-            id=str(_uuid4()),
+        empty_project = ProjectDB(
+            id=str(uuid4()),
             name="Empty Project",
             task_type=TaskType.DETECTION,
             exclusive_labels=False,
