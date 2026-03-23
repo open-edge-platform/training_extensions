@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   # Determines if workflow should execute based on event type and changed paths
-  # If push or workflow_dispatch -> always run
+  # If workflow_dispatch or workflow_call -> always run
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
@@ -82,6 +82,7 @@ jobs:
           device: ${{ matrix.device }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          push: ${{ github.event_name != 'pull_request' }}
           # Fork PRs cannot write packages to the upstream org, so disable
           # cache export to avoid 403 errors from GHCR.
           cache-write: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}
