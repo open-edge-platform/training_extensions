@@ -12,34 +12,43 @@ import { Model, Pipeline } from '../../../constants/shared-types';
 import { server } from '../../../msw-node-setup';
 import { ActiveModel } from './active-model.component';
 
-describe('ActiveModel', () => {
-    const successfulModelA = getMockedModel({ id: 'model-a', name: 'Model A' });
-    const successfulModelB = getMockedModel({ id: 'model-b', name: 'Model B' });
-    const runningModelB = getMockedModel({
-        id: 'running-model',
-        name: 'Running model',
-        training_info: {
-            ...getMockedModel().training_info,
-            status: 'in_progress',
-        },
-    });
-    const failedModel = getMockedModel({
-        id: 'model-failed',
-        name: 'Failed Model',
-        training_info: {
-            ...getMockedModel().training_info,
-            status: 'failed',
-        },
-    });
-    const notStartedModel = getMockedModel({
-        id: 'not-started-model',
-        name: 'Not started model',
-        training_info: {
-            ...getMockedModel().training_info,
-            status: 'not_started',
-        },
-    });
+const successfulModelA = getMockedModel({ id: 'model-a', name: 'Model A' });
+const successfulModelB = getMockedModel({ id: 'model-b', name: 'Model B' });
+const runningModelB = getMockedModel({
+    id: 'running-model',
+    name: 'Running model',
+    training_info: {
+        ...getMockedModel().training_info,
+        status: 'in_progress',
+    },
+});
+const failedModel = getMockedModel({
+    id: 'model-failed',
+    name: 'Failed Model',
+    training_info: {
+        ...getMockedModel().training_info,
+        status: 'failed',
+    },
+});
+const notStartedModel = getMockedModel({
+    id: 'not-started-model',
+    name: 'Not started model',
+    training_info: {
+        ...getMockedModel().training_info,
+        status: 'not_started',
+    },
+});
+const modelWithDeletedFiles = getMockedModel({
+    id: 'model-deleted-files',
+    name: 'Model with deleted files',
+    training_info: {
+        ...getMockedModel().training_info,
+        status: 'successful',
+    },
+    files_deleted: true,
+});
 
+describe('ActiveModel', () => {
     const renderApp = ({ models, pipeline }: { models: Model[]; pipeline: Pipeline }) => {
         const patchSpy = vi.fn();
 
@@ -64,7 +73,14 @@ describe('ActiveModel', () => {
 
     it('shows only successful models', async () => {
         renderApp({
-            models: [successfulModelA, successfulModelB, runningModelB, failedModel, notStartedModel],
+            models: [
+                successfulModelA,
+                successfulModelB,
+                runningModelB,
+                failedModel,
+                notStartedModel,
+                modelWithDeletedFiles,
+            ],
             pipeline: getMockedPipeline(),
         });
 
@@ -77,6 +93,7 @@ describe('ActiveModel', () => {
         expect(screen.queryByRole('option', { name: 'Running model' })).not.toBeInTheDocument();
         expect(screen.queryByRole('option', { name: 'Not started model' })).not.toBeInTheDocument();
         expect(screen.queryByRole('option', { name: 'Failed Model' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('option', { name: 'Model with deleted files' })).not.toBeInTheDocument();
     });
 
     it('patches pipeline upon change', async () => {
