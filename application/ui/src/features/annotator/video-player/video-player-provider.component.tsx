@@ -44,14 +44,13 @@ type VideoPlayerContextProps = {
 const useSynchronizeVideoTimeWithVideoFrame = ({
     videoFrame,
     videoRef,
-    currentFrameIndex,
     onUpdateCurrentFrameIndex,
 }: {
     videoRef: RefObject<HTMLVideoElement | null>;
     videoFrame: MediaVideoFrame | undefined;
-    currentFrameIndex: number;
     onUpdateCurrentFrameIndex: (index: number) => void;
 }) => {
+    const previousVideoFrame = usePreviousVideoFrame(videoFrame);
     /*
      * This part is responsible for updating video time on the initial load when the frame number is not 0.
      * In that case we need to move the video to the correct frame number.
@@ -95,12 +94,22 @@ const useSynchronizeVideoTimeWithVideoFrame = ({
             return;
         }
 
-        if (currentFrameIndex !== videoFrame.frame_number) {
+        if (previousVideoFrame?.frame_number !== videoFrame.frame_number) {
             onUpdateCurrentFrameIndex(videoFrame.frame_number);
 
             videoRef.current.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;
         }
-    }, [currentFrameIndex, onUpdateCurrentFrameIndex, videoFrame, videoRef]);
+    }, [videoFrame, previousVideoFrame, videoRef, onUpdateCurrentFrameIndex]);
+};
+
+const usePreviousVideoFrame = (videoFrame: MediaVideoFrame | undefined) => {
+    const previousVideoFrameRef = useRef<MediaVideoFrame | undefined>(videoFrame);
+
+    useEffect(() => {
+        previousVideoFrameRef.current = videoFrame;
+    }, [videoFrame]);
+
+    return previousVideoFrameRef.current;
 };
 
 const VideoPlayerContext = createContext<VideoPlayerContextProps | null>(null);
@@ -121,7 +130,6 @@ export const VideoPlayerProvider = ({ children, videoFrame, changeSelectedMediaI
     useSynchronizeVideoTimeWithVideoFrame({
         videoRef,
         videoFrame,
-        currentFrameIndex,
         onUpdateCurrentFrameIndex: setCurrentFrameIndex,
     });
 
