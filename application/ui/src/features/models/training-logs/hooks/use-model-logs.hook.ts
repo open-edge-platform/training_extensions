@@ -46,7 +46,7 @@ export const useModelLogs = (modelId: string | undefined) => {
 };
 
 const downloadModelLogsFile = async (projectId: string, modelId: string) => {
-    const { data, error } = await fetchClient.GET('/api/projects/{project_id}/models/{model_id}/logs', {
+    const { data, error, response } = await fetchClient.GET('/api/projects/{project_id}/models/{model_id}/logs', {
         params: {
             path: { project_id: projectId, model_id: modelId },
             header: { accept: 'text/plain' },
@@ -55,7 +55,7 @@ const downloadModelLogsFile = async (projectId: string, modelId: string) => {
     });
 
     if (error || !data) {
-        throw new Error('Unable to download logs');
+        throw new Error(`Failed to download model logs: ${response.status} ${response.statusText}`);
     }
 
     const url = URL.createObjectURL(data);

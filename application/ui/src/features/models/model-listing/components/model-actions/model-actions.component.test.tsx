@@ -9,7 +9,17 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../../../api/utils';
 import { server } from '../../../../../msw-node-setup';
+import { downloadFile } from '../../../../../shared/util';
 import { ModelActions } from './model-actions.component';
+
+vi.mock('../../../../../shared/util', async (importActual) => {
+    const actual = await importActual<typeof import('../../../../../shared/util')>();
+
+    return {
+        ...actual,
+        downloadFile: vi.fn(),
+    };
+});
 
 const mockModel = getMockedModel({
     id: 'model-123',
@@ -28,6 +38,10 @@ const mockModel = getMockedModel({
 });
 
 describe('ModelActions', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('should render menu with all items', async () => {
         render(<ModelActions model={mockModel} />);
 
@@ -69,7 +83,12 @@ describe('ModelActions', () => {
         server.use(
             http.get('/api/projects/{project_id}/models/{model_id}/logs', () => {
                 return new HttpResponse(
-                    '[2025-01-10 10:00:00][INFO ] Initializing\n[2025-01-10 10:00:01][INFO ] Training started',
+                    new Blob(
+                        ['[2025-01-10 10:00:00][INFO ] Initializing\n[2025-01-10 10:00:01][INFO ] Training started'],
+                        {
+                            type: 'text/plain',
+                        }
+                    ),
                     {
                         status: 200,
                         headers: {
@@ -89,6 +108,7 @@ describe('ModelActions', () => {
 
         await userEvent.click(await screen.findByRole('button', { name: 'Download logs' }));
 
+        expect(downloadFile).toHaveBeenCalledWith(expect.stringMatching(/^blob:/), `training-logs-${mockModel.id}.log`);
         expect(await screen.findByText('Training logs downloaded successfully')).toBeInTheDocument();
     });
 
