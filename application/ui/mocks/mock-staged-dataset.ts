@@ -1,11 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { components, SchemaStagedDatasetView } from '../src/api/openapi-spec';
+import { SchemaStagedDatasetView } from '../src/api/openapi-spec';
 
-export const getMockedStagedDataset = (overrides: Partial<SchemaStagedDatasetView>) => ({
+export const getMockedStagedDataset = (overrides: Partial<SchemaStagedDatasetView> = {}): SchemaStagedDatasetView => ({
     id: 'staged-dataset-456',
-    format: 'geti' as components['schemas']['DatasetFormat'],
+    format: 'geti',
     compressed: true,
     ready_for_export: true,
     ready_for_import: false,

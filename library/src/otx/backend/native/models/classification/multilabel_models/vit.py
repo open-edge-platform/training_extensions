@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ViT model implementation."""
@@ -57,7 +57,7 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "vit-tiny",
             "vit-small",
@@ -90,6 +90,9 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         vit_backbone = VisionTransformerBackbone(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,

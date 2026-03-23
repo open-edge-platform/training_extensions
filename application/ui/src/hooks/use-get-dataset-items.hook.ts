@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { usePrefetchQuery, useQuery } from '@tanstack/react-query';
+
 import { $api } from '../api/client';
 import type { DatasetItemAnnotationStatus, DatasetSubset } from '../constants/shared-types';
 import { useProjectIdentifier } from './use-project-identifier.hook';
@@ -11,12 +13,10 @@ type UseGetDatasetItemsOptions = {
     subset?: DatasetSubset;
 };
 
-export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
-    const project_id = useProjectIdentifier();
-
-    return $api.useQuery('get', '/api/projects/{project_id}/dataset/items', {
+const getDatasetItemsQueryOptions = (projectId: string, options?: UseGetDatasetItemsOptions) => {
+    return $api.queryOptions('get', '/api/projects/{project_id}/dataset/items', {
         params: {
-            path: { project_id },
+            path: { project_id: projectId },
             query: {
                 annotation_status: options?.annotationStatus,
                 limit: options?.limit,
@@ -24,4 +24,16 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
             },
         },
     });
+};
+
+export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
+    const projectId = useProjectIdentifier();
+
+    return useQuery(getDatasetItemsQueryOptions(projectId, options));
+};
+
+export const usePrefetchDatasetItems = (options?: UseGetDatasetItemsOptions) => {
+    const projectId = useProjectIdentifier();
+
+    return usePrefetchQuery(getDatasetItemsQueryOptions(projectId, options));
 };

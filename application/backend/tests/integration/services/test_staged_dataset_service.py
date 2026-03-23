@@ -66,7 +66,7 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
             user_reviewed=True,
         )
     )
-    export_dataset(dataset, ds_dir, export_images=ExportMode.SKIP, export_videos=ExportMode.SKIP)
+    export_dataset(dataset, ds_dir, export_media=ExportMode.SKIP)
     return dataset_id, ds_dir
 
 

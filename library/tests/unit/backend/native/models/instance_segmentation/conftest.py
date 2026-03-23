@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Test of custom algo modules of OTX Detection task."""
 
@@ -46,7 +46,7 @@ def fxt_instance_seg_batch(batch_size: int = 2) -> OTXSampleBatch:
     ]
 
     return OTXSampleBatch(
-        images=images,
+        images=torch.stack(images),
         bboxes=bboxes,
         labels=labels,
         masks=masks,

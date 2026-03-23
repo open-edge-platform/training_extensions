@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Torchvision model for the OTX classification."""
@@ -35,7 +35,7 @@ class TVModelMulticlassCls(OTXMulticlassClsModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None, optional): The data input parameters
+        data_input_params (DataInputParams | dict | None, optional): The data input parameters
             such as input size and normalization. If None is given,
             default parameters for the specific model will be used.
         model_name (str, optional): Backbone model name for feature extraction. Defaults to "efficientnet_v2_s".
@@ -49,7 +49,7 @@ class TVModelMulticlassCls(OTXMulticlassClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "efficientnet_v2_s",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

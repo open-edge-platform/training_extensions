@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Download a ~50-sample COCO 2017 subset for instance segmentation.
@@ -148,7 +148,7 @@ def _build_dataset(
         if not bboxes_list:
             continue
 
-        bboxes = np.array(bboxes_list, dtype=np.float32)
+        bboxes = torch.tensor(bboxes_list, dtype=torch.float32)
         labels = torch.tensor(labels_list, dtype=torch.long)
         masks = tv_tensors.Mask(torch.from_numpy(np.stack(masks_list, axis=0).astype(np.uint8)))  # type: ignore[arg-type]
 

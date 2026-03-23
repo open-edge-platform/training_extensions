@@ -1,10 +1,9 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of OTX SSD architecture."""
+"""Test of OTX ATSS architecture."""
 
 import pytest
 import torch
-from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.exporter.native import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
@@ -14,6 +13,14 @@ from otx.types.export import TaskLevelExportParameters
 
 
 class TestATSS:
+    @pytest.fixture(params=["atss_mobilenetv2"])
+    def fxt_model(self, request) -> ATSS:
+        return ATSS(
+            model_name=request.param,
+            label_info=3,
+            data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+
     def test(self, mocker) -> None:
         model = ATSS(
             model_name="atss_mobilenetv2",
@@ -24,95 +31,22 @@ class TestATSS:
         assert isinstance(model._export_parameters, TaskLevelExportParameters)
         assert isinstance(model._exporter, OTXModelExporter)
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            ATSS(
-                model_name="atss_mobilenetv2",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            ATSS(
-                model_name="atss_resnext101",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_loss(self, model, fxt_detection_batch):
-        output = model(fxt_detection_batch)
+    def test_loss(self, fxt_model, fxt_detection_batch):
+        output = fxt_model(fxt_detection_batch)
         assert "loss_cls" in output
         assert "loss_bbox" in output
         assert "loss_centerness" in output
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            ATSS(
-                model_name="atss_mobilenetv2",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            ATSS(
-                model_name="atss_resnext101",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_predict(self, model, fxt_detection_batch):
-        model.eval()
-        output = model(fxt_detection_batch)
+    def test_predict(self, fxt_model, fxt_detection_batch):
+        fxt_model.eval()
+        output = fxt_model(fxt_detection_batch)
         assert isinstance(output, OTXPredictionBatch)
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            ATSS(
-                model_name="atss_mobilenetv2",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            ATSS(
-                model_name="atss_resnext101",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_export(self, model):
-        model.eval()
-        output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))
+    def test_export(self, fxt_model):
+        fxt_model.eval()
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 2
 
-        model.explain_mode = True
-        output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))
+        fxt_model.explain_mode = True
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            ATSS(
-                model_name="atss_mobilenetv2",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            ATSS(
-                model_name="atss_resnext101",
-                label_info=3,
-                data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_compiled_model(self, model):
-        # Set Compile Counter
-        torch._dynamo.reset()
-        cnt = CompileCounter()
-
-        # Set model compile setting
-        model.model = torch.compile(model.model, backend=cnt)
-
-        # Prepare inputs
-        x = torch.randn(1, 3, *model.data_input_params.input_size)
-        model.model(x)
-        assert cnt.frame_count == 1

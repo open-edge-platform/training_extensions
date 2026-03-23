@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
@@ -144,7 +144,7 @@ def test_process_image(postprocess) -> None:
 
 def _get_pred_result_multiclass(pred_labels, pred_scores) -> OTXPredictionBatch:
     return OTXPredictionBatch(
-        images=[torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)],
+        images=torch.stack([torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)]),
         imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
@@ -155,7 +155,7 @@ def _get_pred_result_multiclass(pred_labels, pred_scores) -> OTXPredictionBatch:
 
 def _get_pred_result_multilabel(pred_labels, pred_scores) -> OTXPredictionBatch:
     return OTXPredictionBatch(
-        images=[torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)],
+        images=torch.stack([torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)]),
         imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
@@ -166,7 +166,7 @@ def _get_pred_result_multilabel(pred_labels, pred_scores) -> OTXPredictionBatch:
 
 def _get_pred_result_hcls(pred_labels, pred_scores) -> OTXPredictionBatch:
     return OTXPredictionBatch(
-        images=[torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)],
+        images=torch.stack([torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)]),
         imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,

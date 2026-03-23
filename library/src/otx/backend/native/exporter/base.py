@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for base model exporter used in OTX."""
@@ -171,8 +171,8 @@ class OTXModelExporter:
         Returns:
             dict[tuple[str, str] ,str]: updated metadata
         """
-        mean_str = " ".join(map(str, self.data_input_params.mean))
-        std_str = " ".join(map(str, self.data_input_params.std))
+        mean_str = " ".join(map(str, self.data_input_params.mean)) if self.data_input_params.mean else ""
+        std_str = " ".join(map(str, self.data_input_params.std)) if self.data_input_params.std else ""
 
         extra_data = {
             ("model_info", "mean_values"): mean_str.strip(),

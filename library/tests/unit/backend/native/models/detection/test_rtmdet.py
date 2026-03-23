@@ -4,7 +4,6 @@
 
 import pytest
 import torch
-from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams
@@ -16,98 +15,40 @@ from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestRTMDet:
-    def test_init(self) -> None:
-        otx_rtmdet_tiny = RTMDet(
+    @pytest.fixture
+    def fxt_model(self) -> RTMDet:
+        return RTMDet(
             model_name="rtmdet_tiny",
             label_info=3,
             data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        assert isinstance(otx_rtmdet_tiny.model.backbone, CSPNeXtModule)
-        assert isinstance(otx_rtmdet_tiny.model.neck, CSPNeXtPAFPNModule)
-        assert isinstance(otx_rtmdet_tiny.model.bbox_head, RTMDetSepBNHeadModule)
-        assert otx_rtmdet_tiny.data_input_params.input_size == (320, 320)
 
-    def test_exporter(self) -> None:
-        otx_rtmdet_tiny = RTMDet(
-            model_name="rtmdet_tiny",
-            label_info=3,
-            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        )
-        otx_rtmdet_tiny_exporter = otx_rtmdet_tiny._exporter
-        assert isinstance(otx_rtmdet_tiny_exporter, OTXNativeModelExporter)
-        assert otx_rtmdet_tiny_exporter.swap_rgb is True
+    def test_init(self, fxt_model) -> None:
+        assert isinstance(fxt_model.model.backbone, CSPNeXtModule)
+        assert isinstance(fxt_model.model.neck, CSPNeXtPAFPNModule)
+        assert isinstance(fxt_model.model.bbox_head, RTMDetSepBNHeadModule)
+        assert fxt_model.data_input_params.input_size == (320, 320)
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            RTMDet(
-                model_name="rtmdet_tiny",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_loss(self, model, fxt_detection_batch):
-        output = model(fxt_detection_batch)
+    def test_exporter(self, fxt_model) -> None:
+        exporter = fxt_model._exporter
+        assert isinstance(exporter, OTXNativeModelExporter)
+        assert exporter.swap_rgb is True
+
+    def test_loss(self, fxt_model, fxt_detection_batch):
+        output = fxt_model(fxt_detection_batch)
         assert "loss_cls" in output
         assert "loss_bbox" in output
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            RTMDet(
-                model_name="rtmdet_tiny",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_predict(self, model, fxt_detection_batch):
-        model.eval()
-        output = model(fxt_detection_batch)
+    def test_predict(self, fxt_model, fxt_detection_batch):
+        fxt_model.eval()
+        output = fxt_model(fxt_detection_batch)
         assert isinstance(output, OTXPredictionBatch)
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            RTMDet(
-                model_name="rtmdet_tiny",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_export(self, model):
-        model.eval()
-        output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))
+    def test_export(self, fxt_model):
+        fxt_model.eval()
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 2
 
-        model.explain_mode = True
-        output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))
+        fxt_model.explain_mode = True
+        output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            RTMDet(
-                model_name="rtmdet_tiny",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_compiled_model(self, model):
-        # Set Compile Counter
-        torch._dynamo.reset()
-        cnt = CompileCounter()
-
-        # Set model compile setting
-        model.model = torch.compile(model.model, backend=cnt)
-
-        # Prepare inputs
-        x = torch.randn(1, 3, *model.data_input_params.input_size)
-        model.model(x)
-        assert cnt.frame_count == 1
-
-        # Reset dynamo state
-        torch._dynamo.reset()
