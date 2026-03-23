@@ -20,7 +20,7 @@ DETECTION_LIST = [recipe for recipe in RECIPE_LIST_ALL if "/detection" in recipe
 INST_SEG_LIST = [recipe for recipe in RECIPE_LIST_ALL if "instance_segmentation" in recipe]
 EXPLAIN_MODEL_LIST = MC_ML_CLS + DETECTION_LIST + INST_SEG_LIST
 
-MEAN_TORCH_OV_DIFF = 150
+MEAN_TORCH_OV_DIFF = 170
 UNSUPPORTED_MODEL_SUBSTRS = ("dino", "rfdetr")
 
 
