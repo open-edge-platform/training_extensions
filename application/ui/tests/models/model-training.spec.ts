@@ -266,4 +266,86 @@ test.describe('Model training flow', () => {
             getTrainingConfigurationUpdatePayload({ parameters: updatedTrainingConfigurationParameters })
         );
     });
+
+    test('Advanced model training flow with training from scratch', async ({ network, modelsPage }) => {
+        const state = setupNetworkMocks(network);
+
+        await modelsPage.goto();
+        await modelsPage.openTrainModelDialog();
+
+        await test.step('Select model architecture', async () => {
+            await modelsPage.selectModelArchitecture('Custom_Object_Detection_Gen3_ATSS');
+        });
+
+        await test.step('Select dataset revision', async () => {
+            await modelsPage.selectPickerOption('Select dataset', 'Dataset Revision 2');
+        });
+
+        await test.step('Select model revision', async () => {
+            await modelsPage.selectPickerOption('Select model revision', 'Train from scratch');
+        });
+
+        await test.step('Select advanced settings', async () => {
+            await modelsPage.openAdvancedSettings();
+        });
+
+        await test.step('Update any parameter', async () => {
+            await modelsPage.openTrainingParameters();
+            await modelsPage.updateInputSizeParameters(640, 512);
+        });
+
+        await test.step('Start the training', async () => {
+            await modelsPage.startTraining();
+        });
+
+        expect(state.submittedJobBody).toMatchObject({
+            job_type: 'train',
+            project_id: 'id-1',
+            parameters: {
+                device: 'cpu',
+                model_architecture_id: 'Custom_Object_Detection_Gen3_ATSS',
+                dataset_revision_id: 'dataset-2',
+                parent_model_revision_id: null,
+            },
+        });
+
+        const updatedTrainingConfigurationParameters = deepReplaceParameters(
+            MOCKED_TRAINING_CONFIGURATION.parameters,
+            [
+                {
+                    type: 'parameter',
+                    key: 'input_size_width',
+                    name: 'Input size width',
+                    description:
+                        'Width size in pixels for model input images. Determines the horizontal resolution at which images are processed.',
+                    depends_on: null,
+                    value_type: 'int',
+                    value: 640,
+                    default_value: 1024,
+                    min_value: 0,
+                    max_value: null,
+                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
+                },
+                {
+                    type: 'parameter',
+                    key: 'input_size_height',
+                    name: 'Input size height',
+                    description:
+                        'Height size in pixels for model input images. Determines the vertical resolution at which images are processed.',
+                    depends_on: null,
+                    value_type: 'int',
+                    value: 512,
+                    default_value: 1024,
+                    min_value: 0,
+                    max_value: null,
+                    allowed_values: [512, 640, 800, 992, 1024, 1280, 1344, 1536],
+                },
+            ],
+            ['training']
+        );
+
+        expect(state.submittedTrainingConfiguration).toMatchObject(
+            getTrainingConfigurationUpdatePayload({ parameters: updatedTrainingConfigurationParameters })
+        );
+    });
 });
