@@ -48,7 +48,7 @@ export const StreamContainer = () => {
                     )}
 
                     {isConnected && (
-                        <View position='relative' width='100%' height='100%'>
+                        <View position='relative' width='100%' height='100%' UNSAFE_className={classes.streamWrapper}>
                             <Stream size={size} setSize={setSize} />
 
                             <Flex
@@ -59,13 +59,15 @@ export const StreamContainer = () => {
                                 height='100%'
                                 UNSAFE_className={classes.pauseOverlay}
                             >
-                                <Button
-                                    onPress={stop}
-                                    aria-label={'Stop stream'}
-                                    UNSAFE_className={classes.playPauseButton}
-                                >
-                                    <Pause width='64px' height='64px' />
-                                </Button>
+                                <div onClick={(event) => event.stopPropagation()}>
+                                    <Button
+                                        onPress={stop}
+                                        aria-label={'Stop stream'}
+                                        UNSAFE_className={classes.playPauseButton}
+                                    >
+                                        <Pause width='64px' height='64px' />
+                                    </Button>
+                                </div>
                             </Flex>
                         </View>
                     )}

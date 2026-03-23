@@ -16,13 +16,18 @@
     border-radius: var(--spectrum-alias-border-radius-medium);
 }
 
+.streamWrapper:hover .pauseOverlay,
+.streamWrapper:focus-within .pauseOverlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
 .pauseOverlay {
     inset: 0;
     background-color: rgba(255, 255, 255, 0.22);
     opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
     transition: opacity 120ms ease-in-out;
-}
-
-.pauseOverlay:hover {
-    opacity: 1;
 }
