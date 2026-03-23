@@ -7,6 +7,7 @@ import { usePatchPipeline } from '../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
 import { useGetModels } from '../../models/hooks/api/use-get-models.hook';
+import { filterOutFailedModels } from '../../models/model-listing/utils/model-transforms';
 
 export const ActiveModel = () => {
     const { data: models } = useGetModels();
@@ -25,12 +26,14 @@ export const ActiveModel = () => {
         });
     };
 
+    const validModels = filterOutFailedModels(models);
+
     return (
         <Picker
             aria-label={'active model'}
             label={'Model'}
             labelPosition={'side'}
-            items={models}
+            items={validModels}
             onSelectionChange={handleChange}
             selectedKey={activeModel?.id ?? null}
         >
