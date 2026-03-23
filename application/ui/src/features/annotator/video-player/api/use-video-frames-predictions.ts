@@ -4,12 +4,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { $api, fetchClient } from '../../../../api/client';
-import { AnnotatedVideoFrame } from '../../../../constants/shared-types';
+import { VideoFramePrediction } from '../../../../constants/shared-types';
+import { useGetActiveModel } from '../../../models/hooks/api/use-get-active-model.hook';
+import { mediaPredictionsQueryOptions } from '../../api/use-media-predictions';
 import { useVideoPlayer } from '../video-player-provider.component';
-
-const getVideoFramesPredictionsQueryOptions = async () =>
-    $api.queryOptions('post', '/api/projects/{project_id}/dataset/media/media:predict');
+import { getVideoFrameRangeIndexes } from './utils';
 
 export const useVideoFramesPredictions = <T>({
     frameNumber,
@@ -18,23 +17,25 @@ export const useVideoFramesPredictions = <T>({
 }: {
     frameNumber: number;
     frameSkip: number;
-    selector: (data: AnnotatedVideoFrame[]) => T;
+    selector: (data: VideoFramePrediction[]) => T;
 }) => {
     const projectId = useProjectIdentifier();
     const { videoFrame } = useVideoPlayer();
-    useQuery({
-        queryKey: ['video-frames-predictions'],
-        queryFn: async () => {
-            const response = await fetchClient.POST('/api/projects/{project_id}/dataset/media/media:predict', {
-                params: {
-                    path: {
-                        project_id: projectId,
-                    },
-                },
-                body: {
-                    device: 'cpu',
-                },
-            });
-        },
+    const activeModel = useGetActiveModel();
+
+    const { startFrameIndex, endFrameIndex } = getVideoFrameRangeIndexes({
+        frames: videoFrame.frame_count - 1,
+        frameSkip,
+        frameNumber,
+    });
+
+    return useQuery({
+        ...mediaPredictionsQueryOptions({
+            projectId,
+            modelId: activeModel?.id,
+            mediaId: videoFrame.id,
+            range: { stride: 1, start_frame: startFrameIndex, end_frame: endFrameIndex },
+        }),
+        select: selector,
     });
 };
