@@ -22,7 +22,13 @@ from app.models.training_configuration.configuration import TrainingConfiguratio
 from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository, ModelVariantRepository
 from app.services.dataset_revision_service import DatasetRevisionService
 
-from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
+from .base import (
+    BaseSessionManagedService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourcePermissionError,
+    ResourceType,
+)
 from .model_manifest_service import ModelManifestService
 from .parent_process_guard import parent_process_only
 
@@ -235,17 +241,20 @@ class ModelService(BaseSessionManagedService):
         if model_to_delete is None:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
-        path = self._projects_dir / str(project_id) / "models" / str(model_id)
-        if path.exists():
-            shutil.rmtree(path)
-            logger.info("Deleted model files at '{}'", path)
-
         try:
             deleted = model_rev_repo.delete(str(model_id))
             if not deleted:
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        try:
+            if path.exists():
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+        except OSError:
+            raise ResourcePermissionError(ResourceType.MODEL, str(model_id))
 
         if model_to_delete.training_dataset_id is not None:
             model_list = model_rev_repo.list_all(training_dataset_id=model_to_delete.training_dataset_id)

@@ -12,7 +12,13 @@ from sqlalchemy.orm import Session
 from app.db.schema import DatasetRevisionDB, EvaluationDB, MetricScoreDB, ModelRevisionDB, ModelVariantDB, ProjectDB
 from app.models import DatasetItemSubset, EvaluationResult
 from app.models.model_revision import ModelFormat, TrainingStatus
-from app.services import ModelRevisionMetadata, ModelService, ResourceNotFoundError, ResourceType
+from app.services import (
+    ModelRevisionMetadata,
+    ModelService,
+    ResourceNotFoundError,
+    ResourcePermissionError,
+    ResourceType,
+)
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
@@ -387,7 +393,11 @@ class TestModelServiceIntegration:
         fxt_model_service: ModelService,
         db_session: Session,
     ):
-        """Test that delete_model fails when filesystem cleanup is denied due to OSError."""
+        """Test that delete_model fails when filesystem cleanup is denied due to OSError.
+
+        The database record is deleted first (before file cleanup), so even when the
+        filesystem operation fails the model revision no longer exists in the database.
+        """
         model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
         model_rev_path.mkdir(parents=True, exist_ok=True)
         (model_rev_path / "config.yaml").touch()
@@ -396,10 +406,12 @@ class TestModelServiceIntegration:
         model_rev_path.chmod(0o444)
 
         try:
-            with pytest.raises(OSError):
+            with pytest.raises(ResourcePermissionError):
                 fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 
-            assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is not None
+            # DB record is deleted before file cleanup, so it should be gone
+            assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
+            # Files remain because the filesystem operation failed
             assert model_rev_path.exists()
         finally:
             # Cleanup: restore permissions so pytest can clean up temp directory
