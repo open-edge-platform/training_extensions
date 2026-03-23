@@ -7,6 +7,7 @@ import { Grid, Text } from '@geti/ui';
 
 import { TrainingConfigurationParameter } from '../../../../constants/shared-types';
 import { useGetModelTrainingConfiguration } from '../../hooks/api/use-get-model-training-configuration.hook';
+import { reorderDependentParameters } from '../../train-model/advanced-settings/training/learning-parameters/utils';
 import { Box } from '../components/box/box.component';
 import { findGroupByKey, flattenParameters } from './utils';
 
@@ -54,13 +55,15 @@ export const ModelTrainingParameters = ({ modelId }: ModelTrainingParametersProp
     const filteringGroup = findGroupByKey(datasetPreparationGroup?.parameters, 'filtering');
     const augmentationGroup = findGroupByKey(datasetPreparationGroup?.parameters, 'augmentation');
 
+    const learningParameters = reorderDependentParameters(trainingGroup?.parameters ?? []);
+
     return (
         <Grid columns={['1fr', '1fr', '1fr']} gap={'size-200'}>
             <Box
                 testId={'Box-LEARNING PARAMETERS'}
                 customClasses={classes.box}
                 title={'LEARNING PARAMETERS'}
-                content={<TrainingConfigurationParametersList parameters={trainingGroup?.parameters || []} />}
+                content={<TrainingConfigurationParametersList parameters={learningParameters} />}
             />
             <Box
                 testId={'Box-FILTERS'}
