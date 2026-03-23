@@ -37,7 +37,7 @@ export const TILING_AUTOMATIC_DESCRIPTION =
     'It means that the system will automatically set the parameters based on the image resolution and ' +
     'annotations size.';
 
-const ADAPTIVE_TILING_PARAMETER = 'adaptive_tiling';
+const ADAPTIVE_TILING_PARAMETER = 'enable_adaptive_tiling';
 const ENABLE_TILING_PARAMETER = 'enable';
 
 const getBoolParameter = (tilingParameters: ConfigurableParameter[], key: string) => {
