@@ -25,12 +25,16 @@ export const ActiveModel = () => {
         });
     };
 
+    const successfulModels = models.filter(
+        (model) => model.training_info.status === 'successful' && !model.files_deleted
+    );
+
     return (
         <Picker
             aria-label={'active model'}
             label={'Model'}
             labelPosition={'side'}
-            items={models}
+            items={successfulModels}
             onSelectionChange={handleChange}
             selectedKey={activeModel?.id ?? null}
         >
