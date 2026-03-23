@@ -291,6 +291,7 @@ class TestOTXTrainerAssignSubsets:
             DatasetItemWithLabels(item_id=uuid4(), labels={label_1, label_2, label_3}),
         ]
         fxt_subset_service.get_unassigned_items_with_labels.return_value = unassigned_items
+        fxt_subset_service.has_all_subsets_assigned.return_value = False
 
         # Mock configuration
         training_config = TrainingConfiguration(
@@ -334,6 +335,50 @@ class TestOTXTrainerAssignSubsets:
         fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
         fxt_assigner.assign.assert_not_called()
         fxt_subset_service.update_subset_assignments.assert_not_called()
+
+    @pytest.mark.parametrize("has_all_subsets_assigned", [True, False], ids=["all-assigned", "not-all-assigned"])
+    def test_assign_subsets_passes_has_all_subsets_assigned_to_assigner(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_subset_service: Mock,
+        fxt_assigner: Mock,
+        has_all_subsets_assigned: bool,
+    ):
+        """Test that the result of SubsetService.has_all_subsets_assigned is forwarded to SubsetAssigner.assign."""
+        # Arrange
+        otx_trainer = fxt_otx_trainer()
+        project_id = uuid4()
+        label = uuid4()
+
+        unassigned_items = [
+            DatasetItemWithLabels(item_id=uuid4(), labels={label}),
+            DatasetItemWithLabels(item_id=uuid4(), labels={label}),
+            DatasetItemWithLabels(item_id=uuid4(), labels={label}),
+        ]
+        fxt_subset_service.get_unassigned_items_with_labels.return_value = unassigned_items
+        fxt_subset_service.has_all_subsets_assigned.return_value = has_all_subsets_assigned
+        fxt_assigner.assign.return_value = [
+            SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.TRAINING) for item in unassigned_items
+        ]
+
+        training_config = TrainingConfiguration(
+            task_level_parameters=TaskLevelParameters(),
+            algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
+        )
+
+        # Act
+        otx_trainer.assign_subsets(training_config=training_config, project_id=project_id)
+
+        # Assert - has_all_subsets_assigned is queried from the service ...
+        fxt_subset_service.has_all_subsets_assigned.assert_called_once_with(project_id)
+
+        # … and the returned value is forwarded verbatim as the third positional argument
+        call_args = fxt_assigner.assign.call_args
+        call_args.args[1] if len(call_args.args) >= 2 else call_args.kwargs.get("target_ratios")
+        actual_flag = (
+            call_args.args[2] if len(call_args.args) >= 3 else call_args.kwargs.get("has_all_subsets_assigned")
+        )
+        assert actual_flag is has_all_subsets_assigned
 
 
 class TestOTXTrainerCreateTrainingDataset:

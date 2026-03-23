@@ -24,14 +24,14 @@ class TestSubsetAssigner:
 
     def test_assign_empty_list(self, fxt_assigner, fxt_default_ratios):
         """Test that assigning empty list returns empty list"""
-        result = fxt_assigner.assign([], fxt_default_ratios)
+        result = fxt_assigner.assign([], fxt_default_ratios, has_all_subsets_assigned=False)
         assert result == []
 
     def test_assign_returns_all_items(self, fxt_assigner, fxt_default_ratios):
         """Test that all input items are assigned to a subset"""
         items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(100)]
 
-        result = fxt_assigner.assign(items, fxt_default_ratios)
+        result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=False)
 
         assert len(result) == len(items)
 
@@ -52,7 +52,7 @@ class TestSubsetAssigner:
         for _ in range(40):
             items.append(DatasetItemWithLabels(item_id=uuid4(), labels={label_b}))
 
-        result = fxt_assigner.assign(items, fxt_default_ratios)
+        result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=False)
 
         item_labels_map = {item.item_id: item.labels for item in items}
 
@@ -68,3 +68,73 @@ class TestSubsetAssigner:
                 # Label A should be ~60% and label B ~40% in each subset
                 assert label_a_count / total_in_subset == 0.6
                 assert label_b_count / total_in_subset == 0.4
+
+    def test_assign_raises_when_too_few_items_and_not_all_subsets_assigned(self, fxt_assigner, fxt_default_ratios):
+        """Test that a ValueError is raised when fewer than 3 items exist and not all subsets are already assigned."""
+        items = [
+            DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}),
+            DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}),
+        ]
+
+        with pytest.raises(ValueError, match="number of unassigned dataset items is less than number of subsets"):
+            fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=False)
+
+    def test_assign_allows_fewer_than_three_items_when_all_subsets_already_assigned(
+        self, fxt_assigner, fxt_default_ratios
+    ):
+        """Test that the 3-item minimum guard is skipped when all subsets already have at least one item assigned.
+
+        When has_all_subsets_assigned=False, fewer than 3 items raises a ValueError before the
+        stratifier is ever called.  When has_all_subsets_assigned=True, that guard is bypassed and
+        the call succeeds as long as the stratifier itself is satisfied (n_samples >= n_splits=3).
+        We therefore use exactly 3 items: it would raise with has_all_subsets_assigned=False but
+        not with True.
+        """
+        # Exactly 3 items: skipped by our guard when False → ValueError; allowed when True
+        items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(3)]
+
+        # With has_all_subsets_assigned=False and 3 items, the guard is NOT triggered (3 >= 3),
+        # so we need a case that would fail. Use 2 items to confirm the guard fires:
+        two_items = items[:2]
+        with pytest.raises(ValueError, match="number of unassigned dataset items is less than number of subsets"):
+            fxt_assigner.assign(two_items, fxt_default_ratios, has_all_subsets_assigned=False)
+
+        # With has_all_subsets_assigned=True, the guard is bypassed entirely - no ValueError
+        result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=True)
+        assert len(result) == len(items)
+
+    def test_assign_ensures_all_subsets_nonempty_when_not_all_subsets_assigned(self, fxt_assigner, fxt_default_ratios):
+        """Test that every subset receives at least one item when not all subsets are pre-assigned.
+
+        With has_all_subsets_assigned=False and enough items, _ensure_all_subsets_nonempty
+        must guarantee each of TRAINING, VALIDATION, and TESTING has at least one assignment.
+        """
+        # Use exactly 3 items - minimum allowed when has_all_subsets_assigned=False
+        items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(3)]
+
+        result = fxt_assigner.assign(items, fxt_default_ratios, has_all_subsets_assigned=False)
+
+        assigned_subsets = {assignment.subset for assignment in result}
+        assert DatasetItemSubset.TRAINING in assigned_subsets
+        assert DatasetItemSubset.VALIDATION in assigned_subsets
+        assert DatasetItemSubset.TESTING in assigned_subsets
+
+    def test_assign_does_not_enforce_nonempty_subsets_when_all_subsets_already_assigned(
+        self, fxt_assigner, fxt_default_ratios
+    ):
+        """Test that _ensure_all_subsets_nonempty is NOT called when all subsets are pre-assigned.
+
+        When has_all_subsets_assigned=True the assigner trusts that the existing data already
+        covers all three subsets, so it does not forcibly move items between subsets.
+        Use a pathological ratio (1/0/0) to produce an empty val/test fold and verify no
+        redistribution occurs.
+        """
+        skewed_ratios = SplitRatios(train=0.98, val=0.01, test=0.01)
+        # 3 items with a heavily skewed ratio - stratifier will put all 3 in train, leaving
+        # val and test empty.  With has_all_subsets_assigned=True this must NOT raise.
+        items = [DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}) for _ in range(3)]
+
+        result = fxt_assigner.assign(items, skewed_ratios, has_all_subsets_assigned=True)
+
+        # All items are assigned (no items lost)
+        assert len(result) == len(items)

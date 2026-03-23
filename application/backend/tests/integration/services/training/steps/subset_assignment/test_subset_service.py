@@ -102,3 +102,118 @@ class TestSubsetServiceIntegration:
                 db_session.scalar(select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.subset == subset))
                 == fxt_default_distribution.get(subset, 0) + count
             )
+
+    def test_has_all_subsets_assigned_returns_true_when_all_three_subsets_present(
+        self,
+        fxt_project_id: UUID,
+        fxt_subset_service: SubsetService,
+        fxt_default_distribution: dict[DatasetItemSubset, int],
+    ) -> None:
+        """Test that has_all_subsets_assigned returns True when TRAINING, VALIDATION, and TESTING each
+        have at least one item - which is the case with the default fixture distribution."""
+        # The default distribution already contains TRAINING, VALIDATION, and TESTING items
+        for subset in (DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION, DatasetItemSubset.TESTING):
+            assert fxt_default_distribution.get(subset, 0) > 0, (
+                f"Prerequisite: default distribution must have {subset} items"
+            )
+
+        assert fxt_subset_service.has_all_subsets_assigned(fxt_project_id) is True
+
+    def test_has_all_subsets_assigned_returns_false_when_a_subset_is_missing(
+        self,
+        fxt_db_projects: list[ProjectDB],
+        fxt_db_labels: list[LabelDB],
+        db_session: Session,
+        fxt_subset_service: SubsetService,
+    ) -> None:
+        """Test that has_all_subsets_assigned returns False when at least one required subset has no items.
+
+          We create a second project that only has TRAINING and VALIDATION items - no TESTING items -
+        so has_all_subsets_assigned must return False for it.
+        """
+        from uuid import uuid4 as _uuid4
+
+        from app.db.schema import ProjectDB as ProjectDBAlias
+        from app.models import TaskType
+
+        # Build a second project with only TRAINING + VALIDATION items (no TESTING)
+        partial_project = ProjectDBAlias(
+            id=str(_uuid4()),
+            name="Partial Subsets Project",
+            task_type=TaskType.DETECTION,
+            exclusive_labels=False,
+        )
+        db_session.add(partial_project)
+        db_session.flush()
+
+        fxt_db_labels[0]
+
+        incomplete_distribution = {
+            DatasetItemSubset.TRAINING: 3,
+            DatasetItemSubset.VALIDATION: 2,
+            # DatasetItemSubset.TESTING intentionally absent
+        }
+
+        from tests.integration.project_factory import ProjectTestDataFactory
+
+        ProjectTestDataFactory(db_session).with_project(partial_project).with_media_and_dataset_items(
+            incomplete_distribution
+        ).build()
+
+        partial_project_id = UUID(partial_project.id)
+        partial_service = SubsetService(db_session)
+        assert partial_service.has_all_subsets_assigned(partial_project_id) is False
+
+    def test_has_all_subsets_assigned_returns_false_for_all_unassigned_project(
+        self,
+        fxt_db_projects: list[ProjectDB],
+        db_session: Session,
+    ) -> None:
+        """Test that has_all_subsets_assigned returns False when all items are UNASSIGNED."""
+        from uuid import uuid4 as _uuid4
+
+        from app.db.schema import ProjectDB as ProjectDBAlias
+        from app.models import TaskType
+
+        unassigned_project = ProjectDBAlias(
+            id=str(_uuid4()),
+            name="All Unassigned Project",
+            task_type=TaskType.DETECTION,
+            exclusive_labels=False,
+        )
+        db_session.add(unassigned_project)
+        db_session.flush()
+
+        only_unassigned = {DatasetItemSubset.UNASSIGNED: 5}
+        from tests.integration.project_factory import ProjectTestDataFactory
+
+        ProjectTestDataFactory(db_session).with_project(unassigned_project).with_media_and_dataset_items(
+            only_unassigned
+        ).build()
+
+        unassigned_project_id = UUID(unassigned_project.id)
+        service = SubsetService(db_session)
+        assert service.has_all_subsets_assigned(unassigned_project_id) is False
+
+    def test_has_all_subsets_assigned_returns_false_for_empty_project(
+        self,
+        db_session: Session,
+    ) -> None:
+        """Test that has_all_subsets_assigned returns False when the project has no dataset items at all."""
+        from uuid import uuid4 as _uuid4
+
+        from app.db.schema import ProjectDB as ProjectDBAlias
+        from app.models import TaskType
+
+        empty_project = ProjectDBAlias(
+            id=str(_uuid4()),
+            name="Empty Project",
+            task_type=TaskType.DETECTION,
+            exclusive_labels=False,
+        )
+        db_session.add(empty_project)
+        db_session.flush()
+
+        empty_project_id = UUID(empty_project.id)
+        service = SubsetService(db_session)
+        assert service.has_all_subsets_assigned(empty_project_id) is False
