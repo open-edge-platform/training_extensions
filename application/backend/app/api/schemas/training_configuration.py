@@ -1064,9 +1064,9 @@ class TrainingConfigurationView(BaseModel):
                                                     "of most annotations."
                                                 ),
                                                 "value": 400,
-                                                "default_value": 400,
+                                                "default_value": 128,
                                                 "value_type": "int",
-                                                "min_value": 0,
+                                                "min_value": 64,
                                                 "max_value": None,
                                                 "allowed_values": None,
                                             },
