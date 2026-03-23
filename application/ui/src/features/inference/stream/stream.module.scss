@@ -6,17 +6,14 @@
     align-items: center;
     width: 100%;
     height: 100%;
-}
-
-.canvasItem {
-    grid-area: innercanvas;
+    cursor: pointer;
 }
 
 .playButton {
     display: flex;
     gap: var(--spectrum-global-dimension-size-400);
     align-items: center;
-    padding: var(--spectrum-global-dimension-size-1200);
+    padding: var(--spectrum-global-dimension-size-600);
     position: relative;
     border-radius: var(--spectrum-alias-border-radius-medium);
 }
