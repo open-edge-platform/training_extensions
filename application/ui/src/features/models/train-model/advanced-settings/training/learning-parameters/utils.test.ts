@@ -10,10 +10,10 @@ import { TrainingConfigurationParameter } from '../../../../../../constants/shar
 import { isParameter, isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { learningParameters } from './mocks';
 import {
+    filterDependentParameters,
     isInputSizeHeightParameter,
     isInputSizeWidthParameter,
     LearningConfigurationGroup,
-    reorderDependentParameters,
 } from './utils';
 
 const buildEnumNumberParameter = (key: string): TrainingConfigurationParameter =>
@@ -91,9 +91,9 @@ describe('isInputSizeHeightParameter', () => {
     });
 });
 
-describe('reorderDependentParameters', () => {
+describe('filterDependentParameters', () => {
     it('keeps independent parameters in their original order', () => {
-        const result = reorderDependentParameters(learningParameters.parameters);
+        const result = filterDependentParameters(learningParameters.parameters);
         const keys = result.filter(isParameter).map((p) => p.key);
 
         expect(keys).toContain('max_epochs');
@@ -105,7 +105,7 @@ describe('reorderDependentParameters', () => {
         const schedulerGroup = learningParameters.parameters.find(
             (p) => isParameterGroup(p) && p.key === 'scheduler'
         ) as LearningConfigurationGroup;
-        const result = reorderDependentParameters(schedulerGroup.parameters);
+        const result = filterDependentParameters(schedulerGroup.parameters);
         const keys = result.filter(isParameter).map((p) => p.key);
 
         const typeIndex = keys.indexOf('type');
@@ -122,7 +122,7 @@ describe('reorderDependentParameters', () => {
         const schedulerGroup = learningParameters.parameters.find(
             (p) => isParameterGroup(p) && p.key === 'scheduler'
         ) as LearningConfigurationGroup;
-        const result = reorderDependentParameters(schedulerGroup.parameters);
+        const result = filterDependentParameters(schedulerGroup.parameters);
         const keys = result.filter(isParameter).map((p) => p.key);
 
         // 'min_lr' depends on type === 'cosine_annealing', but type === 'reduce_lr_on_plateau'
@@ -130,7 +130,7 @@ describe('reorderDependentParameters', () => {
     });
 
     it('preserves parameter groups in the output', () => {
-        const result = reorderDependentParameters(learningParameters.parameters);
+        const result = filterDependentParameters(learningParameters.parameters);
         const groupKeys = result.filter(isParameterGroup).map((p) => p.key);
 
         expect(groupKeys).toContain('early_stopping');
@@ -140,12 +140,12 @@ describe('reorderDependentParameters', () => {
     });
 
     it('returns an empty array when given an empty array', () => {
-        expect(reorderDependentParameters([])).toEqual([]);
+        expect(filterDependentParameters([])).toEqual([]);
     });
 
     it('returns a single independent parameter unchanged', () => {
         const param = getMockedConfigurationParameter({ value_type: 'int', key: 'solo', depends_on: null });
-        const result = reorderDependentParameters([param]);
+        const result = filterDependentParameters([param]);
 
         expect(result).toEqual([param]);
     });
@@ -156,7 +156,7 @@ describe('reorderDependentParameters', () => {
             key: 'orphan',
             depends_on: { some_key: 'some_value' },
         });
-        const result = reorderDependentParameters([dependent]);
+        const result = filterDependentParameters([dependent]);
 
         expect(result).toEqual([]);
     });

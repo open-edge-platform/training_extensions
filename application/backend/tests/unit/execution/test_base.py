@@ -6,7 +6,7 @@ from unittest.mock import call, patch
 import pytest
 
 from app.core.jobs.models import JobParams
-from app.execution.base import Execution, step
+from app.execution.base import Execution, ExecutionErr, step
 
 
 class TestStepDecorator:
@@ -66,6 +66,30 @@ class TestStepDecorator:
         mock_update_message.assert_has_calls(
             [call("Started: Failing Step"), call("Failed: Failing Step", level="ERROR")]
         )
+
+    def test_step_decorator_reports_failure_on_execution_error(self):
+        """Test that the decorator reports failure with the message from the error."""
+
+        # Arrange
+        class MockTrainer(Execution[JobParams]):
+            def execute(self, params: JobParams) -> None:
+                pass
+
+            @step("Failing Step")
+            def failing_method(self) -> None:
+                raise ExecutionErr("Execution error")
+
+        trainer = MockTrainer()
+
+        with (
+            pytest.raises(ExecutionErr, match="Execution error"),
+            patch.object(trainer, "update_message") as mock_update_message,
+        ):
+            # Act
+            trainer.failing_method()
+
+        # Assert
+        mock_update_message.assert_has_calls([call("Started: Failing Step"), call("Execution error", level="ERROR")])
 
     def test_step_decorator_pinned_message(self):
         """Test that the decorator doesn't override pinned message."""

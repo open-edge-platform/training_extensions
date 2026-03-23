@@ -5,7 +5,7 @@ import { ReactNode, RefObject, useRef } from 'react';
 
 import { DOMRefValue, Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, View } from '@geti/ui';
 
-import { useTrainModel } from '../train-model-provider.component';
+import { useTrainModelState } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
 import { Training } from './training/training.component';
 
@@ -25,7 +25,7 @@ type TabProps = {
 };
 
 export const AdvancedSettings = () => {
-    const { trainingConfiguration, onTrainingConfigurationChange, defaultTrainingConfiguration } = useTrainModel();
+    const { trainingConfiguration, onTrainingConfigurationChange, defaultTrainingConfiguration } = useTrainModelState();
     const containerRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const unwrappedContainerRef = useUnwrapDOMRef(containerRef);
 

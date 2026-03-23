@@ -3,6 +3,7 @@
 
 import { useMemo } from 'react';
 
+import { usePrefetchQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useProject } from 'hooks/api/project.hook';
 
 import { $api } from '../../../../api/client';
@@ -10,6 +11,7 @@ import {
     ModelArchitecture,
     ModelArchitectureWithPerformanceCategory,
     RecommendedModelArchitectures,
+    TaskType,
 } from '../../../../constants/shared-types';
 
 const getModelArchitectures = (
@@ -38,16 +40,22 @@ const getModelArchitectures = (
     });
 };
 
+const getTaskModelArchitecturesQueryOptions = (taskType: TaskType) => {
+    return $api.queryOptions('get', '/api/model_architectures', {
+        params: { query: { task: taskType } },
+    });
+};
+
+export const usePrefetchTaskModelArchitectures = () => {
+    const { data: projectData } = useProject();
+
+    return usePrefetchQuery(getTaskModelArchitecturesQueryOptions(projectData.task.task_type));
+};
+
 export const useGetTaskModelArchitectures = () => {
     const { data: projectData } = useProject();
 
-    const { data } = $api.useSuspenseQuery('get', '/api/model_architectures', {
-        params: {
-            query: {
-                task: projectData.task.task_type,
-            },
-        },
-    });
+    const { data } = useSuspenseQuery(getTaskModelArchitecturesQueryOptions(projectData.task.task_type));
 
     const modelArchitectures = useMemo(
         () => getModelArchitectures(data.model_architectures, data.top_picks),

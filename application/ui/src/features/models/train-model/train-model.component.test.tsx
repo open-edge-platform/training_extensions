@@ -72,7 +72,7 @@ describe('TrainModel', () => {
 
         render(<TrainModel />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Train model' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Train model' }));
 
         expect(
             await screen.findByText(/In order to train a model, you need to annotate at least 3 items/)
@@ -113,7 +113,7 @@ describe('TrainModel', () => {
 
         render(<TrainModel />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Train model' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Train model' }));
 
         await waitFor(() => {
             expect(

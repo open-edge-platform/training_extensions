@@ -59,6 +59,19 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
 
     BATCH_PROGRESS_INTERVAL = 20  # 5% intervals (100% / 5% = 20)
 
+    SUPPORTED_CONVERSIONS: dict[type[Sample], list[type[Sample]]] = {
+        DetectionImportExportSample: [
+            InstanceSegmentationImportExportSample,
+            MultilabelClassificationImportExportSample,
+        ],
+        InstanceSegmentationImportExportSample: [
+            DetectionImportExportSample,
+            MultilabelClassificationImportExportSample,
+        ],
+        MultilabelClassificationImportExportSample: [],
+        MulticlassClassificationImportExportSample: [],
+    }
+
     def __init__(
         self,
         staged_datasets_dir: Path,
@@ -79,8 +92,16 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
         if not staged_dataset_path.exists() or not staged_dataset_path.is_dir():
             raise ValueError(f"Staged dataset directory does not exist: {staged_dataset_path}")
         dataset = import_dataset(str(staged_dataset_path))
+        dataset_type = dataset.dtype
         target_type = self.__get_sample_by_task(task=task)
-        if target_type and target_type != dataset.dtype:
+        if target_type != dataset_type:
+            if (
+                dataset_type in self.SUPPORTED_CONVERSIONS
+                and target_type not in self.SUPPORTED_CONVERSIONS[dataset_type]
+            ):
+                raise ValueError(
+                    f"Dataset type {dataset_type.__name__} conversion to {target_type.__name__} is not supported."
+                )
             dataset = dataset.convert_to_schema(target_type)
         return dataset
 
@@ -206,7 +227,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             return VideoFormat.MP4
 
     @staticmethod
-    def __get_sample_by_task(task: Task) -> type[Sample] | None:
+    def __get_sample_by_task(task: Task) -> type[Sample]:
         match task.task_type:
             case TaskType.CLASSIFICATION:
                 if not task.exclusive_labels:

@@ -51,7 +51,7 @@ export const TogglePipelineButton = () => {
                 isPending={disablePipelineMutation.isPending || enablePipelineMutation.isPending}
                 onPress={handleToggle}
             >
-                {isPipelineEnabled ? 'Disable' : 'Enable'} Pipeline
+                {isPipelineEnabled ? 'Disable' : 'Enable'} pipeline
             </Button>
 
             <EnablePipelineBlockedDialog
