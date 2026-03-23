@@ -63,18 +63,6 @@ class ResourceWithIdAlreadyExistsError(ResourceError):
         super().__init__(resource_type, resource_id, msg)
 
 
-class ResourcePermissionError(ResourceError):
-    """Exception raised when a resource cannot be accessed due to OS permission issue."""
-
-    def __init__(self, resource_type: ResourceType, resource_id: str, message: str | None = None):
-        msg = (
-            message
-            or f"{resource_type} with ID '{resource_id}' cannot be accessed."
-            f" Please check if you have the correct OS permissions to access this resource."
-        )
-        super().__init__(resource_type, resource_id, msg)
-
-
 class BaseSessionManagedService(ABC):
     """
     Base class for services that require a managed database session.
