@@ -71,12 +71,12 @@ _TASK_SPECS: list[_TaskSpec] = [
     ),
     _TaskSpec(
         task=OTXTaskType.DETECTION,
-        recipe_name="yolox_s",
+        recipe_name="ssd_mobilenetv2",
         dataset_dir="detection_coco",
     ),
     _TaskSpec(
         task=OTXTaskType.INSTANCE_SEGMENTATION,
-        recipe_name="rfdetr_seg_small",
+        recipe_name="rtmdet_inst_tiny",
         dataset_dir="instance_segmentation_coco",
     ),
     _TaskSpec(
@@ -91,7 +91,7 @@ _TASK_SPECS: list[_TaskSpec] = [
     ),
     _TaskSpec(
         task=OTXTaskType.MULTI_CLASS_CLS,
-        recipe_name="tv_mobilenet_v3_small",
+        recipe_name="efficientnet_b0",
         dataset_dir="classification_dataset_16bit",
     ),
 ]
