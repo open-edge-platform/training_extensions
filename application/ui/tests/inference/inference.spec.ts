@@ -65,6 +65,12 @@ test('Inference', async ({ streamPage, page, network }) => {
         expect(streamPage.isConnected()).toBeTruthy();
     });
 
+    await test.step('stops stream', async () => {
+        await streamPage.stopStream();
+
+        await expect(page.getByRole('button', { name: 'Start stream' })).toBeVisible();
+    });
+
     await test.step('toggles pipeline', async () => {
         await page.goto('/projects/id-1/inference');
 
