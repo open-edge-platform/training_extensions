@@ -9,6 +9,9 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 import type { Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
+import { isVideoFrame } from '../../../shared/media-item-utils';
+import { useMediaPredictions } from '../../annotator/api/use-media-predictions';
+import { PredictionsSetupProvider, usePredictionSetup } from '../../annotator/predictions-setup-provider.component';
 import {
     SelectedMediaItemProvider,
     useSelectedMediaItem,
@@ -19,7 +22,7 @@ import { useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { useAnnotatorMediaTransition } from './use-annotator-media-transition.hook';
-import { getInitialAnnotations, getInitialPredictions } from './utils';
+import { getInitialAnnotations } from './utils';
 
 type MediaPreviewProps = {
     mediaItem: Media;
@@ -94,8 +97,16 @@ const MediaPreviewContent = ({
 }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
     const { mediaItem } = useSelectedMediaItem();
+    const { selectedModelId } = usePredictionSetup();
 
     const { data: annotationsData } = useAnnotationsQuery(mediaItem);
+    const { data: predictionsData } = useMediaPredictions({
+        mediaId: mediaItem.id,
+        modelId: selectedModelId,
+        range: isVideoFrame(mediaItem)
+            ? { start_frame: mediaItem.frame_number, end_frame: mediaItem.frame_number, stride: mediaItem.frame_stride }
+            : null,
+    });
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
 
@@ -104,8 +115,8 @@ const MediaPreviewContent = ({
     }, [isUserReviewed, annotationsData?.annotations]);
 
     const initialPredictions = useMemo(() => {
-        return getInitialPredictions(isUserReviewed, annotationsData?.annotations ?? []);
-    }, [isUserReviewed, annotationsData?.annotations]);
+        return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
+    }, [predictionsData]);
 
     return (
         <ToolProvider mode={mode}>
@@ -157,14 +168,16 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     ]}
                 >
                     <SelectedMediaItemProvider mediaItem={mediaItem}>
-                        <MediaPreviewContent
-                            items={items}
-                            onClose={close}
-                            onSelectedMediaItem={onSelectedMediaItem}
-                            hasNextPage={hasNextPage}
-                            isFetchingNextPage={isFetchingNextPage}
-                            fetchNextPage={fetchNextPage}
-                        />
+                        <PredictionsSetupProvider>
+                            <MediaPreviewContent
+                                items={items}
+                                onClose={close}
+                                onSelectedMediaItem={onSelectedMediaItem}
+                                hasNextPage={hasNextPage}
+                                isFetchingNextPage={isFetchingNextPage}
+                                fetchNextPage={fetchNextPage}
+                            />
+                        </PredictionsSetupProvider>
                     </SelectedMediaItemProvider>
                 </Grid>
             </Content>
