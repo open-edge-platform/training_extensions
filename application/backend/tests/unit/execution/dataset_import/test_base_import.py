@@ -5,7 +5,7 @@ import secrets
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 from uuid import uuid4
 
 import cv2
@@ -263,8 +263,8 @@ class TestBaseDatasetImport:
 
         # Verify media creation
         assert fxt_media_service.create_image.call_count == 2
-        for index, call in enumerate(fxt_media_service.create_image.call_args_list):
-            meta: ImageMetadata = call.args[0]
+        for index, call_item in enumerate(fxt_media_service.create_image.call_args_list):
+            meta: ImageMetadata = call_item.args[0]
             assert meta.project_id == project_id
             assert meta.name == f"image_{index}"
             assert meta.media_type == MediaType.IMAGE
@@ -366,8 +366,8 @@ class TestBaseDatasetImport:
 
         # A video-frame image entry should be created for each frame
         assert fxt_media_service.create_image.call_count == 2
-        for call in fxt_media_service.create_image.call_args_list:
-            meta: ImageMetadata = call.args[0]
+        for call_item in fxt_media_service.create_image.call_args_list:
+            meta: ImageMetadata = call_item.args[0]
             assert meta.media_type == MediaType.VIDEO_FRAME
             assert meta.video_id == mock_video.id
             assert meta.image_format == ImageFormat.JPG

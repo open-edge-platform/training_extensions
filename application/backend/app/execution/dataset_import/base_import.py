@@ -135,7 +135,12 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             for idx, item in enumerate(dataset):
                 annotations, user_reviewed = [], item.user_reviewed
                 # apply conversion only if it's not an Empty label case
-                empty_label = user_reviewed is True and isinstance(item.label, np.ndarray) and len(item.label) == 0
+                empty_label = (
+                    user_reviewed is True
+                    and isinstance(item.label, np.ndarray)
+                    and item.label.ndim == 1
+                    and item.label.size == 0
+                )
                 if not empty_label:
                     annotations = converter.convert_sample(item)
                     # non-native *ImportExportSample types are always treated as reviewed
