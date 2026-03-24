@@ -61,14 +61,20 @@ run-image accelerator="cpu" reload="false" tag="latest" host="0.0.0.0" port="786
         exit 1
     fi
 
-    CONTAINER_ID=$(docker ps -q -f "name=^/${CONTAINER_NAME}$")
-    if [[ -n "$CONTAINER_ID" ]]; then
+    EXISTING_CONTAINER_ID=$(docker ps -aq -f "name=^/${CONTAINER_NAME}$")
+    if [[ -n "$EXISTING_CONTAINER_ID" ]]; then
         if [[ "{{ reload }}" == "true" ]]; then
-            echo "Stopping existing container: ${CONTAINER_NAME}"
-            docker stop "$CONTAINER_ID"
-            docker rm "$CONTAINER_ID"
+            # If a container with this name is running, stop it first
+            RUNNING_CONTAINER_ID=$(docker ps -q -f "name=^/${CONTAINER_NAME}$")
+            if [[ -n "$RUNNING_CONTAINER_ID" ]]; then
+                echo "Stopping existing running container: ${CONTAINER_NAME}"
+                docker stop "$RUNNING_CONTAINER_ID"
+            fi
+            echo "Removing existing container: ${CONTAINER_NAME}"
+            docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1 || true
         else
-            echo "Container with such name runs already. Please pass --reload to force container restart" >&2
+            echo "Error: A container named '${CONTAINER_NAME}' is already running." >&2
+            echo "Either pass --reload to stop and replace it, or specify a different --name." >&2
             exit 1
         fi
     fi
