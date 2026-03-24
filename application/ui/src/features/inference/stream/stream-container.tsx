@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Button, Flex, Loading, toast, View } from '@geti/ui';
+import { Flex, Loading, toast, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
 
 import { Stream } from './stream';
@@ -27,17 +27,13 @@ export const StreamContainer = () => {
 
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
-            <div className={classes.canvasContainer} onClick={isConnected ? stop : undefined}>
+            <div className={classes.canvasContainer} onClick={isConnected ? stop : isStopped ? start : undefined}>
                 <View backgroundColor={'gray-200'} width='90%' height='90%'>
                     {isStopped && (
                         <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Button
-                                onPress={start}
-                                UNSAFE_className={classes.playPauseButton}
-                                aria-label={'Start stream'}
-                            >
-                                <Play width='64px' height='64px' />
-                            </Button>
+                            <Flex UNSAFE_className={classes.playPauseButton}>
+                                <Play width='64px' height='64px' aria-label={'Start stream'} />
+                            </Flex>
                         </Flex>
                     )}
 
@@ -59,7 +55,9 @@ export const StreamContainer = () => {
                                 height='100%'
                                 UNSAFE_className={classes.pauseOverlay}
                             >
-                                <Pause width='64px' height='64px' aria-label={'Stop stream'} />
+                                <Flex UNSAFE_className={classes.playPauseButton}>
+                                    <Pause width='64px' height='64px' aria-label={'Stop stream'} />
+                                </Flex>
                             </Flex>
                         </View>
                     )}
