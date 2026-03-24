@@ -3,9 +3,11 @@
 
 import type { Dispatch, SetStateAction } from 'react';
 
-import { Flex, Grid, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
+import { Divider, Flex, Grid, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
-import thumbnailUrl from '../../../assets/mocked-project-thumbnail.webp';
+import classificationImageUrl from '../../../assets/classification.webp';
+import detectionImageUrl from '../../../assets/detection.webp';
+import segmentationImageUrl from '../../../assets/segmentation.webp';
 import type { TaskType } from '../../../constants/shared-types';
 import type { TaskOption } from './interface';
 
@@ -14,25 +16,28 @@ import classes from './task-selection.module.scss';
 export const TASK_OPTIONS: TaskOption[] = [
     {
         id: 'detection_task',
-        imageSrc: thumbnailUrl,
+        imageSrc: detectionImageUrl,
         title: 'Object Detection',
         description: 'Identify and locate objects in your images',
+        advice: 'Best for: Counting, Tracking',
         verb: 'detect',
         value: 'detection',
     },
     {
         id: 'segmentation_task',
-        imageSrc: thumbnailUrl,
+        imageSrc: segmentationImageUrl,
         title: 'Image Segmentation',
         description: 'Detect and outline specific regions or shapes',
+        advice: 'Best for: Measurement, Odd shapes',
         verb: 'segment',
         value: 'instance_segmentation',
     },
     {
         id: 'classification_task',
-        imageSrc: thumbnailUrl,
+        imageSrc: classificationImageUrl,
         title: 'Image Classification',
         description: 'Categorize entire images based on their content',
+        advice: 'Best for: Filtering, Content Moderation',
         verb: 'classify',
         value: 'classification',
     },
@@ -50,7 +55,7 @@ const Option = ({ taskOption, onPress }: TaskOptionProps) => {
                 <Image height={'size-2400'} width={'100%'} src={taskOption.imageSrc} alt={taskOption.title} />
             </View>
 
-            <View padding={'size-300'}>
+            <View padding={'size-200'}>
                 <Flex justifyContent={'space-between'} gap={'size-50'} alignItems={'center'}>
                     <Heading level={2} UNSAFE_className={classes.title}>
                         {taskOption.title}
@@ -59,6 +64,10 @@ const Option = ({ taskOption, onPress }: TaskOptionProps) => {
                 </Flex>
 
                 <Text UNSAFE_className={classes.description}>{taskOption.description}</Text>
+
+                <Divider marginTop={'size-100'} marginBottom={'size-150'} size={'S'} />
+
+                <Text UNSAFE_className={classes.advice}>{taskOption.advice}</Text>
             </View>
         </div>
     );
@@ -83,10 +92,10 @@ export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionPr
             >
                 <Grid
                     columns={
-                        'repeat(3, minmax(min(100%, var(--spectrum-global-dimension-size-3000)), ' +
+                        'repeat(3, minmax(min(100%, var(--spectrum-global-dimension-size-3600)), ' +
                         'var(--spectrum-global-dimension-size-4600)))'
                     }
-                    gap={'size-500'}
+                    gap={'size-300'}
                     width={'100%'}
                     justifyContent={'center'}
                 >
