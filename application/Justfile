@@ -30,13 +30,13 @@ build-image accelerator="cpu" tag="latest": install-uv
 
 # Run Geti as a Docker container for a specific training backend
 [arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
-[arg("reload", long="reload", short="r", value="true", help="Automatically reload the container if it is already running")]
 [arg("tag", long="tag", short="t")]
 [arg("host", long="host", short="h", help="Host address to bind the server to")]
 [arg("port", long="port", short="p", help="Port number to bind the server to")]
 [arg("container-name", long="name", short="n", help="Custom name for the container (defaults to geti-<accelerator>)")]
 [arg("detach", long="detach", short="d", value="true", help="Run the container in detached mode")]
 [arg("remove", long="remove", value="true", help="Automatically remove the container after it exits")]
+[arg("reload", long="reload", short="r", value="true", help="Automatically reload the container if it is already running")]
 [arg("shm-size", long="shm-size", help="Size of /dev/shm inside the container (e.g. 256m, 4g). Defaults to 8g")]
 [arg("passthrough-devices", long="passthrough-devices", help="Space-separated list of additional device paths to pass through to the container (e.g. '/dev/video0 /dev/video1')")]
 [arg("volumes", long="volumes", help="Space-separated list of host:container path mappings to mount (e.g. '/host/path:/container/path /host/path2:/container/path2')")]
