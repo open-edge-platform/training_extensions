@@ -42,6 +42,44 @@ if TYPE_CHECKING:
 logger = logging.getLogger()
 
 
+class _FP32OpenvinoAdapter(OpenvinoAdapter):
+    """OpenvinoAdapter variant that forces float32 input tensors.
+
+    OTX models are trained with a ``scale_to_unit`` intensity transform that
+    converts images to float32 [0, 1] *before* the GPU Kornia ``Normalize``
+    step.  During OpenVINO inference the GPU Normalize is not executed, so the
+    raw [0, 1] float32 images are passed directly to ModelAPI.  The embedded
+    preprocessing in the IR must therefore receive float32 input, and its
+    stored ``mean_values`` / ``scale_values`` must be in the **0-1 scale**
+    (e.g. ``0.485 0.456 0.406``).
+
+    Guard: if the IR was exported with an older OTX version that stored
+    mean_values in the 0-255 scale (e.g. ``123.675``), applying those values
+    to [0, 1] inputs produces completely wrong normalisation.  A
+    ``ValueError`` is raised in that case so the problem is caught early
+    rather than silently producing bad predictions.
+    """
+
+    # Values above this threshold indicate uint8 (0-255) scale rather than 0-1 scale.
+    _UINT8_SCALE_THRESHOLD = 1.0
+
+    def embed_preprocessing(self, *args, **kwargs) -> None:
+        mean = kwargs.get("mean") or (args[5] if len(args) > 5 else None)
+        scale = kwargs.get("scale") or (args[6] if len(args) > 6 else None)
+        bad_mean  = mean  and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
+        bad_scale = scale and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
+        if bad_mean or bad_scale:
+            msg = (
+                f"IR mean_values {mean} / scale_values {scale} appear to be in "
+                "uint8 (0-255) scale, but _FP32OpenvinoAdapter expects float32 "
+                "[0, 1] inputs with values in 0-1 scale "
+                "(e.g. mean=0.485 0.456 0.406, std=0.229 0.224 0.225). "
+                "Re-export the model with the current OTX version."
+            )
+            raise ValueError(msg)
+        kwargs["dtype"] = float
+        super().embed_preprocessing(*args, **kwargs)
+
 class OVModel:
     """Base class for the OpenVINO model.
 
@@ -129,7 +167,7 @@ class OVModel:
         if self.use_throughput_mode:
             plugin_config["PERFORMANCE_HINT"] = "THROUGHPUT"
 
-        model_adapter = OpenvinoAdapter(
+        model_adapter = _FP32OpenvinoAdapter(
             ie,
             self.model_path,
             device=ov_device,
