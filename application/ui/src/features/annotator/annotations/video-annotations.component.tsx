@@ -73,8 +73,6 @@ export const VideoPredictions = () => {
     const { data: predictions = [] } = useVideoFramesPredictions({
         frameNumber: videoFrame.frame_number,
         frameSkip: step,
-        // To provide the best user experience, we should get predictions for each single frame
-        rangeStride: 1,
         selector: (data) => {
             const framePredictions =
                 data

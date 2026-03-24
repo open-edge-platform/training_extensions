@@ -17,10 +17,6 @@ export const getInitialAnnotations = (isUserReviewed: boolean, annotationsDTO: A
     return isUserReviewed ? annotationsDTO : [];
 };
 
-export const getInitialPredictions = (predictions: PredictionDTO[] | undefined): AnnotationDTO[] => {
-    return predictions ?? [];
-};
-
 export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[], step: number): Media | undefined => {
     if (isVideoFrame(currentMediaItem)) {
         const videoFrames = range(0, currentMediaItem.frame_count, step);

@@ -22,7 +22,7 @@ import { useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { useAnnotatorMediaTransition } from './use-annotator-media-transition.hook';
-import { getInitialAnnotations, getInitialPredictions } from './utils';
+import { getInitialAnnotations } from './utils';
 
 type MediaPreviewProps = {
     mediaItem: Media;
@@ -115,7 +115,7 @@ const MediaPreviewContent = ({
     }, [isUserReviewed, annotationsData?.annotations]);
 
     const initialPredictions = useMemo(() => {
-        return getInitialPredictions(predictionsData?.flatMap((predictionData) => predictionData.prediction));
+        return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
     }, [predictionsData]);
 
     return (
