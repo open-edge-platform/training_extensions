@@ -136,7 +136,7 @@ jobs:
               exit 1
           fi
 
-          EXPECTED_TITLE="Geti Tune"
+          EXPECTED_TITLE="Geti"
           echo "Checking HTML title..."
 
           HTML_CONTENT=$(curl -sf $TEST_URL)

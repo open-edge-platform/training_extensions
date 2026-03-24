@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Command line interface for interacting with the Geti Tune application."""
+"""Command line interface for interacting with the Geti application."""
 
 import sys
 from pathlib import Path
@@ -17,7 +17,7 @@ migration_manager = MigrationManager(settings)
 
 @click.group()
 def cli() -> None:
-    """Geti Tune CLI"""
+    """Geti CLI"""
 
 
 @cli.command()

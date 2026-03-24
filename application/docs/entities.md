@@ -1,8 +1,8 @@
-# Geti Tune entities
+# Geti entities
 
 ![Full ER diagram with all entities](media/er/full.svg)
 
-In Geti Tune, a _project_ (`Project`) represents the machine learning problem that the user wants to solve,
+In Geti, a _project_ (`Project`) represents the machine learning problem that the user wants to solve,
 and at the same time serves as a container for all the assets related to it (datasets, models, ...)
 
 The definition of the problem consists of a _task_ and a set of _labels_ (`Label`).
@@ -29,7 +29,7 @@ used to organize and filter the dataset items. Filtered data, based on tags and/
 can be used to create a _view_ in the dataset (`DatasetView`). A dataset view basically represents a subset of the
 dataset items; the user fully controls which items belong to a view.
 
-When the user decides to train a new model - optionally fine-tuning a previous model - Geti Tune creates a snapshot
+When the user decides to train a new model - optionally fine-tuning a previous model - Geti creates a snapshot
 of the dataset, namely a _dataset revision_ (`DatasetRevision`), that captures the exact state of the dataset when
 that model is trained. A dataset revision is therefore an immutable entity, and is not affected by subsequent changes
 to the main dataset, for example when images are added or removed. In other words, it is always possible to access the

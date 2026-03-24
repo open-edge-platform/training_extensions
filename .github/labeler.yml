@@ -1,12 +1,12 @@
 # See help here: https://github.com/marketplace/actions/labeler
 
-Geti Tune Backend:
+Geti Backend:
   - changed-files:
       - any-glob-to-any-file:
           - "application/backend/**/*"
           - "application/docker/**/*"
 
-Geti Tune UI:
+Geti UI:
   - changed-files:
       - any-glob-to-any-file:
           - "application/ui/**/*"
