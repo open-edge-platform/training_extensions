@@ -59,15 +59,7 @@ export const StreamContainer = () => {
                                 height='100%'
                                 UNSAFE_className={classes.pauseOverlay}
                             >
-                                <div onClick={(event) => event.stopPropagation()}>
-                                    <Button
-                                        onPress={stop}
-                                        aria-label={'Stop stream'}
-                                        UNSAFE_className={classes.playPauseButton}
-                                    >
-                                        <Pause width='64px' height='64px' />
-                                    </Button>
-                                </div>
+                                <Pause width='64px' height='64px' aria-label={'Stop stream'} />
                             </Flex>
                         </View>
                     )}
