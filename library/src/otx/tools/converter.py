@@ -247,6 +247,8 @@ class TransformsUpdater:
         "gaussian_noise": {
             "class_paths": ["kornia.augmentation.RandomGaussianNoise"],
             "stage": "gpu",
+            # kornia.augmentation.RandomGaussianNoise uses `std`; manifests use `sigma`
+            "param_rename": {"sigma": "std"},
         },
         "color_jitter": {
             "class_paths": ["kornia.augmentation.ColorJiggle"],
@@ -287,7 +289,6 @@ class TransformsUpdater:
     # Geti param name -> kornia/torchvision param name
     PARAM_RENAME: ClassVar[dict[str, str]] = {
         "probability": "p",
-        "sigma": "std",
         "max_rotate_degree": "degrees",
         "scaling_ratio_range": "scale",
         "crop_ratio_range": "scale",
@@ -340,7 +341,7 @@ class TransformsUpdater:
             existing_idx = cls._find_augmentation(aug_list, registry_entry["class_paths"])
 
             if enable:
-                init_args = cls._remap_params(params)
+                init_args = cls._remap_params(params, registry_entry.get("param_rename"))
 
                 if existing_idx is not None:
                     # Update existing augmentation parameters
@@ -367,18 +368,26 @@ class TransformsUpdater:
                     aug_list.pop(existing_idx)
 
     @classmethod
-    def _remap_params(cls, params: dict) -> dict:
+    def _remap_params(cls, params: dict, per_aug_rename: dict[str, str] | None = None) -> dict:
         """Rename Geti parameter names to kornia/torchvision names and adjust values.
 
         1. Rename keys via PARAM_RENAME (probability->p, max_translate_ratio->translate, etc.)
+           plus any per-augmentation overrides supplied via per_aug_rename.
         2. Adjust values where kornia expects a different format than a single scalar.
+
+        Args:
+            params: Raw Geti parameter dict for the augmentation.
+            per_aug_rename: Optional extra rename map applied after PARAM_RENAME.  Use this
+                when a kornia class uses a different argument name than the global default
+                (e.g. RandomGaussianNoise uses ``std`` while the manifest stores ``sigma``).
         """
-        # Step 1: rename keys
+        # Step 1: rename keys (global renames + per-augmentation overrides)
+        rename_map = {**cls.PARAM_RENAME, **(per_aug_rename or {})}
         init_args: dict[str, Any] = {}
         for key, value in params.items():
             if value is None:
                 continue
-            init_args[cls.PARAM_RENAME.get(key, key)] = value
+            init_args[rename_map.get(key, key)] = value
 
         # Step 2: adjust values to match kornia expected formats
         if "translate" in init_args and not isinstance(init_args["translate"], list):

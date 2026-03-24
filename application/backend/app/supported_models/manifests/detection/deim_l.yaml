@@ -39,3 +39,6 @@ hyperparameters:
       gaussian_blur: null
       color_jitter: null
       gaussian_noise: null
+      random_erasing: null
+      random_grayscale: null
+      random_sharpness: null

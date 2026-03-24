@@ -45,3 +45,7 @@ hyperparameters:
       random_zoom_out:
         enable: true
         fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5

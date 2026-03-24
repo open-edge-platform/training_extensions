@@ -492,6 +492,76 @@ class TestTransformsUpdater:
         assert sharp_aug["init_args"]["sharpness"] == 0.7
         assert sharp_aug["init_args"]["p"] == 0.5  # probability renamed to p
 
+    def test_gaussian_blur(self, base_config):
+        """Test that gaussian_blur keeps 'sigma'.
+        """
+        aug_params = {
+            "gaussian_blur": {
+                "enable": True,
+                "kernel_size": 5,
+                "sigma": [0.1, 2.0],
+                "probability": 0.5,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        gpu_augs = base_config["data"]["train_subset"]["augmentations_gpu"]
+        blur_aug = next(
+            (a for a in gpu_augs if "RandomGaussianBlur" in a.get("class_path", "")),
+            None,
+        )
+        assert blur_aug is not None
+        assert "sigma" in blur_aug["init_args"], "sigma must NOT be renamed for gaussian_blur"
+        assert "std" not in blur_aug["init_args"], "std must NOT appear for gaussian_blur"
+        assert blur_aug["init_args"]["sigma"] == [0.1, 2.0]
+        assert blur_aug["init_args"]["p"] == 0.5
+
+    def test_gaussian_noise_sigma(self, base_config):
+        """Test that gaussian_noise renames 'sigma' -> 'std' via per-aug param_rename.
+        """
+        aug_params = {
+            "gaussian_noise": {
+                "enable": True,
+                "mean": 0.0,
+                "sigma": 0.15,
+                "probability": 0.3,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        gpu_augs = base_config["data"]["train_subset"]["augmentations_gpu"]
+        noise_aug = next(
+            (a for a in gpu_augs if "RandomGaussianNoise" in a.get("class_path", "")),
+            None,
+        )
+        assert noise_aug is not None
+        assert "std" in noise_aug["init_args"], "sigma must be renamed to std for gaussian_noise"
+        assert "sigma" not in noise_aug["init_args"], "sigma must NOT appear in gaussian_noise init_args"
+        assert noise_aug["init_args"]["std"] == 0.15
+        assert noise_aug["init_args"]["p"] == 0.3
+
+    def test_random_erasing_value_passthrough(self, base_config):
+        """Test that RandomErasing 'value' param passes through unchanged."""
+        aug_params = {
+            "random_erasing": {
+                "enable": True,
+                "scale": [0.02, 0.33],
+                "ratio": [0.3, 3.3],
+                "probability": 0.5,
+                "value": 0.5,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        gpu_augs = base_config["data"]["train_subset"]["augmentations_gpu"]
+        erasing_aug = next(
+            (a for a in gpu_augs if "RandomErasing" in a.get("class_path", "")),
+            None,
+        )
+        assert erasing_aug is not None
+        assert erasing_aug["init_args"]["value"] == 0.5
+        assert erasing_aug["init_args"]["p"] == 0.5
+
 
 class TestHyperparametersUpdater:
     """Test HyperparametersUpdater for training hyperparameter updates."""

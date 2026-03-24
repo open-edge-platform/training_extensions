@@ -13,6 +13,8 @@ hyperparameters:
       iou_random_crop:
         enable: true
         probability: 1.0
+        min_scale: 0.3
+        max_scale: 1.0
       random_horizontal_flip:
         enable: true
         probability: 0.5
@@ -27,6 +29,7 @@ hyperparameters:
           - 0.5
           - 1.5
         max_shear_degree: 2.0
+        probability: 0.5
       gaussian_blur:
         enable: false
         kernel_size: 5
@@ -63,6 +66,7 @@ hyperparameters:
           - 0.3
           - 3.3
         probability: 0.5
+        value: 0.0
       random_grayscale:
         enable: false
         probability: 0.1

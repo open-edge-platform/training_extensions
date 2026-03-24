@@ -70,7 +70,7 @@ overrides:
             ratio_range:
               - 1.0
               - 1.0
-            probability: 0.5
+            p: 0.5
             random_pop: false
             max_cached_images: 10
         - class_path: otx.data.augmentation.transforms.Resize

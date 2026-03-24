@@ -113,7 +113,7 @@ callbacks:
                   init_args:
                     img_scale: [640, 640]
                     ratio_range: [1.0, 1.0]
-                    probability: 0.5
+                    p: 0.5
                     random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
@@ -153,7 +153,7 @@ callbacks:
                   init_args:
                     img_scale: [640, 640]
                     ratio_range: [1.0, 1.0]
-                    probability: 0.5
+                    p: 0.5
                     random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes

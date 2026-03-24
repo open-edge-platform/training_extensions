@@ -13,9 +13,14 @@ from app.models.training_configuration import (
 from app.models.training_configuration.augmentation import (
     AugmentationParameters,
     ColorJitter,
+    Mixup,
+    Mosaic,
+    RandomAffine,
     RandomErasing,
     RandomGrayscale,
+    RandomIOUCrop,
     RandomSharpness,
+    RandomZoomOut,
 )
 from app.models.training_configuration.configuration import TaskLevelParameters, TrainingConfiguration
 from app.models.training_configuration.dataset_preparation import (
@@ -65,6 +70,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                         scale=(0.03, 0.25),
                         ratio=(0.5, 2.0),
                         probability=0.4,
+                        value=0.1,
                     ),
                     random_grayscale=RandomGrayscale(
                         enable=True,
@@ -74,6 +80,35 @@ def fxt_training_configuration() -> TrainingConfiguration:
                         enable=True,
                         sharpness=0.8,
                         probability=0.3,
+                    ),
+                    random_affine=RandomAffine(
+                        enable=True,
+                        max_rotate_degree=15.0,
+                        max_translate_ratio=0.2,
+                        scaling_ratio_range=(0.6, 1.4),
+                        max_shear_degree=5.0,
+                        probability=0.7,
+                    ),
+                    random_zoom_out=RandomZoomOut(
+                        enable=True,
+                        fill=128,
+                        side_range=(1.0, 3.0),
+                        probability=0.4,
+                    ),
+                    iou_random_crop=RandomIOUCrop(
+                        enable=True,
+                        probability=0.9,
+                        min_scale=0.4,
+                        max_scale=0.9,
+                    ),
+                    mosaic=Mosaic(
+                        enable=True,
+                        probability=0.8,
+                    ),
+                    mixup=Mixup(
+                        enable=True,
+                        probability=0.6,
+                        mix_ratio=0.4,
                     ),
                 )
             ),
@@ -121,6 +156,7 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                         scale=(0.02, 0.33),
                         ratio=(0.3, 3.3),
                         probability=0.5,
+                        value=0.0,
                     ),
                     random_grayscale=RandomGrayscale(
                         enable=False,
@@ -130,6 +166,35 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                         enable=False,
                         sharpness=0.5,
                         probability=0.5,
+                    ),
+                    random_affine=RandomAffine(
+                        enable=False,
+                        max_rotate_degree=10.0,
+                        max_translate_ratio=0.1,
+                        scaling_ratio_range=(0.5, 1.5),
+                        max_shear_degree=2.0,
+                        probability=0.5,
+                    ),
+                    random_zoom_out=RandomZoomOut(
+                        enable=False,
+                        fill=0,
+                        side_range=(1.0, 4.0),
+                        probability=0.5,
+                    ),
+                    iou_random_crop=RandomIOUCrop(
+                        enable=False,
+                        probability=1.0,
+                        min_scale=0.3,
+                        max_scale=1.0,
+                    ),
+                    mosaic=Mosaic(
+                        enable=False,
+                        probability=1.0,
+                    ),
+                    mixup=Mixup(
+                        enable=False,
+                        probability=1.0,
+                        mix_ratio=0.5,
                     ),
                 )
             ),
@@ -339,6 +404,338 @@ def fxt_training_configuration_view_json() -> dict:
                         "parameters": [
                             {
                                 "type": "parameter_group",
+                                "key": "random_zoom_out",
+                                "name": "Random zoom out",
+                                "description": (
+                                    "Randomly zoom out the image by placing it on a larger canvas with "
+                                    "padding. Applied before resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "fill",
+                                        "name": "Fill value",
+                                        "description": (
+                                            "Fill value for the area outside the image when zooming out. "
+                                            "Typically 0 for black padding. Value should be between 0 and 255."
+                                        ),
+                                        "value": 128,
+                                        "default_value": 0,
+                                        "value_type": "int",
+                                        "min_value": 0,
+                                        "max_value": 255,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "side_range",
+                                        "name": "Side range",
+                                        "description": (
+                                            "Range (min, max) of the zoom-out scale factor for each side. "
+                                            "The image will be placed on a canvas scaled by a random factor "
+                                            "from this range. For example, (1.0, 4.0) means the canvas can "
+                                            "be up to 4x the original image size. The minimum value must "
+                                            "be >= 1.0."
+                                        ),
+                                        "value": [1.0, 3.0],
+                                        "default_value": [1.0, 4.0],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying random zoom out. "
+                                            "A value of 0.5 means each image has a 50% chance to be zoomed out."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "iou_random_crop",
+                                "name": "IoU random crop",
+                                "description": (
+                                    "Randomly crop images based on Intersection over Union (IoU) criteria. "
+                                    "Applied before resize. Note: this augmentation is not supported when "
+                                    "Tiling algorithm is enabled."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying IoU random crop. "
+                                            "A value of 1.0 means the crop is always applied when enabled."
+                                        ),
+                                        "value": 0.9,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "min_scale",
+                                        "name": "Minimum scale",
+                                        "description": (
+                                            "Minimum fraction of the original image area to retain after "
+                                            "cropping. For example, 0.3 means the crop will be at least 30% "
+                                            "of the original area."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.3,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_scale",
+                                        "name": "Maximum scale",
+                                        "description": (
+                                            "Maximum fraction of the original image area to retain after "
+                                            "cropping. A value of 1.0 means the crop can be as large as the "
+                                            "entire image."
+                                        ),
+                                        "value": 0.9,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "mosaic",
+                                "name": "Mosaic",
+                                "description": (
+                                    "Combines 4 images into one mosaic for augmentation. Applied before resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying mosaic augmentation. "
+                                            "A value of 1.0 means mosaic is always applied when enabled."
+                                        ),
+                                        "value": 0.8,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_affine",
+                                "name": "Random affine",
+                                "description": (
+                                    "Apply random affine transformations (rotation, translation, scaling, shear) "
+                                    "to the image. Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_rotate_degree",
+                                        "name": "Rotation degrees",
+                                        "description": (
+                                            "Maximum rotation angle in degrees for affine transformation. "
+                                            "A random angle in the range [-max_rotate_degree, max_rotate_degree] "
+                                            "will be applied. For example, max_rotate_degree=10 allows up to ±10 "
+                                            "degrees rotation."
+                                        ),
+                                        "value": 15.0,
+                                        "default_value": 10.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_translate_ratio",
+                                        "name": "Horizontal translation",
+                                        "description": (
+                                            "Maximum translation as a fraction of image width or height. "
+                                            "A random translation in the range [-max_translate_ratio, "
+                                            "max_translate_ratio] will be applied along both axes. For example, "
+                                            "0.1 allows up to ±10% translation."
+                                        ),
+                                        "value": 0.2,
+                                        "default_value": 0.1,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "scaling_ratio_range",
+                                        "name": "Scaling ratio range",
+                                        "description": (
+                                            "Range (min, max) of scaling factors to apply during affine "
+                                            "transformation. Both values should be > 0.0. For example, "
+                                            "(0.8, 1.2) will randomly scale the image between 80% and 120% "
+                                            "of its original size."
+                                        ),
+                                        "value": [0.6, 1.4],
+                                        "default_value": [0.5, 1.5],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_shear_degree",
+                                        "name": "Maximum shear degree",
+                                        "description": (
+                                            "Maximum absolute shear angle in degrees to apply during affine "
+                                            "transformation. A random shear in the range [-max_shear_degree, "
+                                            "max_shear_degree] will be applied."
+                                        ),
+                                        "value": 5.0,
+                                        "default_value": 2.0,
+                                        "value_type": "float",
+                                        "min_value": None,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying the affine transformation. "
+                                            "A value of 0.5 means each image has a 50% chance to be transformed."
+                                        ),
+                                        "value": 0.7,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "mixup",
+                                "name": "Mixup",
+                                "description": (
+                                    "Blends two images and their labels for augmentation. Applied before resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": "Probability of applying mixup augmentation",
+                                        "value": 0.6,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "mix_ratio",
+                                        "name": "Mix ratio",
+                                        "description": (
+                                            "Blending ratio between the two images. "
+                                            "A value of 0.5 means equal blending of both images. "
+                                            "Lower values give more weight to the original image."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
                                 "key": "color_jitter",
                                 "name": "Color jitter",
                                 "description": (
@@ -500,6 +897,22 @@ def fxt_training_configuration_view_json() -> dict:
                                         "allowed_values": None,
                                         "depends_on": None,
                                     },
+                                    {
+                                        "type": "parameter",
+                                        "key": "value",
+                                        "name": "Fill value",
+                                        "description": (
+                                            "Fill value for the erased region, normalized to [0, 1]. "
+                                            "A value of 0.0 fills with black. A value of 1.0 fills with white."
+                                        ),
+                                        "value": 0.1,
+                                        "default_value": 0.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
                                 ],
                             },
                             {
@@ -600,7 +1013,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "depends_on": None,
                                     },
                                 ],
-                            }
+                            },
                         ],
                     },
                 ],
