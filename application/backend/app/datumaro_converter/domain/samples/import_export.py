@@ -50,7 +50,7 @@ class MulticlassClassificationImportExportSample(BaseImportExportSample):
     """
 
     label: int | None = label_field(dtype=pl.UInt8(), is_list=False)
-    confidence: float | None = numeric_field(dtype=pl.Float32(), semantic="default")
+    confidence: float | None = numeric_field(dtype=pl.Float32(), semantic="confidence")
 
     @staticmethod
     def annotation_type() -> AnnotationType:
