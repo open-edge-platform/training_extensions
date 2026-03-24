@@ -19,9 +19,9 @@ describe('TaskSelection', () => {
         expect(screen.getByLabelText('Task option: Image Segmentation')).toBeInTheDocument();
         expect(screen.getByLabelText('Task option: Image Classification')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('Best for: Counting, Tracking')).toBeInTheDocument();
-        expect(screen.getByLabelText('Best for: Measurement, Odd shapes')).toBeInTheDocument();
-        expect(screen.getByLabelText('Best for: Filtering, Content Moderation')).toBeInTheDocument();
+        expect(screen.getByText('Best for: Counting, Tracking')).toBeInTheDocument();
+        expect(screen.getByText('Best for: Measurement, Odd shapes')).toBeInTheDocument();
+        expect(screen.getByText('Best for: Filtering, Content Moderation')).toBeInTheDocument();
     });
 
     it('selects the first task by default', () => {
