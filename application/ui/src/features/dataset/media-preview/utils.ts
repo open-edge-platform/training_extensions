@@ -1,13 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { range } from 'lodash-es';
+import { isEmpty, range } from 'lodash-es';
+import { useLocalStorage } from 'usehooks-ts';
 
-import type { AnnotationDTO, Media } from '../../../constants/shared-types';
+import type { AnnotationDTO, Media, PredictionDTO } from '../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideoFrame } from '../../../shared/media-item-utils';
 import { loadImageQueryOptions } from '../../annotator/hooks/use-load-image-query.hook';
 import { useVideoPlayerContext } from '../../annotator/video-player/video-player-provider.component';
@@ -87,4 +89,31 @@ export const useNextMediaPrefetch = (currentMediaItem: Media, allMediaItems: Med
         nextImage: nextImageQuery.data,
         isNextImageReady: nextImageQuery.isSuccess,
     };
+};
+
+export const useAnnotatorMode = ({
+    annotations,
+    predictions,
+}: {
+    annotations: AnnotationDTO[];
+    predictions: PredictionDTO[];
+}) => {
+    const projectId = useProjectIdentifier();
+    const [mode, setMode] = useLocalStorage<AnnotatorMode>(`${projectId}-annotator-mode`, 'annotation');
+
+    const hasPredictions = !isEmpty(predictions);
+    const hasAnnotations = !isEmpty(annotations);
+
+    useEffect(() => {
+        if (hasAnnotations) {
+            setMode('annotation');
+            return;
+        }
+
+        if (hasPredictions) {
+            setMode('prediction');
+        }
+    }, [hasAnnotations, hasPredictions, setMode]);
+
+    return [mode, setMode] as const;
 };
