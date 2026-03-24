@@ -1,6 +1,6 @@
 task: INSTANCE_SEGMENTATION
 model:
-  class_path: otx.backend.native.models.instance_segmentation.maskrcnn.MaskRCNN
+  class_path: otx.backend.native.models.instance_segmentation.maskrcnn_tv.MaskRCNNTV
   init_args:
     model_name: maskrcnn_resnet_50
     label_info: 80

@@ -187,13 +187,6 @@ class CSPNeXtPAFPN:
     """CSPNeXtPAFPN factory for detection."""
 
     CSPNEXTPAFPN_CFG: ClassVar[dict[str, Any]] = {
-        "rtmdet_tiny": {
-            "in_channels": (96, 192, 384),
-            "out_channels": 96,
-            "num_csp_blocks": 1,
-            "normalization": nn.BatchNorm2d,
-            "activation": partial(nn.SiLU, inplace=True),
-        },
         "rtmdet_inst_tiny": {
             "in_channels": (96, 192, 384),
             "out_channels": 96,

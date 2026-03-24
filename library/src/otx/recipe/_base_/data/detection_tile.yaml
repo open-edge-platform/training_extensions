@@ -12,7 +12,7 @@ train_subset:
   batch_size: 1
   num_workers: 2
   augmentations_cpu:
-    - class_path: torchvision.transforms.v2.RandomIoUCrop
+    - class_path: otx.data.augmentation.transforms.RandomIoUCrop
       enable: true
     - class_path: otx.data.augmentation.transforms.Resize
       init_args:

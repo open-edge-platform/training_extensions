@@ -9,7 +9,7 @@ train_subset:
   batch_size: 8
   num_workers: 4
   augmentations_cpu:
-    - class_path: torchvision.transforms.v2.RandomIoUCrop
+    - class_path: otx.data.augmentation.transforms.RandomIoUCrop
     - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
       init_args:
         min_size: 1

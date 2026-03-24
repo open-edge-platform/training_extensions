@@ -136,7 +136,7 @@ class TestAutoConfigurator:
         )
         model = auto_configurator.get_model(
             label_info=label_info,
-            data_input_params=DataInputParams((256, 256), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((288, 288), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         assert isinstance(model, OTXModel)
 

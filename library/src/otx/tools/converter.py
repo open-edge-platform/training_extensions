@@ -40,17 +40,22 @@ TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
     "image-classification-deit-tiny": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
-        "status": ModelStatus.ACTIVE,
+        "status": ModelStatus.BALANCE,
+        "default": False,
+    },
+    "image-classification-dinov2": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "dino_v2.yaml",
+        "status": ModelStatus.ACCURACY,
         "default": False,
     },
     "image-classification-efficientnet-b0": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
-        "status": ModelStatus.BALANCE,
+        "status": ModelStatus.ACTIVE,
         "default": True,
     },
     "image-classification-efficientnet-v2-s": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
-        "status": ModelStatus.ACCURACY,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "image-classification-mobilenet-v3-large": {
@@ -59,14 +64,14 @@ TEMPLATE_ID_MAPPING = {
         "default": False,
     },
     "image-classification-efficientnet-b3": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b3.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
     # DETECTION
     "object-detection-atss-mobilenet-v2": {
         "recipe_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
-        "status": ModelStatus.BALANCE,
+        "status": ModelStatus.ACTIVE,
         "default": True,
     },
     "object-detection-ssd-mobilenet-v2": {
@@ -101,17 +106,17 @@ TEMPLATE_ID_MAPPING = {
     },
     "object-detection-d-fine-x": {
         "recipe_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
-        "status": ModelStatus.ACCURACY,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "object-detection-deim-d-fine-m": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
-        "status": ModelStatus.ACTIVE,
+        "status": ModelStatus.BALANCE,
         "default": False,
     },
     "object-detection-deim-d-fine-l": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
-        "status": ModelStatus.ACTIVE,
+        "status": ModelStatus.ACCURACY,
         "default": False,
     },
     "object-detection-deim-d-fine-x": {
@@ -119,15 +124,45 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
+    "object-detection-rfdetr-s": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_small.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-rfdetr-m": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_medium.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-rfdetr-l": {
+        "recipe_path": RECIPE_PATH / "detection" / "rfdetr_large.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-dinov3-detr-s": {
+        "recipe_path": RECIPE_PATH / "detection" / "deimv2_s.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-dinov3-detr-m": {
+        "recipe_path": RECIPE_PATH / "detection" / "deimv2_m.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "object-detection-dinov3-detr-l": {
+        "recipe_path": RECIPE_PATH / "detection" / "deimv2_l.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
     # INSTANCE_SEGMENTATION
     "instance-segmentation-mask-rcnn-swin-t": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
-        "status": ModelStatus.ACCURACY,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
     "instance-segmentation-mask-rcnn-efficientnet-b2": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
-        "status": ModelStatus.SPEED,
+        "status": ModelStatus.ACTIVE,
         "default": True,
     },
     "instance-segmentation-rtmdet-tiny": {
@@ -136,8 +171,28 @@ TEMPLATE_ID_MAPPING = {
         "default": False,
     },
     "instance-segmentation-mask-rcnn-resnet50": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-s": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-m": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_medium.yaml",
         "status": ModelStatus.BALANCE,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-l": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_large.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "instance-segmentation-rfdetr-xl": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",
+        "status": ModelStatus.ACCURACY,
         "default": False,
     },
 }
@@ -199,7 +254,7 @@ class TransformsUpdater:
         },
         "iou_random_crop": {
             "class_paths": [
-                "torchvision.transforms.v2.RandomIoUCrop",
+                "otx.data.augmentation.transforms.RandomIoUCrop",
             ],
             "stage": "cpu",
         },
@@ -214,6 +269,18 @@ class TransformsUpdater:
         "mosaic": {
             "class_paths": ["otx.data.augmentation.transforms.CachedMosaic"],
             "stage": "cpu",
+        },
+        "random_erasing": {
+            "class_paths": ["kornia.augmentation.RandomErasing"],
+            "stage": "gpu",
+        },
+        "random_grayscale": {
+            "class_paths": ["kornia.augmentation.RandomGrayscale"],
+            "stage": "gpu",
+        },
+        "random_sharpness": {
+            "class_paths": ["kornia.augmentation.RandomSharpness"],
+            "stage": "gpu",
         },
     }
 

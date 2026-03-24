@@ -336,7 +336,6 @@ class TestObjectDetection(BaseTest):
     # Test case parametrization for model
     MODEL_TEST_CASES = [  # noqa: RUF012
         ModelTestCase(task="detection", name="atss_mobilenetv2"),
-        ModelTestCase(task="detection", name="atss_resnext101"),
         ModelTestCase(task="detection", name="ssd_mobilenetv2"),
         ModelTestCase(task="detection", name="yolox_tiny"),
         ModelTestCase(task="detection", name="yolox_s"),

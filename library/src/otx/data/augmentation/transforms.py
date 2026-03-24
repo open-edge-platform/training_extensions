@@ -941,7 +941,8 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         max_aspect_ratio (float, optional): the same as RandomIoUCrop. Defaults to 2.
         sampler_options (list[float] | None, optional): the same as RandomIoUCrop. Defaults to None.
         trials (int, optional): the same as RandomIoUCrop. Defaults to 40.
-        probability (float, optional): probability. Defaults to 1.0.
+        p (float, optional): probability of applying the crop. Defaults to 1.0.
+        probability (float | None, optional): legacy alias for `p`. If set, it overrides `p`.
     """
 
     def __init__(
@@ -952,7 +953,8 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         max_aspect_ratio: float = 2,
         sampler_options: list[float] | None = None,
         trials: int = 40,
-        probability: float = 1.0,
+        p: float = 1.0,
+        probability: float | None = None,
     ):
         super().__init__(
             min_scale,
@@ -962,7 +964,9 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
             sampler_options,
             trials,
         )
-        self.p = probability
+        if probability is not None:
+            p = probability
+        self.p = p
 
     def __call__(self, *inputs: Any) -> Any:  # noqa: ANN401
         """Apply the transform to the given inputs."""

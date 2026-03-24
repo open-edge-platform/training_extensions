@@ -153,6 +153,34 @@ class TestTransformsUpdater:
         assert crop_aug is not None
         assert crop_aug["init_args"]["scale"] == [0.1, 1.0]
 
+    def test_add_iou_random_crop_with_probability(self, base_config):
+        """Test adding OTX RandomIoUCrop and mapping probability to p."""
+        # Remove existing RandomIoUCrop from base config first to force insertion path
+        base_config["data"]["train_subset"]["augmentations_cpu"] = [
+            aug
+            for aug in base_config["data"]["train_subset"]["augmentations_cpu"]
+            if "RandomIoUCrop" not in aug.get("class_path", "")
+        ]
+
+        aug_params = {
+            "iou_random_crop": {
+                "enable": True,
+                "probability": 0.8,
+                "trials": 60,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        cpu_augs = base_config["data"]["train_subset"]["augmentations_cpu"]
+        iou_aug = next(
+            (a for a in cpu_augs if "RandomIoUCrop" in a.get("class_path", "")),
+            None,
+        )
+        assert iou_aug is not None
+        assert iou_aug["class_path"] == "otx.data.augmentation.transforms.RandomIoUCrop"
+        assert iou_aug["init_args"]["p"] == 0.8
+        assert iou_aug["init_args"]["trials"] == 60
+
     def test_add_new_augmentation_gpu(self, base_config):
         """Test adding new GPU augmentation when not present in config."""
         aug_params = {
@@ -400,6 +428,69 @@ class TestTransformsUpdater:
         TransformsUpdater.update_tiling(None, base_config)
 
         assert base_config["data"]["tile_config"].get("enable_tiler", False) == original_tiler
+
+    def test_add_random_erasing(self, base_config):
+        """Test adding RandomErasing GPU augmentation."""
+        aug_params = {
+            "random_erasing": {
+                "enable": True,
+                "scale": [0.02, 0.33],
+                "ratio": [0.3, 3.3],
+                "probability": 0.5,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        gpu_augs = base_config["data"]["train_subset"]["augmentations_gpu"]
+        erasing_aug = next(
+            (a for a in gpu_augs if "RandomErasing" in a.get("class_path", "")),
+            None,
+        )
+        assert erasing_aug is not None
+        assert erasing_aug["class_path"] == "kornia.augmentation.RandomErasing"
+        assert erasing_aug["init_args"]["scale"] == [0.02, 0.33]
+        assert erasing_aug["init_args"]["ratio"] == [0.3, 3.3]
+        assert erasing_aug["init_args"]["p"] == 0.5  # probability renamed to p
+
+    def test_add_random_grayscale(self, base_config):
+        """Test adding RandomGrayscale GPU augmentation."""
+        aug_params = {
+            "random_grayscale": {
+                "enable": True,
+                "probability": 0.2,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        gpu_augs = base_config["data"]["train_subset"]["augmentations_gpu"]
+        gray_aug = next(
+            (a for a in gpu_augs if "RandomGrayscale" in a.get("class_path", "")),
+            None,
+        )
+        assert gray_aug is not None
+        assert gray_aug["class_path"] == "kornia.augmentation.RandomGrayscale"
+        assert gray_aug["init_args"]["p"] == 0.2  # probability renamed to p
+
+    def test_add_random_sharpness(self, base_config):
+        """Test adding RandomSharpness GPU augmentation."""
+        aug_params = {
+            "random_sharpness": {
+                "enable": True,
+                "sharpness": 0.7,
+                "probability": 0.5,
+            }
+        }
+        TransformsUpdater.update(aug_params, base_config)
+
+        gpu_augs = base_config["data"]["train_subset"]["augmentations_gpu"]
+        sharp_aug = next(
+            (a for a in gpu_augs if "RandomSharpness" in a.get("class_path", "")),
+            None,
+        )
+        assert sharp_aug is not None
+        assert sharp_aug["class_path"] == "kornia.augmentation.RandomSharpness"
+        assert sharp_aug["init_args"]["sharpness"] == 0.7
+        assert sharp_aug["init_args"]["p"] == 0.5  # probability renamed to p
 
 
 class TestHyperparametersUpdater:

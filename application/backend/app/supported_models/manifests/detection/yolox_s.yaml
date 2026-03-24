@@ -15,10 +15,14 @@ stats:
 hyperparameters:
   dataset_preparation:
     augmentation:
-      iou_random_crop:
-        enable: false
       mosaic:
         enable: true
+      mixup:
+        enable: true
+        probability: 0.5
+      iou_random_crop:
+        enable: false
+        probability: 1.0
       random_affine:
         enable: true
         max_rotate_degree: 10.0
@@ -27,29 +31,8 @@ hyperparameters:
           - 0.1
           - 2.0
         max_shear_degree: 2.0
-      mixup:
-        enable: true
-        probability: 0.5
-      hsv_random_aug:
-        enable: true
-        hue_delta: 5
-        saturation_delta: 30
-        value_delta: 30
-      random_horizontal_flip:
-        enable: true
-        probability: 0.5
-      random_vertical_flip:
-        enable: false
-        probability: 0.5
-      gaussian_blur:
-        enable: false
-        kernel_size: 5
-        sigma:
-          - 0.1
-          - 2.0
-        probability: 0.5
       color_jitter:
-        enable: false
+        enable: true
         brightness:
           - 0.875
           - 1.125
@@ -63,10 +46,39 @@ hyperparameters:
           - -0.05
           - 0.05
         probability: 0.5
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
+      gaussian_blur:
+        enable: false
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+        probability: 0.5
       gaussian_noise:
         enable: false
         mean: 0.0
         sigma: 0.1
+        probability: 0.5
+      random_erasing:
+        enable: false
+        scale:
+          - 0.02
+          - 0.33
+        ratio:
+          - 0.3
+          - 3.3
+        probability: 0.5
+      random_grayscale:
+        enable: false
+        probability: 0.1
+      random_sharpness:
+        enable: false
+        sharpness: 0.5
         probability: 0.5
   training:
     learning_rate: 0.001
