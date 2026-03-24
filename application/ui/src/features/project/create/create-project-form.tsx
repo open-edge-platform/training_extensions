@@ -92,7 +92,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             <Flex
                 flex={1}
                 minHeight={0}
-                width={'clamp(800px, 60vw, 1052px)'}
+                width={'clamp(912px, 60vw, 1052px)'}
                 margin={'0 auto'}
                 gap={'size-500'}
                 direction={'column'}
