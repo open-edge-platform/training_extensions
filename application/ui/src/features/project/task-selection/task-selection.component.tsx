@@ -67,7 +67,7 @@ const Option = ({ taskOption, onPress }: TaskOptionProps) => {
 
                 <Divider marginTop={'size-100'} marginBottom={'size-150'} size={'S'} />
 
-                <Text UNSAFE_className={classes.advice}>{taskOption.advice}</Text>
+                <Text>{taskOption.advice}</Text>
             </View>
         </div>
     );
