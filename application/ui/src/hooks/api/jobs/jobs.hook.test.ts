@@ -27,6 +27,10 @@ const createMockJobForProject = (overrides: Partial<ReturnType<typeof getMockedJ
                 architecture: 'SSD',
                 dataset_revision_id: 'ds-rev-1',
             },
+            device: {
+                type: 'cpu',
+                name: 'CPU',
+            },
         },
         ...overrides,
     });
@@ -111,6 +115,10 @@ describe('useGetCurrentTrainingJob', () => {
             metadata: {
                 project: { id: 'other-project' },
                 model: { id: 'model-1', architecture: 'SSD', dataset_revision_id: 'ds-rev-1' },
+                device: {
+                    type: 'cpu',
+                    name: 'CPU',
+                },
             },
         });
         server.use(http.get('/api/jobs', () => HttpResponse.json([otherProjectJob])));
