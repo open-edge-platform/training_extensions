@@ -26,7 +26,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('button', { name: 'Enable Pipeline' }));
+        fireEvent.click(await screen.findByRole('button', { name: /Enable Pipeline/i }));
 
         expect(await screen.findByText('Pipeline enabled successfully')).toBeVisible();
     });
@@ -46,7 +46,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('button', { name: 'Disable Pipeline' }));
+        fireEvent.click(await screen.findByRole('button', { name: /Disable Pipeline/i }));
 
         expect(await screen.findByText('Pipeline disabled successfully')).toBeVisible();
     });
@@ -67,7 +67,7 @@ describe('TogglePipelineButton', () => {
 
         render(<TogglePipelineButton />);
 
-        fireEvent.click(await screen.findByRole('button', { name: 'Enable Pipeline' }));
+        fireEvent.click(await screen.findByRole('button', { name: /Enable Pipeline/i }));
 
         expect(await screen.findByText('Cannot enable pipeline')).toBeVisible();
         expect(

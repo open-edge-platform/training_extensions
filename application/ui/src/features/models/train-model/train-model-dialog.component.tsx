@@ -19,9 +19,9 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useMatch } from 'react-router';
 
 import { paths } from '../../../constants/paths';
-import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
 import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
+import { useIsTrainingButtonDisabled } from './hooks/use-is-training-button-disabled';
 import { useTrainModel } from './hooks/use-train-model';
 import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
 import { useTrainModelState } from './train-model-provider.component';

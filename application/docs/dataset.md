@@ -2,7 +2,7 @@
 
 ## Overview
 
-In Geti Tune, the _dataset_ is the container for all the media and related annotations within a project.
+In Geti, the _dataset_ is the container for all the media and related annotations within a project.
 New items can be added to the dataset from:
 
 - the inference pipeline, whose data collection stage implements policies to select which frames to save,
@@ -15,9 +15,9 @@ elements, edit annotations and other attributes.
 
 ### Media vs Dataset item
 
-In Geti Tune, a _media_ refers to the actual image or video file that contains visual content. Media files are the raw
+In Geti, a _media_ refers to the actual image or video file that contains visual content. Media files are the raw
 data that the system processes, analyzes, and displays. They can be in various formats such as JPEG, PNG, MP4, etc.
-Images and video frames can be annotated. When a frame is annotated, Geti Tune extracts it 
+Images and video frames can be annotated. When a frame is annotated, Geti extracts it 
 from the video, assigns it an ID, and saves it as an image; the extracted frame can also be
 considered a media, supporting all the operations that are normally possible for images.
 A media may have a reference to a source, e.g. the camera from which it was acquired.
@@ -31,7 +31,7 @@ Each dataset item typically contains:
 - Subset assignment: Information about whether the item belongs to the training, validation, or testing subset of the dataset.
 - Other relevant properties that may be needed for dataset management and processing.
 
-Dataset item and media are closely related, but they serve different purposes within the Geti Tune ecosystem.
+Dataset item and media are closely related, but they serve different purposes within the Geti ecosystem.
 A dataset item shares the same unique identifier (UUID) with the media it refers to, which allows easy correlation.
 In other words, the ID of a dataset item always corresponds to the id of an image or an extracted video frame.
 
@@ -49,7 +49,7 @@ with little to no conversion since both the API and the DB use the same JSON sch
 
 The inference stage of the pipeline, followed by the dataset collection module, streams newly acquired media items
 (images represented as `np.array`) along with their predictions (a subclass of `model_api.Result`) and other metadata.
-Before storing them in the database, they must be first converted to the internal representation used by Geti Tune.
+Before storing them in the database, they must be first converted to the internal representation used by Geti.
 Note that the conversion is only one way, as there is no need to convert back to the `model_api` data structures.
 
 Workflows like training, evaluation and dataset export expect a `datumaro.Dataset` object as input, which can be
@@ -63,7 +63,7 @@ Note that Datumaro also allows to export datasets in a variety of formats, usefu
 
 ## Dataset views
 
-A dataset view in Geti Tune is a user-defined subset of items within a dataset, designed to facilitate the organization
+A dataset view in Geti is a user-defined subset of items within a dataset, designed to facilitate the organization
 and exploration of data. Rather than working with the entire dataset, users can create views that include only the items
 relevant to a specific task, for example exporting the items collected in the last week, or evaluating the model on
 a specific subset of media. Especially when datasets grow large or contain diverse data, users can filter the items
@@ -80,10 +80,10 @@ from the dataset automatically removes it from all views.
 
 ## Dataset revisions
 
-A dataset revision in Geti Tune is an immutable snapshot of a dataset (or dataset view), capturing its exact state at
+A dataset revision in Geti is an immutable snapshot of a dataset (or dataset view), capturing its exact state at
 a specific point in time.
 This mechanism is essential for ensuring traceability and reproducibility in machine learning workflows,
-particularly when training or evaluating models. When a user initiates a training or evaluation job, Geti Tune
+particularly when training or evaluating models. When a user initiates a training or evaluation job, Geti
 creates a dataset revision that includes all the items, annotations, and metadata as they existed at that moment.
 
 Dataset revisions are tightly integrated with model management. Each model revision references the dataset revision

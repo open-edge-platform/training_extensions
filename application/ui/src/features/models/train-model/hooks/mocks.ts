@@ -518,7 +518,7 @@ export const mockedTrainingConfiguration: TrainingConfiguration = {
                                 },
                                 {
                                     type: 'parameter',
-                                    key: 'adaptive_tiling',
+                                    key: 'enable_adaptive_tiling',
                                     name: 'Adaptive tiling',
                                     description: 'Whether to use adaptive tiling based on image content',
                                     depends_on: null,

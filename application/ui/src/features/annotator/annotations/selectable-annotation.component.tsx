@@ -100,6 +100,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     return (
         <g
             ref={elementRef}
+            aria-label={isSelected ? 'selected annotation' : 'annotation'}
             tabIndex={isSelected ? 0 : -1}
             onClick={handleSelectAnnotation}
             style={{

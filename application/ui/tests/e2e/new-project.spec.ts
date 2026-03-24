@@ -55,7 +55,7 @@ test('Project creation', async ({ page }) => {
     });
 
     await test.step('Verify project appears in project list', async () => {
-        await page.getByText('Geti Tune').click(); // Go back to /projects
+        await page.getByText('Geti').click(); // Go back to /projects
         await expect(page.getByText('New Project', { exact: true })).toBeVisible();
     });
 

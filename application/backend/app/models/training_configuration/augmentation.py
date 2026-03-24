@@ -288,12 +288,12 @@ class GaussianNoise(BaseAugmentationParameter):
 
 
 class Tiling(BaseAugmentationParameter):
-    adaptive_tiling: bool = Field(
+    enable_adaptive_tiling: bool = Field(
         default=False, title="Adaptive tiling", description="Whether to use adaptive tiling based on image content"
     )
     tile_size: int = Field(
         default=128,
-        gt=0,
+        ge=64,
         title="Tile size",
         description=(
             "Size of each tile in pixels. "

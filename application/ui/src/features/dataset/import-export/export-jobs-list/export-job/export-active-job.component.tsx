@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Loading, Text, View } from '@geti/ui';
-import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 import { getJobProgress, isJobRunning } from 'hooks/api/util';
 import { useExportDataset } from 'hooks/localStorage/use-export-dataset.hook';
 
@@ -20,15 +19,10 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
     const isRunning = isJobRunning(job);
     const { removeLsExportId } = useExportDataset();
 
-    const removeStagedDatasetMutation = useDeleteStagedDataset({
-        stagedDatasetId: job.metadata.dataset_id,
-        deleteEntry: () => removeLsExportId(job.job_id),
-    });
-
     const progress = getJobProgress(job?.progress);
 
     const handleRemove = () => {
-        removeStagedDatasetMutation.mutate();
+        removeLsExportId(job.job_id);
     };
 
     return (

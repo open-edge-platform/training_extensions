@@ -91,7 +91,9 @@ class TestJobEndpoints:
         response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
 
         assert response.status_code == status.HTTP_202_ACCEPTED
-        assert response.json()["job_id"]
+        response_json = response.json()
+        assert response_json["job_id"]
+        assert response_json["metadata"]["device"]["name"] == "CPU"
         job_request = cast(TrainingJob, job_request)
         fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()

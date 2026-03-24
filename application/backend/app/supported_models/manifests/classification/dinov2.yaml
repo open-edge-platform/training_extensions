@@ -1,0 +1,23 @@
+id: image-classification-dinov2
+name: DINOv2-Small
+
+pretrained_weights:
+  url: https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_pretrain.pth
+  sha_sum: f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb
+
+description: "DINOv2 is a self-supervised vision transformer model trained with a combination of discriminative and generative pretraining objectives. It produces robust, general-purpose visual features that transfer well to classification tasks. Fine-tuning uses DoRA (Weight-Decomposed Low-Rank Adaptation) for parameter-efficient training, making it especially effective for small-dataset regimes."
+stats:
+  gigaflops: 4.7
+  trainable_parameters: 22
+  benchmark_metrics:
+    imagenet_top1_accuracy: 80.9
+
+hyperparameters:
+  training:
+    learning_rate: 0.0001
+    weight_decay: 0.05
+    early_stopping:
+      patience: 5
+    scheduler:
+      factor: 0.5
+      patience: 3

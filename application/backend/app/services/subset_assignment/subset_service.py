@@ -23,6 +23,11 @@ class SubsetService(BaseSessionManagedService):
 
         return [DatasetItemWithLabels(item_id=UUID(item_id), labels=labels) for item_id, labels in items_dict.items()]
 
+    def has_all_subsets_assigned(self, project_id: UUID) -> bool:
+        """Return True if there is at least one dataset item for each of TRAINING, VALIDATION, and TESTING subsets."""
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
+        return repo.has_all_subsets_assigned()
+
     def update_subset_assignments(self, project_id: UUID, assignments: list[SubsetAssignment]) -> None:
         """Update subset assignments for dataset items."""
         repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)

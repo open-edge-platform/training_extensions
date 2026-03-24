@@ -51,7 +51,6 @@ const useSynchronizeVideoTimeWithVideoFrame = ({
     onUpdateCurrentFrameIndex: (index: number) => void;
 }) => {
     const previousVideoFrame = usePreviousVideoFrame(videoFrame);
-
     /*
      * This part is responsible for updating video time on the initial load when the frame number is not 0.
      * In that case we need to move the video to the correct frame number.
@@ -95,7 +94,7 @@ const useSynchronizeVideoTimeWithVideoFrame = ({
             return;
         }
 
-        if (previousVideoFrame?.id === videoFrame.id && previousVideoFrame?.frame_number !== videoFrame.frame_number) {
+        if (previousVideoFrame?.frame_number !== videoFrame.frame_number) {
             onUpdateCurrentFrameIndex(videoFrame.frame_number);
 
             videoRef.current.currentTime = (videoFrame.frame_number + 1) / videoFrame.fps;

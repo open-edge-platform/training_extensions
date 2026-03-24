@@ -44,7 +44,7 @@ describe('ExportDatasetConfig', () => {
         );
 
         expect(await screen.findByText('Export dataset')).toBeVisible();
-        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'Geti' })).toBeVisible();
         expect(screen.queryByRole('radio', { name: 'YOLO' })).not.toBeInTheDocument();
         expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
     });
@@ -57,7 +57,7 @@ describe('ExportDatasetConfig', () => {
         );
 
         expect(await screen.findByText('Export dataset')).toBeVisible();
-        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'Geti' })).toBeVisible();
         expect(screen.queryByRole('radio', { name: 'COCO' })).toBeVisible();
     });
 });

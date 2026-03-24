@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Divider, Heading } from '@geti/ui';
 import { useProject } from 'hooks/api/project.hook';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
 
@@ -36,23 +36,24 @@ export const ImportDatasetToProject = () => {
     return (
         <DialogContainer onDismiss={datasetImportDialogState.close}>
             {datasetImportDialogState.isOpen && (
-                <Dialog aria-label={'Create project from dataset'} width={800}>
+                <Dialog aria-label={'Import dataset to project'} width={800}>
                     <Heading>Import dataset</Heading>
                     <Divider />
-                    <Content minHeight={'size-5000'}>
-                        <View height={'100%'} backgroundColor={'gray-50'}>
-                            {currentStep === 'uploading' && (
-                                <ImportUploadFile formatOptions={formatOptions} onFileUploaded={handleFileUploaded} />
-                            )}
+                    <Content
+                        minHeight={'size-5000'}
+                        UNSAFE_style={{ background: 'var(--spectrum-global-color-gray-50)' }}
+                    >
+                        {currentStep === 'uploading' && (
+                            <ImportUploadFile formatOptions={formatOptions} onFileUploaded={handleFileUploaded} />
+                        )}
 
-                            {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
-                                <ImportProcess currentStagedId={currentStagedId} />
-                            )}
+                        {currentStep === 'preparing' && isNonEmptyString(currentStagedId) && (
+                            <ImportProcess currentStagedId={currentStagedId} />
+                        )}
 
-                            {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
-                                <LabelMapping stagedDatasetId={currentStagedId} />
-                            )}
-                        </View>
+                        {currentStep === 'labelMapping' && isNonEmptyString(currentStagedId) && (
+                            <LabelMapping stagedDatasetId={currentStagedId} />
+                        )}
                     </Content>
 
                     <ImportDatasetButtons
