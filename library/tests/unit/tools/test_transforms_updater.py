@@ -493,8 +493,7 @@ class TestTransformsUpdater:
         assert sharp_aug["init_args"]["p"] == 0.5  # probability renamed to p
 
     def test_gaussian_blur(self, base_config):
-        """Test that gaussian_blur keeps 'sigma'.
-        """
+        """Test that gaussian_blur keeps 'sigma'."""
         aug_params = {
             "gaussian_blur": {
                 "enable": True,
@@ -517,8 +516,7 @@ class TestTransformsUpdater:
         assert blur_aug["init_args"]["p"] == 0.5
 
     def test_gaussian_noise_sigma(self, base_config):
-        """Test that gaussian_noise renames 'sigma' -> 'std' via per-aug param_rename.
-        """
+        """Test that gaussian_noise renames 'sigma' -> 'std' via per-aug param_rename."""
         aug_params = {
             "gaussian_noise": {
                 "enable": True,
