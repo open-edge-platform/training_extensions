@@ -58,7 +58,7 @@ const HistoricalModelLogs = ({ modelId }: { modelId: string }) => {
 
 export const TrainingLogsDialog = ({ jobId, modelId }: TrainingLogsDialogProps) => {
     const dialogContainer = useDialogContainer();
-    const { downloadModelLogs, isDownloading } = useDownloadModelLogs(modelId);
+    const { downloadModelLogs, isDownloading } = useDownloadModelLogs(String(modelId));
 
     return (
         <Dialog aria-label={'Training logs'} UNSAFE_className={classes.dialog}>
