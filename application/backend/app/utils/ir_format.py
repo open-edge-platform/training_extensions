@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import defusedxml.ElementTree as ET
+import defusedxml.ElementTree as ET  # noqa: N817
 
 # Values above this threshold mean the IR stores mean/std in uint8 (0-255) scale.
 _UINT8_SCALE_THRESHOLD = 1.0
@@ -39,12 +39,15 @@ def needs_float32_input(model_xml_path: str | Path) -> bool:
         ``False`` → old uint8 scale (or no normalisation) → use default adapter + uint8 input.
     """
     tree = ET.parse(str(model_xml_path))
-    rt_info = tree.getroot().find("rt_info")
+    root = tree.getroot()
+    if root is None:
+        return False
+    rt_info = root.find("rt_info")
     if rt_info is None:
         return False
 
-    def _parse_values(tag: str) -> list[float]:
-        el = rt_info.find(f".//{tag}")
+    def _parse_values(node: ET.Element, tag: str) -> list[float]:
+        el = node.find(f".//{tag}")
         if el is None:
             return []
         raw = el.attrib.get("value", "").strip()
@@ -55,8 +58,8 @@ def needs_float32_input(model_xml_path: str | Path) -> bool:
         except ValueError:
             return []
 
-    mean_values  = _parse_values("mean_values")
-    scale_values = _parse_values("scale_values")
+    mean_values = _parse_values(rt_info, "mean_values")
+    scale_values = _parse_values(rt_info, "scale_values")
 
     all_values = mean_values + scale_values
     if not all_values:

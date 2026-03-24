@@ -66,7 +66,7 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
     def embed_preprocessing(self, *args, **kwargs) -> None:
         mean = kwargs.get("mean") or (args[5] if len(args) > 5 else None)
         scale = kwargs.get("scale") or (args[6] if len(args) > 6 else None)
-        bad_mean  = mean  and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
+        bad_mean = mean and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
         bad_scale = scale and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
         if bad_mean or bad_scale:
             msg = (
@@ -79,6 +79,7 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
             raise ValueError(msg)
         kwargs["dtype"] = float
         super().embed_preprocessing(*args, **kwargs)
+
 
 class OVModel:
     """Base class for the OpenVINO model.

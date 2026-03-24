@@ -178,7 +178,8 @@ class ActiveModelService:
                 adapter_cls = _FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
                 logger.info(
                     "IR format detected: {} (float32_input={})",
-                    model_xml_path.name, use_float32,
+                    model_xml_path.name,
+                    use_float32,
                 )
                 adapter = adapter_cls(
                     ie,

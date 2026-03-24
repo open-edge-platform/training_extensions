@@ -117,7 +117,8 @@ class InferenceServer:
                 adapter_cls = _FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
                 logger.info(
                     "IR format detected: {} (float32_input={})",
-                    model_xml_path.name, use_float32,
+                    model_xml_path.name,
+                    use_float32,
                 )
                 adapter = adapter_cls(
                     ie,
@@ -127,8 +128,11 @@ class InferenceServer:
                 )
                 model = Model.create_model(adapter)
                 self._loaded_model = _LoadedModel(
-                    id=model_id, model=model, device=device,
-                    load_timestamp=datetime.now(), float32_input=use_float32,
+                    id=model_id,
+                    model=model,
+                    device=device,
+                    load_timestamp=datetime.now(),
+                    float32_input=use_float32,
                 )
                 return True
         finally:
