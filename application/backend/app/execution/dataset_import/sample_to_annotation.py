@@ -126,7 +126,7 @@ class DatumaroSampleToGetiAnnotationConverter:
         return []
 
     def __convert_multilabel_sample(
-        self, labels: NDArrayInt, confidences: NDArrayFloat32 | None
+        self, labels: NDArrayInt | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         if label_refs := self.__convert_labels_to_refs(labels):
             return [
@@ -139,10 +139,10 @@ class DatumaroSampleToGetiAnnotationConverter:
         return []
 
     def __convert_detection_sample(
-        self, labels: NDArrayInt, bboxes: NDArrayInt, confidences: NDArrayFloat32 | None
+        self, labels: NDArrayInt | None, bboxes: NDArrayInt | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         annotations = []
-        if label_refs := self.__convert_labels_to_refs(labels):
+        if (label_refs := self.__convert_labels_to_refs(labels)) and bboxes is not None:
             for idx, (x1, y1, x2, y2) in enumerate(bboxes):
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(
@@ -155,10 +155,10 @@ class DatumaroSampleToGetiAnnotationConverter:
         return annotations
 
     def __convert_segmentation_sample(
-        self, labels: NDArrayInt, polygons: NDArrayFloat32, confidences: NDArrayFloat32 | None
+        self, labels: NDArrayInt | None, polygons: NDArrayFloat32 | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         annotations = []
-        if label_refs := self.__convert_labels_to_refs(labels):
+        if (label_refs := self.__convert_labels_to_refs(labels)) and polygons is not None:
             for idx, polygon in enumerate(polygons):
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(

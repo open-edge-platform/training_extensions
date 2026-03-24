@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
+import numpy as np
 from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, Sample
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.export_import import import_dataset
@@ -105,7 +106,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             dataset = dataset.convert_to_schema(target_type)
         return dataset
 
-    def _create_items(
+    def _create_items(  # noqa: C901
         self,
         dataset: Dataset,
         project_id: UUID,
@@ -132,13 +133,18 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             # Cache to track created videos and their IDs to avoid duplicates when importing video frames
             created_videos: dict[str, UUID] = {}
             for idx, item in enumerate(dataset):
-                annotations = converter.convert_sample(item) or None
-                user_reviewed = item.user_reviewed if item.user_reviewed is not None else True
-                # If there are no annotations (due to filtering), we can consider the item as not reviewed by the user.
-                if not annotations:
-                    user_reviewed = False
-                if not user_reviewed and not include_unannotated:
-                    continue
+                annotations, user_reviewed = [], item.user_reviewed
+                # apply conversion only if it's not an Empty label case
+                empty_label = user_reviewed is True and isinstance(item.label, np.ndarray) and len(item.label) == 0
+                if not empty_label:
+                    annotations = converter.convert_sample(item)
+                    # non-native *ImportExportSample types are always treated as reviewed
+                    user_reviewed = user_reviewed if user_reviewed is not None else True
+                    # If there are no annotations (due to filtering), we consider the item as not reviewed.
+                    if not annotations:
+                        user_reviewed = False
+                    if not user_reviewed and not include_unannotated:
+                        continue
 
                 name_suffix = str(idx).zfill(len(str(unfiltered_dataset_size)))
                 media: Media | None = None

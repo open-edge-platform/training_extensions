@@ -5,13 +5,14 @@ import asyncio
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import numpy as np
 import pytest
 from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, MediaInfo, export_dataset
 from datumaro.experimental.categories import Categories, LabelCategories
 from datumaro.experimental.export_import import ExportMode
 from datumaro.experimental.fields import Subset
 
-from app.datumaro_converter import MulticlassClassificationImportExportSample
+from app.datumaro_converter import MultilabelClassificationImportExportSample
 from app.models import AnnotationType, DatasetFormat
 from app.models.dataset import DatasetMetadata
 from app.services import StagedDatasetService
@@ -32,37 +33,48 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
     parent_dir.mkdir(parents=True)
     ds_dir = parent_dir / "dataset"
     categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-    dataset = Dataset(MulticlassClassificationImportExportSample, categories=categories)
+    dataset = Dataset(MultilabelClassificationImportExportSample, categories=categories)
     dataset.append(
-        MulticlassClassificationImportExportSample(
+        MultilabelClassificationImportExportSample(
             id=str(uuid4()),
             media=LazyImage(ds_dir / "images/image1.jpg"),
             media_info=MediaInfo(width=200, height=200),
-            label=0,
+            label=np.array([0]),
             subset=Subset.TRAINING,
-            confidence=0.9,
+            confidence=np.array([0.9]),
             user_reviewed=True,
         )
     )
     dataset.append(
-        MulticlassClassificationImportExportSample(
+        MultilabelClassificationImportExportSample(
             id=str(uuid4()),
             media=LazyImage(ds_dir / "images/image2.jpg"),
             media_info=MediaInfo(width=200, height=200),
-            label=1,
+            label=np.array([1]),
             subset=Subset.TRAINING,
-            confidence=0.8,
+            confidence=np.array([0.8]),
             user_reviewed=True,
         )
     )
     dataset.append(
-        MulticlassClassificationImportExportSample(
+        MultilabelClassificationImportExportSample(
+            id=str(uuid4()),
+            media=LazyImage(ds_dir / "images/image2.jpg"),
+            media_info=MediaInfo(width=200, height=200),
+            label=np.array([]),
+            subset=Subset.TRAINING,
+            confidence=None,
+            user_reviewed=False,
+        )
+    )
+    dataset.append(
+        MultilabelClassificationImportExportSample(
             id=str(uuid4()),
             media=LazyVideoFrame(video_path=ds_dir / "videos/video1.mp4", frame_index=10),
             media_info=MediaInfo(width=200, height=200),
-            label=0,
+            label=np.array([]),
             subset=Subset.TRAINING,
-            confidence=0.9,
+            confidence=np.array([0.9]),
             user_reviewed=True,
         )
     )
@@ -149,7 +161,7 @@ class TestStagedDatasetServiceIntegration:
         assert geti_ds.format == DatasetFormat.GETI
         assert geti_ds.filename == str(geti_path)
         assert geti_ds.metadata == DatasetMetadata(
-            num_images=2,
+            num_images=3,
             num_frames=1,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,
@@ -210,7 +222,7 @@ class TestStagedDatasetServiceIntegration:
         assert result.compressed is False
         assert result.format == DatasetFormat.GETI
         assert result.metadata == DatasetMetadata(
-            num_images=2,
+            num_images=3,
             num_frames=1,
             num_videos=1,
             annotation_type=AnnotationType.LABEL,

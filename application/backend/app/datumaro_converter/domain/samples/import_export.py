@@ -71,7 +71,7 @@ class MultilabelClassificationImportExportSample(BaseImportExportSample):
         confidence: Array of confidence scores for each label. Only for model predictions.
     """
 
-    label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
+    label: NDArrayInt | None = label_field(dtype=pl.UInt8(), multi_label=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
     @staticmethod
@@ -80,7 +80,10 @@ class MultilabelClassificationImportExportSample(BaseImportExportSample):
 
     @property
     def annotations(self) -> int:
-        return self.label.size if self.user_reviewed else 0
+        is_empty_label = self.user_reviewed and self.label is not None and len(self.label) == 0
+        if is_empty_label:
+            return 1
+        return len(self.label) if self.label is not None and self.user_reviewed else 0
 
 
 @register_sample
@@ -94,8 +97,8 @@ class DetectionImportExportSample(BaseImportExportSample):
         confidence: Array of confidence scores for each bounding box. Only for model predictions.
     """
 
-    bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
-    label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
+    bboxes: NDArrayInt | None = bbox_field(dtype=pl.Int32())
+    label: NDArrayInt | None = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
     @staticmethod
@@ -104,7 +107,10 @@ class DetectionImportExportSample(BaseImportExportSample):
 
     @property
     def annotations(self) -> int:
-        return self.bboxes.size if self.user_reviewed else 0
+        is_empty_label = self.user_reviewed and self.label is not None and len(self.label) == 0
+        if is_empty_label:
+            return 1
+        return len(self.bboxes) if self.bboxes is not None and self.user_reviewed else 0
 
 
 @register_sample
@@ -118,8 +124,8 @@ class InstanceSegmentationImportExportSample(BaseImportExportSample):
         confidence: Array of confidence scores for each polygon. Only for model predictions.
     """
 
-    polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
-    label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
+    polygons: NDArrayFloat32 | None = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
+    label: NDArrayInt | None = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True, semantic="confidence")
 
     @staticmethod
@@ -128,4 +134,7 @@ class InstanceSegmentationImportExportSample(BaseImportExportSample):
 
     @property
     def annotations(self) -> int:
-        return self.polygons.size if self.user_reviewed else 0
+        is_empty_label = self.user_reviewed and self.label is not None and len(self.label) == 0
+        if is_empty_label:
+            return 1
+        return len(self.polygons) if self.polygons is not None and self.user_reviewed else 0
