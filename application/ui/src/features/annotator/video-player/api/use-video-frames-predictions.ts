@@ -39,5 +39,7 @@ export const useVideoFramesPredictions = <T>({
             range: { stride: rangeStride ?? frameSkip, start_frame: startFrameIndex, end_frame: endFrameIndex },
         }),
         select: selector,
+        refetchOnMount: false,
+        staleTime: Infinity,
     });
 };
