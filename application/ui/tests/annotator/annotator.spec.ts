@@ -8,10 +8,11 @@ import { fileURLToPath } from 'url';
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedMediaImage } from 'mocks/mock-media';
+import { getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { AnnotationDTO } from '../../src/constants/shared-types';
+import { AnnotationDTO, PredictionDTO } from '../../src/constants/shared-types';
 import { Polygon } from '../../src/shared/types';
 import { http, test } from '../fixtures';
 
@@ -224,14 +225,28 @@ test.describe('Annotator', () => {
                 labels: [{ id: blueLabel.id }],
                 confidences: [0.904296875],
             },
-        ] satisfies AnnotationDTO[];
+        ] satisfies PredictionDTO[];
 
         network.use(
+            http.get('/api/projects/{project_id}/models', async () => {
+                return HttpResponse.json([getMockedModel()]);
+            }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                 return HttpResponse.json({
-                    annotations: predictions,
-                    user_reviewed: false,
-                    prediction_model_id: '123',
+                    annotations: [],
+                    user_reviewed: true,
+                });
+            }),
+            http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                return HttpResponse.json({
+                    predictions: [
+                        {
+                            media: {
+                                id: '123',
+                            },
+                            prediction: predictions,
+                        },
+                    ],
                 });
             })
         );
