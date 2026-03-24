@@ -11,7 +11,7 @@ import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { Annotations } from '../annotations/annotations.component';
-import { VideoAnnotations } from '../annotations/video-annotations.component';
+import { VideoAnnotations, VideoPredictions } from '../annotations/video-annotations.component';
 import { useIsAnnotatorSceneBusy } from '../hooks/use-is-annotator-scene-busy';
 import { ToolManager } from '../tools/tool-manager.component';
 import { VideoFrame } from '../video-player/video-frame.component';
@@ -84,8 +84,9 @@ const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
     if (isVideoFrame(mediaItem) && videoPlayerContext?.videoControls?.isPlaying) {
         if (mode === 'annotation') {
             return <VideoAnnotations />;
+        } else if (mode === 'prediction') {
+            return <VideoPredictions />;
         }
-        // TODO: Render VideoPredictions
     }
 
     return <ImageAnnotations mediaItem={mediaItem} />;
