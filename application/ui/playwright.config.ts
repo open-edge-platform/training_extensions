@@ -67,7 +67,7 @@ export default defineConfig({
     /* Run your local dev server before starting the tests */
     webServer: !process.env.ENABLE_BACKEND
         ? {
-              command: CI ? 'npx rsbuild preview --port 3000' : 'npm run start',
+              command: CI ? 'npm run preview -- --port 3000' : 'npm run start',
               url: 'http://localhost:3000',
               reuseExistingServer: true,
               timeout: ACTION_TIMEOUT,
