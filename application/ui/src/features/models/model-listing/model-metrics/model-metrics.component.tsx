@@ -11,10 +11,19 @@ import { ModelMetricsGraphs } from './model-metrics-graphs.component';
 type ModelMetricsProps = {
     modelId: string;
     evaluations: Evaluation[];
+    filesDeleted?: boolean;
 };
 
-export const ModelMetrics = ({ modelId, evaluations }: ModelMetricsProps) => {
-    const { data: trainingMetrics, isPending, isError } = useGetModelTrainingMetrics(modelId);
+export const ModelMetrics = ({ modelId, evaluations, filesDeleted = false }: ModelMetricsProps) => {
+    const { data: trainingMetrics, isPending, isError } = useGetModelTrainingMetrics(filesDeleted ? null : modelId);
+
+    if (filesDeleted) {
+        return (
+            <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
+                <Text>No available metrics</Text>
+            </Flex>
+        );
+    }
 
     return (
         <Flex direction='column' gap={'size-300'}>
