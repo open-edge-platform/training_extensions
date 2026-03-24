@@ -82,7 +82,7 @@ class TestSubsetAssigner:
     def test_assign_allows_fewer_than_three_items_when_all_subsets_already_assigned(
         self, fxt_assigner, fxt_default_ratios
     ):
-        """Test that the 3-item minimum guard is skipped when all subsets already have at least one item assigned.
+        """When has_all_subsets_assigned=True, the minimum-unassigned-items guard is bypassed.
 
         When has_all_subsets_assigned=True, the guard is bypassed and the call succeeds even with
         fewer items than subsets.
@@ -127,6 +127,11 @@ class TestSubsetAssigner:
 
         # All items are assigned (no items lost)
         assert len(result) == len(items)
+        # With no redistribution, all items stay in TRAINING; val and test remain empty
+        assigned_subsets = {assignment.subset for assignment in result}
+        assert DatasetItemSubset.TRAINING in assigned_subsets
+        assert DatasetItemSubset.VALIDATION not in assigned_subsets
+        assert DatasetItemSubset.TESTING not in assigned_subsets
 
     @pytest.mark.parametrize(
         "num_items, expected_subsets",
