@@ -88,16 +88,9 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
-        cancellableThrottledDecodingQueryFn
-            .call([{ ...point, positive: true }])
-            .then((shapes) => {
-                setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
-            })
-            .catch(() => {
-                // If getting decoding went wrong we set an empty preview and
-                // start to compute the next decoding
-                setPreviewShapes([]);
-            });
+        cancellableThrottledDecodingQueryFn.call([{ ...point, positive: true }]).then((shapes) => {
+            setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
+        });
     };
 
     const handleAddAnnotations = (shapes: Shape[], label: Label) => {
