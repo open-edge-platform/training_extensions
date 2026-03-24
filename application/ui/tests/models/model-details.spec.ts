@@ -178,7 +178,7 @@ test.describe('Model Details', () => {
             await modelsPage.expandModel('YOLOX Model v1');
             await page.getByRole('tab', { name: 'Model variants' }).click();
 
-            await expect(page.getByText('There are no model variants available.')).toBeVisible();
+            await expect(page.getByText('No available model variants.')).toBeVisible();
         });
 
         test('displays model variants in separate tabs for each format', async ({ page, modelsPage }) => {

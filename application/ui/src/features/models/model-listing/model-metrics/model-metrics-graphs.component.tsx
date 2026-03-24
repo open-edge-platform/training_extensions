@@ -22,23 +22,37 @@ type GraphData = {
 
 const useProgressiveList = <T,>(items: T[]): T[] => {
     const [visible, setVisible] = useState<T[]>([]);
-    const frameRef = useRef<number>(undefined);
+    const frameRef = useRef<number | null>(null);
 
     useEffect(() => {
         setVisible([]);
-        let index = 0;
+        if (items.length === 0) {
+            return;
+        }
+
+        let index = 1;
 
         const renderNext = () => {
-            if (index >= items.length) return;
+            setVisible(items.slice(0, index));
 
-            setVisible((prev) => [...prev, items[index++]]);
+            if (index >= items.length) {
+                frameRef.current = null;
 
+                return;
+            }
+
+            index += 1;
             frameRef.current = requestAnimationFrame(renderNext);
         };
 
         frameRef.current = requestAnimationFrame(renderNext);
 
-        return () => cancelAnimationFrame(frameRef.current!);
+        return () => {
+            if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+                frameRef.current = null;
+            }
+        };
     }, [items]);
 
     return visible;
