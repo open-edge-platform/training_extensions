@@ -11,15 +11,14 @@ import classes from './box.module.scss';
 type BoxProps = {
     title: ReactNode;
     content: ReactNode;
-    customClasses?: string;
     headingClassName?: string;
     contentClassName?: string;
     testId?: string;
 };
 
-export const Box = ({ title, content, customClasses, headingClassName, contentClassName, testId }: BoxProps) => {
+export const Box = ({ title, content, headingClassName, contentClassName, testId }: BoxProps) => {
     return (
-        <Flex direction={'column'} height={'100%'} UNSAFE_className={customClasses} data-testid={testId}>
+        <Flex direction={'column'} height={'100%'} UNSAFE_className={classes.boxWrapper} data-testid={testId}>
             <Heading UNSAFE_className={clsx(classes.boxHeading, headingClassName)} level={5}>
                 {title}
             </Heading>
