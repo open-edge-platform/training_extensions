@@ -17,10 +17,10 @@ type ModelVariantsTabsProps = {
 };
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
-    if (isEmpty(model.variants)) {
+    if (isEmpty(model.variants) || model.files_deleted) {
         return (
             <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
-                <Text>There are no model variants available.</Text>
+                <Text>No available model variants.</Text>
             </Flex>
         );
     }
