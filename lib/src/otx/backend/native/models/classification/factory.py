@@ -22,6 +22,7 @@ from .hlabel_models import (
 from .multiclass_models import (
     EfficientNetMulticlassCls,
     MobileNetV3MulticlassCls,
+    ShuffleNetV2MulticlassCls,
     TimmModelMulticlassCls,
     TVModelMulticlassCls,
     VisionTransformerMulticlassCls,
@@ -109,6 +110,59 @@ class MobileNetV3:
             return MobileNetV3MultilabelCls(**kwargs)
         if task == "h_label":
             return MobileNetV3HLabelCls(**kwargs)
+        msg = f"Unsupported task type: {task}"
+        raise ValueError(msg)
+
+
+class ShuffleNetV2:
+    """Factory class for ShuffleNetV2 models."""
+
+    @overload
+    def __new__(
+        cls,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams | dict,
+        task: Literal["multi_class"] = "multi_class",
+        freeze_backbone: bool = False,
+        model_name: Literal["shufflenetv2_large", "shufflenetv2_small"] = "shufflenetv2_large",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MultiClassClsMetricCallable,
+        torch_compile: bool = False,
+    ) -> ShuffleNetV2MulticlassCls: ...
+
+    def __new__(
+        cls,
+        task: Literal["multi_class"] = "multi_class",
+        **kwargs,
+    ) -> ShuffleNetV2MulticlassCls:
+        """Factory method to create ShuffleNetV2 models based on the task type.
+
+        Args:
+            label_info (LabelInfoTypes): The label information.
+            data_input_params (DataInputParams | dict): The data input parameters that consists
+                of input size, mean and std.
+            freeze_backbone (bool, optional): Whether to freeze the backbone during training. Defaults to False.
+            model_name (str, optional): The model name. Defaults to "shufflenetv2_large".
+            task (Literal["multi_class"], optional): The task type. Defaults to "multi_class".
+            optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
+            scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): The learning rate scheduler callable.
+                Defaults to DefaultSchedulerCallable.
+            metric (MetricCallable, optional): The metric callable. Defaults to MultiClassClsMetricCallable.
+            torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
+
+        Examples:
+            >>> model = ShuffleNetV2(
+            ...     task="multi_class",
+            ...     label_info=10,
+            ...     data_input_params={"input_size": (224, 224),
+            ...                        "mean": [123.675, 116.28, 103.53],
+            ...                        "std": [58.395, 57.12, 57.375]},
+            ...     model_name="shufflenetv2_large",
+            ... )
+        """
+        if task == "multi_class":
+            return ShuffleNetV2MulticlassCls(**kwargs)
         msg = f"Unsupported task type: {task}"
         raise ValueError(msg)
 

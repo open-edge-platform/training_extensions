@@ -5,6 +5,7 @@
 
 from .efficientnet import EfficientNetMulticlassCls
 from .mobilenet_v3 import MobileNetV3MulticlassCls
+from .shufflenet_v2 import ShuffleNetV2MulticlassCls
 from .timm_model import TimmModelMulticlassCls
 from .torchvision_model import TVModelMulticlassCls
 from .vit import VisionTransformerMulticlassCls
@@ -12,6 +13,7 @@ from .vit import VisionTransformerMulticlassCls
 __all__ = [
     "EfficientNetMulticlassCls",
     "MobileNetV3MulticlassCls",
+    "ShuffleNetV2MulticlassCls",
     "TimmModelMulticlassCls",
     "TVModelMulticlassCls",
     "VisionTransformerMulticlassCls",

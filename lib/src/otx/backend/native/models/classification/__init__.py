@@ -6,6 +6,7 @@
 from .factory import (
     EfficientNet,
     MobileNetV3,
+    ShuffleNetV2,
     TimmModel,
     TVModel,
     VisionTransformer,
@@ -15,6 +16,7 @@ __all__ = [
     "EfficientNet",
     "TimmModel",
     "MobileNetV3",
+    "ShuffleNetV2",
     "TVModel",
     "VisionTransformer",
 ]

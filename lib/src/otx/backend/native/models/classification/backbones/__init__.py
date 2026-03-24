@@ -5,6 +5,7 @@
 
 from .efficientnet import EfficientNetBackbone
 from .mobilenet_v3 import MobileNetV3Backbone
+from .shufflenet_v2 import ShuffleNetV2Backbone
 from .timm import TimmBackbone
 from .torchvision import TorchvisionBackbone
 from .vision_transformer import VisionTransformerBackbone
@@ -13,6 +14,7 @@ __all__ = [
     "EfficientNetBackbone",
     "TimmBackbone",
     "MobileNetV3Backbone",
+    "ShuffleNetV2Backbone",
     "VisionTransformerBackbone",
     "TorchvisionBackbone",
 ]
