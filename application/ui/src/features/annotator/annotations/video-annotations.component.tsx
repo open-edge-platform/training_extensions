@@ -73,14 +73,17 @@ export const VideoPredictions = () => {
     const { data: predictions = [] } = useVideoFramesPredictions({
         frameNumber: videoFrame.frame_number,
         frameSkip: step,
+        // To provide the best user experience, we should get predictions for each single frame
+        rangeStride: 1,
         selector: (data) => {
-            const framePredictions = data
-                .find((prediction) => {
-                    return prediction.media.frame_index === videoFrame.frame_number;
-                })
-                ?.prediction?.map((prediction) => prediction);
+            const framePredictions =
+                data
+                    .find((prediction) => {
+                        return prediction.media.frame_index === videoFrame.frame_number;
+                    })
+                    ?.prediction?.map((prediction) => prediction) ?? [];
 
-            return mapServerAnnotationsToLocal(framePredictions ?? [], labels);
+            return mapServerAnnotationsToLocal(framePredictions, labels);
         },
     });
 

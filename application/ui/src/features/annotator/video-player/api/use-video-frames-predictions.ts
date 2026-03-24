@@ -14,9 +14,11 @@ export const useVideoFramesPredictions = <T>({
     frameNumber,
     frameSkip,
     selector,
+    rangeStride,
 }: {
     frameNumber: number;
     frameSkip: number;
+    rangeStride?: number;
     selector: (data: VideoFramePrediction[]) => T;
 }) => {
     const projectId = useProjectIdentifier();
@@ -34,7 +36,7 @@ export const useVideoFramesPredictions = <T>({
             projectId,
             modelId: selectedModelId,
             mediaId: videoFrame.id,
-            range: { stride: frameSkip, start_frame: startFrameIndex, end_frame: endFrameIndex },
+            range: { stride: rangeStride ?? frameSkip, start_frame: startFrameIndex, end_frame: endFrameIndex },
         }),
         select: selector,
     });
