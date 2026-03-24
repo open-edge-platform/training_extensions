@@ -75,11 +75,9 @@ export const VideoPredictions = () => {
         frameSkip: step,
         selector: (data) => {
             const framePredictions =
-                data
-                    .find((prediction) => {
-                        return prediction.media.frame_index === videoFrame.frame_number;
-                    })
-                    ?.prediction?.map((prediction) => prediction) ?? [];
+                data.find((prediction) => {
+                    return prediction.media.frame_index === videoFrame.frame_number;
+                })?.prediction ?? [];
 
             return mapServerAnnotationsToLocal(framePredictions, labels);
         },
