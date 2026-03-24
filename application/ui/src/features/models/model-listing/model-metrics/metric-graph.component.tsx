@@ -27,10 +27,7 @@ export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraph
             <Box
                 title={title}
                 content={
-                    <View
-                        backgroundColor={'gray-50'}
-                        minHeight={'size-3800'}
-                    >
+                    <View backgroundColor={'gray-50'} minHeight={'size-3800'}>
                         <LineChart
                             responsive
                             width={'100%'}
