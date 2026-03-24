@@ -7,7 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
+import numpy as np
 from loguru import logger
+from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 
 from app.db import get_db_session
@@ -16,8 +18,21 @@ from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.services import ResourceNotFoundError, ResourceType
 from app.services.data_collect.prediction_converter import convert_prediction
+from app.utils.ir_format import needs_float32_input
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
+
+
+class _FP32OpenvinoAdapter(OpenvinoAdapter):
+    """OpenvinoAdapter that forces float32 input tensors.
+
+    Used when the IR embeds mean/std in the 0-1 scale (new OTX format).
+    Overrides ``embed_preprocessing`` so ModelAPI sets the input tensor to f32.
+    """
+
+    def embed_preprocessing(self, *args, **kwargs) -> None:
+        kwargs["dtype"] = float
+        super().embed_preprocessing(*args, **kwargs)
 
 
 @dataclass(frozen=True)
@@ -26,6 +41,7 @@ class _LoadedModel:
     model: Model
     device: str
     load_timestamp: datetime
+    float32_input: bool  # True → scale images to [0,1] float32 before inference
 
 
 class InferenceServer:
@@ -96,13 +112,23 @@ class InferenceServer:
                     )
                 model_xml_path, _ = paths
 
-                model = Model.create_model(
-                    model=str(model_xml_path),
-                    device=device,
-                    nstreams=MODELAPI_NSTREAMS,
+                use_float32 = needs_float32_input(model_xml_path)
+                ie = create_core()
+                adapter_cls = _FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
+                logger.info(
+                    "IR format detected: {} (float32_input={})",
+                    model_xml_path.name, use_float32,
                 )
+                adapter = adapter_cls(
+                    ie,
+                    str(model_xml_path),
+                    device=device,
+                    max_num_requests=int(MODELAPI_NSTREAMS),
+                )
+                model = Model.create_model(adapter)
                 self._loaded_model = _LoadedModel(
-                    id=model_id, model=model, device=device, load_timestamp=datetime.now()
+                    id=model_id, model=model, device=device,
+                    load_timestamp=datetime.now(), float32_input=use_float32,
                 )
                 return True
         finally:
@@ -151,7 +177,12 @@ class InferenceServer:
                 raise RuntimeError("No model loaded for inference")
             logger.debug("Running inference on batch of {} inputs", len(inputs))
 
-            input_data = [input.data for input in inputs]
+            if self._loaded_model.float32_input:
+                # New OTX format: IR mean/std in 0-1 scale → pre-scale images to float32 [0, 1].
+                input_data = [inp.data.astype(np.float32) / 255.0 for inp in inputs]
+            else:
+                # Old OTX format: IR mean/std in uint8 (0-255) scale → pass raw uint8 images.
+                input_data = [inp.data for inp in inputs]
             inference_result = self._loaded_model.model.infer_batch(input_data)
         finally:
             self._lock.release()

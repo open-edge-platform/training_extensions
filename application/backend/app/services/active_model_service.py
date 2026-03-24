@@ -7,6 +7,7 @@ from pathlib import Path
 from uuid import UUID
 
 from loguru import logger
+from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 
 from app.db.engine import get_db_session
@@ -14,8 +15,21 @@ from app.models.model_activation import ModelActivationState
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
+from app.utils.ir_format import needs_float32_input
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
+
+
+class _FP32OpenvinoAdapter(OpenvinoAdapter):
+    """OpenvinoAdapter that forces float32 input tensors.
+
+    Used when the IR embeds mean/std in the 0-1 scale (new OTX format).
+    Overrides ``embed_preprocessing`` so ModelAPI sets the input tensor to f32.
+    """
+
+    def embed_preprocessing(self, *args, **kwargs) -> None:
+        kwargs["dtype"] = float
+        super().embed_preprocessing(*args, **kwargs)
 
 
 @dataclass(frozen=True)
@@ -24,6 +38,7 @@ class LoadedModel:
     model_variant_id: UUID
     model: Model
     device: str
+    float32_input: bool  # True → InferenceWorker must scale images to [0,1] float32
 
 
 @dataclass(frozen=True)
@@ -158,11 +173,20 @@ class ActiveModelService:
                     variant_id=active_variant_id,
                     extension="bin",
                 )
-                mapi_model = Model.create_model(
-                    model=str(model_xml_path),
-                    device=device,
-                    nstreams=MODELAPI_NSTREAMS,
+                use_float32 = needs_float32_input(model_xml_path)
+                ie = create_core()
+                adapter_cls = _FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
+                logger.info(
+                    "IR format detected: {} (float32_input={})",
+                    model_xml_path.name, use_float32,
                 )
+                adapter = adapter_cls(
+                    ie,
+                    str(model_xml_path),
+                    device=device,
+                    max_num_requests=int(MODELAPI_NSTREAMS),
+                )
+                mapi_model = Model.create_model(adapter)
             except FileNotFoundError:
                 logger.exception("Failed to load model with ID '{}'", active_model_id)
                 return None
@@ -172,5 +196,6 @@ class ActiveModelService:
                 model=mapi_model,
                 model_variant_id=active_variant_id,
                 device=device,
+                float32_input=use_float32,
             )
         return self._loaded_model
