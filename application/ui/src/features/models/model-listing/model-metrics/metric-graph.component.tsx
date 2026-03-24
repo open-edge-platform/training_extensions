@@ -28,8 +28,6 @@ export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraph
                 title={title}
                 content={
                     <View
-                        paddingY={'size-200'}
-                        paddingX={'size-550'}
                         backgroundColor={'gray-50'}
                         minHeight={'size-3800'}
                     >
