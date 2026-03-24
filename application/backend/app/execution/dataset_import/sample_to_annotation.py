@@ -142,7 +142,7 @@ class DatumaroSampleToGetiAnnotationConverter:
         self, labels: NDArrayInt | None, bboxes: NDArrayInt | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         annotations = []
-        if (label_refs := self.__convert_labels_to_refs(labels)) and bboxes is not None:
+        if bboxes is not None and (label_refs := self.__convert_labels_to_refs(labels)):
             for idx, (x1, y1, x2, y2) in enumerate(bboxes):
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(
@@ -158,7 +158,7 @@ class DatumaroSampleToGetiAnnotationConverter:
         self, labels: NDArrayInt | None, polygons: NDArrayFloat32 | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         annotations = []
-        if (label_refs := self.__convert_labels_to_refs(labels)) and polygons is not None:
+        if polygons is not None and (label_refs := self.__convert_labels_to_refs(labels)):
             for idx, polygon in enumerate(polygons):
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(
