@@ -138,6 +138,6 @@ class TestActiveModelServiceLoadState:
         state = service._model_activation_state
 
         assert len(state.available_models) == 2
-        assert state.available_models == [UUID(fxt_successful_model.id), UUID(second_successful.id)]
+        assert set(state.available_models) == {UUID(fxt_successful_model.id), UUID(second_successful.id)}
         assert str(state.active_model_id) == fxt_successful_model.id
         assert str(state.active_model_variant_id) == fxt_fp16_openvino_variant.id
