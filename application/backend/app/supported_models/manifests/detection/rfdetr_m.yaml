@@ -1,0 +1,46 @@
+id: object-detection-rfdetr-m
+name: RF-DETR-M
+
+pretrained_weights:
+  url: https://storage.googleapis.com/rfdetr/medium_coco/checkpoint_best_regular.pth
+  sha_sum: 749ff6071828aaffac63e204c4f4135ed3d6cdae4d702e086c360edc3b5768c8
+
+description: "RF-DETR is a real-time object detection model that combines a DINOv2 vision transformer backbone with a novel decoder for high-accuracy detection without NMS post-processing."
+stats:
+  gigaflops: 86.7
+  trainable_parameters: 33.7
+  benchmark_metrics:
+    coco_map_50_95: 54.7
+    coco_map_50: 73.6
+
+capabilities:
+  tiling: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.00021
+    weight_decay: 0.0001
+    early_stopping:
+      patience: 15
+    scheduler:
+      factor: 0.1
+      patience: 10
+    gradient_clip:
+      enable: true
+      max_grad_norm: 0.1
+    allowed_values_input_size:
+      - 320
+      - 448
+      - 512
+      - 576
+      - 640
+      - 704
+      - 768
+      - 896
+    input_size_width: 576
+    input_size_height: 576
+  dataset_preparation:
+    augmentation:
+      random_zoom_out:
+        enable: true
+        fill: 0

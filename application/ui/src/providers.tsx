@@ -13,7 +13,12 @@ export const Providers = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider router={router}>
-                <RouterProvider router={router} />
+                <RouterProvider
+                    router={router}
+                    future={{
+                        v7_startTransition: true,
+                    }}
+                />
                 <div data-react-aria-top-layer='true'>
                     <Toast />
                 </div>

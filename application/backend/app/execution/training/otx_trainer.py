@@ -9,11 +9,15 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
+import polars as pl
 import yaml
+from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Callback
 from loguru import logger
+
+from otx import OTXTaskType
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig
@@ -44,6 +48,7 @@ from app.models import (
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
+from app.models.training_configuration.dataset_preparation import Filtering
 from app.services import (
     BaseWeightsService,
     DatasetRevisionService,
@@ -169,7 +174,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
             logger.info("Target subset ratios for unassigned items: {}", target_ratios)
 
             self.update_message("Computing optimal subset assignments")
-            assignments = self._subset_assigner.assign(unassigned_items, target_ratios)
+            has_all_subsets_assigned = self._subset_service.has_all_subsets_assigned(project_id)
+            assignments = self._subset_assigner.assign(unassigned_items, target_ratios, has_all_subsets_assigned)
 
             # Persist assignments
             self.update_message("Persisting subset assignments")
@@ -211,7 +217,12 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
     @step("Prepare Training Dataset", 10)
     def prepare_training_dataset(
-        self, project_id: UUID, task: Task, training_config: dict, dataset_revision_id: UUID | None = None
+        self,
+        project_id: UUID,
+        task: Task,
+        otx_training_config: dict,
+        training_config: TrainingConfiguration,
+        dataset_revision_id: UUID | None = None,
     ) -> DatasetInfo:
         """
         Prepare datasets for training, validation, and testing.
@@ -221,8 +232,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         """
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
-            subset_cfg_data = training_config["data"][f"{subset_name}_subset"]
-            subset_cfg_data["input_size"] = training_config["data"]["input_size"]
+            subset_cfg_data = otx_training_config["data"][f"{subset_name}_subset"]
+            subset_cfg_data["input_size"] = otx_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
             # pyrefly: ignore[missing-attribute,bad-assignment]
@@ -267,6 +278,9 @@ class OTXTrainer(Execution[TrainingJobParams]):
                         project_id=project_id, dataset=dm_dataset
                     )
                     logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
+
+            # Apply filtering based on min/max annotation objects if enabled
+            dm_dataset = self.filter_dataset(dm_dataset=dm_dataset, task=task, training_config=training_config)
 
             # Extract the subsets (training, validation, testing)
             logger.info("Extracting training, validation, and testing subsets from the dataset")
@@ -559,7 +573,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         dataset_info = self.prepare_training_dataset(
             project_id=project_id,
             task=task,
-            training_config=otx_training_config,
+            otx_training_config=otx_training_config,
+            training_config=training_config,
             dataset_revision_id=params.dataset_revision_id,
         )
         self.prepare_model(
@@ -619,6 +634,96 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_finished_at=training_finish_time,
             )
             raise
+
+    def _build_filter_conditions(
+        self,
+        otx_task_type: OTXTaskType,
+        annotation_field: str,
+        filtering_config: Filtering,
+    ) -> list:
+        """Build polars filter conditions for min/max annotation object counts."""
+        filter_conditions = []
+
+        if filtering_config.min_annotation_objects.enable:
+            min_value = filtering_config.min_annotation_objects.value
+            logger.info("Filtering samples with a minimum of {} annotation objects", min_value)
+            if otx_task_type == OTXTaskType.MULTI_CLASS_CLS:
+                # Multiclass label is a scalar - presence means exactly 1 annotation object
+                filter_conditions.append(pl.col(annotation_field).is_not_null())
+            else:
+                filter_conditions.append(pl.col(annotation_field).list.len() >= min_value)
+
+        if filtering_config.max_annotation_objects.enable:
+            max_value = filtering_config.max_annotation_objects.value
+            logger.info("Filtering samples with a maximum of {} annotation objects", max_value)
+            if otx_task_type != OTXTaskType.MULTI_CLASS_CLS:
+                # Max filtering is a no-op for multiclass (always 0 or 1 label)
+                filter_conditions.append(pl.col(annotation_field).list.len() <= max_value)
+
+        return filter_conditions
+
+    def filter_dataset(self, dm_dataset: Dataset, task: Task, training_config: TrainingConfiguration) -> Dataset:
+        """Filter a dataset based on min/max annotation object counts from the training configuration.
+
+        Args:
+            dm_dataset: The dataset to filter.
+            task: The task, used to determine which annotation field to count.
+            training_config: The training configuration containing the filtering parameters.
+
+        Returns:
+            A new Dataset containing only the samples that pass the filter, or the original
+            dataset unchanged if filtering is disabled.
+        """
+        filtering_config = training_config.task_level_parameters.dataset_preparation.filtering
+        min_enabled = filtering_config.min_annotation_objects.enable
+        max_enabled = filtering_config.max_annotation_objects.enable
+
+        if not (min_enabled or max_enabled):
+            return dm_dataset
+
+        logger.info("Applying annotation object filtering to the dataset")
+
+        # Determine the annotation field name based on task type
+        otx_task_type = get_otx_task_type_by_task(task)
+        match otx_task_type:
+            case OTXTaskType.DETECTION:
+                annotation_field = "bboxes"
+            case OTXTaskType.INSTANCE_SEGMENTATION:
+                annotation_field = "polygons"
+            case OTXTaskType.MULTI_CLASS_CLS | OTXTaskType.MULTI_LABEL_CLS:
+                # For classification tasks, count the label field.
+                # For multiclass, label is a single scalar; for multilabel it's a list.
+                annotation_field = "label"
+            case _:
+                logger.warning("Unsupported task type for annotation object filtering: {}", otx_task_type)
+                return dm_dataset
+
+        filter_conditions = self._build_filter_conditions(otx_task_type, annotation_field, filtering_config)
+
+        if not filter_conditions:
+            return dm_dataset
+
+        # Combine all conditions with AND and apply to the dataframe
+        combined_filter = filter_conditions[0]
+        for condition in filter_conditions[1:]:
+            combined_filter = combined_filter & condition
+
+        original_count = len(dm_dataset.df)
+        filtered_df = dm_dataset.df.filter(combined_filter)
+        filtered_count = len(filtered_df)
+
+        logger.info(
+            "Filtered dataset from {} to {} samples ({} samples removed)",
+            original_count,
+            filtered_count,
+            original_count - filtered_count,
+        )
+
+        return Dataset.from_dataframe(
+            df=filtered_df,
+            dtype_or_schema=dm_dataset.dtype,
+            schema=dm_dataset.schema,
+        )
 
     @staticmethod
     def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:

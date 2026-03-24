@@ -1,6 +1,6 @@
 task: INSTANCE_SEGMENTATION
 model:
-  class_path: otx.backend.native.models.instance_segmentation.maskrcnn.MaskRCNN
+  class_path: otx.backend.native.models.instance_segmentation.maskrcnn_tv.MaskRCNNTV
   init_args:
     model_name: maskrcnn_resnet_50
     label_info: 80
@@ -57,8 +57,10 @@ overrides:
   data:
     train_subset:
       batch_size: 4
-      num_workers: 8
+      num_workers: 4
+
     val_subset:
       num_workers: 4
+
     test_subset:
       num_workers: 4

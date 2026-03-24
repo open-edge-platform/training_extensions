@@ -18,7 +18,7 @@ from otx.types.precision import OTXPrecisionType
 def fxt_engine(tmp_path) -> OTXEngine:
     return OTXEngine(
         data="tests/assets/classification_cifar10",
-        model="src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
+        model="src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
         work_dir=tmp_path,
         max_epochs=9,
     )
@@ -236,7 +236,7 @@ class TestEngine:
             )
 
     def test_from_config(self, tmp_path, mocker) -> None:
-        recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
+        recipe_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         data_root = "tests/assets/classification_cifar10"
         mocker.patch("pathlib.Path.symlink_to")
         mocker.patch("otx.backend.native.engine.Trainer.fit")

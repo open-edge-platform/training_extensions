@@ -213,6 +213,15 @@ class DatasetItemRepository:
         )
         return list(self.db.scalars(stmt).all())
 
+    def has_all_subsets_assigned(self) -> bool:
+        """Return True if there is at least one dataset item for each of TRAINING, VALIDATION, and TESTING subsets."""
+        stmt = select(func.distinct(DatasetItemDB.subset)).where(
+            DatasetItemDB.project_id == self.project_id,
+        )
+        present_subsets = set(self.db.scalars(stmt).all())
+        required_subsets = {DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION, DatasetItemSubset.TESTING}
+        return required_subsets.issubset(present_subsets)
+
     def get_subset_distribution(self) -> dict[str, int]:
         stmt = (
             select(DatasetItemDB.subset, func.count(DatasetItemDB.id).label("count"))

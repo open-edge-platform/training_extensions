@@ -115,7 +115,7 @@ class TestModelManifestService:
                 "dataset_preparation": {
                     "augmentation": {
                         "gaussian_blur": {"kernel_size": 5, "sigma": [0.1, 2.0], "probability": 0.8},
-                        "tiling": {"adaptive_tiling": True, "tile_size": 100, "tile_overlap": 0.3},
+                        "tiling": {"enable_adaptive_tiling": True, "tile_size": 100, "tile_overlap": 0.3},
                     }
                 },
                 "training": {

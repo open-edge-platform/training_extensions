@@ -15,7 +15,8 @@ from otx.types.export import TaskLevelExportParameters
 class TestMaskRCNN:
     @pytest.fixture(
         params=[
-            ("MaskRCNN", "maskrcnn_resnet_50"),
+            ("MaskRCNN", "maskrcnn_efficientnet_b2b"),
+            ("MaskRCNN", "maskrcnn_swin_tiny"),
             ("MaskRCNNTV", "maskrcnn_resnet_50"),
         ],
     )
@@ -31,7 +32,7 @@ class TestMaskRCNN:
     def test_load_weights(self, mocker) -> None:
         model = MaskRCNN(
             label_info=2,
-            model_name="maskrcnn_resnet_50",
+            model_name="maskrcnn_efficientnet_b2b",
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 

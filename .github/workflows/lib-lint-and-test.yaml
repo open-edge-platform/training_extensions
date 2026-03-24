@@ -1,4 +1,4 @@
-name: Geti Tune Library checks
+name: Geti Library checks
 
 on:
   merge_group:

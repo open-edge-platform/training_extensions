@@ -7,7 +7,7 @@ Depending on the task definition, labels can be mutually exclusive or not. For e
 photos of landscapes, one image could have the labels "mountain" and "lake" without any contradiction. Conversely,
 when classifying vehicles by type, an object can be a "car" or a "motorcycle", but not both at the same time.
 
-In Geti Tune, every _project_ addresses a specific _task_. The currently supported task types are:
+In Geti, every _project_ addresses a specific _task_. The currently supported task types are:
 
 - **Classification**: Categorize images into one (_multiclass_) or more (_multilabel_) classes.
 - **Detection**: Identify and localize objects in images using bounding boxes.
@@ -89,9 +89,9 @@ This section provides a breakdown of some of the design choices made in the task
 
 ### Supported task types
 
-The first iteration of Geti Tune only support three of the most common task types: classification, detection and
+The first iteration of Geti only support three of the most common task types: classification, detection and
 segmentation. This simplification comes from Geti's experience, where the proliferation of task types, each with its
-own quirks, has led to a complex and hard-to-maintain codebase. Geti Tune is open to extending the supported task types
+own quirks, has led to a complex and hard-to-maintain codebase. Geti is open to extending the supported task types
 in the future, but only after careful estimation of the value in relation to the complexity. Note that other products
 in the Geti ecosystem, such as Geti Inspect, offer additional tasks like anomaly detection.
 

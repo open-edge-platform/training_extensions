@@ -14,6 +14,11 @@ stats:
     coco_map_50: 71.3
 
 hyperparameters:
+  dataset_preparation:
+    augmentation:
+      iou_random_crop:
+        enable: false
+        probability: 1.0
   training:
     learning_rate: 0.0001
     weight_decay: 0.0001

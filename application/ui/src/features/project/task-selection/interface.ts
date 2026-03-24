@@ -8,6 +8,7 @@ export type TaskOption = {
     imageSrc: string;
     title: string;
     description: string;
+    advice: string;
     verb: string;
     value: TaskType;
 };

@@ -17,6 +17,10 @@ export const getMockedJob = (job?: Partial<Job>): Job => {
                 parent_revision_id: null,
                 dataset_revision_id: '6f9f9g61-4fg1-7781-e082-e1113f371e01',
             },
+            device: {
+                type: 'cpu',
+                name: 'CPU',
+            },
         },
         status: 'RUNNING',
         progress: 45,

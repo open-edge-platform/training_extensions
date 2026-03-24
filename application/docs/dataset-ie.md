@@ -1,17 +1,17 @@
 # Dataset import & export
 
-Geti Tune dataset import and export functionality allows users to easily transfer datasets in and out of the platform,
+Geti dataset import and export functionality allows users to easily transfer datasets in and out of the platform,
 enabling several use cases such as:
 
-1. **Migration to Geti Tune**: Users who have existing datasets, prepared manually or with the help of other tools
-   (e.g., Geti, CVAT, Label Studio), can import them into Geti Tune to leverage its training and inference features.
-2. **Integration with other tools**: Users can annotate datasets in Geti Tune using its powerful annotation tools,
+1. **Migration to Geti**: Users who have existing datasets, prepared manually or with the help of other tools
+   (e.g., Geti, CVAT, Label Studio), can import them into Geti to leverage its training and inference features.
+2. **Integration with other tools**: Users can annotate datasets in Geti using its powerful annotation tools,
    export them, and then use them in other machine learning frameworks.
 3. **Backup and sharing**: Users can export their datasets for backup purposes or to share them with other people,
-   who may not have access to the Geti Tune instance where the dataset was created.
+   who may not have access to the Geti instance where the dataset was created.
 4. **Dataset versioning**: Users can export datasets at different stages of annotation or preprocessing,
    allowing them to maintain versions of their datasets for experimentation and comparison.
-5. **Project forking**: Users can export a dataset from one project and import it into another project within Geti Tune,
+5. **Project forking**: Users can export a dataset from one project and import it into another project within Geti,
    potentially with different task type and labels, facilitating the reuse of annotated data across different projects.
 
 ## Design
@@ -38,7 +38,7 @@ benefits in terms of maintainability and reliability.
 ### Overview
 
 The first interesting thing to note is that all use cases involve moving a dataset from a source to a destination.
-The source could be an external zip archive, a project's dataset within Geti Tune, or a dataset revision, while
+The source could be an external zip archive, a project's dataset within Geti, or a dataset revision, while
 the destination could be a zip file or the dataset of a new or existing project.
 Between the source and destination, several intermediate steps may need to take place, depending on the specific use
 case: format conversion, compression / decompression, filtering, label remapping.

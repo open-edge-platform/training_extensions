@@ -36,6 +36,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("container-name", long="name", short="n", help="Custom name for the container (defaults to geti-<accelerator>)")]
 [arg("detach", long="detach", short="d", value="true", help="Run the container in detached mode")]
 [arg("remove", long="remove", value="true", help="Automatically remove the container after it exits")]
+[arg("reload", long="reload", short="r", value="true", help="Automatically reload the container if it is already running")]
 [arg("shm-size", long="shm-size", help="Size of /dev/shm inside the container (e.g. 256m, 4g). Defaults to 8g")]
 [arg("passthrough-devices", long="passthrough-devices", help="Space-separated list of additional device paths to pass through to the container (e.g. '/dev/video0 /dev/video1')")]
 [arg("volumes", long="volumes", help="Space-separated list of host:container path mappings to mount (e.g. '/host/path:/container/path /host/path2:/container/path2')")]
@@ -43,7 +44,7 @@ build-image accelerator="cpu" tag="latest": install-uv
 [arg("coturn_host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
 [arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
 [arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
-run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
+run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -58,6 +59,24 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
         echo "Error: Docker image '${IMAGE_NAME}' not found." >&2
         echo "Build it first with: just build-image --accelerator {{ accelerator }} --tag {{ tag }}" >&2
         exit 1
+    fi
+
+    EXISTING_CONTAINER_ID=$(docker ps -aq -f "name=^/${CONTAINER_NAME}$")
+    if [[ -n "$EXISTING_CONTAINER_ID" ]]; then
+        if [[ "{{ reload }}" == "true" ]]; then
+            # If a container with this name is running, stop it first
+            RUNNING_CONTAINER_ID=$(docker ps -q -f "name=^/${CONTAINER_NAME}$")
+            if [[ -n "$RUNNING_CONTAINER_ID" ]]; then
+                echo "Stopping existing running container: ${CONTAINER_NAME}"
+                docker stop "$RUNNING_CONTAINER_ID"
+            fi
+            echo "Removing existing container: ${CONTAINER_NAME}"
+            docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1 || true
+        else
+            echo "Error: A container named '${CONTAINER_NAME}' is already running." >&2
+            echo "Either pass --reload to stop and replace it, or specify a different --name." >&2
+            exit 1
+        fi
     fi
 
     DETACH_FLAG=""

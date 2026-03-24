@@ -12,10 +12,11 @@ from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, Sample, im
 from app.models import AnnotationType, DatasetFormat, StagedDataset
 from app.models.dataset import DatasetMetadata
 
+# labels should be checked after bboxes and polygons, as they can be present in all samples
 _ANNOTATION_ATTRS: list[tuple[str, AnnotationType]] = [
-    ("labels", AnnotationType.LABEL),
     ("bboxes", AnnotationType.BOUNDING_BOX),
     ("polygons", AnnotationType.POLYGON),
+    ("labels", AnnotationType.LABEL),
 ]
 
 

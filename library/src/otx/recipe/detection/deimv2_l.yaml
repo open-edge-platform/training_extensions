@@ -79,7 +79,7 @@ callbacks:
                   init_args:
                     fill: 0
                     p: 0.5
-                - class_path: torchvision.transforms.v2.RandomIoUCrop
+                - class_path: otx.data.augmentation.transforms.RandomIoUCrop
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1
@@ -145,7 +145,7 @@ callbacks:
                     fill: 0
                     p: 0.5
                     side_range: [1.0, 2.0]
-                - class_path: torchvision.transforms.v2.RandomIoUCrop
+                - class_path: otx.data.augmentation.transforms.RandomIoUCrop
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_size: 1

@@ -1,4 +1,4 @@
-name: Geti Tune UI checks
+name: Geti UI checks
 
 on:
   merge_group:

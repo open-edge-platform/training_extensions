@@ -1,4 +1,4 @@
-# Geti Tune UI
+# Geti UI
 
 Modern React application for AI model training and inference, built with Rsbuild and TypeScript.
 

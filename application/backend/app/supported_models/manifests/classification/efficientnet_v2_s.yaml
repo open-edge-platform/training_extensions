@@ -13,6 +13,10 @@ stats:
     imagenet_top1_accuracy: 83.9
 
 hyperparameters:
+  dataset_preparation:
+    augmentation:
+      color_jitter:
+        enable: false
   training:
     learning_rate: 0.0071
     weight_decay: 0.0001
