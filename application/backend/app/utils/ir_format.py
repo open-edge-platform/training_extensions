@@ -16,43 +16,55 @@ _UINT8_SCALE_THRESHOLD = 1.0
 
 
 class FP32OpenvinoAdapter(OpenvinoAdapter):
-    """OpenvinoAdapter that forces float32 input tensors.
-
-    Used when the IR embeds mean/std in the 0-1 scale (new OTX format).
-    Overrides ``embed_preprocessing`` so ModelAPI sets the input tensor to f32.
-    """
+    """OpenvinoAdapter that forces float32 input tensors (0-1 scale IRs)."""
 
     def embed_preprocessing(self, *args: Any, **kwargs: Any) -> None:
-        """Force dtype to float so ModelAPI creates an f32 input tensor."""
         kwargs["dtype"] = float
-        super().embed_preprocessing(*args, **kwargs)
+        _patch_pad_constant_type(super().embed_preprocessing, *args, **kwargs)
+
+
+def _patch_pad_constant_type(embed_fn: Any, *args: Any, **kwargs: Any) -> None:
+    """Call ``embed_fn`` while monkey-patching ``opset.pad`` to fix pad-value dtype.
+
+    ModelAPI hardcodes pad constants as ``uint8``.  With f32 input this causes
+    a type-mismatch error, so we temporarily wrap ``opset.pad`` to insert a
+    ``Convert`` when the element types differ.
+    """
+    import model_api.adapters.utils as _mapi_utils
+
+    _opset = _mapi_utils.opset
+    _orig_pad = _opset.pad
+
+    def _pad_with_type_cast(
+        arg: Any,
+        pads_begin: Any,
+        pads_end: Any,
+        pad_mode: str,
+        arg_pad_value: Any = None,
+        name: Any = None,
+    ) -> Any:
+        if arg_pad_value is not None:
+            data_et = arg.get_element_type()
+            pad_et = arg_pad_value.get_element_type()
+            if data_et != pad_et:
+                arg_pad_value = _opset.convert(arg_pad_value, data_et)
+        return _orig_pad(arg, pads_begin, pads_end, pad_mode, arg_pad_value, name)
+
+    _opset.pad = _pad_with_type_cast  # pyrefly: ignore[bad-assignment]
+    try:
+        embed_fn(*args, **kwargs)
+    finally:
+        _opset.pad = _orig_pad
 
 
 def needs_float32_input(model_xml_path: str | Path) -> bool:
-    """Return True if the IR expects float32 [0, 1] inputs (new OTX format).
-
-    Reads ``mean_values`` and ``scale_values`` from the IR's ``<rt_info>``
-    block.  If all values are <= 1.0 the model was exported with the new
-    0-1 normalisation scale and callers must:
-
-    * Pass images pre-scaled to ``float32 / 255``.
-        * Load the model via ``FP32OpenvinoAdapter`` so that ModelAPI sets the
-      input tensor type to ``f32``.
-
-    If any value exceeds the threshold the IR uses the old uint8 scale
-    (e.g. ``mean_values = 123.675 116.28 103.53``), and raw ``uint8``
-    images should be passed as usual with the default ``OpenvinoAdapter``.
-
-    When no ``mean_values`` / ``scale_values`` are present in the IR, the
-    model has no embedded normalisation and raw ``uint8`` images are safe
-    (returns ``False``).
+    """Check whether the IR uses 0-1 normalisation scale (new OTX format).
 
     Args:
-        model_xml_path: Path to the ``.xml`` file of the OpenVINO IR model.
+        model_xml_path: Path to the ``.xml`` IR file.
 
     Returns:
-        ``True``  → new 0-1 scale → use ``FP32OpenvinoAdapter`` + scale to float32.
-        ``False`` → old uint8 scale (or no normalisation) → use default adapter + uint8 input.
+        True if all mean/scale values in rt_info are <= 1.0, False otherwise.
     """
     try:
         tree = ET.parse(str(model_xml_path))

@@ -30,6 +30,7 @@ from otx.types.task import OTXTaskType
 from .utils import get_default_num_async_infer_requests
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     from model_api.models.result import Result
@@ -43,21 +44,11 @@ logger = logging.getLogger()
 
 
 class _FP32OpenvinoAdapter(OpenvinoAdapter):
-    """OpenvinoAdapter variant that forces float32 input tensors.
+    """OpenvinoAdapter that forces float32 input tensors.
 
-    OTX models are trained with a ``scale_to_unit`` intensity transform that
-    converts images to float32 [0, 1] *before* the GPU Kornia ``Normalize``
-    step.  During OpenVINO inference the GPU Normalize is not executed, so the
-    raw [0, 1] float32 images are passed directly to ModelAPI.  The embedded
-    preprocessing in the IR must therefore receive float32 input, and its
-    stored ``mean_values`` / ``scale_values`` must be in the **0-1 scale**
-    (e.g. ``0.485 0.456 0.406``).
-
-    Guard: if the IR was exported with an older OTX version that stored
-    mean_values in the 0-255 scale (e.g. ``123.675``), applying those values
-    to [0, 1] inputs produces completely wrong normalisation.  A
-    ``ValueError`` is raised in that case so the problem is caught early
-    rather than silently producing bad predictions.
+    Sets ``dtype=float`` so ModelAPI builds an f32 input tensor matching
+    the 0-1 normalisation scale used by new OTX exports.  Raises
+    ``ValueError`` if the IR still stores mean/scale in the 0-255 range.
     """
 
     # Values above this threshold indicate uint8 (0-255) scale rather than 0-1 scale.
@@ -78,7 +69,41 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
             )
             raise ValueError(msg)
         kwargs["dtype"] = float
-        super().embed_preprocessing(*args, **kwargs)
+        _patch_pad_constant_type(super().embed_preprocessing, *args, **kwargs)
+
+
+def _patch_pad_constant_type(embed_fn: Callable, *args: object, **kwargs: object) -> None:
+    """Call ``embed_fn`` while monkey-patching ``opset.pad`` to fix pad-value dtype.
+
+    ModelAPI hardcodes pad constants as ``uint8``.  With f32 input this causes
+    a type-mismatch error, so we temporarily wrap ``opset.pad`` to insert a
+    ``Convert`` when the element types differ.
+    """
+    import model_api.adapters.utils as _mapi_utils
+
+    _opset = _mapi_utils.opset
+    _orig_pad = _opset.pad
+
+    def _pad_with_type_cast(
+        arg: openvino.Node,
+        pads_begin: openvino.Node,
+        pads_end: openvino.Node,
+        pad_mode: str,
+        arg_pad_value: openvino.Node | None = None,
+        name: str | None = None,
+    ) -> openvino.Node:
+        if arg_pad_value is not None:
+            data_et = arg.get_element_type()
+            pad_et = arg_pad_value.get_element_type()
+            if data_et != pad_et:
+                arg_pad_value = _opset.convert(arg_pad_value, data_et)
+        return _orig_pad(arg, pads_begin, pads_end, pad_mode, arg_pad_value, name)
+
+    _opset.pad = _pad_with_type_cast  # pyrefly: ignore[bad-assignment]
+    try:
+        embed_fn(*args, **kwargs)
+    finally:
+        _opset.pad = _orig_pad
 
 
 class OVModel:
