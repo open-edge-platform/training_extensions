@@ -123,7 +123,7 @@ class TestInferenceServer:
             ),
             patch("app.services.inference.inference_server.needs_float32_input", return_value=True),
             patch("app.services.inference.inference_server.create_core"),
-            patch("app.services.inference.inference_server._FP32OpenvinoAdapter") as mock_fp32_adapter,
+            patch("app.services.inference.inference_server.FP32OpenvinoAdapter") as mock_fp32_adapter,
         ):
             model_loaded = inference_server.set_inference_model(
                 project_id=project_id, model_id=model_id, device=device, ttl=60

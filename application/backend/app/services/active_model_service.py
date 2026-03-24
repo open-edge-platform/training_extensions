@@ -15,21 +15,9 @@ from app.models.model_activation import ModelActivationState
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
-from app.utils.ir_format import needs_float32_input
+from app.utils.ir_format import FP32OpenvinoAdapter, needs_float32_input
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
-
-
-class _FP32OpenvinoAdapter(OpenvinoAdapter):
-    """OpenvinoAdapter that forces float32 input tensors.
-
-    Used when the IR embeds mean/std in the 0-1 scale (new OTX format).
-    Overrides ``embed_preprocessing`` so ModelAPI sets the input tensor to f32.
-    """
-
-    def embed_preprocessing(self, *args, **kwargs) -> None:
-        kwargs["dtype"] = float
-        super().embed_preprocessing(*args, **kwargs)
 
 
 @dataclass(frozen=True)
@@ -175,7 +163,7 @@ class ActiveModelService:
                 )
                 use_float32 = needs_float32_input(model_xml_path)
                 ie = create_core()
-                adapter_cls = _FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
+                adapter_cls = FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
                 logger.info(
                     "IR format detected: {} (float32_input={})",
                     model_xml_path.name,

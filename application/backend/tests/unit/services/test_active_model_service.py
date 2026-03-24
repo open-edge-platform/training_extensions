@@ -130,7 +130,7 @@ class TestActiveModelServiceUnit:
             ),
             patch("app.services.active_model_service.needs_float32_input", return_value=True),
             patch("app.services.active_model_service.create_core"),
-            patch("app.services.active_model_service._FP32OpenvinoAdapter") as mock_fp32_adapter,
+            patch("app.services.active_model_service.FP32OpenvinoAdapter") as mock_fp32_adapter,
         ):
             loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
 
