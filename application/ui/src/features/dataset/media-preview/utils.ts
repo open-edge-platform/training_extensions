@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { range } from 'lodash-es';
 
-import type { AnnotationDTO, Media } from '../../../constants/shared-types';
+import type { AnnotationDTO, Media, PredictionDTO } from '../../../constants/shared-types';
 import { isVideoFrame } from '../../../shared/media-item-utils';
 import { loadImageQueryOptions } from '../../annotator/hooks/use-load-image-query.hook';
 import { useVideoPlayerContext } from '../../annotator/video-player/video-player-provider.component';
@@ -17,8 +17,8 @@ export const getInitialAnnotations = (isUserReviewed: boolean, annotationsDTO: A
     return isUserReviewed ? annotationsDTO : [];
 };
 
-export const getInitialPredictions = (isUserReviewed: boolean, annotationsDTO: AnnotationDTO[]): AnnotationDTO[] => {
-    return isUserReviewed ? [] : annotationsDTO;
+export const getInitialPredictions = (predictions: PredictionDTO[] | undefined): AnnotationDTO[] => {
+    return predictions ?? [];
 };
 
 export const getNextMediaItem = (currentMediaItem: Media, allMediaItems: Media[], step: number): Media | undefined => {

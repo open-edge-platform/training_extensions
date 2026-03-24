@@ -50,7 +50,7 @@ export const ReadOnlyAnnotator = ({
     const { canSubmit, isSaving, submit } = useSubmitPredictions({ onSuccess: onAcceptPrediction });
 
     return (
-        <PredictionsSetupProvider>
+        <>
             <View gridArea={'header'} UNSAFE_className={classes.toolbarContainer}>
                 <Flex alignItems={'center'} justifyContent={'space-between'} width={'100%'}>
                     {onModeChange && (
@@ -102,6 +102,6 @@ export const ReadOnlyAnnotator = ({
             <View gridArea={'bottom'}>
                 <BottomToolbar mediaItem={mediaItem} hideHotkeys />
             </View>
-        </PredictionsSetupProvider>
+        </>
     );
 };

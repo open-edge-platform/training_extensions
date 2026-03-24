@@ -5,8 +5,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { fetchClient } from '../../../api/client';
-import { Media, PredictionVideoRangePayload } from '../../../constants/shared-types';
-import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
+import { PredictionVideoRangePayload } from '../../../constants/shared-types';
 
 export const mediaPredictionsQueryOptions = ({
     projectId,
@@ -27,7 +26,7 @@ export const mediaPredictionsQueryOptions = ({
             const response = await fetchClient.POST('/api/projects/{project_id}/dataset/media/media:predict', {
                 params: { path: { project_id: projectId } },
                 body: {
-                    device: 'auto',
+                    device: 'AUTO',
                     model_id: modelId,
                     save_predictions: false,
                     media: [{ media_id: mediaId, range }],
@@ -40,9 +39,16 @@ export const mediaPredictionsQueryOptions = ({
         enabled: modelId !== undefined,
     });
 
-export const useMediaPredictions = ({ media }: { media: Media }) => {
+export const useMediaPredictions = ({
+    mediaId,
+    modelId,
+    range,
+}: {
+    mediaId: string;
+    modelId: string | undefined;
+    range?: PredictionVideoRangePayload | null;
+}) => {
     const projectId = useProjectIdentifier();
-    const activeModel = useGetActiveModel();
 
-    return useQuery(mediaPredictionsQueryOptions({ projectId, modelId: activeModel?.id, mediaId: media.id }));
+    return useQuery(mediaPredictionsQueryOptions({ projectId, modelId, mediaId, range }));
 };
