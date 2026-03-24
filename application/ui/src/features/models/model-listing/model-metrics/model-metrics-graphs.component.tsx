@@ -1,12 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 
-import { Flex } from '@geti/ui';
+import { Flex, Loading } from '@geti/ui';
 
 import type { LineMetric } from '../../../../constants/shared-types';
+import { useIsVisible } from '../../../../hooks/use-is-visible.hook';
+import { Box } from '../components/box/box.component';
 import { MetricGraph, type MetricGraphPoint } from './metric-graph.component';
+
+import classes from './model-metrics.graphs.module.scss';
 
 type ModelMetricsGraphsProps = {
     trainingMetrics: LineMetric[];
@@ -20,71 +24,58 @@ type GraphData = {
     data: MetricGraphPoint[];
 };
 
-const useProgressiveList = <T,>(items: T[]): T[] => {
-    const [visible, setVisible] = useState<T[]>([]);
-    const frameRef = useRef<number | null>(null);
-
-    useEffect(() => {
-        setVisible([]);
-        if (items.length === 0) {
-            return;
-        }
-
-        let index = 1;
-
-        const renderNext = () => {
-            setVisible(items.slice(0, index));
-
-            if (index >= items.length) {
-                frameRef.current = null;
-
-                return;
+const GraphPlaceholder = ({ title }: { title: string }) => (
+    <Flex UNSAFE_className={classes.graphContainer}>
+        <Box
+            title={title}
+            content={
+                <Flex
+                    alignItems={'center'}
+                    justifyContent={'center'}
+                    minHeight={'size-3000'}
+                    UNSAFE_style={{ backgroundColor: 'var(--spectrum-gray-50)' }}
+                >
+                    <Loading mode={'inline'} size={'L'} />
+                </Flex>
             }
+        />
+    </Flex>
+);
 
-            index += 1;
-            frameRef.current = requestAnimationFrame(renderNext);
-        };
+const LazyMetricGraph = ({ graph }: { graph: GraphData }) => {
+    const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
-        frameRef.current = requestAnimationFrame(renderNext);
-
-        return () => {
-            if (frameRef.current !== null) {
-                cancelAnimationFrame(frameRef.current);
-                frameRef.current = null;
-            }
-        };
-    }, [items]);
-
-    return visible;
-};
-
-export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps) => {
-    const graphs = useMemo<GraphData[]>(
-        () =>
-            trainingMetrics.map((metric) => ({
-                key: metric.key,
-                title: metric.header,
-                xAxisLabel: metric.value.x_axis_label,
-                yAxisLabel: metric.value.y_axis_label,
-                data: metric.value.line_data.flatMap((line) =>
-                    line.points.map((point) => ({ x: point.x, y: point.y }))
-                ),
-            })),
-        [trainingMetrics]
-    );
-
-    const visibleGraphs = useProgressiveList(graphs);
+    const isVisible = useIsVisible({ element: container });
 
     return (
-        <Flex width={'100%'} direction={'row'} gap={'size-300'} wrap>
-            {visibleGraphs.map((graph) => (
+        <div ref={setContainer} className={classes.graphContainer}>
+            {isVisible ? (
                 <MetricGraph
-                    key={graph.key}
                     title={graph.title}
                     data={graph.data}
                     xAxisLabel={graph.xAxisLabel}
                     yAxisLabel={graph.yAxisLabel}
                 />
+            ) : (
+                <GraphPlaceholder title={graph.title} />
+            )}
+        </div>
+    );
+};
+
+export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps) => {
+    const graphs: GraphData[] = trainingMetrics.map((metric) => ({
+        key: metric.key,
+        title: metric.header,
+        xAxisLabel: metric.value.x_axis_label,
+        yAxisLabel: metric.value.y_axis_label,
+        data: metric.value.line_data.flatMap((line) => line.points.map((point) => ({ x: point.x, y: point.y }))),
+    }));
+
+    return (
+        <Flex width={'100%'} gap={'size-300'} wrap>
+            {graphs.map((graph) => (
+                <LazyMetricGraph key={graph.key} graph={graph} />
             ))}
         </Flex>
     );
