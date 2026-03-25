@@ -37,6 +37,7 @@ from app.models import (
     VideoFrame,
 )
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaPredictionRequest, VideoFormat, VideoRange
+from app.models.system import DeviceInfo, DeviceType
 from app.services import DatasetService, MediaPredictionService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
 from app.services.media_prediction_service import VideoRangeError
@@ -1534,7 +1535,11 @@ class TestMediaEndpoints:
             ]
         }
 
-        fxt_media_prediction_service.predict_media.assert_called_once_with(project=fxt_get_project, request=request)
+        fxt_media_prediction_service.predict_media.assert_called_once_with(
+            project=fxt_get_project,
+            request=request,
+            device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+        )
 
     def test_media_predict_video_range_error(
         self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client
@@ -1560,7 +1565,11 @@ class TestMediaEndpoints:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json() == {"detail": "Frame range can be specified only for videos."}
 
-        fxt_media_prediction_service.predict_media.assert_called_once_with(project=fxt_get_project, request=request)
+        fxt_media_prediction_service.predict_media.assert_called_once_with(
+            project=fxt_get_project,
+            request=request,
+            device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+        )
 
     def test_media_predict_limit_exceeded(
         self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client
