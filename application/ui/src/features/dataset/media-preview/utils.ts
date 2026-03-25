@@ -99,10 +99,12 @@ export const useAnnotatorMode = ({
     predictions: PredictionDTO[];
 }) => {
     const projectId = useProjectIdentifier();
-    const [mode, setMode] = useLocalStorage<AnnotatorMode>(`${projectId}-annotator-mode`, 'annotation');
-
     const hasPredictions = !isEmpty(predictions);
     const hasAnnotations = !isEmpty(annotations);
+    const [mode, setMode] = useLocalStorage<AnnotatorMode>(
+        `${projectId}-annotator-mode`,
+        hasAnnotations || !hasPredictions ? 'annotation' : 'prediction'
+    );
 
     useEffect(() => {
         if (hasAnnotations) {

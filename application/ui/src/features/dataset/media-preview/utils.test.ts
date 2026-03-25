@@ -138,7 +138,7 @@ describe('useAnnotatorMode', () => {
         expect(result.current[0]).toBe('annotation');
     });
 
-    it('sets mode to "prediction" when there are no annotations and are predictions', () => {
+    it('sets mode to "prediction" when there are no annotations and there are predictions', () => {
         const { result } = renderHook(() =>
             useAnnotatorMode({
                 predictions: [getMockedAnnotation({ id: '1' })],
