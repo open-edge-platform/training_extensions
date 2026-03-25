@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, Flex, Text, View } from '@geti/ui';
-import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
+import { ActionButton, Divider, Flex, Icon, Text, View } from '@geti/ui';
+import { Checkmark, CloseSemiBold, Edit } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
@@ -18,13 +18,30 @@ import { useSubmitPredictions } from './use-submit-predictions.hook';
 
 import classes from './read-only-annotator.module.scss';
 
+type EditPredictionButtonProps = {
+    onEditPrediction: () => void;
+};
+
+const EditPredictionButton = ({ onEditPrediction }: EditPredictionButtonProps) => {
+    return (
+        <ActionButton isQuiet onPress={onEditPrediction}>
+            <Icon>
+                <Edit />
+            </Icon>
+            <Text>Edit</Text>
+        </ActionButton>
+    );
+};
+
 type ReadOnlyAnnotatorProps = {
     mode: AnnotatorMode;
     mediaItem: Media;
     image: ImageData;
     onClose: () => void;
-    onModeChange?: (mode: 'annotation' | 'prediction') => void;
-    onAcceptPrediction?: () => void;
+    onModeChange?: (mode: AnnotatorMode) => void;
+    onSuccessfulAcceptPrediction?: () => void;
+
+    onEditPrediction?: () => void;
 };
 
 /**
@@ -44,9 +61,10 @@ export const ReadOnlyAnnotator = ({
     mediaItem,
     onModeChange,
     onClose,
-    onAcceptPrediction,
+    onSuccessfulAcceptPrediction,
+    onEditPrediction,
 }: ReadOnlyAnnotatorProps) => {
-    const { canSubmit, isSaving, submit } = useSubmitPredictions({ onSuccess: onAcceptPrediction });
+    const { canSubmit, isSaving, submit } = useSubmitPredictions({ onSuccess: onSuccessfulAcceptPrediction });
 
     return (
         <>
@@ -64,23 +82,27 @@ export const ReadOnlyAnnotator = ({
                     )}
                     <Toolbar.Container marginStart={!onModeChange ? 'auto' : undefined}>
                         <Toolbar.Section>
-                            {onModeChange && (
-                                <Button
-                                    variant='accent'
-                                    onPress={submit}
-                                    isPending={isSaving}
-                                    marginStart={'size-200'}
-                                    isDisabled={!canSubmit || isSaving}
-                                >
-                                    <Checkmark />
-                                    <Text>Confirm prediction</Text>
-                                </Button>
-                            )}
+                            <Flex alignItems={'center'} height={'100%'} alignContent={'center'} gap={'size-150'}>
+                                {onModeChange && (
+                                    <ActionButton isQuiet onPress={submit} isDisabled={!canSubmit || isSaving}>
+                                        <Checkmark />
+                                        <Text>Confirm prediction</Text>
+                                    </ActionButton>
+                                )}
 
-                            <ActionButton isQuiet onPress={onClose} UNSAFE_className={classes.closeButton}>
-                                <CloseSemiBold width={14} height={14} />
-                                <Text>Close</Text>
-                            </ActionButton>
+                                {onEditPrediction && <EditPredictionButton onEditPrediction={onEditPrediction} />}
+
+                                {(onEditPrediction || onModeChange) && (
+                                    <Divider size={'S'} height={'size-400'} width={'size-10'} />
+                                )}
+
+                                <ActionButton isQuiet onPress={onClose} UNSAFE_className={classes.closeButton}>
+                                    <Icon height={'size-150'} width={'size-150'}>
+                                        <CloseSemiBold />
+                                    </Icon>
+                                    <Text>Close</Text>
+                                </ActionButton>
+                            </Flex>
                         </Toolbar.Section>
                     </Toolbar.Container>
                 </Flex>
