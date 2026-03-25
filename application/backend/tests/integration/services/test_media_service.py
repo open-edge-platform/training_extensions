@@ -568,6 +568,40 @@ class TestMediaServiceIntegration:
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
 
+    def test_create_image_16bit_png_thumbnail(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+    ) -> None:
+        """Test that a thumbnail is generated correctly for a 16-bit PNG image (mode I;16)."""
+        # Create a 16-bit grayscale image using numpy and PIL
+        rng = np.random.default_rng(seed=0)
+        data_16bit = rng.integers(0, 65535, (512, 512), dtype=np.uint16)
+        image = PILImage.fromarray(data_16bit, mode="I;16")
+
+        # Ensure the image is recognised as 16-bit by PIL
+        assert image.mode == "I;16"
+
+        project, _ = fxt_project_with_pipeline
+
+        created_media = fxt_media_service.create_image(
+            ImageMetadata(
+                project_id=project.id,
+                name="test_16bit",
+                image_format=ImageFormat.PNG,
+                data=image,
+            )
+        )
+
+        # The thumbnail must exist and be a valid JPEG readable by PIL
+        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
+        assert os.path.exists(thumbnail_file_path), "Thumbnail file was not created for 16-bit PNG"
+
+        with PILImage.open(thumbnail_file_path) as thumb:
+            assert thumb.format == "JPEG"
+            assert thumb.mode == "RGB"
+
     @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("format", VideoFormat)
     def test_create_video(

@@ -90,7 +90,8 @@ class MediaService(BaseSessionManagedService):
             thumbnail_image = crop_to_thumbnail(
                 image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
             )
-            if thumbnail_image.mode in ("RGBA", "P"):
+            # Convert non-JPEG-compatible modes (e.g. RGBA, P, I;16) to RGB
+            if thumbnail_image.mode not in ("RGB", "L", "CMYK"):
                 thumbnail_image = thumbnail_image.convert("RGB")
             thumbnail_image.save(path)
         except Exception:
