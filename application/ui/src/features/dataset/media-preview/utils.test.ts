@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, waitFor } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { getMockedMediaImage, getMockedVideoFrame, getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { renderHook } from 'test-utils/render';
@@ -154,24 +154,18 @@ describe('useAnnotatorMode', () => {
 
         const [_, setMode] = result.current;
 
-        await waitFor(() => {
-            expect(result.current[0]).toBe('annotation');
-        });
+        expect(result.current[0]).toBe('annotation');
 
         act(() => {
             setMode('prediction');
         });
 
-        await waitFor(() => {
-            expect(result.current[0]).toBe('prediction');
-        });
+        expect(result.current[0]).toBe('prediction');
 
         act(() => {
             setMode('annotation');
         });
 
-        await waitFor(() => {
-            expect(result.current[0]).toBe('annotation');
-        });
+        expect(result.current[0]).toBe('annotation');
     });
 });
