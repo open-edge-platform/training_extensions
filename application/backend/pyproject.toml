@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "geti"
 dynamic = ["version"]
 description = "Geti"
-readme = "readme.md"
 requires-python = ">=3.13,<3.14"
 
 dependencies = [
