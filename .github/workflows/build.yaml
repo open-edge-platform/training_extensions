@@ -53,6 +53,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -97,7 +98,7 @@ jobs:
           # cache export to avoid 403 errors from GHCR.
           cache-write: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}
 
-      - name: Smoke-test healthcheck endpoint
+      - name: Smoke-test docker image
         if: github.event_name == 'pull_request'
         env:
           IMAGE: ${{ steps.docker_build.outputs.image-name }}
@@ -124,6 +125,59 @@ jobs:
           docker logs "${CONTAINER_NAME}"
           docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
           exit 1
+
+      - name: Get Docker image size
+        if: github.event_name == 'pull_request'
+        id: image_size
+        env:
+          IMAGE: ${{ steps.docker_build.outputs.image-name }}
+        run: |
+          SIZE_BYTES=$(docker image inspect "${IMAGE}" --format='{{.Size}}')
+          SIZE_MB=$(awk "BEGIN {printf \"%.1f\", ${SIZE_BYTES} / 1024 / 1024}")
+          SIZE_GB=$(awk "BEGIN {printf \"%.2f\", ${SIZE_BYTES} / 1024 / 1024 / 1024}")
+          echo "bytes=${SIZE_BYTES}" >> "$GITHUB_OUTPUT"
+          echo "human=${SIZE_MB} MB (${SIZE_GB} GB)" >> "$GITHUB_OUTPUT"
+
+      - name: Post image size comment
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          DEVICE: ${{ matrix.device }}
+          SIZE_HUMAN: ${{ steps.image_size.outputs.human }}
+        run: |
+          MARKER="<!-- docker-image-size -->"
+          HEADER="${MARKER}
+          ### 🐳 Docker image sizes
+
+          | Device | Size |
+          |--------|------|"
+          NEW_ROW="| \`${DEVICE}\` | ${SIZE_HUMAN} |"
+
+          # Find the shared comment
+          COMMENT_ID=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" \
+          | head -n1)
+
+          if [ -n "${COMMENT_ID}" ]; then
+            # Read the current body, replace or append the device row
+            EXISTING=$(gh api "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" --jq .body)
+            if echo "${EXISTING}" | grep -q "| \`${DEVICE}\`"; then
+              BODY=$(echo "${EXISTING}" | sed "s/| \`${DEVICE}\` |.*/${NEW_ROW}/")
+            else
+              BODY="${EXISTING}
+          ${NEW_ROW}"
+            fi
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" \
+              -f body="${BODY}"
+          else
+            BODY="${HEADER}
+          ${NEW_ROW}"
+            gh pr comment "${PR_NUMBER}" --body "${BODY}"
+          fi
 
   required_check:
     name: Required Check build
