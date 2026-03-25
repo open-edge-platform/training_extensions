@@ -71,7 +71,7 @@ export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) =>
 
     const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem.id);
 
-    const isUnassigned = currentSubset === 'unassigned';
+    const isUnassigned = currentSubset === 'unassigned' || currentSubset === null;
 
     return (
         <Flex justifyContent={'end'}>
