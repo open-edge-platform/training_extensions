@@ -683,7 +683,7 @@ class GetiConfigConverter:
 
         Removes the AugmentationSchedulerCallback from the callbacks list,
         falling back to the static augmentation pipeline defined in
-        overrides.data.train_subset.
+        ``data.train_subset``.
         """
         callbacks = config.get("callbacks", [])
         idx = GetiConfigConverter.get_callback_idx(

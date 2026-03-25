@@ -55,7 +55,7 @@ class ModelArchitectures(BaseModel):
                         " regression task in DETRs as Fine-grained Distribution Refinement (FDR)."
                         " Combined with the DEIM adaptive augmentation scheduling framework"
                         " (enabled by default), it achieves outstanding performance with faster convergence.",
-                        "capabilities": {"xai": True, "tiling": True},
+                        "capabilities": {"tiling": False},
                         "stats": {
                             "gigaflops": 57,
                             "trainable_parameters": 19,
