@@ -1,7 +1,9 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, ContextualHelp, Flex, Text } from '@geti/ui';
+import { Button, Content, ContextualHelp, DialogTrigger, Flex, Text } from '@geti/ui';
+
+import { QuantizationDialog } from './quantization-dialog/quantization-dialog.component';
 
 export const QuantizationRow = () => {
     return (
@@ -15,7 +17,10 @@ export const QuantizationRow = () => {
                     </Content>
                 </ContextualHelp>
             </Flex>
-            <Button variant={'secondary'}>Start quantization</Button>
+            <DialogTrigger>
+                <Button variant={'secondary'}>Start quantization</Button>
+                {(close) => <QuantizationDialog onClose={close} />}
+            </DialogTrigger>
         </Flex>
     );
 };
