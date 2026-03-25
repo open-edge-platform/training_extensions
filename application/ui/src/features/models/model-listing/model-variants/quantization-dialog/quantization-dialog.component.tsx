@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 import {
     ActionButton,
@@ -29,7 +29,7 @@ const DEFAULT_QUANTIZATION_PARAMETERS = {
 };
 
 type QuantizationFieldLayoutProps = {
-    children: React.ReactNode;
+    children: ReactNode;
     onReset: () => void;
 };
 const QuantizationFieldLayout = ({ children, onReset }: QuantizationFieldLayoutProps) => (
@@ -48,6 +48,8 @@ type QuantizationDialogProps = {
 export const QuantizationDialog = ({ onClose }: QuantizationDialogProps) => {
     const [accuracyDrop, setAccuracyDrop] = useState<number>(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
     const [calibrationSize, setCalibrationSize] = useState<number>(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
+    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState<boolean>(false);
+    const [usesFullCalibrationDataset, setUsesFullCalibrationDataset] = useState<boolean>(false);
 
     const model = 'my model';
 
@@ -81,10 +83,17 @@ export const QuantizationDialog = ({ onClose }: QuantizationDialogProps) => {
                                 minValue={0.1}
                                 maxValue={10.0}
                                 type={'float'}
+                                isDisabled={hasNoMaxAccuracyDrop}
                                 onChange={setAccuracyDrop}
                                 step={0.1}
                             />
-                            <Checkbox aria-label='No maximum'>No maximum</Checkbox>
+                            <Checkbox
+                                aria-label='No maximum'
+                                isSelected={hasNoMaxAccuracyDrop}
+                                onChange={setHasNoMaxAccuracyDrop}
+                            >
+                                No maximum
+                            </Checkbox>
                         </QuantizationFieldLayout>
 
                         <QuantizationFieldLayout
@@ -103,11 +112,18 @@ export const QuantizationDialog = ({ onClose }: QuantizationDialogProps) => {
                                 value={calibrationSize}
                                 minValue={1}
                                 maxValue={1000}
+                                isDisabled={usesFullCalibrationDataset}
                                 type={'int'}
                                 onChange={setCalibrationSize}
                                 step={1}
                             />
-                            <Checkbox aria-label='Use full dataset'>Use full dataset</Checkbox>
+                            <Checkbox
+                                aria-label='Use full dataset'
+                                isSelected={usesFullCalibrationDataset}
+                                onChange={setUsesFullCalibrationDataset}
+                            >
+                                Use full dataset
+                            </Checkbox>
                         </QuantizationFieldLayout>
 
                         <Flex gap={'size-100'} alignItems={'center'} marginTop={'size-300'}>
@@ -118,7 +134,7 @@ export const QuantizationDialog = ({ onClose }: QuantizationDialogProps) => {
                                     color: 'var(--spectrum-global-color-gray-700)',
                                 }}
                             >
-                                Recommended calibration dataset size: Between 200-500 media items
+                                Recommended calibration dataset size: between 200-500 media items
                             </Text>
                         </Flex>
                     </View>
