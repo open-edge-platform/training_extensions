@@ -95,7 +95,8 @@ export const TrainingModelRow = ({
 }: TrainingModelRowProps) => {
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
-    const modelArchitectureId = 'model' in job.metadata && job.metadata.model?.architecture;
+    const modelArchitectureId =
+        'model' in job.metadata && 'architecture' in job.metadata.model && job.metadata.model.architecture;
     const modelName = trainingModel?.name;
 
     const modelArchitecture = modelArchitectures.find(({ id }) => id === modelArchitectureId);

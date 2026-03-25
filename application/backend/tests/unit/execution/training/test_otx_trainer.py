@@ -489,7 +489,7 @@ class TestOTXTrainerCreateTrainingDataset:
         with patch("app.execution.training.otx_trainer.TransformLibFactory.generate") as mock_generate:
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 
-            # Mock the __get_otx_dataset_class_by_task_type method to return a proper mock class
+            # Mock the get_otx_dataset_class_by_task_type function to return a proper mock class
             mock_dataset_class = Mock()
             mock_dataset_class.__name__ = "OTXDetectionDataset"
 
@@ -503,8 +503,9 @@ class TestOTXTrainerCreateTrainingDataset:
                 mock_otx_testing_dataset,
             ]
 
-            with patch.object(
-                otx_trainer, "_OTXTrainer__get_otx_dataset_class_by_task_type", return_value=mock_dataset_class
+            with patch(
+                "app.execution.training.otx_trainer.get_otx_dataset_class_by_task_type",
+                return_value=mock_dataset_class,
             ):
                 # Act
                 dataset_info = otx_trainer.prepare_training_dataset(

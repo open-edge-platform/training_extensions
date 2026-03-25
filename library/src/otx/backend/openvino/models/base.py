@@ -8,14 +8,15 @@ import contextlib
 import inspect
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
+import nncf
 import numpy as np
 import openvino
 import torch
 from jsonargparse import ArgumentParser
 from model_api.adapters import OpenvinoAdapter, create_core
-from model_api.models import Model
+from model_api.models import ImageModel, Model
 from model_api.tilers import Tiler
 from torch import Tensor
 
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from model_api.models.result import Result
-    from torchmetrics import Metric
+    from torchmetrics import Metric, MetricCollection
 
     from otx.data.module import OTXDataModule
     from otx.metrics import MetricCallable, MetricInput
@@ -207,8 +208,6 @@ class OVModel:
         Returns:
             Path: Path to the optimized model.
         """
-        import nncf
-
         output_model_path = output_dir / (optimized_model_name + ".xml")
 
         def check_if_quantized(model: openvino.Model) -> bool:
@@ -238,17 +237,114 @@ class OVModel:
         else:
             ptq_config = ptq_config_from_ir
 
-        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)  # type: ignore[attr-defined]
+        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)
 
-        compressed_model = nncf.quantize(  # type: ignore[attr-defined]
-            ov_model,
-            quantization_dataset,
-            **ptq_config,
-        )
+        if ptq_config.get("max_drop") is not None:
+            validation_dataset = nncf.Dataset(data_module.val_dataloader(), self.transform_fn)
+            validation_fn = self._create_validation_fn(data_module)
+            compressed_model = nncf.quantize_with_accuracy_control(
+                model=ov_model,
+                calibration_dataset=quantization_dataset,
+                validation_dataset=validation_dataset,
+                validation_fn=validation_fn,
+                **ptq_config,
+            )
+        else:
+            compressed_model = nncf.quantize(
+                model=ov_model,
+                calibration_dataset=quantization_dataset,
+                **ptq_config,
+            )
 
         openvino.save_model(compressed_model, output_model_path)
 
         return output_model_path
+
+    def _create_validation_fn(
+        self, data_module: OTXDataModule
+    ) -> Callable[[openvino.CompiledModel, Any], tuple[float, None]]:
+        """Create a validation function for accuracy-aware quantization.
+
+        The returned function computes accuracy on the validation set using the
+        compiled model provided by NNCF. It is compatible with
+        ``nncf.quantize_with_accuracy_control``.
+
+        Args:
+            data_module (OTXDataModule): Data module providing the validation dataloader.
+
+        Returns:
+            Callable: A function ``(compiled_model, validation_dataset) -> (float, None)``
+            where the float is the primary accuracy metric value.
+        """
+
+        def _infer_compiled_model(
+            compiled_model: openvino.CompiledModel,
+            inputs: OTXSampleBatch,
+        ) -> OTXPredictionBatch:
+            """Run inference using the NNCF-provided compiled model.
+
+            This replaces ``self.forward`` so that accuracy is measured on the
+            quantized candidate, not the original FP model.
+
+            Args:
+                compiled_model: Compiled OpenVINO model supplied by NNCF.
+                inputs: Input data batch.
+
+            Returns:
+                OTXPredictionBatch with predictions from the compiled model.
+            """
+            numpy_inputs = self._customize_inputs(inputs)["inputs"]
+            infer_request = compiled_model.create_infer_request()
+            outputs: list[Result] = []
+            for image in numpy_inputs:
+                model_ref: ImageModel = self.model.model if isinstance(self.model, Tiler) else self.model  # type: ignore[assignment]
+                resized = model_ref.resize(image, (model_ref.w, model_ref.h))
+                resized = model_ref.input_transform(resized)
+                input_tensor = model_ref._change_layout(resized)  # noqa: SLF001
+                infer_request.infer({0: input_tensor})
+                raw_result = {
+                    out.get_any_name(): infer_request.get_tensor(out).data.copy() for out in compiled_model.outputs
+                }
+                result = model_ref.postprocess(raw_result, {"original_shape": image.shape})
+                outputs.append(result)
+            return self._customize_outputs(outputs, inputs)
+
+        def validation_fn(
+            compiled_model: openvino.CompiledModel,
+            validation_dataset: nncf.Dataset,  # noqa: ARG001 required by NNCF signature
+        ) -> tuple[float, None]:
+            """Evaluate the compiled OpenVINO model on the validation dataset.
+
+            Args:
+                compiled_model: Compiled OpenVINO model provided by NNCF during
+                    accuracy-aware quantization.
+                validation_dataset: Validation NNCF dataset (unused, we iterate
+                    via the dataloader for proper batching and transforms).
+
+            Returns:
+                Tuple of (metric_value, None).
+            """
+            metric = self.metric_callable(data_module.label_info)
+
+            val_dataloader = data_module.val_dataloader()
+            for data_batch in val_dataloader:
+                preds = _infer_compiled_model(compiled_model, data_batch)
+                metric_inputs = self.prepare_metric_inputs(preds, data_batch)
+                if isinstance(metric_inputs, list):
+                    for mi in metric_inputs:
+                        metric.update(**mi)
+                else:
+                    metric.update(**metric_inputs)
+
+            results = self.compute_metrics(metric)
+            # Take the first scalar metric value as the accuracy indicator
+            metric_value = next(iter(results.values()))
+            if isinstance(metric_value, torch.Tensor):
+                metric_value = metric_value.item()
+
+            return float(metric_value), None
+
+        return validation_fn
 
     def transform_fn(self, data_batch: OTXSampleBatch) -> np.array:
         """Transform data for PTQ.
@@ -261,7 +357,7 @@ class OVModel:
         """
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
-        model = self.model.model if isinstance(self.model, Tiler) else self.model
+        model: ImageModel = self.model.model if isinstance(self.model, Tiler) else self.model  # type: ignore[assignment]
         resized_image = model.resize(image, (model.w, model.h))
         resized_image = model.input_transform(resized_image)
         return model._change_layout(resized_image)  # noqa: SLF001
@@ -318,22 +414,22 @@ class OVModel:
         """
         raise NotImplementedError
 
-    def compute_metrics(self, metric: Metric) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
         """Compute metrics using the provided metric object.
 
         Args:
-            metric (Metric): Metric object.
+            metric (Metric | MetricCollection): Metric object.
 
         Returns:
             dict: Computed metrics.
         """
         return self._compute_metrics(metric)
 
-    def _compute_metrics(self, metric: Metric, **compute_kwargs) -> dict:
+    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict:
         """Compute metrics with additional arguments.
 
         Args:
-            metric (Metric): Metric object.
+            metric (Metric | MetricCollection): Metric object.
             **compute_kwargs: Additional arguments for metric computation.
 
         Returns:

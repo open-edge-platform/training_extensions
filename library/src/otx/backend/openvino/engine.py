@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -27,6 +28,8 @@ from otx.types import OTXTaskType, PathLike
 if TYPE_CHECKING:
     from otx.metrics import MetricCallable
     from otx.types.types import ANNOTATIONS, DATA, METRICS, MODEL
+
+logger = logging.getLogger()
 
 
 class OVEngine(Engine):
@@ -329,6 +332,7 @@ class OVEngine(Engine):
         checkpoint: PathLike | None = None,
         datamodule: OTXDataModule | None = None,
         max_data_subset_size: int | None = None,
+        max_drop: float | None = None,
     ) -> Path:
         """Apply Post-Training Quantization (PTQ) to optimize the model.
 
@@ -338,6 +342,8 @@ class OVEngine(Engine):
             checkpoint (PathLike | None, optional): Checkpoint to optimize. Defaults to None.
             datamodule (OTXDataModule | None, optional): The data module to use for optimization.
             max_data_subset_size (int | None, optional): Maximum size of the train subset used for optimization.
+                Defaults to None.
+            max_drop (float | None, optional): Maximum accuracy drop allowed for accuracy-aware quantization.
                 Defaults to None.
 
         Returns:
@@ -350,9 +356,12 @@ class OVEngine(Engine):
             subset="train",
         )
 
-        ptq_config = {}
+        ptq_config: dict[str, int | float] = {}
         if max_data_subset_size is not None:
             ptq_config["subset_size"] = max_data_subset_size
+        if max_drop is not None:
+            ptq_config["max_drop"] = max_drop
+        logger.debug(f"PTQ configuration: {ptq_config}")
 
         return model.optimize(
             Path(self.work_dir),
