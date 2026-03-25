@@ -472,44 +472,44 @@ test.describe('Annotator', () => {
         });
     });
 
-    describe('Annotation and prediction modes', () => {
-        test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
-            const predictions = [
-                {
-                    shape: {
-                        type: 'rectangle',
-                        x: 3,
-                        y: 0,
-                        width: 780,
-                        height: 421,
-                    },
-                    labels: [{ id: blueLabel.id }],
-                    confidences: [0.9619140625],
+    test.describe.only('Annotation and prediction modes', () => {
+        const predictions = [
+            {
+                shape: {
+                    type: 'rectangle',
+                    x: 3,
+                    y: 0,
+                    width: 780,
+                    height: 421,
                 },
-                {
-                    shape: {
-                        type: 'rectangle',
-                        x: 1007,
-                        y: 624,
-                        width: 909,
-                        height: 456,
-                    },
-                    labels: [{ id: blueLabel.id }],
-                    confidences: [0.9599609375],
+                labels: [{ id: blueLabel.id }],
+                confidences: [0.9619140625],
+            },
+            {
+                shape: {
+                    type: 'rectangle',
+                    x: 1007,
+                    y: 624,
+                    width: 909,
+                    height: 456,
                 },
-                {
-                    shape: {
-                        type: 'rectangle',
-                        x: 291,
-                        y: 0,
-                        width: 1553,
-                        height: 889,
-                    },
-                    labels: [{ id: blueLabel.id }],
-                    confidences: [0.904296875],
+                labels: [{ id: blueLabel.id }],
+                confidences: [0.9599609375],
+            },
+            {
+                shape: {
+                    type: 'rectangle',
+                    x: 291,
+                    y: 0,
+                    width: 1553,
+                    height: 889,
                 },
-            ] satisfies PredictionDTO[];
+                labels: [{ id: blueLabel.id }],
+                confidences: [0.904296875],
+            },
+        ] satisfies PredictionDTO[];
 
+        test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
             network.use(
                 http.get('/api/projects/{project_id}/models', async () => {
                     return HttpResponse.json([getMockedModel()]);
@@ -586,6 +586,90 @@ test.describe('Annotator', () => {
                 await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
                 await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeHidden();
             });
+        });
+
+        test('Automatically switches to annotation mode when there are annotations, no matter predictions', async ({
+            annotatorPage,
+            page,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json({
+                        annotations: [
+                            {
+                                shape: {
+                                    type: 'rectangle',
+                                    x: 1007,
+                                    y: 624,
+                                    width: 909,
+                                    height: 456,
+                                },
+                                labels: [{ id: redLabel.id }],
+                            },
+                        ],
+                        user_reviewed: true,
+                    });
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+
+            await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+        });
+
+        test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
+            annotatorPage,
+            page,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json(
+                        {
+                            // @ts-expect-error We care only about mocking detail
+                            detail: 'Media has not been annotated yet',
+                        },
+                        { status: 404 }
+                    );
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+
+            await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
         });
     });
 });
