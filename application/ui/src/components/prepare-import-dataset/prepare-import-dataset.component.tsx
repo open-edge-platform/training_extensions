@@ -24,7 +24,7 @@ export const PrepareImportDataset = ({
     onSuccess,
     deleteEntry,
 }: PrepareImportDatasetProps) => {
-    const { data: job, isError, error } = useImportJobStatus({ jobId, onError: deleteEntry, onSuccess });
+    const { data: job, isError, error } = useImportJobStatus({ jobId, onSuccess });
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 

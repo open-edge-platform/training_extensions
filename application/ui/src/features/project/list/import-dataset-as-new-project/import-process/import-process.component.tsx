@@ -4,6 +4,7 @@
 import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
 
 import { ImportJobProcess } from '../../../../../components/import-job-process/import-job-process.component';
+import { useImportDatasetDialog } from '../../../providers/import-dataset-dialog-provider.component';
 
 type ImportProcessProps = {
     stagedDatasetId: string;
@@ -11,16 +12,16 @@ type ImportProcessProps = {
 };
 
 export const ImportProcess = ({ stagedDatasetId, onFilePrepared }: ImportProcessProps) => {
-    const { getImportEntry, deleteImportEntry, updateImportEntryStep } = useImportDatasetAsNewProject();
+    const { datasetImportDialogState } = useImportDatasetDialog();
+    const { getImportEntry, updateImportEntryStep } = useImportDatasetAsNewProject();
+
     const entry = getImportEntry(stagedDatasetId);
 
     return (
         <ImportJobProcess
             jobId={entry?.prepareJobId}
             fileName={entry?.fileName ?? ''}
-            onError={() => {
-                deleteImportEntry(stagedDatasetId);
-            }}
+            onError={datasetImportDialogState.close}
             onSuccess={() => {
                 onFilePrepared();
                 updateImportEntryStep(stagedDatasetId, 'taskTypeSelection');
