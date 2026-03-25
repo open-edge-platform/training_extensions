@@ -233,7 +233,7 @@ test.describe('Annotator', () => {
             })
         );
 
-        await annotatorPage.goto(mockedDetectionProject.id, 'media-1');
+        await annotatorPage.goto(mockedSegmentationProject.id, 'media-1');
 
         await test.step('Select polygon tool on first media item', async () => {
             await polygonTool.selectPolygonTool();

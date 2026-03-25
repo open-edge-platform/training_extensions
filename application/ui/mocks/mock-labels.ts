@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Label } from '../src/constants/shared-types';
-import { AnnotationLabel } from '../src/shared/types';
+import type { AnnotationLabel } from '../src/shared/types';
 
 export const getMockedLabel = (label?: Partial<Label>): Label & { isPrediction: boolean } => {
     return {
