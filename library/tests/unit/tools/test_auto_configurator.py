@@ -173,7 +173,7 @@ class TestAutoConfigurator:
     def test_update_ov_subset_pipeline_from_pre_constructed_datasets(self) -> None:
         """Test that update_ov_subset_pipeline works when the datamodule was created via from_otx_datasets (no data_root)."""
         data_root = "tests/assets/detection_coco"
-        auto_configurator = AutoConfigurator(data_root=data_root, task="DETECTION")
+        auto_configurator = AutoConfigurator(data_root=data_root, task=OTXTaskType.DETECTION)
 
         # Create a normal datamodule first, then rebuild it via from_otx_datasets
         # to simulate what the quantization pipeline does
@@ -190,9 +190,10 @@ class TestAutoConfigurator:
 
         # This should NOT raise ValueError about dataset format detection
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(pre_constructed_datamodule, subset="train")
-        assert updated_datamodule.train_subset.augmentations_cpu == [{"class_path": "torchvision.transforms.v2.ToImage"}]
+        assert updated_datamodule.train_subset.augmentations_cpu == [
+            {"class_path": "torchvision.transforms.v2.ToImage"}
+        ]
         assert not updated_datamodule.tile_config.enable_tiler
         # Verify subsets are preserved
         assert "train" in updated_datamodule.subsets
         assert "val" in updated_datamodule.subsets
-
