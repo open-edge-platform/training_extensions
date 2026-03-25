@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
+import { getMockedJob } from 'mocks/mock-job';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
@@ -232,6 +233,58 @@ test.describe('Model Details', () => {
             await downloadButton.click();
 
             await expect.poll(() => modelVariantId).not.toBeUndefined();
+        });
+
+        test('can start quantization with custom parameters', async ({ network, modelsPage }) => {
+            let submittedJobBody: Record<string, unknown> | null = null;
+
+            network.use(
+                http.post('/api/jobs', async ({ request }) => {
+                    submittedJobBody = await request.json();
+
+                    return HttpResponse.json(
+                        getMockedJob({
+                            job_id: 'quantize-job-1',
+                            job_type: 'quantize',
+                        }),
+                        { status: 201 }
+                    );
+                }),
+                http.get('/api/projects/{project_id}/dataset/media', () => {
+                    return HttpResponse.json({
+                        items: [],
+                        pagination: { offset: 0, limit: 1, count: 0, total: 500 },
+                    });
+                })
+            );
+
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await modelsPage.clickModelVariantsTab();
+
+            await modelsPage.openQuantizationDialog();
+
+            const dialog = modelsPage.getQuantizationDialog();
+            await expect(dialog).toBeVisible();
+            await expect(dialog.getByRole('heading', { name: /Quantize model to INT8/ })).toBeVisible();
+
+            await modelsPage.getNoMaximumCheckbox().click();
+            await modelsPage.getAccuracyDropInput().fill('.05');
+            await modelsPage.getCalibrationSizeInput().fill('300');
+
+            await modelsPage.submitQuantization();
+
+            await expect(modelsPage.getToast('Quantization job started.')).toBeVisible();
+
+            expect(submittedJobBody).toMatchObject({
+                job_type: 'quantize',
+                project_id: 'id-1',
+                parameters: {
+                    model_id: 'model-1',
+                    max_drop: 0.05,
+                    max_calibration_subset_size: 300,
+                },
+            });
         });
     });
 
