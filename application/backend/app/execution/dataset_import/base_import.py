@@ -70,7 +70,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
             MultilabelClassificationImportExportSample,
         ],
         MultilabelClassificationImportExportSample: [],
-        MulticlassClassificationImportExportSample: [],
+        MulticlassClassificationImportExportSample: [MultilabelClassificationImportExportSample],
     }
 
     def __init__(

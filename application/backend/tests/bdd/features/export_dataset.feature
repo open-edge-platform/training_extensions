@@ -54,9 +54,9 @@ Feature: Export Dataset
       | GETI          | dataset-geti.zip | { }                                                 | 30          | 10          |
       | GETI          | dataset-geti.zip | { "subsets": ["training", "testing"] }              | 20          | 8           |
       | GETI          | dataset-geti.zip | { "labels": ["cat"], "include_unannotated": false } | 15          | 5           |
-#     | VOC    | dataset-voc.zip      | { }                                                 | 40        | 0      |
-#     | VOC    | dataset-voc.zip      | { "subsets": ["training", "testing"] }              | 28        | 0      |
-#     | VOC    | dataset-voc.zip      | { "labels": ["cat"], "include_unannotated": false } | 20        | 0      |
+      | VOC           | dataset-voc.zip  | { }                                                 | 40          | 0           |
+      | VOC           | dataset-voc.zip  | { "subsets": ["training", "testing"] }              | 28          | 0           |
+      | VOC           | dataset-voc.zip  | { "labels": ["cat"], "include_unannotated": false } | 20          | 0           |
 
   @export @segmentation
   Scenario Outline: Export segmentation project dataset

@@ -28,7 +28,7 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
     Supported formats:
     - COCO: Images and annotations in COCO JSON format
     - YOLO: YOLO format with root directory structure
-    - VOC: Pascal VOC format (not yet implemented)
+    - VOC: Pascal VOC format
     - GETI: Native Geti format (pass-through)
     - DATUMARO_V1: Legacy Datumaro v1 format
 

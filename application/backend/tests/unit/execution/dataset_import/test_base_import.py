@@ -184,6 +184,7 @@ class TestBaseDatasetImport:
             (InstanceSegmentationImportExportSample, Task(task_type=TaskType.DETECTION)),
             (DetectionImportExportSample, Task(task_type=TaskType.CLASSIFICATION)),
             (DetectionImportExportSample, Task(task_type=TaskType.INSTANCE_SEGMENTATION)),
+            (MulticlassClassificationImportExportSample, Task(task_type=TaskType.CLASSIFICATION)),
         ],
     )
     def test_prepare_dataset_success(
