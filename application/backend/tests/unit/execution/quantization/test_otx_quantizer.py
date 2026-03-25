@@ -464,6 +464,36 @@ class TestOTXQuantizerEvaluateQuantizedModel:
         assert saved_result.subset == DatasetItemSubset.TESTING
         assert saved_result.metrics == pytest.approx({"mAP": 0.75, "precision": 0.80}, rel=1e-6)
 
+    def test_evaluate_quantized_model_skips_multi_element_tensors(
+        self,
+        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_model_service: Mock,
+    ):
+        """Multi-element tensor metrics are skipped; scalar tensors and plain floats are kept."""
+        quantizer = fxt_otx_quantizer()
+        mock_engine = Mock(spec=OVEngine)
+        mock_engine.test.return_value = {
+            "test/mAP": torch.tensor(0.75),
+            "test/per_class_ap": torch.tensor([0.8, 0.7]),  # multi-element — should be skipped
+            "recall": 0.9,  # plain float, no "/" prefix
+        }
+        task = Task(task_type=TaskType.DETECTION, exclusive_labels=False)
+
+        quantizer.evaluate_quantized_model(
+            ov_engine=mock_engine,
+            quantized_model_path=Path("/quantized/model.xml"),
+            task=task,
+            model_revision_id=uuid4(),
+            model_variant_id=uuid4(),
+            dataset_revision_id=uuid4(),
+        )
+
+        saved_result = fxt_model_service.save_evaluation_result.call_args[0][0]
+        assert "mAP" in saved_result.metrics
+        assert "recall" in saved_result.metrics
+        assert "per_class_ap" not in saved_result.metrics
+        assert saved_result.metrics == pytest.approx({"mAP": 0.75, "recall": 0.9}, rel=1e-6)
+
 
 class TestOTXQuantizerStoreArtifacts:
     """Tests for ``OTXQuantizer.store_artifacts``."""

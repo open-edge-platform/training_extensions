@@ -10,6 +10,7 @@ from typing import cast
 from uuid import UUID
 
 import polars as pl
+import torch
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
@@ -442,7 +443,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
                     model_variant_id=model_variant_id,
                     dataset_revision_id=dataset_revision_id,
                     subset=DatasetItemSubset.TESTING,
-                    metrics={item[0].split("/")[1]: item[1].item() for item in metrics.items()},
+                    metrics=self._convert_metrics(metrics),
                 )
             )
 
@@ -756,3 +757,23 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_started_at=training_started_at,
                 training_finished_at=training_finished_at,
             )
+
+    @staticmethod
+    def _convert_metrics(metrics: dict) -> dict[str, float]:
+        """Convert metric values to a flat dict of scalar floats.
+
+        Handles torch.Tensor values that may contain multiple elements
+        (e.g., per-class metrics) by skipping them.
+        """
+        result: dict[str, float] = {}
+        for k, v in metrics.items():
+            name = k.split("/")[1] if "/" in k else k
+            if isinstance(v, torch.Tensor):
+                if v.numel() == 1:
+                    result[name] = v.item()
+                else:
+                    logger.debug("Skipping non-scalar metric '{}' with {} elements", name, v.numel())
+            else:
+                result[name] = float(v)
+        return result
+
