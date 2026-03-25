@@ -11,7 +11,7 @@ from loguru import logger
 
 from app.models.system import CameraInfo, DeviceInfo, DeviceType
 
-DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
+DEVICE_PATTERN = re.compile(r"^(auto|cpu|xpu|cuda)(-(\d+))?$")
 DEFAULT_DEVICE = "cpu"
 CV2_BACKENDS = {
     "Windows": cv2.CAP_MSMF,
@@ -105,9 +105,11 @@ class SystemService:
     def validate_device(self, device_str: str) -> bool:
         """
         Validate if a device string is available on the system.
+        'auto' defaults to CPU.
 
         Args:
-            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+            device_str: Device string in format '<target>[-<index>]'
+                (e.g., 'auto', 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
 
         Returns:
             bool: True if the device is available, False otherwise
@@ -119,7 +121,7 @@ class SystemService:
             return False
 
         # CPU is always available
-        if device_type == DeviceType.CPU:
+        if device_type in [DeviceType.AUTO, DeviceType.CPU]:
             return True
 
         # Check if desired device is among available devices
@@ -133,9 +135,11 @@ class SystemService:
     def get_device_info(self, device_str: str) -> DeviceInfo:
         """
         Get DeviceInfo for a given device string.
+        'auto' defaults to CPU.
 
         Args:
-            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+            device_str: Device string in format '<target>[-<index>]'
+                (e.g., 'auto', 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
 
         Returns:
             DeviceInfo: Information about the specified device
@@ -144,11 +148,43 @@ class SystemService:
             raise ValueError(f"Device '{device_str}' is not available on the system.")
 
         device_type, device_index = self._parse_device(device_str)
-        if device_type == DeviceType.CPU:
+        if device_type in [DeviceType.AUTO, DeviceType.CPU]:
             return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
         return next(
             device for device in self.get_devices() if device.type == device_type and device.index == device_index
         )
+
+    def get_inference_device_info(self, device_str: str) -> DeviceInfo:
+        """
+        Get DeviceInfo for a given device string, ensuring it's valid for inference.
+        'auto' defaults to CPU.
+
+        Args:
+            device_str: Device string in format '<target>[-<index>]'
+                (e.g., 'auto', 'cpu', 'xpu', 'xpu-2')
+
+        Returns:
+            DeviceInfo: Information about the specified inference device
+        """
+        device_info = self.get_device_info(device_str)
+        if device_info.type == DeviceType.CUDA:
+            raise ValueError(f"Device '{device_str}' is not valid for inference (CUDA devices are not supported).")
+        return device_info
+
+    def get_training_device_info(self, device_str: str) -> DeviceInfo:
+        """
+        Get DeviceInfo for a given device string, ensuring it's valid for training.
+        'auto' defaults to CPU.
+
+        Args:
+            device_str: Device string in format '<target>[-<index>]'
+                (e.g., 'auto', 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+
+        Returns:
+            DeviceInfo: Information about the specified training device
+        """
+        # For training, all devices are currently valid, but we can add custom validation here if needed in the future
+        return self.get_device_info(device_str)
 
     @staticmethod
     def _parse_device(device_str: str) -> tuple[DeviceType, int]:
@@ -156,7 +192,8 @@ class SystemService:
         Parse device string into type and index
 
         Args:
-            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+            device_str: Device string in format '<target>[-<index>]'
+                (e.g., 'auto', 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
 
         Returns:
             tuple[str, int]: Device type and index

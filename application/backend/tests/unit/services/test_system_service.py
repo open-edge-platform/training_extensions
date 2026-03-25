@@ -112,6 +112,10 @@ class TestSystemService:
 
             assert len(devices) == 3
 
+    def test_validate_device_auto_always_valid(self, fxt_system_service: SystemService):
+        """Test that AUTO device is always valid"""
+        assert fxt_system_service.validate_device("auto") is True
+
     def test_validate_device_cpu_always_valid(self, fxt_system_service: SystemService):
         """Test that CPU device is always valid"""
         assert fxt_system_service.validate_device("cpu") is True

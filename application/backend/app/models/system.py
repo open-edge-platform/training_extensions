@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 class DeviceType(StrEnum):
     """Enumeration of device types"""
 
+    AUTO = auto()
     CPU = auto()
     XPU = auto()
     CUDA = auto()
