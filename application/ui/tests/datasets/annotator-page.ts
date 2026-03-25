@@ -3,6 +3,8 @@
 
 import { expect, type Page } from '@playwright/test';
 
+import { paths } from '../../src/constants/paths';
+
 export class AnnotatorPage {
     constructor(private readonly page: Page) {}
 
@@ -117,5 +119,9 @@ export class AnnotatorPage {
 
     async editPrediction() {
         await this.page.getByRole('button', { name: 'Edit prediction' }).click();
+    }
+
+    async goto(projectId: string, datasetItemId: string) {
+        await this.page.goto(paths.project.dataset.item.index({ projectId, datasetItemId }));
     }
 }

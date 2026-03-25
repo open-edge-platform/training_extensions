@@ -53,9 +53,8 @@ test.describe('Annotator', () => {
         );
     });
 
-    test('Add and change annotations labels', async ({ page, boundingBoxTool }) => {
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    test('Add and change annotations labels', async ({ page, boundingBoxTool, annotatorPage }) => {
+        await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
         await test.step('Draw an annotation', async () => {
             await boundingBoxTool.selectTool();
@@ -103,9 +102,8 @@ test.describe('Annotator', () => {
         });
     });
 
-    test('change multiple labels at once', async ({ page, boundingBoxTool }) => {
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    test('change multiple labels at once', async ({ page, boundingBoxTool, annotatorPage }) => {
+        await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
         const annotations = [
             { x: 100, y: 100, width: 150, height: 150 },
@@ -145,9 +143,8 @@ test.describe('Annotator', () => {
     });
 
     test.describe('Handles empty label', () => {
-        test('label assignment', async ({ page, boundingBoxTool }) => {
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        test('label assignment', async ({ page, boundingBoxTool, annotatorPage }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             const annotations = [
                 { x: 100, y: 100, width: 150, height: 150 },
@@ -182,9 +179,8 @@ test.describe('Annotator', () => {
             });
         });
 
-        test('renders "No object" when server returns empty annotations list', async ({ page }) => {
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        test('renders "No object" when server returns empty annotations list', async ({ page, annotatorPage }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await expect(page.getByLabel(`label No object background`)).toHaveCount(1);
         });
@@ -237,8 +233,7 @@ test.describe('Annotator', () => {
             })
         );
 
-        await page.goto(`/projects/${mockedSegmentationProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-1');
 
         await test.step('Select polygon tool on first media item', async () => {
             await polygonTool.selectPolygonTool();
@@ -332,10 +327,11 @@ test.describe('Annotator', () => {
             })
         );
 
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-reset-1');
 
         await test.step('Check first media annotations', async () => {
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+
             expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
         });
 
@@ -398,8 +394,7 @@ test.describe('Annotator', () => {
             })
         );
 
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-selection-reset-1');
 
         await test.step('Select annotation on media 1', async () => {
             await page.getByRole('button', { name: 'selection tool' }).click();
@@ -425,7 +420,7 @@ test.describe('Annotator', () => {
         });
     });
 
-    test('Selected label persists when switching media items', async ({ page, network }) => {
+    test('Selected label persists when switching media items', async ({ page, network, annotatorPage }) => {
         const mediaItems = [
             getMockedMediaImage({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
             getMockedMediaImage({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
@@ -451,8 +446,7 @@ test.describe('Annotator', () => {
             })
         );
 
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-1');
 
         await test.step('Select non-default label on first media item', async () => {
             const blueLabelButton = page.getByRole('button', { name: `Label ${blueLabel.name}` });
@@ -472,7 +466,7 @@ test.describe('Annotator', () => {
         });
     });
 
-    test.describe.only('Annotation and prediction modes', () => {
+    test.describe('Annotation and prediction modes', () => {
         const predictions = [
             {
                 shape: {
