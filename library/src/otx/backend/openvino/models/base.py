@@ -55,8 +55,8 @@ class _FP32OpenvinoAdapter(OpenvinoAdapter):
     _UINT8_SCALE_THRESHOLD = 1.0
 
     def embed_preprocessing(self, *args, **kwargs) -> None:
-        mean = kwargs.get("mean") or (args[5] if len(args) > 5 else None)
-        scale = kwargs.get("scale") or (args[6] if len(args) > 6 else None)
+        mean = kwargs.get("mean")
+        scale = kwargs.get("scale")
         bad_mean = mean and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
         bad_scale = scale and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
         if bad_mean or bad_scale:

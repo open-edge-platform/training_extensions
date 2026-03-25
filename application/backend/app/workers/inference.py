@@ -195,10 +195,7 @@ class InferenceWorker(BaseProcessWorker):
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
                     self._prediction_buffer.register_expected_timestamp(inference_start_time)
                     rgb_frame = cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB)
-                    if self._loaded_model.float32_input:
-                        # New OTX format: IR mean/std in 0-1 scale → pre-scale to float32 [0, 1].
-                        rgb_frame = rgb_frame.astype("float32") / 255.0
-                    # else: old OTX format → pass raw uint8 as-is.
+                    rgb_frame = rgb_frame.astype("float32") / 255.0
                     model.infer_async(
                         rgb_frame,
                         user_data={

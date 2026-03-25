@@ -7,7 +7,7 @@ from pathlib import Path
 from uuid import UUID
 
 from loguru import logger
-from model_api.adapters import OpenvinoAdapter, create_core
+from model_api.adapters import create_core
 from model_api.models import Model
 
 from app.db.engine import get_db_session
@@ -15,7 +15,7 @@ from app.models.model_activation import ModelActivationState
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
-from app.utils.ir_format import FP32OpenvinoAdapter, needs_float32_input
+from app.utils.ir_format import FP32OpenvinoAdapter
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
@@ -26,7 +26,6 @@ class LoadedModel:
     model_variant_id: UUID
     model: Model
     device: str
-    float32_input: bool  # True → InferenceWorker must scale images to [0,1] float32
 
 
 @dataclass(frozen=True)
@@ -161,15 +160,8 @@ class ActiveModelService:
                     variant_id=active_variant_id,
                     extension="bin",
                 )
-                use_float32 = needs_float32_input(model_xml_path)
                 ie = create_core()
-                adapter_cls = FP32OpenvinoAdapter if use_float32 else OpenvinoAdapter
-                logger.info(
-                    "IR format detected: {} (float32_input={})",
-                    model_xml_path.name,
-                    use_float32,
-                )
-                adapter = adapter_cls(
+                adapter = FP32OpenvinoAdapter(
                     ie,
                     str(model_xml_path),
                     device=device,
@@ -185,6 +177,5 @@ class ActiveModelService:
                 model=mapi_model,
                 model_variant_id=active_variant_id,
                 device=device,
-                float32_input=use_float32,
             )
         return self._loaded_model
