@@ -46,7 +46,7 @@ type QuantizationDialogProps = {
 };
 export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps) => {
     const [accuracyDrop, setAccuracyDrop] = useState(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
-    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState(false);
+    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState(true);
     const [calibrationSize, setCalibrationSize] = useState(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
     const [usesFullCalibrationDataset, setUsesFullCalibrationDataset] = useState(false);
 
