@@ -46,6 +46,7 @@ FROM backend-base AS cpu-base
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
     --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cpu
@@ -56,6 +57,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
 
@@ -68,6 +70,7 @@ FROM backend-base AS cuda-base
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
     --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra cuda
@@ -76,6 +79,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cuda
 
@@ -88,6 +92,7 @@ FROM backend-base AS xpu-base
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library/pyproject.toml,target=/library/pyproject.toml \
     --mount=type=bind,source=library/src/otx/__init__.py,target=/library/src/otx/__init__.py \
     uv sync --frozen --no-dev --no-editable --no-install-project --no-install-workspace --extra mqtt --extra xpu
@@ -96,6 +101,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/VERSION,target=../VERSION \
     --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra xpu
 

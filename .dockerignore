@@ -7,6 +7,7 @@
 !application/backend/app
 !application/backend/pyproject.toml
 !application/backend/uv.lock
+!application/VERSION
 
 # UI
 !application/ui/src
@@ -16,9 +17,6 @@
 !application/ui/package-lock.json
 !application/ui/tsconfig.json
 !application/ui/rsbuild.config.ts
-
-# Nginx config
-!application/docker/nginx.conf
 
 # Library – only what uv needs to resolve deps and build the otx wheel
 !library/pyproject.toml
@@ -30,6 +28,8 @@
 **/.pytest_cache
 **/.mypy_cache
 **/.ruff_cache
+**/.import_linter_cache
+**/otx-workspace*
 **/.venv
 **/*.pyc
 **/*.pyo
