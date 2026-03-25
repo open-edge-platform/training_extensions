@@ -140,6 +140,10 @@ RUN npm run build
 #########################
 FROM python:3.13-slim@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS runtime-base
 
+LABEL org.opencontainers.image.source="https://github.com/open-edge-platform/training_extensions"
+LABEL org.opencontainers.image.description="Geti – train, optimize and deploy deep-learning models"
+LABEL org.opencontainers.image.revision="${GIT_SHA}"
+
 ARG UID=10001
 ARG USER_NAME="non-root"
 

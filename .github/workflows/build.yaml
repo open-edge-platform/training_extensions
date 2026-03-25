@@ -57,6 +57,12 @@ jobs:
     steps:
       - *checkout
 
+      - name: Read application version
+        id: version
+        run: |
+          echo "value=$(cat application/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
       - name: Login to GHCR
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
@@ -68,11 +74,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
-          images: ghcr.io/${{ github.repository }}/geti-${{ matrix.device }}
+          images: ghcr.io/open-edge-platform/geti-${{ matrix.device }}
           tags: |
             type=sha
             type=ref,event=branch
             type=ref,event=pr
+            type=raw,value=${{ steps.version.outputs.value }}-dev-${{ steps.version.outputs.short_sha }},enable=${{ github.event_name == 'pull_request' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
