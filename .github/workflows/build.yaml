@@ -25,8 +25,7 @@ jobs:
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
-      - &checkout
-        name: Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -55,7 +54,10 @@ jobs:
       contents: read
       packages: write
     steps:
-      - *checkout
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Read application version
         id: version
@@ -97,9 +99,11 @@ jobs:
 
       - name: Smoke-test healthcheck endpoint
         if: github.event_name == 'pull_request'
+        env:
+          IMAGE: ${{ steps.docker_build.outputs.image-name }}
+          DEVICE: ${{ matrix.device }}
         run: |
-          IMAGE="${{ steps.docker_build.outputs.image-name }}"
-          CONTAINER_NAME="geti-healthcheck-${{ matrix.device }}"
+          CONTAINER_NAME="geti-healthcheck-${DEVICE}"
 
           echo "Starting container from ${IMAGE} ..."
           docker run -d --name "${CONTAINER_NAME}" -p 7860:7860 "${IMAGE}"

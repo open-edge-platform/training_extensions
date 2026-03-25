@@ -87,7 +87,9 @@ runs:
       id: first-tag
       if: inputs.push != 'true'
       shell: bash
+      env:
+        IMAGE_TAGS: ${{ inputs.tags }}
       run: |
         # Grab the first tag from the newline-separated list
-        FIRST_TAG=$(echo "${{ inputs.tags }}" | head -n1)
+        FIRST_TAG=$(echo "${IMAGE_TAGS}" | head -n1)
         echo "name=${FIRST_TAG}" >> "$GITHUB_OUTPUT"
