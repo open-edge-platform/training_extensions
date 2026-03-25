@@ -1,5 +1,8 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import torch
+
+from loguru import logger
 from otx import OTXTaskType
 from otx.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
 from otx.data.dataset.base import OTXDataset
@@ -52,3 +55,22 @@ def get_otx_dataset_class_by_task_type(otx_task_type: OTXTaskType) -> type[OTXDa
         return otx_task_type_to_class[otx_task_type]
     except KeyError:
         raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
+
+def convert_metrics(metrics: dict) -> dict[str, float]:
+    """Convert metric values to a flat dict of scalar floats.
+
+    Handles torch.Tensor values that may contain multiple elements
+    (e.g., per-class metrics) by skipping them, matching the behavior
+    of OVEngine.log_results.
+    """
+    result: dict[str, float] = {}
+    for k, v in metrics.items():
+        name = k.split("/")[1] if "/" in k else k
+        if isinstance(v, torch.Tensor):
+            if v.numel() == 1:
+                result[name] = v.item()
+            else:
+                logger.debug("Skipping non-scalar metric '{}' with {} elements", name, v.numel())
+        else:
+            result[name] = float(v)
+    return result

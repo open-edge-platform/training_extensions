@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
-import torch
 from datumaro.experimental.fields import Subset
 from loguru import logger
 from otx.backend.openvino.engine import OVEngine
@@ -19,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step
 from app.execution.common.otx_converters import (
+    convert_metrics,
     get_metric_by_task,
     get_otx_dataset_class_by_task_type,
     get_otx_task_type_by_task,
@@ -248,7 +248,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
                     model_variant_id=model_variant_id,
                     dataset_revision_id=dataset_revision_id,
                     subset=DatasetItemSubset.TESTING,
-                    metrics=self._convert_metrics(metrics),
+                    metrics=convert_metrics(metrics),
                 )
             )
 
@@ -360,24 +360,3 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
             if variant.precision == ModelPrecision.INT8 and not variant.files_deleted:
                 return variant
         return None
-
-    @staticmethod
-    def _convert_metrics(metrics: dict) -> dict[str, float]:
-        """Convert metric values to a flat dict of scalar floats.
-
-        Handles torch.Tensor values that may contain multiple elements
-        (e.g., per-class metrics) by skipping them, matching the behavior
-        of OVEngine.log_results.
-        """
-        result: dict[str, float] = {}
-        for k, v in metrics.items():
-            name = k.split("/")[1] if "/" in k else k
-            if isinstance(v, torch.Tensor):
-                if v.numel() == 1:
-                    result[name] = v.item()
-                else:
-                    logger.debug("Skipping non-scalar metric '{}' with {} elements", name, v.numel())
-            else:
-                result[name] = float(v)
-        return result
-
