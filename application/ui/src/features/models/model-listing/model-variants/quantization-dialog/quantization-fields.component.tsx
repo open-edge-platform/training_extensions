@@ -1,15 +1,15 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 import { ActionButton, Checkbox, Content, ContextualHelp, Grid, Text } from '@geti/ui';
 import { Refresh } from '@geti/ui/icons';
 
 import { NumberParameterField } from '../../../train-model/advanced-settings/components/number-parameter-field.component';
 
-const DEFAULT_QUANTIZATION_PARAMETERS = {
-    accuracyDrop: 3.0,
+export const DEFAULT_QUANTIZATION_PARAMETERS = {
+    accuracyDrop: 0.01,
     calibrationSize: 200,
 };
 
@@ -27,66 +27,78 @@ const QuantizationFieldLayout = ({ children, onReset }: QuantizationFieldLayoutP
     </Grid>
 );
 
-export const MaxAccuracyDropField = () => {
-    const [accuracyDrop, setAccuracyDrop] = useState<number>(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
-    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState<boolean>(false);
+interface MaxAccuracyDropFieldProps {
+    value: number;
+    onChange: (value: number) => void;
+    isDisabled: boolean;
+    onDisabledChange: (isDisabled: boolean) => void;
+    onReset: () => void;
+}
 
+export const MaxAccuracyDropField = ({
+    value,
+    onChange,
+    isDisabled,
+    onDisabledChange,
+    onReset,
+}: MaxAccuracyDropFieldProps) => {
     return (
-        <QuantizationFieldLayout
-            onReset={() => {
-                setAccuracyDrop(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
-            }}
-        >
-            <Text>Max accuracy drop</Text>
+        <QuantizationFieldLayout onReset={onReset}>
+            <Text>Max accuracy drop (%)</Text>
             <ContextualHelp>
                 <Content>Maximum allowed drop in validation accuracy</Content>
             </ContextualHelp>
             <NumberParameterField
                 name='Max accuracy drop'
-                value={accuracyDrop}
-                minValue={0.1}
-                maxValue={10.0}
+                value={value}
+                minValue={0.01}
+                maxValue={1.0}
                 type={'float'}
-                isDisabled={hasNoMaxAccuracyDrop}
-                onChange={setAccuracyDrop}
-                step={0.1}
+                isDisabled={isDisabled}
+                onChange={onChange}
+                step={0.01}
             />
-            <Checkbox aria-label='No maximum' isSelected={hasNoMaxAccuracyDrop} onChange={setHasNoMaxAccuracyDrop}>
+            <Checkbox aria-label='No maximum' isSelected={isDisabled} onChange={onDisabledChange}>
                 No maximum
             </Checkbox>
         </QuantizationFieldLayout>
     );
 };
 
-export const CalibrationDatasetSizeField = () => {
-    const [calibrationSize, setCalibrationSize] = useState<number>(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
-    const [usesFullCalibrationDataset, setUsesFullCalibrationDataset] = useState<boolean>(false);
+interface CalibrationDatasetSizeFieldProps {
+    value: number;
+    onChange: (value: number) => void;
+    maxValue: number;
+    isDisabled: boolean;
+    onDisabledChange: (isDisabled: boolean) => void;
+    onReset: () => void;
+}
 
+export const CalibrationDatasetSizeField = ({
+    value,
+    onChange,
+    maxValue,
+    isDisabled,
+    onDisabledChange,
+    onReset,
+}: CalibrationDatasetSizeFieldProps) => {
     return (
-        <QuantizationFieldLayout
-            onReset={() => {
-                setCalibrationSize(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
-            }}
-        >
+        <QuantizationFieldLayout onReset={onReset}>
             <Text>Max calibration size</Text>
             <ContextualHelp>
                 <Content>Calibration samples will be randomly selected within the validation set</Content>
             </ContextualHelp>
             <NumberParameterField
                 name='Max calibration size'
-                value={calibrationSize}
+                value={value}
                 minValue={1}
-                maxValue={1000}
-                isDisabled={usesFullCalibrationDataset}
+                maxValue={maxValue}
+                isDisabled={isDisabled}
                 type={'int'}
-                onChange={setCalibrationSize}
+                onChange={onChange}
                 step={1}
             />
-            <Checkbox
-                aria-label='Use full dataset'
-                isSelected={usesFullCalibrationDataset}
-                onChange={setUsesFullCalibrationDataset}
-            >
+            <Checkbox aria-label='Use full dataset' isSelected={isDisabled} onChange={onDisabledChange}>
                 Use full dataset
             </Checkbox>
         </QuantizationFieldLayout>
