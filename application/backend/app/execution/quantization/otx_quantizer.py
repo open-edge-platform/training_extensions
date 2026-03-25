@@ -81,11 +81,6 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         if not ov_model_xml_path.exists():
             raise FileNotFoundError(f"OpenVINO model files not found at {ov_model_xml_path}")
 
-        # Check model is not already quantized (no INT8 variant exists)
-        existing_int8 = self._get_int8_variant(model)
-        if existing_int8 is not None:
-            raise ValueError(f"Model {params.model_id} already has a quantized (INT8) variant")
-
         logger.info("Model {} validated for quantization (architecture={})", model.id, model.architecture)
         return model
 
