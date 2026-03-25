@@ -6,9 +6,10 @@ import { ReactNode } from 'react';
 import { Flex, View } from '@geti/ui';
 import { useNumberFormatter } from 'react-aria';
 
-import { AnnotatedVideoFrame, Label } from '../../../../../../../constants/shared-types';
+import { AnnotatedVideoFrame, Label, VideoFramePrediction } from '../../../../../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../../../../../shared/annotator/annotator-mode';
 import { useVideoFramesAnnotations } from '../../../../api/use-video-frames-annotations';
+import { useVideoFramesPredictions } from '../../../../api/use-video-frames-predictions';
 import { useVideoPlayer } from '../../../../video-player-provider.component';
 
 import classes from './video-frame-segment.module.scss';
@@ -91,13 +92,22 @@ const useVideoTimelineAnnotations = ({ frameNumber }: { frameNumber: number }) =
     };
 };
 
-// TODO: Implement this properly.
-// This hook should return the annotations and predictions for the current frame. Moreover we should fetch annotations
-// and predictions for the previous and next frames as well (using start-end frame).
-const useVideoTimelinePredictions = (_: { frameNumber: number }) => {
+const selectPredictionsForFrame = (frameNumber: number) => (data: VideoFramePrediction[]) =>
+    data.find(({ media }) => media.frame_index === frameNumber);
+
+const useVideoTimelinePredictions = ({ frameNumber }: { frameNumber: number }) => {
+    const { step } = useVideoPlayer();
+    const { data, isPending } = useVideoFramesPredictions({
+        frameNumber,
+        frameSkip: step,
+        selector: selectPredictionsForFrame(frameNumber),
+    });
+
+    const predictedLabels = data?.prediction?.flatMap((prediction) => prediction.labels.map(({ id }) => id)) ?? [];
+
     return {
-        predictedLabels: [] as string[],
-        isPredictionLoading: false,
+        predictedLabels,
+        isPredictionLoading: isPending,
     };
 };
 

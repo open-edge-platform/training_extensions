@@ -39,7 +39,7 @@ export const LabelSelection = ({ labels, setLabels, taskType }: LabelSelectionPr
             UNSAFE_style={{ overflow: 'auto' }}
         >
             <CreateLabel onCreate={handleAddItem} labels={labels} taskType={taskType} />
-            <Flex gap={'size-100'} width={'100%'} wrap={'wrap'}>
+            <Flex gap={'size-100'} width={'100%'} wrap={'wrap'} justifyContent={'center'} alignItems={'center'}>
                 {labels.map((label) => (
                     <LabelTag key={label.id} label={label} onDelete={handleDeleteItem} />
                 ))}

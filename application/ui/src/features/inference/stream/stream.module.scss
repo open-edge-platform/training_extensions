@@ -6,17 +6,28 @@
     align-items: center;
     width: 100%;
     height: 100%;
+    cursor: pointer;
 }
 
-.canvasItem {
-    grid-area: innercanvas;
-}
-
-.playButton {
-    display: flex;
-    gap: var(--spectrum-global-dimension-size-400);
-    align-items: center;
-    padding: var(--spectrum-global-dimension-size-1200);
-    position: relative;
+.playPauseButton {
+    padding: var(--spectrum-global-dimension-size-400);
     border-radius: var(--spectrum-alias-border-radius-medium);
+    background-color: var(--energy-blue);
+    cursor: pointer;
+}
+
+.streamWrapper:hover .pauseOverlay,
+.streamWrapper:focus-within .pauseOverlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.pauseOverlay {
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.22);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 120ms ease-in-out;
 }

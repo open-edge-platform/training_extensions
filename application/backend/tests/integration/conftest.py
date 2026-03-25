@@ -49,7 +49,7 @@ def fxt_db_models() -> list[ModelRevisionDB]:
         ModelRevisionDB(
             id=str(uuid4()),
             name="YOLOX-S (abc123)",
-            training_status=TrainingStatus.NOT_STARTED,
+            training_status=TrainingStatus.SUCCESSFUL,
             architecture="object-detection-yolox-s",
             training_configuration={},
             label_schema_revision={},
@@ -57,7 +57,7 @@ def fxt_db_models() -> list[ModelRevisionDB]:
         ModelRevisionDB(
             id=str(uuid4()),
             name="YOLOX-X (def456)",
-            training_status=TrainingStatus.NOT_STARTED,
+            training_status=TrainingStatus.SUCCESSFUL,
             architecture="object-detection-yolox-x",
             training_configuration={},
             label_schema_revision={},

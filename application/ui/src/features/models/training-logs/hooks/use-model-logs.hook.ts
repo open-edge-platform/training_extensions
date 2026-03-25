@@ -62,7 +62,7 @@ const downloadModelLogsFile = async (projectId: string, modelId: string) => {
     downloadFile(url, `training-logs-${modelId}.log`);
 };
 
-export const useDownloadModelLogs = (modelId: string | undefined) => {
+export const useDownloadModelLogs = (modelId: string) => {
     const projectId = useProjectIdentifier();
 
     const mutation = useMutation({

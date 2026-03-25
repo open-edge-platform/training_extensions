@@ -5,7 +5,7 @@ import secrets
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 from uuid import uuid4
 
 import cv2
@@ -221,26 +221,26 @@ class TestBaseDatasetImport:
         project_id = uuid4()
         task = Task(task_type=TaskType.CLASSIFICATION)
         label_categories: dict[str, Categories] = {"label": LabelCategories(labels=("cat", "dog", "bird"))}
-        dataset = Dataset(MulticlassClassificationImportExportSample, categories=label_categories)
+        dataset = Dataset(MultilabelClassificationImportExportSample, categories=label_categories)
         create_mock_image(output_path=tmp_path / "image1.jpg", image_format="JPEG")
         create_mock_image(output_path=tmp_path / "image2.bmp", image_format="BMP")
         dataset.append(
-            MulticlassClassificationImportExportSample(
+            MultilabelClassificationImportExportSample(
                 id=None,
                 media=LazyImage(tmp_path / "image1.jpg"),
                 media_info=MediaInfo(10, 10),
-                label=0,
+                label=np.array([0]),
                 user_reviewed=True,
                 confidence=None,
                 subset=Subset.TRAINING,
             )
         )
         dataset.append(
-            MulticlassClassificationImportExportSample(
+            MultilabelClassificationImportExportSample(
                 id=None,
                 media=LazyImage(tmp_path / "image2.bmp"),
                 media_info=MediaInfo(10, 10),
-                label=0,
+                label=np.array([]),
                 user_reviewed=True,
                 confidence=None,
                 subset=Subset.TRAINING,
@@ -263,8 +263,8 @@ class TestBaseDatasetImport:
 
         # Verify media creation
         assert fxt_media_service.create_image.call_count == 2
-        for index, call in enumerate(fxt_media_service.create_image.call_args_list):
-            meta: ImageMetadata = call.args[0]
+        for index, call_item in enumerate(fxt_media_service.create_image.call_args_list):
+            meta: ImageMetadata = call_item.args[0]
             assert meta.project_id == project_id
             assert meta.name == f"image_{index}"
             assert meta.media_type == MediaType.IMAGE
@@ -273,13 +273,27 @@ class TestBaseDatasetImport:
 
         # Verify dataset item creation
         assert fxt_dataset_service.create_dataset_item.call_count == 2
-        fxt_dataset_service.create_dataset_item.assert_any_call(
-            project_id=project_id,
-            task=task,
-            media=mock_media,
-            user_reviewed=True,
-            annotations=[DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])],
-            subset=DatasetItemSubset.TRAINING,
+        fxt_dataset_service.create_dataset_item.assert_has_calls(
+            calls=[
+                call(
+                    project_id=project_id,
+                    task=task,
+                    media=mock_media,
+                    user_reviewed=True,
+                    annotations=[
+                        DatasetItemAnnotation(shape=FullImage(), labels=[LabelReference(id=project_labels[0].id)])
+                    ],
+                    subset=DatasetItemSubset.TRAINING,
+                ),
+                call(
+                    project_id=project_id,
+                    task=task,
+                    media=mock_media,
+                    user_reviewed=True,
+                    annotations=[],
+                    subset=DatasetItemSubset.TRAINING,
+                ),
+            ]
         )
         mock_pin_message.assert_called_once_with(
             "Imported 2/2 items (2 image(s), 0 video(s), 0 frame(s)).", level="INFO"
@@ -352,8 +366,8 @@ class TestBaseDatasetImport:
 
         # A video-frame image entry should be created for each frame
         assert fxt_media_service.create_image.call_count == 2
-        for call in fxt_media_service.create_image.call_args_list:
-            meta: ImageMetadata = call.args[0]
+        for call_item in fxt_media_service.create_image.call_args_list:
+            meta: ImageMetadata = call_item.args[0]
             assert meta.media_type == MediaType.VIDEO_FRAME
             assert meta.video_id == mock_video.id
             assert meta.image_format == ImageFormat.JPG
