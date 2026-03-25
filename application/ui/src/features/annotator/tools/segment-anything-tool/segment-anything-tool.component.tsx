@@ -9,7 +9,6 @@ import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook'
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import type { Label } from '../../../../constants/shared-types';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { useNextMediaItem } from '../../../dataset/media-preview/utils';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
@@ -57,7 +56,6 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 
 export const SegmentAnythingTool = () => {
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
-    const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
@@ -76,10 +74,6 @@ export const SegmentAnythingTool = () => {
     const clampPoint = clampPointBetweenImage(image);
 
     const handleMouseMove = (event: PointerEvent<SVGSVGElement>) => {
-        if (acceptedShapes !== null) {
-            return;
-        }
-
         if (!canvasRef.current) {
             return;
         }
@@ -91,11 +85,6 @@ export const SegmentAnythingTool = () => {
         cancellableThrottledDecodingQueryFn.call([{ ...point, positive: true }]).then((shapes) => {
             setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
         });
-    };
-
-    const handleAddAnnotations = (shapes: Shape[], label: Label) => {
-        addAndSelectAnnotations(shapes, [label]);
-        setPreviewShapes([]);
     };
 
     const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
@@ -111,13 +100,8 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        if (selectedLabel == null) {
-            setAcceptedShapes(previewShapes);
-
-            return;
-        }
-
-        handleAddAnnotations(previewShapes, selectedLabel);
+        addAndSelectAnnotations(previewShapes, selectedLabel ? [selectedLabel] : []);
+        setPreviewShapes([]);
     };
 
     const handlePointerLeave = () => {
@@ -125,7 +109,7 @@ export const SegmentAnythingTool = () => {
         setPreviewShapes([]);
     };
 
-    const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
+    const previewAnnotations = previewShapes.map((shape, idx): Annotation => {
         return {
             shape,
             labels: selectedLabel ? [selectedLabel] : [],
