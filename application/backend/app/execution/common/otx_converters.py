@@ -1,15 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import torch
-
 from loguru import logger
 from otx import OTXTaskType
-
-
-
 from otx.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
-from otx.data.dataset.base import (
-    OTXDataset)
+from otx.data.dataset.base import OTXDataset
 from otx.metrics import MetricCallable
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
@@ -59,6 +54,7 @@ def get_otx_dataset_class_by_task_type(otx_task_type: OTXTaskType) -> type[OTXDa
         return otx_task_type_to_class[otx_task_type]
     except KeyError:
         raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
+
 
 def convert_metrics(metrics: dict) -> dict[str, float]:
     """Convert metric values to a flat dict of scalar floats.
