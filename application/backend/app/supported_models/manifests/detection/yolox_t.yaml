@@ -35,10 +35,14 @@ hyperparameters:
     input_size_height: 416
   dataset_preparation:
     augmentation:
-      iou_random_crop:
-        enable: false
       mosaic:
         enable: true
+      mixup:
+        enable: false
+        probability: 0.5
+      iou_random_crop:
+        enable: false
+        probability: 1.0
       random_affine:
         enable: true
         max_rotate_degree: 10.0
@@ -47,14 +51,6 @@ hyperparameters:
           - 0.1
           - 2.0
         max_shear_degree: 2.0
-      mixup:
-        enable: false
-        probability: 0.5
-      hsv_random_aug:
-        enable: false
-        hue_delta: 5
-        saturation_delta: 30
-        value_delta: 30
       random_horizontal_flip:
         enable: true
         probability: 0.5
@@ -87,4 +83,20 @@ hyperparameters:
         enable: false
         mean: 0.0
         sigma: 0.1
+        probability: 0.5
+      random_erasing:
+        enable: false
+        scale:
+          - 0.02
+          - 0.33
+        ratio:
+          - 0.3
+          - 3.3
+        probability: 0.5
+      random_grayscale:
+        enable: false
+        probability: 0.1
+      random_sharpness:
+        enable: false
+        sharpness: 0.5
         probability: 0.5

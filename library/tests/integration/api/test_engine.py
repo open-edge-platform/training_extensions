@@ -48,7 +48,7 @@ class _TaskSpec(NamedTuple):
     """Light-weight descriptor for a (task, recipe, dataset) triple."""
 
     task: OTXTaskType
-    recipe_name: str  # e.g. "tv_mobilenet_v3_small"
+    recipe_name: str  # e.g. "mobilenet_v3_large"
     dataset_dir: str  # relative to ASSETS_ROOT
 
 
@@ -56,17 +56,17 @@ class _TaskSpec(NamedTuple):
 _TASK_SPECS: list[_TaskSpec] = [
     _TaskSpec(
         task=OTXTaskType.MULTI_CLASS_CLS,
-        recipe_name="tv_mobilenet_v3_small",
+        recipe_name="mobilenet_v3_large",
         dataset_dir="classification_cifar10",
     ),
     _TaskSpec(
         task=OTXTaskType.MULTI_LABEL_CLS,
-        recipe_name="tv_mobilenet_v3_small",
+        recipe_name="mobilenet_v3_large",
         dataset_dir="multilabel_classification_coco",
     ),
     _TaskSpec(
         task=OTXTaskType.H_LABEL_CLS,
-        recipe_name="tv_mobilenet_v3_small",
+        recipe_name="mobilenet_v3_large",
         dataset_dir="hierarchical_classification_cifar100",
     ),
     _TaskSpec(
@@ -91,7 +91,7 @@ _TASK_SPECS: list[_TaskSpec] = [
     ),
     _TaskSpec(
         task=OTXTaskType.MULTI_CLASS_CLS,
-        recipe_name="tv_mobilenet_v3_small",
+        recipe_name="efficientnet_b0",
         dataset_dir="classification_dataset_16bit",
     ),
 ]

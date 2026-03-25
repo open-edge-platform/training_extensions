@@ -7,7 +7,7 @@ export class StreamPage {
     constructor(private page: Page) {}
 
     async startStream() {
-        await this.page.getByRole('button', { name: 'Start Stream' }).click();
+        await this.page.getByLabel('Start stream').click();
     }
 
     async isConnected() {
@@ -15,6 +15,6 @@ export class StreamPage {
     }
 
     async stopStream() {
-        await this.page.getByRole('button', { name: 'Stop' }).click();
+        await this.page.getByLabel('Stop stream').click();
     }
 }

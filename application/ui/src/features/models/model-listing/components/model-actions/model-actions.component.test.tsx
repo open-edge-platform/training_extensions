@@ -75,7 +75,7 @@ describe('ModelActions', () => {
 
         await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
-        expect(screen.getByRole('alertdialog', { name: 'Delete model' })).toBeInTheDocument();
+        expect(screen.getByRole('alertdialog', { name: 'Delete model files' })).toBeInTheDocument();
         expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
     });
 

@@ -4,15 +4,24 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetRevisionDB, EvaluationDB, MetricScoreDB, ModelRevisionDB, ModelVariantDB, ProjectDB
+from app.db.schema import (
+    DatasetRevisionDB,
+    EvaluationDB,
+    MetricScoreDB,
+    ModelRevisionDB,
+    ModelVariantDB,
+    PipelineDB,
+    ProjectDB,
+)
 from app.models import DatasetItemSubset, EvaluationResult
 from app.models.model_revision import ModelFormat, TrainingStatus
-from app.services import ModelRevisionMetadata, ModelService, ResourceNotFoundError, ResourceType
+from app.services import ModelRevisionMetadata, ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
@@ -353,10 +362,11 @@ class TestModelServiceIntegration:
         (model_rev_path / "config.yaml").touch()
         (model_rev_path / "training.log").touch()
 
-        fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
+        with patch("app.services.model_service.shutil.rmtree") as mock_rmtree:
+            fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 
+            mock_rmtree.assert_called_once_with(model_rev_path)
         assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
-        assert not model_rev_path.exists()
 
     def test_delete_model_only_files(
         self,
@@ -372,12 +382,43 @@ class TestModelServiceIntegration:
         (model_rev_path / "model.xml").touch()
         (model_rev_path / "model.bin").touch()
 
-        fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=fxt_model_id)
+        with patch("app.services.model_service.shutil.rmtree") as mock_rmtree:
+            fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=fxt_model_id)
 
+            mock_rmtree.assert_called_once_with(model_rev_path)
         model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
         assert model_db is not None
         assert model_db.files_deleted is True
-        assert not model_rev_path.exists()
+
+    def test_delete_model_files_raises_when_model_active_in_pipeline(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test that deleting model files raises ResourceInUseError when the model is active in a pipeline."""
+        model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_rev_path.mkdir(parents=True, exist_ok=True)
+        (model_rev_path / "model.xml").touch()
+        (model_rev_path / "model.bin").touch()
+
+        # Assign the model to the pipeline so it becomes active
+        pipeline = db_session.get(PipelineDB, str(fxt_project_id))
+        pipeline.model_revision_id = str(fxt_model_id)  # pyrefly: ignore[missing-attribute]
+        db_session.flush()
+
+        with patch("app.services.model_service.shutil.rmtree") as mock_rmtree:
+            with pytest.raises(ResourceInUseError):
+                fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=fxt_model_id)
+
+            mock_rmtree.assert_not_called()
+
+        # Verify DB record is unchanged
+        model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_db is not None
+        assert model_db.files_deleted is False
 
     def test_delete_model_with_files_no_permission(
         self,
@@ -392,18 +433,14 @@ class TestModelServiceIntegration:
         model_rev_path.mkdir(parents=True, exist_ok=True)
         (model_rev_path / "config.yaml").touch()
 
-        # Make directory read-only to simulate permission error
-        model_rev_path.chmod(0o444)
+        with (
+            patch("app.services.model_service.shutil.rmtree", side_effect=OSError("Permission denied")),
+            pytest.raises(OSError),
+        ):
+            fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 
-        try:
-            with pytest.raises(OSError):
-                fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
-
-            assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is not None
-            assert model_rev_path.exists()
-        finally:
-            # Cleanup: restore permissions so pytest can clean up temp directory
-            model_rev_path.chmod(0o755)
+        assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is not None
+        assert model_rev_path.exists()
 
     def test_delete_model_triggers_dataset_revision_files_deletion(
         self,

@@ -10,8 +10,6 @@ import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-re
 import { Box } from '../components/box/box.component';
 import { SubsetGallery } from './subset-gallery.component';
 
-import classes from './model-training-datasets.module.scss';
-
 type SubsetBoxProps = {
     title: string;
     subset: DatasetSubset;
@@ -53,9 +51,6 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
 
     return (
         <Box
-            customClasses={classes.box}
-            headingClassName={classes.boxHeading}
-            contentClassName={classes.boxContent}
             title={`${title} ${formatter.format(subsetPercentage)} (${totalCount})`}
             content={
                 <SubsetGallery

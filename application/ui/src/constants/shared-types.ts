@@ -79,9 +79,16 @@ export type SourceConfig =
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
 
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
+export type PredictionDTO = components['schemas']['DatasetItemAnnotation-Output'];
 export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
 
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
+export type VideoFramePrediction = {
+    media: components['schemas']['BatchInferenceMedia'];
+    prediction: components['schemas']['DatasetItemAnnotation-Output'][];
+};
+
+export type PredictionVideoRangePayload = components['schemas']['VideoRange'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
 

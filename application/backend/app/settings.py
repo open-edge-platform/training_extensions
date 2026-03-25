@@ -19,11 +19,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     # Application
-    app_name: str = "Geti Tune"
+    app_name: str = "Geti"
     version: str = "0.1.0"
-    summary: str = "Geti Tune server"
+    summary: str = "Geti server"
     description: str = (
-        "Geti Tune allows to fine-tune computer vision models at the edge. "
+        "Geti allows to fine-tune computer vision models at the edge. "
         "It is a lightweight application that covers the complete model AI lifecycle, "
         "including advanced features for inference, model monitoring and data collection."
     )
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_file: str = Field(default="geti_tune.db", alias="DATABASE_FILE", description="Database filename")
+    database_file: str = Field(default="geti.db", alias="DATABASE_FILE", description="Database filename")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
     # Alembic
