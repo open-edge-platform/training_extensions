@@ -574,8 +574,13 @@ class TestMediaServiceIntegration:
         fxt_media_service: MediaService,
         fxt_project_with_pipeline: tuple[Project, Pipeline],
     ) -> None:
-        """Test that a thumbnail is generated correctly for a 16-bit PNG image (mode I;16)."""
-        # Create a 16-bit grayscale image using numpy and PIL
+        """Test that a thumbnail is generated correctly for a 16-bit PNG image (mode I;16).
+
+        Specifically, the full dynamic range of the 16-bit source must be
+        preserved through normalization — a naive PIL convert("RGB") only
+        keeps the most-significant byte, producing washed-out thumbnails.
+        """
+        # Create a 16-bit grayscale image that uses the full 0-65535 range
         rng = np.random.default_rng(seed=0)
         data_16bit = rng.integers(0, 65535, (512, 512), dtype=np.uint16)
         image = PILImage.fromarray(data_16bit, mode="I;16")
@@ -601,6 +606,14 @@ class TestMediaServiceIntegration:
         with PILImage.open(thumbnail_file_path) as thumb:
             assert thumb.format == "JPEG"
             assert thumb.mode == "RGB"
+
+            # The normalized thumbnail must use a wide tonal range.
+            # A naive MSB-only conversion collapses most pixels to black (max≈255,
+            # but the vast majority of values cluster near 0), while correct
+            # normalization spreads values across the full 0-255 range.
+            arr = np.array(thumb)
+            assert arr.min() < 10, "Shadow end of range missing — normalization likely clipped low values"
+            assert arr.max() > 245, "Highlight end of range missing — normalization likely clipped high values"
 
     @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("format", VideoFormat)

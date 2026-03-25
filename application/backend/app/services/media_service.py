@@ -85,14 +85,36 @@ class MediaService(BaseSessionManagedService):
             raise InvalidImageError
 
     @staticmethod
+    def _to_jpeg_compatible(image: Image.Image) -> Image.Image:
+        """Convert an image to a JPEG-compatible mode (RGB, L, or CMYK).
+
+        16-bit modes (I;16, I) require explicit normalization: PIL's built-in
+        RGB conversion only preserves the most-significant byte, clipping the
+        lower half of the dynamic range and producing washed-out thumbnails.
+        We normalize the full value range to [0, 255] before converting to L.
+        """
+        if image.mode in ("RGB", "L", "CMYK"):
+            return image
+        if image.mode in ("I;16", "I;16B", "I;16L", "I;16S", "I;16BS", "I"):
+            # Normalize the 16-bit (or 32-bit signed int) range to 8-bit
+            image = image.convert("I")
+            arr = np.array(image, dtype=np.float32)
+            lo, hi = arr.min(), arr.max()
+            if hi > lo:
+                arr = (arr - lo) / (hi - lo) * 255.0
+            else:
+                arr = np.zeros_like(arr)
+            return Image.fromarray(arr.astype(np.uint8), mode="L").convert("RGB")
+        # All other non-JPEG-compatible modes (RGBA, P, F, …)
+        return image.convert("RGB")
+
+    @staticmethod
     def _generate_and_save_thumbnail(image: Image.Image, path: Path) -> None:
         try:
             thumbnail_image = crop_to_thumbnail(
                 image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
             )
-            # Convert non-JPEG-compatible modes (e.g. RGBA, P, I;16) to RGB
-            if thumbnail_image.mode not in ("RGB", "L", "CMYK"):
-                thumbnail_image = thumbnail_image.convert("RGB")
+            thumbnail_image = MediaService._to_jpeg_compatible(thumbnail_image)
             thumbnail_image.save(path)
         except Exception:
             logger.exception("Failed to generate thumbnail image")
@@ -275,9 +297,7 @@ class MediaService(BaseSessionManagedService):
         thumbnail = crop_to_thumbnail(
             image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
         )
-        if thumbnail.mode not in ("RGB", "L", "CMYK"):
-            thumbnail = thumbnail.convert("RGB")
-        return thumbnail
+        return MediaService._to_jpeg_compatible(thumbnail)
 
     def delete_media(self, project: Project, media_id: UUID) -> None:
         """Delete a media by its ID"""
