@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """RTMDetInst model implementations."""
@@ -20,10 +20,10 @@ from otx.backend.native.models.common.utils.prior_generators import MlvlPointGen
 from otx.backend.native.models.common.utils.samplers import PseudoSampler
 from otx.backend.native.models.detection.backbones import CSPNeXt
 from otx.backend.native.models.detection.detectors import SingleStageDetector
-from otx.backend.native.models.detection.necks import CSPNeXtPAFPN
 from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.instance_segmentation.heads import RTMDetInstSepBNHead
 from otx.backend.native.models.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
+from otx.backend.native.models.instance_segmentation.necks import CSPNeXtPAFPN
 from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
@@ -43,7 +43,7 @@ class RTMDetInst(OTXInstanceSegModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels used in the model.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "rtmdet_inst_tiny".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
@@ -66,7 +66,7 @@ class RTMDetInst(OTXInstanceSegModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["rtmdet_inst_tiny"] = "rtmdet_inst_tiny",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -194,4 +194,4 @@ class RTMDetInst(OTXInstanceSegModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))
+        return DataInputParams(input_size=(640, 640), mean=(0.406, 0.456, 0.485), std=(0.225, 0.224, 0.229))

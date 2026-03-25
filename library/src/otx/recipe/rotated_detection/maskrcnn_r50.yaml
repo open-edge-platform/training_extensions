@@ -1,6 +1,6 @@
 task: ROTATED_DETECTION
 model:
-  class_path: otx.backend.native.models.instance_segmentation.maskrcnn.RotatedMaskRCNNModel
+  class_path: otx.backend.native.models.instance_segmentation.maskrcnn_tv.RotatedMaskRCNNModelV2
   init_args:
     model_name: "maskrcnn_resnet_50"
     label_info: 80
@@ -59,19 +59,9 @@ overrides:
     train_subset:
       batch_size: 4
       num_workers: 8
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Pad
-          init_args:
-            size_divisor: 32
+
     val_subset:
       num_workers: 4
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Pad
-          init_args:
-            size_divisor: 32
+
     test_subset:
       num_workers: 4
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Pad
-          init_args:
-            size_divisor: 32

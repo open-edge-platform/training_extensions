@@ -54,6 +54,7 @@ export const Dataset = () => {
             <View gridRow='3'>
                 <Gallery
                     items={items}
+                    annotationStatus={filterStatus ?? undefined}
                     viewMode={viewMode}
                     isPending={isPending}
                     hasActiveFilter={filterStatus !== null}

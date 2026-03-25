@@ -2,15 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex } from '@geti/ui';
+import { useQueryClient } from '@tanstack/react-query';
 import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { partition } from 'lodash-es';
 
-import { LoadingImportDataset } from './loading-import-dataset/loading-import-dataset.component';
-import { PrepareImportDataset } from './prepare-import-dataset.component';
-import { StagedImportDataset } from './staged-import-dataset/staged-import-dataset.component';
+import { StagedImportDataset } from '../../../../components/import-card-status/staged-import-dataset/staged-import-dataset.component';
+import { LoadingImportDataset } from '../../../../components/loading-import-dataset/loading-import-dataset.component';
+import { PrepareImportDataset } from '../../../../components/prepare-import-dataset/prepare-import-dataset.component';
+import { getQueryKey } from '../../../../query-client/query-client';
+import { useImportDatasetDialogState } from '../../providers/export-import-dataset-dialog-provider.component';
 
 export const ImportJobsList = () => {
-    const { getAllImportEntries } = useImportDatasetToProject();
+    const queryClient = useQueryClient();
+    const projectId = useProjectIdentifier();
+    const { datasetImportDialogState, setCurrentStep, setCurrentStagedId } = useImportDatasetDialogState();
+    const { getAllImportEntries, deleteImportEntry, updateImportEntryStep } = useImportDatasetToProject();
+
     const importEntries = getAllImportEntries();
 
     const [preparingImports, otherItems] = partition(importEntries, ({ step }) => step === 'preparing');
@@ -20,6 +28,22 @@ export const ImportJobsList = () => {
     const stagedImportsQueue = stagedImports.reverse();
     const preparingImportsQueue = preparingImports.reverse();
 
+    const handleImportSuccess = () => {
+        queryClient.invalidateQueries({
+            queryKey: getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/media',
+                { params: { path: { project_id: projectId } } },
+            ]),
+        });
+    };
+
+    const handleOpen = (stagedDatasetId: string) => {
+        setCurrentStep('labelMapping');
+        setCurrentStagedId(stagedDatasetId);
+        datasetImportDialogState.open();
+    };
+
     return (
         <Flex
             gap='size-250'
@@ -28,20 +52,40 @@ export const ImportJobsList = () => {
             marginBottom='size-250'
             UNSAFE_style={{ overflowY: 'auto' }}
         >
-            {preparingImportsQueue.map(({ stagedDatasetId }) => (
-                <PrepareImportDataset key={`prepare-${stagedDatasetId}`} stagedDatasetId={String(stagedDatasetId)} />
+            {preparingImportsQueue.map(({ size, fileName, stagedDatasetId, prepareJobId }) => (
+                <PrepareImportDataset
+                    key={`prepare-${stagedDatasetId}`}
+                    size={size}
+                    fileName={fileName}
+                    jobId={prepareJobId}
+                    stagedDatasetId={stagedDatasetId}
+                    onSuccess={() => updateImportEntryStep(stagedDatasetId, 'labelMapping')}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                />
             ))}
 
             {stagedImportsQueue.map(({ fileName, stagedDatasetId }) => (
                 <StagedImportDataset
                     key={`staged-${stagedDatasetId}`}
-                    fileName={String(fileName)}
-                    stagedDatasetId={String(stagedDatasetId)}
+                    fileName={fileName}
+                    message={'Map labels for the uploaded dataset'}
+                    stagedDatasetId={stagedDatasetId}
+                    primaryButtonLabel={'Continue'}
+                    onOpen={() => handleOpen(stagedDatasetId)}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
                 />
             ))}
 
-            {loadingItemsQueue.map(({ stagedDatasetId }) => (
-                <LoadingImportDataset key={`loading-${stagedDatasetId}`} stagedDatasetId={String(stagedDatasetId)} />
+            {loadingItemsQueue.map(({ size, fileName, stagedDatasetId, importJobId }) => (
+                <LoadingImportDataset
+                    key={`loading-${stagedDatasetId}`}
+                    size={size}
+                    fileName={fileName}
+                    jobId={String(importJobId)}
+                    stagedDatasetId={String(stagedDatasetId)}
+                    onSuccess={handleImportSuccess}
+                    deleteEntry={() => deleteImportEntry(stagedDatasetId)}
+                />
             ))}
         </Flex>
     );

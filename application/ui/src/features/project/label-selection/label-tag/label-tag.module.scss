@@ -1,7 +1,8 @@
 .labelTag {
     --colorWithHighContrast: lch(from var(--labelColor) calc((50 - l) * infinity) 0 0);
 
-    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-200);
+    padding: 0;
+    padding-left: var(--spectrum-global-dimension-size-100);
     background-color: var(--labelColor);
     border-radius: var(--spectrum-alias-border-radius-regular);
     color: var(--colorWithHighContrast);

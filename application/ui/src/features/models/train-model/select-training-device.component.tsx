@@ -4,10 +4,10 @@
 import { Item, Picker } from '@geti/ui';
 
 import type { DeviceType } from '../../../constants/shared-types';
-import { useTrainModel } from './train-model-provider.component';
+import { useTrainModelState } from './train-model-provider.component';
 
 export const SelectTrainingDevice = () => {
-    const { trainingDevices, onSelectTrainingDevice, selectedTrainingDevice } = useTrainModel();
+    const { trainingDevices, onSelectTrainingDevice, selectedTrainingDevice } = useTrainModelState();
 
     return (
         <Picker

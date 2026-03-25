@@ -18,7 +18,7 @@ type VideoPlayerSliderProps = {
     videoFrame: MediaVideoFrame;
     step: number;
     frameNumber: number;
-    sizePerSquare: number;
+    sizePerSquare?: number;
     frameOffset?: number;
     ref?: RefObject<HTMLDivElement | null>;
     selectFrame: (frameNumber: number) => void;
@@ -101,9 +101,8 @@ export const VideoPlayerSlider = ({
     selectFrame,
     frameOffset = 0,
 }: VideoPlayerSliderProps) => {
-    const [sliderValue, setSliderValue] = useState<number>(frameNumber);
-
-    useEffect(() => setSliderValue(frameNumber), [frameNumber]);
+    const [dragFrameNumber, setDragFrameNumber] = useState<number | null>(null);
+    const sliderValue = dragFrameNumber ?? frameNumber;
 
     const {
         hoverProps,
@@ -153,14 +152,14 @@ export const VideoPlayerSlider = ({
                 showValueLabel={false}
                 minValue={minValue}
                 maxValue={maxValue}
-                defaultValue={sliderValue}
                 value={sliderValue}
                 onChange={(newFrameNumber) => {
-                    setSliderValue(newFrameNumber);
+                    setDragFrameNumber(newFrameNumber);
                     onShowThumbnail(true);
                 }}
                 onChangeEnd={(newFrameNumber) => {
                     selectFrame(newFrameNumber);
+                    setDragFrameNumber(null);
                     blurActiveInput(true);
                 }}
                 step={step}

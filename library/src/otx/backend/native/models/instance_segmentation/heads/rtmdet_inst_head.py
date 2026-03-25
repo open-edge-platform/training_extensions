@@ -1,11 +1,13 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""Implementation modified from mmdet.models.dense_heads.rtmdet_ins_head.py.
+"""RTMDet head for instance segmentation.
 
-Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/rtmdet_ins_head.py
+References:
+    - https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/rtmdet_head.py
+    - https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/rtmdet_ins_head.py
 """
 
 from __future__ import annotations
@@ -25,16 +27,20 @@ from otx.backend.native.models.common.utils.utils import (
     distance2bbox,
     filter_scores_and_topk,
     inverse_sigmoid,
+    multi_apply,
     reduce_mean,
     select_single_mlvl,
 )
-from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetHead
+from otx.backend.native.models.detection.heads.atss_head import ATSSHeadModule
+from otx.backend.native.models.detection.utils.prior_generators.utils import anchor_inside_flags
+from otx.backend.native.models.detection.utils.utils import images_to_levels, unmap
 from otx.backend.native.models.instance_segmentation.utils.roi_extractors import OTXRoIAlign
 from otx.backend.native.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.backend.native.models.modules import build_activation_layer
 from otx.backend.native.models.modules.base_module import BaseModule
-from otx.backend.native.models.modules.conv_module import Conv2dModule
+from otx.backend.native.models.modules.conv_module import Conv2dModule, PatchedConv2d
 from otx.backend.native.models.modules.norm import build_norm_layer, is_norm
+from otx.backend.native.models.modules.scale import Scale
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
 from otx.data.entity.sample import OTXSampleBatch
@@ -44,6 +50,361 @@ from otx.data.utils.structures.mask.mask_util import polygon_to_bitmap
 from .utils import sigmoid_geometric_mean
 
 # mypy: disable-error-code="call-overload, index, override, attr-defined, misc"
+
+
+class RTMDetHead(ATSSHeadModule):
+    """Detection Head of RTMDet (base class for instance segmentation heads).
+
+    Args:
+        num_classes (int): Number of categories excluding the background category.
+        in_channels (int): Number of channels in the input feature map.
+        with_objectness (bool): Whether to add an objectness branch.
+            Defaults to True.
+        activation (Callable[..., nn.Module]): Activation layer module.
+            Defaults to ``nn.ReLU``.
+    """
+
+    def __init__(
+        self,
+        num_classes: int,
+        in_channels: int,
+        with_objectness: bool = True,
+        activation: Callable[..., nn.Module] = nn.ReLU,
+        **kwargs,
+    ) -> None:
+        self.activation = activation
+        self.with_objectness = with_objectness
+        super().__init__(num_classes, in_channels, **kwargs)
+        if self.train_cfg:
+            self.assigner = self.train_cfg["assigner"]
+
+    def _init_layers(self) -> None:
+        """Initialize layers of the head."""
+        self.cls_convs = nn.ModuleList()
+        self.reg_convs = nn.ModuleList()
+        for i in range(self.stacked_convs):
+            chn = self.in_channels if i == 0 else self.feat_channels
+            self.cls_convs.append(
+                Conv2dModule(
+                    chn,
+                    self.feat_channels,
+                    3,
+                    stride=1,
+                    padding=1,
+                    normalization=build_norm_layer(self.normalization, num_features=self.feat_channels),
+                    activation=build_activation_layer(self.activation),
+                ),
+            )
+            self.reg_convs.append(
+                Conv2dModule(
+                    chn,
+                    self.feat_channels,
+                    3,
+                    stride=1,
+                    padding=1,
+                    normalization=build_norm_layer(self.normalization, num_features=self.feat_channels),
+                    activation=build_activation_layer(self.activation),
+                ),
+            )
+        pred_pad_size = self.pred_kernel_size // 2
+        self.rtm_cls = PatchedConv2d(
+            self.feat_channels,
+            self.num_base_priors * self.cls_out_channels,  # pyrefly: ignore[bad-argument-type]
+            self.pred_kernel_size,
+            padding=pred_pad_size,
+        )
+        self.rtm_reg = PatchedConv2d(
+            self.feat_channels,
+            self.num_base_priors * 4,  # pyrefly: ignore[bad-argument-type]
+            self.pred_kernel_size,
+            padding=pred_pad_size,
+        )
+        if self.with_objectness:
+            self.rtm_obj = PatchedConv2d(self.feat_channels, 1, self.pred_kernel_size, padding=pred_pad_size)
+
+        self.scales = nn.ModuleList([Scale(1.0) for _ in self.prior_generator.strides])
+
+    def init_weights(self) -> None:
+        """Initialize weights of the head."""
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                normal_init(m, mean=0, std=0.01)
+            if is_norm(m):
+                constant_init(m, 1)
+        bias_cls = bias_init_with_prob(0.01)
+        normal_init(self.rtm_cls, std=0.01, bias=bias_cls)
+        normal_init(self.rtm_reg, std=0.01)
+        if self.with_objectness:
+            normal_init(self.rtm_obj, std=0.01, bias=bias_cls)
+
+    def forward(self, feats: tuple[Tensor, ...]) -> tuple:
+        """Forward features from the upstream network.
+
+        Args:
+            feats (tuple[Tensor]): Features from the upstream network, each is
+                a 4D-tensor.
+
+        Returns:
+            tuple: Usually a tuple of classification scores and bbox prediction
+            - cls_scores (list[Tensor]): Classification scores for all scale
+              levels, each is a 4D-tensor, the channels number is
+              num_base_priors * num_classes.
+            - bbox_preds (list[Tensor]): Box energies / deltas for all scale
+              levels, each is a 4D-tensor, the channels number is
+              num_base_priors * 4.
+        """
+        cls_scores = []
+        bbox_preds = []
+        for x, scale, stride in zip(feats, self.scales, self.prior_generator.strides):
+            cls_feat = x
+            reg_feat = x
+
+            for cls_layer in self.cls_convs:
+                cls_feat = cls_layer(cls_feat)
+            cls_score = self.rtm_cls(cls_feat)
+
+            for reg_layer in self.reg_convs:
+                reg_feat = reg_layer(reg_feat)
+
+            if self.with_objectness:
+                objectness = self.rtm_obj(reg_feat)
+                cls_score = inverse_sigmoid(sigmoid_geometric_mean(cls_score, objectness))
+
+            reg_dist = scale(self.rtm_reg(reg_feat).exp()).float() * stride[0]
+
+            cls_scores.append(cls_score)
+            bbox_preds.append(reg_dist)
+        return tuple(cls_scores), tuple(bbox_preds)
+
+    def get_targets(
+        self,
+        cls_scores: Tensor,
+        bbox_preds: Tensor,
+        anchor_list: list[list[Tensor]],
+        valid_flag_list: list[list[Tensor]],
+        batch_gt_instances: list[InstanceData],
+        batch_img_metas: list[dict],
+        batch_gt_instances_ignore: list[InstanceData] | list[None] | None = None,
+        unmap_outputs: bool = True,
+    ) -> tuple | None:
+        """Compute regression and classification targets for anchors in multiple images.
+
+        Args:
+            cls_scores (Tensor): Classification predictions of images,
+                a 3D-Tensor with shape [num_imgs, num_priors, num_classes].
+            bbox_preds (Tensor): Decoded bboxes predictions of one image,
+                a 3D-Tensor with shape [num_imgs, num_priors, 4] in [tl_x,
+                tl_y, br_x, br_y] format.
+            anchor_list (list[list[Tensor]]): Multi level anchors of each
+                image. The outer list indicates images, and the inner list
+                corresponds to feature levels of the image. Each element of
+                the inner list is a tensor of shape (num_anchors, 4).
+            valid_flag_list (list[list[Tensor]]): Multi level valid flags of
+                each image. The outer list indicates images, and the inner list
+                corresponds to feature levels of the image. Each element of
+                the inner list is a tensor of shape (num_anchors, )
+            batch_gt_instances (list[InstanceData]): Batch of
+                gt_instance. It usually includes ``bboxes`` and ``labels``
+                attributes.
+            batch_img_metas (list[dict]): Meta information of each image, e.g.,
+                image size, scaling factor, etc.
+            batch_gt_instances_ignore (list[InstanceData], Optional):
+                Batch of gt_instances_ignore. It includes ``bboxes`` attribute
+                data that is ignored during training and testing.
+                Defaults to None.
+            unmap_outputs (bool): Whether to map outputs back to the original
+                set of anchors. Defaults to True.
+
+        Returns:
+            tuple: a tuple containing learning targets.
+        """
+        num_imgs = len(batch_img_metas)
+        if len(anchor_list) != len(valid_flag_list) != num_imgs:
+            msg = (
+                f"The number of anchor_list (={len(anchor_list)}), the number of valid_flag_list "
+                f"(={len(valid_flag_list)}), and num_imgs (={num_imgs}) should be same."
+            )
+            raise ValueError(msg)
+
+        # anchor number of multi levels
+        num_level_anchors = [anchors.size(0) for anchors in anchor_list[0]]
+
+        # concat all level anchors and flags to a single tensor
+        for i in range(num_imgs):
+            if len(anchor_list[i]) != len(valid_flag_list[i]):
+                msg = (
+                    f"The number of anchor_list[i] (={len(anchor_list[i])}) and the number of valid_flag_list[i] "
+                    f"(={len(valid_flag_list[i])}) should be same."
+                )
+                raise ValueError(msg)
+            anchor_list[i] = torch.cat(anchor_list[i])  # pyrefly: ignore[unsupported-operation]
+            valid_flag_list[i] = torch.cat(valid_flag_list[i])  # pyrefly: ignore[unsupported-operation]
+
+        # compute targets for each image
+        if batch_gt_instances_ignore is None:
+            batch_gt_instances_ignore = [None] * num_imgs
+
+        (
+            all_anchors,
+            all_labels,
+            all_label_weights,
+            all_bbox_targets,
+            all_assign_metrics,
+            sampling_results_list,
+        ) = multi_apply(
+            self._get_targets_single,
+            cls_scores.detach(),
+            bbox_preds.detach(),
+            anchor_list,
+            valid_flag_list,
+            batch_gt_instances,
+            batch_img_metas,
+            batch_gt_instances_ignore,
+            unmap_outputs=unmap_outputs,
+        )
+        # no valid anchors
+        if any(labels is None for labels in all_labels):
+            return None
+
+        # split targets to a list w.r.t. multiple levels
+        anchors_list = images_to_levels(all_anchors, num_level_anchors)
+        labels_list = images_to_levels(all_labels, num_level_anchors)
+        label_weights_list = images_to_levels(all_label_weights, num_level_anchors)
+        bbox_targets_list = images_to_levels(all_bbox_targets, num_level_anchors)
+        assign_metrics_list = images_to_levels(all_assign_metrics, num_level_anchors)
+
+        return (
+            anchors_list,
+            labels_list,
+            label_weights_list,
+            bbox_targets_list,
+            assign_metrics_list,
+            sampling_results_list,
+        )
+
+    def _get_targets_single(
+        self,
+        cls_scores: Tensor,
+        bbox_preds: Tensor,
+        flat_anchors: Tensor,
+        valid_flags: Tensor,
+        gt_instances: InstanceData,
+        img_meta: dict,
+        gt_instances_ignore: InstanceData | None = None,
+        unmap_outputs: bool = True,
+    ) -> tuple:
+        """Compute regression, classification targets for anchors in a single image.
+
+        Args:
+            cls_scores (list[Tensor]): Box scores for each image.
+            bbox_preds (list[Tensor]): Box energies / deltas for each image.
+            flat_anchors (Tensor): Multi-level anchors of the image, which are
+                concatenated into a single tensor of shape (num_anchors, 4)
+            valid_flags (Tensor): Multi level valid flags of the image,
+                which are concatenated into a single tensor of shape (num_anchors,).
+            gt_instances (InstanceData): Ground truth of instance annotations.
+            img_meta (dict): Meta information for current image.
+            gt_instances_ignore (InstanceData, optional): Instances to be ignored.
+                Defaults to None.
+            unmap_outputs (bool): Whether to map outputs back to the original
+                set of anchors. Defaults to True.
+
+        Returns:
+            tuple: N is the number of total anchors in the image.
+        """
+        inside_flags = anchor_inside_flags(
+            flat_anchors,
+            valid_flags,
+            img_meta["img_shape"][:2],
+            self.train_cfg["allowed_border"],
+        )
+        if not inside_flags.any():
+            return (None,) * 7
+        # assign gt and sample anchors
+        anchors = flat_anchors[inside_flags, :]
+
+        pred_instances = InstanceData(
+            scores=cls_scores[inside_flags, :],
+            bboxes=bbox_preds[inside_flags, :],
+            priors=anchors,
+        )
+
+        assign_result = self.assigner.assign(  # pyrefly: ignore[missing-attribute]
+            pred_instances, gt_instances, gt_instances_ignore
+        )
+
+        sampling_result = self.sampler.sample(  # pyrefly: ignore[missing-attribute]
+            assign_result, pred_instances, gt_instances
+        )
+
+        num_valid_anchors = anchors.shape[0]
+        bbox_targets = torch.zeros_like(anchors)
+        labels = anchors.new_full((num_valid_anchors,), self.num_classes, dtype=torch.long)
+        label_weights = anchors.new_zeros(num_valid_anchors, dtype=torch.float)
+        assign_metrics = anchors.new_zeros(num_valid_anchors, dtype=torch.float)
+
+        pos_inds = sampling_result.pos_inds
+        neg_inds = sampling_result.neg_inds
+        if len(pos_inds) > 0:
+            # point-based
+            pos_bbox_targets = sampling_result.pos_gt_bboxes
+            bbox_targets[pos_inds, :] = pos_bbox_targets.to(bbox_targets)
+
+            labels[pos_inds] = sampling_result.pos_gt_labels
+            if self.train_cfg["pos_weight"] <= 0:
+                label_weights[pos_inds] = 1.0
+            else:
+                label_weights[pos_inds] = self.train_cfg["pos_weight"]
+        if len(neg_inds) > 0:
+            label_weights[neg_inds] = 1.0
+
+        class_assigned_gt_inds = torch.unique(sampling_result.pos_assigned_gt_inds)
+        for gt_inds in class_assigned_gt_inds:
+            gt_class_inds = pos_inds[sampling_result.pos_assigned_gt_inds == gt_inds]
+            assign_metrics[gt_class_inds] = assign_result.max_overlaps[gt_class_inds]
+
+        # map up to original set of anchors
+        if unmap_outputs:
+            num_total_anchors = flat_anchors.size(0)
+            anchors = unmap(anchors, num_total_anchors, inside_flags)
+            labels = unmap(labels, num_total_anchors, inside_flags, fill=self.num_classes)
+            label_weights = unmap(label_weights, num_total_anchors, inside_flags)
+            bbox_targets = unmap(bbox_targets, num_total_anchors, inside_flags)
+            assign_metrics = unmap(assign_metrics, num_total_anchors, inside_flags)
+        return (anchors, labels, label_weights, bbox_targets, assign_metrics, sampling_result)
+
+    def get_anchors(
+        self,
+        featmap_sizes: list[tuple[int, int]],
+        batch_img_metas: list[dict],
+        device: torch.device | str = "cuda",
+    ) -> tuple[list[list[Tensor]], list[list[Tensor]]]:
+        """Get anchors according to feature map sizes.
+
+        Args:
+            featmap_sizes (list[tuple]): Multi-level feature map sizes.
+            batch_img_metas (list[dict]): Image meta info.
+            device (torch.device or str): Device for returned tensors.
+                Defaults to cuda.
+
+        Returns:
+            tuple:
+            - anchor_list (list[list[Tensor]]): Anchors of each image.
+            - valid_flag_list (list[list[Tensor]]): Valid flags of each image.
+        """
+        num_imgs = len(batch_img_metas)
+
+        # since feature map sizes of all images are the same, we only compute
+        # anchors for one time
+        multi_level_anchors = self.prior_generator.grid_priors(featmap_sizes, device=device, with_stride=True)
+        anchor_list = [multi_level_anchors for _ in range(num_imgs)]
+
+        # for each image, we compute valid flags of multi level anchors
+        valid_flag_list = []
+        for img_meta in batch_img_metas:
+            multi_level_flags = self.prior_generator.valid_flags(featmap_sizes, img_meta["img_shape"], device)
+            valid_flag_list.append(multi_level_flags)
+        return anchor_list, valid_flag_list
 
 
 class RTMDetInstHead(RTMDetHead):
@@ -629,7 +990,7 @@ class RTMDetInstHead(RTMDetHead):
         Returns:
             dict: A dictionary of components for loss calculation.
         """
-        cls_scores, bbox_preds, kernel_preds, mask_feat = self(x)
+        cls_scores, bbox_preds, kernel_preds, mask_feat = self.forward(x)
         batch_gt_instances, batch_img_metas = unpack_inst_seg_entity(entity)
 
         num_imgs = len(batch_img_metas)

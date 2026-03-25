@@ -20,7 +20,7 @@ def fxt_ov_model(tmp_path, get_dummy_ov_cls_model) -> OVModel:
 
 @pytest.fixture
 def fxt_engine(tmp_path, fxt_ov_model) -> OVEngine:
-    data_root = "tests/assets/multilabel_classification/"
+    data_root = "tests/assets/multilabel_classification_coco/"
 
     return OVEngine(
         data=data_root,
@@ -31,7 +31,7 @@ def fxt_engine(tmp_path, fxt_ov_model) -> OVEngine:
 
 class TestEngine:
     def test_constructor(self, mocker, tmp_path, fxt_ov_model) -> None:
-        data_root = "tests/assets/multilabel_classification/"
+        data_root = "tests/assets/multilabel_classification_coco/"
         engine = OVEngine(data=data_root, model=fxt_ov_model, work_dir=tmp_path)
         assert engine.datamodule.task == "MULTI_LABEL_CLS"
         assert isinstance(engine.model, OVModel)

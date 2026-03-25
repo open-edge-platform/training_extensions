@@ -16,7 +16,7 @@ declare module '@tanstack/react-query' {
 
 const TOAST_DURATION = 5000;
 
-const getErrorMessage = (error: unknown): string => {
+export const getErrorMessage = (error: unknown): string => {
     if (!error || typeof error !== 'object') {
         return 'An unexpected error occurred. Please try again.';
     }

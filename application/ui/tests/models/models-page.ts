@@ -30,12 +30,35 @@ export class ModelsPage {
         await this.page.getByRole('option', { name: option }).click();
     }
 
+    async selectPickerOption(label: string, optionName: string) {
+        await this.page.getByLabel(label, { exact: true }).last().click();
+        await this.page.getByRole('option', { name: optionName, exact: true }).click();
+    }
+
+    async openTrainModelDialog() {
+        await this.page.getByRole('button', { name: 'Train model' }).click();
+    }
+
+    async selectModelArchitecture(architectureName: string) {
+        await this.page.getByRole('radio', { name: architectureName, exact: true }).click();
+    }
+
+    async startTraining() {
+        await this.page.getByRole('button', { name: 'Start' }).click();
+    }
+
+    async openModelListingOptionsMenu() {
+        await this.page.getByRole('button', { name: 'Model listing options' }).click();
+    }
+
     async togglePinActiveModel() {
-        await this.page.getByRole('button', { name: 'Pin active model on top' }).click();
+        await this.openModelListingOptionsMenu();
+        await this.page.getByRole('menuitem', { name: /Pin active model on top|Unpin active model from top/ }).click();
     }
 
     async toggleShowHideFailedModels() {
-        await this.page.getByRole('button', { name: 'Show failed models' }).click();
+        await this.openModelListingOptionsMenu();
+        await this.page.getByRole('menuitem', { name: /Show failed models|Hide failed models/ }).click();
     }
 
     getSearchInput() {
@@ -126,5 +149,31 @@ export class ModelsPage {
 
     async clickTrainingDatasetsTab() {
         await this.page.getByRole('tab', { name: 'Training datasets' }).click();
+    }
+
+    async openAdvancedSettings() {
+        await this.page.getByRole('button', { name: 'Advanced settings' }).click();
+    }
+
+    async openBasicMode() {
+        await this.page.getByRole('button', { name: 'Back' }).click();
+    }
+
+    async openTrainingParameters() {
+        await this.page.getByRole('tab', { name: 'Training' }).click();
+    }
+
+    async updateInputSizeParameters(inputSizeWidth: number, inputSizeHeight: number) {
+        await this.page.getByRole('button', { name: 'Select Input size width' }).click();
+        await this.page
+            .getByRole('listbox', { name: 'Select Input size width' })
+            .getByRole('option', { name: inputSizeWidth.toString() })
+            .click();
+
+        await this.page.getByRole('button', { name: 'Select Input size height' }).click();
+        await this.page
+            .getByRole('listbox', { name: 'Select Input size height' })
+            .getByRole('option', { name: inputSizeHeight.toString() })
+            .click();
     }
 }

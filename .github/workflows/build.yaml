@@ -24,13 +24,13 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: ubuntu-latest
+    runs-on: overflow
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
       - &checkout
         name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -47,33 +47,35 @@ jobs:
 
   build:
     name: Build and upload docker image (${{ matrix.device }})
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
       matrix:
-        device: [cpu, xpu, gpu]
+        device: [cpu, xpu, cuda]
     permissions:
       contents: read
     steps:
       - *checkout
 
       - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
         with:
           type: "pre-build"
 
       # Install the latest Docker, since the version available by default on the runners may be outdated
       - name: Set up Docker
-        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 #v4.7.0
+        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
 
-      - name: Set up Docker Compose
-        uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -87,53 +89,54 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - name: Build image for ${{ matrix.device }}
-        working-directory: application/docker
+        working-directory: application
         run: |
-          # Build and tag images using provided metadata
           for TAG in $TAGS ; do
-              AI_DEVICE=${DEVICE} TAG=${TAG} docker compose build
+              just build-image --accelerator $DEVICE --tag $TAG
           done
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DEVICE: ${{ matrix.device }}
-          PUBLIC_API_BASE_URL: "/"
 
       - name: Run simple checks on the built image
-        working-directory: application/docker
+        working-directory: application
         run: |
-          # Get the first tag for testing
           FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
           echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
 
-          # Start the container in detached mode
-          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 7860:7860 geti-tune-${DEVICE}:${FIRST_TAG})
-          echo "Started container: $CONTAINER_ID"
+          CONTAINER_NAME="geti-${DEVICE}"
 
-          # Function to cleanup container on exit
+          # Start the container in detached mode
+          just run-image --accelerator $DEVICE --tag $FIRST_TAG --name $CONTAINER_NAME --detach
+
+          # Cleanup container on exit
           cleanup() {
-              echo "Cleaning up container: $CONTAINER_ID"
-              docker stop $CONTAINER_ID || true
+              echo "--- Container logs ---"
+              docker logs "$CONTAINER_NAME" || true
+              echo "--- Stopping container ---"
+              docker stop "$CONTAINER_NAME" || true
           }
           trap cleanup EXIT
 
           TEST_URL="localhost:7860"
-          # Wait for container to be ready (max 60 seconds)
           echo "Waiting for container to be ready..."
+          HEALTH_OK=false
           for i in {1..12}; do
               if curl -sf $TEST_URL/health > /dev/null 2>&1; then
                   echo "✅ Health check passed!"
+                  HEALTH_OK=true
                   break
-              fi
-              if [ $i -eq 12 ]; then
-                  echo "❌ Health check failed after 60 seconds"
-                  docker logs $CONTAINER_ID
-                  exit 1
               fi
               echo "Attempt $i/12 - waiting 5 seconds..."
               sleep 5
           done
 
-          EXPECTED_TITLE="Geti Tune"
+          if [[ "$HEALTH_OK" != "true" ]]; then
+              echo "❌ Health check failed after 60 seconds"
+              exit 1
+          fi
+
+          EXPECTED_TITLE="Geti"
           echo "Checking HTML title..."
 
           HTML_CONTENT=$(curl -sf $TEST_URL)
@@ -162,7 +165,7 @@ jobs:
           echo "|-------|------|" >> image-sizes/${DEVICE}.md
 
           for TAG in $TAGS ; do
-            IMAGE="geti-tune-${DEVICE}:${TAG}"
+            IMAGE="geti-${DEVICE}:${TAG}"
             if docker image inspect "$IMAGE" >/dev/null 2>&1; then
               size_bytes=$(docker image inspect "$IMAGE" --format='{{.Size}}')
               size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
@@ -175,7 +178,7 @@ jobs:
 
       - name: Upload image sizes
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: image-sizes-${{ matrix.device }}
           path: application/docker/image-sizes/${{ matrix.device }}.md
@@ -194,7 +197,7 @@ jobs:
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714
         with:
-          image: "geti-tune-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
+          image: "geti-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
           retention_days: "3"
         continue-on-error: true
         env:
@@ -204,13 +207,13 @@ jobs:
     name: Comment PR with all image sizes
     needs: build
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: overflow
     permissions:
       pull-requests: write
     continue-on-error: true
     steps:
       - name: Download all image size artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           pattern: image-sizes-*
           merge-multiple: true
@@ -269,7 +272,7 @@ jobs:
     needs:
       - check_paths
       - build
-    runs-on: ubuntu-latest
+    runs-on: overflow
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

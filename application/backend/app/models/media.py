@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field, TypeAdapter, computed_field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, computed_field, model_validator
 
 from .base import BaseEntity
 
@@ -60,6 +60,7 @@ class BaseMedia(BaseEntity):
         source_id: Identifier of the source from which the media was acquired, if applicable.
     """
 
+    model_config = ConfigDict(frozen=True)
     id: UUID
     project_id: UUID
     name: str
@@ -104,6 +105,47 @@ class Video(BaseMedia):
         return self.frame_count / self.fps
 
 
+class NotAnnotatedVideoFrame(BaseModel):
+    """
+    Video frame that is not annotated yet. It contains the video information and the frame index.
+    """
+
+    model_config = ConfigDict(frozen=True)
+    video: Video
+    frame_index: int
+
+    @computed_field
+    @property
+    def video_id(self) -> UUID:
+        return self.video.id
+
+
 Media = Annotated[Image | Video | VideoFrame, Field(discriminator="type")]
 
 MediaAdapter: TypeAdapter[Media] = TypeAdapter(Media)
+
+
+class VideoRange(BaseModel):
+    start_frame: Annotated[int, Field(description="Index of the first frame to predict, inclusive", ge=0)]
+    end_frame: Annotated[int, Field(description="Index of the last frame to predict, inclusive", ge=0)]
+    stride: Annotated[
+        int, Field(description="Predict every nth frame in the range, e.g. stride=1 means predict every frame", ge=1)
+    ]
+
+    @model_validator(mode="after")
+    def validate_frame_range(self) -> "VideoRange":
+        if self.end_frame < self.start_frame:
+            raise ValueError(f"end_frame ({self.end_frame}) must be >= start_frame ({self.start_frame})")
+        return self
+
+
+class MediaPredictionRequest(BaseModel):
+    media_id: UUID
+    range: VideoRange | None
+
+
+class MediaListPredictionRequest(BaseModel):
+    model_id: UUID
+    media: list[MediaPredictionRequest]
+    save_predictions: bool
+    device: str

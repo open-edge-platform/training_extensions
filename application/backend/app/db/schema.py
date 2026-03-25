@@ -46,6 +46,9 @@ class PipelineDB(Base):
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_revision_id: Mapped[str | None] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="RESTRICT"))
+    model_variant_id: Mapped[str | None] = mapped_column(
+        Text, ForeignKey("model_variants.id", ondelete="RESTRICT"), nullable=True
+    )
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     data_collection: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     device: Mapped[str] = mapped_column(String(50), nullable=False, default="cpu")
@@ -53,6 +56,7 @@ class PipelineDB(Base):
     sink = relationship("SinkDB", uselist=False, lazy="joined")
     source = relationship("SourceDB", uselist=False, lazy="joined")
     model_revision = relationship("ModelRevisionDB", uselist=False, lazy="joined")
+    model_variant = relationship("ModelVariantDB", uselist=False, lazy="joined")
 
 
 class SinkDB(BaseID):
@@ -86,7 +90,7 @@ class ModelRevisionDB(BaseID):
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     project = relationship("ProjectDB", back_populates="model_revisions")
-    evaluations = relationship("EvaluationDB", back_populates="model_revision")
+    variants = relationship("ModelVariantDB", back_populates="model_revision")
 
 
 class DatasetRevisionDB(BaseID):
@@ -177,17 +181,34 @@ class TrainingConfigurationDB(BaseID):
     project = relationship("ProjectDB")
 
 
+class ModelVariantDB(BaseID):
+    __tablename__ = "model_variants"
+    __table_args__ = (Index("idx_model_variants_model_revision", "model_revision_id"),)
+
+    model_revision_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("model_revisions.id", ondelete="CASCADE"), nullable=False
+    )
+    format: Mapped[str] = mapped_column(String(50), nullable=False)
+    precision: Mapped[str] = mapped_column(String(20), nullable=False)
+    quantization_info: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
+    files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    model_revision = relationship("ModelRevisionDB", back_populates="variants")
+    evaluations = relationship("EvaluationDB", back_populates="model_variant")
+
+
 class EvaluationDB(BaseID):
     __tablename__ = "evaluations"
 
     model_revision_id: Mapped[str] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="CASCADE"))
+    model_variant_id: Mapped[str] = mapped_column(Text, ForeignKey("model_variants.id", ondelete="CASCADE"))
     dataset_revision_id: Mapped[str] = mapped_column(
         Text, ForeignKey("dataset_revisions.id", ondelete="CASCADE"), nullable=False
     )
     subset: Mapped[str] = mapped_column(String(20), nullable=False)
 
     metric_scores = relationship("MetricScoreDB", back_populates="evaluation")
-    model_revision = relationship("ModelRevisionDB", back_populates="evaluations")
+    model_variant = relationship("ModelVariantDB", back_populates="evaluations")
 
 
 class MetricScoreDB(BaseID):

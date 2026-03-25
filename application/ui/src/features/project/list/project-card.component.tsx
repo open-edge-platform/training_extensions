@@ -43,9 +43,12 @@ const ActiveProjectBadge = () => {
 
 type ProjectCardProps = {
     item: Project;
+    prioritizeImage?: boolean;
 };
 
-export const ProjectCard = ({ item }: ProjectCardProps) => {
+const DEFAULT_THUMBNAIL_SIZE = 156;
+
+export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
     const isClassification = isClassificationTask(item.task.task_type);
     const isMultiLabel = isClassification && item.task.exclusive_labels === false;
@@ -55,12 +58,19 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
             <NavLink to={paths.project.dataset.index({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <Flex>
-                        <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />
+                        <img
+                            src={getProjectThumbnailUrl(item.id)}
+                            alt={item.name}
+                            width={DEFAULT_THUMBNAIL_SIZE}
+                            height={DEFAULT_THUMBNAIL_SIZE}
+                            loading={prioritizeImage ? 'eager' : 'lazy'}
+                            fetchPriority={prioritizeImage ? 'high' : 'auto'}
+                        />
                     </Flex>
 
                     <View width={'100%'} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
-                            <Heading level={3} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
+                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
                                 <span title={item.name}>{item.name}</span>
                             </Heading>
                         </Flex>

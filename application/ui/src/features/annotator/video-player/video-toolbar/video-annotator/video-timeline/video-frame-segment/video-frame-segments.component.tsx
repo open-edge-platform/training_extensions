@@ -7,6 +7,7 @@ import { Flex } from '@geti/ui';
 import { type Item } from 'react-cool-virtual';
 
 import { type Label } from '../../../../../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../../../../../shared/annotator/annotator-mode';
 import { VideoFrameSegment } from './video-frame-segment.component';
 
 import classes from './video-frame-segment.module.scss';
@@ -24,9 +25,11 @@ type VideoFrameSegmentsProps = {
     items: Item[];
     frameNumber: number;
     selectFrame: (frameNumber: number) => void;
+    mode: AnnotatorMode;
 };
 
 export const VideoFrameSegments = ({
+    mode,
     totalSegments,
     labels,
     step,
@@ -67,6 +70,7 @@ export const VideoFrameSegments = ({
                 return (
                     <Flex justifyContent='center' alignItems='center' width={width} key={itemFrameNumber}>
                         <VideoFrameSegment
+                            mode={mode}
                             colIndex={index}
                             onClick={selectFrame}
                             labels={labels}

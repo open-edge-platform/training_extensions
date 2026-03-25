@@ -4,8 +4,12 @@
 
 import pytest
 import torch
-from datumaro import LabelCategories
-from datumaro.components.annotation import GroupType
+from datumaro.experimental.categories import (
+    GroupType,
+    HierarchicalLabelCategories,
+    HierarchicalLabelCategory,
+    LabelGroup,
+)
 from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
 from pytest_mock import MockerFixture
@@ -158,26 +162,27 @@ class TestOTXModel:
             assert segmentation_model.label_info.ignore_index == 255
 
         # test hlabel classification model loading checkpoint with HLabelInfo
-        labels = [
-            LabelCategories.Category(name="car", parent="vehicle"),
-            LabelCategories.Category(name="truck", parent="vehicle"),
-            LabelCategories.Category(name="plush toy", parent="plush toy"),
-            LabelCategories.Category(name="No class"),
-        ]
-        label_groups = [
-            LabelCategories.LabelGroup(
+        labels = (
+            HierarchicalLabelCategory(name="vehicle"),
+            HierarchicalLabelCategory(name="car", parent="vehicle"),
+            HierarchicalLabelCategory(name="truck", parent="vehicle"),
+            HierarchicalLabelCategory(name="plush toy", parent="plush toy"),
+            HierarchicalLabelCategory(name="No class"),
+        )
+        label_groups = (
+            LabelGroup(
                 name="Detection labels___vehicle",
-                labels=["car", "truck"],
+                labels=("car", "truck"),
                 group_type=GroupType.EXCLUSIVE,
             ),
-            LabelCategories.LabelGroup(
+            LabelGroup(
                 name="Detection labels___plush toy",
-                labels=["plush toy"],
+                labels=("plush toy",),
                 group_type=GroupType.EXCLUSIVE,
             ),
-            LabelCategories.LabelGroup(name="No class", labels=["No class"], group_type=GroupType.RESTRICTED),
-        ]
-        dm_label_categories = LabelCategories(items=labels, label_groups=label_groups)
+            LabelGroup(name="No class", labels=("No class",), group_type=GroupType.RESTRICTED),
+        )
+        dm_label_categories = HierarchicalLabelCategories(items=labels, label_groups=label_groups)
         hlabel_info = HLabelInfo.from_dm_label_groups(dm_label_categories)
         hlabel_dict_label_info = hlabel_info.as_dict(normalize_label_names=True)
 

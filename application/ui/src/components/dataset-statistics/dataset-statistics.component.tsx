@@ -12,11 +12,12 @@ const COLORS: Record<string, string> = {
 };
 
 type DatasetStatisticsProps = {
+    label: string;
     totalMediaItems: number;
     totalAnnotatedItems: number;
 };
 
-export const DatasetStatistics = ({ totalMediaItems, totalAnnotatedItems }: DatasetStatisticsProps) => {
+export const DatasetStatistics = ({ label, totalMediaItems, totalAnnotatedItems }: DatasetStatisticsProps) => {
     const totalUnannotatedItems = totalMediaItems - totalAnnotatedItems;
     const percentageAnnotated = totalMediaItems > 0 ? Math.round((totalAnnotatedItems / totalMediaItems) * 100) : 0;
     const percentageUnannotated = totalMediaItems > 0 ? Math.round((totalUnannotatedItems / totalMediaItems) * 100) : 0;
@@ -32,7 +33,9 @@ export const DatasetStatistics = ({ totalMediaItems, totalAnnotatedItems }: Data
                 >
                     <Text>Unannotated</Text>
                     <Text>{percentageUnannotated}%</Text>
-                    <Text>{totalUnannotatedItems} images</Text>
+                    <Text>
+                        {totalUnannotatedItems} {label}
+                    </Text>
                 </Flex>
 
                 <Flex
@@ -65,7 +68,7 @@ export const DatasetStatistics = ({ totalMediaItems, totalAnnotatedItems }: Data
                     </PieChart>
                     <Flex direction='column' UNSAFE_className={classes.totalMedia}>
                         <Text UNSAFE_className={classes.totalMediaItems}>{totalMediaItems}</Text>
-                        <Text UNSAFE_className={classes.mediaSubtitle}>Images</Text>
+                        <Text UNSAFE_className={classes.mediaSubtitle}>{label}</Text>
                     </Flex>
                 </Flex>
 
@@ -78,7 +81,9 @@ export const DatasetStatistics = ({ totalMediaItems, totalAnnotatedItems }: Data
                 >
                     <Text>Annotated</Text>
                     <Text>{percentageAnnotated}%</Text>
-                    <Text>{totalAnnotatedItems} images</Text>
+                    <Text>
+                        {totalAnnotatedItems} {label}
+                    </Text>
                 </Flex>
             </Flex>
         </View>

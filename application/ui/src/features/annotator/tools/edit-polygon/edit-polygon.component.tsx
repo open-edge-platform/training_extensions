@@ -24,7 +24,9 @@ export const EditPolygon = ({ annotation, zoom }: EditPolygonProps) => {
     const [shape, setShape] = useState(annotation.shape);
     const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
 
-    useEffect(() => setShape(annotation.shape), [annotation.shape]);
+    useEffect(() => {
+        setShape(annotation.shape);
+    }, [annotation.shape]);
 
     // "removeOffLimitPoints" not only remove offlimit points but also in-between ones,
     // a new point is considered "in-between," and so it gets removed,
@@ -93,7 +95,7 @@ export const EditPolygon = ({ annotation, zoom }: EditPolygonProps) => {
                     annotation={{ ...annotation, shape }}
                     onComplete={() => onComplete(shape)}
                 >
-                    <AnnotationShapeRenderer annotation={{ ...annotation, shape }} />
+                    <AnnotationShapeRenderer annotation={{ ...annotation, shape }} hideLabels />
                 </TranslateShape>
             </svg>
 

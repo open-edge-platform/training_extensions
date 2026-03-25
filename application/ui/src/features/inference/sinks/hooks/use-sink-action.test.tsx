@@ -18,14 +18,17 @@ const mockedConfig: LocalFolderSinkConfig = {
     output_formats: [],
     sink_type: 'folder',
     folder_path: '',
-    rate_limit: 0,
+    rate_limit: null,
 };
 
 const bodyFormatter = (formData: FormData) => ({
     id: String(formData.get('id')),
     name: String(formData.get('name')),
     sink_type: 'folder' as const,
-    rate_limit: formData.get('rate_limit') ? Number(formData.get('rate_limit')) : 0,
+    rate_limit:
+        formData.get('rate_limit_samples') && formData.get('rate_limit_seconds')
+            ? Number(formData.get('rate_limit_samples')) / Number(formData.get('rate_limit_seconds'))
+            : null,
     folder_path: String(formData.get('folder_path')),
     output_formats: formData.getAll('output_formats') as SinkOutputFormats,
 });
@@ -48,7 +51,12 @@ const renderApp = async ({
     const formData = new FormData();
     formData.append('name', config.name);
     formData.append('sink_type', config.sink_type);
-    formData.append('rate_limit', String(config.rate_limit));
+
+    if (config.rate_limit !== null && config.rate_limit !== undefined) {
+        formData.append('rate_limit_samples', String(config.rate_limit));
+        formData.append('rate_limit_seconds', '1');
+    }
+
     formData.append('folder_path', config.folder_path);
     formData.append('output_formats', config.output_formats.join(','));
 

@@ -3,10 +3,10 @@
 
 import { Content, ContextualHelp, Heading, Item, Picker } from '@geti/ui';
 
-import { useTrainModel } from './train-model-provider.component';
+import { useTrainModelState } from './train-model-provider.component';
 
 export const SelectModelRevision = () => {
-    const { modelRevisions, selectedModelRevisionId, onSelectModelRevisionId } = useTrainModel();
+    const { modelRevisions, selectedModelRevisionId, onSelectModelRevisionId } = useTrainModelState();
 
     return (
         <Picker

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
-import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
+import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs/jobs.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';

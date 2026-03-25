@@ -44,12 +44,12 @@ describe('ExportDatasetConfig', () => {
         );
 
         expect(await screen.findByText('Export dataset')).toBeVisible();
-        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'Geti' })).toBeVisible();
         expect(screen.queryByRole('radio', { name: 'YOLO' })).not.toBeInTheDocument();
         expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
     });
 
-    it('shows GETI and YOLO export option for instance_segmentation task', async () => {
+    it('shows GETI and COCO export option for instance_segmentation task', async () => {
         renderApp(
             getMockedProject({
                 task: { exclusive_labels: true, task_type: 'instance_segmentation' },
@@ -57,8 +57,7 @@ describe('ExportDatasetConfig', () => {
         );
 
         expect(await screen.findByText('Export dataset')).toBeVisible();
-        expect(screen.getByRole('radio', { name: 'GETI' })).toBeVisible();
-        expect(screen.getByRole('radio', { name: 'YOLO' })).toBeVisible();
-        expect(screen.queryByRole('radio', { name: 'COCO' })).not.toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: 'Geti' })).toBeVisible();
+        expect(screen.queryByRole('radio', { name: 'COCO' })).toBeVisible();
     });
 });

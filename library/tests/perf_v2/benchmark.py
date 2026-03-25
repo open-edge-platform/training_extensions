@@ -170,7 +170,7 @@ class Benchmark:
         self,
         model_info: ModelInfo,
         dataset_info: DatasetInfo,
-        sub_work_dir: Path | str,
+        sub_work_dir: Path,
         tags: dict[str, str],
         criteria: list[Criterion],
         checkpoint: Path | str | None = None,
@@ -186,7 +186,7 @@ class Benchmark:
         Args:
             model_info (ModelInfo): Information of the model to test
             dataset_info (DatasetInfo): Information of the dataset to test
-            sub_work_dir (Path | str): Sub work directory
+            sub_work_dir (Path): Sub work directory
             tags (dict[str, str]): Information useful for excel/csv output
             criteria (list[Criterion]): Criteria to check results
             checkpoint (Path | str | None, optional): Checkpoint path. Defaults to None.
@@ -325,7 +325,7 @@ class Benchmark:
         """
 
         return OTXEngine.from_config(
-            config_path=FOLDER_MAPPINGS[model_info.task] / (model_info.name + ".yaml"),
+            config_path=FOLDER_MAPPINGS[OTXTaskType(model_info.task)] / (model_info.name + ".yaml"),
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,

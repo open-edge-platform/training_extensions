@@ -5,11 +5,9 @@ from uuid import UUID
 
 from loguru import logger
 
-from app.models import DatasetItemSubset
 from app.repositories import DatasetItemRepository
 from app.services import BaseSessionManagedService
 
-from .distribution import SubsetDistribution
 from .models import DatasetItemWithLabels, SubsetAssignment
 
 
@@ -25,12 +23,10 @@ class SubsetService(BaseSessionManagedService):
 
         return [DatasetItemWithLabels(item_id=UUID(item_id), labels=labels) for item_id, labels in items_dict.items()]
 
-    def get_subset_distribution(self, project_id: UUID) -> SubsetDistribution:
-        """Get distribution of dataset items across subsets."""
+    def has_all_subsets_assigned(self, project_id: UUID) -> bool:
+        """Return True if there is at least one dataset item for each of TRAINING, VALIDATION, and TESTING subsets."""
         repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
-        results = repo.get_subset_distribution()
-
-        return SubsetDistribution(counts={DatasetItemSubset(subset): count for subset, count in results.items()})
+        return repo.has_all_subsets_assigned()
 
     def update_subset_assignments(self, project_id: UUID, assignments: list[SubsetAssignment]) -> None:
         """Update subset assignments for dataset items."""

@@ -1,10 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { useState } from 'react';
+
+import { Flex, Loading } from '@geti/ui';
 
 import type { LineMetric } from '../../../../constants/shared-types';
+import { useIsVisible } from '../../../../hooks/use-is-visible.hook';
+import { Box } from '../components/box/box.component';
 import { MetricGraph, type MetricGraphPoint } from './metric-graph.component';
+
+import classes from './model-metrics.graphs.module.scss';
 
 type ModelMetricsGraphsProps = {
     trainingMetrics: LineMetric[];
@@ -18,6 +24,45 @@ type GraphData = {
     data: MetricGraphPoint[];
 };
 
+const GraphPlaceholder = ({ title }: { title: string }) => (
+    <Flex UNSAFE_className={classes.graphContainer}>
+        <Box
+            title={title}
+            content={
+                <Flex
+                    alignItems={'center'}
+                    justifyContent={'center'}
+                    minHeight={'size-3000'}
+                    UNSAFE_style={{ backgroundColor: 'var(--spectrum-gray-50)' }}
+                >
+                    <Loading mode={'inline'} size={'L'} />
+                </Flex>
+            }
+        />
+    </Flex>
+);
+
+const LazyMetricGraph = ({ graph }: { graph: GraphData }) => {
+    const [container, setContainer] = useState<HTMLDivElement | null>(null);
+
+    const isVisible = useIsVisible({ element: container });
+
+    return (
+        <div ref={setContainer} className={classes.graphContainer}>
+            {isVisible ? (
+                <MetricGraph
+                    title={graph.title}
+                    data={graph.data}
+                    xAxisLabel={graph.xAxisLabel}
+                    yAxisLabel={graph.yAxisLabel}
+                />
+            ) : (
+                <GraphPlaceholder title={graph.title} />
+            )}
+        </div>
+    );
+};
+
 export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps) => {
     const graphs: GraphData[] = trainingMetrics.map((metric) => ({
         key: metric.key,
@@ -28,15 +73,9 @@ export const ModelMetricsGraphs = ({ trainingMetrics }: ModelMetricsGraphsProps)
     }));
 
     return (
-        <Flex width={'100%'} direction={'row'} gap={'size-300'} wrap>
+        <Flex width={'100%'} gap={'size-300'} wrap>
             {graphs.map((graph) => (
-                <MetricGraph
-                    key={graph.key}
-                    title={graph.title}
-                    data={graph.data}
-                    xAxisLabel={graph.xAxisLabel}
-                    yAxisLabel={graph.yAxisLabel}
-                />
+                <LazyMetricGraph key={graph.key} graph={graph} />
             ))}
         </Flex>
     );

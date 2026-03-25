@@ -43,3 +43,7 @@ class Task(BaseEntity):
     exclusive_labels: bool = False
     task_type: TaskType
     labels: list[Label] = Field(default_factory=list)
+
+    @property
+    def is_multiclass(self) -> bool:
+        return self.task_type is TaskType.CLASSIFICATION and self.exclusive_labels

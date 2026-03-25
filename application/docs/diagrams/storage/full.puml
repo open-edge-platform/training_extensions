@@ -4,7 +4,7 @@
 !define fk(x) <i>x</i>
 
 title
-<size:16><b>Geti Tune - Complete Storage Diagram</b></size>
+<size:16><b>Geti - Complete Storage Diagram</b></size>
 <size:12>DB Tables and Objects</size>
 end title
 

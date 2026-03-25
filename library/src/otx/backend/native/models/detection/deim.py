@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """DEIM-DFine model implementations."""
@@ -46,7 +46,7 @@ class DEIMDFine(RTDETR):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None, uses _default_preprocessing_params.
         model_name (literal, optional): Name of the model to use. Defaults to "deim_dfine_hgnetv2_x".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -71,7 +71,7 @@ class DEIMDFine(RTDETR):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "deim_dfine_hgnetv2_n",
             "deim_dfine_hgnetv2_s",
@@ -101,6 +101,9 @@ class DEIMDFine(RTDETR):
     def _create_model(self, num_classes: int | None = None) -> DETR:
         """Create DEIM-DFine model."""
         num_classes = num_classes if num_classes is not None else self.num_classes
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
         decoder = DFINETransformer(

@@ -20,6 +20,10 @@ const mockedTrainingJob = getMockedJob({
             parent_revision_id: null,
             dataset_revision_id: 'dataset-1',
         },
+        device: {
+            type: 'cpu',
+            name: 'CPU',
+        },
     },
     started_at: '2026-01-19T08:15:00.000000+00:00',
     finished_at: null,

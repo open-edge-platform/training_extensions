@@ -17,8 +17,18 @@ from app.api.schemas.jobs import JobRequest, JobType, JobView
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
-from app.models import DatasetFormat, ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
+from app.models import (
+    DatasetFormat,
+    ExportDatasetJob,
+    ExportDatasetJobParams,
+    QuantizationJob,
+    QuantizationJobParams,
+    TrainingJob,
+    TrainingJobParams,
+)
 from app.models.jobs import (
+    ImportDatasetAsNewProjectJob,
+    ImportDatasetAsNewProjectJobParams,
     ImportDatasetToProjectJob,
     ImportDatasetToProjectJobParams,
     PrepareDatasetForImportJob,
@@ -74,6 +84,21 @@ async def submit_job(
                         dataset_revision_id=job_request.parameters.dataset_revision_id,
                     ),
                 )
+            case JobType.QUANTIZE:
+                project = project_service.get_project_by_id(job_request.project_id)
+                job = QuantizationJob(
+                    id=job_id,
+                    project_id=project.id,
+                    log_dir=job_dir,
+                    data_dir=data_dir,
+                    params=QuantizationJobParams(
+                        model_id=job_request.parameters.model_id,
+                        project_id=project.id,
+                        job_id=job_id,
+                        max_calibration_subset_size=job_request.parameters.max_calibration_subset_size,
+                        max_drop=job_request.parameters.max_drop,
+                    ),
+                )
             case JobType.PREPARE_DATASET_FOR_IMPORT:
                 job = PrepareDatasetForImportJob(
                     id=job_id,
@@ -82,7 +107,18 @@ async def submit_job(
                     ),
                 )
             case JobType.IMPORT_DATASET_AS_NEW_PROJECT:
-                raise NotImplementedError
+                job = ImportDatasetAsNewProjectJob(
+                    id=job_id,
+                    params=ImportDatasetAsNewProjectJobParams(
+                        staged_dataset_id=job_request.staged_dataset_id,
+                        project_name=job_request.parameters.project.name,
+                        task_type=job_request.parameters.project.task_type,
+                        exclusive_labels=job_request.parameters.project.exclusive_labels,
+                        labels=job_request.parameters.filters.labels,
+                        subsets=job_request.parameters.filters.subsets,
+                        include_unannotated=job_request.parameters.filters.include_unannotated,
+                    ),
+                )
             case JobType.IMPORT_DATASET_TO_PROJECT:
                 project = project_service.get_project_by_id(job_request.project_id)
                 job = ImportDatasetToProjectJob(
@@ -93,6 +129,7 @@ async def submit_job(
                         project_id=project.id,
                         task=project.task,
                         labels_mapping=job_request.parameters.labels_mapping,
+                        include_unannotated=job_request.parameters.include_unannotated,
                     ),
                 )
             case JobType.EXPORT_DATASET:

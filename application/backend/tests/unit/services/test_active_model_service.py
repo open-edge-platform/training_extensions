@@ -19,11 +19,13 @@ def fxt_model_activation_state() -> ModelActivationState:
     """Fixture to create a default ModelActivationState."""
     project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
     active_model_id = UUID("d4992996-4d87-422b-aaf3-7427267a50df")
+    active_variant_id = UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
     other_model_id = UUID("da21744f-990c-4b95-aa2a-70da8d46fdcf")
     available_models = [active_model_id, other_model_id]
     return ModelActivationState(
         project_id=project_id,
         active_model_id=active_model_id,
+        active_model_variant_id=active_variant_id,
         available_models=available_models,
         device="CPU",
     )
@@ -57,16 +59,23 @@ class TestActiveModelServiceUnit:
         assert str(ov_device_name) == expected_ov_device_name
 
     def test_get_model_file_path(self, fxt_active_model_service):
-        """Test retrieval of model file path."""
+        """Test retrieval of model file path from variants directory."""
         project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
         model_id = UUID("d4992996-4d87-422b-aaf3-7427267a50df")
+        variant_id = UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
         extension = "bin"
-        expected_path = fxt_active_model_service.projects_dir / f"{project_id}/models/{model_id}/model.{extension}"
+        expected_path = (
+            fxt_active_model_service.projects_dir
+            / f"{project_id}/models/{model_id}/variants/{variant_id}/model.{extension}"
+        )
         expected_path.parent.mkdir(parents=True, exist_ok=True)
         expected_path.touch()
 
         file_path = fxt_active_model_service._get_model_file_path(
-            project_id=project_id, model_id=model_id, extension=extension
+            project_id=project_id,
+            model_id=model_id,
+            variant_id=variant_id,
+            extension=extension,
         )
 
         assert file_path == expected_path
@@ -75,10 +84,16 @@ class TestActiveModelServiceUnit:
         """Test error when model file is not found."""
         project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
         model_id = UUID("d4992996-4d87-422b-aaf3-7427267a50df")
+        model_variant_id = UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
         extension = "bin"
 
         with pytest.raises(FileNotFoundError, match="Model file not found"):
-            fxt_active_model_service._get_model_file_path(project_id=project_id, model_id=model_id, extension=extension)
+            fxt_active_model_service._get_model_file_path(
+                project_id=project_id,
+                model_id=model_id,
+                variant_id=model_variant_id,
+                extension=extension,
+            )
 
     def test_get_loaded_inference_model(self, fxt_active_model_service, fxt_model_activation_state, monkeypatch):
         """Test loading the active inference model."""
@@ -89,11 +104,13 @@ class TestActiveModelServiceUnit:
             patch.object(
                 fxt_active_model_service,
                 "_get_model_file_path",
-                new=lambda project_id, model_id, ext: f"model.{ext}",
+                new=lambda project_id, model_id, variant_id, extension: Path(f"model.{extension}"),
             ),
+            patch("app.services.active_model_service.create_core"),
+            patch("app.services.active_model_service.FP32OpenvinoAdapter"),
         ):
             loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
             assert isinstance(loaded, LoadedModel)
-            assert loaded.id == fxt_model_activation_state.active_model_id
+            assert loaded.model_revision_id == fxt_model_activation_state.active_model_id
             assert loaded.model is dummy_model
             assert loaded.device == fxt_model_activation_state.device

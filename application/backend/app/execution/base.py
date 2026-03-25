@@ -39,15 +39,26 @@ def step(name: str, complete: float = 0.0) -> Callable[[Callable[..., T]], Calla
             self.update_message(f"Started: {name}")
             try:
                 result = func(self, *args, **kwargs)
-            except Exception:
-                self.update_message_with_stacktrace(f"Failed: {name}")
+            except ExecutionErr as e:
+                self.update_message(str(e), level="ERROR")
                 raise
-            self._report_progress(f"Completed: {name}", percent=complete)
+            except Exception:
+                self.update_message(f"Failed: {name}", level="ERROR")
+                raise
+            if not self._pinned_message:
+                self._report_progress(f"Completed: {name}", percent=complete)
+            else:
+                self._pinned_message = False  # reset pinned message state for the next step
+                logger.info(f"Completed: {name}")
             return result
 
         return wrapper
 
     return decorator
+
+
+class ExecutionErr(Exception):
+    """Raised when an execution step fails in an expected, user-facing way."""
 
 
 JobParamsT = TypeVar("JobParamsT", bound=JobParams)
@@ -64,6 +75,7 @@ class Execution(Runnable, ABC, Generic[JobParamsT]):
 
     def __init__(self) -> None:
         self._ctx: ExecutionContext | None = None
+        self._pinned_message: bool = False
 
     def parse_params(self, ctx: ExecutionContext) -> JobParamsT:
         """Parse and validate parameters from execution context."""
@@ -79,26 +91,19 @@ class Execution(Runnable, ABC, Generic[JobParamsT]):
         self._ctx = ctx
         self.execute(self.parse_params(ctx))
 
-    @staticmethod
-    def __log_message(msg: str, exc: bool = False) -> None:
-        """Log a message using appropriate log level."""
-        if exc:
-            logger.exception(msg)
-        else:
-            logger.info(msg)
-
     def __report_to_context(self, msg: str, percent: float, metadata: dict[str, Any] | None = None) -> None:
         """Report progress to execution context if available."""
         if self._ctx is not None:
             self._ctx.report(msg, percent, metadata)
 
-    def update_message_with_stacktrace(self, msg: str) -> None:
-        """Update the current progress message without changing the percentage and log the stacktrace."""
-        self._report_progress(msg=msg, exc=True)
-
-    def update_message(self, msg: str) -> None:
+    def update_message(self, msg: str, level: str = "INFO") -> None:
         """Update the current progress message without changing the percentage."""
-        self._report_progress(msg=msg)
+        self._report_progress(msg=msg, level=level)
+
+    def pin_message(self, msg: str, level: str = "WARNING") -> None:
+        """Update the message and prevent the step decorator from overriding it on completion."""
+        self._pinned_message = True
+        self._report_progress(msg=msg, level=level)
 
     def update_progress(self, percent: float) -> None:
         """Update the current progress percentage without changing the message."""
@@ -111,8 +116,8 @@ class Execution(Runnable, ABC, Generic[JobParamsT]):
         self._report_progress(metadata=metadata)
 
     def _report_progress(
-        self, msg: str = "", percent: float = 0.0, metadata: dict[str, Any] | None = None, exc: bool = False
+        self, msg: str = "", percent: float = 0.0, metadata: dict[str, Any] | None = None, level: str = "INFO"
     ) -> None:
         if msg:
-            self.__log_message(msg=msg, exc=exc)
+            logger.opt(exception=level == "ERROR").log(level, msg)
         self.__report_to_context(msg=msg, percent=percent, metadata=metadata)

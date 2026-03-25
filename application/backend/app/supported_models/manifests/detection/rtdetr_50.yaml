@@ -9,13 +9,24 @@ description: "RT-DETR is a real-time object detection algorithm based on the tra
 stats:
   gigaflops: 136
   trainable_parameters: 42
-  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
-    accuracy: 3
-    training_time: 1
-    inference_speed: 2
+  benchmark_metrics:
+    coco_map_50_95: 53.1
+    coco_map_50: 71.3
 
 hyperparameters:
+  dataset_preparation:
+    augmentation:
+      iou_random_crop:
+        enable: false
+        probability: 1.0
   training:
     learning_rate: 0.0001
+    weight_decay: 0.0001
+    scheduler:
+      factor: 0.1
+      patience: 6
+      warmup:
+        enable: true
+        epochs: 100
     input_size_width: 640
     input_size_height: 640

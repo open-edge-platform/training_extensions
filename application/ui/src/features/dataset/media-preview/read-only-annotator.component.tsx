@@ -5,16 +5,21 @@ import { ActionButton, Button, Flex, Text, View } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
+import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
+import { PredictionModelSelector } from './secondary-toolbar/annotator-modes/prediction-model-selector.component';
 import { Toolbar } from './toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from './use-submit-predictions.hook';
 
 import classes from './read-only-annotator.module.scss';
 
 type ReadOnlyAnnotatorProps = {
+    mode: AnnotatorMode;
     mediaItem: Media;
     image: ImageData;
     onClose: () => void;
@@ -34,6 +39,7 @@ type ReadOnlyAnnotatorProps = {
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
 export const ReadOnlyAnnotator = ({
+    mode,
     image,
     mediaItem,
     onModeChange,
@@ -49,7 +55,10 @@ export const ReadOnlyAnnotator = ({
                     {onModeChange && (
                         <Toolbar.Container>
                             <Toolbar.Section>
-                                <AnnotatorModes mode={'prediction'} onModeChange={onModeChange} />
+                                <Flex alignItems={'center'} gap={'size-200'}>
+                                    <AnnotatorModes mode={'prediction'} onModeChange={onModeChange} />
+                                    {mode === 'prediction' && <PredictionModelSelector />}
+                                </Flex>
                             </Toolbar.Section>
                         </Toolbar.Container>
                     )}
@@ -79,9 +88,15 @@ export const ReadOnlyAnnotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'} UNSAFE_className={classes.readOnlyCanvas}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} />
+                    <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
             </View>
+
+            {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
+                <View gridArea={'video-toolbar'}>
+                    <VideoToolbar mode={mode} />
+                </View>
+            )}
 
             <View gridArea={'bottom'}>
                 <BottomToolbar mediaItem={mediaItem} hideHotkeys />

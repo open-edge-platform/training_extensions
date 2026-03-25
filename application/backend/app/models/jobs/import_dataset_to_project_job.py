@@ -12,6 +12,7 @@ class ImportDatasetToProjectJobParams(JobParams):
     project_id: UUID
     task: Task
     labels_mapping: dict[str, str | None] | None = None
+    include_unannotated: bool = True
 
 
 class ImportDatasetToProjectJob(ProjectJob[ImportDatasetToProjectJobParams]):

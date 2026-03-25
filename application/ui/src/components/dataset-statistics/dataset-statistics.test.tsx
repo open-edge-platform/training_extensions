@@ -8,7 +8,7 @@ import { DatasetStatistics } from './dataset-statistics.component';
 
 describe('DatasetStatistics', () => {
     it('displays correct statistics when all items are annotated', async () => {
-        render(<DatasetStatistics totalMediaItems={100} totalAnnotatedItems={33} />);
+        render(<DatasetStatistics label='images' totalMediaItems={100} totalAnnotatedItems={33} />);
 
         expect(await screen.findByText('100')).toBeVisible();
 

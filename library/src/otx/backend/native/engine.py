@@ -9,10 +9,10 @@ import copy
 import csv
 import inspect
 import logging
+import multiprocessing
 import os
 import time
 from contextlib import contextmanager
-from multiprocessing import Value
 from pathlib import Path
 from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
@@ -26,10 +26,11 @@ from lightning.pytorch.plugins.precision import MixedPrecision
 
 from otx.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback
+from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.backend.native.callbacks.iteration_timer import IterationTimer
 from otx.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
-from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.models.base import OTXModel
 from otx.backend.native.tools import adapt_batch_size
 from otx.backend.native.utils.cache import TrainerArgumentsCache
 from otx.config.device import DeviceConfig
@@ -139,11 +140,15 @@ class OTXEngine(Engine):
                     "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
-            get_model_args["data_input_params"] = DataInputParams(
-                input_size=input_size,
-                mean=self._datamodule.input_mean,
-                std=self._datamodule.input_std,
-            )
+            # Only pass what the datamodule knows; mean/std may be None when
+            # normalization lives in the augmentation pipeline. Model defaults
+            # fill in any missing values inside _configure_preprocessing_params.
+            params: dict[str, Any] = {"input_size": input_size}
+            if self._datamodule.input_mean is not None:
+                params["mean"] = self._datamodule.input_mean
+            if self._datamodule.input_std is not None:
+                params["std"] = self._datamodule.input_std
+            get_model_args["data_input_params"] = params
 
             model = self._auto_configurator.get_model(**get_model_args)
 
@@ -986,10 +991,43 @@ class OTXEngine(Engine):
         if not has_callback(GPUMemMonitor):
             callbacks.append(GPUMemMonitor())
 
+        # Add GPU augmentation callback if GPU augmentations are configured
+        if not has_callback(GPUAugmentationCallback):
+            gpu_aug_callback = self._build_gpu_augmentation_callback()
+            if gpu_aug_callback is not None:
+                callbacks.append(gpu_aug_callback)
+
         self._cache.args["callbacks"] = callbacks + config_callbacks
 
         # Setup DataAugSwitch with shared multiprocessing.Value
         self._setup_augmentation_scheduler()
+
+    def _build_gpu_augmentation_callback(self) -> GPUAugmentationCallback | None:
+        """Build GPU augmentation callback from datamodule configs.
+
+        Returns:
+            GPUAugmentationCallback if GPU augmentations are configured, None otherwise.
+        """
+        train_config = self._datamodule.train_subset
+        val_config = self._datamodule.val_subset
+        test_config = self._datamodule.test_subset
+
+        # Check if any GPU augmentations are configured
+        has_train_gpu_augs = (
+            train_config and hasattr(train_config, "augmentations_gpu") and train_config.augmentations_gpu
+        )
+        has_val_gpu_augs = val_config and hasattr(val_config, "augmentations_gpu") and val_config.augmentations_gpu
+        has_test_gpu_augs = test_config and hasattr(test_config, "augmentations_gpu") and test_config.augmentations_gpu
+
+        if not has_train_gpu_augs and not has_val_gpu_augs:
+            return None
+
+        logging.info("Building GPU augmentation callback with Kornia augmentations")
+        return GPUAugmentationCallback(
+            train_config=train_config if has_train_gpu_augs else None,
+            val_config=val_config if has_val_gpu_augs else None,
+            test_config=test_config if has_test_gpu_augs else None,
+        )
 
     def _setup_augmentation_scheduler(self) -> None:
         """Set up shared memory for DataAugSwitch and AugmentationSchedulerCallback.
@@ -1040,8 +1078,10 @@ class OTXEngine(Engine):
 
         # If AugmentationSchedulerCallback exists and has a data_aug_switch, set up shared memory
         if aug_scheduler_callback is not None and aug_scheduler_callback.data_aug_switch is not None:
-            # Create shared multiprocessing.Value for epoch tracking
-            shared_epoch = Value("i", 0)
+            # Create shared multiprocessing.Value for epoch tracking.
+            # Must use "spawn" context to match the DataLoader's multiprocessing_context,
+            # otherwise the SemLock created in a fork context cannot be shared with spawn workers.
+            shared_epoch = multiprocessing.get_context("spawn").Value("i", 0)
             aug_scheduler_callback.data_aug_switch.set_shared_epoch(shared_epoch)
 
     def _setup_data_aug_switch_for_datasets(self) -> None:

@@ -5,16 +5,21 @@ import numpy as np
 from datumaro.experimental.categories import LabelCategories
 
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    DetectionImportExportSample,
+    InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
+    MultilabelClassificationImportExportSample,
 )
 from app.datumaro_converter.domain import LabelIndex
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
-SampleType = ClassificationSample | MultilabelClassificationSample | DetectionSample | InstanceSegmentationSample
+SampleType = (
+    MulticlassClassificationImportExportSample
+    | DetectionImportExportSample
+    | InstanceSegmentationImportExportSample
+    | MultilabelClassificationImportExportSample
+)
 
 
 class DatumaroSampleToGetiAnnotationConverter:
@@ -96,13 +101,13 @@ class DatumaroSampleToGetiAnnotationConverter:
             ValueError: If the sample format is invalid or unsupported.
         """
         match sample:
-            case ClassificationSample(label=label, confidence=confidence):
+            case MulticlassClassificationImportExportSample(label=label, confidence=confidence):
                 return self.__convert_classification_sample(label, confidence)
-            case MultilabelClassificationSample(label=labels, confidence=confidences):
+            case MultilabelClassificationImportExportSample(label=labels, confidence=confidences):
                 return self.__convert_multilabel_sample(labels, confidences)
-            case DetectionSample(label=labels, bboxes=bboxes, confidence=confidences):
+            case DetectionImportExportSample(label=labels, bboxes=bboxes, confidence=confidences):
                 return self.__convert_detection_sample(labels, bboxes, confidences)
-            case InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences):
+            case InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=confidences):
                 return self.__convert_segmentation_sample(labels, polygons, confidences)
             case _:
                 raise ValueError(f"Unsupported sample type: {type(sample)}")
@@ -121,7 +126,7 @@ class DatumaroSampleToGetiAnnotationConverter:
         return []
 
     def __convert_multilabel_sample(
-        self, labels: NDArrayInt, confidences: NDArrayFloat32 | None
+        self, labels: NDArrayInt | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         if label_refs := self.__convert_labels_to_refs(labels):
             return [
@@ -134,10 +139,10 @@ class DatumaroSampleToGetiAnnotationConverter:
         return []
 
     def __convert_detection_sample(
-        self, labels: NDArrayInt, bboxes: NDArrayInt, confidences: NDArrayFloat32 | None
+        self, labels: NDArrayInt | None, bboxes: NDArrayInt | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         annotations = []
-        if label_refs := self.__convert_labels_to_refs(labels):
+        if bboxes is not None and (label_refs := self.__convert_labels_to_refs(labels)):
             for idx, (x1, y1, x2, y2) in enumerate(bboxes):
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(
@@ -150,10 +155,10 @@ class DatumaroSampleToGetiAnnotationConverter:
         return annotations
 
     def __convert_segmentation_sample(
-        self, labels: NDArrayInt, polygons: NDArrayFloat32, confidences: NDArrayFloat32 | None
+        self, labels: NDArrayInt | None, polygons: NDArrayFloat32 | None, confidences: NDArrayFloat32 | None
     ) -> list[DatasetItemAnnotation]:
         annotations = []
-        if label_refs := self.__convert_labels_to_refs(labels):
+        if polygons is not None and (label_refs := self.__convert_labels_to_refs(labels)):
             for idx, polygon in enumerate(polygons):
                 if (label_ref := label_refs[idx]) is not None:
                     annotations.append(
@@ -171,6 +176,8 @@ class DatumaroSampleToGetiAnnotationConverter:
         if isinstance(label_idx, int):
             return [self.__get_label_ref_by_dm_index(label_idx)]
         if isinstance(label_idx, np.ndarray):
+            if label_idx.ndim != 1:
+                raise ValueError(f"Expected 1D array for label indices, got {label_idx.ndim}D")
             return [self.__get_label_ref_by_dm_index(idx) for idx in label_idx]
         raise ValueError(f"Unsupported label index type: {type(label_idx)}")
 

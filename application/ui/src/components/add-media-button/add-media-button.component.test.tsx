@@ -29,4 +29,26 @@ describe('AddMediaButton', () => {
 
         expect(input).toHaveAttribute('accept', acceptedExtensions);
     });
+
+    it('opens file picker when button is clicked', () => {
+        const mockOnFilesSelected = vi.fn();
+
+        render(<AddMediaButton onFilesSelected={mockOnFilesSelected} />);
+
+        const button = screen.getByRole('button', { name: /Upload media/ });
+        const input = screen.getByLabelText(/Upload media files/) as HTMLInputElement;
+
+        const clickSpy = vi.spyOn(input, 'click');
+        fireEvent.click(button);
+
+        expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('disables button when isDisabled prop is true', () => {
+        render(<AddMediaButton onFilesSelected={vi.fn()} isDisabled />);
+
+        const button = screen.getByRole('button', { name: /Upload media/ });
+
+        expect(button).toBeDisabled();
+    });
 });

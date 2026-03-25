@@ -9,13 +9,14 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { ZoomProvider } from '../../../../components/zoom/zoom.provider';
+import type { MediaImage } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
 import { AnnotationVisibilityProvider } from '../../../../shared/annotator/annotation-visibility-provider.component';
 import { CanvasSettingsProvider } from '../primary-toolbar/settings/canvas-settings-provider.component';
 import { BottomToolbar } from './bottom-toolbar.component';
 
 type BottomToolbarProps = {
-    mediaItem: ReturnType<typeof getMockedMediaImage>;
+    mediaItem: MediaImage;
 };
 
 const renderBottomToolbar = ({ mediaItem }: BottomToolbarProps) => {
@@ -73,10 +74,38 @@ describe('BottomToolbar', () => {
         expect(screen.getByLabelText('For Review')).toBeInTheDocument();
     });
 
-    it('renders the subset picker with default placeholder', () => {
+    it('renders the subset picker with default placeholder', async () => {
+        server.use(
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+                return HttpResponse.json(
+                    getMockedDatasetItem({ id: 'media-123', user_reviewed: false, subset: 'unassigned' }),
+                    {
+                        status: 200,
+                    }
+                );
+            })
+        );
+
         renderBottomToolbar({ mediaItem: mockMediaItem });
 
-        expect(screen.getByLabelText('Select subset')).toBeInTheDocument();
+        expect(await screen.findByLabelText('Select subset')).toBeInTheDocument();
+    });
+
+    it('renders the subset instead of picker when subset is assigned', async () => {
+        server.use(
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+                return HttpResponse.json(
+                    getMockedDatasetItem({ id: 'media-123', user_reviewed: false, subset: 'validation' }),
+                    {
+                        status: 200,
+                    }
+                );
+            })
+        );
+
+        renderBottomToolbar({ mediaItem: mockMediaItem });
+
+        expect(await screen.findByLabelText('Validation')).toBeInTheDocument();
     });
 
     it('calls patch mutation when subset is changed', async () => {
@@ -104,7 +133,7 @@ describe('BottomToolbar', () => {
 
         renderBottomToolbar({ mediaItem: mockMediaItem });
 
-        const pickerButton = screen.getByRole('button', { name: /select subset/i });
+        const pickerButton = await screen.findByRole('button', { name: /select subset/i });
         fireEvent.click(pickerButton);
 
         const validationOption = await screen.findByRole('option', { name: /Validation/i });
