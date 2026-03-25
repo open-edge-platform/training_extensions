@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from uuid import UUID
 
+from datumaro.experimental.categories import HierarchicalLabelCategories
 from datumaro.experimental.export_import import export_dataset, import_dataset
 from loguru import logger
 
@@ -46,6 +47,7 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
         "The dataset could not be recognized in any of the supported formats. Please verify that the dataset "
         "is well-formed and in a supported format; if the problem persists, report the issue."
     )
+    HIERARCHICAL_LABELS_ERR = "The dataset with hierarchical labels is not supported."
 
     def __init__(self, staged_datasets_dir: Path) -> None:
         super().__init__()
@@ -71,6 +73,8 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
             dataset = import_dataset(archive_path, extract_dir=tmp_dir)
         except ValueError as err:
             raise ExecutionErr(self.IMPORT_ERR) from err
+        if isinstance(dataset.label_categories, HierarchicalLabelCategories):
+            raise ExecutionErr(self.HIERARCHICAL_LABELS_ERR)
         export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
         return tmp_dir
 
