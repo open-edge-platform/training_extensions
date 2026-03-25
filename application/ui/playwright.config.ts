@@ -1,7 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+const file = fileURLToPath(import.meta.url);
+const dirname = path.dirname(file);
+
+dotenv.config({
+    path: path.resolve(dirname, '.env.test'),
+});
 
 const CI = !!process.env.CI;
 
