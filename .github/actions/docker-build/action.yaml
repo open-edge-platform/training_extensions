@@ -38,6 +38,9 @@ outputs:
   digest:
     description: "Image digest from docker/build-push-action"
     value: ${{ steps.build.outputs.digest }}
+  image-name:
+    description: "First tag of the built image (available only when load=true)"
+    value: ${{ steps.first-tag.outputs.name }}
 
 runs:
   using: composite
@@ -59,8 +62,9 @@ runs:
         push: ${{ inputs.push }}
         tags: ${{ inputs.tags }}
         labels: ${{ inputs.labels }}
-        # When not pushing, validate the build and populate the cache only.
-        outputs: ${{ inputs.push != 'true' && 'type=cacheonly' || '' }}
+        # When not pushing, load the image into the local Docker daemon so
+        # callers can run smoke tests (e.g. healthcheck) against it.
+        load: ${{ inputs.push != 'true' }}
         build-args: |
           http_proxy
           https_proxy
@@ -78,3 +82,12 @@ runs:
         # to prevent cache poisoning and ensure reproducible builds.
         cache-from: ${{ inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/geti-{0}:buildcache', inputs.device) || '' }}
         cache-to: ${{ inputs.cache-write == 'true' && inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/geti-{0}:buildcache,mode=max,compression=zstd,image-manifest=true,ignore-error=true', inputs.device) || '' }}
+
+    - name: Extract first image tag
+      id: first-tag
+      if: inputs.push != 'true'
+      shell: bash
+      run: |
+        # Grab the first tag from the newline-separated list
+        FIRST_TAG=$(echo "${{ inputs.tags }}" | head -n1)
+        echo "name=${FIRST_TAG}" >> "$GITHUB_OUTPUT"

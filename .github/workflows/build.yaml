@@ -84,6 +84,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - name: Build Docker image
+        id: docker_build
         uses: ./.github/actions/docker-build
         with:
           device: ${{ matrix.device }}
@@ -93,6 +94,32 @@ jobs:
           # Fork PRs cannot write packages to the upstream org, so disable
           # cache export to avoid 403 errors from GHCR.
           cache-write: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}
+
+      - name: Smoke-test healthcheck endpoint
+        if: github.event_name == 'pull_request'
+        run: |
+          IMAGE="${{ steps.docker_build.outputs.image-name }}"
+          CONTAINER_NAME="geti-healthcheck-${{ matrix.device }}"
+
+          echo "Starting container from ${IMAGE} ..."
+          docker run -d --name "${CONTAINER_NAME}" -p 7860:7860 "${IMAGE}"
+
+          # Wait up to 60 seconds for the /health endpoint to respond
+          echo "Waiting for /health endpoint ..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:7860/health; then
+              echo ""
+              echo "Health check passed!"
+              docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Health check failed after 60 seconds."
+          docker logs "${CONTAINER_NAME}"
+          docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
+          exit 1
 
   required_check:
     name: Required Check build
