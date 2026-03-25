@@ -66,7 +66,8 @@ export const useGetCurrentTrainingJob = () => {
             'id' in job.metadata.project &&
             job.metadata.project.id;
         const isActive = job.status === 'RUNNING' || job.status === 'PENDING';
-        return jobProjectId === projectId && isActive && job.job_type === 'train';
+
+        return jobProjectId === projectId && isActive && (job.job_type === 'train' || job.job_type === 'quantize');
     });
 
     useStreamJobStatus(activeTrainingJob?.job_id);
