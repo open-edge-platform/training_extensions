@@ -55,14 +55,14 @@ class TestCachedMosaicInit:
 
     def test_invalid_probability_raises(self):
         with pytest.raises(ValueError, match="probability must be in"):
-            CachedMosaic(probability=1.5)
+            CachedMosaic(p=1.5)
 
     def test_invalid_max_cached_images_raises(self):
         with pytest.raises(ValueError, match="max_cached_images must be >= 4"):
             CachedMosaic(max_cached_images=3)
 
     def test_valid_construction(self):
-        m = CachedMosaic(img_scale=(320, 320), probability=0.5, max_cached_images=10)
+        m = CachedMosaic(img_scale=(320, 320), p=0.5, max_cached_images=10)
         assert m.img_scale == (320, 320)
         assert m.prob == 0.5
         assert m.max_cached_images == 10
@@ -73,7 +73,7 @@ class TestCachedMosaicForward:
 
     def test_cache_too_small_returns_input(self):
         """With fewer than 4 cached images, forward returns input unchanged."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=1.0, max_cached_images=10)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=10)
         sample = _make_det_sample(h=32, w=32)
         result = mosaic(sample)
         # After first call, cache has 1 item → should return input image unchanged
@@ -81,7 +81,7 @@ class TestCachedMosaicForward:
 
     def test_mosaic_applied_after_cache_fills(self):
         """After 4+ samples cached, mosaic produces doubled-size output."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=1.0, max_cached_images=40)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(4):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
             result = mosaic(sample)
@@ -96,7 +96,7 @@ class TestCachedMosaicForward:
 
     def test_mosaic_with_masks(self):
         """Mosaic should handle instance segmentation masks."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=1.0, max_cached_images=40)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
             result = mosaic(sample)
@@ -106,7 +106,7 @@ class TestCachedMosaicForward:
 
     def test_probability_zero_returns_input(self):
         """With probability=0, mosaic never applies (even with full cache)."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=0.0, max_cached_images=40)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=0.0, max_cached_images=40)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32)
             _ = mosaic(sample)
@@ -117,7 +117,7 @@ class TestCachedMosaicForward:
 
     def test_cache_eviction(self):
         """Cache should not grow beyond max_cached_images."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=0.0, max_cached_images=5)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=0.0, max_cached_images=5)
         for _ in range(10):
             sample = _make_det_sample(h=32, w=32)
             mosaic(sample)
@@ -125,7 +125,7 @@ class TestCachedMosaicForward:
 
     def test_bboxes_valid_after_mosaic(self):
         """Bboxes should be valid XYXY after mosaic (x2 > x1, y2 > y1)."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=1.0, max_cached_images=40)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32, n_boxes=3)
             result = mosaic(sample)
@@ -138,7 +138,7 @@ class TestCachedMosaicForward:
 
     def test_labels_match_bboxes(self):
         """Labels should be aligned with bboxes after mosaic."""
-        mosaic = CachedMosaic(img_scale=(32, 32), probability=1.0, max_cached_images=40)
+        mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
             result = mosaic(sample)
@@ -153,7 +153,7 @@ class TestCachedMosaicForward:
         assert all(0 <= i < 10 for i in indices)
 
     def test_repr(self):
-        mosaic = CachedMosaic(img_scale=(320, 320), probability=0.8)
+        mosaic = CachedMosaic(img_scale=(320, 320), p=0.8)
         r = repr(mosaic)
         assert "CachedMosaic" in r
         assert "320" in r
@@ -176,10 +176,10 @@ class TestCachedMixUpInit:
 
     def test_invalid_probability_raises(self):
         with pytest.raises(ValueError, match="Probability must be in"):
-            CachedMixUp(probability=-0.1)
+            CachedMixUp(p=-0.1)
 
     def test_valid_construction(self):
-        m = CachedMixUp(img_scale=(320, 320), probability=0.5, max_cached_images=10)
+        m = CachedMixUp(img_scale=(320, 320), p=0.5, max_cached_images=10)
         assert m.img_scale == (320, 320)
         assert m.prob == 0.5
 
@@ -189,7 +189,7 @@ class TestCachedMixUpForward:
 
     def test_cache_too_small_returns_input(self):
         """With only 1 cached sample, forward returns input unchanged."""
-        mixup = CachedMixUp(img_scale=(32, 32), probability=1.0, max_cached_images=20)
+        mixup = CachedMixUp(img_scale=(32, 32), p=1.0, max_cached_images=20)
         sample = _make_det_sample(h=32, w=32)
         result = mixup(sample)
         # First call: cache has 1 item → early return
@@ -199,7 +199,7 @@ class TestCachedMixUpForward:
         """After 2+ samples cached, mixup blends images."""
         mixup = CachedMixUp(
             img_scale=(32, 32),
-            probability=1.0,
+            p=1.0,
             max_cached_images=20,
             mix_ratio=0.5,
         )
@@ -213,7 +213,7 @@ class TestCachedMixUpForward:
 
     def test_probability_zero_returns_input(self):
         """With probability=0, mixup never applies."""
-        mixup = CachedMixUp(img_scale=(32, 32), probability=0.0, max_cached_images=20)
+        mixup = CachedMixUp(img_scale=(32, 32), p=0.0, max_cached_images=20)
         for _ in range(5):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
             result = mixup(sample)
@@ -222,21 +222,21 @@ class TestCachedMixUpForward:
 
     def test_cache_eviction(self):
         """Cache should not grow beyond max_cached_images."""
-        mixup = CachedMixUp(img_scale=(32, 32), probability=0.0, max_cached_images=5)
+        mixup = CachedMixUp(img_scale=(32, 32), p=0.0, max_cached_images=5)
         for _ in range(10):
             mixup(_make_det_sample(h=32, w=32))
         assert len(mixup.results_cache) <= 5
 
     def test_labels_match_bboxes(self):
         """Labels count must match bboxes count after mixup."""
-        mixup = CachedMixUp(img_scale=(32, 32), probability=1.0, max_cached_images=20)
+        mixup = CachedMixUp(img_scale=(32, 32), p=1.0, max_cached_images=20)
         for _ in range(5):
             result = mixup(_make_det_sample(h=32, w=32, n_boxes=2))
         assert result.bboxes.shape[0] == result.label.shape[0]
 
     def test_mixup_with_masks(self):
         """MixUp should handle instance segmentation masks."""
-        mixup = CachedMixUp(img_scale=(32, 32), probability=1.0, max_cached_images=20)
+        mixup = CachedMixUp(img_scale=(32, 32), p=1.0, max_cached_images=20)
         for _ in range(5):
             result = mixup(_make_det_sample(h=32, w=32, n_boxes=2))
         assert result.masks is not None
@@ -245,7 +245,7 @@ class TestCachedMixUpForward:
 
     def test_image_clamped_to_unit(self):
         """MixUp output image should be clamped to [0, 1]."""
-        mixup = CachedMixUp(img_scale=(32, 32), probability=1.0, max_cached_images=20)
+        mixup = CachedMixUp(img_scale=(32, 32), p=1.0, max_cached_images=20)
         for _ in range(5):
             result = mixup(_make_det_sample(h=32, w=32))
         assert result.image.min() >= 0.0
@@ -267,7 +267,7 @@ class TestRandomIoUCrop:
 
     def test_probability_zero_passthrough(self):
         """With p=0, input is returned unchanged."""
-        crop = RandomIoUCrop(probability=0.0)
+        crop = RandomIoUCrop(p=0.0)
         image = tv_tensors.Image(torch.rand(3, 100, 100))
         bboxes = tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
             torch.tensor([[10.0, 10.0, 50.0, 50.0]]),
@@ -282,7 +282,7 @@ class TestRandomIoUCrop:
 
     def test_probability_one_applies(self):
         """With p=1, crop always applies (output shape may differ)."""
-        crop = RandomIoUCrop(probability=1.0)
+        crop = RandomIoUCrop(p=1.0)
         image = tv_tensors.Image(torch.rand(3, 100, 100))
         bboxes = tv_tensors.BoundingBoxes(  # type: ignore[no-matching-overload]
             torch.tensor([[10.0, 10.0, 50.0, 50.0]]),
@@ -296,7 +296,7 @@ class TestRandomIoUCrop:
 
     def test_single_input_returns_single(self):
         """With p=0 and single input, returns the input (not a tuple)."""
-        crop = RandomIoUCrop(probability=0.0)
+        crop = RandomIoUCrop(p=0.0)
         image = tv_tensors.Image(torch.rand(3, 50, 50))
         result = crop(image)
         # Single input + skip → returns single tensor

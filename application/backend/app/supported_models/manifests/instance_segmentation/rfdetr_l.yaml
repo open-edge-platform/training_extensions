@@ -44,5 +44,12 @@ hyperparameters:
       random_zoom_out:
         enable: true
         fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5
       iou_random_crop:
         enable: true
+        probability: 1.0
+        min_scale: 0.3
+        max_scale: 1.0
