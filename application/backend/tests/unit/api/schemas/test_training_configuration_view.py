@@ -232,6 +232,7 @@ def fxt_training_configuration_view_json() -> dict:
                 "description": (
                     "Configurable parameters related to the training data, such as augmentations and filters."
                 ),
+                "depends_on": None,
                 "parameters": [
                     {
                         "type": "parameter_group",
@@ -244,6 +245,7 @@ def fxt_training_configuration_view_json() -> dict:
                             "to evaluate the final performance of the model. The percentages for training, validation, "
                             "and test subsets must sum to 100."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter",
@@ -295,12 +297,14 @@ def fxt_training_configuration_view_json() -> dict:
                             "the dataset. Depending on the scenario, an appropriate filter configuration can speed up "
                             "the training process and/or improve the model performance by removing noisy annotations."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter_group",
                                 "key": "min_annotation_pixels",
                                 "name": "Minimum annotation pixels",
                                 "description": "Minimum number of pixels in an annotation",
+                                "depends_on": None,
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -332,6 +336,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "key": "min_annotation_objects",
                                 "name": "Minimum annotation objects",
                                 "description": "Minimum number of objects in an annotation",
+                                "depends_on": None,
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -363,6 +368,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "key": "max_annotation_objects",
                                 "name": "Maximum annotation objects",
                                 "description": "Maximum number of objects in an annotation",
+                                "depends_on": None,
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -401,6 +407,7 @@ def fxt_training_configuration_view_json() -> dict:
                             "existing data. It improves model generalization and reduces overfitting by "
                             "increasing data variability without collecting new samples."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter_group",
@@ -410,6 +417,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Randomly zoom out the image by placing it on a larger canvas with "
                                     "padding. Applied before resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -480,6 +488,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Applied before resize. Note: this augmentation is not supported when "
                                     "Tiling algorithm is enabled."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -550,6 +559,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "description": (
                                     "Combines 4 images into one mosaic for augmentation. Applied before resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -587,6 +597,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Apply random affine transformations (rotation, translation, scaling, shear) "
                                     "to the image. Applied after resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -691,6 +702,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "description": (
                                     "Blends two images and their labels for augmentation. Applied before resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -742,6 +754,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Randomly adjust brightness, contrast, saturation, and hue of the image. "
                                     "Applied after resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -841,6 +854,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "rather than "
                                     "specific local features. Applied after resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -925,6 +939,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "features rather than relying solely on color information. "
                                     "Applied after resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -966,6 +981,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "image quality. "
                                     "Applied after resize."
                                 ),
+                                "depends_on": {"deim_framework.enable": False},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -1023,6 +1039,7 @@ def fxt_training_configuration_view_json() -> dict:
                 "key": "training",
                 "name": "Training",
                 "description": "Configurable parameters related to the learning phase (hyperparameters).",
+                "depends_on": None,
                 "parameters": [
                     {
                         "type": "parameter",
@@ -1066,6 +1083,7 @@ def fxt_training_configuration_view_json() -> dict:
                             "Early stopping is a technique to prevent overfitting by stopping training when "
                             "performance on a validation set stops improving."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter",
@@ -1137,6 +1155,7 @@ def fxt_training_configuration_view_json() -> dict:
                             "predefined schedule or based on validation performance, helping to improve convergence "
                             "and training stability."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter",
@@ -1165,6 +1184,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "and improve convergence, especially when using large learning rates or training "
                                     "on complex datasets."
                                 ),
+                                "depends_on": None,
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -1247,6 +1267,7 @@ def fxt_training_configuration_view_json() -> dict:
                             "Gradient accumulation allows simulating larger batch sizes by accumulating gradients "
                             "over multiple forward/backward passes before updating the model weights."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter",
@@ -1285,6 +1306,7 @@ def fxt_training_configuration_view_json() -> dict:
                             "Gradient clipping prevents exploding gradients by capping gradient norms during "
                             "backpropagation."
                         ),
+                        "depends_on": None,
                         "parameters": [
                             {
                                 "type": "parameter",
@@ -1353,6 +1375,7 @@ def fxt_training_configuration_view_json() -> dict:
                 "key": "evaluation",
                 "name": "Evaluation parameters",
                 "description": "Configurable parameters related to the model evaluation.",
+                "depends_on": None,
                 "parameters": [
                     {
                         "type": "parameter",

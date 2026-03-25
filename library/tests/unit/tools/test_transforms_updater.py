@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from otx.tools.converter import HyperparametersUpdater, TransformsUpdater
+from otx.tools.converter import GetiConfigConverter, HyperparametersUpdater, TransformsUpdater
 
 
 class TestTransformsUpdater:
@@ -686,3 +686,224 @@ class TestHyperparametersUpdater:
             base_config["data"]["train_subset"]["batch_size"] == original_config["data"]["train_subset"]["batch_size"]
         )
         assert base_config["data"]["input_size"] == original_config["data"]["input_size"]
+
+
+class TestDeimFrameworkToggle:
+    """Test DEIM framework toggle logic in GetiConfigConverter."""
+
+    @pytest.fixture
+    def config_with_deim_callback(self):
+        """Create a config that includes the AugmentationSchedulerCallback."""
+        return {
+            "callbacks": [
+                {
+                    "class_path": "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
+                    "init_args": {"max_interval": 1},
+                },
+                {
+                    "class_path": "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+                    "init_args": {"patience": 20},
+                },
+                {
+                    "class_path": "otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+                    "init_args": {
+                        "data_aug_switch": {
+                            "class_path": "otx.backend.native.callbacks.aug_scheduler.DataAugSwitch",
+                            "init_args": {"policy_epochs": [4, 40]},
+                        }
+                    },
+                },
+            ],
+        }
+
+    @pytest.fixture
+    def config_without_deim_callback(self):
+        """Create a config without the AugmentationSchedulerCallback."""
+        return {
+            "callbacks": [
+                {
+                    "class_path": "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
+                    "init_args": {"max_interval": 1},
+                },
+                {
+                    "class_path": "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+                    "init_args": {"patience": 20},
+                },
+            ],
+        }
+
+    def test_disable_deim_removes_callback(self, config_with_deim_callback):
+        """Test that disabling DEIM removes the AugmentationSchedulerCallback."""
+        assert len(config_with_deim_callback["callbacks"]) == 3
+        GetiConfigConverter._disable_deim_framework(config_with_deim_callback)
+        assert len(config_with_deim_callback["callbacks"]) == 2
+        for cb in config_with_deim_callback["callbacks"]:
+            assert "AugmentationSchedulerCallback" not in cb["class_path"]
+
+    def test_disable_deim_noop_when_no_callback(self, config_without_deim_callback):
+        """Test that disabling DEIM is a no-op when callback is absent."""
+        original_count = len(config_without_deim_callback["callbacks"])
+        GetiConfigConverter._disable_deim_framework(config_without_deim_callback)
+        assert len(config_without_deim_callback["callbacks"]) == original_count
+
+    def test_deim_framework_popped_from_augmentation_params(self):
+        """Test that deim_framework is popped and doesn't reach TransformsUpdater.
+
+        When DEIM is enabled, augmentation params should NOT be forwarded to
+        TransformsUpdater (the scheduler owns the pipeline).
+        """
+        config = {
+            "data": {
+                "train_subset": {
+                    "augmentations_cpu": [],
+                    "augmentations_gpu": [
+                        {"class_path": "kornia.augmentation.Normalize", "init_args": {}},
+                    ],
+                },
+                "tile_config": {"enable_tiler": False},
+            },
+            "model": {
+                "init_args": {
+                    "optimizer": {"init_args": {"lr": 0.001}},
+                },
+            },
+            "callbacks": [
+                {
+                    "class_path": "otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+                    "init_args": {},
+                },
+            ],
+        }
+        param_dict = {
+            "dataset_preparation": {
+                "augmentation": {
+                    "deim_framework": {"enable": True},
+                    "random_horizontal_flip": {
+                        "enable": True,
+                        "probability": 0.5,
+                    },
+                },
+            },
+        }
+        # Should NOT raise "Unknown augmentation: 'deim_framework'"
+        GetiConfigConverter._update_params(config, param_dict)
+        # Callback should still be present since enable=True
+        assert len(config["callbacks"]) == 1
+        # Augmentations should NOT have been applied (DEIM owns the pipeline)
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        assert len(gpu_augs) == 1  # only Normalize, no RandomHorizontalFlip added
+
+    def test_deim_framework_disabled_applies_augmentations(self):
+        """Test that when DEIM is disabled, augmentations ARE forwarded to the static pipeline."""
+        config = {
+            "data": {
+                "train_subset": {
+                    "augmentations_cpu": [],
+                    "augmentations_gpu": [
+                        {"class_path": "kornia.augmentation.Normalize", "init_args": {}},
+                    ],
+                },
+                "tile_config": {"enable_tiler": False},
+            },
+            "model": {
+                "init_args": {
+                    "optimizer": {"init_args": {"lr": 0.001}},
+                },
+            },
+            "callbacks": [
+                {
+                    "class_path": "otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+                    "init_args": {},
+                },
+            ],
+        }
+        param_dict = {
+            "dataset_preparation": {
+                "augmentation": {
+                    "deim_framework": {"enable": False},
+                    "random_horizontal_flip": {
+                        "enable": True,
+                        "probability": 0.7,
+                    },
+                },
+            },
+        }
+        GetiConfigConverter._update_params(config, param_dict)
+        # Callback should be removed
+        assert len(config["callbacks"]) == 0
+        # RandomHorizontalFlip should have been added to the static pipeline
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        flip_augs = [a for a in gpu_augs if "RandomHorizontalFlip" in a.get("class_path", "")]
+        assert len(flip_augs) == 1
+        assert flip_augs[0]["init_args"]["p"] == 0.7
+
+    def test_deim_framework_disabled_strips_callback(self):
+        """Test end-to-end: deim_framework enable=False strips the callback."""
+        config = {
+            "data": {
+                "train_subset": {
+                    "augmentations_cpu": [],
+                    "augmentations_gpu": [
+                        {"class_path": "kornia.augmentation.Normalize", "init_args": {}},
+                    ],
+                },
+                "tile_config": {"enable_tiler": False},
+            },
+            "model": {
+                "init_args": {
+                    "optimizer": {"init_args": {"lr": 0.001}},
+                },
+            },
+            "callbacks": [
+                {
+                    "class_path": "otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+                    "init_args": {},
+                },
+            ],
+        }
+        param_dict = {
+            "dataset_preparation": {
+                "augmentation": {
+                    "deim_framework": {"enable": False},
+                },
+            },
+        }
+        GetiConfigConverter._update_params(config, param_dict)
+        assert len(config["callbacks"]) == 0
+
+    def test_no_deim_framework_applies_augmentations_normally(self):
+        """Test that when deim_framework is absent (None), augmentations are applied normally."""
+        config = {
+            "data": {
+                "train_subset": {
+                    "augmentations_cpu": [],
+                    "augmentations_gpu": [
+                        {"class_path": "kornia.augmentation.Normalize", "init_args": {}},
+                    ],
+                },
+                "tile_config": {"enable_tiler": False},
+            },
+            "model": {
+                "init_args": {
+                    "optimizer": {"init_args": {"lr": 0.001}},
+                },
+            },
+            "callbacks": [],
+        }
+        param_dict = {
+            "dataset_preparation": {
+                "augmentation": {
+                    "random_horizontal_flip": {
+                        "enable": True,
+                        "probability": 0.5,
+                    },
+                },
+            },
+        }
+        GetiConfigConverter._update_params(config, param_dict)
+        # No callback to remove
+        assert len(config["callbacks"]) == 0
+        # Augmentations should have been applied
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        flip_augs = [a for a in gpu_augs if "RandomHorizontalFlip" in a.get("class_path", "")]
+        assert len(flip_augs) == 1

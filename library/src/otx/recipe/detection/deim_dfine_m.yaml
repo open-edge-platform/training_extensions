@@ -199,11 +199,18 @@ overrides:
       batch_size: 8
       num_workers: 4
       augmentations_cpu:
+        - class_path: torchvision.transforms.v2.RandomZoomOut
+          init_args:
+            fill: 0
+            p: 0.5
+        - class_path: otx.data.augmentation.transforms.RandomIoUCrop
+        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+          init_args:
+            min_size: 1
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
-            resize_targets: false
       augmentations_gpu:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:

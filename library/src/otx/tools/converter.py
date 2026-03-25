@@ -104,22 +104,17 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "object-detection-d-fine-x": {
-        "recipe_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "object-detection-deim-d-fine-m": {
+    "object-detection-dfine-m": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
         "status": ModelStatus.BALANCE,
         "default": False,
     },
-    "object-detection-deim-d-fine-l": {
+    "object-detection-dfine-l": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    "object-detection-deim-d-fine-x": {
+    "object-detection-dfine-x": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_x.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
@@ -646,11 +641,20 @@ class GetiConfigConverter:
         """
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
         tiling = augmentation_params.pop("tiling", None)
+        deim_framework = augmentation_params.pop("deim_framework", None)
         training_parameters = param_dict.get("training", {})
 
-        # Update augmentations and tiling
+        # Update tiling (always applied regardless of DEIM state)
         TransformsUpdater.update_tiling(tiling, config)
-        TransformsUpdater.update(augmentation_params, config)
+
+        # When DEIM is enabled, the AugmentationSchedulerCallback owns the pipeline;
+        # user augmentation overrides must be ignored.
+        deim_enabled = deim_framework is not None and deim_framework.get("enable", True)
+        if not deim_enabled:
+            TransformsUpdater.update(augmentation_params, config)
+            if deim_framework is not None:
+                # User explicitly disabled DEIM -> remove the scheduler callback
+                GetiConfigConverter._disable_deim_framework(config)
 
         # Update training hyperparameters
         hyperparams = {
@@ -672,6 +676,23 @@ class GetiConfigConverter:
             if callback["class_path"] == name:
                 return idx
         return -1
+
+    @staticmethod
+    def _disable_deim_framework(config: dict) -> None:
+        """Disable the DEIM adaptive augmentation scheduling framework.
+
+        Removes the AugmentationSchedulerCallback from the callbacks list,
+        falling back to the static augmentation pipeline defined in
+        overrides.data.train_subset.
+        """
+        callbacks = config.get("callbacks", [])
+        idx = GetiConfigConverter.get_callback_idx(
+            callbacks,
+            "otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+        )
+        if idx > -1:
+            callbacks.pop(idx)
+            logging.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
 
     @staticmethod
     def _remove_unused_key(config: dict) -> None:

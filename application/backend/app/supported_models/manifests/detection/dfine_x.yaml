@@ -1,100 +1,38 @@
-id: object-detection-d-fine-x
+id: object-detection-dfine-x
 name: D-FINE-X
 
 pretrained_weights:
-  url: https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth
-  sha_sum: 9a82252f2d0426b2c24e99905c36c33a4ea850f247c247bda76fb5f76daea123
+  url: https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_x_coco_50e.pth
+  sha_sum: e729436f96d95e78dbf67452bf3fb654cd5bed37de43067f5cf0aafb24d0fc7a
 
-description: "D-FINE is a powerful real-time object detector that redefines the bounding box regression task in DETRs as Fine-grained Distribution Refinement (FDR) and introduces Global Optimal Localization Self-Distillation (GO-LSD), achieving outstanding performance without introducing additional inference and training costs."
+description: "D-FINE is a powerful real-time object detector that redefines the bounding box regression task in DETRs as Fine-grained Distribution Refinement (FDR). Combined with the DEIM adaptive augmentation scheduling framework (enabled by default), it achieves outstanding performance with faster convergence."
 stats:
   gigaflops: 202
-  trainable_parameters: 240
+  trainable_parameters: 62
   benchmark_metrics:
-    coco_map_50_95: 55.8
-    coco_map_50: 73.7
+    coco_map_50_95: 56.5
+    coco_map_50: 74.0
+
+capabilities:
+  tiling: false
 
 hyperparameters:
   training:
-    learning_rate: 0.00025
+    learning_rate: 0.0005
     weight_decay: 0.000125
     scheduler:
-      factor: 0.1
+      factor: 0.5
       patience: 6
       warmup:
         enable: true
-        epochs: 100
+        epochs: 30
+    allowed_values_input_size:
+      - 640
     input_size_width: 640
     input_size_height: 640
   dataset_preparation:
     augmentation:
+      deim_framework:
+        enable: true
       random_zoom_out:
         enable: true
-        fill: 0
-        side_range:
-          - 1.0
-          - 4.0
-        probability: 0.5
-      iou_random_crop:
-        enable: true
-        probability: 1.0
-        min_scale: 0.3
-        max_scale: 1.0
-      random_horizontal_flip:
-        enable: true
-        probability: 0.5
-      random_vertical_flip:
-        enable: false
-        probability: 0.5
-      random_affine:
-        enable: false
-        max_rotate_degree: 10.0
-        max_translate_ratio: 0.1
-        scaling_ratio_range:
-          - 0.5
-          - 1.5
-        max_shear_degree: 2.0
-        probability: 0.5
-      gaussian_blur:
-        enable: false
-        kernel_size: 5
-        sigma:
-          - 0.1
-          - 2.0
-        probability: 0.5
-      color_jitter:
-        enable: false
-        brightness:
-          - 0.875
-          - 1.125
-        contrast:
-          - 0.5
-          - 1.5
-        saturation:
-          - 0.5
-          - 1.5
-        hue:
-          - -0.05
-          - 0.05
-        probability: 0.5
-      gaussian_noise:
-        enable: false
-        mean: 0.0
-        sigma: 0.1
-        probability: 0.5
-      random_erasing:
-        enable: false
-        scale:
-          - 0.02
-          - 0.33
-        ratio:
-          - 0.3
-          - 3.3
-        probability: 0.5
-        value: 0.0
-      random_grayscale:
-        enable: false
-        probability: 0.1
-      random_sharpness:
-        enable: false
-        sharpness: 0.5
-        probability: 0.5
