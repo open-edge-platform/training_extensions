@@ -179,8 +179,6 @@ class LabelService(BaseSessionManagedService):
         # Find all dataset items that reference this label
         affected_items = dataset_item_repo.find_items_by_label_id(label_id_str)
 
-        is_multiclass = task.task_type is TaskType.CLASSIFICATION and task.exclusive_labels
-
         for item in affected_items:
             if item.annotation_data is None:
                 continue
@@ -200,7 +198,7 @@ class LabelService(BaseSessionManagedService):
                     user_reviewed=item.user_reviewed,
                     prediction_model_id=item.prediction_model_id,
                 )
-            elif is_multiclass:
+            elif task.is_multiclass:
                 dataset_item_repo.delete_annotation_data(obj_id=item.id)
             else:
                 dataset_item_repo.set_annotation_data(
