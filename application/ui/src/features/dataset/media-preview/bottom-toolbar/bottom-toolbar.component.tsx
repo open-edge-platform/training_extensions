@@ -5,6 +5,7 @@ import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { capitalize } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
@@ -70,6 +71,8 @@ export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) =>
 
     const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem.id);
 
+    const isUnassigned = currentSubset === 'unassigned';
+
     return (
         <Flex justifyContent={'end'}>
             <Toolbar.Container>
@@ -81,7 +84,7 @@ export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) =>
                     )}
 
                     <Toolbar.Section>
-                        <Flex gap={'size-100'} alignItems={'center'}>
+                        <Flex gap={'size-100'} alignItems={'center'} height={'100%'}>
                             <Text UNSAFE_className={classes.filename}>{fileName}</Text>
                             <Tag
                                 className={clsx({
@@ -92,16 +95,20 @@ export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) =>
                                 text={isUserReviewed ? 'Accepted' : 'For Review'}
                             />
 
-                            <Picker
-                                selectedKey={currentSubset === 'unassigned' ? null : currentSubset}
-                                placeholder={'Select subset'}
-                                aria-label={'Select subset'}
-                                onSelectionChange={handleSubsetChange}
-                            >
-                                <Item key={'validation'}>Validation</Item>
-                                <Item key={'testing'}>Testing</Item>
-                                <Item key={'training'}>Training</Item>
-                            </Picker>
+                            {isUnassigned ? (
+                                <Picker
+                                    selectedKey={null}
+                                    placeholder={'Select subset'}
+                                    aria-label={'Select subset'}
+                                    onSelectionChange={handleSubsetChange}
+                                >
+                                    <Item key={'validation'}>Validation</Item>
+                                    <Item key={'testing'}>Testing</Item>
+                                    <Item key={'training'}>Training</Item>
+                                </Picker>
+                            ) : (
+                                <Tag withDot={false} text={capitalize(String(currentSubset))} />
+                            )}
                         </Flex>
                     </Toolbar.Section>
 
