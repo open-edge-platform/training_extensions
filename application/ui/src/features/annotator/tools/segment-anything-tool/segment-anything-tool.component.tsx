@@ -100,6 +100,7 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
+        cancellableThrottledDecodingQueryFn.cancel();
         addAndSelectAnnotations(previewShapes, selectedLabel ? [selectedLabel] : []);
         setPreviewShapes([]);
     };
