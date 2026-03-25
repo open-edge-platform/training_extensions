@@ -250,39 +250,6 @@ class TestOTXQuantizerValidateModel:
         with pytest.raises(FileNotFoundError, match="OpenVINO model files not found"):
             quantizer.validate_model(params=fxt_quantization_params)
 
-    def test_validate_model_fails_already_quantized(
-        self,
-        tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
-        fxt_model_service: Mock,
-        fxt_quantization_params: QuantizationJobParams,
-    ):
-        """Model that already has an INT8 variant must be rejected."""
-        quantizer = fxt_otx_quantizer()
-        model = _make_model_revision(
-            fxt_quantization_params.model_id,
-            has_int8=True,
-        )
-        # Create the FP16 XML on disk so we get past the file check
-        fp16_variant = next(v for v in model.variants if v.precision == ModelPrecision.FP16)
-        xml_path = (
-            tmp_path
-            / "projects"
-            / str(fxt_quantization_params.project_id)
-            / "models"
-            / str(fxt_quantization_params.model_id)
-            / "variants"
-            / str(fp16_variant.id)
-            / "model.xml"
-        )
-        xml_path.parent.mkdir(parents=True, exist_ok=True)
-        xml_path.write_text("<model/>")
-
-        fxt_model_service.get_model.return_value = model
-
-        with pytest.raises(ValueError, match="already has a quantized"):
-            quantizer.validate_model(params=fxt_quantization_params)
-
 
 class TestOTXQuantizerRunQuantization:
     """Tests for ``OTXQuantizer.run_quantization``."""

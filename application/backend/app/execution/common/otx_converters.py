@@ -4,8 +4,12 @@ import torch
 
 from loguru import logger
 from otx import OTXTaskType
+
+
+
 from otx.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
-from otx.data.dataset.base import OTXDataset
+from otx.data.dataset.base import (
+    OTXDataset)
 from otx.metrics import MetricCallable
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
