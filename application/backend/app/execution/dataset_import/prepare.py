@@ -74,6 +74,7 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
         except ValueError as err:
             raise ExecutionErr(self.IMPORT_ERR) from err
         if isinstance(dataset.label_categories, HierarchicalLabelCategories):
+            shutil.rmtree(archive_path.parent)
             raise ExecutionErr(self.HIERARCHICAL_LABELS_ERR)
         export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
         return tmp_dir

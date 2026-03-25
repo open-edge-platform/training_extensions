@@ -75,6 +75,7 @@ class TestPrepareDataset:
         self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path
     ) -> None:
         archive_path = fxt_staged_datasets_dir / str(uuid4()) / "dataset.zip"
+        archive_path.parent.mkdir(parents=True)
         dataset = Mock()
         dataset.label_categories = HierarchicalLabelCategories()
         with (
@@ -85,6 +86,8 @@ class TestPrepareDataset:
             patch("app.execution.dataset_import.prepare.import_dataset", return_value=dataset),
         ):
             fxt_prepare.convert_archive(archive_path)
+
+        assert not archive_path.parent.exists()
 
     def test_convert_archive_success(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
         archive_path = fxt_staged_datasets_dir / str(uuid4()) / "dataset.zip"
