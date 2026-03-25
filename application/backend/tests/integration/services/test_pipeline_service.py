@@ -194,10 +194,6 @@ class TestPipelineServiceIntegration:
 
         model_id = fxt_db_models[1].id
 
-        # The service requires the target model to have SUCCESSFUL training status
-        fxt_db_models[1].training_status = TrainingStatus.SUCCESSFUL
-        db_session.flush()
-
         updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {model_attr: model_id})
 
         fxt_event_bus.emit_event.assert_called_once_with(EventType.MODEL_CHANGED)
