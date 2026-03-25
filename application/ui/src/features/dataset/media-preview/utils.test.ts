@@ -1,10 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { act, waitFor } from '@testing-library/react';
+import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { getMockedMediaImage, getMockedVideoFrame, getMultipleMockedMediaImage } from 'mocks/mock-media';
+import { renderHook } from 'test-utils/render';
 
 import type { AnnotationDTO } from '../../../constants/shared-types';
-import { getInitialAnnotations, getNextMediaItem } from './utils';
+import { getInitialAnnotations, getNextMediaItem, useAnnotatorMode } from './utils';
 
 describe('getInitialAnnotations', () => {
     const mockAnnotations: AnnotationDTO[] = [
@@ -98,6 +101,77 @@ describe('getNextMediaItem', () => {
             const frame = getMockedVideoFrame({ id: 'video-1', frame_number: 5, frame_count: 10 });
             const result = getNextMediaItem(frame, [frame], 3);
             expect(result).toEqual({ ...frame, frame_number: 6 });
+        });
+    });
+});
+
+describe('useAnnotatorMode', () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    it('sets mode to "annotation" when there are no annotations and no predictions', () => {
+        const { result } = renderHook(() => useAnnotatorMode({ predictions: [], annotations: [] }));
+
+        expect(result.current[0]).toBe('annotation');
+    });
+
+    it('sets mode to "annotation" when there are annotations and predictions', () => {
+        const { result } = renderHook(() =>
+            useAnnotatorMode({
+                predictions: [getMockedAnnotation({ id: '1' })],
+                annotations: [getMockedAnnotation({ id: '2' })],
+            })
+        );
+
+        expect(result.current[0]).toBe('annotation');
+    });
+
+    it('sets mode to "annotation" when there are annotations and no predictions', () => {
+        const { result } = renderHook(() =>
+            useAnnotatorMode({
+                predictions: [],
+                annotations: [getMockedAnnotation({ id: '1' })],
+            })
+        );
+
+        expect(result.current[0]).toBe('annotation');
+    });
+
+    it('sets mode to "prediction" when there are no annotations and are predictions', () => {
+        const { result } = renderHook(() =>
+            useAnnotatorMode({
+                predictions: [getMockedAnnotation({ id: '1' })],
+                annotations: [],
+            })
+        );
+
+        expect(result.current[0]).toBe('prediction');
+    });
+
+    it('updates mode manually properly', async () => {
+        const { result } = renderHook(() => useAnnotatorMode({ predictions: [], annotations: [] }));
+
+        const [_, setMode] = result.current;
+
+        await waitFor(() => {
+            expect(result.current[0]).toBe('annotation');
+        });
+
+        act(() => {
+            setMode('prediction');
+        });
+
+        await waitFor(() => {
+            expect(result.current[0]).toBe('prediction');
+        });
+
+        act(() => {
+            setMode('annotation');
+        });
+
+        await waitFor(() => {
+            expect(result.current[0]).toBe('annotation');
         });
     });
 });
