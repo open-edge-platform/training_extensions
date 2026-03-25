@@ -24,7 +24,7 @@ type EditPredictionButtonProps = {
 
 const EditPredictionButton = ({ onEditPrediction }: EditPredictionButtonProps) => {
     return (
-        <ActionButton isQuiet onPress={onEditPrediction}>
+        <ActionButton isQuiet onPress={onEditPrediction} aria-label={'Edit prediction'}>
             <Icon>
                 <Edit />
             </Icon>

@@ -190,110 +190,6 @@ test.describe('Annotator', () => {
         });
     });
 
-    test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
-        const predictions = [
-            {
-                shape: {
-                    type: 'rectangle',
-                    x: 3,
-                    y: 0,
-                    width: 780,
-                    height: 421,
-                },
-                labels: [{ id: blueLabel.id }],
-                confidences: [0.9619140625],
-            },
-            {
-                shape: {
-                    type: 'rectangle',
-                    x: 1007,
-                    y: 624,
-                    width: 909,
-                    height: 456,
-                },
-                labels: [{ id: blueLabel.id }],
-                confidences: [0.9599609375],
-            },
-            {
-                shape: {
-                    type: 'rectangle',
-                    x: 291,
-                    y: 0,
-                    width: 1553,
-                    height: 889,
-                },
-                labels: [{ id: blueLabel.id }],
-                confidences: [0.904296875],
-            },
-        ] satisfies PredictionDTO[];
-
-        network.use(
-            http.get('/api/projects/{project_id}/models', async () => {
-                return HttpResponse.json([getMockedModel()]);
-            }),
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
-                return HttpResponse.json({
-                    annotations: [],
-                    user_reviewed: true,
-                });
-            }),
-            http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
-                return HttpResponse.json({
-                    predictions: [
-                        {
-                            media: {
-                                id: '123',
-                            },
-                            prediction: predictions,
-                        },
-                    ],
-                });
-            })
-        );
-
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
-
-        await test.step('Draws an annotation in annotation mode', async () => {
-            await expect(annotatorPage.getAnnotationMode('Annotation')).toHaveAttribute('aria-pressed', 'true');
-            await expect(annotatorPage.getAnnotationMode('Prediction')).toHaveAttribute('aria-pressed', 'false');
-
-            const annotation = { x: 100, y: 100, width: 150, height: 150 };
-
-            await boundingBoxTool.selectTool();
-            await boundingBoxTool.drawBoundingBox(annotation);
-
-            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
-
-            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
-
-            expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
-        });
-
-        await test.step('Displays server prediction in prediction mode', async () => {
-            await annotatorPage.openPredictionMode();
-
-            await expect(annotatorPage.getAnnotationMode('Prediction')).toHaveAttribute('aria-pressed', 'true');
-            await expect(annotatorPage.getAnnotationMode('Annotation')).toHaveAttribute('aria-pressed', 'false');
-
-            await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
-            await expect(page.getByLabel('Labels')).toBeHidden();
-
-            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
-            expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);
-
-            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
-            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(0);
-        });
-
-        await test.step('Hides predictions in annotation mode, restores annotation', async () => {
-            await annotatorPage.openAnnotationMode();
-
-            expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
-            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
-        });
-    });
-
     test('Tool selection persists across media items', async ({ page, polygonTool, annotatorPage, network }) => {
         const smallPolygon: Polygon = {
             type: 'polygon',
@@ -573,6 +469,123 @@ test.describe('Annotator', () => {
                 'aria-pressed',
                 'true'
             );
+        });
+    });
+
+    describe('Annotation and prediction modes', () => {
+        test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
+            const predictions = [
+                {
+                    shape: {
+                        type: 'rectangle',
+                        x: 3,
+                        y: 0,
+                        width: 780,
+                        height: 421,
+                    },
+                    labels: [{ id: blueLabel.id }],
+                    confidences: [0.9619140625],
+                },
+                {
+                    shape: {
+                        type: 'rectangle',
+                        x: 1007,
+                        y: 624,
+                        width: 909,
+                        height: 456,
+                    },
+                    labels: [{ id: blueLabel.id }],
+                    confidences: [0.9599609375],
+                },
+                {
+                    shape: {
+                        type: 'rectangle',
+                        x: 291,
+                        y: 0,
+                        width: 1553,
+                        height: 889,
+                    },
+                    labels: [{ id: blueLabel.id }],
+                    confidences: [0.904296875],
+                },
+            ] satisfies PredictionDTO[];
+
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json({
+                        annotations: [],
+                        user_reviewed: true,
+                    });
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+            await test.step('Draws an annotation in annotation mode', async () => {
+                await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+                await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+
+                const annotation = { x: 100, y: 100, width: 150, height: 150 };
+
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox(annotation);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
+
+                expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
+            });
+
+            await test.step('Displays server prediction in prediction mode', async () => {
+                await annotatorPage.openPredictionMode();
+
+                await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+                await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
+
+                await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
+                await expect(page.getByLabel('Labels')).toBeHidden();
+
+                await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
+                expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(0);
+            });
+
+            await test.step('Hides predictions in annotation mode, restores annotation', async () => {
+                await annotatorPage.openAnnotationMode();
+
+                expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+            });
+
+            await test.step('Edits prediction by overwriting existing annotations with prediction in annotation mode', async () => {
+                await annotatorPage.openPredictionMode();
+                await annotatorPage.editPrediction();
+
+                await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+                await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+
+                await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeHidden();
+            });
         });
     });
 });
