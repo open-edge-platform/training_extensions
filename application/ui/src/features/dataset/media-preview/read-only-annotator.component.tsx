@@ -19,12 +19,13 @@ import { useSubmitPredictions } from './use-submit-predictions.hook';
 import classes from './read-only-annotator.module.scss';
 
 type EditPredictionButtonProps = {
+    isDisabled: boolean;
     onEditPrediction: () => void;
 };
 
-const EditPredictionButton = ({ onEditPrediction }: EditPredictionButtonProps) => {
+const EditPredictionButton = ({ isDisabled, onEditPrediction }: EditPredictionButtonProps) => {
     return (
-        <ActionButton isQuiet onPress={onEditPrediction} aria-label={'Edit prediction'}>
+        <ActionButton isQuiet onPress={onEditPrediction} isDisabled={isDisabled} aria-label={'Edit prediction'}>
             <Icon>
                 <Edit />
             </Icon>
@@ -40,7 +41,7 @@ type ReadOnlyAnnotatorProps = {
     onClose: () => void;
     onModeChange?: (mode: AnnotatorMode) => void;
     onSuccessfulAcceptPrediction?: () => void;
-
+    isEditPredictionDisabled?: boolean;
     onEditPrediction?: () => void;
 };
 
@@ -63,6 +64,7 @@ export const ReadOnlyAnnotator = ({
     onClose,
     onSuccessfulAcceptPrediction,
     onEditPrediction,
+    isEditPredictionDisabled = false,
 }: ReadOnlyAnnotatorProps) => {
     const { canSubmit, isSaving, submit } = useSubmitPredictions({ onSuccess: onSuccessfulAcceptPrediction });
 
@@ -90,7 +92,12 @@ export const ReadOnlyAnnotator = ({
                                     </ActionButton>
                                 )}
 
-                                {onEditPrediction && <EditPredictionButton onEditPrediction={onEditPrediction} />}
+                                {onEditPrediction && (
+                                    <EditPredictionButton
+                                        onEditPrediction={onEditPrediction}
+                                        isDisabled={isEditPredictionDisabled}
+                                    />
+                                )}
 
                                 {(onEditPrediction || onModeChange) && (
                                     <Divider size={'S'} height={'size-400'} width={'size-10'} />

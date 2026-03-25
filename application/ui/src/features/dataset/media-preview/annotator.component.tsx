@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
@@ -25,7 +26,6 @@ type PredictionAnnotatorProps = {
     mode: AnnotatorMode;
     onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
-
     onSuccessfulAcceptPrediction: () => void;
 };
 
@@ -53,6 +53,7 @@ const PredictionAnnotator = ({
             onClose={onClose}
             onSuccessfulAcceptPrediction={onSuccessfulAcceptPrediction}
             onEditPrediction={handleEditPrediction}
+            isEditPredictionDisabled={isEmpty(annotations)}
         />
     );
 };
