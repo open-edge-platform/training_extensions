@@ -32,7 +32,7 @@ export const StreamContainer = () => {
                     {isStopped && (
                         <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
                             <Flex UNSAFE_className={classes.playPauseButton}>
-                                <Play width='64px' height='64px' aria-label={'Start stream'} />
+                                <Play color={'#333'} width='64px' height='64px' aria-label={'Start stream'} />
                             </Flex>
                         </Flex>
                     )}
@@ -56,7 +56,7 @@ export const StreamContainer = () => {
                                 UNSAFE_className={classes.pauseOverlay}
                             >
                                 <Flex UNSAFE_className={classes.playPauseButton}>
-                                    <Pause width='64px' height='64px' aria-label={'Stop stream'} />
+                                    <Pause color={'#333'} width='64px' height='64px' aria-label={'Stop stream'} />
                                 </Flex>
                             </Flex>
                         </View>
