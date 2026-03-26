@@ -34,7 +34,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
     """
     Base implementation for dataset import logic, inheriting from Execution.
 
-    This class provides protected helper methods (_prepare_dataset, _create_items)
+    This class provides protected helper methods (_import_dataset, _convert_dataset, _create_items)
     that can be orchestrated by concrete subclasses using the @step decorator.
     It does not define the @step orchestration itself.
 
