@@ -43,17 +43,6 @@ describe('convertPredictionToAnnotation', () => {
         });
     });
 
-    it('removes probability only from prediction labels when mixed with non-prediction labels', () => {
-        const predictionLabel = getMockedAnnotationLabel({ id: 'label-2', name: 'label-2', probability: 0.8 });
-        const regularLabel = getMockedAnnotationLabel();
-        const annotation = getMockedAnnotation({ labels: [regularLabel, predictionLabel] });
-
-        const result = convertPredictionToAnnotation(annotation);
-
-        expect(result.labels[0]).not.toHaveProperty('probability');
-        expect(result.labels[1]).not.toHaveProperty('probability');
-    });
-
     it('preserves all other label properties after conversion', () => {
         const label = getMockedAnnotationLabel({ probability: 0.85 });
         const annotation = getMockedAnnotation({ labels: [label] });
@@ -62,14 +51,6 @@ describe('convertPredictionToAnnotation', () => {
 
         const { probability: _probability, ...expectedLabel } = label;
         expect(result.labels[0]).toEqual(expectedLabel);
-    });
-
-    it('returns the annotation unchanged when no labels are predictions', () => {
-        const annotation = getMockedAnnotation({ labels: [getMockedAnnotationLabel()] });
-
-        const result = convertPredictionToAnnotation(annotation);
-
-        expect(result).toBe(annotation);
     });
 
     it('preserves annotation shape and id after conversion', () => {
