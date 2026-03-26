@@ -113,7 +113,6 @@ async def submit_job(
                         staged_dataset_id=job_request.staged_dataset_id,
                         project_name=job_request.parameters.project.name,
                         task_type=job_request.parameters.project.task_type,
-                        exclusive_labels=job_request.parameters.project.exclusive_labels,
                         labels=job_request.parameters.filters.labels,
                         subsets=job_request.parameters.filters.subsets,
                         include_unannotated=job_request.parameters.filters.include_unannotated,
