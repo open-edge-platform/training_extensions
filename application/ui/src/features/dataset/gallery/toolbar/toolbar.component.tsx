@@ -25,6 +25,7 @@ import { useBulkUploadAndAssignLabel } from '../bulk-labels-assignment/use-bulk-
 import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { AddMediaButton } from './add-media-button/add-media-button.component';
+import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { toggleMultipleSelection } from './util';
 
@@ -153,6 +154,9 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <Flex gap={'size-200'} alignItems={'center'}>
                     <FilterByStatus onChange={onFilter} />
                     <Text>{message}</Text>
+
+                    <DatasetStatistics />
+
                     <MediaViewModes
                         viewMode={viewMode}
                         setViewMode={setViewMode}

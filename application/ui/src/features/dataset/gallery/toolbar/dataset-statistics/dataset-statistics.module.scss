@@ -1,0 +1,18 @@
+.mainValue {
+    font-size: var(--spectrum-global-dimension-static-size-450);
+}
+
+.secondaryValue {
+    font-size: var(--spectrum-global-dimension-static-size-300);
+}
+
+.subTitle {
+    color: var(--spectrum-global-color-gray-800);
+    font-size: var(--spectrum-global-dimension-static-size-175);
+}
+
+.meter {
+    & > span:first-child {
+        display: none;
+    }
+}
