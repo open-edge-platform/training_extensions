@@ -55,11 +55,11 @@ const useListJobs = () => {
     return $api.useQuery('get', '/api/jobs');
 };
 
-export const useGetCurrentTrainingJob = () => {
+export const useGetCurrentRunningJob = () => {
     const projectId = useProjectIdentifier();
     const activeJobs = useListJobs();
 
-    const activeTrainingJob = activeJobs.data?.find((job) => {
+    const activeRunningJob = activeJobs.data?.find((job) => {
         const jobProjectId =
             'project' in job.metadata &&
             job.metadata.project &&
@@ -70,9 +70,9 @@ export const useGetCurrentTrainingJob = () => {
         return jobProjectId === projectId && isActive && (job.job_type === 'train' || job.job_type === 'quantize');
     });
 
-    useStreamJobStatus(activeTrainingJob?.job_id);
+    useStreamJobStatus(activeRunningJob?.job_id);
 
-    return activeTrainingJob;
+    return activeRunningJob;
 };
 
 export const useCancelJob = () => {

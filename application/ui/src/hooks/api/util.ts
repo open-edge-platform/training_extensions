@@ -29,3 +29,6 @@ export const isJobDone = (job?: Job): job is Job => job?.status === 'DONE';
 export const isJobFailed = (job?: Job): job is Job => job?.status === 'FAILED';
 export const isJobRunning = (job?: Job): job is Job => job?.status === 'RUNNING';
 export const isJobPending = (job?: Job): job is Job => job?.status === 'PENDING';
+
+export const isTrainJob = (job?: Job): job is Job => job?.job_type === 'train';
+export const isQuantizeJob = (job?: Job): job is Job => job?.job_type === 'quantize';
