@@ -635,9 +635,12 @@ class AugmentationParameters(BaseModel):
         default=None,
         title="DEIM framework",
         description=(
-            "Controls the DEIM adaptive augmentation scheduling framework. "
-            "When enabled, training uses multi-phase augmentation scheduling for faster convergence. "
-            "When disabled, a static augmentation pipeline is used."
+            "Controls the DEIM multi-stage augmentation scheduling framework. "
+            "When enabled, training uses complex multi-stage augmentations that "
+            "automatically transition between strong and light augmentation phases "
+            "during training. This may lead to better accuracy but increases "
+            "training time. When disabled, a simpler static augmentation pipeline "
+            "is used instead, allowing direct control over individual augmentations."
         ),
     )
     tiling: Tiling | None = Field(
