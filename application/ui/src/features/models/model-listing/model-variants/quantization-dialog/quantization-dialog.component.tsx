@@ -37,7 +37,7 @@ const useDatasetItemsCount = () => {
     });
 
     // Get the latest dataset revision's total item count
-    const latestRevision = datasetRevisions?.[datasetRevisions.length - 1];
+    const latestRevision = datasetRevisions?.at(-1);
     const totalCount = latestRevision?.item_counts?.total ?? 0;
 
     return { totalCount, isPending };
