@@ -76,7 +76,10 @@ export const useVideoControls = ({
         setIsPlaying(false);
         videoRef.current.pause();
 
-        goto(currentFrameNumber);
+        const maxNearestFrame = Math.floor((videoFrame.frame_count - 1) / step) * step;
+        const nearestFrame = Math.min(maxNearestFrame, roundFrameNumber(currentFrameNumber, step));
+
+        goto(nearestFrame);
     };
 
     const nextFrame = () => {
