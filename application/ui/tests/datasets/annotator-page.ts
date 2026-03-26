@@ -3,6 +3,8 @@
 
 import { expect, type Page } from '@playwright/test';
 
+import { paths } from '../../src/constants/paths';
+
 export class AnnotatorPage {
     constructor(private readonly page: Page) {}
 
@@ -99,19 +101,27 @@ export class AnnotatorPage {
             .evaluateAll((nodes) => nodes.filter((node) => !node.closest('mask')));
     }
 
-    getAnnotationMode(mode: 'Annotation' | 'Prediction') {
+    getAnnotatorMode(mode: 'annotation' | 'prediction') {
         return this.page.getByTestId('annotator-modes-id').getByRole('button', { name: mode });
     }
 
     async openAnnotationMode() {
-        await this.getAnnotationMode('Annotation').click();
+        await this.getAnnotatorMode('annotation').click();
     }
 
     async openPredictionMode() {
-        await this.getAnnotationMode('Prediction').click();
+        await this.getAnnotatorMode('prediction').click();
     }
 
     getPrimaryToolbar() {
         return this.page.getByLabel('primary toolbar');
+    }
+
+    async editPrediction() {
+        await this.page.getByRole('button', { name: 'Edit prediction' }).click();
+    }
+
+    async goto(projectId: string, datasetItemId: string) {
+        await this.page.goto(paths.project.dataset.item.index({ projectId, datasetItemId }));
     }
 }
