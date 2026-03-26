@@ -76,11 +76,6 @@ class ImportDatasetToProjectRequest(BaseImportRequest, BaseJobRequest):
 class NewProjectParams(BaseModel):
     name: str = Field(..., description="Name to assign to the new project")
     task_type: TaskType = Field(..., description="Type of the project to create")
-    exclusive_labels: bool = Field(
-        False,
-        description="For classification projects: If True, multiple labels per item are allowed (multi-label); "
-        "if False, exactly one label per item is allowed (multi-class)",
-    )
 
     model_config = {
         "json_schema_extra": {
@@ -187,7 +182,6 @@ class ImportDatasetMetadata(BaseModel):
                 "project": NewProjectParams(
                     name=data.params.project_name,
                     task_type=data.params.task_type,
-                    exclusive_labels=data.params.exclusive_labels,
                 ),
             }
 

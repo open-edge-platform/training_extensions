@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
+import polars as pl
 import pytest
 from datumaro.experimental import Dataset
 from datumaro.experimental.categories import LabelCategories
@@ -47,7 +48,6 @@ def fxt_import_params() -> ImportDatasetAsNewProjectJobParams:
     return ImportDatasetAsNewProjectJobParams(
         project_name="New Project",
         task_type=TaskType.CLASSIFICATION,
-        exclusive_labels=False,
         staged_dataset_id=uuid4(),
         labels=["label1", "label2"],
         subsets=[],
@@ -68,33 +68,46 @@ class TestImportDatasetAsNewProject:
         project.id = uuid4()
         fxt_project_service.create_project.return_value = project
 
-        result = fxt_import.create_project(fxt_import_params)
+        result = fxt_import.create_project(params=fxt_import_params, exclusive_labels=False)
 
         fxt_project_service.create_project.assert_called_once()
         call_args = fxt_project_service.create_project.call_args
         assert call_args.kwargs["name"] == fxt_import_params.project_name
-        assert call_args.kwargs["task"].exclusive_labels == fxt_import_params.exclusive_labels
         assert call_args.kwargs["task"].task_type == fxt_import_params.task_type
         assert result == project
 
+    @pytest.mark.parametrize("include_unannotated", [True, False])
     def test_prepare_dataset(
-        self, fxt_import: ImportDatasetAsNewProject, fxt_import_params: ImportDatasetAsNewProjectJobParams
+        self,
+        include_unannotated: bool,
+        fxt_import: ImportDatasetAsNewProject,
+        fxt_import_params: ImportDatasetAsNewProjectJobParams,
     ) -> None:
+        fxt_import_params.include_unannotated = include_unannotated
         dataset = MagicMock(spec=Dataset)
-        dataset.__len__.return_value = 10
+        dataset.__len__.return_value = 3
         dataset.filter_by_subset.return_value = dataset
         dataset.filter_by_labels.return_value = dataset
+        dataset.df = pl.DataFrame(
+            {
+                "id": ["item1", "item2"],
+                "label": [["label1"], []],
+                "user_reviewed": [True, True],
+            }
+        )
         task = Task(task_type=fxt_import_params.task_type)
 
-        with patch.object(fxt_import, "_prepare_dataset", return_value=dataset) as mock_prepare:
-            result = fxt_import.prepare_dataset(params=fxt_import_params, task=task)
+        with patch.object(fxt_import, "_convert_dataset", return_value=dataset) as mock_convert:
+            result = fxt_import.prepare_dataset(dataset=dataset, params=fxt_import_params, task=task)
 
-            mock_prepare.assert_called_once_with(staged_dataset_id=fxt_import_params.staged_dataset_id, task=task)
+            mock_convert.assert_called_once_with(dataset=dataset, task=task)
             dataset.filter_by_subset.assert_not_called()
             dataset.filter_by_labels.assert_called_once_with(
-                labels=fxt_import_params.labels, keep_empty_samples=fxt_import_params.include_unannotated
+                labels=fxt_import_params.labels, keep_empty_samples=include_unannotated
             )
             assert result == dataset
+            # make sure that item with empty label kept reviewed
+            assert result.df["user_reviewed"].to_list() == [True, True]
 
     @pytest.mark.parametrize(
         "dataset_labels, project_labels, expected_mapping",
@@ -162,14 +175,18 @@ class TestImportDatasetAsNewProject:
         project.name = fxt_import_params.project_name
         project.task = Mock(spec=Task)
         with (
+            patch.object(fxt_import, "import_dataset", return_value=dataset) as mock_import_dataset,
+            patch.object(fxt_import, "_is_multilabel_dataset", return_value=False) as mock_multilabel_dataset,
             patch.object(fxt_import, "create_project", return_value=project) as mock_create_project,
-            patch.object(fxt_import, "prepare_dataset", return_value=dataset) as mock_prepare,
+            patch.object(fxt_import, "prepare_dataset", return_value=dataset) as mock_prepare_dataset,
             patch.object(fxt_import, "create_items") as mock_create,
         ):
             fxt_import.execute(fxt_import_params)
 
-            mock_create_project.assert_called_once_with(fxt_import_params)
-            mock_prepare.assert_called_once_with(params=fxt_import_params, task=project.task)
+            mock_import_dataset.assert_called_once_with(params=fxt_import_params)
+            mock_multilabel_dataset.assert_called_once_with(dataset=dataset)
+            mock_create_project.assert_called_once_with(params=fxt_import_params, exclusive_labels=True)
+            mock_prepare_dataset.assert_called_once_with(dataset=dataset, params=fxt_import_params, task=project.task)
             mock_create.assert_called_once_with(
                 dataset=dataset, project=project, include_unannotated=fxt_import_params.include_unannotated
             )
