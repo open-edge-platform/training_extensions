@@ -34,7 +34,7 @@ from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, Datase
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
 from app.services import DatasetService, MediaPredictionService, MediaService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError
+from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
 from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
 
@@ -456,14 +456,23 @@ def set_media_annotations(
             user_reviewed=True,
             prediction_model_id=None,
         )
-        return MediaAnnotations(
-            media_id=media.id,
-            annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
-            prediction_model_id=dataset_item.prediction_model_id,
-            user_reviewed=dataset_item.user_reviewed,
-        )
     except AnnotationValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    if media_annotations.subset is not None:
+        try:
+            dataset_service.assign_dataset_item_subset(
+                project_id=project.id, dataset_item_id=dataset_item_id, subset=media_annotations.subset
+            )
+        except SubsetAlreadyAssignedError as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    return MediaAnnotations(
+        media_id=media.id,
+        annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
+        prediction_model_id=dataset_item.prediction_model_id,
+        user_reviewed=dataset_item.user_reviewed,
+    )
 
 
 @router.get(
