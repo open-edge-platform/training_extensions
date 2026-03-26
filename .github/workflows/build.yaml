@@ -126,12 +126,18 @@ jobs:
             sleep 2
           done
 
-          # Verify the UI is being served (static assets at /html/)
-          echo "Checking UI is served ..."
-          if curl -sf http://localhost:7860/html/ | grep -q '</html>'; then
-            echo "UI check passed!"
+          # Verify the UI is being served
+          TEST_URL="http://localhost:7860"
+          EXPECTED_TITLE="Geti"
+          echo "Checking HTML title..."
+
+          HTML_CONTENT=$(curl -sf $TEST_URL)
+          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
+            echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
           else
-            echo "UI check failed – /html/ did not return a valid HTML page."
+            echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
+            echo "Actual HTML content:"
+            echo "$HTML_CONTENT"
             docker logs "${CONTAINER_NAME}"
             docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
             exit 1
