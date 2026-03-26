@@ -112,7 +112,14 @@ class MediaService(BaseSessionManagedService):
         dataset_dir = self.projects_dir / f"{metadata.project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
         binary_path = dataset_dir / f"{media_id}.{metadata.image_format}"
-        image.save(binary_path, exif=image.getexif())
+        try:
+            image.save(binary_path, exif=image.getexif())
+        except RuntimeError:
+            logger.warning(
+                "Failed to save image with EXIF data ({}), saving without EXIF.",
+                metadata.name,
+            )
+            image.save(binary_path)
 
         try:
             MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
