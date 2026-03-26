@@ -519,6 +519,18 @@ class AugmentationParameters(BaseModel):
     Each augmentation technique can be enabled or disabled using the 'enable' field within its respective configuration.
     """
 
+    deim_framework: bool | None = Field(
+        default=None,
+        title="DEIM framework",
+        description=(
+            "Controls the DEIM multi-stage augmentation scheduling framework. "
+            "When enabled, training uses complex multi-stage augmentations that "
+            "automatically transition between strong and light augmentation phases "
+            "during training. This may lead to better accuracy but increases "
+            "training time. When disabled, a simpler static augmentation pipeline "
+            "is used instead, allowing direct control over individual augmentations."
+        ),
+    )
     random_zoom_out: RandomZoomOut | None = Field(
         default=None,
         title="Random zoom out",
@@ -630,18 +642,6 @@ class AugmentationParameters(BaseModel):
             "Applied after resize."
         ),
         json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
-    )
-    deim_framework: bool | None = Field(
-        default=None,
-        title="DEIM framework",
-        description=(
-            "Controls the DEIM multi-stage augmentation scheduling framework. "
-            "When enabled, training uses complex multi-stage augmentations that "
-            "automatically transition between strong and light augmentation phases "
-            "during training. This may lead to better accuracy but increases "
-            "training time. When disabled, a simpler static augmentation pipeline "
-            "is used instead, allowing direct control over individual augmentations."
-        ),
     )
     tiling: Tiling | None = Field(
         default=None,
