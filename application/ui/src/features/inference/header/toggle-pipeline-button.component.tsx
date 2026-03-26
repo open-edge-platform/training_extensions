@@ -33,7 +33,7 @@ export const TogglePipelineButton = () => {
                     message: `Pipeline ${isPipelineEnabled ? 'disabled' : 'enabled'} successfully`,
                 });
 
-                if (streamStatus !== 'idle' && streamStatus !== 'failed') {
+                if (isPipelineEnabled && streamStatus !== 'idle' && streamStatus !== 'failed') {
                     void stopStream();
                 }
             },
@@ -44,6 +44,7 @@ export const TogglePipelineButton = () => {
         } else {
             if (!canEnablePipeline) {
                 setIsEnableBlockedDialogOpen(true);
+
                 return;
             }
 

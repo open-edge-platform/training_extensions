@@ -30,6 +30,13 @@ describe('TogglePipelineButton', () => {
     });
 
     it('enables pipeline when currently idle', async () => {
+        vi.mocked(useWebRTCConnection).mockReturnValue({
+            status: 'connected',
+            start: vi.fn(),
+            stop: mockStopStream,
+            webRTCConnectionRef: { current: null },
+        });
+
         server.use(
             http.get('/api/projects/{project_id}/pipeline', () => {
                 return HttpResponse.json(getMockedPipeline({ status: 'idle' }));
@@ -47,6 +54,7 @@ describe('TogglePipelineButton', () => {
         fireEvent.click(await screen.findByRole('button', { name: /Enable Pipeline/i }));
 
         expect(await screen.findByText('Pipeline enabled successfully')).toBeVisible();
+        expect(mockStopStream).not.toHaveBeenCalled();
     });
 
     it('disables pipeline when currently running', async () => {

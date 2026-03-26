@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Flex, Loading, toast, View } from '@geti/ui';
+import { dimensionValue, Flex, Loading, toast, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
@@ -44,9 +44,9 @@ export const StreamContainer = () => {
                                 })}
                             >
                                 <Play
-                                    color={'#333'}
-                                    width='64px'
-                                    height='64px'
+                                    color={'currentColor'}
+                                    width={dimensionValue('size-800')}
+                                    height={dimensionValue('size-800')}
                                     aria-label={isPipelineRunning ? 'Start stream' : 'Enable pipeline to start stream'}
                                     aria-disabled={!isPipelineRunning}
                                 />
@@ -73,7 +73,12 @@ export const StreamContainer = () => {
                                 UNSAFE_className={classes.pauseOverlay}
                             >
                                 <Flex UNSAFE_className={classes.playPauseButton}>
-                                    <Pause color={'#333'} width='64px' height='64px' aria-label={'Stop stream'} />
+                                    <Pause
+                                        color={'currentColor'}
+                                        width={dimensionValue('size-800')}
+                                        height={dimensionValue('size-800')}
+                                        aria-label={'Stop stream'}
+                                    />
                                 </Flex>
                             </Flex>
                         </View>
