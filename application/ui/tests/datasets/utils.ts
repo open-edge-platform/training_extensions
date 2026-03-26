@@ -13,7 +13,7 @@ export const PREPARE_JOB_ID = 'prepare-job-123';
 export const IMPORT_JOB_ID = 'import-job-456';
 export const DATASET_FILENAME = 'my-dataset.zip';
 
-export const makePrepareJob = (overrides: Partial<Job> = {}) =>
+export const getMockedPrepareJob = (overrides: Partial<Job> = {}) =>
     getMockedJob({
         job_id: PREPARE_JOB_ID,
         job_type: 'prepare_dataset_for_import',
@@ -23,7 +23,7 @@ export const makePrepareJob = (overrides: Partial<Job> = {}) =>
         ...overrides,
     });
 
-export const makeImportJob = (
+export const getMockedImportJob = (
     jobType: 'import_dataset_as_new_project' | 'import_dataset_to_project',
     overrides: Partial<Job> = {}
 ) =>

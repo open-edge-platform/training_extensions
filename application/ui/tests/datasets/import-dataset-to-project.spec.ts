@@ -11,9 +11,10 @@ import { expect, http, test } from '../fixtures';
 import {
     DATASET_FILENAME,
     deleteStagedDatasetHandler,
+    getMockedImportJob,
+    getMockedPrepareJob,
     IMPORT_JOB_ID,
     jobPollHandler,
-    makePrepareJob,
     PREPARE_JOB_ID,
     STAGED_DATASET_ID,
     stagedDatasetWithMetadata,
@@ -26,16 +27,6 @@ const mockedProject = getMockedProject({
         labels: [getMockedLabel({ name: 'cat' }), getMockedLabel({ name: 'dog' })],
     },
 });
-
-const makeImportJob = (overrides: { status?: string; progress?: number; message?: string } = {}) =>
-    getMockedJob({
-        job_id: IMPORT_JOB_ID,
-        job_type: 'import_dataset_to_project',
-        status: 'RUNNING',
-        progress: 0,
-        message: 'Importing dataset...',
-        ...overrides,
-    });
 
 test.describe('Import dataset to project', () => {
     test.beforeEach(({ network }) => {
@@ -58,25 +49,32 @@ test.describe('Import dataset to project', () => {
             http.post('/api/jobs', async ({ request }) => {
                 const body = await request.json();
                 if (body.job_type === 'import_dataset_to_project') {
-                    return HttpResponse.json(makeImportJob(), { status: 201 });
+                    return HttpResponse.json(getMockedImportJob('import_dataset_to_project'), { status: 201 });
                 }
-                return HttpResponse.json(makePrepareJob(), { status: 201 });
+                return HttpResponse.json(getMockedPrepareJob(), { status: 201 });
             })
         );
     });
 
     test('import dataset with default label mapping', async ({ page, network, importDatasetPage }) => {
-        const importingJob = makeImportJob({ progress: 60, message: 'Importing progress...' });
+        const importingJob = getMockedImportJob('import_dataset_to_project', {
+            progress: 60,
+            message: 'Importing progress...',
+        });
 
         const preparePoll = jobPollHandler({
             jobId: PREPARE_JOB_ID,
-            whileRunning: makePrepareJob(),
-            whenDone: makePrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
+            whileRunning: getMockedPrepareJob(),
+            whenDone: getMockedPrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
         });
         const importPoll = jobPollHandler({
             jobId: IMPORT_JOB_ID,
             whileRunning: importingJob,
-            whenDone: makeImportJob({ status: 'DONE', progress: 100, message: 'Import completed' }),
+            whenDone: getMockedImportJob('import_dataset_to_project', {
+                status: 'DONE',
+                progress: 100,
+                message: 'Import completed',
+            }),
         });
         const { handler: deleteHandler, getDeletedId } = deleteStagedDatasetHandler();
 
@@ -131,12 +129,15 @@ test.describe('Import dataset to project', () => {
     });
 
     test('cancel import job removes staged files', async ({ page, network, importDatasetPage }) => {
-        const importingJob = makeImportJob({ progress: 60, message: 'Importing progress...' });
+        const importingJob = getMockedImportJob('import_dataset_to_project', {
+            progress: 60,
+            message: 'Importing progress...',
+        });
 
         const preparePoll = jobPollHandler({
             jobId: PREPARE_JOB_ID,
-            whileRunning: makePrepareJob(),
-            whenDone: makePrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
+            whileRunning: getMockedPrepareJob(),
+            whenDone: getMockedPrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
         });
 
         network.use(
@@ -177,11 +178,11 @@ test.describe('Import dataset to project', () => {
     });
 
     test('cancel prepare job removes staged files', async ({ page, network, importDatasetPage }) => {
-        const runningPrepareJob = makePrepareJob();
+        const runningPrepareJob = getMockedPrepareJob();
 
         network.use(
             http.post('/api/jobs', async () => {
-                return HttpResponse.json(makePrepareJob(), { status: 201 });
+                return HttpResponse.json(getMockedPrepareJob(), { status: 201 });
             }),
             http.get('/api/jobs/{job_id}', () => {
                 return HttpResponse.json(runningPrepareJob, { status: 200 });

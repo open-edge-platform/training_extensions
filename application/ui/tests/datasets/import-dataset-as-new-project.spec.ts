@@ -11,23 +11,14 @@ import { type ImportDatasetPage } from './import-dataset-page';
 import {
     DATASET_FILENAME,
     deleteStagedDatasetHandler,
+    getMockedImportJob,
+    getMockedPrepareJob,
     IMPORT_JOB_ID,
     jobPollHandler,
-    makePrepareJob,
     PREPARE_JOB_ID,
     STAGED_DATASET_ID,
     stagedDatasetWithMetadata,
 } from './utils';
-
-const makeImportJob = (overrides: { status?: string; progress?: number; message?: string } = {}) =>
-    getMockedJob({
-        job_id: IMPORT_JOB_ID,
-        job_type: 'import_dataset_as_new_project',
-        status: 'RUNNING',
-        progress: 0,
-        message: 'Importing dataset...',
-        ...overrides,
-    });
 
 const openCreateFromDatasetDialog = async (page: Page) => {
     await page.getByRole('button', { name: 'Create project' }).click();
@@ -63,25 +54,32 @@ test.describe('Import dataset as new project', () => {
             http.post('/api/jobs', async ({ request }) => {
                 const body = await request.json();
                 if (body.job_type === 'import_dataset_as_new_project') {
-                    return HttpResponse.json(makeImportJob(), { status: 201 });
+                    return HttpResponse.json(getMockedImportJob('import_dataset_as_new_project'), { status: 201 });
                 }
-                return HttpResponse.json(makePrepareJob(), { status: 201 });
+                return HttpResponse.json(getMockedPrepareJob(), { status: 201 });
             })
         );
     });
 
     test('import dataset as new project with default settings', async ({ page, network, importDatasetPage }) => {
-        const importingJob = makeImportJob({ progress: 60, message: 'Importing progress...' });
+        const importingJob = getMockedImportJob('import_dataset_as_new_project', {
+            progress: 60,
+            message: 'Importing progress...',
+        });
 
         const preparePoll = jobPollHandler({
             jobId: PREPARE_JOB_ID,
-            whileRunning: makePrepareJob(),
-            whenDone: makePrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
+            whileRunning: getMockedPrepareJob(),
+            whenDone: getMockedPrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
         });
         const importPoll = jobPollHandler({
             jobId: IMPORT_JOB_ID,
             whileRunning: importingJob,
-            whenDone: makeImportJob({ status: 'DONE', progress: 100, message: 'Import completed' }),
+            whenDone: getMockedImportJob('import_dataset_as_new_project', {
+                status: 'DONE',
+                progress: 100,
+                message: 'Import completed',
+            }),
         });
         const { handler: deleteHandler, getDeletedId } = deleteStagedDatasetHandler();
 
@@ -146,12 +144,12 @@ test.describe('Import dataset as new project', () => {
     });
 
     test('cancel prepare job removes staged files', async ({ page, network, importDatasetPage }) => {
-        const runningPrepareJob = makePrepareJob();
+        const runningPrepareJob = getMockedPrepareJob();
         const { handler: deleteHandler, getDeletedId } = deleteStagedDatasetHandler();
 
         network.use(
             http.post('/api/jobs', async () => {
-                return HttpResponse.json(makePrepareJob(), { status: 201 });
+                return HttpResponse.json(getMockedPrepareJob(), { status: 201 });
             }),
             http.get('/api/jobs/{job_id}', () => {
                 return HttpResponse.json(runningPrepareJob, { status: 200 });
@@ -182,12 +180,15 @@ test.describe('Import dataset as new project', () => {
     });
 
     test('cancel import job removes staged files', async ({ page, network, importDatasetPage }) => {
-        const importingJob = makeImportJob({ progress: 60, message: 'Importing progress...' });
+        const importingJob = getMockedImportJob('import_dataset_as_new_project', {
+            progress: 60,
+            message: 'Importing progress...',
+        });
 
         const preparePoll = jobPollHandler({
             jobId: PREPARE_JOB_ID,
-            whileRunning: makePrepareJob(),
-            whenDone: makePrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
+            whileRunning: getMockedPrepareJob(),
+            whenDone: getMockedPrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
         });
         const { handler: deleteHandler, getDeletedId } = deleteStagedDatasetHandler();
 
@@ -232,12 +233,12 @@ test.describe('Import dataset as new project', () => {
 
     test('failed prepare job closes dialog', async ({ page, network, importDatasetPage }) => {
         const errorData = { message: 'An error occurred during preparation.', error: 'error test' };
-        const failedPrepareJob = makePrepareJob({ status: 'FAILED', ...errorData });
+        const failedPrepareJob = getMockedPrepareJob({ status: 'FAILED', ...errorData });
         const { handler: deleteHandler, getDeletedId } = deleteStagedDatasetHandler();
 
         network.use(
             http.post('/api/jobs', async () => {
-                return HttpResponse.json(makePrepareJob(), { status: 201 });
+                return HttpResponse.json(getMockedPrepareJob(), { status: 201 });
             }),
             http.get('/api/jobs/{job_id}', () => {
                 return HttpResponse.json(failedPrepareJob, { status: 200 });
@@ -275,12 +276,12 @@ test.describe('Import dataset as new project', () => {
         importDatasetPage,
     }) => {
         const errorData = { message: 'An error occurred during preparation.', error: 'error test' };
-        const failedImportJob = makeImportJob({ status: 'FAILED', ...errorData });
+        const failedImportJob = getMockedImportJob('import_dataset_as_new_project', { status: 'FAILED', ...errorData });
 
         const preparePoll = jobPollHandler({
             jobId: PREPARE_JOB_ID,
-            whileRunning: makePrepareJob(),
-            whenDone: makePrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
+            whileRunning: getMockedPrepareJob(),
+            whenDone: getMockedPrepareJob({ status: 'DONE', progress: 100, message: 'Preparation completed' }),
         });
         const { handler: deleteHandler, getDeletedId } = deleteStagedDatasetHandler();
 
