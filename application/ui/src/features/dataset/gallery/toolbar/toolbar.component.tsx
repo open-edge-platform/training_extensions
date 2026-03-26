@@ -16,7 +16,6 @@ import {
     ViewModes,
 } from '@geti/ui';
 
-import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { useMediaUpload } from '../../api/use-media-upload';
@@ -24,6 +23,7 @@ import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-it
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
+import { AddMediaButton } from './add-media-button/add-media-button.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { toggleMultipleSelection } from './util';
 
@@ -104,7 +104,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                                 onDeleted={toggleSelectedKeys}
                             />
 
-                            {/* 
+                            {/*
                                 TODO: In the future we will have a single endpoint to accept/decline
                                     multiple media items at once instead of sending multiple requests in a loop.
                                     Once we have that, we can reenable these buttons.
