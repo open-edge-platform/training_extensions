@@ -17,7 +17,7 @@ export type VideoControls = {
     canPlay?: boolean;
 };
 
-const roundFrameNumber = (frameNumber: number, step: number) => Math.round(Math.round(frameNumber / step) * step);
+const roundFrameNumber = (frameNumber: number, step: number) => Math.round(frameNumber / step) * step;
 
 export const useVideoControls = ({
     step,
@@ -119,7 +119,6 @@ export const useVideoControls = ({
             setIsPlaying(false);
         }
 
-        videoRef.current.currentTime = (frameNumber + 1) / videoFrame.fps;
         const nearest = Math.min(roundFrameNumber(frameNumber, step), totalFrames - 1);
 
         selectFrame(nearest);
