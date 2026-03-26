@@ -32,7 +32,6 @@ hyperparameters:
     input_size_height: 640
   dataset_preparation:
     augmentation:
-      deim_framework:
-        enable: true
+      deim_framework: true
       random_zoom_out:
         enable: true

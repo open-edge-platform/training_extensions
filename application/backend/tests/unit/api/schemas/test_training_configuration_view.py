@@ -417,7 +417,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Randomly zoom out the image by placing it on a larger canvas with "
                                     "padding. Applied before resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -488,7 +488,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Applied before resize. Note: this augmentation is not supported when "
                                     "Tiling algorithm is enabled."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -559,7 +559,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "description": (
                                     "Combines 4 images into one mosaic for augmentation. Applied before resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -597,7 +597,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Apply random affine transformations (rotation, translation, scaling, shear) "
                                     "to the image. Applied after resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -702,7 +702,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "description": (
                                     "Blends two images and their labels for augmentation. Applied before resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -754,7 +754,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "Randomly adjust brightness, contrast, saturation, and hue of the image. "
                                     "Applied after resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -854,7 +854,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "rather than "
                                     "specific local features. Applied after resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -939,7 +939,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "features rather than relying solely on color information. "
                                     "Applied after resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",
@@ -981,7 +981,7 @@ def fxt_training_configuration_view_json() -> dict:
                                     "image quality. "
                                     "Applied after resize."
                                 ),
-                                "depends_on": {"deim_framework.enable": False},
+                                "depends_on": {"deim_framework": [False, None]},
                                 "parameters": [
                                     {
                                         "type": "parameter",

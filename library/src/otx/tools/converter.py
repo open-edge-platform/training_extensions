@@ -649,10 +649,10 @@ class GetiConfigConverter:
 
         # When DEIM is enabled, the AugmentationSchedulerCallback owns the pipeline;
         # user augmentation overrides must be ignored.
-        deim_enabled = deim_framework is not None and deim_framework.get("enable", True)
+        deim_enabled = deim_framework is True
         if not deim_enabled:
             TransformsUpdater.update(augmentation_params, config)
-            if deim_framework is not None:
+            if deim_framework is False:
                 # User explicitly disabled DEIM -> remove the scheduler callback
                 GetiConfigConverter._disable_deim_framework(config)
 

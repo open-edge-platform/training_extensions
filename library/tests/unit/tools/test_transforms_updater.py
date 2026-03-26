@@ -777,7 +777,7 @@ class TestDeimFrameworkToggle:
         param_dict = {
             "dataset_preparation": {
                 "augmentation": {
-                    "deim_framework": {"enable": True},
+                    "deim_framework": True,
                     "random_horizontal_flip": {
                         "enable": True,
                         "probability": 0.5,
@@ -820,7 +820,7 @@ class TestDeimFrameworkToggle:
         param_dict = {
             "dataset_preparation": {
                 "augmentation": {
-                    "deim_framework": {"enable": False},
+                    "deim_framework": False,
                     "random_horizontal_flip": {
                         "enable": True,
                         "probability": 0.7,
@@ -864,7 +864,7 @@ class TestDeimFrameworkToggle:
         param_dict = {
             "dataset_preparation": {
                 "augmentation": {
-                    "deim_framework": {"enable": False},
+                    "deim_framework": False,
                 },
             },
         }
