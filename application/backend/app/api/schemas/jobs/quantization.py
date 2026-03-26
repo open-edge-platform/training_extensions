@@ -17,13 +17,14 @@ class QuantizationRequestParams(BaseModel):
 
     model_id: UUID = Field(..., description="ID of the model revision to quantize")
     max_calibration_subset_size: int = Field(
-        100, description="Maximum number of samples from training set used for calibration"
+        100, description="Maximum number of samples from the dataset revision to be used for calibration"
     )
     max_drop: float | None = Field(
         None,
-        ge=0,
+        gt=0,
         le=1,
-        description="Maximum allowed accuracy drop, expressed as a fraction in range [0-1] where e.g. 0.03 means 3%",
+        description="Maximum allowed accuracy drop, expressed as a percentage in the range [0-1] "
+        "where e.g. 0.03 means 3%",
     )
 
     model_config = {
