@@ -14,7 +14,14 @@ from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotat
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
 from .inference import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult
-from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
+from .jobs import (
+    ExportDatasetJob,
+    ExportDatasetJobParams,
+    QuantizationJob,
+    QuantizationJobParams,
+    TrainingJob,
+    TrainingJobParams,
+)
 from .label import Label, LabelReference, LabelUpdateInfo
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
 from .model_manifest import ModelManifest
@@ -89,6 +96,8 @@ __all__ = [
     "Point",
     "Polygon",
     "Project",
+    "QuantizationJob",
+    "QuantizationJobParams",
     "Rectangle",
     "RosSinkConfig",
     "Shape",

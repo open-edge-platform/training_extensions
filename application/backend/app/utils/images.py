@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import numpy as np
 from PIL import Image
 
 
@@ -37,3 +38,27 @@ def crop_to_thumbnail(image: Image.Image, target_height: int, target_width: int)
     y1 = round(max(y1, 0))
     y2 = round(min(y2, resized_image.height))
     return resized_image.crop((x1, y1, x2, y2))
+
+
+def convert_to_jpeg_compatible(image: Image.Image) -> Image.Image:
+    """Convert an image to a JPEG-compatible mode (RGB, L, or CMYK).
+
+    16-bit modes (I;16, I) require explicit normalization: PIL's built-in
+    RGB conversion only preserves the most-significant byte, clipping the
+    lower half of the dynamic range and producing washed-out thumbnails.
+    We normalize the full value range to [0, 255] before converting to L.
+    """
+    if image.mode in ("RGB", "L", "CMYK"):
+        return image
+    if image.mode in ("I;16", "I;16B", "I;16L", "I;16S", "I;16BS", "I"):
+        # Normalize the 16-bit (or 32-bit signed int) range to 8-bit
+        image = image.convert("I")
+        arr = np.array(image, dtype=np.float32)
+        lo, hi = arr.min(), arr.max()
+        if hi > lo:
+            arr = (arr - lo) / (hi - lo) * 255.0
+        else:
+            arr = np.zeros_like(arr)
+        return Image.fromarray(arr.astype(np.uint8), mode="L").convert("RGB")
+    # All other non-JPEG-compatible modes (RGBA, P, F, …)
+    return image.convert("RGB")

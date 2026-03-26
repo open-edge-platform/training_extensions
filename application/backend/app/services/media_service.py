@@ -20,7 +20,7 @@ from app.models import DatasetItem, DatasetItemAnnotationStatus, Media, MediaTyp
 from app.models.media import ImageFormat, MediaAdapter, VideoFormat
 from app.repositories import MediaRepository
 from app.services.video import extract_video_frame, get_video_metadata
-from app.utils.images import crop_to_thumbnail
+from app.utils.images import convert_to_jpeg_compatible, crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 
@@ -90,8 +90,7 @@ class MediaService(BaseSessionManagedService):
             thumbnail_image = crop_to_thumbnail(
                 image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
             )
-            if thumbnail_image.mode in ("RGBA", "P"):
-                thumbnail_image = thumbnail_image.convert("RGB")
+            thumbnail_image = convert_to_jpeg_compatible(thumbnail_image)
             thumbnail_image.save(path)
         except Exception:
             logger.exception("Failed to generate thumbnail image")
@@ -274,9 +273,7 @@ class MediaService(BaseSessionManagedService):
         thumbnail = crop_to_thumbnail(
             image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
         )
-        if thumbnail.mode not in ("RGB", "L", "CMYK"):
-            thumbnail = thumbnail.convert("RGB")
-        return thumbnail
+        return convert_to_jpeg_compatible(thumbnail)
 
     def delete_media(self, project: Project, media_id: UUID) -> None:
         """Delete a media by its ID"""

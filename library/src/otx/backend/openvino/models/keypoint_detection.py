@@ -17,7 +17,7 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import DetectedKeypoints
-    from torchmetrics import Metric
+    from torchmetrics import Metric, MetricCollection
 
     from otx.types import PathLike
 
@@ -95,16 +95,16 @@ class OVKeypointDetectionModel(OVModel):
             labels=[],
         )
 
-    def compute_metrics(self, metric: Metric) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
         """Compute evaluation metrics for the keypoint detection model.
 
         Args:
-            metric (Metric): Metric object used for evaluation.
+            metric (Metric | MetricCollection): Metric object used for evaluation.
 
         Returns:
             dict: A dictionary containing computed metric values.
         """
-        metric.input_size = (self.model.h, self.model.w)
+        metric.input_size = (self.model.h, self.model.w)  # type: ignore[union-attr]
         return super()._compute_metrics(metric)
 
     def prepare_metric_inputs(  # type: ignore[override]

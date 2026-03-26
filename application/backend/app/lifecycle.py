@@ -19,7 +19,15 @@ from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
-from app.execution import ExportDataset, ImportDatasetToProject, OTXTrainer, PrepareDataset, TrainingDependencies
+from app.execution import (
+    ExportDataset,
+    ImportDatasetToProject,
+    OTXQuantizer,
+    OTXTrainer,
+    PrepareDataset,
+    QuantizationDependencies,
+    TrainingDependencies,
+)
 from app.execution.dataset_import.import_as_new_project import ImportDatasetAsNewProject
 from app.scheduler import Scheduler
 from app.services import (
@@ -87,6 +95,20 @@ def setup_job_controller(
                 model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),
                 data_dir=data_dir,
+                db_session_factory=get_db_session,
+            ),
+        ),
+    )
+    job_runnable_factory.register(
+        JobType.QUANTIZE,
+        partial(
+            OTXQuantizer,
+            quantization_deps=QuantizationDependencies(
+                data_dir=data_dir,
+                model_service=ModelService(data_dir=data_dir),
+                dataset_revision_service=dataset_revision_service,
+                project_service=project_service,
+                training_configuration_service=TrainingConfigurationService(),
                 db_session_factory=get_db_session,
             ),
         ),
