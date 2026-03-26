@@ -114,17 +114,30 @@ jobs:
           for i in $(seq 1 30); do
             if curl -sf http://localhost:7860/health; then
               echo ""
-              echo "Health check passed!"
+              echo "Backend health check passed!"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Backend health check failed after 60 seconds."
+              docker logs "${CONTAINER_NAME}"
               docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
-              exit 0
+              exit 1
             fi
             sleep 2
           done
 
-          echo "Health check failed after 60 seconds."
-          docker logs "${CONTAINER_NAME}"
+          # Verify the UI is being served (static assets at /html/)
+          echo "Checking UI is served ..."
+          if curl -sf http://localhost:7860/html/ | grep -q '</html>'; then
+            echo "UI check passed!"
+          else
+            echo "UI check failed – /html/ did not return a valid HTML page."
+            docker logs "${CONTAINER_NAME}"
+            docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
+            exit 1
+          fi
+
           docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
-          exit 1
 
       - name: Get Docker image size
         if: github.event_name == 'pull_request'
