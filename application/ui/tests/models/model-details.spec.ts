@@ -60,10 +60,10 @@ const mockedDatasetRevision = getMockedDatasetRevision({
     id: 'dataset-1',
     name: 'Dataset Revision 1',
     item_counts: {
-        training: 70,
-        validation: 20,
-        testing: 10,
-        total: 100,
+        training: 150,
+        validation: 200,
+        testing: 150,
+        total: 500,
     },
 });
 
@@ -250,11 +250,8 @@ test.describe('Model Details', () => {
                         { status: 201 }
                     );
                 }),
-                http.get('/api/projects/{project_id}/dataset/media', () => {
-                    return HttpResponse.json({
-                        items: [],
-                        pagination: { offset: 0, limit: 1, count: 0, total: 500 },
-                    });
+                http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                    return HttpResponse.json([mockedDatasetRevision]);
                 })
             );
 
@@ -269,7 +266,7 @@ test.describe('Model Details', () => {
             await expect(dialog.getByRole('heading', { name: /Quantize model to INT8/ })).toBeVisible();
 
             await modelsPage.getNoMaximumCheckbox().click();
-            await modelsPage.getAccuracyDropInput().fill('.05');
+            await modelsPage.getAccuracyDropInput().fill('5');
             await modelsPage.getCalibrationSizeInput().fill('300');
 
             await modelsPage.submitQuantization();

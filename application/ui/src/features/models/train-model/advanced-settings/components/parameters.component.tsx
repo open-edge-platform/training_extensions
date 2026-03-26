@@ -34,7 +34,7 @@ import {
     ParametersEnableGroupParameters,
 } from '../utils';
 import { BooleanParameterField } from './boolean-parameter-field.component';
-import { NumberParameterField } from './number-parameter-field.component';
+import { NumberParameterField } from '../../../../../components/fields/number-parameter-field/number-parameter-field.component';
 import { RangeParameterField } from './range-parameter-field/range-parameter-field.component';
 import { ResetButton } from './reset-button.component';
 

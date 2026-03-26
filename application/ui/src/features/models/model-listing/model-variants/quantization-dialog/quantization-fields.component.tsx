@@ -6,11 +6,13 @@ import { ReactNode } from 'react';
 import { ActionButton, Checkbox, Content, ContextualHelp, Grid, Text } from '@geti/ui';
 import { Refresh } from '@geti/ui/icons';
 
-import { NumberParameterField } from '../../../train-model/advanced-settings/components/number-parameter-field.component';
+import { NumberParameterField } from '../../../../../components/fields/number-parameter-field/number-parameter-field.component';
 
 export const DEFAULT_QUANTIZATION_PARAMETERS = {
-    accuracyDrop: 0.01,
+    accuracyDrop: 1.0,
     calibrationSize: 200,
+    hasNoMaxAccuracyDrop: true,
+    usesFullCalibrationDataset: false,
 };
 
 type QuantizationFieldLayoutProps = {
@@ -51,12 +53,12 @@ export const MaxAccuracyDropField = ({
             <NumberParameterField
                 name='Max accuracy drop'
                 value={value}
-                minValue={0.01}
-                maxValue={1.0}
+                minValue={0.1}
+                maxValue={15}
                 type={'float'}
                 isDisabled={isDisabled}
                 onChange={onChange}
-                step={0.01}
+                step={0.1}
             />
             <Checkbox aria-label='No maximum' isSelected={isDisabled} onChange={onDisabledChange}>
                 No maximum
@@ -86,7 +88,7 @@ export const CalibrationDatasetSizeField = ({
         <QuantizationFieldLayout onReset={onReset}>
             <Text>Max calibration size</Text>
             <ContextualHelp>
-                <Content>Calibration samples will be randomly selected within the validation set</Content>
+                <Content>Calibration samples will be randomly selected within the dataset</Content>
             </ContextualHelp>
             <NumberParameterField
                 name='Max calibration size'

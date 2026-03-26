@@ -30,14 +30,17 @@ import {
 const useDatasetItemsCount = () => {
     const project_id = useProjectIdentifier();
 
-    const { data, isPending } = $api.useQuery('get', '/api/projects/{project_id}/dataset/media', {
+    const { data: datasetRevisions, isPending } = $api.useQuery('get', '/api/projects/{project_id}/dataset_revisions', {
         params: {
-            query: { limit: 1, offset: 0 },
             path: { project_id },
         },
     });
 
-    return { totalCount: data?.pagination?.total ?? 0, isPending };
+    // Get the latest dataset revision's total item count
+    const latestRevision = datasetRevisions?.[datasetRevisions.length - 1];
+    const totalCount = latestRevision?.item_counts?.total ?? 0;
+
+    return { totalCount, isPending };
 };
 
 type QuantizationDialogProps = {
@@ -46,15 +49,20 @@ type QuantizationDialogProps = {
 };
 export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps) => {
     const [accuracyDrop, setAccuracyDrop] = useState(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
-    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState(true);
+    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState(
+        DEFAULT_QUANTIZATION_PARAMETERS.hasNoMaxAccuracyDrop
+    );
     const [calibrationSize, setCalibrationSize] = useState(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
-    const [usesFullCalibrationDataset, setUsesFullCalibrationDataset] = useState(false);
+    const [usesFullCalibrationDataset, setUsesFullCalibrationDataset] = useState(
+        DEFAULT_QUANTIZATION_PARAMETERS.usesFullCalibrationDataset
+    );
 
     const { totalCount, isPending: isLoadingCount } = useDatasetItemsCount();
     const submitJob = useSubmitJob();
 
-    const maxCalibrationSize = totalCount;
+    const maxCalibrationSize = Math.max(totalCount, 1);
     const effectiveCalibrationSize = Math.min(calibrationSize, maxCalibrationSize);
+    const hasNoDatasetItems = !isLoadingCount && totalCount === 0;
 
     const projectId = useProjectIdentifier();
 
@@ -66,7 +74,7 @@ export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps
                     job_type: 'quantize',
                     parameters: {
                         model_id: modelId,
-                        max_drop: hasNoMaxAccuracyDrop ? null : accuracyDrop,
+                        max_drop: hasNoMaxAccuracyDrop ? null : accuracyDrop / 100,
                         max_calibration_subset_size: usesFullCalibrationDataset ? totalCount : effectiveCalibrationSize,
                     },
                 },
@@ -142,7 +150,7 @@ export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps
                     variant={'primary'}
                     onPress={handleStartQuantization}
                     isPending={submitJob.isPending}
-                    isDisabled={isLoadingCount}
+                    isDisabled={isLoadingCount || hasNoDatasetItems || submitJob.isPending}
                 >
                     Start quantization
                 </Button>

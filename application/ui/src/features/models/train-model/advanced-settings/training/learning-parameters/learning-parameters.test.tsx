@@ -7,8 +7,8 @@ import { fireEvent, screen, Screen, within } from '@testing-library/react';
 import { render } from 'test-utils/render';
 import { describe } from 'vitest';
 
+import { getStep } from '../../../../../../components/fields/number-parameter-field/number-parameter-field.component';
 import { NumberConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
-import { getStep } from '../../components/number-parameter-field.component';
 import { isBoolEnableParameterGroup, isNumberParameter } from '../../utils';
 import { LearningParameters } from './learning-parameters.component';
 import { learningParameters } from './mocks';

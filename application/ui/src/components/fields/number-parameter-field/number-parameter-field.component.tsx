@@ -5,8 +5,8 @@ import { useState } from 'react';
 
 import { Flex, NumberField, Slider } from '@geti/ui';
 
-import { NumberConfigurableParameter } from '../../../../../constants/shared-types';
-import { getFloatingPointStep } from '../utils';
+import { NumberConfigurableParameter } from '../../../constants/shared-types';
+import { getFloatingPointStep } from '../../../features/models/train-model/advanced-settings/utils';
 
 type NumberGroupParamsProps = {
     name: string;
