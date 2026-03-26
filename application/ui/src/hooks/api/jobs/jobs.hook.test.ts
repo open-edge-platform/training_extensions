@@ -89,7 +89,7 @@ describe('useGetCurrentRunningJob', () => {
         resetMockEventSource();
     });
 
-    it('returns undefined when there are no active training jobs', async () => {
+    it('returns undefined when there are no active running jobs', async () => {
         server.use(http.get('/api/jobs', () => HttpResponse.json([])));
 
         const { result } = renderHook(() => useGetCurrentRunningJob());
@@ -99,7 +99,7 @@ describe('useGetCurrentRunningJob', () => {
         });
     });
 
-    it('returns the active training job for the current project', async () => {
+    it('returns the active running job for the current project', async () => {
         const job = createMockJobForProject();
         server.use(http.get('/api/jobs', () => HttpResponse.json([job])));
 
@@ -130,7 +130,7 @@ describe('useGetCurrentRunningJob', () => {
         });
     });
 
-    it('subscribes to SSE when an active training job is found', async () => {
+    it('subscribes to SSE when an active running job is found', async () => {
         const job = createMockJobForProject();
         server.use(http.get('/api/jobs', () => HttpResponse.json([job])));
 
@@ -142,7 +142,7 @@ describe('useGetCurrentRunningJob', () => {
         });
     });
 
-    it('does not subscribe to SSE when no active training job matches the project', async () => {
+    it('does not subscribe to SSE when no active running job matches the project', async () => {
         server.use(http.get('/api/jobs', () => HttpResponse.json([])));
 
         renderHook(() => useGetCurrentRunningJob());

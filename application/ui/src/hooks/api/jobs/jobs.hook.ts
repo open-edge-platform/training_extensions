@@ -8,6 +8,7 @@ import { $api } from '../../../api/client';
 import { Job } from '../../../constants/shared-types';
 import { getQueryKey } from '../../../query-client/query-client';
 import { useSSE } from '../../use-sse.hook';
+import { isQuantizeJob, isTrainJob } from '../util';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
 
@@ -67,7 +68,7 @@ export const useGetCurrentRunningJob = () => {
             job.metadata.project.id;
         const isActive = job.status === 'RUNNING' || job.status === 'PENDING';
 
-        return jobProjectId === projectId && isActive && (job.job_type === 'train' || job.job_type === 'quantize');
+        return jobProjectId === projectId && isActive && (isTrainJob(job) || isQuantizeJob(job));
     });
 
     useStreamJobStatus(activeRunningJob?.job_id);
