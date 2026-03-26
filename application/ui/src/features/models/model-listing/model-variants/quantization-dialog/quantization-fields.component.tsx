@@ -3,14 +3,14 @@
 
 import { ReactNode, useState } from 'react';
 
-import { ActionButton, Checkbox, Content, ContextualHelp, Grid, Text } from '@geti/ui';
+import { ActionButton, Checkbox, Content, ContextualHelp, Flex, Grid, NumberField, Slider, Text } from '@geti/ui';
 import { Refresh } from '@geti/ui/icons';
 
-import { NumberParameterField } from '../../../train-model/advanced-settings/components/number-parameter-field.component';
-
-const DEFAULT_QUANTIZATION_PARAMETERS = {
-    accuracyDrop: 3.0,
+export const DEFAULT_QUANTIZATION_PARAMETERS = {
+    accuracyDrop: 1.0,
     calibrationSize: 200,
+    hasNoMaxAccuracyDrop: true,
+    usesFullCalibrationDataset: false,
 };
 
 type QuantizationFieldLayoutProps = {
@@ -27,66 +27,123 @@ const QuantizationFieldLayout = ({ children, onReset }: QuantizationFieldLayoutP
     </Grid>
 );
 
-export const MaxAccuracyDropField = () => {
-    const [accuracyDrop, setAccuracyDrop] = useState<number>(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
-    const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState<boolean>(false);
+interface MaxAccuracyDropFieldProps {
+    value: number;
+    onChange: (value: number) => void;
+    isDisabled: boolean;
+    onDisabledChange: (isDisabled: boolean) => void;
+    onReset: () => void;
+}
+
+export const MaxAccuracyDropField = ({
+    value,
+    onChange,
+    isDisabled,
+    onDisabledChange,
+    onReset,
+}: MaxAccuracyDropFieldProps) => {
+    const [draftValue, setDraftValue] = useState<number | null>(null);
+    const parameterValue = draftValue ?? value;
+
+    const handleValueChange = (inputValue: number) => {
+        setDraftValue(null);
+        onChange(inputValue);
+    };
 
     return (
-        <QuantizationFieldLayout
-            onReset={() => {
-                setAccuracyDrop(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
-            }}
-        >
-            <Text>Max accuracy drop</Text>
+        <QuantizationFieldLayout onReset={onReset}>
+            <Text>Max accuracy drop (%)</Text>
             <ContextualHelp>
                 <Content>Maximum allowed drop in validation accuracy</Content>
             </ContextualHelp>
-            <NumberParameterField
-                name='Max accuracy drop'
-                value={accuracyDrop}
-                minValue={0.1}
-                maxValue={10.0}
-                type={'float'}
-                isDisabled={hasNoMaxAccuracyDrop}
-                onChange={setAccuracyDrop}
-                step={0.1}
-            />
-            <Checkbox aria-label='No maximum' isSelected={hasNoMaxAccuracyDrop} onChange={setHasNoMaxAccuracyDrop}>
+            <Flex gap={'size-100'}>
+                <Slider
+                    aria-label={'Change Max accuracy drop slider'}
+                    value={parameterValue}
+                    minValue={0.1}
+                    maxValue={15}
+                    step={0.1}
+                    onChange={setDraftValue}
+                    onChangeEnd={handleValueChange}
+                    isFilled
+                    flex={1}
+                    isDisabled={isDisabled}
+                />
+                <NumberField
+                    isQuiet
+                    step={0.1}
+                    value={parameterValue}
+                    minValue={0.1}
+                    maxValue={15}
+                    onChange={handleValueChange}
+                    isDisabled={isDisabled}
+                    aria-label={'Change Max accuracy drop'}
+                    formatOptions={{ maximumFractionDigits: 1 }}
+                />
+            </Flex>
+            <Checkbox aria-label='No maximum' isSelected={isDisabled} onChange={onDisabledChange}>
                 No maximum
             </Checkbox>
         </QuantizationFieldLayout>
     );
 };
 
-export const CalibrationDatasetSizeField = () => {
-    const [calibrationSize, setCalibrationSize] = useState<number>(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
-    const [usesFullCalibrationDataset, setUsesFullCalibrationDataset] = useState<boolean>(false);
+interface CalibrationDatasetSizeFieldProps {
+    value: number;
+    onChange: (value: number) => void;
+    maxValue: number;
+    isDisabled: boolean;
+    onDisabledChange: (isDisabled: boolean) => void;
+    onReset: () => void;
+}
+
+export const CalibrationDatasetSizeField = ({
+    value,
+    onChange,
+    maxValue,
+    isDisabled,
+    onDisabledChange,
+    onReset,
+}: CalibrationDatasetSizeFieldProps) => {
+    const [draftValue, setDraftValue] = useState<number | null>(null);
+    const parameterValue = draftValue ?? value;
+
+    const handleValueChange = (inputValue: number) => {
+        setDraftValue(null);
+        onChange(inputValue);
+    };
 
     return (
-        <QuantizationFieldLayout
-            onReset={() => {
-                setCalibrationSize(DEFAULT_QUANTIZATION_PARAMETERS.calibrationSize);
-            }}
-        >
+        <QuantizationFieldLayout onReset={onReset}>
             <Text>Max calibration size</Text>
             <ContextualHelp>
-                <Content>Calibration samples will be randomly selected within the validation set</Content>
+                <Content>Calibration samples will be randomly selected within the dataset</Content>
             </ContextualHelp>
-            <NumberParameterField
-                name='Max calibration size'
-                value={calibrationSize}
-                minValue={1}
-                maxValue={1000}
-                isDisabled={usesFullCalibrationDataset}
-                type={'int'}
-                onChange={setCalibrationSize}
-                step={1}
-            />
-            <Checkbox
-                aria-label='Use full dataset'
-                isSelected={usesFullCalibrationDataset}
-                onChange={setUsesFullCalibrationDataset}
-            >
+            <Flex gap={'size-100'}>
+                <Slider
+                    aria-label={'Change Max calibration size slider'}
+                    value={parameterValue}
+                    minValue={1}
+                    maxValue={maxValue}
+                    step={1}
+                    onChange={setDraftValue}
+                    onChangeEnd={handleValueChange}
+                    isFilled
+                    flex={1}
+                    isDisabled={isDisabled}
+                />
+                <NumberField
+                    isQuiet
+                    step={1}
+                    value={parameterValue}
+                    minValue={1}
+                    maxValue={maxValue}
+                    onChange={handleValueChange}
+                    isDisabled={isDisabled}
+                    aria-label={'Change Max calibration size'}
+                />
+            </Flex>
+            <Checkbox aria-label='Use full dataset' isSelected={isDisabled} onChange={onDisabledChange}>
                 Use full dataset
             </Checkbox>
         </QuantizationFieldLayout>

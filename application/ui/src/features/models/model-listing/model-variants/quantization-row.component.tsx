@@ -5,7 +5,10 @@ import { Button, Content, ContextualHelp, DialogTrigger, Flex, Text } from '@get
 
 import { QuantizationDialog } from './quantization-dialog/quantization-dialog.component';
 
-export const QuantizationRow = () => {
+type QuantizationRowProps = {
+    modelId: string;
+};
+export const QuantizationRow = ({ modelId }: QuantizationRowProps) => {
     return (
         <Flex marginTop={'size-150'} alignItems={'center'} justifyContent={'space-between'}>
             <Flex>
@@ -19,7 +22,7 @@ export const QuantizationRow = () => {
             </Flex>
             <DialogTrigger>
                 <Button variant={'secondary'}>Start quantization</Button>
-                {(close) => <QuantizationDialog onClose={close} />}
+                {(close) => <QuantizationDialog modelId={modelId} onClose={close} />}
             </DialogTrigger>
         </Flex>
     );
