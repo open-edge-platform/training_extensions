@@ -15,14 +15,13 @@ import {
 } from '@geti/ui';
 
 import { ReactComponent as DropFiles } from '../../../assets/drop-files.svg';
-import { MediaDTO } from '../../../constants/shared-types';
 import { getFilesFromDropEvent } from '../../../shared/drop-zone.utils';
 
 import classes from './drop-zone.component.module.scss';
 
 type DatasetDropZoneProps = {
     children: ReactNode;
-    onFilesDropped?: (files: File[]) => void | Promise<MediaDTO[]>;
+    onFilesDropped?: (files: File[]) => void | Promise<void>;
 };
 
 type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
