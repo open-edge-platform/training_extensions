@@ -12,11 +12,11 @@ const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
 export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 
 type AddMediaButtonProps = {
-    onFilesSelected: (files: File[]) => Promise<void>;
+    onFileUpload: (files: File[]) => Promise<void>;
     isDisabled?: boolean;
 };
 
-export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMediaButtonProps) => {
+export const AddMediaButton = ({ onFileUpload, isDisabled = false }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +25,7 @@ export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMedia
         if (files && files.length > 0) {
             const fileArray = Array.from(files);
 
-            await onFilesSelected(fileArray);
+            await onFileUpload(fileArray);
         }
 
         // Clear the input value to allow selecting the same file again

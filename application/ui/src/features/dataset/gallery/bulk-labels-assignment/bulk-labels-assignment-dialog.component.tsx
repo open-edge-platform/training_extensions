@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Heading } from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Flex, Heading, Text } from '@geti/ui';
+import { Info } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/labels';
@@ -31,17 +32,23 @@ const BulkLabelsAssignmentDialogContent = ({
     };
 
     return (
-        <Dialog minHeight={'size-6000'}>
+        <Dialog height={'65vh'}>
             <Heading>Label assignment</Heading>
             <Divider />
             <Content>
-                <LabelsList
-                    ariaLabel={'Labels to assign'}
-                    labels={projectLabels}
-                    selectedLabels={selectedLabels}
-                    onSelectedLabelsChange={setSelectedLabels}
-                    isMultiple={isMultiLabelClassification}
-                />
+                <Flex direction={'column'} gap={'size-100'} height={'100%'} minHeight={0}>
+                    <LabelsList
+                        ariaLabel={'Labels to assign'}
+                        labels={projectLabels}
+                        selectedLabels={selectedLabels}
+                        onSelectedLabelsChange={setSelectedLabels}
+                        isMultiple={isMultiLabelClassification}
+                    />
+                    <Flex alignItems={'center'} gap={'size-50'}>
+                        <Info />
+                        <Text>Labeling applies only to images</Text>
+                    </Flex>
+                </Flex>
             </Content>
             <ButtonGroup>
                 <Button variant={'secondary'} onPress={onClose}>

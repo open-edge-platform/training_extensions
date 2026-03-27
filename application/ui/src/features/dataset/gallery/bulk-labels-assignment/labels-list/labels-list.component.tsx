@@ -3,7 +3,7 @@
 
 import { useDeferredValue, useMemo, useState } from 'react';
 
-import { Flex, Item, ListView, Selection, Text, TextField } from '@geti/ui';
+import { Flex, Item, ListView, Selection, Text, TextField, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { Label } from '../../../../../constants/shared-types';
@@ -52,7 +52,7 @@ export const LabelsList = ({
     };
 
     return (
-        <Flex gap='size-200' direction='column'>
+        <Flex gap='size-200' direction='column' flex={1} minHeight={0}>
             <TextField
                 aria-label={'Search labels'}
                 value={searchPhrase}
@@ -63,15 +63,17 @@ export const LabelsList = ({
             {hasNoSearchResults ? (
                 <Text>No results found. Try searching with different words.</Text>
             ) : (
-                <ListView
-                    items={filteredLabels}
-                    aria-label={ariaLabel}
-                    selectionMode={isMultiple ? 'multiple' : 'single'}
-                    onSelectionChange={handleSelectChange}
-                    selectedKeys={selectedLabels}
-                >
-                    {(item) => <Item key={item.id}>{item.name}</Item>}
-                </ListView>
+                <View flex={1} UNSAFE_style={{ overflowY: 'auto' }}>
+                    <ListView
+                        items={filteredLabels}
+                        aria-label={ariaLabel}
+                        selectionMode={isMultiple ? 'multiple' : 'single'}
+                        onSelectionChange={handleSelectChange}
+                        selectedKeys={selectedLabels}
+                    >
+                        {(item) => <Item key={item.id}>{item.name}</Item>}
+                    </ListView>
+                </View>
             )}
         </Flex>
     );

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import {
     Button,
@@ -15,13 +15,16 @@ import {
     Text,
     ViewModes,
 } from '@geti/ui';
+import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
+import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
 import { useMediaUpload } from '../../api/use-media-upload';
-import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
+import { BulkLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-labels-assignment-dialog.component';
+import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { AddMediaButton } from './add-media-button/add-media-button.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
@@ -47,10 +50,44 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
+const MediaUpload = () => {
+    const { data: project } = useProject();
+    const { uploadMedia, uploadProgress } = useMediaUpload();
+    const [filesForLabelAssignment, setFilesForLabelAssignment] = useState<File[]>([]);
+
+    const isClassification = isClassificationTask(project.task.task_type);
+    const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
+
+    const handleFileUpload = async (files: File[]) => {
+        if (isClassification) {
+            setFilesForLabelAssignment(files);
+        } else {
+            await uploadMedia(files);
+        }
+    };
+
+    const handleClose = () => {
+        setFilesForLabelAssignment([]);
+    };
+
+    return (
+        <>
+            <AddMediaButton onFileUpload={handleFileUpload} isDisabled={uploadProgress.isUploading} />
+            {isClassification && (
+                <BulkLabelsAssignmentDialog
+                    files={filesForLabelAssignment}
+                    onClose={handleClose}
+                    isMultiLabelClassification={isMultiLabelClassification}
+                    onDatasetItemsUpload={uploadMedia}
+                />
+            )}
+        </>
+    );
+};
+
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { uploadMedia, uploadProgress } = useMediaUpload();
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -68,7 +105,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     <ImportExport />
 
-                    <AddMediaButton onFilesSelected={uploadMedia} isDisabled={uploadProgress.isUploading} />
+                    <MediaUpload />
 
                     <TrainModel />
 
