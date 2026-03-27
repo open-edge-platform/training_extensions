@@ -50,9 +50,9 @@ jobs:
             echo RELEASE_VERSION=${GITHUB_REF#refs/*/} >> $GITHUB_ENV
           fi
           SOURCE_NAME=${GITHUB_REF#refs/*/}
-          echo SOURCE_NAME=$SOURCE_NAME >> $GITHUB_OUTPUT
-          echo SOURCE_BRANCH=${GITHUB_REF#refs/heads/} >> $GITHUB_OUTPUT
-          echo SOURCE_TAG=${GITHUB_REF#refs/tags/} >> $GITHUB_OUTPUT
+          echo "SOURCE_NAME=$SOURCE_NAME" >> "$GITHUB_OUTPUT"
+          echo "SOURCE_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
+          echo "SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
           existed_in_remote=$(git ls-remote --heads origin gh-pages)
 
