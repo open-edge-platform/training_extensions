@@ -70,6 +70,7 @@ export type DatasetRevisionItem = components['schemas']['DatasetRevisionItemView
 export type Project = components['schemas']['ProjectView'];
 
 export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
+export type Task = components['schemas']['TaskView'];
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];

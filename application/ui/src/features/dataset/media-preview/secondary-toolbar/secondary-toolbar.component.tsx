@@ -8,7 +8,7 @@ import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Labels } from '../../../annotator/labels/labels.component';
-import { isClassificationTask } from '../../../project/task-type-guards';
+import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from '../use-submit-predictions.hook';
@@ -40,8 +40,8 @@ export const SecondaryToolbar = ({
 
     const { canSubmit, isSaving, submit } = useSubmitPredictions({ onSuccess: onAcceptPrediction });
 
-    const isMultiLabel = selectedProject.task.exclusive_labels === false;
     const isClassification = isClassificationTask(selectedProject.task.task_type);
+    const isMultiLabelClassification = isMultiLabelClassificationTask(selectedProject.task);
 
     const handleDeleteItem = ([deletedItem]: string[], totalItems: number) => {
         const deletedIndex = items.findIndex((item) => item.id === deletedItem);
@@ -65,7 +65,7 @@ export const SecondaryToolbar = ({
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
-                    <Labels isClassification={isClassification} isMultiLabel={isMultiLabel} />
+                    <Labels isClassification={isClassification} isMultiLabel={isMultiLabelClassification} />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
