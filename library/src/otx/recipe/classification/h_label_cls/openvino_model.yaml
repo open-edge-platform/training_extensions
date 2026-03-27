@@ -12,23 +12,5 @@ overrides:
   data:
     task: H_LABEL_CLS
     stack_images: false
-    train_subset:
-      batch_size: 1
-      sampler:
-        class_path: torch.utils.data.RandomSampler
-        init_args: null
-      augmentations_gpu:
-        - class_path: kornia.augmentation.Normalize
-          init_args:
-            mean:
-              - 0.485
-              - 0.456
-              - 0.406
-            std:
-              - 0.229
-              - 0.224
-              - 0.225
-    val_subset:
-      batch_size: 1
     test_subset:
       batch_size: 128
