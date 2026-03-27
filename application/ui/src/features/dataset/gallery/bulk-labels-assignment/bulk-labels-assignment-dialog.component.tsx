@@ -13,7 +13,7 @@ import { LabelsList } from './labels-list/labels-list.component';
 type BulkLabelsAssignmentDialogContentProps = {
     onClose: () => void;
     onSkip: () => void;
-    onAccept: (labelIds: string[]) => void;
+    onAccept: (files: File[]) => Promise<void>;
     isMultiLabelClassification: boolean;
 };
 
@@ -28,7 +28,7 @@ const BulkLabelsAssignmentDialogContent = ({
     const [selectedLabels, setSelectedLabels] = useState<Set<string>>(() => new Set([]));
 
     const handleAccept = () => {
-        onAccept(Array.from(selectedLabels));
+        onAccept([]);
     };
 
     return (
@@ -85,17 +85,13 @@ export const BulkLabelsAssignmentDialog = ({
         onClose();
     };
 
-    const handleAccept = (_labelIds: string[]) => {
-        // TODO: Send bulk label assignment request
-    };
-
     return (
         <DialogContainer onDismiss={onClose}>
             {isVisible && (
                 <BulkLabelsAssignmentDialogContent
                     onClose={onClose}
                     onSkip={handleSkip}
-                    onAccept={handleAccept}
+                    onAccept={onDatasetItemsUpload}
                     isMultiLabelClassification={isMultiLabelClassification}
                 />
             )}
