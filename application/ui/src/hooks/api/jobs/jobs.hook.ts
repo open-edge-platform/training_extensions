@@ -61,14 +61,13 @@ export const useGetCurrentRunningJob = () => {
     const activeJobs = useListJobs();
 
     const activeRunningJob = activeJobs.data?.find((job) => {
-        const jobProjectId =
-            'project' in job.metadata &&
-            job.metadata.project &&
-            'id' in job.metadata.project &&
-            job.metadata.project.id;
         const isActive = job.status === 'RUNNING' || job.status === 'PENDING';
 
-        return jobProjectId === projectId && isActive && (isTrainJob(job) || isQuantizeJob(job));
+        if (isActive && (isTrainJob(job) || isQuantizeJob(job))) {
+            return job.metadata.project.id === projectId;
+        }
+
+        return false;
     });
 
     useStreamJobStatus(activeRunningJob?.job_id);

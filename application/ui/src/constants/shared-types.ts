@@ -17,6 +17,14 @@ export type Metric = components['schemas']['MetricView'];
 export type LineMetric = components['schemas']['LineMetric'];
 
 export type Job = components['schemas']['JobView'];
+export type TrainJob = Job & {
+    job_type: 'train';
+    metadata: components['schemas']['TrainingMetadata'];
+};
+export type QuantizeJob = Job & {
+    job_type: 'quantize';
+    metadata: components['schemas']['QuantizationMetadata'];
+};
 export type ExportDatasetJob = Job & {
     type: 'export_dataset';
     metadata: components['schemas']['ExportDatasetMetadata'];

@@ -3,7 +3,7 @@
 
 import isObject from 'lodash-es/isObject';
 
-import { Job } from '../../constants/shared-types';
+import { Job, QuantizeJob, TrainJob } from '../../constants/shared-types';
 
 export const isInvalidStagedFile = (error: unknown): boolean => {
     if (isObject(error) && 'detail' in error) {
@@ -30,5 +30,5 @@ export const isJobFailed = (job?: Job): job is Job => job?.status === 'FAILED';
 export const isJobRunning = (job?: Job): job is Job => job?.status === 'RUNNING';
 export const isJobPending = (job?: Job): job is Job => job?.status === 'PENDING';
 
-export const isTrainJob = (job?: Job): job is Job => job?.job_type === 'train';
-export const isQuantizeJob = (job?: Job): job is Job => job?.job_type === 'quantize';
+export const isTrainJob = (job?: Job): job is TrainJob => job?.job_type === 'train';
+export const isQuantizeJob = (job?: Job): job is QuantizeJob => job?.job_type === 'quantize';
