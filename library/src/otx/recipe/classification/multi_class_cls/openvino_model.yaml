@@ -1,10 +1,34 @@
 callback_monitor: val/accuracy
 
-data: ../../_base_/data/torchvision_base.yaml
+data: ../../_base_/data/classification.yaml
 
 overrides:
+  reset:
+    - data.train_subset.augmentations_cpu
+    - data.train_subset.augmentations_gpu
+    - data.val_subset.augmentations_cpu
+    - data.test_subset.augmentations_cpu
+
   data:
     task: MULTI_CLASS_CLS
     stack_images: false
+    train_subset:
+      batch_size: 1
+      sampler:
+        class_path: torch.utils.data.RandomSampler
+        init_args: null
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean:
+              - 0.485
+              - 0.456
+              - 0.406
+            std:
+              - 0.229
+              - 0.224
+              - 0.225
+    val_subset:
+      batch_size: 1
     test_subset:
       batch_size: 128

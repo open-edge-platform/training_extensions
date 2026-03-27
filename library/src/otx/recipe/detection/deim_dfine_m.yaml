@@ -178,7 +178,7 @@ callbacks:
                   init_args:
                     mean: [0.0, 0.0, 0.0]
                     std: [1.0, 1.0, 1.0]
-data: ../_base_/data/torchvision_base.yaml
+data: ../_base_/data/detection.yaml
 overrides:
   callbacks:
     - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
@@ -197,7 +197,6 @@ overrides:
     task: DETECTION
     train_subset:
       batch_size: 8
-      num_workers: 4
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
