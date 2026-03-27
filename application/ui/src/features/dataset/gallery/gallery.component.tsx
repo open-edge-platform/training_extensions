@@ -1,10 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { Checkbox, DialogContainer, Flex, Size, ViewModes } from '@geti/ui';
-import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 import { GridLayoutOptions } from 'react-aria-components';
@@ -15,12 +12,11 @@ import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layo
 import type { DatasetItemAnnotationStatus, Media } from '../../../constants/shared-types';
 import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
-import { isClassificationTask, isMultiLabelClassificationTask } from '../../project/task-type-guards';
-import { useMediaUpload } from '../api/use-media-upload';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { BulkLabelsAssignmentDialog } from './bulk-labels-assignment/bulk-labels-assignment-dialog.component';
+import { useBulkUploadAndAssignLabel } from './bulk-labels-assignment/use-bulk-upload-and-assign-label';
 import { DatasetDropZone } from './drop-zone.component';
 import { EmptyDataset } from './empty-dataset.component';
 import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
@@ -140,22 +136,17 @@ export const Gallery = ({
     isFetchingNextPage,
     fetchNextPage,
 }: GalleryProps) => {
-    const { data: project } = useProject();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
-    const { uploadMedia, uploadProgress } = useMediaUpload();
 
-    const [filesForLabelAssignment, setFilesForLabelAssignment] = useState<File[]>([]);
-
-    const isClassification = isClassificationTask(project.task.task_type);
-    const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
-
-    const handleFileUpload = async (files: File[]) => {
-        if (isClassification) {
-            setFilesForLabelAssignment(files);
-        } else {
-            await uploadMedia(files);
-        }
-    };
+    const {
+        isClassification,
+        isMultiLabelClassification,
+        setFilesForLabelAssignment,
+        filesForLabelAssignment,
+        uploadAndAssign,
+        uploadMedia,
+        uploadMediaLoading,
+    } = useBulkUploadAndAssignLabel();
 
     const content =
         !isPending && isEmpty(items) ? (
@@ -174,7 +165,7 @@ export const Gallery = ({
 
     return (
         <>
-            <DatasetDropZone onFilesDropped={handleFileUpload}>
+            <DatasetDropZone onFilesDropped={uploadAndAssign}>
                 {content}
 
                 <DialogContainer type={'fullscreenTakeover'} onDismiss={() => onSelectedMediaItemChange(null)}>
@@ -187,13 +178,15 @@ export const Gallery = ({
                     )}
                 </DialogContainer>
             </DatasetDropZone>
-            <BulkLabelsAssignmentDialog
-                files={filesForLabelAssignment}
-                onClose={() => setFilesForLabelAssignment([])}
-                isMultiLabelClassification={isMultiLabelClassification}
-                isUploadingDatasetItems={uploadProgress.isUploading}
-                onDatasetItemsUpload={uploadMedia}
-            />
+            {isClassification && (
+                <BulkLabelsAssignmentDialog
+                    files={filesForLabelAssignment}
+                    onClose={() => setFilesForLabelAssignment([])}
+                    isMultiLabelClassification={isMultiLabelClassification}
+                    isUploadingDatasetItems={uploadMediaLoading}
+                    onDatasetItemsUpload={uploadMedia}
+                />
+            )}
         </>
     );
 };

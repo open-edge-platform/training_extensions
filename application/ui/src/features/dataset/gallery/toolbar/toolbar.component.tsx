@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
 import {
     Button,
@@ -15,15 +15,13 @@ import {
     Text,
     ViewModes,
 } from '@geti/ui';
-import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
-import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
-import { useMediaUpload } from '../../api/use-media-upload';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { BulkLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-labels-assignment-dialog.component';
+import { useBulkUploadAndAssignLabel } from '../bulk-labels-assignment/use-bulk-upload-and-assign-label';
 import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { AddMediaButton } from './add-media-button/add-media-button.component';
@@ -51,20 +49,15 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
 };
 
 const MediaUpload = () => {
-    const { data: project } = useProject();
-    const { uploadMedia, uploadProgress } = useMediaUpload();
-    const [filesForLabelAssignment, setFilesForLabelAssignment] = useState<File[]>([]);
-
-    const isClassification = isClassificationTask(project.task.task_type);
-    const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
-
-    const handleFileUpload = async (files: File[]) => {
-        if (isClassification) {
-            setFilesForLabelAssignment(files);
-        } else {
-            await uploadMedia(files);
-        }
-    };
+    const {
+        isClassification,
+        isMultiLabelClassification,
+        setFilesForLabelAssignment,
+        filesForLabelAssignment,
+        uploadAndAssign,
+        uploadMedia,
+        uploadMediaLoading,
+    } = useBulkUploadAndAssignLabel();
 
     const handleClose = () => {
         setFilesForLabelAssignment([]);
@@ -72,13 +65,13 @@ const MediaUpload = () => {
 
     return (
         <>
-            <AddMediaButton onFileUpload={handleFileUpload} isDisabled={uploadProgress.isUploading} />
+            <AddMediaButton onFileUpload={uploadAndAssign} isDisabled={uploadMediaLoading} />
             {isClassification && (
                 <BulkLabelsAssignmentDialog
                     onClose={handleClose}
                     files={filesForLabelAssignment}
                     onDatasetItemsUpload={uploadMedia}
-                    isUploadingDatasetItems={uploadProgress.isUploading}
+                    isUploadingDatasetItems={uploadMediaLoading}
                     isMultiLabelClassification={isMultiLabelClassification}
                 />
             )}
