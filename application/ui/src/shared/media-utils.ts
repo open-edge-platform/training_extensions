@@ -12,6 +12,13 @@ export const isTiffFormat = (media: { format?: string }): boolean => {
 export const getImageDataFromTiffUrl = async (url: string): Promise<ImageData> => {
     try {
         const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(
+                `Failed to fetch TIFF image from "${url}". HTTP status ${response.status} ${response.statusText}`
+            );
+        }
+
         const buffer = await response.arrayBuffer();
         const ifds = UTIF.decode(buffer);
 

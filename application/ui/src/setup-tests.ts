@@ -81,7 +81,9 @@ class ImageDataMock {
     }
 }
 
-global.ImageData = ImageDataMock as unknown as typeof ImageData;
+if (typeof global.ImageData === 'undefined') {
+    global.ImageData = ImageDataMock as unknown as typeof ImageData;
+}
 
 const createLocalStorageMock = () => {
     let store: Record<string, string> = {};

@@ -16,6 +16,7 @@ vi.mock('utif', () => ({
 
 afterEach(() => {
     vi.resetAllMocks();
+    vi.restoreAllMocks();
 });
 
 const TIFF_BINARY_URL = '/api/projects/test-project/dataset/media/test-media/binary';
