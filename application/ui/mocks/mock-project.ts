@@ -17,7 +17,7 @@ export const getMockedProject = (customProject: Partial<SchemaProjectView> = {})
                     name: 'Object',
                 },
             ],
-            task_type: 'classification',
+            task_type: 'detection',
         },
         active_pipeline: false,
         ...customProject,
