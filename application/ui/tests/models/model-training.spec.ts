@@ -182,7 +182,7 @@ test.describe('Model training flow', () => {
 
         await modelsPage.startTraining();
 
-        await expect(page.getByRole('heading', { name: 'Current training' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Currently running' })).toBeVisible();
         await expect(page.getByText('ATSS Training Run')).toBeVisible();
 
         expect(state.submittedJobBody).toMatchObject({

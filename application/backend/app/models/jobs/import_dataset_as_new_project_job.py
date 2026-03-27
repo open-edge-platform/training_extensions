@@ -14,7 +14,6 @@ class ImportDatasetAsNewProjectJobParams(JobParams):
     task_type: TaskType
     labels: list[str] | None
     subsets: list[DatasetItemSubset] | None
-    exclusive_labels: bool = False
     include_unannotated: bool = True
     project_id: UUID | None = None
 

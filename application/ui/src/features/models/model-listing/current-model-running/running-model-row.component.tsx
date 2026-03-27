@@ -16,11 +16,11 @@ import { GRID_COLUMNS } from '../constants';
 import { GroupByMode } from '../types';
 import { BottomProgressBar } from './bottom-progress-bar.component';
 
-import classes from './current-model-training.module.scss';
+import classes from './current-model-running.module.scss';
 
 dayjs.extend(duration);
 
-type TrainingModelRowProps = {
+type RunningModelRowProps = {
     job: Job;
     onCancel?: () => void;
     groupBy: GroupByMode;
@@ -28,20 +28,20 @@ type TrainingModelRowProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 };
 
-const TrainingTag = () => (
-    <Tag prefix={<Loading size={'S'} mode={'inline'} />} className={classes.trainingTag} text={'Training'} />
+const RunningStatusTag = () => (
+    <Tag prefix={<Loading size={'S'} mode={'inline'} />} className={classes.runningStatusTag} text={'Running'} />
 );
 
 const StatusTag = ({ status }: { status: string }) => (
     <Tag className={classes.statusTag} withDot={false} text={status} />
 );
 
-type CancelTrainingProps = {
+type CancelRunningJobProps = {
     job: Job;
     onCancel: () => void;
 };
 
-const CancelTraining = ({ job, onCancel }: CancelTrainingProps) => {
+const CancelRunningJob = ({ job, onCancel }: CancelRunningJobProps) => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
 
     return (
@@ -50,20 +50,20 @@ const CancelTraining = ({ job, onCancel }: CancelTrainingProps) => {
                 isDisabled={job.status !== 'RUNNING'}
                 variant={'negative'}
                 onPress={() => setIsDeleteDialogOpen(true)}
-                aria-label={'Cancel training job'}
+                aria-label={'Cancel running job'}
             >
                 Cancel
             </Button>
             <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
                 {isDeleteDialogOpen && (
                     <AlertDialog
-                        title='Cancel training'
+                        title='Stop running job'
                         variant='destructive'
                         primaryActionLabel='Cancel'
                         onPrimaryAction={onCancel}
                         cancelLabel='Close'
                     >
-                        Are you sure you want to cancel training job?
+                        Are you sure you want to stop this running job?
                     </AlertDialog>
                 )}
             </DialogContainer>
@@ -86,13 +86,13 @@ const ViewLogsButton = ({ jobId }: { jobId: string }) => {
     );
 };
 
-export const TrainingModelRow = ({
+export const RunningModelRow = ({
     job,
     onCancel,
     datasetRevisions,
     groupBy,
     modelArchitectures,
-}: TrainingModelRowProps) => {
+}: RunningModelRowProps) => {
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
     const modelArchitectureId =
@@ -129,7 +129,7 @@ export const TrainingModelRow = ({
                     </Flex>
 
                     <Flex alignItems={'start'}>
-                        <TrainingTag />
+                        <RunningStatusTag />
                         <StatusTag status={statusMessage} />
                     </Flex>
 
@@ -152,7 +152,7 @@ export const TrainingModelRow = ({
 
                 <Flex gap={'size-100'} direction={'column'} alignItems={'center'}>
                     <ViewLogsButton jobId={job.job_id} />
-                    {onCancel ? <CancelTraining onCancel={onCancel} job={job} /> : null}
+                    {onCancel ? <CancelRunningJob onCancel={onCancel} job={job} /> : null}
                 </Flex>
             </Grid>
         </BottomProgressBar>
