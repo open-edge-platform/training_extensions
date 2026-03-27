@@ -6,8 +6,8 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { Flex, Item, ListView, Selection, Text, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { Label } from '../../../../../../constants/shared-types';
-import { EMPTY_LABEL_ID } from '../../../../../../shared/annotator/labels';
+import { Label } from '../../../../../constants/shared-types';
+import { EMPTY_LABEL_ID } from '../../../../../shared/annotator/labels';
 
 type LabelsListProps = {
     ariaLabel: string;

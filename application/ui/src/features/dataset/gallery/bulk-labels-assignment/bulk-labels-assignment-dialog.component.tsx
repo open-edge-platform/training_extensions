@@ -6,22 +6,22 @@ import { useState } from 'react';
 import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Heading } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { useProjectLabelsWithEmptyLabel } from '../../../../../../shared/annotator/labels';
-import { LabelsList } from './labels-list.component';
+import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/labels';
+import { LabelsList } from './labels-list/labels-list.component';
 
-type BulkLabelAssignmentDialogContentProps = {
+type BulkLabelsAssignmentDialogContentProps = {
     onClose: () => void;
     onSkip: () => void;
     onAccept: (labelIds: string[]) => void;
     isMultiLabelClassification: boolean;
 };
 
-const BulkLabelAssignmentDialogContent = ({
+const BulkLabelsAssignmentDialogContent = ({
     onClose,
     onSkip,
     onAccept,
     isMultiLabelClassification,
-}: BulkLabelAssignmentDialogContentProps) => {
+}: BulkLabelsAssignmentDialogContentProps) => {
     const projectLabels = useProjectLabelsWithEmptyLabel();
 
     const [selectedLabels, setSelectedLabels] = useState<Set<string>>(() => new Set([]));
@@ -58,19 +58,19 @@ const BulkLabelAssignmentDialogContent = ({
     );
 };
 
-type LabelAssignmentDialogProps = {
+type BulkLabelsAssignmentDialogProps = {
     files: File[];
     onClose: () => void;
     isMultiLabelClassification: boolean;
     onDatasetItemsUpload: (files: File[]) => Promise<void>;
 };
 
-export const BulkLabelAssignmentDialog = ({
+export const BulkLabelsAssignmentDialog = ({
     files,
     onClose,
     onDatasetItemsUpload,
     isMultiLabelClassification,
-}: LabelAssignmentDialogProps) => {
+}: BulkLabelsAssignmentDialogProps) => {
     const isVisible = !isEmpty(files);
 
     const handleSkip = async () => {
@@ -85,7 +85,7 @@ export const BulkLabelAssignmentDialog = ({
     return (
         <DialogContainer onDismiss={onClose}>
             {isVisible && (
-                <BulkLabelAssignmentDialogContent
+                <BulkLabelsAssignmentDialogContent
                     onClose={onClose}
                     onSkip={handleSkip}
                     onAccept={handleAccept}

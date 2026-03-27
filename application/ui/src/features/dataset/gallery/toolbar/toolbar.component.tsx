@@ -15,7 +15,6 @@ import {
     Text,
     ViewModes,
 } from '@geti/ui';
-import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
@@ -49,7 +48,6 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
 };
 
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
-    const { data: project } = useProject();
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
     const { uploadMedia, uploadProgress } = useMediaUpload();
@@ -70,11 +68,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     <ImportExport />
 
-                    <AddMediaButton
-                        project={project}
-                        onFilesSelected={uploadMedia}
-                        isDisabled={uploadProgress.isUploading}
-                    />
+                    <AddMediaButton onFilesSelected={uploadMedia} isDisabled={uploadProgress.isUploading} />
 
                     <TrainModel />
 
