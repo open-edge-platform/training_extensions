@@ -48,7 +48,6 @@ const useSubsets = (mediaItem: Media) => {
         dataset_item_id: mediaItem.id,
     };
     const datasetItemParams = { params: { path: datasetItemParamsPath } };
-    const mediaListParams = { params: { path: { project_id: projectId } } };
     const mediaAnnotationsParams = {
         params: {
             path: { project_id: projectId, media_id: mediaItem.id },
@@ -62,7 +61,6 @@ const useSubsets = (mediaItem: Media) => {
         meta: {
             invalidateQueries: [
                 getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]),
-                getQueryKey(['get', '/api/projects/{project_id}/dataset/media', mediaListParams]),
                 getQueryKey([
                     'get',
                     '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
