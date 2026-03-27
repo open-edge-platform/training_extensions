@@ -11,7 +11,7 @@ import placeholderThumbnailIconUrl from '../../../assets/icons/image-icon.svg?ur
 import { paths } from '../../../constants/paths';
 import { Project, TaskType } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
-import { isClassificationTask, isMultiLabelClassificationTask } from '../task-type-guards';
+import { isMultiLabelClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
 
 import classes from './project-list.module.scss';

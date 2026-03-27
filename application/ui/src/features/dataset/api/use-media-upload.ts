@@ -92,12 +92,12 @@ export const useMediaUpload = () => {
     };
 
     // Starts the upload process directly
-    const uploadMedia = (files: File[]): void => {
+    const uploadMedia = async (files: File[]) => {
         if (files.length === 0) {
             return;
         }
 
-        void processUploadBatch(files);
+        await processUploadBatch(files);
     };
 
     return {
