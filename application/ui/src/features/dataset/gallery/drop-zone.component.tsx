@@ -35,12 +35,12 @@ export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZonePro
         const files = await getFilesFromDropEvent(event);
 
         if (files.length > 0) {
-            await onFilesDropped(files);
+            void onFilesDropped(files);
         }
     };
 
     return (
-        <AriaDropZone onDrop={onFilesDropped === undefined ? undefined : handleDrop} className={classes.dropZone}>
+        <AriaDropZone onDrop={handleDrop} className={classes.dropZone}>
             {(dropZoneState) => (
                 <View UNSAFE_className={classes.container}>
                     {children}
