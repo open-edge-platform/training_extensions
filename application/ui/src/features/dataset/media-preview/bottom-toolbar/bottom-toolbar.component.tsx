@@ -7,9 +7,11 @@ import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { capitalize } from 'lodash-es';
 
-import { $api } from '../../../../api/client';
+import { $api, fetchClient } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { getQueryKey } from '../../../../query-client/query-client';
+import { isVideoFrame } from '../../../../shared/media-item-utils';
+import { isUnannotatedError } from '../api/use-annotations-query';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -26,22 +28,33 @@ type BottomToolbarProps = {
 
 const DATASET_ITEM_OPERATION = 'get';
 const DATASET_ITEM_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}';
-const UPDATE_SUBSET_OPERATION = 'patch';
-const UPDATE_SUBSET_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset';
+const UPDATE_SUBSET_OPERATION = 'post';
+const UPDATE_SUBSET_URL = '/api/projects/{project_id}/dataset/media/{media_id}/annotations';
 
 type AssignableSubset = Exclude<DatasetSubset, 'unassigned'>;
 
 const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !== null && key !== 'unassigned';
 
-const useSubsets = (mediaItemId: string) => {
+const useSubsets = (mediaItem: Media) => {
     const projectId = useProjectIdentifier();
+    const query = isVideoFrame(mediaItem)
+        ? {
+              frame_index: mediaItem.frame_number,
+          }
+        : undefined;
 
     const datasetItemParamsPath = {
         project_id: projectId,
-        dataset_item_id: mediaItemId,
+        dataset_item_id: mediaItem.id,
     };
     const datasetItemParams = { params: { path: datasetItemParamsPath } };
     const mediaListParams = { params: { path: { project_id: projectId } } };
+    const mediaAnnotationsParams = {
+        params: {
+            path: { project_id: projectId, media_id: mediaItem.id },
+            query,
+        },
+    };
 
     const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
 
@@ -50,16 +63,43 @@ const useSubsets = (mediaItemId: string) => {
             invalidateQueries: [
                 getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]),
                 getQueryKey(['get', '/api/projects/{project_id}/dataset/media', mediaListParams]),
+                getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
+                    mediaAnnotationsParams,
+                ]),
             ],
         },
     });
 
-    const handleSubsetChange = (key: Key | null) => {
+    const handleSubsetChange = async (key: Key | null) => {
         if (!isAssignableSubset(key)) return;
 
+        // We need to first fetch the annotations to make sure we dont send
+        // stale data to the server when changing the subset, which could lead to wrongly overwriting changes
+        // TODO: We could optimize this by caching the annotations, then we could just
+        // `getQueryData` instead of making an additional request
+        const {
+            data: annotationsResponse,
+            error: annotationsError,
+            response,
+        } = await fetchClient.GET('/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
+            params: {
+                path: { project_id: projectId, media_id: mediaItem.id },
+                query,
+            },
+        });
+
+        if (annotationsError && response.status !== 404 && !isUnannotatedError(annotationsError)) {
+            return;
+        }
+
         updateSubsetMutation.mutate({
-            params: { path: datasetItemParamsPath },
-            body: { subset: key },
+            params: {
+                path: { project_id: projectId, media_id: mediaItem.id },
+                query,
+            },
+            body: { annotations: annotationsResponse?.annotations ?? [], subset: key },
         });
     };
 
@@ -69,7 +109,7 @@ const useSubsets = (mediaItemId: string) => {
 export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
-    const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem.id);
+    const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem);
 
     const isUnassigned = currentSubset === 'unassigned' || currentSubset === null;
 

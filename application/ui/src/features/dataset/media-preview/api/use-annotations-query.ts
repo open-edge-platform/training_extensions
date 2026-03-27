@@ -11,7 +11,7 @@ import { getQueryKey } from '../../../../query-client/query-client';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 
-const isUnannotatedError = (error: unknown): boolean => {
+export const isUnannotatedError = (error: unknown): boolean => {
     return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
 };
 

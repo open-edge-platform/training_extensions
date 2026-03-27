@@ -108,8 +108,8 @@ describe('BottomToolbar', () => {
         expect(await screen.findByLabelText('Validation')).toBeInTheDocument();
     });
 
-    it('calls patch mutation when subset is changed', async () => {
-        const patchSpy = vi.fn();
+    it('calls annotations endpoint when changing subset', async () => {
+        const postSpy = vi.fn();
 
         server.use(
             http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
@@ -117,15 +117,21 @@ describe('BottomToolbar', () => {
                     status: 200,
                 });
             }),
-            http.patch(
-                '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset',
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
+                return HttpResponse.json({ annotations: [], user_reviewed: false }, { status: 200 });
+            }),
+            http.post(
+                '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
                 async ({ request, params }) => {
                     const body = await request.json();
 
-                    patchSpy(params, body);
+                    postSpy(params, body);
 
-                    return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', subset: 'validation' }), {
-                        status: 200,
+                    return HttpResponse.json({
+                        media_id: 'media-123',
+                        annotations: [],
+                        prediction_model_id: null,
+                        user_reviewed: false,
                     });
                 }
             )
@@ -140,12 +146,13 @@ describe('BottomToolbar', () => {
         fireEvent.click(validationOption);
 
         await waitFor(() => {
-            expect(patchSpy).toHaveBeenCalledWith(
+            expect(postSpy).toHaveBeenCalledWith(
                 expect.objectContaining({
                     project_id: expect.any(String),
-                    dataset_item_id: 'media-123',
+                    media_id: 'media-123',
                 }),
                 expect.objectContaining({
+                    annotations: [],
                     subset: 'validation',
                 })
             );
