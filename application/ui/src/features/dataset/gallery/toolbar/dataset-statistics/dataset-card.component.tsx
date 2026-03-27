@@ -14,7 +14,7 @@ type DatasetCardProps = {
 };
 
 export const DatasetCard = ({ title, gridArea, children, hasFullSizeContent = false }: DatasetCardProps) => {
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
     return (
         <Flex
@@ -29,19 +29,24 @@ export const DatasetCard = ({ title, gridArea, children, hasFullSizeContent = fa
 
                 {hasFullSizeContent && (
                     <>
-                        <ActionButton isQuiet onPress={() => setIsDialogOpen(true)}>
+                        <ActionButton isQuiet onPress={() => setIsFullscreenOpen(true)}>
                             <Expand />
                         </ActionButton>
 
-                        <DialogContainer type={'fullscreen'} onDismiss={() => setIsDialogOpen(false)}>
-                            {isDialogOpen && (
+                        <DialogContainer type={'fullscreen'} onDismiss={() => setIsFullscreenOpen(false)}>
+                            {isFullscreenOpen && (
                                 <Flex
                                     height={'100%'}
                                     gap={'size-200'}
                                     direction={'column'}
                                     UNSAFE_style={{ padding: dimensionValue('size-300') }}
                                 >
-                                    <ActionButton isQuiet alignSelf={'end'} onPress={() => setIsDialogOpen(false)}>
+                                    <ActionButton
+                                        isQuiet
+                                        alignSelf={'end'}
+                                        onPress={() => setIsFullscreenOpen(false)}
+                                        aria-label='collapse fullscreen'
+                                    >
                                         <Collapse />
                                     </ActionButton>
 
@@ -53,7 +58,7 @@ export const DatasetCard = ({ title, gridArea, children, hasFullSizeContent = fa
                 )}
             </Flex>
             <Divider size='S' />
-            {children}
+            {isFullscreenOpen ? null : children}
         </Flex>
     );
 };
