@@ -1,8 +1,6 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
-
 import {
     ActionButton,
     Button,
@@ -21,32 +19,20 @@ import {
 import { GraphChart } from '@geti/ui/icons';
 import { useDatasetStatistics } from 'hooks/api/dataset.hook';
 
+import { DatasetCard } from './dataset-card.component';
+import { DatasetLabelsChart } from './dataset-labels-chart.component';
+
 import classes from './dataset-statistics.module.scss';
-
-type CardProps = {
-    title: string;
-    gridArea: string;
-    children: ReactNode;
-};
-
-const Card = ({ title, gridArea, children }: CardProps) => {
-    return (
-        <Flex
-            gap={'size-100'}
-            width={'100%'}
-            gridArea={gridArea}
-            direction={'column'}
-            UNSAFE_style={{ padding: dimensionValue('size-200'), background: 'var(--spectrum-global-color-gray-100)' }}
-        >
-            <Heading>{title}</Heading>
-            <Divider size='S' />
-            {children}
-        </Flex>
-    );
-};
 
 export const DatasetStatistics = () => {
     const { data: statistics } = useDatasetStatistics();
+
+    const totalMediaItems = statistics.media_counts.images + statistics.media_counts.videos;
+
+    const totalAnnotations =
+        statistics.annotations_counts.annotated_images + statistics.annotations_counts.annotated_videos;
+
+    const totalItems = totalAnnotations > totalMediaItems ? totalAnnotations : totalMediaItems;
 
     const annotationPercentage =
         (statistics.annotations_counts.annotated_images / statistics.media_counts.images) * 100;
@@ -71,7 +57,7 @@ export const DatasetStatistics = () => {
                                 background: 'var(--spectrum-global-color-gray-50)',
                             }}
                         >
-                            <Card title='Number of media' gridArea='col1'>
+                            <DatasetCard title='Number of media' gridArea='col1'>
                                 <Flex justifyContent={'space-evenly'}>
                                     <Flex direction={'column'} alignItems={'center'}>
                                         <Text UNSAFE_className={classes.mainValue}>
@@ -87,9 +73,9 @@ export const DatasetStatistics = () => {
                                         <Text UNSAFE_className={classes.subTitle}>Videos</Text>
                                     </Flex>
                                 </Flex>
-                            </Card>
+                            </DatasetCard>
 
-                            <Card title='Annotated images' gridArea='col2'>
+                            <DatasetCard title='Annotated images' gridArea='col2'>
                                 <Flex direction={'column'} alignItems={'center'}>
                                     <Text UNSAFE_className={classes.mainValue}>
                                         {statistics.annotations_counts.annotated_images}
@@ -103,8 +89,8 @@ export const DatasetStatistics = () => {
                                         UNSAFE_className={classes.meter}
                                     />
                                 </Flex>
-                            </Card>
-                            <Card title='Annotated videos / frames' gridArea='col3'>
+                            </DatasetCard>
+                            <DatasetCard title='Annotated videos / frames' gridArea='col3'>
                                 <Flex gap={'size-125'} alignItems={'center'}>
                                     <Text UNSAFE_className={classes.subTitle}>Videos:</Text>
                                     <Text UNSAFE_className={classes.secondaryValue}>
@@ -118,10 +104,13 @@ export const DatasetStatistics = () => {
                                         {statistics.annotations_counts.annotated_video_frames}
                                     </Text>
                                 </Flex>
-                            </Card>
-                            <Card title='Number of objects per label' gridArea='full'>
-                                <Text>Number of objects per label</Text>
-                            </Card>
+                            </DatasetCard>
+                            <DatasetCard title='Number of objects per label' gridArea='full' hasFullSizeContent>
+                                <DatasetLabelsChart
+                                    totalItems={totalItems}
+                                    instancesPerLabel={statistics.annotations_counts.instances_per_label}
+                                />
+                            </DatasetCard>
                         </Grid>
                     </Content>
                     <ButtonGroup>
