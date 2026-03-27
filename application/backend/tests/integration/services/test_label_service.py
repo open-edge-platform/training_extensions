@@ -1,23 +1,35 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import LabelDB, ProjectDB
-from app.models import Label
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, MediaDB, ProjectDB
+from app.models import DatasetItemAnnotation, Label
 from app.models.label import LabelReference, LabelUpdateInfo
+from app.models.media import ImageFormat, MediaType
 from app.models.project import Project
+from app.models.shape import FullImage, Rectangle
 from app.models.task import Task, TaskType
 from app.services import ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
+from app.services.dataset_service import DatasetService
 from app.services.label_service import DuplicateLabelsError, LabelService
+from app.services.media_service import MediaService
 
 
 @pytest.fixture
 def fxt_label_service(db_session: Session) -> LabelService:
     return LabelService(db_session)
+
+
+@pytest.fixture
+def fxt_dataset_service(db_session: Session) -> DatasetService:
+    label_service = LabelService(db_session)
+    media_service = MagicMock(spec=MediaService)
+    return DatasetService(label_service=label_service, media_service=media_service, db_session=db_session)
 
 
 @pytest.fixture
@@ -47,6 +59,23 @@ def _db_project_to_project(db_project: ProjectDB) -> Project:
             labels=[],
         ),
     )
+
+
+@pytest.fixture
+def fxt_db_images() -> list[MediaDB]:
+    return [
+        MediaDB(
+            id=str(uuid4()),
+            type=MediaType.IMAGE,
+            project_id=str(uuid4()),
+            name=f"test_image_{i}",
+            format=ImageFormat.JPG,
+            width=1024,
+            height=768,
+            size=2048,
+        )
+        for i in range(3)
+    ]
 
 
 class TestLabelServiceIntegration:
@@ -379,3 +408,250 @@ class TestLabelServiceIntegration:
         ids = fxt_label_service.list_ids(uuid4())
 
         assert len(ids) == 0
+
+    def test_delete_label_removes_annotations_detection(
+        self,
+        fxt_stored_project_with_labels: tuple[ProjectDB, list[LabelDB]],
+        fxt_label_service: LabelService,
+        fxt_dataset_service: DatasetService,
+        fxt_db_images: list[MediaDB],
+        db_session: Session,
+    ) -> None:
+        """
+        Test deleting a label cleans up annotations for a detection project.
+
+        Sets up three dataset items:
+        - item1: has two shapes, one with the deleted label only (dropped),
+          the other with a different label (kept) -> annotation_data has one shape left.
+        - item2: has one shape with only the deleted label -> annotation_data becomes [].
+        - item3: has one shape with only the other label -> annotation_data is unchanged.
+
+        Verifies that:
+        - Shapes that lose all labels are removed.
+        - Items that lose all shapes get annotation_data=[].
+        - Items with remaining shapes keep them intact.
+        - The label is removed from the labels join table.
+        - The label itself is deleted.
+        """
+        db_project, db_labels = fxt_stored_project_with_labels
+        project = _db_project_to_project(db_project)
+        label_to_delete = db_labels[0]
+        label_to_keep = db_labels[1]
+
+        # Store media directly in the DB (no file I/O needed)
+        for media in fxt_db_images:
+            media.project_id = db_project.id
+            db_session.add(media)
+        db_session.flush()
+
+        def _media(db_media: MediaDB) -> MagicMock:
+            m = MagicMock()
+            m.id = UUID(db_media.id)
+            m.width = db_media.width
+            m.height = db_media.height
+            return m
+
+        # item1: two rectangles — one with the deleted label, one with the kept label
+        item1 = fxt_dataset_service.create_dataset_item(
+            project_id=UUID(db_project.id),
+            task=project.task,
+            media=_media(fxt_db_images[0]),
+            user_reviewed=True,
+            annotations=[
+                DatasetItemAnnotation(
+                    shape=Rectangle(x=0, y=0, width=10, height=10),
+                    labels=[LabelReference(id=UUID(label_to_delete.id))],
+                ),
+                DatasetItemAnnotation(
+                    shape=Rectangle(x=20, y=20, width=10, height=10),
+                    labels=[LabelReference(id=UUID(label_to_keep.id))],
+                ),
+            ],
+        )
+        # item2: one rectangle with only the deleted label
+        item2 = fxt_dataset_service.create_dataset_item(
+            project_id=UUID(db_project.id),
+            task=project.task,
+            media=_media(fxt_db_images[1]),
+            user_reviewed=True,
+            annotations=[
+                DatasetItemAnnotation(
+                    shape=Rectangle(x=0, y=0, width=10, height=10),
+                    labels=[LabelReference(id=UUID(label_to_delete.id))],
+                ),
+            ],
+        )
+        # item3: one rectangle with only the kept label (unaffected)
+        item3 = fxt_dataset_service.create_dataset_item(
+            project_id=UUID(db_project.id),
+            task=project.task,
+            media=_media(fxt_db_images[2]),
+            user_reviewed=True,
+            annotations=[
+                DatasetItemAnnotation(
+                    shape=Rectangle(x=0, y=0, width=10, height=10),
+                    labels=[LabelReference(id=UUID(label_to_keep.id))],
+                ),
+            ],
+        )
+
+        # Add a third label so we can remove one and still have >= 2 (multiclass min) / >= 1
+        fxt_label_service.create_label(project_id=UUID(db_project.id), name="extra", color="#999999", hotkey="e")
+
+        # Delete the label via update_labels
+        fxt_label_service.update_labels(
+            project=project,
+            labels_to_add=[],
+            labels_to_remove=[LabelReference(id=UUID(label_to_delete.id))],
+            labels_to_edit=[],
+        )
+
+        db_session.expire_all()
+
+        # Verify the label is deleted
+        assert db_session.query(LabelDB).filter(LabelDB.id == label_to_delete.id).one_or_none() is None
+
+        # item1: should have one shape left (the one with label_to_keep)
+        refreshed_item1 = db_session.query(DatasetItemDB).filter(DatasetItemDB.id == str(item1.id)).one()
+        assert refreshed_item1.annotation_data is not None
+        assert len(refreshed_item1.annotation_data) == 1
+        assert refreshed_item1.annotation_data[0]["labels"][0]["id"] == label_to_keep.id
+        assert refreshed_item1.user_reviewed is True
+
+        # item2: should have empty annotation_data (not None, since this is detection)
+        refreshed_item2 = db_session.query(DatasetItemDB).filter(DatasetItemDB.id == str(item2.id)).one()
+        assert refreshed_item2.annotation_data == []
+        assert refreshed_item2.user_reviewed is True
+
+        # item3: should be unchanged
+        refreshed_item3 = db_session.query(DatasetItemDB).filter(DatasetItemDB.id == str(item3.id)).one()
+        assert refreshed_item3.annotation_data is not None
+        assert len(refreshed_item3.annotation_data) == 1
+        assert refreshed_item3.annotation_data[0]["labels"][0]["id"] == label_to_keep.id
+
+        # Verify label is removed from dataset_items_labels join table
+        remaining_join_entries = (
+            db_session.query(DatasetItemLabelDB).filter(DatasetItemLabelDB.label_id == label_to_delete.id).all()
+        )
+        assert len(remaining_join_entries) == 0
+
+    def test_delete_label_removes_annotations_multiclass_classification(
+        self,
+        fxt_db_projects: list[ProjectDB],
+        fxt_label_service: LabelService,
+        fxt_dataset_service: DatasetService,
+        fxt_db_images: list[MediaDB],
+        db_session: Session,
+    ) -> None:
+        """
+        Test deleting a label cleans up annotations for a multi-class classification project.
+
+        Sets up two dataset items:
+        - item1: has one shape with only the deleted label -> annotation_data becomes None,
+          user_reviewed becomes False (multi-class classification behavior).
+        - item2: has one shape with both the deleted label and a kept label ->
+          annotation_data keeps the shape with the remaining label.
+
+        Verifies that:
+        - Multi-class classification items that lose all shapes get annotation_data=None
+          and user_reviewed=False.
+        - Items with remaining labels keep their annotation data.
+        - The label is removed from the labels join table.
+        - The label itself is deleted.
+        """
+        # Use a classification project
+        db_project = fxt_db_projects[1]  # classification project
+        db_project.task_type = TaskType.CLASSIFICATION.value
+        db_session.add(db_project)
+        db_session.flush()
+
+        # Create labels for this project
+        label1 = LabelDB(project_id=db_project.id, name="cat", color="#FF0000", hotkey="c")
+        label2 = LabelDB(project_id=db_project.id, name="dog", color="#00FF00", hotkey="d")
+        label3 = LabelDB(project_id=db_project.id, name="bird", color="#0000FF", hotkey="b")
+        db_session.add_all([label1, label2, label3])
+        db_session.flush()
+
+        # Store media directly in the DB (no file I/O needed)
+        for media in fxt_db_images:
+            media.project_id = db_project.id
+            db_session.add(media)
+        db_session.flush()
+
+        # Build the project model with exclusive_labels=True for multi-class
+        project = Project(
+            id=UUID(db_project.id),
+            name=db_project.name,
+            task=Task(task_type=TaskType.CLASSIFICATION, labels=[], exclusive_labels=True),
+        )
+
+        def _media(db_media: MediaDB) -> MagicMock:
+            m = MagicMock()
+            m.id = UUID(db_media.id)
+            m.width = db_media.width
+            m.height = db_media.height
+            return m
+
+        # item1: one full_image annotation with only the label to delete.
+        # DatasetService validates multiclass correctly (one label per annotation).
+        item1 = fxt_dataset_service.create_dataset_item(
+            project_id=UUID(db_project.id),
+            task=project.task,
+            media=_media(fxt_db_images[0]),
+            user_reviewed=True,
+            annotations=[
+                DatasetItemAnnotation(
+                    shape=FullImage(),
+                    labels=[LabelReference(id=UUID(label1.id))],
+                ),
+            ],
+        )
+
+        # item2: one full_image annotation with both label1 and label2.
+        # A multilabel task is used for creation because multiclass forbids >1 label per annotation.
+        # The join table is populated explicitly afterwards to match the actual annotation_data.
+        multilabel_task = Task(task_type=TaskType.CLASSIFICATION, labels=[], exclusive_labels=False)
+        item2 = fxt_dataset_service.create_dataset_item(
+            project_id=UUID(db_project.id),
+            task=multilabel_task,
+            media=_media(fxt_db_images[1]),
+            user_reviewed=True,
+            annotations=[
+                DatasetItemAnnotation(
+                    shape=FullImage(),
+                    labels=[LabelReference(id=UUID(label1.id)), LabelReference(id=UUID(label2.id))],
+                ),
+            ],
+        )
+
+        # Delete label1 using the multiclass project
+        fxt_label_service.update_labels(
+            project=project,
+            labels_to_add=[],
+            labels_to_remove=[LabelReference(id=UUID(label1.id))],
+            labels_to_edit=[],
+        )
+
+        db_session.expire_all()
+
+        # Verify label is deleted
+        assert db_session.query(LabelDB).filter(LabelDB.id == label1.id).one_or_none() is None
+
+        # item1: multi-class with no shapes left -> annotation_data=None, user_reviewed=False
+        refreshed_item1 = db_session.query(DatasetItemDB).filter(DatasetItemDB.id == str(item1.id)).one()
+        assert refreshed_item1.annotation_data is None
+        assert refreshed_item1.user_reviewed is False
+
+        # item2: should still have the shape with label2
+        refreshed_item2 = db_session.query(DatasetItemDB).filter(DatasetItemDB.id == str(item2.id)).one()
+        assert refreshed_item2.annotation_data is not None
+        assert len(refreshed_item2.annotation_data) == 1
+        assert len(refreshed_item2.annotation_data[0]["labels"]) == 1
+        assert refreshed_item2.annotation_data[0]["labels"][0]["id"] == label2.id
+        assert refreshed_item2.user_reviewed is True
+
+        # Verify label is removed from join table
+        remaining_join_entries = (
+            db_session.query(DatasetItemLabelDB).filter(DatasetItemLabelDB.label_id == label1.id).all()
+        )
+        assert len(remaining_join_entries) == 0

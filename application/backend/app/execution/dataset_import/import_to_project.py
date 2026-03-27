@@ -55,7 +55,8 @@ class ImportDatasetToProject(BaseDatasetImport[ImportDatasetToProjectJobParams])
 
     @step("Prepare dataset", 10)
     def prepare_dataset(self, staged_dataset_id: UUID, task: Task) -> Dataset:
-        return self._prepare_dataset(staged_dataset_id=staged_dataset_id, task=task)
+        dataset = self._import_dataset(staged_dataset_id=staged_dataset_id)
+        return self._convert_dataset(dataset=dataset, task=task)
 
     @step("Import items from dataset to project", 100)
     def create_items(self, dataset: Dataset, params: ImportDatasetToProjectJobParams) -> None:

@@ -9,6 +9,7 @@ import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-lo
 import { ReactComponent as Pytorch } from '../../../../assets/icons/pytorch-logo.svg';
 import type { Model } from '../../../../constants/shared-types';
 import { ModelVariantTable } from './model-variant-table.component';
+import { QuantizationRow } from './quantization-row.component';
 
 import classes from './model-variant-tabs.module.scss';
 
@@ -41,6 +42,7 @@ export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
             <TabPanels width={0} minWidth={'100%'} UNSAFE_className={classes.tabPanels}>
                 <Item key='openvino'>
                     <ModelVariantTable model={model} format='openvino' />
+                    <QuantizationRow modelId={model.id} />
                 </Item>
                 <Item key='pytorch'>
                     <ModelVariantTable model={model} format='pytorch' />

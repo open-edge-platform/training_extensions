@@ -7,13 +7,15 @@ from pathlib import Path
 from uuid import UUID
 
 from loguru import logger
+from model_api.adapters import create_core
 from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.models.model_activation import ModelActivationState
-from app.models.model_revision import ModelFormat, ModelPrecision
+from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
 from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
+from app.utils.ir_format import FP32OpenvinoAdapter
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
@@ -85,7 +87,7 @@ class ActiveModelService:
                     device="",
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
-            available_models = model_rev_repo.list_all()
+            available_models = model_rev_repo.list_all(training_status=TrainingStatus.SUCCESSFUL)
             model_variants_repo = ModelVariantRepository(db=db)
             model_variants = model_variants_repo.list_by_model_revision(str(active_model.id))
             active_variant_id = next(
@@ -158,11 +160,14 @@ class ActiveModelService:
                     variant_id=active_variant_id,
                     extension="bin",
                 )
-                mapi_model = Model.create_model(
-                    model=str(model_xml_path),
+                ie = create_core()
+                adapter = FP32OpenvinoAdapter(
+                    ie,
+                    str(model_xml_path),
                     device=device,
-                    nstreams=MODELAPI_NSTREAMS,
+                    max_num_requests=int(MODELAPI_NSTREAMS),
                 )
+                mapi_model = Model.create_model(adapter)
             except FileNotFoundError:
                 logger.exception("Failed to load model with ID '{}'", active_model_id)
                 return None

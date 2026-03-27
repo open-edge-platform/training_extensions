@@ -103,9 +103,9 @@ def create_mock_video(output_path: Path, width: int = 10, height: int = 10, fps:
 
 
 class TestBaseDatasetImport:
-    def test_prepare_dataset_no_directory(self, fxt_dummy_import: DummyDatasetImport) -> None:
+    def test_import_dataset_no_directory(self, fxt_dummy_import: DummyDatasetImport) -> None:
         with pytest.raises(ValueError, match="Staged dataset directory does not exist"):
-            fxt_dummy_import._prepare_dataset(staged_dataset_id=uuid4(), task=Task(task_type=TaskType.CLASSIFICATION))
+            fxt_dummy_import._import_dataset(staged_dataset_id=uuid4())
 
     @pytest.mark.parametrize(
         "sample_type, target_type, task",
@@ -147,12 +147,12 @@ class TestBaseDatasetImport:
             ),
             (
                 MulticlassClassificationImportExportSample,
-                DetectionImportExportSample,
-                Task(exclusive_labels=True, task_type=TaskType.DETECTION),
+                MultilabelClassificationImportExportSample,
+                Task(task_type=TaskType.CLASSIFICATION),
             ),
         ],
     )
-    def test_prepare_dataset_error(
+    def test_convert_dataset_error(
         self,
         sample_type: type[BaseImportExportSample],
         target_type: type[BaseImportExportSample],
@@ -163,19 +163,18 @@ class TestBaseDatasetImport:
         dataset_id = uuid4()
         dataset_dir = fxt_staged_datasets_dir / str(dataset_id) / "dataset"
         dataset_dir.mkdir(parents=True)
-        expected_dataset = Mock(spec=Dataset)
-        expected_dataset.dtype = sample_type
+        dataset = Mock(spec=Dataset)
+        dataset.dtype = sample_type
         converted_dataset = Mock(spec=Dataset)
-        expected_dataset.convert_to_schema.return_value = converted_dataset
+        dataset.convert_to_schema.return_value = converted_dataset
 
         with (
             pytest.raises(
                 ValueError,
                 match=f"Dataset type {sample_type.__name__} conversion to {target_type.__name__} is not supported.",
             ),
-            patch("app.execution.dataset_import.base_import.import_dataset", return_value=expected_dataset),
         ):
-            fxt_dummy_import._prepare_dataset(staged_dataset_id=dataset_id, task=task)
+            fxt_dummy_import._convert_dataset(dataset=dataset, task=task)
 
     @pytest.mark.parametrize(
         "sample_type, task",
@@ -186,7 +185,7 @@ class TestBaseDatasetImport:
             (DetectionImportExportSample, Task(task_type=TaskType.INSTANCE_SEGMENTATION)),
         ],
     )
-    def test_prepare_dataset_success(
+    def test_convert_dataset_success(
         self,
         sample_type: type[BaseImportExportSample],
         task: Task,
@@ -196,18 +195,15 @@ class TestBaseDatasetImport:
         dataset_id = uuid4()
         dataset_dir = fxt_staged_datasets_dir / str(dataset_id) / "dataset"
         dataset_dir.mkdir(parents=True)
-        expected_dataset = Mock(spec=Dataset)
-        expected_dataset.dtype = sample_type
+        dataset = Mock(spec=Dataset)
+        dataset.dtype = sample_type
         converted_dataset = Mock(spec=Dataset)
-        expected_dataset.convert_to_schema.return_value = converted_dataset
+        dataset.convert_to_schema.return_value = converted_dataset
 
-        with patch(
-            "app.execution.dataset_import.base_import.import_dataset", return_value=expected_dataset
-        ) as mock_import:
-            result = fxt_dummy_import._prepare_dataset(staged_dataset_id=dataset_id, task=task)
+        result = fxt_dummy_import._convert_dataset(dataset=dataset, task=task)
 
-            mock_import.assert_called_once_with(str(dataset_dir))
-            assert result == converted_dataset
+        dataset.convert_to_schema.assert_called_once()
+        assert result == converted_dataset
 
     def test_create_items_images(
         self,

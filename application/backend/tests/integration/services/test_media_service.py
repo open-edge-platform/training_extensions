@@ -568,6 +568,120 @@ class TestMediaServiceIntegration:
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
 
+    def test_create_image_16bit_png_thumbnail(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+    ) -> None:
+        """Test that a thumbnail is generated correctly for a 16-bit PNG image (mode I;16).
+
+        Specifically, the full dynamic range of the 16-bit source must be
+        preserved through normalization — a naive PIL convert("RGB") only
+        keeps the most-significant byte, producing washed-out thumbnails.
+        """
+        # Create a 16-bit grayscale image that uses the full 0-65535 range
+        rng = np.random.default_rng(seed=0)
+        data_16bit = rng.integers(0, 65535, (512, 512), dtype=np.uint16)
+        image = PILImage.fromarray(data_16bit, mode="I;16")
+
+        # Ensure the image is recognised as 16-bit by PIL
+        assert image.mode == "I;16"
+
+        project, _ = fxt_project_with_pipeline
+
+        created_media = fxt_media_service.create_image(
+            ImageMetadata(
+                project_id=project.id,
+                name="test_16bit",
+                image_format=ImageFormat.PNG,
+                data=image,
+            )
+        )
+
+        # The thumbnail must exist and be a valid JPEG readable by PIL
+        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
+        assert os.path.exists(thumbnail_file_path), "Thumbnail file was not created for 16-bit PNG"
+
+        with PILImage.open(thumbnail_file_path) as thumb:
+            assert thumb.format == "JPEG"
+            assert thumb.mode == "RGB"
+
+            # The normalized thumbnail must use a wide tonal range.
+            # A naive MSB-only conversion collapses most pixels to black (max≈255,
+            # but the vast majority of values cluster near 0), while correct
+            # normalization spreads values across the full 0-255 range.
+            arr = np.array(thumb)
+            assert arr.min() < 10, "Shadow end of range missing — normalization likely clipped low values"
+            assert arr.max() > 245, "Highlight end of range missing — normalization likely clipped high values"
+
+    @pytest.mark.parametrize("format", [ImageFormat.TIF, ImageFormat.TIFF])
+    def test_create_tiff_image_with_problematic_exif(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+        format: ImageFormat,
+    ) -> None:
+        """Test that TIFF images with EXIF data that cannot be re-serialized by
+        PIL's libtiff encoder are still saved successfully (without EXIF).
+
+        Regression test for RuntimeError: 'Error setting from dictionary' when
+        uploading certain TIFF files whose IFD contains tags incompatible with
+        the libtiff encoder round-trip.
+        """
+        image = PILImage.new("RGB", (896, 768))
+
+        # Inject a problematic EXIF tag that triggers the libtiff encoder error.
+        # Tag 0x8769 (ExifOffset / ExifIFD) with an invalid dict value causes
+        # PIL's libtiff encoder to raise RuntimeError when saving.
+        exif = image.getexif()
+        exif[ExifTags.Base.Software] = "Intel Geti"
+        exif.get_ifd(ExifTags.IFD.Exif)[ExifTags.Base.ExifVersion] = b"0232"
+        image.info["exif"] = exif.tobytes()
+
+        # Patch image.save to simulate the libtiff RuntimeError when exif= is
+        # passed, then succeed on the retry without exif.
+        original_save = PILImage.Image.save
+        exif_save_attempted = False
+        fallback_save_done = False
+
+        def patched_save(self_img, *args, **kwargs):
+            nonlocal exif_save_attempted, fallback_save_done
+            if "exif" in kwargs:
+                exif_save_attempted = True
+                raise RuntimeError("Error setting from dictionary")
+            # Track that the immediate retry (same path, no exif) succeeded
+            if exif_save_attempted and not fallback_save_done:
+                fallback_save_done = True
+            return original_save(self_img, *args, **kwargs)
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(PILImage.Image, "save", patched_save)
+
+            project, _ = fxt_project_with_pipeline
+            created_media = fxt_media_service.create_image(
+                ImageMetadata(
+                    project_id=project.id,
+                    name="test_tiff_exif",
+                    image_format=format,
+                    data=image,
+                )
+            )
+
+        assert exif_save_attempted, "Expected save with exif= to be attempted"
+        assert fallback_save_done, "Expected fallback save without exif to succeed"
+
+        media = db_session.get(MediaDB, str(created_media.id))
+        assert media is not None
+        assert media.width == 896
+        assert media.height == 768
+        assert media.format == format
+
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
+        assert os.path.exists(binary_file_path)
+
     @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("format", VideoFormat)
     def test_create_video(

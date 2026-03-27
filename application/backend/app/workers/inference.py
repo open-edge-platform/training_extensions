@@ -194,8 +194,10 @@ class InferenceWorker(BaseProcessWorker):
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
                     self._prediction_buffer.register_expected_timestamp(inference_start_time)
+                    rgb_frame = cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB)
+                    rgb_frame = rgb_frame.astype("float32") / 255.0
                     model.infer_async(
-                        cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB),  # models expect RGB input
+                        rgb_frame,
                         user_data={
                             "stream_data": item,
                             "model_id": self._loaded_model.model_revision_id,

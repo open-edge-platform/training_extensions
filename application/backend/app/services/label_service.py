@@ -9,8 +9,8 @@ from app.db.schema import LabelDB
 from app.models import Label
 from app.models.label import LabelReference, LabelUpdateInfo
 from app.models.project import Project
-from app.models.task import TaskType
-from app.repositories import LabelRepository
+from app.models.task import Task, TaskType
+from app.repositories import DatasetItemRepository, LabelRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.utils.color import random_color
 
@@ -131,7 +131,7 @@ class LabelService(BaseSessionManagedService):
                 new_hotkey=label_to_edit.new_hotkey,
             )
         for label_to_remove in labels_to_remove:
-            self._delete_label(project_id=project.id, label_id=label_to_remove.id)
+            self._delete_label(project_id=project.id, label_id=label_to_remove.id, task=project.task)
         for label_to_add in labels_to_add:
             self.create_label(
                 project_id=project.id,
@@ -163,7 +163,55 @@ class LabelService(BaseSessionManagedService):
         except UniqueConstraintIntegrityError:
             raise DuplicateLabelsError
 
-    def _delete_label(self, project_id: UUID, label_id: UUID) -> None:
+    def _delete_label(self, project_id: UUID, label_id: UUID, task: Task) -> None:
+        """Delete a label and clean up all annotations that reference it.
+
+        For each dataset item that uses this label:
+        - Remove the label from all annotation shapes.
+        - Remove shapes that have no labels left.
+        - If no shapes remain, set annotation_data=[].
+        - For multi-class classification (which doesn't support empty labels),
+          set annotation_data=None and user_reviewed=False.
+        """
+        dataset_item_repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
+        label_id_str = str(label_id)
+
+        # Find all dataset items that reference this label
+        affected_items = dataset_item_repo.find_items_by_label_id(label_id_str)
+
+        for item in affected_items:
+            if item.annotation_data is None:
+                continue
+
+            # Build a fresh list of annotations with the deleted label removed.
+            # Shapes that have no remaining labels are dropped entirely.
+            updated_annotations = []
+            for annotation in item.annotation_data:
+                filtered_labels = [lbl for lbl in annotation.get("labels", []) if lbl.get("id") != label_id_str]
+                if filtered_labels:
+                    updated_annotations.append({**annotation, "labels": filtered_labels})
+
+            if updated_annotations:
+                dataset_item_repo.set_annotation_data(
+                    obj_id=item.id,
+                    annotation_data=updated_annotations,
+                    user_reviewed=item.user_reviewed,
+                    prediction_model_id=item.prediction_model_id,
+                )
+            elif task.is_multiclass:
+                dataset_item_repo.delete_annotation_data(obj_id=item.id)
+            else:
+                dataset_item_repo.set_annotation_data(
+                    obj_id=item.id,
+                    annotation_data=[],
+                    user_reviewed=item.user_reviewed,
+                    prediction_model_id=item.prediction_model_id,
+                )
+
+        # Remove label references from the dataset_items_labels join table
+        dataset_item_repo.delete_label_from_items(label_id_str)
+
+        # Delete the label itself
         label_repo = LabelRepository(str(project_id), self.db_session)
-        if not label_repo.delete(str(label_id)):
-            raise ResourceNotFoundError(ResourceType.LABEL, str(label_id))
+        if not label_repo.delete(label_id_str):
+            raise ResourceNotFoundError(ResourceType.LABEL, label_id_str)

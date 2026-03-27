@@ -1,0 +1,105 @@
+name: Docker Build
+description: >
+  Build a Geti Docker image for a given device target.
+  Handles Buildx setup and the build itself.
+  The caller is responsible for checkout, registry login, metadata/tagging,
+  and any post-build steps (image signing, smoke tests).
+
+inputs:
+  device:
+    description: "Build target device (cpu, xpu, or cuda)"
+    required: true
+  push:
+    description: "Push the image to the registry (true/false)"
+    required: false
+    default: "false"
+  tags:
+    description: "Newline-separated image tags (from docker/metadata-action)"
+    required: false
+    default: ""
+  labels:
+    description: "Newline-separated image labels (from docker/metadata-action)"
+    required: false
+    default: ""
+  cache-write:
+    description: >
+      Write build cache to the registry (true/false). Set to false for
+      fork PRs where GITHUB_TOKEN cannot write to the org's packages.
+    required: false
+    default: "true"
+  use-cache:
+    description: >
+      Enable build cache (true/false). Should be disabled for RC and release
+      builds to ensure reproducibility and prevent cache poisoning attacks.
+    required: false
+    default: "true"
+
+outputs:
+  digest:
+    description: "Image digest from docker/build-push-action"
+    value: ${{ steps.build.outputs.digest }}
+  image-name:
+    description: "First tag of the built image (available only when load=true)"
+    value: ${{ steps.first-tag.outputs.name }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Docker
+      uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@8016837eba79c3b51bf2025379f48b6fc50f1236 # v4.0.0
+      with:
+        # Use the native docker driver when the image stays local (load).
+        # The default docker-container driver would serialise the entire
+        # image as an OCI tarball to load it back into the daemon, adding
+        # ~2 min of pure I/O.  The docker driver builds directly in the
+        # daemon so the image is available instantly.
+        # When pushing we need docker-container for registry cache support.
+        driver: ${{ inputs.push == 'true' && 'docker-container' || 'docker' }}
+
+    - name: Build Docker image
+      id: build
+      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      with:
+        context: .
+        file: application/docker/Dockerfile
+        target: geti-${{ inputs.device }}
+        # Explicit platform is only needed for docker-container driver;
+        # the docker driver always builds for the host architecture.
+        platforms: ${{ inputs.push == 'true' && 'linux/amd64' || '' }}
+        push: ${{ inputs.push }}
+        tags: ${{ inputs.tags }}
+        labels: ${{ inputs.labels }}
+        # When not pushing, load the image into the local Docker daemon so
+        # callers can run smoke tests (e.g. healthcheck) against it.
+        load: ${{ inputs.push != 'true' }}
+        build-args: |
+          http_proxy
+          https_proxy
+          no_proxy
+          HTTP_PROXY
+          HTTPS_PROXY
+          NO_PROXY
+        # Disable all caching (local and remote) when use-cache=false to
+        # ensure reproducible builds for RC/release without any cached layers.
+        no-cache: ${{ inputs.use-cache != 'true' }}
+        # The caller must log in to ghcr.io before invoking this action.
+        # Cache reads always work (public packages); writes require
+        # packages:write which fork PRs do not have.
+        # Cache is disabled for RC/release builds (use-cache=false)
+        # to prevent cache poisoning and ensure reproducible builds.
+        cache-from: ${{ inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/geti-{0}:buildcache', inputs.device) || '' }}
+        cache-to: ${{ inputs.cache-write == 'true' && inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/geti-{0}:buildcache,mode=max,compression=zstd,image-manifest=true,ignore-error=true', inputs.device) || '' }}
+
+    - name: Extract first image tag
+      id: first-tag
+      if: inputs.push != 'true'
+      shell: bash
+      env:
+        IMAGE_TAGS: ${{ inputs.tags }}
+      run: |
+        # Grab the first tag from the newline-separated list
+        FIRST_TAG=$(echo "${IMAGE_TAGS}" | head -n1)
+        echo "name=${FIRST_TAG}" >> "$GITHUB_OUTPUT"

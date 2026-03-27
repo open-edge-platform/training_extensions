@@ -30,7 +30,6 @@
 }
 
 .card {
-    --thumbnail-size: var(--spectrum-global-dimension-size-2000);
     --border-size: var(--spectrum-global-dimension-size-25);
 
     border: var(--border-size) solid var(--spectrum-global-color-gray-200);
@@ -41,18 +40,21 @@
         background-color,
         border 0.2s ease-in-out;
 
-    img {
-        width: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
-        object-fit: cover;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     &:hover {
         background-color: var(--spectrum-global-color-gray-100);
         border-color: var(--energy-blue);
     }
+}
+
+.thumbnail {
+    object-fit: cover;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.thumbnailError {
+    scale: 0.5;
 }
 
 .activeCard {

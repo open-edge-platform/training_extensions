@@ -7,7 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
+import numpy as np
 from loguru import logger
+from model_api.adapters import create_core
 from model_api.models import Model
 
 from app.db import get_db_session
@@ -16,6 +18,7 @@ from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.services import ResourceNotFoundError, ResourceType
 from app.services.data_collect.prediction_converter import convert_prediction
+from app.utils.ir_format import FP32OpenvinoAdapter
 
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
@@ -96,13 +99,19 @@ class InferenceServer:
                     )
                 model_xml_path, _ = paths
 
-                model = Model.create_model(
-                    model=str(model_xml_path),
+                ie = create_core()
+                adapter = FP32OpenvinoAdapter(
+                    ie,
+                    str(model_xml_path),
                     device=device,
-                    nstreams=MODELAPI_NSTREAMS,
+                    max_num_requests=int(MODELAPI_NSTREAMS),
                 )
+                model = Model.create_model(adapter)
                 self._loaded_model = _LoadedModel(
-                    id=model_id, model=model, device=device, load_timestamp=datetime.now()
+                    id=model_id,
+                    model=model,
+                    device=device,
+                    load_timestamp=datetime.now(),
                 )
                 return True
         finally:
@@ -151,7 +160,7 @@ class InferenceServer:
                 raise RuntimeError("No model loaded for inference")
             logger.debug("Running inference on batch of {} inputs", len(inputs))
 
-            input_data = [input.data for input in inputs]
+            input_data = [inp.data.astype(np.float32) / 255.0 for inp in inputs]
             inference_result = self._loaded_model.model.infer_batch(input_data)
         finally:
             self._lock.release()

@@ -87,6 +87,16 @@ class RandomAffine(BaseAugmentationParameter):
             "A random shear in the range [-max_shear_degree, max_shear_degree] will be applied."
         ),
     )
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Probability",
+        description=(
+            "Probability of applying the affine transformation. "
+            "A value of 0.5 means each image has a 50% chance to be transformed."
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_scaling_ratio_range(self) -> "RandomAffine":
@@ -133,6 +143,32 @@ class RandomIOUCrop(BaseAugmentationParameter):
             "Probability of applying IoU random crop. A value of 1.0 means the crop is always applied when enabled."
         ),
     )
+    min_scale: float = Field(
+        gt=0.0,
+        le=1.0,
+        default=0.3,
+        title="Minimum scale",
+        description=(
+            "Minimum fraction of the original image area to retain after cropping. "
+            "For example, 0.3 means the crop will be at least 30% of the original area."
+        ),
+    )
+    max_scale: float = Field(
+        gt=0.0,
+        le=1.0,
+        default=1.0,
+        title="Maximum scale",
+        description=(
+            "Maximum fraction of the original image area to retain after cropping. "
+            "A value of 1.0 means the crop can be as large as the entire image."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_scale_range(self) -> "RandomIOUCrop":
+        if self.min_scale >= self.max_scale:
+            raise ValueError("min_scale must be less than max_scale")
+        return self
 
 
 class GaussianBlur(BaseAugmentationParameter):
@@ -312,7 +348,15 @@ class Tiling(BaseAugmentationParameter):
 
 
 class Mosaic(BaseAugmentationParameter):
-    pass
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=1.0,
+        title="Probability",
+        description=(
+            "Probability of applying mosaic augmentation. A value of 1.0 means mosaic is always applied when enabled."
+        ),
+    )
 
 
 class Mixup(BaseAugmentationParameter):
@@ -321,6 +365,17 @@ class Mixup(BaseAugmentationParameter):
         le=1.0,
         title="Probability",
         description="Probability of applying mixup augmentation",
+    )
+    mix_ratio: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Mix ratio",
+        description=(
+            "Blending ratio between the two images. "
+            "A value of 0.5 means equal blending of both images. "
+            "Lower values give more weight to the original image."
+        ),
     )
 
 
@@ -346,6 +401,16 @@ class RandomErasing(BaseAugmentationParameter):
         description=(
             "Probability of applying random erasing. "
             "A value of 0.5 means each image has a 50% chance to have a region erased."
+        ),
+    )
+    value: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.0,
+        title="Fill value",
+        description=(
+            "Fill value for the erased region, normalized to [0, 1]. "
+            "A value of 0.0 fills with black. A value of 1.0 fills with white."
         ),
     )
 
@@ -413,6 +478,36 @@ class RandomZoomOut(BaseAugmentationParameter):
             "Typically 0 for black padding. Value should be between 0 and 255."
         ),
     )
+    side_range: tuple[float, float] = Field(
+        default=(1.0, 4.0),
+        title="Side range",
+        description=(
+            "Range (min, max) of the zoom-out scale factor for each side. "
+            "The image will be placed on a canvas scaled by a random factor from this range. "
+            "For example, (1.0, 4.0) means the canvas can be up to 4x the original image size. "
+            "The minimum value must be >= 1.0."
+        ),
+    )
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Probability",
+        description=(
+            "Probability of applying random zoom out. "
+            "A value of 0.5 means each image has a 50% chance to be zoomed out."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_side_range(self) -> "RandomZoomOut":
+        if len(self.side_range) != 2:
+            raise ValueError("side_range must be a tuple of exactly two float values")
+        if self.side_range[0] >= self.side_range[1]:
+            raise ValueError("The first value in side_range must be less than the second value")
+        if self.side_range[0] < 1.0:
+            raise ValueError("The minimum side_range value must be >= 1.0")
+        return self
 
 
 class AugmentationParameters(BaseModel):

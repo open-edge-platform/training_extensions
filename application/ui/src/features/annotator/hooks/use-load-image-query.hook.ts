@@ -7,6 +7,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { Media } from '../../../constants/shared-types';
 import { isVideoFrame } from '../../../shared/media-item-utils';
 import { getMediaBinaryUrl, getVideoFrameBinaryUrl } from '../../../shared/media-url.utils';
+import { getImageDataFromTiffUrl, isTiffFormat } from '../../../shared/media-utils';
 import { getImageData, loadImage } from '../tools/utils';
 
 export const loadImageQueryOptions = (projectId: string, media: Media) =>
@@ -18,6 +19,10 @@ export const loadImageQueryOptions = (projectId: string, media: Media) =>
             const url = isVideoFrame(media)
                 ? getVideoFrameBinaryUrl(projectId, media.id, media.frame_number)
                 : getMediaBinaryUrl(projectId, media.id);
+
+            if (isTiffFormat(media)) {
+                return getImageDataFromTiffUrl(url);
+            }
 
             const image = await loadImage(url);
 

@@ -79,7 +79,7 @@ overrides:
             ratio_range:
               - 1.0
               - 1.0
-            probability: 0.5
+            p: 0.5
             random_pop: false
             max_cached_images: 10
         - class_path: otx.data.augmentation.transforms.Resize
@@ -87,13 +87,6 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
       augmentations_gpu:
-        - class_path: kornia.augmentation.RandomAffine
-          init_args:
-            degrees: 10.0
-            translate: [0.1, 0.1]
-            scale: [0.1, 2.0]
-            shear: [-2.0, 2.0]
-            p: 1.0
         - class_path: kornia.augmentation.ColorJiggle
           init_args:
             brightness: 0.125
@@ -104,6 +97,13 @@ overrides:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
+        - class_path: kornia.augmentation.RandomAffine
+          init_args:
+            degrees: 10.0
+            translate: [0.1, 0.1]
+            scale: [0.1, 2.0]
+            shear: [-2.0, 2.0]
+            p: 1.0
         - class_path: kornia.augmentation.Normalize
           init_args:
             mean: [0.0, 0.0, 0.0]

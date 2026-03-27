@@ -100,7 +100,7 @@ overrides:
               - 1.0
             max_cached_images: 10
             random_pop: false
-            probability: 0.5
+            p: 0.5
       # ============ GPU Augmentations (after batching, in Lightning Callback) ============
       # Batch-level ops that run on GPU via Kornia
       augmentations_gpu:

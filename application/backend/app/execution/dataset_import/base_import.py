@@ -34,7 +34,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
     """
     Base implementation for dataset import logic, inheriting from Execution.
 
-    This class provides protected helper methods (_prepare_dataset, _create_items)
+    This class provides protected helper methods (_import_dataset, _convert_dataset, _create_items)
     that can be orchestrated by concrete subclasses using the @step decorator.
     It does not define the @step orchestration itself.
 
@@ -88,11 +88,13 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
         self._dataset_service = dataset_service
         self._db_session_factory = db_session_factory
 
-    def _prepare_dataset(self, staged_dataset_id: UUID, task: Task) -> Dataset:
+    def _import_dataset(self, staged_dataset_id: UUID) -> Dataset:
         staged_dataset_path = self._staged_datasets_dir / str(staged_dataset_id) / "dataset"
         if not staged_dataset_path.exists() or not staged_dataset_path.is_dir():
             raise ValueError(f"Staged dataset directory does not exist: {staged_dataset_path}")
-        dataset = import_dataset(str(staged_dataset_path))
+        return import_dataset(str(staged_dataset_path))
+
+    def _convert_dataset(self, dataset: Dataset, task: Task) -> Dataset:
         dataset_type = dataset.dtype
         target_type = self.__get_sample_by_task(task=task)
         if target_type != dataset_type:
@@ -142,7 +144,7 @@ class BaseDatasetImport(Execution[JobParamsT], ABC):
                     and item.label.size == 0
                 )
                 if not empty_label:
-                    annotations = converter.convert_sample(item)
+                    annotations = converter.convert_sample(item) or None
                     # non-native *ImportExportSample types are always treated as reviewed
                     user_reviewed = user_reviewed if user_reviewed is not None else True
                     # If there are no annotations (due to filtering), we consider the item as not reviewed.

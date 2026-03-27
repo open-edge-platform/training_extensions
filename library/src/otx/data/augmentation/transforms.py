@@ -233,7 +233,7 @@ class CachedMosaic(tvt_v2.Transform):
             Defaults to True.
         pad_val (float | tuple[float, float, float]): Padding value for mosaic canvas.
             Defaults to 114.0.
-        probability (float): Probability of applying mosaic. Defaults to 1.0.
+        p (float): Probability of applying mosaic. Defaults to 1.0.
         max_cached_images (int): Maximum number of cached images. Defaults to 40.
         random_pop (bool): If True, randomly remove cached images when full.
             If False, use FIFO. Defaults to True.
@@ -245,7 +245,7 @@ class CachedMosaic(tvt_v2.Transform):
         center_ratio_range: tuple[float, float] = (0.5, 1.5),
         bbox_clip_border: bool = True,
         pad_val: float | tuple[float, float, float] = 114.0,
-        probability: float = 1.0,
+        p: float = 1.0,
         max_cached_images: int = 40,
         random_pop: bool = True,
     ) -> None:
@@ -254,8 +254,8 @@ class CachedMosaic(tvt_v2.Transform):
         if not isinstance(img_scale, (tuple, list)):
             msg = "img_scale must be a tuple or list"
             raise TypeError(msg)
-        if not 0 <= probability <= 1.0:
-            msg = f"probability must be in [0, 1], got {probability}"
+        if not 0 <= p <= 1.0:
+            msg = f"probability must be in [0, 1], got {p}"
             raise ValueError(msg)
         if max_cached_images < 4:
             msg = f"max_cached_images must be >= 4, got {max_cached_images}"
@@ -265,7 +265,7 @@ class CachedMosaic(tvt_v2.Transform):
         self.center_ratio_range = center_ratio_range
         self.bbox_clip_border = bbox_clip_border
         self.pad_val = pad_val
-        self.prob = probability
+        self.prob = p
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
 
@@ -605,7 +605,7 @@ class CachedMixUp(tvt_v2.Transform):
         bbox_clip_border (bool): Whether to clip bboxes to image border. Defaults to True.
         max_cached_images (int): Maximum cache size. Defaults to 20.
         random_pop (bool): Random vs FIFO cache eviction. Defaults to True.
-        probability (float): Probability of applying mixup. Defaults to 1.0.
+        p (float): Probability of applying mixup. Defaults to 1.0.
         mix_ratio (float): Blending ratio (0.5 = equal mix). Defaults to 0.5.
     """
 
@@ -619,7 +619,7 @@ class CachedMixUp(tvt_v2.Transform):
         bbox_clip_border: bool = True,
         max_cached_images: int = 20,
         random_pop: bool = True,
-        probability: float = 1.0,
+        p: float = 1.0,
         mix_ratio: float = 0.5,
     ) -> None:
         super().__init__()
@@ -630,8 +630,8 @@ class CachedMixUp(tvt_v2.Transform):
         if max_cached_images < 2:
             msg = f"Cache size must be >= 2, got {max_cached_images}"
             raise ValueError(msg)
-        if not 0 <= probability <= 1.0:
-            msg = f"Probability must be in [0,1], got {probability}"
+        if not 0 <= p <= 1.0:
+            msg = f"Probability must be in [0,1], got {p}"
             raise ValueError(msg)
 
         self.img_scale = tuple(img_scale)  # (H, W)
@@ -642,7 +642,7 @@ class CachedMixUp(tvt_v2.Transform):
         self.bbox_clip_border = bbox_clip_border
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
-        self.prob = probability
+        self.prob = p
         self.mix_ratio = mix_ratio
 
         self.results_cache: list[OTXSample] = []
@@ -942,7 +942,6 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         sampler_options (list[float] | None, optional): the same as RandomIoUCrop. Defaults to None.
         trials (int, optional): the same as RandomIoUCrop. Defaults to 40.
         p (float, optional): probability of applying the crop. Defaults to 1.0.
-        probability (float | None, optional): legacy alias for `p`. If set, it overrides `p`.
     """
 
     def __init__(
@@ -954,7 +953,6 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         sampler_options: list[float] | None = None,
         trials: int = 40,
         p: float = 1.0,
-        probability: float | None = None,
     ):
         super().__init__(
             min_scale,
@@ -964,8 +962,6 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
             sampler_options,
             trials,
         )
-        if probability is not None:
-            p = probability
         self.p = p
 
     def __call__(self, *inputs: Any) -> Any:  # noqa: ANN401
