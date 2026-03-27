@@ -23,9 +23,12 @@ runs:
     - name: Set run flag
       id: run_workflow
       shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        TEST_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.test_any_changed }}
       run: |
-        if [[ "${{ github.event_name }}" =~ ^(push|workflow_dispatch|workflow_call)$ ]] || \
-           [ "${{ steps.changed-files-yaml.outputs.test_any_changed }}" = "true" ]; then
+        if [[ "$EVENT_NAME" =~ ^(push|workflow_dispatch|workflow_call)$ ]] || \
+           [ "$TEST_ANY_CHANGED" = "true" ]; then
           echo "run=true" >> "$GITHUB_OUTPUT"
         else
           echo "run=false" >> "$GITHUB_OUTPUT"
