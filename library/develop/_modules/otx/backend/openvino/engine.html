@@ -260,6 +260,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
@@ -282,6 +283,8 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ANNOTATIONS</span><span class="p">,</span> <span class="n">DATA</span><span class="p">,</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">MODEL</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="OVEngine">
@@ -603,6 +606,7 @@
         <span class="n">checkpoint</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">datamodule</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_data_subset_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_drop</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply Post-Training Quantization (PTQ) to optimize the model.</span>
 
@@ -612,6 +616,8 @@
 <span class="sd">            checkpoint (PathLike | None, optional): Checkpoint to optimize. Defaults to None.</span>
 <span class="sd">            datamodule (OTXDataModule | None, optional): The data module to use for optimization.</span>
 <span class="sd">            max_data_subset_size (int | None, optional): Maximum size of the train subset used for optimization.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            max_drop (float | None, optional): Maximum accuracy drop allowed for accuracy-aware quantization.</span>
 <span class="sd">                Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
@@ -624,9 +630,12 @@
             <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">ptq_config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">ptq_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">max_data_subset_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ptq_config</span><span class="p">[</span><span class="s2">&quot;subset_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_data_subset_size</span>
+        <span class="k">if</span> <span class="n">max_drop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ptq_config</span><span class="p">[</span><span class="s2">&quot;max_drop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_drop</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PTQ configuration: </span><span class="si">{</span><span class="n">ptq_config</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">),</span>

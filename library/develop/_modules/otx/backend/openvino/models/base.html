@@ -263,14 +263,15 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">nncf</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">openvino</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenvinoAdapter</span><span class="p">,</span> <span class="n">create_core</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageModel</span><span class="p">,</span> <span class="n">Model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.tilers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tiler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
 
@@ -285,10 +286,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_num_async_infer_requests</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models.result</span><span class="w"> </span><span class="kn">import</span> <span class="n">Result</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span><span class="p">,</span> <span class="n">MetricInput</span>
@@ -297,8 +299,71 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_FP32OpenvinoAdapter</span><span class="p">(</span><span class="n">OpenvinoAdapter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenvinoAdapter that forces float32 input tensors.</span>
+
+<span class="sd">    Sets ``dtype=float`` so ModelAPI builds an f32 input tensor matching</span>
+<span class="sd">    the 0-1 normalisation scale used by new OTX exports.  Raises</span>
+<span class="sd">    ``ValueError`` if the IR still stores mean/scale in the 0-255 range.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Values above this threshold indicate uint8 (0-255) scale rather than 0-1 scale.</span>
+    <span class="n">_UINT8_SCALE_THRESHOLD</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">embed_preprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">)</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">)</span>
+        <span class="n">bad_mean</span> <span class="o">=</span> <span class="n">mean</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_UINT8_SCALE_THRESHOLD</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mean</span><span class="p">)</span>
+        <span class="n">bad_scale</span> <span class="o">=</span> <span class="n">scale</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_UINT8_SCALE_THRESHOLD</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bad_mean</span> <span class="ow">or</span> <span class="n">bad_scale</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;IR mean_values </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2"> / scale_values </span><span class="si">{</span><span class="n">scale</span><span class="si">}</span><span class="s2"> appear to be in &quot;</span>
+                <span class="s2">&quot;uint8 (0-255) scale, but _FP32OpenvinoAdapter expects float32 &quot;</span>
+                <span class="s2">&quot;[0, 1] inputs with values in 0-1 scale &quot;</span>
+                <span class="s2">&quot;(e.g. mean=0.485 0.456 0.406, std=0.229 0.224 0.225). &quot;</span>
+                <span class="s2">&quot;Re-export the model with the current OTX version.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span>
+        <span class="n">_patch_pad_constant_type</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">embed_preprocessing</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_patch_pad_constant_type</span><span class="p">(</span><span class="n">embed_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Call ``embed_fn`` while monkey-patching ``opset.pad`` to fix pad-value dtype.</span>
+
+<span class="sd">    ModelAPI hardcodes pad constants as ``uint8``.  With f32 input this causes</span>
+<span class="sd">    a type-mismatch error, so we temporarily wrap ``opset.pad`` to insert a</span>
+<span class="sd">    ``Convert`` when the element types differ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">model_api.adapters.utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_mapi_utils</span>
+
+    <span class="n">_opset</span> <span class="o">=</span> <span class="n">_mapi_utils</span><span class="o">.</span><span class="n">opset</span>
+    <span class="n">_orig_pad</span> <span class="o">=</span> <span class="n">_opset</span><span class="o">.</span><span class="n">pad</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pad_with_type_cast</span><span class="p">(</span>
+        <span class="n">arg</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
+        <span class="n">pads_begin</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
+        <span class="n">pads_end</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
+        <span class="n">pad_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">arg_pad_value</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Node</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Node</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">arg_pad_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_et</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">get_element_type</span><span class="p">()</span>
+            <span class="n">pad_et</span> <span class="o">=</span> <span class="n">arg_pad_value</span><span class="o">.</span><span class="n">get_element_type</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">data_et</span> <span class="o">!=</span> <span class="n">pad_et</span><span class="p">:</span>
+                <span class="n">arg_pad_value</span> <span class="o">=</span> <span class="n">_opset</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">arg_pad_value</span><span class="p">,</span> <span class="n">data_et</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_orig_pad</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">pads_begin</span><span class="p">,</span> <span class="n">pads_end</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">,</span> <span class="n">arg_pad_value</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="n">_opset</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">_pad_with_type_cast</span>  <span class="c1"># pyrefly: ignore[bad-assignment]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">embed_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_opset</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">_orig_pad</span>
+
+
 <div class="viewcode-block" id="OVModel">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the OpenVINO model.</span>
 
@@ -386,7 +451,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_throughput_mode</span><span class="p">:</span>
             <span class="n">plugin_config</span><span class="p">[</span><span class="s2">&quot;PERFORMANCE_HINT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;THROUGHPUT&quot;</span>
 
-        <span class="n">model_adapter</span> <span class="o">=</span> <span class="n">OpenvinoAdapter</span><span class="p">(</span>
+        <span class="n">model_adapter</span> <span class="o">=</span> <span class="n">_FP32OpenvinoAdapter</span><span class="p">(</span>
             <span class="n">ie</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="n">ov_device</span><span class="p">,</span>
@@ -431,7 +496,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OVModel.forward">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.forward">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span> <span class="n">async_inference</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredictionBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform forward pass of the model.</span>
 
@@ -450,7 +515,7 @@
 
 
 <div class="viewcode-block" id="OVModel.optimize">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.optimize">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.optimize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
@@ -469,8 +534,6 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Path: Path to the optimized model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">nncf</span>
-
         <span class="n">output_model_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">optimized_model_name</span> <span class="o">+</span> <span class="s2">&quot;.xml&quot;</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">check_if_quantized</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -500,21 +563,118 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ptq_config</span> <span class="o">=</span> <span class="n">ptq_config_from_ir</span>
 
-        <span class="n">quantization_dataset</span> <span class="o">=</span> <span class="n">nncf</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_fn</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="n">quantization_dataset</span> <span class="o">=</span> <span class="n">nncf</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_fn</span><span class="p">)</span>
 
-        <span class="n">compressed_model</span> <span class="o">=</span> <span class="n">nncf</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
-            <span class="n">ov_model</span><span class="p">,</span>
-            <span class="n">quantization_dataset</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">ptq_config</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ptq_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_drop&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">validation_dataset</span> <span class="o">=</span> <span class="n">nncf</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data_module</span><span class="o">.</span><span class="n">val_dataloader</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_fn</span><span class="p">)</span>
+            <span class="n">validation_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_validation_fn</span><span class="p">(</span><span class="n">data_module</span><span class="p">)</span>
+            <span class="n">compressed_model</span> <span class="o">=</span> <span class="n">nncf</span><span class="o">.</span><span class="n">quantize_with_accuracy_control</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">ov_model</span><span class="p">,</span>
+                <span class="n">calibration_dataset</span><span class="o">=</span><span class="n">quantization_dataset</span><span class="p">,</span>
+                <span class="n">validation_dataset</span><span class="o">=</span><span class="n">validation_dataset</span><span class="p">,</span>
+                <span class="n">validation_fn</span><span class="o">=</span><span class="n">validation_fn</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">ptq_config</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">compressed_model</span> <span class="o">=</span> <span class="n">nncf</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">ov_model</span><span class="p">,</span>
+                <span class="n">calibration_dataset</span><span class="o">=</span><span class="n">quantization_dataset</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">ptq_config</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">openvino</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">compressed_model</span><span class="p">,</span> <span class="n">output_model_path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">output_model_path</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_validation_fn</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data_module</span><span class="p">:</span> <span class="n">OTXDataModule</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">openvino</span><span class="o">.</span><span class="n">CompiledModel</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a validation function for accuracy-aware quantization.</span>
+
+<span class="sd">        The returned function computes accuracy on the validation set using the</span>
+<span class="sd">        compiled model provided by NNCF. It is compatible with</span>
+<span class="sd">        ``nncf.quantize_with_accuracy_control``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_module (OTXDataModule): Data module providing the validation dataloader.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Callable: A function ``(compiled_model, validation_dataset) -&gt; (float, None)``</span>
+<span class="sd">            where the float is the primary accuracy metric value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_infer_compiled_model</span><span class="p">(</span>
+            <span class="n">compiled_model</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">CompiledModel</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredictionBatch</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Run inference using the NNCF-provided compiled model.</span>
+
+<span class="sd">            This replaces ``self.forward`` so that accuracy is measured on the</span>
+<span class="sd">            quantized candidate, not the original FP model.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                compiled_model: Compiled OpenVINO model supplied by NNCF.</span>
+<span class="sd">                inputs: Input data batch.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                OTXPredictionBatch with predictions from the compiled model.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">numpy_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)[</span><span class="s2">&quot;inputs&quot;</span><span class="p">]</span>
+            <span class="n">infer_request</span> <span class="o">=</span> <span class="n">compiled_model</span><span class="o">.</span><span class="n">create_infer_request</span><span class="p">()</span>
+            <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Result</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">numpy_inputs</span><span class="p">:</span>
+                <span class="n">model_ref</span><span class="p">:</span> <span class="n">ImageModel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">Tiler</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>  <span class="c1"># type: ignore[assignment]</span>
+                <span class="n">resized</span> <span class="o">=</span> <span class="n">model_ref</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">model_ref</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">model_ref</span><span class="o">.</span><span class="n">h</span><span class="p">))</span>
+                <span class="n">resized</span> <span class="o">=</span> <span class="n">model_ref</span><span class="o">.</span><span class="n">input_transform</span><span class="p">(</span><span class="n">resized</span><span class="p">)</span>
+                <span class="n">input_tensor</span> <span class="o">=</span> <span class="n">model_ref</span><span class="o">.</span><span class="n">_change_layout</span><span class="p">(</span><span class="n">resized</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
+                <span class="n">infer_request</span><span class="o">.</span><span class="n">infer</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="n">input_tensor</span><span class="p">})</span>
+                <span class="n">raw_result</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">get_any_name</span><span class="p">():</span> <span class="n">infer_request</span><span class="o">.</span><span class="n">get_tensor</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">compiled_model</span><span class="o">.</span><span class="n">outputs</span>
+                <span class="p">}</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">model_ref</span><span class="o">.</span><span class="n">postprocess</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;original_shape&quot;</span><span class="p">:</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">})</span>
+                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">validation_fn</span><span class="p">(</span>
+            <span class="n">compiled_model</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">CompiledModel</span><span class="p">,</span>
+            <span class="n">validation_dataset</span><span class="p">:</span> <span class="n">nncf</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>  <span class="c1"># noqa: ARG001 required by NNCF signature</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Evaluate the compiled OpenVINO model on the validation dataset.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                compiled_model: Compiled OpenVINO model provided by NNCF during</span>
+<span class="sd">                    accuracy-aware quantization.</span>
+<span class="sd">                validation_dataset: Validation NNCF dataset (unused, we iterate</span>
+<span class="sd">                    via the dataloader for proper batching and transforms).</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                Tuple of (metric_value, None).</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_callable</span><span class="p">(</span><span class="n">data_module</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
+
+            <span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">data_module</span><span class="o">.</span><span class="n">val_dataloader</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">data_batch</span> <span class="ow">in</span> <span class="n">val_dataloader</span><span class="p">:</span>
+                <span class="n">preds</span> <span class="o">=</span> <span class="n">_infer_compiled_model</span><span class="p">(</span><span class="n">compiled_model</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">)</span>
+                <span class="n">metric_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_metric_inputs</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">mi</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">:</span>
+                        <span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">mi</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_inputs</span><span class="p">)</span>
+
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+            <span class="c1"># Take the first scalar metric value as the accuracy indicator</span>
+            <span class="n">metric_value</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">metric_value</span><span class="p">),</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">validation_fn</span>
+
 <div class="viewcode-block" id="OVModel.transform_fn">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.transform_fn">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.transform_fn">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform data for PTQ.</span>
 
@@ -526,7 +686,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">np_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">data_batch</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">np_data</span><span class="p">[</span><span class="s2">&quot;inputs&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">Tiler</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">ImageModel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">Tiler</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>  <span class="c1"># type: ignore[assignment]</span>
         <span class="n">resized_image</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">))</span>
         <span class="n">resized_image</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_transform</span><span class="p">(</span><span class="n">resized_image</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">_change_layout</span><span class="p">(</span><span class="n">resized_image</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span></div>
@@ -569,7 +729,7 @@
         <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">instantiate_classes</span><span class="p">(</span><span class="n">initial_ptq_config</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
 <div class="viewcode-block" id="OVModel.prepare_metric_inputs">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.prepare_metric_inputs">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span>
@@ -588,12 +748,12 @@
 
 
 <div class="viewcode-block" id="OVModel.compute_metrics">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.compute_metrics">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.compute_metrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span> <span class="o">|</span> <span class="n">MetricCollection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute metrics using the provided metric object.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            metric (Metric): Metric object.</span>
+<span class="sd">            metric (Metric | MetricCollection): Metric object.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict: Computed metrics.</span>
@@ -601,11 +761,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_metrics</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span><span class="p">,</span> <span class="o">**</span><span class="n">compute_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span> <span class="o">|</span> <span class="n">MetricCollection</span><span class="p">,</span> <span class="o">**</span><span class="n">compute_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute metrics with additional arguments.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            metric (Metric): Metric object.</span>
+<span class="sd">            metric (Metric | MetricCollection): Metric object.</span>
 <span class="sd">            **compute_kwargs: Additional arguments for metric computation.</span>
 
 <span class="sd">        Returns:</span>
@@ -685,7 +845,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OVModel.get_dummy_input">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.get_dummy_input">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.get_dummy_input">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXSampleBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a dummy input for the model.</span>
 
@@ -702,7 +862,7 @@
 
 
 <div class="viewcode-block" id="OVModel.__call__">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.__call__">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.__call__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Call the model for inference.</span>
 

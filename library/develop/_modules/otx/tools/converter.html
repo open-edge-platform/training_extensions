@@ -298,17 +298,22 @@
     <span class="c1"># MULTI_CLASS_CLS</span>
     <span class="s2">&quot;image-classification-deit-tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;deit_tiny.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;image-classification-dinov2&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;dino_v2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;image-classification-efficientnet-b0&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_b0.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;image-classification-efficientnet-v2-s&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_v2.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;image-classification-mobilenet-v3-large&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -317,14 +322,14 @@
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;image-classification-efficientnet-b3&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_efficientnet_b3.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_b3.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># DETECTION</span>
     <span class="s2">&quot;object-detection-atss-mobilenet-v2&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;atss_mobilenetv2.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;object-detection-ssd-mobilenet-v2&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -359,17 +364,17 @@
     <span class="p">},</span>
     <span class="s2">&quot;object-detection-d-fine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;dfine_x.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;object-detection-deim-d-fine-m&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_m.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;object-detection-deim-d-fine-l&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_l.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;object-detection-deim-d-fine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -377,15 +382,45 @@
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
+    <span class="s2">&quot;object-detection-rfdetr-s&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_small.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;object-detection-rfdetr-m&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_medium.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;object-detection-rfdetr-l&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_large.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;object-detection-dinov3-detr-s&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deimv2_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;object-detection-dinov3-detr-m&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deimv2_m.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;object-detection-dinov3-detr-l&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deimv2_l.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
     <span class="c1"># INSTANCE_SEGMENTATION</span>
     <span class="s2">&quot;instance-segmentation-mask-rcnn-swin-t&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_swint.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;instance-segmentation-mask-rcnn-efficientnet-b2&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;instance-segmentation-rtmdet-tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -394,8 +429,28 @@
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;instance-segmentation-mask-rcnn-resnet50&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50_tv.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;instance-segmentation-rfdetr-s&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_seg_small.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;instance-segmentation-rfdetr-m&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_seg_medium.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;instance-segmentation-rfdetr-l&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_seg_large.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;instance-segmentation-rfdetr-xl&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;rfdetr_seg_xlarge.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>
@@ -452,6 +507,8 @@
         <span class="s2">&quot;gaussian_noise&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;kornia.augmentation.RandomGaussianNoise&quot;</span><span class="p">],</span>
             <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="s2">&quot;gpu&quot;</span><span class="p">,</span>
+            <span class="c1"># kornia.augmentation.RandomGaussianNoise uses `std`; manifests use `sigma`</span>
+            <span class="s2">&quot;param_rename&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="s2">&quot;std&quot;</span><span class="p">},</span>
         <span class="p">},</span>
         <span class="s2">&quot;color_jitter&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;kornia.augmentation.ColorJiggle&quot;</span><span class="p">],</span>
@@ -459,7 +516,7 @@
         <span class="p">},</span>
         <span class="s2">&quot;iou_random_crop&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;torchvision.transforms.v2.RandomIoUCrop&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;otx.data.augmentation.transforms.RandomIoUCrop&quot;</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
         <span class="p">},</span>
@@ -475,12 +532,23 @@
             <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.augmentation.transforms.CachedMosaic&quot;</span><span class="p">],</span>
             <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
         <span class="p">},</span>
+        <span class="s2">&quot;random_erasing&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;kornia.augmentation.RandomErasing&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="s2">&quot;gpu&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;random_grayscale&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;kornia.augmentation.RandomGrayscale&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="s2">&quot;gpu&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;random_sharpness&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;class_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;kornia.augmentation.RandomSharpness&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="s2">&quot;gpu&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
     <span class="p">}</span>
 
     <span class="c1"># Geti param name -&gt; kornia/torchvision param name</span>
     <span class="n">PARAM_RENAME</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;probability&quot;</span><span class="p">:</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span>
         <span class="s2">&quot;max_rotate_degree&quot;</span><span class="p">:</span> <span class="s2">&quot;degrees&quot;</span><span class="p">,</span>
         <span class="s2">&quot;scaling_ratio_range&quot;</span><span class="p">:</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span>
         <span class="s2">&quot;crop_ratio_range&quot;</span><span class="p">:</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span>
@@ -535,7 +603,7 @@
             <span class="n">existing_idx</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_find_augmentation</span><span class="p">(</span><span class="n">aug_list</span><span class="p">,</span> <span class="n">registry_entry</span><span class="p">[</span><span class="s2">&quot;class_paths&quot;</span><span class="p">])</span>
 
             <span class="k">if</span> <span class="n">enable</span><span class="p">:</span>
-                <span class="n">init_args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_remap_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">init_args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_remap_params</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">registry_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;param_rename&quot;</span><span class="p">))</span>
 
                 <span class="k">if</span> <span class="n">existing_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># Update existing augmentation parameters</span>
@@ -563,18 +631,26 @@
 
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_remap_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remap_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">per_aug_rename</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Rename Geti parameter names to kornia/torchvision names and adjust values.</span>
 
 <span class="sd">        1. Rename keys via PARAM_RENAME (probability-&gt;p, max_translate_ratio-&gt;translate, etc.)</span>
+<span class="sd">           plus any per-augmentation overrides supplied via per_aug_rename.</span>
 <span class="sd">        2. Adjust values where kornia expects a different format than a single scalar.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params: Raw Geti parameter dict for the augmentation.</span>
+<span class="sd">            per_aug_rename: Optional extra rename map applied after PARAM_RENAME.  Use this</span>
+<span class="sd">                when a kornia class uses a different argument name than the global default</span>
+<span class="sd">                (e.g. RandomGaussianNoise uses ``std`` while the manifest stores ``sigma``).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Step 1: rename keys</span>
+        <span class="c1"># Step 1: rename keys (global renames + per-augmentation overrides)</span>
+        <span class="n">rename_map</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="bp">cls</span><span class="o">.</span><span class="n">PARAM_RENAME</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">per_aug_rename</span> <span class="ow">or</span> <span class="p">{})}</span>
         <span class="n">init_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">init_args</span><span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">PARAM_RENAME</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">init_args</span><span class="p">[</span><span class="n">rename_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
 
         <span class="c1"># Step 2: adjust values to match kornia expected formats</span>
         <span class="k">if</span> <span class="s2">&quot;translate&quot;</span> <span class="ow">in</span> <span class="n">init_args</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">init_args</span><span class="p">[</span><span class="s2">&quot;translate&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>

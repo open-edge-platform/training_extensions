@@ -272,13 +272,13 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models.result</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectedKeypoints</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">PathLike</span>
 
 
 <div class="viewcode-block" id="OVKeypointDetectionModel">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVKeypointDetectionModel">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVKeypointDetectionModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVKeypointDetectionModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Keypoint detection model compatible for OpenVINO IR inference.</span>
 
@@ -353,22 +353,22 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OVKeypointDetectionModel.compute_metrics">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVKeypointDetectionModel.compute_metrics">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVKeypointDetectionModel.compute_metrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span> <span class="o">|</span> <span class="n">MetricCollection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute evaluation metrics for the keypoint detection model.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            metric (Metric): Metric object used for evaluation.</span>
+<span class="sd">            metric (Metric | MetricCollection): Metric object used for evaluation.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict: A dictionary containing computed metric values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">metric</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr]</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_compute_metrics</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OVKeypointDetectionModel.prepare_metric_inputs">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVKeypointDetectionModel.prepare_metric_inputs">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVKeypointDetectionModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span>
