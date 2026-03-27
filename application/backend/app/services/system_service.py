@@ -105,7 +105,6 @@ class SystemService:
     def validate_device(self, device_str: str) -> bool:
         """
         Validate if a device string is available on the system.
-        'auto' defaults to CPU.
 
         Args:
             device_str: Device string in format '<target>[-<index>]'
@@ -135,7 +134,6 @@ class SystemService:
     def get_device_info(self, device_str: str) -> DeviceInfo:
         """
         Get DeviceInfo for a given device string.
-        'auto' defaults to CPU.
 
         Args:
             device_str: Device string in format '<target>[-<index>]'
@@ -148,8 +146,10 @@ class SystemService:
             raise ValueError(f"Device '{device_str}' is not available on the system.")
 
         device_type, device_index = self._parse_device(device_str)
-        if device_type in [DeviceType.AUTO, DeviceType.CPU]:
+        if device_type == DeviceType.CPU:
             return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+        if device_type == DeviceType.AUTO:
+            return DeviceInfo(type=DeviceType.AUTO, name="AUTO", memory=None, index=None)
         return next(
             device for device in self.get_devices() if device.type == device_type and device.index == device_index
         )
@@ -157,7 +157,6 @@ class SystemService:
     def get_inference_device_info(self, device_str: str) -> DeviceInfo:
         """
         Get DeviceInfo for a given device string, ensuring it's valid for inference.
-        'auto' defaults to CPU.
 
         Args:
             device_str: Device string in format '<target>[-<index>]'
@@ -174,7 +173,6 @@ class SystemService:
     def get_training_device_info(self, device_str: str) -> DeviceInfo:
         """
         Get DeviceInfo for a given device string, ensuring it's valid for training.
-        'auto' defaults to CPU.
 
         Args:
             device_str: Device string in format '<target>[-<index>]'
