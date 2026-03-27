@@ -1538,7 +1538,7 @@ class TestMediaEndpoints:
         fxt_media_prediction_service.predict_media.assert_called_once_with(
             project=fxt_get_project,
             request=request,
-            device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+            device=DeviceInfo(type=DeviceType.AUTO, name="AUTO", memory=None, index=None),
         )
 
     def test_media_predict_video_range_error(
@@ -1568,7 +1568,7 @@ class TestMediaEndpoints:
         fxt_media_prediction_service.predict_media.assert_called_once_with(
             project=fxt_get_project,
             request=request,
-            device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+            device=DeviceInfo(type=DeviceType.AUTO, name="AUTO", memory=None, index=None),
         )
 
     def test_media_predict_limit_exceeded(

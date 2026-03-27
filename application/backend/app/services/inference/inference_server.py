@@ -99,7 +99,7 @@ class InferenceServer:
 
                 model = Model.create_model(
                     model=str(model_xml_path),
-                    device=device.type.name,
+                    device=device.as_openvino,
                     nstreams=MODELAPI_NSTREAMS,
                 )
                 self._loaded_model = _LoadedModel(
