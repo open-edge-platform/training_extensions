@@ -5,9 +5,7 @@ import { ChangeEvent, useRef } from 'react';
 
 import { Button } from '@geti/ui';
 
-const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
-const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'jfif', 'tif', 'tiff', 'webp', 'bmp'];
-const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
+import { VALID_EXT } from '../../utils';
 
 export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 

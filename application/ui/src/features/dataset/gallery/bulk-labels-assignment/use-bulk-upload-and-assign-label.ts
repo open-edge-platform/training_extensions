@@ -7,6 +7,7 @@ import { useProject } from 'hooks/api/project.hook';
 
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
 import { useMediaUpload } from '../../api/use-media-upload';
+import { isVideoFile } from '../utils';
 
 export const useBulkUploadAndAssignLabel = () => {
     const { data: project } = useProject();
@@ -18,7 +19,11 @@ export const useBulkUploadAndAssignLabel = () => {
     const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
 
     const handleFileUpload = async (files: File[]) => {
-        if (isClassification) {
+        if (files.length === 0) {
+            return;
+        }
+
+        if (isClassification && !files.every(isVideoFile)) {
             setFilesForLabelAssignment(files);
         } else {
             await uploadMedia(files);
