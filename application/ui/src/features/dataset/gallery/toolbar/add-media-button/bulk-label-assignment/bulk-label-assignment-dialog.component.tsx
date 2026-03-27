@@ -32,7 +32,7 @@ const BulkLabelAssignmentDialogContent = ({
 
     return (
         <Dialog minHeight={'size-6000'}>
-            <Heading>Assign the label{isMultiLabelClassification ? 's' : ''} to the images</Heading>
+            <Heading>Label assignment</Heading>
             <Divider />
             <Content>
                 <LabelsList
@@ -50,7 +50,7 @@ const BulkLabelAssignmentDialogContent = ({
                 <Button variant={'secondary'} onPress={onSkip}>
                     Skip
                 </Button>
-                <Button variant={'primary'} onPress={handleAccept}>
+                <Button variant={'accent'} onPress={handleAccept}>
                     Accept
                 </Button>
             </ButtonGroup>

@@ -61,7 +61,7 @@ export const LabelsList = ({
             />
 
             {hasNoSearchResults ? (
-                <Text>No results found. Try searching with a different phrase.</Text>
+                <Text>No results found. Try searching with different words.</Text>
             ) : (
                 <ListView
                     items={filteredLabels}

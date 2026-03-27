@@ -94,7 +94,7 @@ describe('AddMediaButton', () => {
         const input = screen.getByLabelText(/Upload media files/);
         fireEvent.change(input, { target: { files: [mockFile] } });
 
-        expect(await screen.findByRole('heading', { name: 'Assign the label to the images' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Label assignment' })).toBeInTheDocument();
 
         expect(mockOnFilesSelected).not.toHaveBeenCalledWith([mockFile]);
     });
