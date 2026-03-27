@@ -42,7 +42,7 @@
 data/
 ├── geti.db                                         # SQLite database
 ├── pretrained_weights/                             # Base model weights
-├─��� staged_datasets/                                # Temporary import staging area
+├── staged_datasets/                                # Temporary import staging area
 └── projects/
     └── <project_id>/
         ├── dataset/                                # Media files & thumbnails
