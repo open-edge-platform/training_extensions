@@ -9,7 +9,7 @@ import { GridLayoutOptions } from 'react-aria-components';
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItemAnnotationStatus, Media } from '../../../constants/shared-types';
+import type { DatasetItemAnnotationStatus, Media, MediaDTO } from '../../../constants/shared-types';
 import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
@@ -29,7 +29,7 @@ type GalleryProps = {
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    onFilesDropped?: (files: File[]) => void | Promise<void>;
+    onFilesDropped?: (files: File[]) => void | Promise<MediaDTO[]>;
 };
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties

@@ -6,21 +6,22 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { MediaDTO } from '../../../constants/shared-types';
 import { getQueryKey } from '../../../query-client/query-client';
 import { useUploadProgress } from '../hooks/use-display-upload-progress';
 
 export const MEDIA_UPLOAD_CONCURRENCY = 10;
 
-type UploadTask = () => Promise<unknown>;
+type UploadTask<T> = () => Promise<T>;
 
 // Runs ${batchSize} promises at a time until all promises have been executed,
 // returning an array of settled results.
-const executeInBatches = async (
-    uploadTasks: UploadTask[],
+const executeInBatches = async <T>(
+    uploadTasks: UploadTask<T>[],
     batchSize: number,
-    onBatchCompleted?: (batchResults: PromiseSettledResult<unknown>[]) => Promise<void>
-): Promise<PromiseSettledResult<unknown>[]> => {
-    const settledResults: PromiseSettledResult<unknown>[] = [];
+    onBatchCompleted?: (batchResults: PromiseSettledResult<T>[]) => Promise<void>
+): Promise<PromiseSettledResult<T>[]> => {
+    const settledResults: PromiseSettledResult<T>[] = [];
 
     for (let index = 0; index < uploadTasks.length; index += batchSize) {
         const batchPromises = uploadTasks.slice(index, index + batchSize).map((task) => task());
@@ -36,6 +37,11 @@ const executeInBatches = async (
     return settledResults;
 };
 
+const getFulfilledValues = <T>(results: PromiseSettledResult<T>[]): T[] =>
+    results
+        .filter((result): result is PromiseFulfilledResult<T> => result.status === 'fulfilled')
+        .map((result) => result.value);
+
 export const useMediaUpload = () => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
@@ -44,7 +50,7 @@ export const useMediaUpload = () => {
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
     type UploadMutationRequest = Parameters<typeof addItemMutation.mutateAsync>[0];
 
-    const buildUploadTask = (file: File): UploadTask => {
+    const buildUploadTask = (file: File): UploadTask<MediaDTO> => {
         return () => {
             const formData = new FormData();
             formData.append('file', file);
@@ -67,37 +73,40 @@ export const useMediaUpload = () => {
             ]),
         });
 
-    // Processes files with batched concurrency
-    const processUploadBatch = async (files: File[]): Promise<void> => {
+    // Processes files with batched concurrency, returning all successfully uploaded media items
+    const processUploadBatch = async (files: File[]): Promise<MediaDTO[]> => {
         if (files.length === 0) {
-            return;
+            return [];
         }
 
         startUploadProgress(files.length);
 
         try {
-            const onBatchCompleted = async (batchResults: PromiseSettledResult<unknown>[]) => {
+            const onBatchCompleted = async (batchResults: PromiseSettledResult<MediaDTO>[]) => {
                 updateUploadProgress({ settledResults: batchResults });
 
                 await invalidateMediaQuery();
             };
 
             const uploadTasks = files.map((file) => buildUploadTask(file));
-            await executeInBatches(uploadTasks, MEDIA_UPLOAD_CONCURRENCY, onBatchCompleted);
+            const allResults = await executeInBatches(uploadTasks, MEDIA_UPLOAD_CONCURRENCY, onBatchCompleted);
 
             finishUploadProgress();
+
+            return getFulfilledValues(allResults);
         } catch (_error) {
             finishUploadProgress();
+            return [];
         }
     };
 
-    // Starts the upload process directly
-    const uploadMedia = async (files: File[]) => {
+    // Starts the upload process directly, returning all successfully uploaded media items
+    const uploadMedia = async (files: File[]): Promise<MediaDTO[]> => {
         if (files.length === 0) {
-            return;
+            return [];
         }
 
-        await processUploadBatch(files);
+        return processUploadBatch(files);
     };
 
     return {

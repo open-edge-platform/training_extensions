@@ -7,13 +7,14 @@ import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Flex, H
 import { Info } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
+import { MediaDTO } from '../../../../constants/shared-types';
 import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/labels';
 import { LabelsList } from './labels-list/labels-list.component';
 
 type BulkLabelsAssignmentDialogContentProps = {
     onClose: () => void;
     onSkip: () => void;
-    onAccept: (files: File[]) => Promise<void>;
+    onAccept: (files: File[]) => Promise<MediaDTO[]>;
     isMultiLabelClassification: boolean;
 };
 
@@ -69,7 +70,7 @@ type BulkLabelsAssignmentDialogProps = {
     files: File[];
     onClose: () => void;
     isMultiLabelClassification: boolean;
-    onDatasetItemsUpload: (files: File[]) => Promise<void>;
+    onDatasetItemsUpload: (files: File[]) => Promise<MediaDTO[]>;
 };
 
 export const BulkLabelsAssignmentDialog = ({
