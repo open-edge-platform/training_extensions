@@ -19,6 +19,15 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
     const gridColumns = hasDatasetRevisionData ? ['auto', '1fr', 'auto', '1fr'] : ['auto', '1fr', 'auto'];
     const formatter = useNumberFormatter();
 
+    const subsetsTotal =
+        dataset.trainingSubsets.training + dataset.trainingSubsets.validation + dataset.trainingSubsets.testing;
+
+    const percentages = {
+        training: subsetsTotal > 0 ? (dataset.trainingSubsets.training / subsetsTotal) * 100 : 0,
+        validation: subsetsTotal > 0 ? (dataset.trainingSubsets.validation / subsetsTotal) * 100 : 0,
+        testing: subsetsTotal > 0 ? (dataset.trainingSubsets.testing / subsetsTotal) * 100 : 0,
+    };
+
     return (
         <Grid columns={gridColumns} alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
             <Flex alignItems={'center'} gap={'size-50'}>
@@ -48,9 +57,9 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
             {hasDatasetRevisionData && (
                 <ThreeSectionRange
                     id={`dataset-range-${dataset.id}`}
-                    trainingValue={dataset.trainingSubsets.training}
-                    validationValue={dataset.trainingSubsets.validation}
-                    testingValue={dataset.trainingSubsets.testing}
+                    trainingValue={percentages.training}
+                    validationValue={percentages.validation}
+                    testingValue={percentages.testing}
                 />
             )}
         </Grid>

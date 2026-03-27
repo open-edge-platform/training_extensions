@@ -12,6 +12,8 @@ type ThreeSectionRangeProps = {
     testingValue: number;
 };
 
+const formatPercentage = (value: number) => Math.round(value);
+
 export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
     const gridColumns = [
         trainingValue > 0 ? `${trainingValue}fr` : '1fr',
@@ -38,7 +40,11 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
                 {testingValue > 0 && <View height='100%' UNSAFE_style={{ backgroundColor: 'var(--geode-tint)' }} />}
             </Grid>
 
-            <Text UNSAFE_className={classes.label}>{`${trainingValue}% / ${validationValue}% / ${testingValue}%`}</Text>
+            <Text UNSAFE_className={classes.label}>
+                {`${formatPercentage(trainingValue)}% / ${formatPercentage(validationValue)}% / ${formatPercentage(
+                    testingValue
+                )}%`}
+            </Text>
         </Flex>
     );
 };
