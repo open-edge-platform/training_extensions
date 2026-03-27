@@ -7,7 +7,7 @@ import { Button } from '@geti/ui';
 
 import { Project } from '../../../../../constants/shared-types';
 import { isClassificationTask, isMultiLabelClassificationTask } from '../../../../project/task-type-guards';
-import { LabelAssignmentDialog } from './bulk-label-assignment/bulk-label-assignment-dialog.component';
+import { BulkLabelAssignmentDialog } from './bulk-label-assignment/bulk-label-assignment-dialog.component';
 
 const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
 const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'jfif', 'tif', 'tiff', 'webp', 'bmp'];
@@ -66,7 +66,7 @@ export const AddMediaButton = ({ onFilesSelected, isDisabled = false, project }:
                 Upload media
             </Button>
             {isClassification && (
-                <LabelAssignmentDialog
+                <BulkLabelAssignmentDialog
                     files={filesForLabelAssignment}
                     onClose={() => setFilesForLabelAssignment([])}
                     onDatasetItemsUpload={onFilesSelected}

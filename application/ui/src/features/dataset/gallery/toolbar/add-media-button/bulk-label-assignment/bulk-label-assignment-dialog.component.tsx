@@ -32,7 +32,7 @@ const BulkLabelAssignmentDialogContent = ({
 
     return (
         <Dialog minHeight={'size-6000'}>
-            <Heading>Assign the label(s) to the uploaded dataset items</Heading>
+            <Heading>Assign the label{isMultiLabelClassification ? 's' : ''} to the images</Heading>
             <Divider />
             <Content>
                 <LabelsList
@@ -65,7 +65,7 @@ type LabelAssignmentDialogProps = {
     onDatasetItemsUpload: (files: File[]) => Promise<void>;
 };
 
-export const LabelAssignmentDialog = ({
+export const BulkLabelAssignmentDialog = ({
     files,
     onClose,
     onDatasetItemsUpload,

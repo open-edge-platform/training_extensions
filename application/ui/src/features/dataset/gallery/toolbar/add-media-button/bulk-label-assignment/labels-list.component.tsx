@@ -53,7 +53,12 @@ export const LabelsList = ({
 
     return (
         <Flex gap='size-200' direction='column'>
-            <TextField value={searchPhrase} onChange={setSearchPhrase} placeholder='Search labels' />
+            <TextField
+                aria-label={'Search labels'}
+                value={searchPhrase}
+                onChange={setSearchPhrase}
+                placeholder='Search labels'
+            />
 
             {hasNoSearchResults ? (
                 <Text>No results found. Try searching with a different phrase.</Text>

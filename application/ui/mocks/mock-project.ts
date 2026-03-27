@@ -3,7 +3,7 @@
 
 import { SchemaProjectView } from './../src/api/openapi-spec.d';
 
-export const getMockedProject = (customProject: Partial<SchemaProjectView>): SchemaProjectView => {
+export const getMockedProject = (customProject: Partial<SchemaProjectView> = {}): SchemaProjectView => {
     return {
         id: '7b073838-99d3-42ff-9018-4e901eb047fc',
         name: 'animals',
