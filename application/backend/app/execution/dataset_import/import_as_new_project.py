@@ -7,6 +7,7 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from uuid import uuid4
 
+import polars as pl
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from sqlalchemy.orm import Session
@@ -27,9 +28,10 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
     including project creation with labels, dataset preparation, and item import.
 
     The execution follows these steps:
-    1. Create a new project with the specified task type and labels
-    2. Load and filter the prepared dataset from the staged directory
-    3. Create media items and dataset items with annotations for each dataset entry
+    1. Load dataset from the staged directory
+    2. Create a new project with the specified task type and labels
+    3. Convert and filter the loaded dataset according to the project task and import parameters
+    4. Create media items and dataset items with annotations for each dataset entry
 
     Attributes:
         params_type: The parameter type for this execution (ImportDatasetAsNewProjectJobParams).
@@ -57,8 +59,12 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
         super().__init__(staged_datasets_dir, dataset_service, label_service, media_service, db_session_factory)
         self._project_service = project_service
 
-    @step("Create new project", 5)
-    def create_project(self, params: ImportDatasetAsNewProjectJobParams) -> Project:
+    @step("Import dataset", 5)
+    def import_dataset(self, params: ImportDatasetAsNewProjectJobParams) -> Dataset:
+        return self._import_dataset(staged_dataset_id=params.staged_dataset_id)
+
+    @step("Create new project", 10)
+    def create_project(self, params: ImportDatasetAsNewProjectJobParams, exclusive_labels: bool) -> Project:
         project_labels = (
             [
                 Label(
@@ -71,22 +77,36 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
             if params.labels
             else []
         )
-        task = Task(
-            task_type=params.task_type,
-            labels=project_labels,
-            exclusive_labels=params.exclusive_labels,
-        )
+        task = Task(task_type=params.task_type, labels=project_labels, exclusive_labels=exclusive_labels)
         with self._db_session_factory() as db_session:
             self._project_service.set_db_session(db_session)
             return self._project_service.create_project(project_id=uuid4(), name=params.project_name, task=task)
 
     @step("Prepare dataset", 15)
-    def prepare_dataset(self, params: ImportDatasetAsNewProjectJobParams, task: Task) -> Dataset:
-        dataset = self._prepare_dataset(staged_dataset_id=params.staged_dataset_id, task=task)
+    def prepare_dataset(self, dataset: Dataset, params: ImportDatasetAsNewProjectJobParams, task: Task) -> Dataset:
+        dataset = self._convert_dataset(dataset=dataset, task=task)
         if len(dataset) > 0 and params.subsets:
             dataset = dataset.filter_by_subset(subset=[Subset[subset.name] for subset in params.subsets])
         if len(dataset) > 0 and params.labels:
+            # Track items that were explicitly labeled as empty (i.e., reviewed but intentionally have no labels)
+            # BEFORE filtering. This is necessary because filter_by_labels with keep_empty_samples=True will also keep
+            # genuinely unannotated items, making them indistinguishable from items that originally had empty labels.
+            # After filtering, we reset user_reviewed=False for any newly-empty items (those that lost their labels
+            # due to filtering) while preserving user_reviewed=True for items that were already empty-labeled before
+            # the filter.
+            empty_label_supported = "user_reviewed" in dataset.df.columns and dataset.df["label"].dtype == pl.List
+            empty_labeled = set()
+            if empty_label_supported:
+                mask = (pl.col("label").list.len() == 0) & pl.col("user_reviewed")
+                empty_labeled = set(dataset.df.filter(mask)["id"].to_list())
             dataset = dataset.filter_by_labels(labels=params.labels, keep_empty_samples=params.include_unannotated)
+            if empty_label_supported:
+                dataset.df = dataset.df.with_columns(
+                    pl.when((pl.col("label").list.len() == 0) & (~pl.col("id").is_in(empty_labeled)))
+                    .then(False)
+                    .otherwise(pl.col("user_reviewed"))
+                    .alias("user_reviewed")
+                )
         return dataset
 
     @step("Import items from dataset to project", 100)
@@ -108,7 +128,15 @@ class ImportDatasetAsNewProject(BaseDatasetImport[ImportDatasetAsNewProjectJobPa
         )
 
     def execute(self, params: ImportDatasetAsNewProjectJobParams) -> None:
-        project = self.create_project(params)
+        dataset = self.import_dataset(params=params)
+        multilabel = self._is_multilabel_dataset(dataset=dataset)
+        project = self.create_project(params=params, exclusive_labels=not multilabel)
         self.update_metadata({"project_id": project.id})
-        dataset = self.prepare_dataset(params=params, task=project.task)
+        dataset = self.prepare_dataset(dataset=dataset, params=params, task=project.task)
         self.create_items(dataset=dataset, project=project, include_unannotated=params.include_unannotated)
+
+    @staticmethod
+    def _is_multilabel_dataset(dataset: Dataset) -> bool:
+        if "label" in dataset.schema.attributes:
+            return getattr(dataset.schema.attributes["label"].field, "multi_label", False)
+        return False

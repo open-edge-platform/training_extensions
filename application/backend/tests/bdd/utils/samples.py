@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import secrets
+from uuid import uuid4
 
 import numpy as np
 from datumaro.experimental import LazyImage, LazyVideoFrame, MediaInfo
@@ -31,7 +32,7 @@ class SampleFactory:
     ):
         """Return a fully constructed sample for the task's annotation type."""
         base = {
-            "id": None,
+            "id": str(uuid4()),
             "media": lazy_media,
             "media_info": media_info,
             "subset": Subset[subset.upper()],

@@ -47,14 +47,16 @@ class TestImportDatasetToProject:
     ) -> None:
         dataset = Mock(spec=Dataset)
 
-        with patch.object(fxt_import, "_prepare_dataset", return_value=dataset) as mock_prepare:
+        with (
+            patch.object(fxt_import, "_import_dataset", return_value=dataset) as mock_import_dataset,
+            patch.object(fxt_import, "_convert_dataset", return_value=dataset) as mock_convert_dataset,
+        ):
             result = fxt_import.prepare_dataset(
                 staged_dataset_id=fxt_import_params.staged_dataset_id, task=fxt_import_params.task
             )
 
-            mock_prepare.assert_called_once_with(
-                staged_dataset_id=fxt_import_params.staged_dataset_id, task=fxt_import_params.task
-            )
+            mock_import_dataset.assert_called_once_with(staged_dataset_id=fxt_import_params.staged_dataset_id)
+            mock_convert_dataset.assert_called_once_with(dataset=dataset, task=fxt_import_params.task)
             assert result == dataset
 
     def test_create_items(
@@ -79,12 +81,12 @@ class TestImportDatasetToProject:
         dataset = Mock(spec=Dataset)
 
         with (
-            patch.object(fxt_import, "prepare_dataset", return_value=dataset) as mock_prepare,
+            patch.object(fxt_import, "prepare_dataset", return_value=dataset) as mock_prepare_dataset,
             patch.object(fxt_import, "create_items") as mock_create,
         ):
             fxt_import.execute(fxt_import_params)
 
-            mock_prepare.assert_called_once_with(
+            mock_prepare_dataset.assert_called_once_with(
                 staged_dataset_id=fxt_import_params.staged_dataset_id, task=fxt_import_params.task
             )
             mock_create.assert_called_once_with(dataset=dataset, params=fxt_import_params)

@@ -343,6 +343,22 @@ class AutoConfigurator:
             "And the tiler is disabled."
         )
         warn(msg, stacklevel=1)
+
+        # If the datamodule was created from pre-constructed datasets (no data_root),
+        # rebuild using from_otx_datasets to avoid re-importing from disk.
+        # This is useful for the quantization pipeline.
+        if not datamodule.data_root and datamodule.subsets:
+            return OTXDataModule.from_otx_datasets(
+                train_dataset=datamodule.subsets["train"],
+                val_dataset=datamodule.subsets["val"],
+                test_dataset=datamodule.subsets.get("test"),
+                train_subset=datamodule.train_subset,
+                val_subset=datamodule.val_subset,
+                test_subset=datamodule.test_subset,
+                auto_num_workers=datamodule.auto_num_workers,
+                device=datamodule.device,
+            )
+
         return OTXDataModule(
             task=datamodule.task,
             data_root=datamodule.data_root,

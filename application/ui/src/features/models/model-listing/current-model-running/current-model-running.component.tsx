@@ -2,32 +2,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
-import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs/jobs.hook';
+import { useCancelJob, useGetCurrentRunningJob } from 'hooks/api/jobs/jobs.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
 import { ModelsTableHeader } from '../components/models-table-header.component';
 import { GroupByMode } from '../types';
-import { TrainingModelRow } from './training-model-row.component';
+import { RunningModelRow } from './running-model-row.component';
 
-type CurrentModelTrainingProps = {
+type CurrentModelRunningProps = {
     groupBy: GroupByMode;
     datasetRevisions: DatasetRevision[];
 };
 
-export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModelTrainingProps) => {
-    const activeTrainingJob = useGetCurrentTrainingJob();
+export const CurrentModelRunning = ({ groupBy, datasetRevisions }: CurrentModelRunningProps) => {
+    const activeRunningJob = useGetCurrentRunningJob();
     const cancelJobMutation = useCancelJob();
 
     const { modelArchitectures } = useGetTaskModelArchitectures();
 
-    const handleCancelTraining = () => {
-        if (activeTrainingJob?.job_id) {
-            cancelJobMutation.mutate({ params: { path: { job_id: activeTrainingJob.job_id } } });
+    const handleCancelRunning = () => {
+        if (activeRunningJob?.job_id) {
+            cancelJobMutation.mutate({ params: { path: { job_id: activeRunningJob.job_id } } });
         }
     };
 
-    if (!activeTrainingJob) {
+    if (!activeRunningJob) {
         return null;
     }
 
@@ -38,15 +38,15 @@ export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModel
             UNSAFE_style={{ padding: 'var(--spectrum-global-dimension-size-300)' }}
         >
             <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
-                Current training
+                Currently running
             </Heading>
 
             <View backgroundColor={'gray-75'}>
                 <ModelsTableHeader />
 
-                <TrainingModelRow
-                    job={activeTrainingJob}
-                    onCancel={handleCancelTraining}
+                <RunningModelRow
+                    job={activeRunningJob}
+                    onCancel={handleCancelRunning}
                     groupBy={groupBy}
                     datasetRevisions={datasetRevisions}
                     modelArchitectures={modelArchitectures}

@@ -48,7 +48,7 @@ Feature: Prepare Dataset For Import
     Examples:
       | export format | image count | frame count |
       | GETI          | 30          | 10          |
-#      | VOC           | 30          | 0           |
+      | VOC           | 40          | 0           |
 
   @prepare @segmentation
   Scenario Outline: Prepare segmentation dataset for import

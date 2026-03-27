@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
 from app.models import Pipeline, PipelineStatus
+from app.models.model_revision import TrainingStatus
 from app.repositories import PipelineRepository
+from app.repositories.model_revision_repo import ModelRevisionRepository
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
 from app.services.parent_process_guard import parent_process_only
@@ -100,6 +102,8 @@ class PipelineService(BaseSessionManagedService):
             data_collection=to_update.data_collection.model_dump(),
             device=to_update.device,
         )
+
+        # Validate pipeline data
         if to_update_db.is_running:
             # Only one pipeline can run at the same time. Note that only one pipeline per project exists.
             active_pipeline_db = pipeline_repo.get_active_pipeline()
@@ -107,6 +111,20 @@ class PipelineService(BaseSessionManagedService):
                 raise OtherProjectActiveError(
                     requested_project_id=to_update_db.project_id, active_project_id=active_pipeline_db.project_id
                 )
+        if to_update_db.model_revision_id is not None:
+            # Only successfully trained models can be part of a pipeline
+            model_revision_repo = ModelRevisionRepository(project_id=to_update_db.project_id, db=self.db_session)
+            model_revision_db = model_revision_repo.get_by_id(to_update_db.model_revision_id)
+            if model_revision_db is None:
+                raise ResourceNotFoundError(
+                    resource_type=ResourceType.MODEL, resource_id=to_update_db.model_revision_id
+                )
+            if model_revision_db.training_status != TrainingStatus.SUCCESSFUL:
+                raise ValueError(
+                    f"Provided model id ({to_update_db.model_revision_id}) points to a model that was not successfully "
+                    f"trained (status is {model_revision_db.training_status})."
+                )
+
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
         self.__emit_event(pipeline, updated)

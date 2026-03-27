@@ -44,7 +44,8 @@ const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
         return {
             ...mediaItem,
             type: 'video_frame',
-            frame_stride: mediaItem.fps,
+            fps: Math.round(mediaItem.fps),
+            frame_stride: Math.round(mediaItem.fps),
             frame_number: frameNumber,
         };
     }

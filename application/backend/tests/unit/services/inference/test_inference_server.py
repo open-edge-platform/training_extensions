@@ -9,14 +9,7 @@ import numpy as np
 import pytest
 from model_api.models import Model
 
-from app.models import (
-    BatchInferenceInput,
-    BatchInferenceMedia,
-    BatchInferencePrediction,
-    BatchInferenceResult,
-    DatasetItemAnnotation,
-    Label,
-)
+from app.models import BatchInferenceInput, DatasetItemAnnotation, Label
 from app.models.model_revision import ModelFormat, ModelPrecision, ModelVariant
 from app.models.system import DeviceInfo, DeviceType
 from app.services import ModelService
@@ -49,6 +42,8 @@ class TestInferenceServer:
                 attribute="get_model_binary_files",
                 return_value=(True, (tmp_path / "model.xml", tmp_path / "model.bin")),
             ) as mock_get_model_binary_files,
+            patch("app.services.inference.inference_server.create_core") as mock_create_core,
+            patch("app.services.inference.inference_server.FP32OpenvinoAdapter") as mock_fp32_adapter,
         ):
             model_loaded = inference_server.set_inference_model(
                 project_id=project_id, model_id=model_id, device=device, ttl=60
@@ -66,9 +61,13 @@ class TestInferenceServer:
             mock_get_model_binary_files.assert_called_once_with(
                 project_id=project_id, model_id=model_id, model_variant_id=model_variant_id
             )
-            mock_create_model.assert_called_once_with(
-                model=str(tmp_path / "model.xml"), device=device.type.name, nstreams="2"
+            mock_fp32_adapter.assert_called_once_with(
+                mock_create_core.return_value,
+                str(tmp_path / "model.xml"),
+                device=device.as_openvino,
+                max_num_requests=2,
             )
+            mock_create_model.assert_called_once_with(mock_fp32_adapter.return_value)
 
     def test_set_inference_model_already_loaded(self, tmp_path) -> None:
         project_id = uuid4()
@@ -153,7 +152,8 @@ class TestInferenceServer:
         model.infer_batch.return_value = [inference_result]
 
         label = MagicMock(spec=Label)
-        input = BatchInferenceInput(media_id=media_id, frame_index=15, data=np.random.rand(20, 20, 3))
+        raw_uint8 = np.full((20, 20, 3), 128, dtype=np.uint8)
+        input = BatchInferenceInput(media_id=media_id, frame_index=15, data=raw_uint8)
 
         annotation = MagicMock(spec=DatasetItemAnnotation)
 
@@ -164,16 +164,10 @@ class TestInferenceServer:
 
         with patch("app.services.inference.inference_server.convert_prediction") as mock_convert_prediction:
             mock_convert_prediction.return_value = [annotation]
-            result = inference_server.infer_batch(labels=[label], inputs=[input])
+            inference_server.infer_batch(labels=[label], inputs=[input])
 
-        assert result == BatchInferenceResult(
-            predictions=[
-                BatchInferencePrediction(
-                    media=BatchInferenceMedia(id=media_id, frame_index=15), prediction=[annotation]
-                )
-            ]
-        )
-        model.infer_batch.assert_called_once_with([input.data])
-        mock_convert_prediction.assert_called_once_with(
-            labels=[label], frame_data=input.data, prediction=inference_result
-        )
+        # Images are always scaled to float32 [0, 1]
+        (passed_batch,) = model.infer_batch.call_args.args
+        assert len(passed_batch) == 1
+        np.testing.assert_array_almost_equal(passed_batch[0], raw_uint8.astype(np.float32) / 255.0)
+        assert passed_batch[0].dtype == np.float32

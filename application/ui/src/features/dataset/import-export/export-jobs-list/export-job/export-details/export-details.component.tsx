@@ -11,6 +11,9 @@ type ExportJobDetailsProps = {
     datasetName?: string;
     metadata: ExportDatasetMetadata;
 };
+
+const isGetiFormat = (format?: string | null) => format?.toLowerCase() === 'geti';
+
 export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProps) => {
     const { data: selectedProject } = useProject();
 
@@ -28,7 +31,14 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
 
             <Grid gap='size-125' columns={['auto', '1px', 'auto', '1px', '1fr']}>
                 <Text>
-                    <Text UNSAFE_style={{ textTransform: 'uppercase' }}>{metadata.export_format}</Text> format
+                    <Text
+                        UNSAFE_style={{
+                            textTransform: isGetiFormat(metadata.export_format) ? 'capitalize' : 'uppercase',
+                        }}
+                    >
+                        {metadata.export_format}
+                    </Text>
+                    format
                 </Text>
 
                 <Divider orientation='vertical' size='S' />

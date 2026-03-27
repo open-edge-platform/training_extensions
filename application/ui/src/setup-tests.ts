@@ -69,6 +69,22 @@ class IntersectionObserverMock {
 
 global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
+class ImageDataMock {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+
+    constructor(data: Uint8ClampedArray, width: number, height?: number) {
+        this.data = data;
+        this.width = width;
+        this.height = height ?? 1;
+    }
+}
+
+if (typeof global.ImageData === 'undefined') {
+    global.ImageData = ImageDataMock as unknown as typeof ImageData;
+}
+
 const createLocalStorageMock = () => {
     let store: Record<string, string> = {};
 
