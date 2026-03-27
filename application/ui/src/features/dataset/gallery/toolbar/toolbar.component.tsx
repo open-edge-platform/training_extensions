@@ -75,10 +75,11 @@ const MediaUpload = () => {
             <AddMediaButton onFileUpload={handleFileUpload} isDisabled={uploadProgress.isUploading} />
             {isClassification && (
                 <BulkLabelsAssignmentDialog
-                    files={filesForLabelAssignment}
                     onClose={handleClose}
-                    isMultiLabelClassification={isMultiLabelClassification}
+                    files={filesForLabelAssignment}
                     onDatasetItemsUpload={uploadMedia}
+                    isUploadingDatasetItems={uploadProgress.isUploading}
+                    isMultiLabelClassification={isMultiLabelClassification}
                 />
             )}
         </>
