@@ -20,5 +20,5 @@ export const isPrefetchEnabledForTask = (taskType: TaskType | null): boolean => 
 };
 
 export const isMultiLabelClassificationTask = (task: Task): boolean => {
-    return isClassificationTask(task.task_type) && !task.exclusive_labels;
+    return isClassificationTask(task.task_type) && task.exclusive_labels === false;
 };
