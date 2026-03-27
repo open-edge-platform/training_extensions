@@ -615,6 +615,73 @@ class TestMediaServiceIntegration:
             assert arr.min() < 10, "Shadow end of range missing — normalization likely clipped low values"
             assert arr.max() > 245, "Highlight end of range missing — normalization likely clipped high values"
 
+    @pytest.mark.parametrize("format", [ImageFormat.TIF, ImageFormat.TIFF])
+    def test_create_tiff_image_with_problematic_exif(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+        format: ImageFormat,
+    ) -> None:
+        """Test that TIFF images with EXIF data that cannot be re-serialized by
+        PIL's libtiff encoder are still saved successfully (without EXIF).
+
+        Regression test for RuntimeError: 'Error setting from dictionary' when
+        uploading certain TIFF files whose IFD contains tags incompatible with
+        the libtiff encoder round-trip.
+        """
+        image = PILImage.new("RGB", (896, 768))
+
+        # Inject a problematic EXIF tag that triggers the libtiff encoder error.
+        # Tag 0x8769 (ExifOffset / ExifIFD) with an invalid dict value causes
+        # PIL's libtiff encoder to raise RuntimeError when saving.
+        exif = image.getexif()
+        exif[ExifTags.Base.Software] = "Intel Geti"
+        exif.get_ifd(ExifTags.IFD.Exif)[ExifTags.Base.ExifVersion] = b"0232"
+        image.info["exif"] = exif.tobytes()
+
+        # Patch image.save to simulate the libtiff RuntimeError when exif= is
+        # passed, then succeed on the retry without exif.
+        original_save = PILImage.Image.save
+        exif_save_attempted = False
+        fallback_save_done = False
+
+        def patched_save(self_img, *args, **kwargs):
+            nonlocal exif_save_attempted, fallback_save_done
+            if "exif" in kwargs:
+                exif_save_attempted = True
+                raise RuntimeError("Error setting from dictionary")
+            # Track that the immediate retry (same path, no exif) succeeded
+            if exif_save_attempted and not fallback_save_done:
+                fallback_save_done = True
+            return original_save(self_img, *args, **kwargs)
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(PILImage.Image, "save", patched_save)
+
+            project, _ = fxt_project_with_pipeline
+            created_media = fxt_media_service.create_image(
+                ImageMetadata(
+                    project_id=project.id,
+                    name="test_tiff_exif",
+                    image_format=format,
+                    data=image,
+                )
+            )
+
+        assert exif_save_attempted, "Expected save with exif= to be attempted"
+        assert fallback_save_done, "Expected fallback save without exif to succeed"
+
+        media = db_session.get(MediaDB, str(created_media.id))
+        assert media is not None
+        assert media.width == 896
+        assert media.height == 768
+        assert media.format == format
+
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
+        assert os.path.exists(binary_file_path)
+
     @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("format", VideoFormat)
     def test_create_video(
