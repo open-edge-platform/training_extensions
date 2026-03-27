@@ -4,6 +4,7 @@
 import { ViewModes } from '@geti/ui';
 import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -57,16 +58,7 @@ describe('Toolbar', () => {
                 return HttpResponse.json(getMockedProject({ id: 'project-123' }));
             }),
             http.get('/api/projects/{project_id}/dataset/statistics', () => {
-                return HttpResponse.json({
-                    media_counts: { images: 10, videos: 2, video_frames: 0 },
-                    annotations_counts: {
-                        annotated_images: 5,
-                        annotated_videos: 1,
-                        annotated_video_frames: 0,
-                        instances: 6,
-                        instances_per_label: [],
-                    },
-                });
+                return HttpResponse.json(getMockedDatasetStatistics({}));
             })
         );
 

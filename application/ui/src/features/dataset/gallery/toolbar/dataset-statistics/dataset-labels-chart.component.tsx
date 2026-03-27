@@ -29,7 +29,7 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
     }));
 
     return (
-        <ResponsiveContainer width='100%' height={'100%'} minHeight={200}>
+        <ResponsiveContainer width='100%' height={'100%'} minHeight={'size-2400'}>
             <BarChart
                 data={chartData}
                 layout='vertical'

@@ -41,6 +41,8 @@ export type ImportDatasetToProjectJob = Job & {
     metadata: components['schemas']['ImportDatasetToProjectRequest'];
 };
 
+export type DatasetStatisticsView = components['schemas']['DatasetStatisticsView'];
+
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];
 export type MediaVideoFrameDTO = components['schemas']['VideoFrameView'];

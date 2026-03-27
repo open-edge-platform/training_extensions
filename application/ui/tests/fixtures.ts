@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 import { defineNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
+import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
@@ -183,6 +184,9 @@ const test = testBase.extend<Fixtures>({
                                 'Cache-Control': 'no-cache',
                             },
                         });
+                    }),
+                    http.get('/api/projects/{project_id}/dataset/statistics', () => {
+                        return HttpResponse.json(getMockedDatasetStatistics({}));
                     }),
                 ],
             });
