@@ -1,0 +1,24 @@
+name: Remove Stale Branches
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions: {}
+
+jobs:
+  remove-stale-branches:
+    name: Remove Stale Branches
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    steps:
+      - uses: fpicalausa/remove-stale-branches@v2.4.0
+        with:
+          dry-run: true
+          days-before-branch-stale: 90
+          days-before-branch-delete: 7
+          operations-per-run: 10
+          exempt-branches-regex: "^(main|master|develop)$"
