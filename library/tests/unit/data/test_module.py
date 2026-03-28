@@ -137,6 +137,28 @@ class TestOTXDataModule:
         assert fxt_config.val_subset.input_size == (240, 240)
         assert fxt_config.test_subset.input_size == (240, 240)
 
+    def test_init_input_size_multiplier(
+        self,
+        mock_dm_dataset,
+        mock_otx_dataset_factory,
+        mock_data_filtering,
+        fxt_config,
+    ) -> None:
+        mock_dm_subsets = {f"{name}_{idx}": MagicMock() for name in ["train", "val", "test"] for idx in range(2)}
+        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+
+        module = OTXDataModule(
+            task=OTXTaskType.DETECTION,
+            data_format=fxt_config.data_format,
+            data_root=fxt_config.data_root,
+            train_subset=fxt_config.train_subset,
+            val_subset=fxt_config.val_subset,
+            test_subset=fxt_config.test_subset,
+            input_size=(640, 640),
+            input_size_multiplier=24,
+        )
+        assert module.input_size_multiplier == 24
+
     def test_init_input_size(
         self,
         mock_dm_dataset,
