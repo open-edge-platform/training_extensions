@@ -256,6 +256,16 @@ class TestDataInputParams:
             "input_size": (224, 224),
             "mean": (0.485, 0.456, 0.406),
             "std": (0.229, 0.224, 0.225),
+            "storage_dtype": "uint8",
+            "intensity_mode": "scale_to_unit",
+            "intensity_max_value": None,
+            "window_center": None,
+            "window_width": None,
+            "percentile_low": 1.0,
+            "percentile_high": 99.0,
+            "scale_factor": 1.0,
+            "min_value": 0.0,
+            "repeat_channels": 0,
         }
 
     def test_as_ncwh(self):
