@@ -1,8 +1,11 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Test Factory classes for dataset and transforms."""
 
+from unittest.mock import MagicMock, PropertyMock
+
+import polars as pl
 import pytest
 from datumaro.experimental import Dataset
 
@@ -17,24 +20,7 @@ from otx.data.dataset.detection import OTXDetectionDataset
 from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.dataset.segmentation import OTXSegmentationDataset
 from otx.data.factory import OTXDatasetFactory, TransformLibFactory
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.types.task import OTXTaskType
-from otx.types.transformer_libs import TransformLibType
-
-lib_type_parameters = [(TransformLibType.TORCHVISION, TorchVisionTransformLib)]
-
-
-class TestTransformLibFactory:
-    @pytest.mark.parametrize(
-        ("lib_type", "lib"),
-        lib_type_parameters,
-    )
-    def test_generate(self, lib_type, lib, mocker) -> None:
-        mock_generate = mocker.patch.object(lib, "generate")
-        config = mocker.MagicMock(spec=SubsetConfig)
-        config.transform_lib_type = lib_type
-        _ = TransformLibFactory.generate(config)
-        mock_generate.assert_called_once_with(config)
 
 
 class TestOTXDatasetFactory:
@@ -75,7 +61,67 @@ class TestOTXDatasetFactory:
                 task=task_type,
                 dm_subset=dm_subset,
                 cfg_subset=cfg_subset,
-                data_format="",
             ),
             dataset_cls,
         )
+
+
+class TestDetectStorageDtype:
+    """Tests for OTXDatasetFactory._detect_storage_dtype."""
+
+    def test_schema_uint16(self):
+        """Schema-declared UInt16 dtype → 'uint16'."""
+        mock_subset = MagicMock(spec=Dataset)
+        # Make iteration raise StopIteration (empty dataset)
+        mock_subset.__iter__ = MagicMock(return_value=iter([]))
+        mock_field = MagicMock()
+        mock_field.dtype = pl.UInt16
+        mock_img_attr = MagicMock()
+        mock_img_attr.field = mock_field
+        mock_schema = MagicMock()
+        mock_schema.attributes = {"image": mock_img_attr}
+        type(mock_subset).schema = PropertyMock(return_value=mock_schema)
+
+        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "uint16"
+
+    def test_schema_float32(self):
+        """Schema-declared Float32 dtype → 'float32'."""
+        mock_subset = MagicMock(spec=Dataset)
+        mock_subset.__iter__ = MagicMock(return_value=iter([]))
+        mock_field = MagicMock()
+        mock_field.dtype = pl.Float32
+        mock_img_attr = MagicMock()
+        mock_img_attr.field = mock_field
+        mock_schema = MagicMock()
+        mock_schema.attributes = {"image": mock_img_attr}
+        type(mock_subset).schema = PropertyMock(return_value=mock_schema)
+
+        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "float32"
+
+    def test_schema_unknown_defaults_uint8(self):
+        """Unknown/missing schema dtype → default 'uint8'."""
+        mock_subset = MagicMock(spec=Dataset)
+        mock_subset.__iter__ = MagicMock(return_value=iter([]))
+        mock_schema = MagicMock()
+        mock_schema.attributes = {}
+        type(mock_subset).schema = PropertyMock(return_value=mock_schema)
+
+        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "uint8"
+
+    def test_file_based_detection(self, tmp_path):
+        """File-header probing detects uint8 from a real PNG."""
+        import numpy as np
+        from PIL import Image as PILImage
+
+        # Create a small uint8 PNG
+        img_path = tmp_path / "test.png"
+        PILImage.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(img_path)
+
+        mock_media = MagicMock()
+        mock_media.path = str(img_path)
+        mock_item = MagicMock()
+        mock_item.media = mock_media
+        mock_subset = MagicMock(spec=Dataset)
+        mock_subset.__iter__ = MagicMock(return_value=iter([mock_item]))
+
+        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "uint8"

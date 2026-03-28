@@ -55,7 +55,14 @@ export const render = (ui: ReactNode, options: RenderOptions = {}) => {
     const testQueryClient = options.queryClient ?? createQueryClient();
     const router = createTestRouter(ui, options, testQueryClient);
 
-    return rtlRender(<RouterProvider router={router} />);
+    return rtlRender(
+        <RouterProvider
+            router={router}
+            future={{
+                v7_startTransition: true,
+            }}
+        />
+    );
 };
 
 export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult, options: RenderOptions = {}) => {
@@ -64,7 +71,14 @@ export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult
     const Wrapper = ({ children }: { children: ReactNode }) => {
         const router = createTestRouter(children, options, testQueryClient);
 
-        return <RouterProvider router={router} />;
+        return (
+            <RouterProvider
+                router={router}
+                future={{
+                    v7_startTransition: true,
+                }}
+            />
+        );
     };
 
     return rtlRenderHook(callback, { wrapper: Wrapper });

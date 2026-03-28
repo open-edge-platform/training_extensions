@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -53,7 +53,7 @@ class SSD(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
             This parameter contains image input size, mean, and std, that is used to preprocess the input image.
             If None is given, default parameters for the specific model will be used.
             In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
@@ -75,7 +75,7 @@ class SSD(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["ssd_mobilenetv2"] = "ssd_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -210,7 +210,7 @@ class SSD(OTXDetectionModel):
         """Get new anchors for SSD from OTXDataset."""
         from torchvision.transforms.v2._container import Compose
 
-        from otx.data.transform_libs.torchvision import Resize
+        from otx.data.augmentation.transforms import Resize
 
         target_wh = None
         if isinstance(dataset.transforms, Compose):
@@ -218,6 +218,9 @@ class SSD(OTXDetectionModel):
                 if isinstance(transform, Resize):
                     target_wh = transform.scale
         if target_wh is None:
+            if self.data_input_params.input_size is None:
+                msg = "input_size should not be None."
+                raise ValueError(msg)
             target_wh = list(reversed(self.data_input_params.input_size))  # type: ignore[assignment]
             msg = f"Cannot get target_wh from the dataset. Assign it with the default value: {target_wh}"
             logger.warning(msg)
@@ -374,4 +377,4 @@ class SSD(OTXDetectionModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(864, 864), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return DataInputParams(input_size=(864, 864), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))

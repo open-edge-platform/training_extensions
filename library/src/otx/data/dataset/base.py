@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base class for OTXDataset using new Datumaro experimental Dataset."""
@@ -6,31 +6,32 @@
 from __future__ import annotations
 
 import abc
+from functools import partial
 from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
-import numpy as np
 import torch
 from torch.utils.data import Dataset as TorchDataset
+from torchvision.transforms.v2 import Compose
+from torchvision.transforms.v2 import functional as f
 
 from otx import LabelInfo, NullLabelInfo
+from otx.data.augmentation.pipeline import CPUAugmentationPipeline
+from otx.data.entity.sample import OTXSample, OTXSampleBatch
+from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
-from otx.data.entity.sample import OTXSample, OTXSampleBatch
-from otx.data.transform_libs.torchvision import Compose
-from otx.types import OTXTaskType
-
-Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
-
-RNG = np.random.default_rng(42)
+Transforms = Union[
+    Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
+]
 
 
 def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     """Ensure image tensor is in CHW format with 3 channels.
 
     Args:
-        img: Image tensor that may be in HWC or CHW format
+        img: Image tensor that may be in HWC, HCW, or CHW format
 
     Returns:
         Image tensor in CHW format (C, H, W) for 3D or (B, C, H, W) for 4D with 3 channels
@@ -45,6 +46,10 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
         if img.shape[-1] in (1, 3, 4) and img.shape[0] > 4:
             # HWC format detected, convert to CHW
             img = img.permute(2, 0, 1)
+        # Check for HCW format: channels in the middle dimension
+        elif img.shape[1] in (1, 3, 4) and img.shape[0] > 4 and img.shape[2] > 4:
+            # HCW format detected, convert to CHW
+            img = img.permute(1, 0, 2)
         # If 4 channels (RGBA), convert to 3 channels (RGB)
         if img.shape[0] == 4:
             img = img[:3]
@@ -61,11 +66,13 @@ def _collect_optional_attr(items: list[OTXSample], attr_name: str) -> list | Non
     return values if any(value is not None for value in values) else None
 
 
-def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
+def _default_collate_fn(items: list[OTXSample], stack_images: bool = True) -> OTXSampleBatch:
     """Collate OTXSample items into an OTXSampleBatch.
 
     Args:
         items: List of OTXSample items to batch
+        stack_images: Whether to stack images into a single tensor or keep as a list of tensors. Defaults to True.
+
     Returns:
         Batched OTXSample items with stacked tensors
     """
@@ -73,30 +80,34 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
     image_tensors = []
     for item in items:
         img = item.image
-        if isinstance(img, torch.Tensor):
-            # Convert to float32 if not already
-            if img.dtype != torch.float32:
-                img = img.float()
-        else:
-            # Convert numpy array to float32 tensor
-            img = torch.from_numpy(img).float()
-        # Ensure image is in CHW format
-        img = _ensure_chw_format(img)
+        # All images should already be tensors from the pipeline
+        if not isinstance(img, torch.Tensor):
+            msg = (
+                f"Expected torch.Tensor but got {type(img)}. "
+                "Images should be converted to tensors in the dataset pipeline."
+            )
+            raise TypeError(msg)
+        # Convert to float32 if not already.
+        # For int32/int16 tensors (16-bit images) the intensity transform should
+        # have already produced float32 in [0,1].  If we get here with an integer
+        # dtype it means the intensity transform is missing — raise an error
+        # instead of silently producing wrong values.
+        if img.dtype != torch.float32:
+            if img.dtype in (torch.int32, torch.int16, torch.int64):
+                msg = (
+                    f"Image tensor has dtype {img.dtype} which looks like a high-bit-depth image "
+                    "that was not converted to float32. Please configure an intensity transform "
+                    "(IntensityConfig) in the recipe to map raw pixel values to [0, 1] float32."
+                )
+                raise TypeError(msg)
+            # uint8 → float32 [0, 1]
+            img = img.float().div_(255.0)
         image_tensors.append(img)
 
-    # Try to stack images if they have the same shape
-    if len(image_tensors) > 0 and all(t.shape == image_tensors[0].shape for t in image_tensors):
-        images = torch.stack(image_tensors)
-        # Safety: ensure stacked tensor is BCHW. If it's in BHWC or BHCW, fix it.
-        if images.ndim == 4:
-            # BHWC -> BCHW
-            if images.shape[1] not in (1, 3) and images.shape[-1] in (1, 3):
-                images = images.permute(0, 3, 1, 2)
-            # BHCW -> BCHW (channels at dim=2)
-            elif images.shape[2] in (1, 3) and images.shape[1] not in (1, 3):
-                images = images.permute(0, 2, 1, 3)
-    else:
-        images = image_tensors
+    if len(image_tensors) == 0:
+        msg = "No images found in batch. Ensure that the dataset and pipeline are configured correctly."
+        raise ValueError(msg)
+    images = torch.stack(image_tensors) if stack_images else image_tensors
 
     return OTXSampleBatch(
         images=images,
@@ -115,13 +126,11 @@ class OTXDataset(TorchDataset):
     functionality for data transformation, image decoding, and label handling.
 
     Args:
-        dm_subset (DmDataset): Datumaro subset of a dataset.
+        dm_subset (Dataset): Datumaro subset of a dataset.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int, optional): Maximum number of times to attempt fetching a valid image. Defaults to 1000.
         stack_images (bool, optional): Whether to stack images in the collate function in OTXBatchData entity.
             Defaults to True.
-        to_tv_image (bool, optional): Whether to convert images to TorchVision format. Defaults to True.
-        data_format (str, optional): Source data format originally passed to Datumaro (e.g., "arrow"). Defaults to "".
 
     """
 
@@ -131,16 +140,10 @@ class OTXDataset(TorchDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
-        data_format: str = "",
-        sample_type: type[OTXSample] = OTXSample,
     ) -> None:
         self.transforms = transforms
         self.stack_images = stack_images
-        self.to_tv_image = to_tv_image
-        self.sample_type = sample_type
         self.max_refetch = max_refetch
-        self.data_format = data_format
         self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset
 
@@ -148,12 +151,33 @@ class OTXDataset(TorchDataset):
         return len(self.dm_subset)
 
     def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
+        # Intensity mapping: convert raw pixels to float32 [0, 1].
+        #
+        # When a CPUAugmentationPipeline is used the pipeline itself prepends
+        # the correct intensity transform (built from IntensityConfig), so we
+        # must NOT scale here — the intensity transform will do it.
+        #
+        # For legacy paths (Compose, callable) or when no transforms are set we
+        # keep the original uint8-only scaling as a safe default.
+        if not isinstance(self.transforms, CPUAugmentationPipeline):
+            # Legacy path: always scale assuming uint8 input (backward-compat)
+            entity.image = f.to_dtype(entity.image, dtype=torch.float32, scale=True)
+
         if self.transforms is None:
             return entity
+
+        if isinstance(self.transforms, CPUAugmentationPipeline):
+            return self.transforms(entity)
+
+        # Legacy path: Compose
         if isinstance(self.transforms, Compose):
             return self.transforms(entity)
+
+        # Legacy path: Iterable of transforms
         if isinstance(self.transforms, Iterable):
             return self._iterable_transforms(entity)
+
+        # Legacy path: Single callable
         if callable(self.transforms):
             return self.transforms(entity)
         return None
@@ -165,12 +189,20 @@ class OTXDataset(TorchDataset):
         results = item
         for transform in self.transforms:
             results = transform(results)
-            # MMCV transform can produce None. Please see
-            # https://github.com/open-mmlab/mmengine/blob/26f22ed283ae4ac3a24b756809e5961efe6f9da8/mmengine/dataset/base_dataset.py#L59-L66
             if results is None:
                 return None
 
         return results
+
+    def _read_dm_item(self, index: int) -> OTXSample:
+        """Read an item from the datumaro subset with guaranteed CHW image format."""
+        item = self.dm_subset[index]
+        # Workaround for a datumaro bug: ``TensorField.from_polars()`` applies
+        # ``np.transpose(data, (2, 0, 1))`` to undo the export transpose, but
+        # the correct inverse of ``(2, 0, 1)`` is ``(1, 2, 0)``.  As a result,
+        # images come back as HWC instead of the original CHW.
+        item.image = _ensure_chw_format(item.image)
+        return item
 
     def __getitem__(self, index: int) -> OTXSample:
         for _ in range(self.max_refetch):
@@ -179,19 +211,18 @@ class OTXDataset(TorchDataset):
             if results is not None:
                 return results
 
-            index = RNG.integers(0, len(self))
-
+            index = torch.randint(0, len(self), (1,)).item()
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
     def _get_item_impl(self, index: int) -> OTXSample | None:
-        dm_item = self.dm_subset[index]
+        dm_item = self._read_dm_item(index)
         return self._apply_transforms(dm_item)
 
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect samples into a batch in data loader."""
-        return _default_collate_fn
+        return partial(_default_collate_fn, stack_images=self.stack_images)
 
     @abc.abstractmethod
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:

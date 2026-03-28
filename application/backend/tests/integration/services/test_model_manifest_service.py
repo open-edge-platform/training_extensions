@@ -11,11 +11,11 @@ import pytest
 
 from app.models import TaskType
 from app.models.model_manifest import (
+    BenchmarkMetrics,
     Capabilities,
     ModelManifest,
     ModelManifestDeprecationStatus,
     ModelStats,
-    PerformanceRatings,
     PretrainedWeights,
 )
 from app.models.training_configuration import (
@@ -38,10 +38,9 @@ def fxt_dummy_model_stats():
     yield ModelStats(
         gigaflops=0.39,
         trainable_parameters=5288548,
-        performance_ratings=PerformanceRatings(
-            accuracy=1,
-            training_time=2,
-            inference_speed=3,
+        benchmark_metrics=BenchmarkMetrics(
+            imagenet_top1_accuracy=76.2,
+            imagenet_top5_accuracy=95.3,
         ),
     )
 
@@ -109,18 +108,14 @@ class TestModelManifestService:
             "stats": {
                 "gigaflops": 1.0,
                 "trainable_parameters": 1000,
-                "performance_ratings": {
-                    "accuracy": 1,
-                    "training_time": 2,
-                    "inference_speed": 3,
-                },
+                "benchmark_metrics": {"coco_map_50_95": 54.0, "coco_map_50": 71.6},
             },
             "support_status": "active",
             "hyperparameters": {
                 "dataset_preparation": {
                     "augmentation": {
                         "gaussian_blur": {"kernel_size": 5, "sigma": [0.1, 2.0], "probability": 0.8},
-                        "tiling": {"adaptive_tiling": True, "tile_size": 100, "tile_overlap": 0.3},
+                        "tiling": {"enable_adaptive_tiling": True, "tile_size": 100, "tile_overlap": 0.3},
                     }
                 },
                 "training": {

@@ -504,10 +504,6 @@ class RPNHead:
     """RPNHead factory for instance segmentation regional proposal network."""
 
     RPNHEAD_CFG: ClassVar[dict[str, Any]] = {
-        "maskrcnn_resnet_50": {
-            "in_channels": 256,
-            "feat_channels": 256,
-        },
         "maskrcnn_efficientnet_b2b": {
             "in_channels": 80,
             "feat_channels": 80,

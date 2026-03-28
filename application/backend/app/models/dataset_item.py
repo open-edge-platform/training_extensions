@@ -24,7 +24,6 @@ class DatasetItemAnnotationStatus(StrEnum):
     UNANNOTATED = "unannotated"
     REVIEWED = "reviewed"
     TO_REVIEW = "to_review"
-    REVIEWED_OR_UNANNOTATED = "reviewed_or_unannotated"
 
 
 class DatasetItemAnnotation(BaseModel):

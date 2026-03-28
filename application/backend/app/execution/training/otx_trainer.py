@@ -4,49 +4,51 @@ import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 from uuid import UUID
 
+import polars as pl
 import yaml
+from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Callback
 from loguru import logger
+from otx import OTXTaskType
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig
-from otx.data.dataset import (
-    OTXDetectionDataset,
-    OTXInstanceSegDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
-)
 from otx.data.dataset.base import OTXDataset
+from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
-from otx.metrics import MetricCallable
-from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
-from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
+from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
+from app.execution.common.otx_converters import (
+    convert_metrics,
+    get_metric_by_task,
+    get_otx_dataset_class_by_task_type,
+    get_otx_task_type_by_task,
+)
 from app.models import (
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
     EvaluationResult,
     Task,
-    TaskType,
     TrainingJobParams,
     TrainingStatus,
 )
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
+from app.models.training_configuration.dataset_preparation import Filtering
 from app.services import (
     BaseWeightsService,
     DatasetRevisionService,
@@ -127,20 +129,28 @@ class OTXTrainer(Execution[TrainingJobParams]):
         If a parent model revision ID is provided, it fetches the weights from the parent model.
         Otherwise, it retrieves the base weights for the specified model architecture.
         """
-        parent_model_revision_id = training_params.parent_model_revision_id
-        task = training_params.task
-        model_architecture_id = training_params.model_architecture_id
-        project_id = training_params.project_id
-        if parent_model_revision_id is None:
-            return self._base_weights_service.get_local_weights_path(
-                task=task.task_type, model_manifest_id=model_architecture_id
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            parent_model_revision_id = training_params.parent_model_revision_id
+            task = training_params.task
+            model_architecture_id = training_params.model_architecture_id
+            project_id = training_params.project_id
+            if parent_model_revision_id is None:
+                return self._base_weights_service.get_local_weights_path(
+                    task=task.task_type, model_manifest_id=model_architecture_id
+                )
+
+            parent_variants = self._model_service.get_model_variants(
+                project_id=project_id, model_id=parent_model_revision_id
             )
+            parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
+            weights_path = self.__build_model_weights_path(
+                self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
+            )
+            if not weights_path.exists():
+                raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
 
-        weights_path = self.__build_model_weights_path(self._data_dir, project_id, parent_model_revision_id)
-        if not weights_path.exists():
-            raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
-
-        return weights_path
+            return weights_path
 
     @step("Assign Dataset Subsets")
     def assign_subsets(self, training_config: TrainingConfiguration, project_id: UUID) -> None:
@@ -156,20 +166,16 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
             self.update_message(f"Found {len(unassigned_items)} unassigned items")
 
-            # Get current distribution
-            current_distribution = self._subset_service.get_subset_distribution(project_id)
-            logger.info("Current subset distribution: {}", current_distribution)
-
-            # Compute adjusted ratios
+            # Get target ratios
             split_params = training_config.task_level_parameters.dataset_preparation.subset_split
             target_ratios = SplitRatios(
                 train=(split_params.training / 100), val=(split_params.validation / 100), test=(split_params.test / 100)
             )
-            adjusted_ratios = current_distribution.compute_adjusted_ratios(target_ratios, len(unassigned_items))
-            logger.info("Adjusted subset ratios for unassigned items: {}", adjusted_ratios)
+            logger.info("Target subset ratios for unassigned items: {}", target_ratios)
 
             self.update_message("Computing optimal subset assignments")
-            assignments = self._subset_assigner.assign(unassigned_items, adjusted_ratios)
+            has_all_subsets_assigned = self._subset_service.has_all_subsets_assigned(project_id)
+            assignments = self._subset_assigner.assign(unassigned_items, target_ratios, has_all_subsets_assigned)
 
             # Persist assignments
             self.update_message("Persisting subset assignments")
@@ -196,7 +202,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             geti_training_config = training_config.model_dump(exclude_none=True)
             geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
             geti_training_config["model_manifest_id"] = training_params.model_architecture_id
-            geti_training_config["sub_task_type"] = self.__get_otx_task_type_by_task(task)
+            geti_training_config["sub_task_type"] = get_otx_task_type_by_task(task)
             geti_config_path = self.__build_model_config_path(self._data_dir, project_id, training_params.model_id)
             geti_config_path.parent.mkdir(parents=True, exist_ok=True)
             with open(geti_config_path, "w") as f:
@@ -211,7 +217,12 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
     @step("Prepare Training Dataset", 10)
     def prepare_training_dataset(
-        self, project_id: UUID, task: Task, training_config: dict, dataset_revision_id: UUID | None = None
+        self,
+        project_id: UUID,
+        task: Task,
+        otx_training_config: dict,
+        training_config: TrainingConfiguration,
+        dataset_revision_id: UUID | None = None,
     ) -> DatasetInfo:
         """
         Prepare datasets for training, validation, and testing.
@@ -221,13 +232,12 @@ class OTXTrainer(Execution[TrainingJobParams]):
         """
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
-            subset_cfg_data = training_config["data"][f"{subset_name}_subset"]
-            subset_cfg_data["input_size"] = training_config["data"]["input_size"]
+            subset_cfg_data = otx_training_config["data"][f"{subset_name}_subset"]
+            subset_cfg_data["input_size"] = otx_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = TorchVisionTransformLib.generate(  # pyrefly: ignore[bad-assignment]
-                subset_config
-            )
+            # pyrefly: ignore[missing-attribute,bad-assignment]
+            subset_config.transforms = TransformLibFactory.generate(subset_config)
             return subset_config
 
         with self._db_session_factory() as db:
@@ -259,12 +269,18 @@ class OTXTrainer(Execution[TrainingJobParams]):
                     # Create a dataset revision including only the items with user-verified annotations, then save it
                     logger.info("Creating a new dataset revision with user-verified annotated items")
                     dm_dataset = self._dataset_service.get_dm_dataset(
-                        project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                        project_id=project_id,
+                        task=task,
+                        annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                        sample_mode=SampleMode.TRAINING,
                     )
                     dataset_revision_id = self._dataset_revision_service.save_revision(
                         project_id=project_id, dataset=dm_dataset
                     )
                     logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
+
+            # Apply filtering based on min/max annotation objects if enabled
+            dm_dataset = self.filter_dataset(dm_dataset=dm_dataset, task=task, training_config=training_config)
 
             # Extract the subsets (training, validation, testing)
             logger.info("Extracting training, validation, and testing subsets from the dataset")
@@ -279,20 +295,20 @@ class OTXTrainer(Execution[TrainingJobParams]):
             test_subset_config = build_subset_config("test")
 
             # Wrap them into OTXDataset instances
-            otx_task_type = self.__get_otx_task_type_by_task(task)
-            otx_dataset_class = self.__get_otx_dataset_class_by_task_type(otx_task_type)
+            otx_task_type = get_otx_task_type_by_task(task)
+            otx_dataset_class = get_otx_dataset_class_by_task_type(otx_task_type)
             logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
             otx_training_dataset = otx_dataset_class(
                 dm_subset=dm_training_dataset,
-                transforms=train_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_validation_dataset = otx_dataset_class(
                 dm_subset=dm_validation_dataset,
-                transforms=val_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
             otx_testing_dataset = otx_dataset_class(
                 dm_subset=dm_testing_dataset,
-                transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
+                transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
             return DatasetInfo(
@@ -361,8 +377,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         model_cfg["init_args"]["label_info"] = otx_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
             input_size=cast(tuple[int, int], otx_datamodule.input_size),
-            mean=otx_datamodule.input_mean,
-            std=otx_datamodule.input_std,
+            mean=otx_datamodule.input_mean if otx_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=otx_datamodule.input_std if otx_datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False)
@@ -412,19 +428,21 @@ class OTXTrainer(Execution[TrainingJobParams]):
         model_checkpoint_path: Path,
         task: Task,
         model_revision_id: UUID,
+        model_variant_id: UUID,
         dataset_revision_id: UUID,
     ) -> None:
         """Evaluate the trained model on the testing set"""
         logger.info("Evaluating the model on the testing set...")
-        metrics = otx_engine.test(checkpoint=model_checkpoint_path, metric=self.__get_metric_by_task(task))
+        metrics = otx_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
                 EvaluationResult(
                     model_revision_id=model_revision_id,
+                    model_variant_id=model_variant_id,
                     dataset_revision_id=dataset_revision_id,
                     subset=DatasetItemSubset.TESTING,
-                    metrics={item[0].split("/")[1]: item[1].item() for item in metrics.items()},
+                    metrics=convert_metrics(metrics),
                 )
             )
 
@@ -455,22 +473,49 @@ class OTXTrainer(Execution[TrainingJobParams]):
         otx_work_dir: Path,
         trained_model_path: Path,
         exported_model_paths: ExportedModels,
+        created_variants: dict[ModelFormat, UUID],
     ) -> None:
-        """Store the selected training artifacts (model binary, metrics, ...) and cleanup the rest"""
-        # Store the Pytorch model checkpoint and the OpenVINO exported model files
-        model_ckpt_source_path = trained_model_path
-        model_xml_source_path = exported_model_paths.openvino_model_path.with_suffix(".xml")
-        model_bin_source_path = exported_model_paths.openvino_model_path.with_suffix(".bin")
-        model_onnx_source_path = exported_model_paths.onnx_model_path.with_suffix(".onnx")
-        model_ckpt_dest_path = model_dir / "model.ckpt"
-        model_xml_dest_path = model_dir / "model.xml"
-        model_bin_dest_path = model_dir / "model.bin"
-        model_onnx_dest_path = model_dir / "model.onnx"
-        shutil.copyfile(model_ckpt_source_path, model_ckpt_dest_path)
-        shutil.copyfile(model_xml_source_path, model_xml_dest_path)
-        shutil.copyfile(model_bin_source_path, model_bin_dest_path)
-        shutil.copyfile(model_onnx_source_path, model_onnx_dest_path)
-        logger.info("Stored model artifacts at {}", model_dir)
+        """Copy training artifacts into variant directories and clean up the workspace.
+
+        Each variant's files are stored under model_dir/variants/<variant_id>/model.*
+
+        Args:
+            model_dir: The base model directory.
+            otx_work_dir: The OTX workspace directory to clean up.
+            trained_model_path: Path to the trained checkpoint inside the workspace.
+            exported_model_paths: Paths to exported model files inside the workspace.
+            created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
+        """
+        variants_dir = model_dir / "variants"
+        variants_dir.mkdir(parents=True, exist_ok=True)
+
+        # Copy PyTorch checkpoint
+        pytorch_variant_dir = variants_dir / str(created_variants[ModelFormat.PYTORCH])
+        pytorch_variant_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(trained_model_path, pytorch_variant_dir / "model.ckpt")
+        logger.info("Stored PyTorch variant at {}", pytorch_variant_dir)
+
+        # Copy OpenVINO IR files
+        openvino_variant_dir = variants_dir / str(created_variants[ModelFormat.OPENVINO])
+        openvino_variant_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(
+            exported_model_paths.openvino_model_path.with_suffix(".xml"),
+            openvino_variant_dir / "model.xml",
+        )
+        shutil.copyfile(
+            exported_model_paths.openvino_model_path.with_suffix(".bin"),
+            openvino_variant_dir / "model.bin",
+        )
+        logger.info("Stored OpenVINO variant at {}", openvino_variant_dir)
+
+        # Copy ONNX file
+        onnx_variant_dir = variants_dir / str(created_variants[ModelFormat.ONNX])
+        onnx_variant_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(
+            exported_model_paths.onnx_model_path.with_suffix(".onnx"),
+            onnx_variant_dir / "model.onnx",
+        )
+        logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
         # Store the metrics
         metrics_source_path = otx_work_dir / "csv"
@@ -483,7 +528,37 @@ class OTXTrainer(Execution[TrainingJobParams]):
         shutil.rmtree(otx_work_dir)
         logger.info("Cleaned up OTX work directory at {}", otx_work_dir)
 
+    def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
+        """Create variant records in the database for all exported formats.
+
+        This is called before evaluation so that variant IDs are available for
+        associating evaluation results, and before the OTX workspace is cleaned up.
+
+        Args:
+            model_revision_id: The ID of the model revision for which to create variants for.
+
+        Returns:
+            dict mapping ModelFormat to the created variant UUID.
+        """
+        created_variants: dict[ModelFormat, UUID] = {}
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            for fmt, precision in [
+                (ModelFormat.PYTORCH, ModelPrecision.FP32),
+                (ModelFormat.OPENVINO, ModelPrecision.FP16),
+                (ModelFormat.ONNX, ModelPrecision.FP16),
+            ]:
+                variant = self._model_service.create_variant(
+                    model_revision_id=model_revision_id,
+                    format=fmt,
+                    precision=precision,
+                )
+                created_variants[fmt] = variant.id
+                logger.info("Created {} variant record (id={})", fmt.value, variant.id)
+        return created_variants
+
     def execute(self, params: TrainingJobParams) -> None:
+        training_start_time = datetime.now(UTC)
         project_id = params.project_id
         task = params.task
         model_dir = self.__base_model_path(
@@ -498,7 +573,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         dataset_info = self.prepare_training_dataset(
             project_id=project_id,
             task=task,
-            training_config=otx_training_config,
+            otx_training_config=otx_training_config,
+            training_config=training_config,
             dataset_revision_id=params.dataset_revision_id,
         )
         self.prepare_model(
@@ -506,7 +582,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
         )
         try:
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=params.model_id, status=TrainingStatus.IN_PROGRESS
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.IN_PROGRESS,
+                training_started_at=training_start_time,
             )
             trained_model_path, otx_engine = self.train_model(
                 training_config=otx_training_config,
@@ -516,86 +595,164 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 device=params.device,
                 has_parent_revision=params.parent_model_revision_id is not None,
             )
+            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+
+            # Create variant DB records first (no file I/O yet)
+            created_variants = self.create_model_variants(model_revision_id=params.model_id)
+
+            # Evaluate while the workspace and checkpoint still exist
             self.evaluate_model(
                 otx_engine=otx_engine,
                 model_checkpoint_path=trained_model_path,
                 task=task,
                 model_revision_id=params.model_id,
+                model_variant_id=created_variants[ModelFormat.PYTORCH],
                 dataset_revision_id=dataset_info.revision_id,
             )
-            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+
+            # Now copy files into variant dirs and clean up the workspace
             self.store_model_artifacts(
                 model_dir=model_dir,
                 otx_work_dir=Path(otx_engine.work_dir),
                 trained_model_path=trained_model_path,
                 exported_model_paths=exported_model_paths,
+                created_variants=created_variants,
             )
+            training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=params.model_id, status=TrainingStatus.SUCCESSFUL
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.SUCCESSFUL,
+                training_finished_at=training_finish_time,
             )
         except Exception:
+            training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
-                project_id=project_id, model_id=params.model_id, status=TrainingStatus.FAILED
+                project_id=project_id,
+                model_id=params.model_id,
+                status=TrainingStatus.FAILED,
+                training_finished_at=training_finish_time,
             )
             raise
+
+    def _build_filter_conditions(
+        self,
+        otx_task_type: OTXTaskType,
+        annotation_field: str,
+        filtering_config: Filtering,
+    ) -> list:
+        """Build polars filter conditions for min/max annotation object counts."""
+        filter_conditions = []
+
+        if filtering_config.min_annotation_objects.enable:
+            min_value = filtering_config.min_annotation_objects.value
+            logger.info("Filtering samples with a minimum of {} annotation objects", min_value)
+            if otx_task_type == OTXTaskType.MULTI_CLASS_CLS:
+                # Multiclass label is a scalar - presence means exactly 1 annotation object
+                filter_conditions.append(pl.col(annotation_field).is_not_null())
+            else:
+                filter_conditions.append(pl.col(annotation_field).list.len() >= min_value)
+
+        if filtering_config.max_annotation_objects.enable:
+            max_value = filtering_config.max_annotation_objects.value
+            logger.info("Filtering samples with a maximum of {} annotation objects", max_value)
+            if otx_task_type != OTXTaskType.MULTI_CLASS_CLS:
+                # Max filtering is a no-op for multiclass (always 0 or 1 label)
+                filter_conditions.append(pl.col(annotation_field).list.len() <= max_value)
+
+        return filter_conditions
+
+    def filter_dataset(self, dm_dataset: Dataset, task: Task, training_config: TrainingConfiguration) -> Dataset:
+        """Filter a dataset based on min/max annotation object counts from the training configuration.
+
+        Args:
+            dm_dataset: The dataset to filter.
+            task: The task, used to determine which annotation field to count.
+            training_config: The training configuration containing the filtering parameters.
+
+        Returns:
+            A new Dataset containing only the samples that pass the filter, or the original
+            dataset unchanged if filtering is disabled.
+        """
+        filtering_config = training_config.task_level_parameters.dataset_preparation.filtering
+        min_enabled = filtering_config.min_annotation_objects.enable
+        max_enabled = filtering_config.max_annotation_objects.enable
+
+        if not (min_enabled or max_enabled):
+            return dm_dataset
+
+        logger.info("Applying annotation object filtering to the dataset")
+
+        # Determine the annotation field name based on task type
+        otx_task_type = get_otx_task_type_by_task(task)
+        match otx_task_type:
+            case OTXTaskType.DETECTION:
+                annotation_field = "bboxes"
+            case OTXTaskType.INSTANCE_SEGMENTATION:
+                annotation_field = "polygons"
+            case OTXTaskType.MULTI_CLASS_CLS | OTXTaskType.MULTI_LABEL_CLS:
+                # For classification tasks, count the label field.
+                # For multiclass, label is a single scalar; for multilabel it's a list.
+                annotation_field = "label"
+            case _:
+                logger.warning("Unsupported task type for annotation object filtering: {}", otx_task_type)
+                return dm_dataset
+
+        filter_conditions = self._build_filter_conditions(otx_task_type, annotation_field, filtering_config)
+
+        if not filter_conditions:
+            return dm_dataset
+
+        # Combine all conditions with AND and apply to the dataframe
+        combined_filter = filter_conditions[0]
+        for condition in filter_conditions[1:]:
+            combined_filter = combined_filter & condition
+
+        original_count = len(dm_dataset.df)
+        filtered_df = dm_dataset.df.filter(combined_filter)
+        filtered_count = len(filtered_df)
+
+        logger.info(
+            "Filtered dataset from {} to {} samples ({} samples removed)",
+            original_count,
+            filtered_count,
+            original_count - filtered_count,
+        )
+
+        return Dataset.from_dataframe(
+            df=filtered_df,
+            dtype_or_schema=dm_dataset.dtype,
+            schema=dm_dataset.schema,
+        )
 
     @staticmethod
     def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
         return data_dir / "projects" / str(project_id) / "models" / str(model_id)
 
     @classmethod
-    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
-        return cls.__base_model_path(data_dir, project_id, model_id) / "model.ckpt"
+    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID, model_variant: UUID) -> Path:
+        """Get the path to the PyTorch checkpoint from a model's variants directory."""
+        model_dir = cls.__base_model_path(data_dir, project_id, model_id)
+        return model_dir / "variants" / str(model_variant) / "model.ckpt"
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
         return cls.__base_model_path(data_dir, project_id, model_id) / "config.yaml"
 
-    @classmethod
-    def __get_otx_task_type_by_task(cls, task: Task) -> OTXTaskType:
-        """Map internal Task to OTXTaskType."""
-        match task.task_type:
-            case TaskType.CLASSIFICATION:
-                if task.exclusive_labels:
-                    return OTXTaskType.MULTI_CLASS_CLS
-                return OTXTaskType.MULTI_LABEL_CLS
-            case TaskType.DETECTION:
-                return OTXTaskType.DETECTION
-            case TaskType.INSTANCE_SEGMENTATION:
-                return OTXTaskType.INSTANCE_SEGMENTATION
-            case _:
-                raise ValueError(f"Unsupported task type: {task.task_type}")
-
-    @classmethod
-    def __get_metric_by_task(cls, task: Task) -> MetricCallable:
-        """Map internal Task to Metric."""
-        match task.task_type:
-            case TaskType.CLASSIFICATION:
-                if task.exclusive_labels:
-                    return MultiClassClsMetricCallable
-                return MultiLabelClsMetricCallable
-            case TaskType.DETECTION:
-                return MeanAPCallable
-            case TaskType.INSTANCE_SEGMENTATION:
-                return MaskRLEMeanAPCallable
-            case _:
-                raise ValueError(f"Unsupported task type: {task.task_type}")
-
-    @classmethod
-    def __get_otx_dataset_class_by_task_type(cls, otx_task_type: OTXTaskType) -> type[OTXDataset]:
-        """Get the OTXDataset class corresponding to the given OTXTaskType."""
-        otx_task_type_to_class: dict[OTXTaskType, type[OTXDataset]] = {
-            OTXTaskType.MULTI_CLASS_CLS: OTXMulticlassClsDataset,
-            OTXTaskType.MULTI_LABEL_CLS: OTXMultilabelClsDataset,
-            OTXTaskType.DETECTION: OTXDetectionDataset,
-            OTXTaskType.INSTANCE_SEGMENTATION: OTXInstanceSegDataset,
-        }
-        try:
-            return otx_task_type_to_class[otx_task_type]
-        except KeyError:
-            raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
-
-    def __update_model_revision_training_status(self, project_id: UUID, model_id: UUID, status: TrainingStatus):
+    def __update_model_revision_training_status(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+        status: TrainingStatus,
+        training_started_at: datetime | None = None,
+        training_finished_at: datetime | None = None,
+    ):
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
-            self._model_service.update_revision_status(project_id=project_id, model_id=model_id, training_status=status)
+            self._model_service.update_revision_status(
+                project_id=project_id,
+                model_id=model_id,
+                training_status=status,
+                training_started_at=training_started_at,
+                training_finished_at=training_finished_at,
+            )

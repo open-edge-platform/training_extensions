@@ -3,7 +3,7 @@
 
 import type { ComponentType, SVGProps } from 'react';
 
-export type ToolType = 'selection' | 'bounding-box' | 'polygon' | 'sam' | 'magnetic-lasso';
+export type ToolType = 'selection' | 'bounding-box' | 'polygon' | 'sam' | 'magnetic-lasso' | 'ssim';
 
 export interface ToolConfig {
     type: ToolType;

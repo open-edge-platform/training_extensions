@@ -8,10 +8,10 @@ import pytest
 from datumaro.experimental.categories import LabelCategories
 
 from app.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
+    DetectionImportExportSample,
+    InstanceSegmentationImportExportSample,
+    MulticlassClassificationImportExportSample,
+    MultilabelClassificationImportExportSample,
 )
 from app.execution.dataset_import.sample_to_annotation import DatumaroSampleToGetiAnnotationConverter
 from app.models import FullImage, Label, Polygon, Rectangle
@@ -70,10 +70,23 @@ def fxt_converter_with_mapping(
     )
 
 
+def test_convert_with_none(fxt_converter, fxt_project_labels):
+    """Test converting a multilabel sample with confidence scores."""
+    none_array = np.array(None)
+    samples = [
+        MultilabelClassificationImportExportSample(label=none_array, confidence=None),
+        DetectionImportExportSample(label=none_array, bboxes=none_array, confidence=None),
+        InstanceSegmentationImportExportSample(label=none_array, polygons=none_array, confidence=None),
+    ]
+    for sample in samples:
+        with pytest.raises(ValueError, match="Expected 1D array for label indices, got 0D"):
+            fxt_converter.convert_sample(sample)
+
+
 class TestClassificationConversion:
     def test_convert_classification_sample_with_confidence(self, fxt_converter, fxt_project_labels):
         """Test converting a classification sample with confidence score."""
-        sample = ClassificationSample(label=0, confidence=0.95)
+        sample = MulticlassClassificationImportExportSample(label=0, confidence=0.95)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -85,7 +98,7 @@ class TestClassificationConversion:
 
     def test_convert_classification_sample_without_confidence(self, fxt_converter, fxt_project_labels):
         """Test converting a classification sample without confidence."""
-        sample = ClassificationSample(label=1, confidence=None)
+        sample = MulticlassClassificationImportExportSample(label=1, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -95,17 +108,17 @@ class TestClassificationConversion:
 
     def test_convert_classification_sample_with_none_label(self, fxt_converter):
         """Test converting a classification sample with None label."""
-        sample = ClassificationSample(label=None, confidence=0.5)
+        sample = MulticlassClassificationImportExportSample(label=None, confidence=0.5)
 
         result = fxt_converter.convert_sample(sample)
 
-        assert result == []
+        assert result is None
 
     def test_convert_classification_sample_with_label_mapping(
         self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
     ):
         """Test converting a classification sample with label mapping."""
-        sample = ClassificationSample(label=0, confidence=0.9)
+        sample = MulticlassClassificationImportExportSample(label=0, confidence=0.9)
         result = fxt_converter_with_mapping.convert_sample(sample)
 
         assert result is not None
@@ -118,10 +131,10 @@ class TestClassificationConversion:
         project_labels = fxt_project_labels[:2]  # Only "cat" and "dog" labels in project
         converter = DatumaroSampleToGetiAnnotationConverter(project_labels, fxt_label_categories, label_mapping)
 
-        sample = ClassificationSample(label=2, confidence=0.9)
+        sample = MulticlassClassificationImportExportSample(label=2, confidence=0.9)
         result = converter.convert_sample(sample)
 
-        assert result == []  # Label should be filtered out and no annotations returned
+        assert result is None  # Label should be filtered out and no annotations returned
 
 
 class TestMultilabelConversion:
@@ -129,7 +142,7 @@ class TestMultilabelConversion:
         """Test converting a multilabel sample with confidence scores."""
         labels = np.array([0, 1, 2])
         confidences = np.array([0.9, 0.85, 0.8])
-        sample = MultilabelClassificationSample(label=labels, confidence=confidences)
+        sample = MultilabelClassificationImportExportSample(label=labels, confidence=confidences)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -144,7 +157,7 @@ class TestMultilabelConversion:
     def test_convert_multilabel_sample_without_confidences(self, fxt_converter):
         """Test converting a multilabel sample without confidences."""
         labels = np.array([1])
-        sample = MultilabelClassificationSample(label=labels, confidence=None)
+        sample = MultilabelClassificationImportExportSample(label=labels, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -156,7 +169,7 @@ class TestMultilabelConversion:
         self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
     ):
         """Test converting a multilabel sample with label mapping."""
-        sample = MultilabelClassificationSample(label=np.array([0, 1]), confidence=np.array([0.9] * 2))
+        sample = MultilabelClassificationImportExportSample(label=np.array([0, 1]), confidence=np.array([0.9] * 2))
         result = fxt_converter_with_mapping.convert_sample(sample)
 
         assert result is not None
@@ -170,7 +183,7 @@ class TestDetectionConversion:
         labels = np.array([0, 1])
         bboxes = np.array([[10, 20, 50, 60], [100, 150, 200, 250]])
         confidences = np.array([0.95, 0.88])
-        sample = DetectionSample(label=labels, bboxes=bboxes, confidence=confidences)
+        sample = DetectionImportExportSample(label=labels, bboxes=bboxes, confidence=confidences)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -191,7 +204,7 @@ class TestDetectionConversion:
         """Test converting a detection sample without confidences."""
         labels = np.array([2])
         bboxes = np.array([[5, 10, 15, 20]])
-        sample = DetectionSample(label=labels, bboxes=bboxes, confidence=None)
+        sample = DetectionImportExportSample(label=labels, bboxes=bboxes, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -205,7 +218,7 @@ class TestDetectionConversion:
         labels = np.array([1, 2, 0])
         bboxes = np.array([[10, 20, 50, 60]] * 3)
         confidences = np.array([0.92] * 3)
-        sample = DetectionSample(label=labels, bboxes=bboxes, confidence=confidences)
+        sample = DetectionImportExportSample(label=labels, bboxes=bboxes, confidence=confidences)
         result = fxt_converter_with_mapping.convert_sample(sample)
 
         assert result is not None
@@ -220,7 +233,7 @@ class TestSegmentationConversion:
         labels = np.array([0])
         polygons = np.array([[[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]]])
         confidences = np.array([0.92])
-        sample = InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences)
+        sample = InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=confidences)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -236,7 +249,7 @@ class TestSegmentationConversion:
         """Test converting multiple instance segmentation polygons."""
         labels = np.array([1, 2])
         polygons = np.array([[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]], [[20.0, 20.0], [30.0, 30.0]]], dtype=object)
-        sample = InstanceSegmentationSample(label=labels, polygons=polygons, confidence=None)
+        sample = InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=None)
 
         result = fxt_converter.convert_sample(sample)
 
@@ -251,7 +264,7 @@ class TestSegmentationConversion:
         labels = np.array([1, 2, 0])
         polygons = np.array([[[10.0, 20.0], [30.0, 40.0], [50.0, 60.0]]] * 3)
         confidences = np.array([0.92] * 3)
-        sample = InstanceSegmentationSample(label=labels, polygons=polygons, confidence=confidences)
+        sample = InstanceSegmentationImportExportSample(label=labels, polygons=polygons, confidence=confidences)
         result = fxt_converter_with_mapping.convert_sample(sample)
 
         assert result is not None

@@ -51,11 +51,11 @@ test('Project creation', async ({ page }) => {
         await page.getByRole('button', { name: /Create project/ }).scrollIntoViewIfNeeded();
         await page.getByRole('button', { name: /Create project/ }).click();
 
-        await page.waitForURL(/inference/);
+        await page.waitForURL(/dataset/);
     });
 
     await test.step('Verify project appears in project list', async () => {
-        await page.getByText('Geti Tune').click(); // Go back to /projects
+        await page.getByText('Geti').click(); // Go back to /projects
         await expect(page.getByText('New Project', { exact: true })).toBeVisible();
     });
 

@@ -6,6 +6,13 @@ import { PointerEvent, SVGProps } from 'react';
 import { isPolygonValid } from '@geti/smart-tools/utils';
 import { isEmpty, isEqual, isNil, negate } from 'lodash-es';
 
+import eraserToolCursor from '../../../../assets/icons/cursor/eraser-tool.png';
+import lassoClosingCursor from '../../../../assets/icons/cursor/lasso-closing.png';
+import lassoDrawingCursor from '../../../../assets/icons/cursor/lasso-drawing.png';
+import magneticLassoClosingCursor from '../../../../assets/icons/cursor/magnetic-lasso-closing.png';
+import magneticLassoDrawingCursor from '../../../../assets/icons/cursor/magnetic-lasso-drawing.png';
+import polygonClosingCursor from '../../../../assets/icons/cursor/polygon-closing.png';
+import polygonDrawingCursor from '../../../../assets/icons/cursor/polygon-drawing.png';
 import type { Label } from '../../../../constants/shared-types';
 import { isEraserOrRightButton, isLeftButton } from '../../../../shared/buttons-utils';
 import { Point, Polygon as PolygonType } from '../../../../shared/types';
@@ -47,17 +54,42 @@ enum PointerIconsOffset {
     MagneticLassoClose = '0 0',
 }
 
-const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
-    [PolygonMode.Lasso]: { icon: PointerIcons.Lasso, offset: PointerIconsOffset.Lasso },
-    [PolygonMode.Eraser]: { icon: PointerIcons.Eraser, offset: PointerIconsOffset.Eraser },
-    [PolygonMode.Polygon]: { icon: PointerIcons.Polygon, offset: PointerIconsOffset.Polygon },
-    [PolygonMode.LassoClose]: { icon: PointerIcons.LassoClose, offset: PointerIconsOffset.LassoClose },
-    [PolygonMode.MagneticLasso]: { icon: PointerIcons.MagneticLasso, offset: PointerIconsOffset.MagneticLasso },
+const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset; cursorUrl: string }> = {
+    [PolygonMode.Lasso]: {
+        icon: PointerIcons.Lasso,
+        offset: PointerIconsOffset.Lasso,
+        cursorUrl: lassoDrawingCursor,
+    },
+    [PolygonMode.Eraser]: {
+        icon: PointerIcons.Eraser,
+        offset: PointerIconsOffset.Eraser,
+        cursorUrl: eraserToolCursor,
+    },
+    [PolygonMode.Polygon]: {
+        icon: PointerIcons.Polygon,
+        offset: PointerIconsOffset.Polygon,
+        cursorUrl: polygonDrawingCursor,
+    },
+    [PolygonMode.LassoClose]: {
+        icon: PointerIcons.LassoClose,
+        offset: PointerIconsOffset.LassoClose,
+        cursorUrl: lassoClosingCursor,
+    },
+    [PolygonMode.MagneticLasso]: {
+        icon: PointerIcons.MagneticLasso,
+        offset: PointerIconsOffset.MagneticLasso,
+        cursorUrl: magneticLassoDrawingCursor,
+    },
     [PolygonMode.MagneticLassoClose]: {
         icon: PointerIcons.MagneticLassoClose,
         offset: PointerIconsOffset.MagneticLassoClose,
+        cursorUrl: magneticLassoClosingCursor,
     },
-    [PolygonMode.PolygonClose]: { icon: PointerIcons.PolygonClose, offset: PointerIconsOffset.PolygonClose },
+    [PolygonMode.PolygonClose]: {
+        icon: PointerIcons.PolygonClose,
+        offset: PointerIconsOffset.PolygonClose,
+        cursorUrl: polygonClosingCursor,
+    },
 };
 
 export const ERASER_FIELD_DEFAULT_RADIUS = 5;

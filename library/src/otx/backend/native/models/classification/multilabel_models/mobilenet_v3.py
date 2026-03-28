@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MobileNetV3 model implementation."""
@@ -36,7 +36,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
 
     Args:
         label_info (LabelInfoTypes): The label information.
-        data_input_params (DataInputParams | None, optional): The data input parameters
+        data_input_params (DataInputParams | dict | None, optional): The data input parameters
             such as input size and normalization. If None is given,
             default parameters for the specific model will be used.
         model_name (str, optional): The model name. Defaults to "mobilenetv3_large".
@@ -50,7 +50,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

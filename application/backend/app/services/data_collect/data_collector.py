@@ -10,8 +10,9 @@ from loguru import logger
 from app.db import get_db_session
 from app.models import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, Pipeline, Project
 from app.models.media import ImageFormat
-from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
+from app.services.data_collect.prediction_converter import get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
+from app.services.media_service import ImageMetadata
 from app.stream.stream_data import InferenceData
 
 
@@ -148,8 +149,8 @@ class DataCollector:
         Collects dispatched images to project dataset based on policy checkers.
 
         Evaluates automated collection policies and the manual next-frame trigger to determine if image
-        should be added to dataset. If collection is warranted, processes the image and
-        creates a dataset item with annotations.
+        should be added to dataset. If collection is warranted, stores the image as an unannotated
+        dataset item (predictions are not cached; they can be generated on-the-fly later).
 
         Args:
             timestamp: Floating-point timestamp of the captured image, used for item naming.
@@ -200,23 +201,21 @@ class DataCollector:
                     )
                     return
 
-            labels = label_service.list_all(project_id=project.id)
-            annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
-
             media = media_service.create_image(
-                project_id=project.id,
-                data=frame_data,
-                name=f"{timestamp:.4f}".replace(".", "_"),
-                format=ImageFormat.JPG,
-                source_id=pipeline.source_id,
+                ImageMetadata(
+                    project_id=project.id,
+                    data=frame_data,
+                    name=f"{timestamp:.4f}".replace(".", "_"),
+                    image_format=ImageFormat.JPG,
+                    source_id=pipeline.source_id,
+                )
             )
             dataset_service.create_dataset_item(
                 project_id=project.id,
                 task=project.task,
                 media=media,
                 user_reviewed=False,
-                prediction_model_id=inference_data.model_id,
-                annotations=annotations,
+                annotations=None,
             )
         self.should_collect_next_frame = False
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for classification model entity used in OTX."""
@@ -37,7 +37,7 @@ class OTXMulticlassClsModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -50,7 +50,7 @@ class OTXMulticlassClsModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "multiclass_classification_model",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -61,7 +61,6 @@ class OTXMulticlassClsModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.MULTI_CLASS_CLS,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
@@ -161,6 +160,9 @@ class OTXMulticlassClsModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for classification model."""
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return OTXSampleBatch(images=images, labels=labels)
@@ -183,5 +185,10 @@ class OTXMulticlassClsModel(OTXModel):
         )
 
     @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.MULTI_CLASS_CLS
+
+    @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))
+        return DataInputParams(input_size=(224, 224), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))

@@ -24,7 +24,7 @@ import { useProject } from 'hooks/api/project.hook';
 
 import { useExportDatasetJobAction } from '../../hooks/use-export-dataset-job-action.hook';
 import { MultiSelectList } from '../multi-select-list/multi-select-list.component';
-import { getFormatOptions } from './util';
+import { getFormatOptions } from '../util';
 
 import classes from './export-dataset-config.module.scss';
 
@@ -72,6 +72,7 @@ export const ExportDatasetConfig = ({
                                     items={labels}
                                     maxHeight='size-2000'
                                     label='Filter annotations by label'
+                                    allSelectedByDefault
                                 />
 
                                 <Checkbox name='include_unannotated' defaultSelected={formState.include_unannotated}>

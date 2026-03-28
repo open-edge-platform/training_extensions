@@ -1,10 +1,14 @@
-// Copyright (C) 2025-2026 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../constants/shared-types';
+import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
+import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
+import { convertPredictionToAnnotation } from '../../annotator/annotations/utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
@@ -13,16 +17,53 @@ import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { ReadOnlyAnnotator } from './read-only-annotator.component';
-import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { useNextMedia } from './secondary-toolbar/util';
+import { useNextMediaPrefetch } from './utils';
+
+type PredictionAnnotatorProps = {
+    image: ImageData;
+    mediaItem: Media;
+    mode: AnnotatorMode;
+    onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
+    onClose: () => void;
+    onSuccessfulAcceptPrediction: () => void;
+};
+
+const PredictionAnnotator = ({
+    mode,
+    onChangeAnnotatorMode,
+    mediaItem,
+    image,
+    onClose,
+    onSuccessfulAcceptPrediction,
+}: PredictionAnnotatorProps) => {
+    const { replaceAnnotations, annotations } = useAnnotationActions();
+
+    const handleEditPrediction = () => {
+        onChangeAnnotatorMode('annotation');
+        replaceAnnotations(annotations.map(convertPredictionToAnnotation));
+    };
+
+    return (
+        <ReadOnlyAnnotator
+            mode={mode}
+            image={image}
+            mediaItem={mediaItem}
+            onModeChange={onChangeAnnotatorMode}
+            onClose={onClose}
+            onSuccessfulAcceptPrediction={onSuccessfulAcceptPrediction}
+            onEditPrediction={handleEditPrediction}
+            isEditPredictionDisabled={isEmpty(annotations)}
+        />
+    );
+};
 
 type AnnotatorProps = {
     image: ImageData;
     mediaItem: Media;
     items: Media[];
     mode: AnnotatorMode;
-    changeAnnotatorMode: (mode: AnnotatorMode) => void;
+    onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
 };
@@ -31,27 +72,30 @@ const Annotator = ({
     mediaItem,
     image,
     mode,
-    changeAnnotatorMode,
+    onChangeAnnotatorMode,
     onSelectedMediaItem,
     items,
     onClose,
 }: AnnotatorProps) => {
-    const getNextMediaItem = useNextMedia(mediaItem, items);
+    const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
 
     const handleSubmitAnnotations = async () => {
-        const nextMediaItem = getNextMediaItem();
+        if (nextMediaItem === undefined) {
+            return;
+        }
 
         onSelectedMediaItem(nextMediaItem);
     };
 
     if (mode === 'prediction') {
         return (
-            <ReadOnlyAnnotator
+            <PredictionAnnotator
                 image={image}
                 mediaItem={mediaItem}
-                onModeChange={changeAnnotatorMode}
+                mode={mode}
+                onChangeAnnotatorMode={onChangeAnnotatorMode}
                 onClose={onClose}
-                onAcceptPrediction={handleSubmitAnnotations}
+                onSuccessfulAcceptPrediction={handleSubmitAnnotations}
             />
         );
     }
@@ -65,7 +109,7 @@ const Annotator = ({
                     onClose={onClose}
                     mediaItem={mediaItem}
                     onSelectedMediaItem={onSelectedMediaItem}
-                    onModeChange={changeAnnotatorMode}
+                    onModeChange={onChangeAnnotatorMode}
                     onAcceptPrediction={handleSubmitAnnotations}
                 />
             </View>
@@ -76,7 +120,7 @@ const Annotator = ({
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>
-                    <VideoToolbar />
+                    <VideoToolbar mode={mode} />
                 </View>
             )}
 
@@ -86,7 +130,7 @@ const Annotator = ({
 
             <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} />
+                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
             </View>
         </>
@@ -108,17 +152,12 @@ export const AnnotatorContainer = ({
     items,
     onSelectedMediaItem,
 }: AnnotatorContainerProps) => {
-    const { mediaItem, setMediaItem, image } = useSelectedMediaItem();
-
-    const selectMediaItem = (item: Media) => {
-        setMediaItem(item);
-        onSelectedMediaItem(item);
-    };
+    const { mediaItem, image } = useSelectedMediaItem();
 
     return (
         <VideoPlayerProvider
             videoFrame={isVideoFrame(mediaItem) ? mediaItem : undefined}
-            changeSelectedMediaItem={selectMediaItem}
+            changeSelectedMediaItem={onSelectedMediaItem}
         >
             <Annotator
                 mode={mode}
@@ -126,8 +165,8 @@ export const AnnotatorContainer = ({
                 image={image}
                 onClose={onClose}
                 mediaItem={mediaItem}
-                changeAnnotatorMode={changeAnnotatorMode}
-                onSelectedMediaItem={selectMediaItem}
+                onChangeAnnotatorMode={changeAnnotatorMode}
+                onSelectedMediaItem={onSelectedMediaItem}
             />
         </VideoPlayerProvider>
     );

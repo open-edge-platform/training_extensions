@@ -9,14 +9,20 @@ description: "D-FINE is a powerful real-time object detector that redefines the 
 stats:
   gigaflops: 202
   trainable_parameters: 240
-  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
-    accuracy: 3
-    training_time: 1
-    inference_speed: 1
+  benchmark_metrics:
+    coco_map_50_95: 55.8
+    coco_map_50: 73.7
 
 hyperparameters:
   training:
     learning_rate: 0.00025
+    weight_decay: 0.000125
+    scheduler:
+      factor: 0.1
+      patience: 6
+      warmup:
+        enable: true
+        epochs: 100
     input_size_width: 640
     input_size_height: 640
   dataset_preparation:
@@ -24,8 +30,21 @@ hyperparameters:
       random_zoom_out:
         enable: true
         fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5
       iou_random_crop:
         enable: true
+        probability: 1.0
+        min_scale: 0.3
+        max_scale: 1.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
       random_affine:
         enable: false
         max_rotate_degree: 10.0
@@ -34,11 +53,6 @@ hyperparameters:
           - 0.5
           - 1.5
         max_shear_degree: 2.0
-      random_horizontal_flip:
-        enable: true
-        probability: 0.5
-      random_vertical_flip:
-        enable: false
         probability: 0.5
       gaussian_blur:
         enable: false
@@ -48,7 +62,7 @@ hyperparameters:
           - 2.0
         probability: 0.5
       color_jitter:
-        enable: true
+        enable: false
         brightness:
           - 0.875
           - 1.125
@@ -66,4 +80,21 @@ hyperparameters:
         enable: false
         mean: 0.0
         sigma: 0.1
+        probability: 0.5
+      random_erasing:
+        enable: false
+        scale:
+          - 0.02
+          - 0.33
+        ratio:
+          - 0.3
+          - 3.3
+        probability: 0.5
+        value: 0.0
+      random_grayscale:
+        enable: false
+        probability: 0.1
+      random_sharpness:
+        enable: false
+        sharpness: 0.5
         probability: 0.5

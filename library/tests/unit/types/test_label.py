@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from datumaro.components.annotation import GroupType
 from datumaro.experimental.categories import (
+    GroupType,
     HierarchicalLabelCategories,
     HierarchicalLabelCategory,
     LabelGroup,
@@ -63,7 +63,49 @@ def test_hlabel_info():
     for lbl in dict_label_info["label_names"]:
         assert " " not in lbl
 
-    # Check if class_to_group_idx and label_to_idx have the same keys
-    assert list(hlabel_info.class_to_group_idx.keys()) == list(
-        hlabel_info.label_to_idx.keys(),
-    ), "class_to_group_idx and label_to_idx keys do not match"
+    # All classification output labels must be in label_to_idx
+    assert set(hlabel_info.class_to_group_idx.keys()).issubset(
+        set(hlabel_info.label_to_idx.keys()),
+    ), "class_to_group_idx keys must be a subset of label_to_idx keys"
+
+    # All parent labels referenced in label_tree_edges must also be in label_to_idx
+    for child, parent in hlabel_info.label_tree_edges:
+        assert child in hlabel_info.label_to_idx, f"child '{child}' missing from label_to_idx"
+        assert parent in hlabel_info.label_to_idx, f"parent '{parent}' missing from label_to_idx"
+
+
+def test_hlabel_info_parent_only_nodes():
+    """Test hierarchy where parent labels are NOT classification outputs.
+
+    CIFAR-100-style: superclasses like 'aquatic_mammals' only appear as
+    parent nodes in the tree, never as members of a classification group.
+    """
+    labels = (
+        HierarchicalLabelCategory(name="aquatic_mammals"),
+        HierarchicalLabelCategory(name="fish"),
+        HierarchicalLabelCategory(name="beaver", parent="aquatic_mammals"),
+        HierarchicalLabelCategory(name="otter", parent="aquatic_mammals"),
+        HierarchicalLabelCategory(name="shark", parent="fish"),
+        HierarchicalLabelCategory(name="trout", parent="fish"),
+    )
+    label_groups = (
+        LabelGroup(name="aquatic_mammals", labels=("beaver", "otter"), group_type=GroupType.EXCLUSIVE),
+        LabelGroup(name="fish", labels=("shark", "trout"), group_type=GroupType.EXCLUSIVE),
+    )
+    dm_label_categories = HierarchicalLabelCategories(items=labels, label_groups=label_groups)
+
+    hlabel_info = HLabelInfo.from_dm_label_groups(dm_label_categories)
+
+    # Parent-only nodes must be in label_to_idx
+    assert "aquatic_mammals" in hlabel_info.label_to_idx
+    assert "fish" in hlabel_info.label_to_idx
+
+    # All edge parents/children must be in label_to_idx
+    for child, parent in hlabel_info.label_tree_edges:
+        assert child in hlabel_info.label_to_idx, f"child '{child}' missing from label_to_idx"
+        assert parent in hlabel_info.label_to_idx, f"parent '{parent}' missing from label_to_idx"
+
+    # JSON round-trip must be equal
+    serialized = hlabel_info.to_json()
+    deserialized = HLabelInfo.from_json(serialized)
+    assert hlabel_info == deserialized

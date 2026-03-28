@@ -1,0 +1,55 @@
+id: instance-segmentation-rfdetr-m
+name: RF-DETR-Seg-M
+
+pretrained_weights:
+  url: https://storage.googleapis.com/rfdetr/rf-detr-seg-m-ft.pth
+  sha_sum: 3ad325094735f431aee9962a8d204d68eb5bfc393d53e7e836e70998fef5ea58
+
+description: "RF-DETR for instance segmentation extends the RF-DETR object detector with mask prediction capabilities, providing high-accuracy instance segmentation with real-time performance."
+stats:
+  gigaflops: 102.0
+  trainable_parameters: 35.7
+  benchmark_metrics:
+    coco_map_50_95: 45.3
+    coco_map_50: 68.4
+
+capabilities:
+  tiling: false
+
+hyperparameters:
+  training:
+    learning_rate: 0.0001
+    weight_decay: 0.0001
+    early_stopping:
+      patience: 15
+    scheduler:
+      factor: 0.1
+      patience: 10
+    gradient_clip:
+      enable: true
+      max_grad_norm: 0.1
+    allowed_values_input_size:
+      - 336
+      - 432
+      - 480
+      - 504
+      - 528
+      - 576
+      - 624
+      - 768
+    input_size_width: 432
+    input_size_height: 432
+  dataset_preparation:
+    augmentation:
+      random_zoom_out:
+        enable: true
+        fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5
+      iou_random_crop:
+        enable: true
+        probability: 1.0
+        min_scale: 0.3
+        max_scale: 1.0

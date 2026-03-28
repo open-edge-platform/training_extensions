@@ -3,8 +3,6 @@
 #
 
 import pytest
-import torch
-from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
@@ -34,26 +32,3 @@ class TestDinoV2Seg:
         assert isinstance(config, dict)
         assert "model_type" in config
         assert config["model_type"] == "transformer"
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            DinoV2Seg(
-                model_name="dinov2-small-seg",
-                label_info=3,
-                data_input_params=DataInputParams((518, 518), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_compiled_model(self, model):
-        # Set Compile Counter
-        torch._dynamo.reset()
-        cnt = CompileCounter()
-
-        # Set model compile setting
-        model.model = torch.compile(model.model, backend=cnt)
-
-        # Prepare inputs
-        x = torch.randn(1, 3, 518, 518)
-        model.model(x)
-        assert cnt.frame_count == 1

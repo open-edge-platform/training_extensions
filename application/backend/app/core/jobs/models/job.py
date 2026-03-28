@@ -24,6 +24,7 @@ class JobStatus(IntEnum):
 
 class JobType(StrEnum):
     TRAIN = "train"
+    QUANTIZE = "quantize"
     PREPARE_DATASET_FOR_IMPORT = "prepare_dataset_for_import"
     IMPORT_DATASET_AS_NEW_PROJECT = "import_dataset_as_new_project"
     IMPORT_DATASET_TO_PROJECT = "import_dataset_to_project"

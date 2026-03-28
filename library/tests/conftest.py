@@ -1,25 +1,21 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import multiprocessing
-from collections import defaultdict
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
 import torch
-import yaml
 from torch import LongTensor
 from torch.utils._pytree import register_pytree_node
 from torchvision import tv_tensors
-from torchvision.tv_tensors import Image, Mask
+from torchvision.tv_tensors import Mask
 
-from otx.backend.native.cli.utils import get_otx_root_path
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.tools.converter import TEMPLATE_ID_MAPPING
 from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
@@ -303,6 +299,7 @@ def fxt_h_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXPredic
 def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
+    fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
@@ -314,13 +311,13 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         label=fake_labels,
     )
     batch_data_entity = OTXSampleBatch(
-        images=[Image(fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        images=[Image(fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
@@ -334,6 +331,7 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
 def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
+    fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
@@ -348,14 +346,14 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         label=fake_labels,
     )
     batch_data_entity = OTXSampleBatch(
-        images=[Image(data=fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        images=[Image(data=fake_image)],
+        images=fake_images,
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
@@ -368,7 +366,8 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
 @pytest.fixture(scope="session")
 def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     img_size = (32, 32)
-    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.uint8).numpy()
+    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
+    fake_images = fake_image.unsqueeze(0)  # (1, 3, H, W)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_masks = Mask(torch.randint(low=0, high=2, size=img_size, dtype=torch.uint8))
     # define data entity
@@ -378,12 +377,12 @@ def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         masks=fake_masks,
     )
     batch_data_entity = OTXSampleBatch(
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=fake_images,
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=fake_images,
         imgs_info=[fake_image_info],
         masks=[fake_masks],
         scores=[],
@@ -523,84 +522,3 @@ def fxt_export_list() -> list[ExportCase2Test]:
         ExportCase2Test("OPENVINO", False, "exported_model.xml"),
         ExportCase2Test("OPENVINO", True, "exportable_code.zip"),
     ]
-
-
-def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
-    """Get Geti model template paths from the templates directory.
-
-    Returns:
-        dict: A dictionary mapping task types to lists of template paths and tiling options.
-    """
-    template_dir = Path(get_otx_root_path()).parent.parent / "tests" / "assets" / "geti" / "model_configs"
-    template_paths = template_dir.rglob("*.yaml")
-    template_dict = defaultdict(list)
-
-    for template_path in template_paths:
-        with template_path.open() as file:
-            template = yaml.safe_load(file)
-
-        model_id = template.get("model_manifest_id")
-
-        model_config_path = TEMPLATE_ID_MAPPING[model_id]["recipe_path"]
-        if not isinstance(model_config_path, Path):
-            msg = f"Expected Path for recipe_path, got {type(model_config_path)}"
-            raise TypeError(msg)
-        model_task = OTXTaskType(model_config_path.parent.name.upper())
-        has_tiling = (
-            template["hyperparameters"].get("dataset_preparation", {}).get("augmentation", {}).get("tiling", None)
-        )
-
-        # Add base (no-tiling)
-        template_dict[model_task].append(
-            {
-                "template_path": template_path,
-                "tiling": False,
-            },
-        )
-
-        # Add tiling version if available
-        if has_tiling:
-            template_dict[model_task].append(
-                {
-                    "template_path": template_path,
-                    "tiling": True,
-                },
-            )
-
-    # Alias multi-class template for multi-label and hierarchical
-    if OTXTaskType.MULTI_CLASS_CLS in template_dict:
-        template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
-        template_dict[OTXTaskType.H_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
-
-    return template_dict
-
-
-def pytest_generate_tests(metafunc):
-    """
-    Dynamically generates parameterized test cases for each available task template.
-
-    If the test function requires the 'task_template' fixture, this hook loads model templates
-    based on the specified --task and --run-category-only command-line options. It then creates
-    combinations of (task_enum, template_path, tiling_flag) and registers them as individual
-    test cases using pytest's parametrize mechanism, with readable test IDs for clarity.
-    """
-    if "task_template" in metafunc.fixturenames:
-        task_name = metafunc.config.getoption("task")
-        template_dict = get_model_template_paths()
-
-        params = []
-        if task_name.lower() == "all":
-            params = [
-                (task, entry["template_path"], entry["tiling"])
-                for task, entries in template_dict.items()
-                for entry in entries
-            ]
-        else:
-            task_enum = OTXTaskType(task_name.upper())
-            params = [
-                (task_enum, entry["template_path"], entry["tiling"]) for entry in template_dict.get(task_enum, [])
-            ]
-
-        ids = [f"{task.name}/{path.parent.name}" + ("/tiling" if tiling else "") for task, path, tiling in params]
-
-        metafunc.parametrize("task_template", params, ids=ids)

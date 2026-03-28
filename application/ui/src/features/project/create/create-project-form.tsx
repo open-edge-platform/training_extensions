@@ -3,7 +3,7 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField } from '@geti/ui';
+import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField, toast } from '@geti/ui';
 import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
@@ -17,6 +17,7 @@ import {
     ClassificationTaskSelection,
     ClassificationTaskType,
 } from './classification-label-selection/classification-task-type-selection.component';
+import { generateUniqueProjectName } from './utils';
 import { validateProjectName } from './validator';
 
 import classes from './create-project-form.module.scss';
@@ -28,8 +29,7 @@ type CreateProjectFormProps = {
 export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
     const [labels, setLabels] = useState<Label[]>([]);
-    const numberOfProjects = projects.length;
-    const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
+    const [name, setName] = useState<string>(() => generateUniqueProjectName(projects.map((project) => project.name)));
     const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask);
 
     const [classificationTaskType, setClassificationTaskType] = useState<ClassificationTaskType>('single-label');
@@ -42,6 +42,9 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         projects.map((project) => project.name)
     );
 
+    const isMultiClassProject = isClassificationTask(selectedTask) && classificationTaskType === 'single-label';
+    const needsMinimumNumberOfLabels = isMultiClassProject && labels.length < 2;
+
     const isCreateProjectDisabled =
         selectedTask === null || validationErrorMessage !== undefined || labels.length === 0;
 
@@ -49,6 +52,15 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         e.preventDefault();
 
         if (isCreateProjectDisabled) {
+            return;
+        }
+
+        if (needsMinimumNumberOfLabels) {
+            toast({
+                message: 'At least 2 labels are required for single-label classification',
+                type: 'warning',
+            });
+
             return;
         }
 
@@ -80,7 +92,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             <Flex
                 flex={1}
                 minHeight={0}
-                width={'clamp(800px, 60vw, 1052px)'}
+                width={'clamp(912px, 60vw, 1052px)'}
                 margin={'0 auto'}
                 gap={'size-500'}
                 direction={'column'}

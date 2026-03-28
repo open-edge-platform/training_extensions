@@ -8,12 +8,13 @@ import { AnnotationShapeWithoutLabels } from './annotation-shape-without-labels.
 
 interface AnnotationShapeRendererProps {
     annotation: Annotation;
+    hideLabels?: boolean;
 }
 
-export const AnnotationShapeRenderer = ({ annotation }: AnnotationShapeRendererProps) => {
+export const AnnotationShapeRenderer = ({ annotation, hideLabels = false }: AnnotationShapeRendererProps) => {
     const { canvasSettings } = useCanvasSettings();
 
-    if (canvasSettings.hideLabels.value) {
+    if (hideLabels || canvasSettings.hideLabels.value) {
         return <AnnotationShapeWithoutLabels annotation={annotation} />;
     }
 

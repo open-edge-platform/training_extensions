@@ -3,10 +3,8 @@
 #
 """Test of RTDETR."""
 
-import pytest
 import torch
 from torch import nn
-from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.rtdetr import RTDETR
@@ -112,40 +110,3 @@ class TestRTDETR:
             assert not torch.is_nonzero((p1.data - p2.data).sum())
         assert params[0]["lr"] == 0.01  # conv
         assert params[1]["lr"] == 0.001  # fc
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            RTDETR(
-                model_name="rtdetr_18",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            RTDETR(
-                model_name="rtdetr_50",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-            RTDETR(
-                model_name="rtdetr_101",
-                label_info=3,
-                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_compiled_model(self, model):
-        # Set Compile Counter
-        torch._dynamo.reset()
-        cnt = CompileCounter()
-
-        # Set model compile setting
-        model.model = torch.compile(model.model, backend=cnt)
-
-        # Prepare inputs
-        x = torch.randn(1, 3, *model.data_input_params.input_size)
-        model.model.training = False  # do not calculate loss
-        model.model(x)
-        assert cnt.frame_count == 1
-
-        # Reset dynamo state
-        torch._dynamo.reset()

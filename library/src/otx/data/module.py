@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """LightningDataModule extension for OTX."""
@@ -8,25 +8,25 @@ from __future__ import annotations
 import logging
 import multiprocessing
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING
 
-from datumaro import Dataset as DmDataset
+from datumaro.experimental.export_import import import_dataset
+from datumaro.experimental.fields import Subset
 from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
-from torchvision.transforms.v2 import Normalize
 
 from otx.config.data import SubsetConfig, TileConfig
+from otx.data.augmentation import CPUAugmentationPipeline
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
-from otx.data.transform_libs.torchvision import Compose, TorchVisionTransformLib
-from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
-from otx.data.utils.pre_filtering import pre_filtering
+from otx.data.utils import get_adaptive_num_workers, instantiate_sampler
 from otx.types.device import DeviceType
 from otx.types.label import LabelInfo
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
     from lightning.pytorch.utilities.parsing import AttributeDict
 
     from otx.data.dataset.base import OTXDataset
@@ -35,6 +35,16 @@ logger = logging.getLogger(__name__)
 
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
+
+# Mapping from OTX subset config names to Datumaro experimental Subset enums
+_SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
+    "train": Subset.TRAINING,
+    "val": Subset.VALIDATION,
+    "test": Subset.TESTING,
+    "training": Subset.TRAINING,
+    "validation": Subset.VALIDATION,
+    "testing": Subset.TESTING,
+}
 
 
 class OTXDataModule(LightningDataModule):
@@ -45,7 +55,6 @@ class OTXDataModule(LightningDataModule):
     Args:
         task (OTXTaskType): Task type (e.g., classification, detection).
         data_root (str): Root directory of the dataset.
-        data_format (str, optional): Data format (e.g., 'coco', 'voc'). Defaults to None.
         train_subset (SubsetConfig, optional): Training subset configuration. Defaults to None.
         val_subset (SubsetConfig, optional): Validation subset configuration. Defaults to None.
         test_subset (SubsetConfig, optional): Test subset configuration. Defaults to None.
@@ -64,7 +73,6 @@ class OTXDataModule(LightningDataModule):
         self,
         task: OTXTaskType,
         data_root: str,
-        data_format: str | None = None,
         train_subset: SubsetConfig | None = None,
         val_subset: SubsetConfig | None = None,
         test_subset: SubsetConfig | None = None,
@@ -79,7 +87,6 @@ class OTXDataModule(LightningDataModule):
         super().__init__()
 
         self.task = task
-        self.data_format = data_format
         self.data_root = data_root
 
         if input_size is not None and not isinstance(input_size, (tuple, list)):
@@ -101,21 +108,7 @@ class OTXDataModule(LightningDataModule):
         self.subsets: dict[str, OTXDataset] = {}
         self.save_hyperparameters(ignore=["input_size"])
 
-        dataset = DmDataset.import_from(self.data_root, format=self.data_format)
-
-        if self.data_format is None:
-            self.data_format = dataset.format
-
-        if self.task != OTXTaskType.H_LABEL_CLS and not (
-            self.task == OTXTaskType.KEYPOINT_DETECTION and self.data_format == "arrow"
-        ):
-            dataset = pre_filtering(
-                dataset,
-                self.data_format,
-                self.unannotated_items_ratio,
-                self.task,
-                ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
-            )
+        dataset = import_dataset(self.data_root)
 
         if input_size is not None:
             # override input_size to all subset configs when it is given
@@ -123,21 +116,27 @@ class OTXDataModule(LightningDataModule):
                 if subset_cfg.input_size is None:
                     subset_cfg.input_size = input_size  # type: ignore[assignment]
 
-        # Extract mean and std from Normalize transform
-        self.input_mean, self.input_std = self.extract_normalization_params(self.train_subset.transforms)
+        # Derive mean/std from the CPU pipeline's Normalize transform.
+        # If no Normalize is present (e.g. GPU-only normalization via Kornia),
+        # leave as None so models fall back to their own defaults.
+        # The GPUAugmentationCallback.setup() will later override the model's
+        # mean/std with the GPU pipeline's values if applicable.
+        if getattr(self.train_subset, "augmentations_cpu", None):
+            cpu_pipeline = CPUAugmentationPipeline.from_config(self.train_subset)
+            self.input_mean: tuple[float, float, float] | None = cpu_pipeline.mean
+            self.input_std: tuple[float, float, float] | None = cpu_pipeline.std
+        else:
+            self.input_mean = None
+            self.input_std = None
         self.input_size = input_size
-
-        if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:
-            adapt_tile_config(self.tile_config, dataset=dataset, task=self.task)
 
         self._setup_otx_dataset(dataset)
 
-    def _setup_otx_dataset(self, dataset: DmDataset) -> None:
-        """Setup OTXDataset from Datumaro Dataset object.
+    def _setup_otx_dataset(self, dataset: Dataset) -> None:
+        """Setup OTXDataset instances from a Datumaro experimental Dataset.
 
         Args:
-            dataset: Datumaro Dataset object.
-        Returns: None
+            dataset: A ``datumaro.experimental.Dataset`` loaded via ``import_dataset``.
         """
         config_mapping = {
             self.train_subset.subset_name: self.train_subset,
@@ -160,16 +159,21 @@ class OTXDataModule(LightningDataModule):
                     subset_config.num_workers = num_workers
 
         label_infos: list[LabelInfo] = []
-        for name, dm_subset in dataset.subsets().items():
-            if name not in config_mapping:
-                logger.warning(f"{name} is not available. Skip it")
+        for name, subset_cfg in config_mapping.items():
+            subset_enum = _SUBSET_NAME_TO_ENUM.get(name.lower())
+            if subset_enum is None:
+                logger.warning(f"{name} has no Subset enum mapping. Skip it")
+                continue
+
+            dm_subset = dataset.filter_by_subset(subset_enum)
+            if len(dm_subset) == 0:
+                logger.warning(f"Subset '{name}' is empty in the dataset. Skip it")
                 continue
 
             otx_dataset = OTXDatasetFactory.create(
                 task=self.task,
-                dm_subset=dm_subset.as_dataset(),
-                cfg_subset=config_mapping[name],
-                data_format=self.data_format,  # type: ignore[arg-type]
+                dm_subset=dm_subset,
+                cfg_subset=subset_cfg,
                 ignore_index=self.ignore_index,
             )
 
@@ -189,55 +193,6 @@ class OTXDataModule(LightningDataModule):
         self.label_info = next(iter(label_infos))
 
     @classmethod
-    def extract_normalization_params(
-        cls, transforms_source: Sequence[dict[str, Any]] | Compose | None
-    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
-        """Extract mean and std from the dataset transforms.
-
-        Specifically, this method looks for a Normalize transform in the provided transforms, and extracts
-        the mean and std values used for normalization.
-        If not found, it returns default values of mean=(0.0, 0.0, 0.0) and std=(1.0, 1.0, 1.0).
-
-        Args:
-            transforms_source: Transforms applied to the dataset.
-                Should be specified as an iterable of transform descriptors (jsonargparse-like) or a Compose object
-
-        Returns:
-            Tuple of (mean, std) tuples.
-        """
-        mean = (0.0, 0.0, 0.0)
-        std = (1.0, 1.0, 1.0)
-
-        if transforms_source is None:
-            return mean, std
-        if hasattr(transforms_source, "__iter__"):
-            transforms_iterable = transforms_source
-        elif isinstance(transforms_source, Compose):
-            transforms_iterable = transforms_source.transforms
-        else:
-            msg = f"Transforms should be given as an iterable or a Compose object, got {type(transforms_source)}"
-            raise TypeError(msg)
-
-        for transform in transforms_iterable:
-            if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
-                # CLI case with jsonargparse
-                mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
-                std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
-                break
-
-            if isinstance(transform, Normalize):
-                # torchvision.transforms case
-                mean = transform.mean
-                std = transform.std
-                break
-
-        if len(mean) != 3 or len(std) != 3:
-            msg = f"Expected mean and std to have length 3, got mean={mean}, std={std}"
-            raise ValueError(msg)
-
-        return tuple(mean), tuple(std)  # type: ignore[return-value]
-
-    @classmethod
     def from_otx_datasets(
         cls,
         train_dataset: OTXDataset,
@@ -252,8 +207,8 @@ class OTXDataModule(LightningDataModule):
         """Create an OTXDataModule from pre-constructed OTXDataset instances.
 
         This is a factory method that provides a clean way to create OTXDataModule instances
-        when you already have constructed datasets, without needing to provide data_root,
-        data_format, or other data loading parameters.
+        when you already have constructed datasets, without needing to provide data_root
+        or other data loading parameters.
 
         Args:
             train_dataset (OTXDataset): Pre-constructed training dataset.
@@ -319,7 +274,6 @@ class OTXDataModule(LightningDataModule):
         # Set basic attributes
         instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.task = train_dataset.task_type  # type: ignore[assignment]
-        instance.data_format = train_dataset.data_format
         instance.data_root = ""
         instance.tile_config = (
             train_dataset.tile_config if hasattr(train_dataset, "tile_config") else TileConfig(enable_tiler=False)
@@ -347,9 +301,9 @@ class OTXDataModule(LightningDataModule):
             if subset is not None:
                 # Use provided subset config
                 subset_to_assign = subset
-                if subset.transforms:
+                if getattr(subset, "augmentations_cpu", None):
                     logger.warning(
-                        f"The provided {name} SubsetConfig contains transforms which will be overridden "
+                        f"The provided {name} SubsetConfig contains augmentations_cpu which will be overridden "
                         "by the transforms of the provided OTXDataset. When building OTXDataModule from "
                         "pre-constructed datasets, developers should set up the transforms when creating the datasets.",
                     )
@@ -359,16 +313,20 @@ class OTXDataModule(LightningDataModule):
                     default_subset_configs = instance.get_default_subset_configs(instance.input_size)
                 subset_to_assign = default_subset_configs[f"{name}_subset"]
 
-            # Override transforms with the ones from the pre-constructed dataset
-            subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
+            # The pre-constructed datasets already have their transforms configured.
+            # No need to override - just set the subset config.
 
             # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
 
-        # Extract normalization parameters from train dataset transforms if available
-        instance.input_mean, instance.input_std = instance.extract_normalization_params(
-            instance.train_subset.transforms
-        )
+        # Derive normalization params from the CPU pipeline's Normalize transform if available.
+        if getattr(instance.train_subset, "augmentations_cpu", None):
+            _cpu_pipeline = CPUAugmentationPipeline.from_config(instance.train_subset)
+            instance.input_mean = _cpu_pipeline.mean
+            instance.input_std = _cpu_pipeline.std
+        else:
+            instance.input_mean = None
+            instance.input_std = None
 
         # Save hyperparameters
         instance.save_hyperparameters(
@@ -435,7 +393,6 @@ class OTXDataModule(LightningDataModule):
                 msg = "input size is not specified in both the config file and the DataModule constructor."
                 raise ValueError(msg)
             subset_config_dict = SubsetConfig(**subset_config_dict)
-            subset_config_dict.transforms = TorchVisionTransformLib.generate(subset_config_dict)
             subset_dicts[subset_key] = subset_config_dict
         return subset_dicts
 
@@ -464,6 +421,7 @@ class OTXDataModule(LightningDataModule):
             "persistent_workers": config.num_workers > 0,
             "sampler": sampler,
             "shuffle": sampler is None,
+            "prefetch_factor": 2 if config.num_workers > 0 else None,
             "multiprocessing_context": _MP_CONTEXT if config.num_workers > 0 else None,
         }
 
@@ -557,7 +515,6 @@ class OTXDataModule(LightningDataModule):
             self.__class__,
             (
                 self.task,
-                self.data_format,
                 self.data_root,
                 self.train_subset,
                 self.val_subset,

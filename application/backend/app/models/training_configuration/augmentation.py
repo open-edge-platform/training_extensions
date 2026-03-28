@@ -87,6 +87,16 @@ class RandomAffine(BaseAugmentationParameter):
             "A random shear in the range [-max_shear_degree, max_shear_degree] will be applied."
         ),
     )
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Probability",
+        description=(
+            "Probability of applying the affine transformation. "
+            "A value of 0.5 means each image has a 50% chance to be transformed."
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_scaling_ratio_range(self) -> "RandomAffine":
@@ -124,7 +134,41 @@ class RandomVerticalFlip(BaseAugmentationParameter):
 
 
 class RandomIOUCrop(BaseAugmentationParameter):
-    pass
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=1.0,
+        title="Probability",
+        description=(
+            "Probability of applying IoU random crop. A value of 1.0 means the crop is always applied when enabled."
+        ),
+    )
+    min_scale: float = Field(
+        gt=0.0,
+        le=1.0,
+        default=0.3,
+        title="Minimum scale",
+        description=(
+            "Minimum fraction of the original image area to retain after cropping. "
+            "For example, 0.3 means the crop will be at least 30% of the original area."
+        ),
+    )
+    max_scale: float = Field(
+        gt=0.0,
+        le=1.0,
+        default=1.0,
+        title="Maximum scale",
+        description=(
+            "Maximum fraction of the original image area to retain after cropping. "
+            "A value of 1.0 means the crop can be as large as the entire image."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_scale_range(self) -> "RandomIOUCrop":
+        if self.min_scale >= self.max_scale:
+            raise ValueError("min_scale must be less than max_scale")
+        return self
 
 
 class GaussianBlur(BaseAugmentationParameter):
@@ -279,12 +323,12 @@ class GaussianNoise(BaseAugmentationParameter):
 
 
 class Tiling(BaseAugmentationParameter):
-    adaptive_tiling: bool = Field(
+    enable_adaptive_tiling: bool = Field(
         default=False, title="Adaptive tiling", description="Whether to use adaptive tiling based on image content"
     )
     tile_size: int = Field(
         default=128,
-        gt=0,
+        ge=64,
         title="Tile size",
         description=(
             "Size of each tile in pixels. "
@@ -304,7 +348,15 @@ class Tiling(BaseAugmentationParameter):
 
 
 class Mosaic(BaseAugmentationParameter):
-    pass
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=1.0,
+        title="Probability",
+        description=(
+            "Probability of applying mosaic augmentation. A value of 1.0 means mosaic is always applied when enabled."
+        ),
+    )
 
 
 class Mixup(BaseAugmentationParameter):
@@ -314,23 +366,105 @@ class Mixup(BaseAugmentationParameter):
         title="Probability",
         description="Probability of applying mixup augmentation",
     )
+    mix_ratio: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Mix ratio",
+        description=(
+            "Blending ratio between the two images. "
+            "A value of 0.5 means equal blending of both images. "
+            "Lower values give more weight to the original image."
+        ),
+    )
 
 
-class HSVRandomAug(BaseAugmentationParameter):
-    hue_delta: int = Field(
-        ge=0,
-        title="Hue delta",
-        description="Maximum delta for hue adjustment",
+class RandomErasing(BaseAugmentationParameter):
+    scale: tuple[float, float] = Field(
+        title="Erasing area scale range",
+        description=(
+            "Range (min, max) of the proportion of the image area to erase. "
+            "For example, (0.02, 0.33) means erasing between 2% and 33% of the image area."
+        ),
     )
-    saturation_delta: int = Field(
-        ge=0,
-        title="Saturation delta",
-        description="Maximum delta for saturation adjustment",
+    ratio: tuple[float, float] = Field(
+        title="Erasing aspect ratio range",
+        description=(
+            "Range (min, max) of the aspect ratio of the erased area. "
+            "For example, (0.3, 3.3) allows the erased rectangle to have varying proportions."
+        ),
     )
-    value_delta: int = Field(
-        ge=0,
-        title="Value delta",
-        description="Maximum delta for value (brightness) adjustment",
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        title="Probability",
+        description=(
+            "Probability of applying random erasing. "
+            "A value of 0.5 means each image has a 50% chance to have a region erased."
+        ),
+    )
+    value: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.0,
+        title="Fill value",
+        description=(
+            "Fill value for the erased region, normalized to [0, 1]. "
+            "A value of 0.0 fills with black. A value of 1.0 fills with white."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_scale_range(self) -> "RandomErasing":
+        if len(self.scale) != 2:
+            raise ValueError("scale must be a list of exactly two float values")
+        if self.scale[0] >= self.scale[1]:
+            raise ValueError("The first value in scale must be less than the second value")
+        if self.scale[0] < 0 or self.scale[1] > 1:
+            raise ValueError("Values in scale must be between 0 and 1")
+        return self
+
+    @model_validator(mode="after")
+    def validate_ratio_range(self) -> "RandomErasing":
+        if len(self.ratio) != 2:
+            raise ValueError("ratio must be a list of exactly two float values")
+        if self.ratio[0] >= self.ratio[1]:
+            raise ValueError("The first value in ratio must be less than the second value")
+        if self.ratio[0] <= 0:
+            raise ValueError("Values in ratio must be greater than 0")
+        return self
+
+
+class RandomGrayscale(BaseAugmentationParameter):
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        title="Probability",
+        description=(
+            "Probability of converting the image to grayscale. "
+            "A value of 0.1 means each image has a 10% chance to be converted to grayscale."
+        ),
+    )
+
+
+class RandomSharpness(BaseAugmentationParameter):
+    sharpness: float = Field(
+        ge=0.0,
+        title="Sharpness factor",
+        description=(
+            "Factor controlling the strength of the sharpness adjustment. "
+            "A value of 0.0 means no sharpening, higher values increase the effect. "
+            "Typical values are between 0.0 and 1.0."
+        ),
+    )
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        title="Probability",
+        description=(
+            "Probability of applying sharpness adjustment. "
+            "A value of 0.5 means each image has a 50% chance to be sharpened."
+        ),
     )
 
 
@@ -344,6 +478,36 @@ class RandomZoomOut(BaseAugmentationParameter):
             "Typically 0 for black padding. Value should be between 0 and 255."
         ),
     )
+    side_range: tuple[float, float] = Field(
+        default=(1.0, 4.0),
+        title="Side range",
+        description=(
+            "Range (min, max) of the zoom-out scale factor for each side. "
+            "The image will be placed on a canvas scaled by a random factor from this range. "
+            "For example, (1.0, 4.0) means the canvas can be up to 4x the original image size. "
+            "The minimum value must be >= 1.0."
+        ),
+    )
+    probability: float = Field(
+        ge=0.0,
+        le=1.0,
+        default=0.5,
+        title="Probability",
+        description=(
+            "Probability of applying random zoom out. "
+            "A value of 0.5 means each image has a 50% chance to be zoomed out."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_side_range(self) -> "RandomZoomOut":
+        if len(self.side_range) != 2:
+            raise ValueError("side_range must be a tuple of exactly two float values")
+        if self.side_range[0] >= self.side_range[1]:
+            raise ValueError("The first value in side_range must be less than the second value")
+        if self.side_range[0] < 1.0:
+            raise ValueError("The minimum side_range value must be >= 1.0")
+        return self
 
 
 class AugmentationParameters(BaseModel):
@@ -358,68 +522,100 @@ class AugmentationParameters(BaseModel):
     random_zoom_out: RandomZoomOut | None = Field(
         default=None,
         title="Random zoom out",
-        description="Settings for random zoom out augmentation",
+        description=(
+            "Randomly zoom out the image by placing it on a larger canvas with padding. Applied before resize."
+        ),
     )
     iou_random_crop: RandomIOUCrop | None = Field(
         default=None,
         title="IoU random crop",
         description=(
             "Randomly crop images based on Intersection over Union (IoU) criteria. "
+            "Applied before resize. "
             "Note: this augmentation is not supported when Tiling algorithm is enabled."
         ),
     )
     mosaic: Mosaic | None = Field(
         default=None,
         title="Mosaic",
-        description="Combines 4 images into one mosaic for augmentation.",
+        description="Combines 4 images into one mosaic for augmentation. Applied before resize.",
     )
     random_resize_crop: RandomResizeCrop | None = Field(
         default=None,
         title="Random resize crop",
         description=(
-            "Randomly resize and crop the image. "
+            "Randomly resize and crop the image. Applied instead of resize. "
+            "When disabled, a standard resize to the target input size is used instead. "
             "Note: this augmentation is not supported when Tiling algorithm is enabled."
         ),
     )
     random_affine: RandomAffine | None = Field(
         default=None,
         title="Random affine",
-        description="Apply random affine transformations (rotation, translation, scaling, shear) to the image.",
+        description=(
+            "Apply random affine transformations (rotation, translation, scaling, shear) to the image. "
+            "Applied after resize."
+        ),
     )
     mixup: Mixup | None = Field(
         default=None,
         title="Mixup",
-        description="Blends two images and their labels for augmentation.",
-    )
-    hsv_random_aug: HSVRandomAug | None = Field(
-        default=None,
-        title="HSV random augmentation",
-        description="Apply random adjustments to Hue, Saturation, and Value channels of the image.",
+        description="Blends two images and their labels for augmentation. Applied before resize.",
     )
     random_horizontal_flip: RandomHorizontalFlip | None = Field(
         default=None,
         title="Random horizontal flip",
-        description="Randomly flip images horizontally along the vertical axis (swap left and right).",
+        description=(
+            "Randomly flip images horizontally along the vertical axis (swap left and right). Applied after resize."
+        ),
     )
     random_vertical_flip: RandomVerticalFlip | None = Field(
         default=None,
         title="Random vertical flip",
-        description="Randomly flip images vertically along the horizontal axis (swap top and bottom).",
+        description=(
+            "Randomly flip images vertically along the horizontal axis (swap top and bottom). Applied after resize."
+        ),
     )
     color_jitter: ColorJitter | None = Field(
         default=None,
         title="Color jitter",
-        description="Randomly adjust brightness, contrast, saturation, and hue of the image.",
+        description="Randomly adjust brightness, contrast, saturation, and hue of the image. Applied after resize.",
     )
     gaussian_blur: GaussianBlur | None = Field(
         default=None,
         title="Gaussian blur",
-        description="Apply Gaussian blur to the image.",
+        description="Apply Gaussian blur to the image. Applied after resize.",
     )
     gaussian_noise: GaussianNoise | None = Field(
         default=None,
         title="Gaussian noise",
-        description="Add Gaussian noise to the image.",
+        description="Add Gaussian noise to the image. Applied after resize.",
+    )
+    random_erasing: RandomErasing | None = Field(
+        default=None,
+        title="Random erasing",
+        description=(
+            "Randomly erase a rectangular region in the image and fill it with a constant value. "
+            "Also known as Cutout. Helps the model learn to rely on broader context rather than "
+            "specific local features. Applied after resize."
+        ),
+    )
+    random_grayscale: RandomGrayscale | None = Field(
+        default=None,
+        title="Random grayscale",
+        description=(
+            "Randomly convert the image to grayscale. Forces the model to learn shape and texture "
+            "features rather than relying solely on color information. Applied after resize."
+        ),
+    )
+    random_sharpness: RandomSharpness | None = Field(
+        default=None,
+        title="Random sharpness",
+        description=(
+            "Randomly adjust the sharpness of the image. Complements Gaussian blur by also "
+            "allowing images to become sharper, improving robustness to varying image quality. "
+            "Applied after resize."
+        ),
     )
     tiling: Tiling | None = Field(
         default=None,

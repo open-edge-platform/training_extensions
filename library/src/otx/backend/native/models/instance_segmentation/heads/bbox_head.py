@@ -644,13 +644,6 @@ class ConvFCBBoxHead:
     """ConvFCBBoxHead factory for instance segmentation task."""
 
     BBOXHEAD_CFG: ClassVar[dict[str, Any]] = {
-        "maskrcnn_resnet_50": {
-            "in_channels": 256,
-            "pos_weight": -1,
-            "nms_iou_threshold": 0.5,
-            "max_per_img": 100,
-            "score_threshold": 0.05,
-        },
         "maskrcnn_efficientnet_b2b": {
             "in_channels": 80,
             "pos_weight": -1,

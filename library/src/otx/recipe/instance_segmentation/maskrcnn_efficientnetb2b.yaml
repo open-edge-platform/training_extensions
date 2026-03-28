@@ -57,31 +57,28 @@ overrides:
     train_subset:
       batch_size: 4
       num_workers: 8
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Pad
+      augmentations_gpu:
+        - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
-            size_divisor: 32
-        - class_path: torchvision.transforms.v2.Normalize
+            p: 0.5
+        - class_path: kornia.augmentation.Normalize
           init_args:
+            mean: [0.0, 0.0, 0.0]
             std: [1.0, 1.0, 1.0]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       num_workers: 4
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Pad
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            size_divisor: 32
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
+            mean: [0.0, 0.0, 0.0]
             std: [1.0, 1.0, 1.0]
     test_subset:
       num_workers: 4
-      transforms:
-        - class_path: otx.data.transform_libs.torchvision.Pad
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
           init_args:
-            size_divisor: 32
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
+            mean: [0.0, 0.0, 0.0]
             std: [1.0, 1.0, 1.0]

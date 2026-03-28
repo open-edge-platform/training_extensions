@@ -50,7 +50,7 @@ class MobileNetV3:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         freeze_backbone: bool = False,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
@@ -69,8 +69,8 @@ class MobileNetV3:
 
         Args:
             label_info (LabelInfoTypes): The label information.
-            data_input_params (DataInputParams | dict): The data input parameters that consists
-                of input size, mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists
+                of input size, mean and std. Defaults to None.
             freeze_backbone (bool, optional): Whether to freeze the backbone during training. Defaults to False.
                 Note: only multiclass classification supports this argument.
             model_name (str, optional): The model name. Defaults to "mobilenetv3_large".
@@ -88,8 +88,8 @@ class MobileNetV3:
         ...     task="multi_class",
         ...     label_info=10,
         ...     data_input_params={"input_size": (224, 224),
-        ...                        "mean": [123.675, 116.28, 103.53],
-        ...                        "std": [58.395, 57.12, 57.375]},
+        ...                        "mean": [0.485, 0.456, 0.406],
+        ...                        "std": [0.229, 0.224, 0.225]},
         ...     model_name="mobilenetv3_small",
         ... )
 
@@ -98,8 +98,8 @@ class MobileNetV3:
         ...     task="multi_label",
         ...     model_name="mobilenetv3_large",
         ...     data_input_params={"input_size": (224, 224),
-        ...                        "mean": [123.675, 116.28, 103.53],
-        ...                        "std": [58.395, 57.12, 57.375]},
+        ...                        "mean": [0.485, 0.456, 0.406],
+        ...                        "std": [0.229, 0.224, 0.225]},
         ...     label_info=[1, 5, 10]  # Multi-label setup
         ... )
         """
@@ -120,7 +120,7 @@ class EfficientNet:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: Literal[
             "efficientnet_b0",
@@ -149,8 +149,8 @@ class EfficientNet:
 
         Args:
             label_info (LabelInfoTypes): The label information.
-            data_input_params (DataInputParams | dict): The data input parameters that consists
-                of input size, mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists
+                of input size, mean and std. Defaults to None.
             freeze_backbone (bool, optional): Whether to freeze the backbone during training. Defaults to False.
                 Note: only multiclass classification supports this argument.
             model_name (Literal["efficientnet_b0", "efficientnet_b1", "efficientnet_b2", "efficientnet_b3",
@@ -192,7 +192,7 @@ class TimmModel:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: str = "tf_efficientnetv2_s.in21k",
         freeze_backbone: bool = False,
@@ -221,8 +221,8 @@ class TimmModel:
 
         Args:
             label_info (LabelInfoTypes): The label information.
-            data_input_params (DataInputParams | dict): The data input parameters that consists
-                of input size, mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists
+                of input size, mean and std. Defaults to None.
             freeze_backbone (bool, optional): Whether to freeze the backbone during training.
                 Note: only multiclass classification supports this argument. Defaults to False.
             model_name (str, optional): The model name. Defaults to "tf_efficientnetv2_s.in21k".
@@ -279,7 +279,7 @@ class TVModel:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: str = "efficientnet_v2_s",
         freeze_backbone: bool = False,
@@ -304,8 +304,8 @@ class TVModel:
 
         Args:
             label_info (LabelInfoTypes): The label information.
-            data_input_params (DataInputParams | dict): The data input parameters that consists
-                of input size, mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists
+                of input size, mean and std. Defaults to None.
             freeze_backbone (bool, optional): Whether to freeze the backbone during training.
                 Note: only multiclass classification supports this argument. Defaults to False.
             model_name (str, optional): The model name. Defaults to "efficientnet_v2_s".
@@ -361,7 +361,7 @@ class VisionTransformer:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: Literal[
             "vit-tiny",
@@ -393,8 +393,8 @@ class VisionTransformer:
 
         Args:
             label_info (LabelInfoTypes): The label information.
-            data_input_params (DataInputParams | dict): The data input parameters that consists
-                of input size, mean and std.
+            data_input_params (DataInputParams | dict | None, optional): The data input parameters that consists
+                of input size, mean and std. Defaults to None.
             freeze_backbone (bool, optional): Whether to freeze the backbone during training.
                 Note: only multiclass classification supports this argument. Defaults to False.
             model_name (Literal["vit-tiny", "vit-small", "vit-base", "vit-large",

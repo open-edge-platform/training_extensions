@@ -9,6 +9,7 @@ import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { EnablePipelineBlockedDialog } from '../../../components/enable-pipeline-blocked-dialog/enable-pipeline-blocked-dialog.component';
+import { useWebRTCConnection } from '../stream/web-rtc-connection-provider';
 
 export const TogglePipelineButton = () => {
     const projectId = useProjectIdentifier();
@@ -17,6 +18,7 @@ export const TogglePipelineButton = () => {
     const pipelineQuery = usePipeline();
     const disablePipelineMutation = useDisablePipeline();
     const enablePipelineMutation = useEnablePipeline();
+    const { stop: stopStream, status: streamStatus } = useWebRTCConnection();
 
     const isPipelineEnabled = pipelineQuery.data?.status === 'running';
     const canEnablePipeline = useIsPipelineConfigured(pipelineQuery.data);
@@ -30,6 +32,10 @@ export const TogglePipelineButton = () => {
                     type: 'success',
                     message: `Pipeline ${isPipelineEnabled ? 'disabled' : 'enabled'} successfully`,
                 });
+
+                if (isPipelineEnabled && streamStatus !== 'idle' && streamStatus !== 'failed') {
+                    void stopStream();
+                }
             },
         };
 
@@ -38,6 +44,7 @@ export const TogglePipelineButton = () => {
         } else {
             if (!canEnablePipeline) {
                 setIsEnableBlockedDialogOpen(true);
+
                 return;
             }
 
@@ -51,7 +58,7 @@ export const TogglePipelineButton = () => {
                 isPending={disablePipelineMutation.isPending || enablePipelineMutation.isPending}
                 onPress={handleToggle}
             >
-                {isPipelineEnabled ? 'Disable' : 'Enable'} Pipeline
+                {isPipelineEnabled ? 'Disable' : 'Enable'} pipeline
             </Button>
 
             <EnablePipelineBlockedDialog

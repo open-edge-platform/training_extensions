@@ -7,30 +7,66 @@ from datumaro.experimental import LazyImage
 from datumaro.experimental.fields import ImageInfo, Subset
 from loguru import logger
 
-from app.datumaro_converter.domain import DetectionSample
+from app.datumaro_converter.domain import DetectionImportExportSample, DetectionTrainingSample
 from app.datumaro_converter.utils import ShapeConverter, validate_confidence_consistency
 from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, Media, Rectangle
+from app.utils.typing import NDArrayFloat32, NDArrayInt
 
-from .sample_factory import SampleFactory
+from .sample_factory import SampleFactory, SampleMode
+
+DetectionSample = DetectionTrainingSample | DetectionImportExportSample
 
 
 class DetectionSampleFactory(SampleFactory[DetectionSample]):
     """Knows how to create detection samples."""
 
-    sample_type = DetectionSample
+    _sample_type_map = {
+        SampleMode.TRAINING: DetectionTrainingSample,
+        SampleMode.IMPORT_EXPORT: DetectionImportExportSample,
+    }
 
-    def create_sample(self, dataset_item: DatasetItem, media: Media, image_path: str) -> DetectionSample | None:
+    def __create_sample_for_mode(
+        self,
+        dataset_item: DatasetItem,
+        media: Media,
+        media_path: str,
+        label: NDArrayInt | None = None,
+        confidence: NDArrayFloat32 | None = None,
+        bboxes: NDArrayInt | None = None,
+        user_reviewed: bool = False,
+    ) -> DetectionSample | None:
+        subset = Subset[dataset_item.subset.name]
+        label = np.array([]) if label is None else label
+        bboxes = np.array([]) if bboxes is None else bboxes
+        match self._mode:
+            case SampleMode.IMPORT_EXPORT:
+                media_item, media_info = self._get_dm_media_with_info(media, media_path)
+                return DetectionImportExportSample(
+                    id=str(dataset_item.id),
+                    media=media_item,
+                    media_info=media_info,
+                    subset=subset,
+                    label=label,
+                    bboxes=bboxes,
+                    confidence=confidence,
+                    user_reviewed=user_reviewed,
+                )
+            case SampleMode.TRAINING:
+                return DetectionTrainingSample(
+                    id=str(dataset_item.id),
+                    image=LazyImage(media_path),
+                    image_info=ImageInfo(width=media.width, height=media.height),
+                    subset=subset,
+                    label=label,
+                    bboxes=bboxes,
+                    confidence=confidence,
+                )
+            case _:
+                raise ValueError(f"Unsupported sample mode: {self._mode}")
+
+    def create_sample(self, dataset_item: DatasetItem, media: Media, media_path: str) -> DetectionSample | None:
         if dataset_item.annotation_data is None:
-            return DetectionSample(
-                id=str(dataset_item.id),
-                image=LazyImage(image_path),
-                image_info=ImageInfo(width=media.width, height=media.height),
-                bboxes=np.array([]),
-                label=np.array([]),
-                confidence=None,
-                subset=Subset[dataset_item.subset.name],
-                user_reviewed=False,
-            )
+            return self.__create_sample_for_mode(dataset_item, media, media_path)
 
         bboxes = self._extract_bboxes(dataset_item.annotation_data)
         label_indices = self._extract_label_indices(dataset_item)
@@ -43,14 +79,13 @@ class DetectionSampleFactory(SampleFactory[DetectionSample]):
 
         confidences = self._extract_confidences(dataset_item.annotation_data)
 
-        return DetectionSample(
-            id=str(dataset_item.id),
-            image=LazyImage(image_path),
-            image_info=ImageInfo(width=media.width, height=media.height),
-            bboxes=np.array(bboxes),
+        return self.__create_sample_for_mode(
+            dataset_item=dataset_item,
+            media=media,
+            media_path=media_path,
             label=np.array(label_indices),
             confidence=np.array(confidences) if confidences else None,
-            subset=Subset[dataset_item.subset.name],
+            bboxes=np.array(bboxes),
             user_reviewed=True,
         )
 

@@ -8,12 +8,12 @@ use std::{
 };
 use tauri::RunEvent;
 
-/// “geti-tune-backend.exe” on Windows, “geti-tune-backend” elsewhere.
+/// “geti-backend.exe” on Windows, “geti-backend” elsewhere.
 fn backend_filename() -> &'static str {
     if cfg!(windows) {
-        "geti-tune-backend.exe"
+        "geti-backend.exe"
     } else {
-        "geti-tune-backend"
+        "geti-backend"
     }
 }
 
@@ -25,7 +25,7 @@ fn spawn_backend() -> std::io::Result<Child> {
         .parent()
         .expect("failed to get parent directory of exe");
 
-    // Build the full path to geti-tune-backend.exe
+    // Build the full path to geti-backend.exe
     // Tauri build will have renamed the suffixed file to plain name next to the exe.
     let backend_path = exe_dir.join(backend_filename());
 

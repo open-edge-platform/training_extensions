@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """DinoV2Seg model implementations."""
@@ -35,7 +35,7 @@ class DinoV2Seg(OTXSegmentationModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the hierarchical labels.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
         model_name (Literal, optional): Name of the model. Defaults to "dinov2-small-seg".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -52,7 +52,7 @@ class DinoV2Seg(OTXSegmentationModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["dinov2-small-seg"] = "dinov2-small-seg",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -75,6 +75,9 @@ class DinoV2Seg(OTXSegmentationModel):
         # initialize backbones
         num_classes = num_classes if num_classes is not None else self.num_classes
 
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         backbone = VisionTransformerBackbone(model_name=self.model_name, img_size=self.data_input_params.input_size)
         backbone.forward = partial(  # type: ignore[method-assign]
             backbone.get_intermediate_layers,

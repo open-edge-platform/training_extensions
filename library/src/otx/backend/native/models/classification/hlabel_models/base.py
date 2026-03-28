@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for classification model entity used in OTX."""
@@ -40,8 +40,8 @@ class OTXHlabelClsModel(OTXModel):
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
-        data_input_params (DataInputParams | None, optional): Parameters for image data preprocessing. If None is given,
-            default parameters for the specific model will be used.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image data
+            preprocessing. If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -56,7 +56,7 @@ class OTXHlabelClsModel(OTXModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "hlabel_classification_model",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -69,7 +69,6 @@ class OTXHlabelClsModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.H_LABEL_CLS,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
@@ -243,6 +242,9 @@ class OTXHlabelClsModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for classification OV model."""
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return OTXSampleBatch(images=images, labels=labels)
@@ -268,5 +270,10 @@ class OTXHlabelClsModel(OTXModel):
         return self.model(images=image, mode="tensor")
 
     @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.H_LABEL_CLS
+
+    @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))
+        return DataInputParams(input_size=(224, 224), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))

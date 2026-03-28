@@ -125,7 +125,7 @@ class DatasetItemRepository:
         return result.rowcount > 0
 
     def set_annotation_data(
-        self, obj_id: str, annotation_data: list, user_reviewed: bool
+        self, obj_id: str, annotation_data: list, user_reviewed: bool, prediction_model_id: str | None
     ) -> UpdateDatasetItemAnnotation | None:
         stmt = (
             update(DatasetItemDB)
@@ -141,6 +141,7 @@ class DatasetItemRepository:
             .values(
                 annotation_data=annotation_data,
                 user_reviewed=user_reviewed,
+                prediction_model_id=prediction_model_id,
                 updated_at=datetime.now(UTC),
             )
         )
@@ -158,6 +159,8 @@ class DatasetItemRepository:
             .values(
                 annotation_data=None,
                 updated_at=datetime.now(UTC),
+                user_reviewed=False,
+                prediction_model_id=None,
             )
         )
         result = cast(CursorResult, self.db.execute(stmt))
@@ -201,6 +204,22 @@ class DatasetItemRepository:
         stmt = delete(DatasetItemLabelDB).where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
         self.db.execute(stmt)
 
+    def find_items_by_label_id(self, label_id: str) -> list[DatasetItemDB]:
+        """Find all dataset items that reference a given label via the dataset_items_labels table."""
+        stmt = (
+            self._base_select()
+            .join(DatasetItemLabelDB, DatasetItemLabelDB.dataset_item_id == DatasetItemDB.id)
+            .where(DatasetItemLabelDB.label_id == label_id)
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def delete_label_from_items(self, label_id: str) -> None:
+        """Delete a label reference from the dataset_items_labels table for all items."""
+        stmt = delete(DatasetItemLabelDB).where(
+            DatasetItemLabelDB.label_id == label_id,
+        )
+        self.db.execute(stmt)
+
     def list_unassigned_items(self) -> list[DatasetItemLabelDB]:
         stmt = (
             select(DatasetItemLabelDB)
@@ -211,6 +230,15 @@ class DatasetItemRepository:
             )
         )
         return list(self.db.scalars(stmt).all())
+
+    def has_all_subsets_assigned(self) -> bool:
+        """Return True if there is at least one dataset item for each of TRAINING, VALIDATION, and TESTING subsets."""
+        stmt = select(func.distinct(DatasetItemDB.subset)).where(
+            DatasetItemDB.project_id == self.project_id,
+        )
+        present_subsets = set(self.db.scalars(stmt).all())
+        required_subsets = {DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION, DatasetItemSubset.TESTING}
+        return required_subsets.issubset(present_subsets)
 
     def get_subset_distribution(self) -> dict[str, int]:
         stmt = (

@@ -36,3 +36,13 @@ class ActiveModelRepo:
         """
         stmt = select(PipelineDB.device).where(PipelineDB.is_running)
         return self.db.execute(stmt).scalar_one_or_none()
+
+    def get_active_model_variant_id(self) -> str | None:
+        """
+        Get the model variant ID configured for the active pipeline.
+
+        Returns:
+            The model variant ID string or None if no pipeline is running or no variant is set.
+        """
+        stmt = select(PipelineDB.model_variant_id).where(PipelineDB.is_running)
+        return self.db.execute(stmt).scalar_one_or_none()

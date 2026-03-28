@@ -37,6 +37,18 @@ Object.defineProperty(global, 'Request', {
     value: RequestPolyfill,
 });
 
+// For downloading logs and model files, we use URL.createObjectURL which is not
+// implemented in jsdom, so we need to mock it.
+Object.defineProperty(URL, 'createObjectURL', {
+    writable: true,
+    value: vi.fn(() => 'blob:mock-url'),
+});
+
+Object.defineProperty(URL, 'revokeObjectURL', {
+    writable: true,
+    value: vi.fn(),
+});
+
 // Mock ResizeObserver which is not available in jsdom
 class ResizeObserverMock {
     observe = vi.fn();
@@ -45,6 +57,33 @@ class ResizeObserverMock {
 }
 
 global.ResizeObserver = ResizeObserverMock;
+
+class IntersectionObserverMock {
+    constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+    takeRecords = vi.fn(() => []);
+}
+
+global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
+
+class ImageDataMock {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+
+    constructor(data: Uint8ClampedArray, width: number, height?: number) {
+        this.data = data;
+        this.width = width;
+        this.height = height ?? 1;
+    }
+}
+
+if (typeof global.ImageData === 'undefined') {
+    global.ImageData = ImageDataMock as unknown as typeof ImageData;
+}
 
 const createLocalStorageMock = () => {
     let store: Record<string, string> = {};

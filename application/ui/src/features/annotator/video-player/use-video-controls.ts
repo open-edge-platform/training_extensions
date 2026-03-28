@@ -17,6 +17,8 @@ export type VideoControls = {
     canPlay?: boolean;
 };
 
+const roundFrameNumber = (frameNumber: number, step: number) => Math.round(frameNumber / step) * step;
+
 export const useVideoControls = ({
     step,
     videoRef,
@@ -35,11 +37,10 @@ export const useVideoControls = ({
     const totalFrames = videoFrame?.frame_count ?? 1;
     const currentFrameNumber = videoFrame?.frame_number ?? 0;
 
-    const round = (x: number) => Math.round(x / step) * step;
-    const previousVideoFrameNumber = round(currentFrameNumber - step);
+    const previousVideoFrameNumber = roundFrameNumber(currentFrameNumber - step, step);
     const canSelectPreviousFrame = previousVideoFrameNumber >= 0;
 
-    const nextVideoFrameNumber = round(currentFrameNumber + step);
+    const nextVideoFrameNumber = roundFrameNumber(currentFrameNumber + step, step);
     const canSelectNextFrame = nextVideoFrameNumber < totalFrames;
 
     const selectFrame = (frameNumber: number) => {
@@ -76,7 +77,7 @@ export const useVideoControls = ({
         videoRef.current.pause();
 
         const maxNearestFrame = Math.floor((videoFrame.frame_count - 1) / step) * step;
-        const nearestFrame = Math.min(maxNearestFrame, Math.round(currentFrameNumber / step) * step);
+        const nearestFrame = Math.min(maxNearestFrame, roundFrameNumber(currentFrameNumber, step));
 
         goto(nearestFrame);
     };
@@ -121,8 +122,7 @@ export const useVideoControls = ({
             setIsPlaying(false);
         }
 
-        videoRef.current.currentTime = (frameNumber + 1) / videoFrame.fps;
-        const nearest = Math.min(Math.round(frameNumber / step) * step, totalFrames - 1);
+        const nearest = Math.min(roundFrameNumber(frameNumber, step), totalFrames - 1);
 
         selectFrame(nearest);
     };

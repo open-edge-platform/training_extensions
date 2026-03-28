@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTXSegmentationDataset."""
@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from otx import SegLabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.sample import SegmentationSample
+from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
@@ -29,8 +30,7 @@ class OTXSegmentationDataset(OTXDataset):
         max_refetch: Maximum number of retries when fetching a data item fails.
         image_color_channel: Color channel format for images (RGB, BGR, etc.).
         stack_images: Whether to stack images in batch processing.
-        to_tv_image: Whether to convert images to torchvision format.
-        data_format: Format of the source data (e.g., "cityscapes", "pascal_voc").
+
         ignore_index: Index value for pixels to be ignored during training.
 
     Attributes:
@@ -51,19 +51,16 @@ class OTXSegmentationDataset(OTXDataset):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        to_tv_image: bool = True,
         ignore_index: int = 255,
         data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = SegmentationSample
+        sample_type = with_image_dtype(SegmentationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            to_tv_image=to_tv_image,
-            data_format=data_format,
-            sample_type=sample_type,
         )
 
         labels = list(dm_subset.schema.attributes["masks"].categories.labels)

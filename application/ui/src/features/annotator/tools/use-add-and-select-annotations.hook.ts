@@ -23,6 +23,7 @@ export const useAddAndSelectAnnotations = () => {
 
             const newIds = addAnnotations(shapes, labels);
             setSelectedAnnotations(new Set(newIds));
+
             return newIds;
         },
         [addAnnotations, setSelectedAnnotations, annotations, deleteAnnotations]

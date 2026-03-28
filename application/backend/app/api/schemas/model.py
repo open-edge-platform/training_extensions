@@ -10,10 +10,14 @@ from app.core.models import BaseRequiredIDModel
 from app.models import TrainingInfo
 
 
-class ModelVariant(BaseModel):
+class ModelVariantView(BaseModel):
+    id: UUID = Field(..., description="Unique identifier for the model variant")
     format: str = Field(..., description="Model format, e.g., 'openvino', 'onnx', 'pytorch'")
-    precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32'")
-    weights_size: int = Field(..., description="Size of the model weights file in bytes")
+    precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32', 'int8'")
+    weights_size: int = Field(0, description="Size of the model weights file in bytes")
+    evaluations: list[EvaluationView] = Field(description="List of evaluations for this variant", default=[])
+    quantization_info: dict | None = Field(None, description="Quantization metadata, if applicable")
+    files_deleted: bool = Field(False, description="Indicates if variant files have been deleted")
 
 
 class ModelView(BaseRequiredIDModel):
@@ -23,8 +27,7 @@ class ModelView(BaseRequiredIDModel):
     architecture: str = Field(..., description="Model architecture name")
     parent_revision: UUID | None = Field(None, description="Parent model revision ID")
     training_info: TrainingInfo = Field(..., description="Information about the training process")
-    variants: list[ModelVariant] = Field(description="Variants of the model", default=[])
-    evaluations: list[EvaluationView] = Field(description="List of evaluations with metrics", default=[])
+    variants: list[ModelVariantView] = Field(description="Variants of the model", default=[])
     files_deleted: bool = Field(description="Indicates if model files have been deleted", default=False)
     size: int = Field(description="Total size of model and all its files in bytes")
 
@@ -55,19 +58,25 @@ class ModelView(BaseRequiredIDModel):
                 },
                 "variants": [
                     {
+                        "id": "4c576bce-5e97-408d-a0ea-cc3801e4c453",
                         "format": "openvino",
                         "precision": "fp16",
                         "weights_size": 123456,
+                        "evaluations": [],
                     },
                     {
+                        "id": "6b7bb928-5d6f-46ea-8fd2-5ce80dd1e12b",
                         "format": "onnx",
                         "precision": "fp16",
                         "weights_size": 123456,
+                        "evaluations": [],
                     },
                     {
+                        "id": "d01945ae-1578-41f9-a2b3-11865032981c",
                         "format": "pytorch",
                         "precision": "fp32",
                         "weights_size": 123456,
+                        "evaluations": [],
                     },
                 ],
                 "evaluations": [

@@ -380,6 +380,7 @@ class TestDatasetServiceUnit:
                 dataset_item_id=dataset_item_id,
                 annotations=dataset_item_annotations,
                 user_reviewed=True,
+                prediction_model_id=None,
             )
 
         mock_validate_labels.assert_called_once()
@@ -395,6 +396,7 @@ class TestDatasetServiceUnit:
                 }
             ],
             user_reviewed=True,
+            prediction_model_id=None,
         )
         mock_repo_set_labels.assert_called_once_with(
             dataset_item_id=str(dataset_item_id),

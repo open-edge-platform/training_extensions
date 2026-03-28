@@ -14,18 +14,18 @@ class ModelArchitectureCategory(StrEnum):
 
 RECOMMENDED_MODEL_ARCHITECTURES = {
     TaskType.CLASSIFICATION: {
-        ModelArchitectureCategory.BALANCE: "image-classification-efficientnet-b0",
-        ModelArchitectureCategory.ACCURACY: "image-classification-efficientnet-v2-s",
+        ModelArchitectureCategory.BALANCE: "image-classification-deit-tiny",
+        ModelArchitectureCategory.ACCURACY: "image-classification-dinov2",
         ModelArchitectureCategory.SPEED: "image-classification-mobilenet-v3-large",
     },
     TaskType.DETECTION: {
-        ModelArchitectureCategory.BALANCE: "object-detection-atss-mobilenet-v2",
-        ModelArchitectureCategory.ACCURACY: "object-detection-d-fine-x",
+        ModelArchitectureCategory.BALANCE: "object-detection-deim-d-fine-m",
+        ModelArchitectureCategory.ACCURACY: "object-detection-deim-d-fine-l",
         ModelArchitectureCategory.SPEED: "object-detection-yolox-s",
     },
     TaskType.INSTANCE_SEGMENTATION: {
-        ModelArchitectureCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50",
-        ModelArchitectureCategory.ACCURACY: "instance-segmentation-mask-rcnn-swin-t",
-        ModelArchitectureCategory.SPEED: "instance-segmentation-mask-rcnn-efficientnet-b2",
+        ModelArchitectureCategory.BALANCE: "instance-segmentation-rfdetr-m",
+        ModelArchitectureCategory.ACCURACY: "instance-segmentation-rfdetr-xl",
+        ModelArchitectureCategory.SPEED: "instance-segmentation-rfdetr-s",
     },
 }

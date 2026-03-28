@@ -1,10 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useState } from 'react';
+
 import { Badge, dimensionValue, Flex, Heading, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
+import placeholderThumbnailIconUrl from '../../../assets/icons/image-icon.svg?url';
 import { paths } from '../../../constants/paths';
 import { Project, TaskType } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
@@ -41,11 +44,34 @@ const ActiveProjectBadge = () => {
     );
 };
 
-type ProjectCardProps = {
-    item: Project;
+type ProjectThumbnailProps = {
+    project: Project;
+    prioritizeImage?: boolean;
 };
 
-export const ProjectCard = ({ item }: ProjectCardProps) => {
+const ProjectThumbnail = ({ project, prioritizeImage }: ProjectThumbnailProps) => {
+    const [isThumbnailLoadingError, setIsThumbnailLoadingError] = useState<boolean>(false);
+
+    const src = isThumbnailLoadingError ? placeholderThumbnailIconUrl : getProjectThumbnailUrl(project.id);
+
+    return (
+        <img
+            src={src}
+            alt={project.name}
+            loading={prioritizeImage ? 'eager' : 'lazy'}
+            fetchPriority={prioritizeImage ? 'high' : 'auto'}
+            onError={() => setIsThumbnailLoadingError(true)}
+            className={clsx(classes.thumbnail, { [classes.thumbnailError]: isThumbnailLoadingError })}
+        />
+    );
+};
+
+type ProjectCardProps = {
+    item: Project;
+    prioritizeImage?: boolean;
+};
+
+export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
     const isClassification = isClassificationTask(item.task.task_type);
     const isMultiLabel = isClassification && item.task.exclusive_labels === false;
@@ -54,13 +80,21 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
         <div style={{ position: 'relative' }}>
             <NavLink to={paths.project.dataset.index({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
-                    <Flex>
-                        <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />
-                    </Flex>
+                    <View
+                        height={'100%'}
+                        backgroundColor={'gray-100'}
+                        borderEndColor={'gray-75'}
+                        borderEndWidth={'thick'}
+                        width={'size-2000'}
+                    >
+                        <Flex height={'100%'} width={'100%'} alignItems={'center'} justifyContent={'center'}>
+                            <ProjectThumbnail project={item} prioritizeImage={prioritizeImage} />
+                        </Flex>
+                    </View>
 
-                    <View width={'100%'} padding={cardPadding}>
+                    <View flex={1} padding={cardPadding}>
                         <Flex alignItems={'center'} justifyContent={'space-between'}>
-                            <Heading level={3} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
+                            <Heading level={2} marginEnd={'size-400'} UNSAFE_className={classes.projectName}>
                                 <span title={item.name}>{item.name}</span>
                             </Heading>
                         </Flex>
