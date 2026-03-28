@@ -986,6 +986,9 @@ class OTXModel(LightningModule):
         if isinstance(preprocessing_params, dict):
             # Merge with model defaults for any missing keys so callers can pass
             # a partial dict (e.g. only input_size) without knowing mean/std upfront.
+            # Fall back to DataInputParams field defaults when model has no defaults.
+            fallback = DataInputParams(input_size=(0, 0), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
+            default = default or fallback
             data_input_params = DataInputParams(
                 input_size=preprocessing_params.get("input_size") or default.input_size,
                 mean=preprocessing_params.get("mean") or default.mean,
