@@ -21,5 +21,4 @@ jobs:
           days-before-branch-stale: 90
           days-before-branch-delete: 7
           operations-per-run: 10
-          exempt-branches-regex: "^(main|master|develop)$"
-          exempt-branches-prefixes: "release/"
+          exempt-branches-regex: "^(main|master|develop|release/.*)$"
