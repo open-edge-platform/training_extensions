@@ -74,6 +74,7 @@ class OTXDataModule(LightningDataModule):
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
         input_size: tuple[int, int] | None = None,
+        input_size_multiplier: int = 1,
     ) -> None:
         """Constructor."""
         super().__init__()
@@ -81,6 +82,7 @@ class OTXDataModule(LightningDataModule):
         self.task = task
         self.data_format = data_format
         self.data_root = data_root
+        self.input_size_multiplier = input_size_multiplier
 
         if input_size is not None and not isinstance(input_size, (tuple, list)):
             msg = f"input_size should be a tuple or list of ints, but got {input_size!r}"
