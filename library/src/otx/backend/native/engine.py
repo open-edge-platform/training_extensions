@@ -33,6 +33,7 @@ from otx.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
 from otx.backend.native.models.base import OTXModel
 from otx.backend.native.tools import adapt_batch_size
 from otx.backend.native.utils.cache import TrainerArgumentsCache
+from otx.config.data import IntensityConfig
 from otx.config.device import DeviceConfig
 from otx.config.explain import ExplainConfig
 from otx.data.module import OTXDataModule
@@ -148,8 +149,8 @@ class OTXEngine(Engine):
                 params["mean"] = self._datamodule.input_mean
             if self._datamodule.input_std is not None:
                 params["std"] = self._datamodule.input_std
-            if hasattr(self._datamodule, "intensity_config"):
-                ic = self._datamodule.intensity_config
+            ic = getattr(self._datamodule, "intensity_config", None)
+            if isinstance(ic, IntensityConfig):
                 params["storage_dtype"] = ic.storage_dtype
                 params["intensity_mode"] = ic.mode
                 params["intensity_max_value"] = ic.max_value

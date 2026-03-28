@@ -19,6 +19,7 @@ from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
+from otx.config.data import IntensityConfig
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
@@ -329,8 +330,8 @@ class OTXCLI:
                 _dip["mean"] = self.datamodule.input_mean
             if self.datamodule.input_std is not None:
                 _dip["std"] = self.datamodule.input_std
-            if hasattr(self.datamodule, "intensity_config"):
-                ic = self.datamodule.intensity_config
+            ic = getattr(self.datamodule, "intensity_config", None)
+            if isinstance(ic, IntensityConfig):
                 _dip["storage_dtype"] = ic.storage_dtype
                 _dip["intensity_mode"] = ic.mode
                 _dip["intensity_max_value"] = ic.max_value
