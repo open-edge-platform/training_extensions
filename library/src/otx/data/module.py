@@ -55,6 +55,8 @@ class OTXDataModule(LightningDataModule):
         auto_num_workers (bool, optional): Automatically determine number of workers. Defaults to False.
         device (DeviceType, optional): Device type ('cpu', 'gpu', etc.). Defaults to DeviceType.auto.
         input_size (tuple[int, int] | None, optional): Final image/video shape after transformation. Defaults to None.
+        input_size_multiplier (int, optional): Model constraint on input dimensions. Passed by
+            auto_configurator/CLI when ``input_size == "auto"``. Defaults to 1.
 
     Note:
         To create an OTXDataModule from pre-constructed datasets, use the `from_otx_datasets` class method.
@@ -330,6 +332,7 @@ class OTXDataModule(LightningDataModule):
         instance.unannotated_items_ratio = 0.0
         instance.auto_num_workers = auto_num_workers
         instance.device = device
+        instance.input_size_multiplier = 1
 
         # Store datasets and label info
         instance.label_info = train_dataset.label_info
