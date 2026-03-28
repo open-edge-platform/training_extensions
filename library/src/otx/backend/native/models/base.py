@@ -68,10 +68,34 @@ class DataInputParams:
     input_size: tuple[int, int]
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
+    storage_dtype: str = "uint8"
+    intensity_mode: str = "scale_to_unit"
+    intensity_max_value: float | None = None
+    window_center: float | None = None
+    window_width: float | None = None
+    percentile_low: float = 1.0
+    percentile_high: float = 99.0
+    scale_factor: float = 1.0
+    min_value: float = 0.0
+    repeat_channels: int = 0
 
     def as_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return {"input_size": self.input_size, "mean": self.mean, "std": self.std}
+        return {
+            "input_size": self.input_size,
+            "mean": self.mean,
+            "std": self.std,
+            "storage_dtype": self.storage_dtype,
+            "intensity_mode": self.intensity_mode,
+            "intensity_max_value": self.intensity_max_value,
+            "window_center": self.window_center,
+            "window_width": self.window_width,
+            "percentile_low": self.percentile_low,
+            "percentile_high": self.percentile_high,
+            "scale_factor": self.scale_factor,
+            "min_value": self.min_value,
+            "repeat_channels": self.repeat_channels,
+        }
 
     def as_ncwh(self, batch_size: int = 1) -> tuple[int, int, int, int]:
         """Convert input_size to NCWH format."""
@@ -966,6 +990,16 @@ class OTXModel(LightningModule):
                 input_size=preprocessing_params.get("input_size") or default.input_size,
                 mean=preprocessing_params.get("mean") or default.mean,
                 std=preprocessing_params.get("std") or default.std,
+                storage_dtype=preprocessing_params.get("storage_dtype", default.storage_dtype),
+                intensity_mode=preprocessing_params.get("intensity_mode", default.intensity_mode),
+                intensity_max_value=preprocessing_params.get("intensity_max_value", default.intensity_max_value),
+                window_center=preprocessing_params.get("window_center", default.window_center),
+                window_width=preprocessing_params.get("window_width", default.window_width),
+                percentile_low=preprocessing_params.get("percentile_low", default.percentile_low),
+                percentile_high=preprocessing_params.get("percentile_high", default.percentile_high),
+                scale_factor=preprocessing_params.get("scale_factor", default.scale_factor),
+                min_value=preprocessing_params.get("min_value", default.min_value),
+                repeat_channels=preprocessing_params.get("repeat_channels", default.repeat_channels),
             )
         elif isinstance(preprocessing_params, DataInputParams):
             data_input_params = preprocessing_params

@@ -329,6 +329,18 @@ class OTXCLI:
                 _dip["mean"] = self.datamodule.input_mean
             if self.datamodule.input_std is not None:
                 _dip["std"] = self.datamodule.input_std
+            if hasattr(self.datamodule, "intensity_config"):
+                ic = self.datamodule.intensity_config
+                _dip["storage_dtype"] = ic.storage_dtype
+                _dip["intensity_mode"] = ic.mode
+                _dip["intensity_max_value"] = ic.max_value
+                _dip["window_center"] = ic.window_center
+                _dip["window_width"] = ic.window_width
+                _dip["percentile_low"] = ic.percentile_low
+                _dip["percentile_high"] = ic.percentile_high
+                _dip["scale_factor"] = ic.scale_factor
+                _dip["min_value"] = ic.min_value
+                _dip["repeat_channels"] = ic.repeat_channels
             model_config.init_args["data_input_params"] = _dip
 
             # Instantiate the model and needed components

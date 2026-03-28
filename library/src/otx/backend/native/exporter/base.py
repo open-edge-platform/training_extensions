@@ -174,13 +174,27 @@ class OTXModelExporter:
         mean_str = " ".join(map(str, self.data_input_params.mean)) if self.data_input_params.mean else ""
         std_str = " ".join(map(str, self.data_input_params.std)) if self.data_input_params.std else ""
 
+        dip = self.data_input_params
         extra_data = {
             ("model_info", "mean_values"): mean_str.strip(),
             ("model_info", "scale_values"): std_str.strip(),
             ("model_info", "resize_type"): self.resize_mode,
             ("model_info", "pad_value"): str(self.pad_value),
             ("model_info", "reverse_input_channels"): str(self.swap_rgb),
+            ("model_info", "storage_dtype"): dip.storage_dtype,
+            ("model_info", "intensity_mode"): dip.intensity_mode,
+            ("model_info", "percentile_low"): str(dip.percentile_low),
+            ("model_info", "percentile_high"): str(dip.percentile_high),
+            ("model_info", "scale_factor"): str(dip.scale_factor),
+            ("model_info", "min_value"): str(dip.min_value),
+            ("model_info", "repeat_channels"): str(dip.repeat_channels),
         }
+        if dip.intensity_max_value is not None:
+            extra_data[("model_info", "intensity_max_value")] = str(dip.intensity_max_value)
+        if dip.window_center is not None:
+            extra_data[("model_info", "window_center")] = str(dip.window_center)
+        if dip.window_width is not None:
+            extra_data[("model_info", "window_width")] = str(dip.window_width)
         extra_data.update(metadata)
 
         return extra_data

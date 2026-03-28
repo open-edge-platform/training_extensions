@@ -129,6 +129,7 @@ class OTXDataModule(LightningDataModule):
             self.input_mean = None
             self.input_std = None
         self.input_size = input_size
+        self.intensity_config = self.train_subset.intensity
 
         self._setup_otx_dataset(dataset)
 
@@ -327,6 +328,8 @@ class OTXDataModule(LightningDataModule):
         else:
             instance.input_mean = None
             instance.input_std = None
+
+        instance.intensity_config = instance.train_subset.intensity
 
         # Save hyperparameters
         instance.save_hyperparameters(

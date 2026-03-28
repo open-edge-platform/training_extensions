@@ -148,6 +148,18 @@ class OTXEngine(Engine):
                 params["mean"] = self._datamodule.input_mean
             if self._datamodule.input_std is not None:
                 params["std"] = self._datamodule.input_std
+            if hasattr(self._datamodule, "intensity_config"):
+                ic = self._datamodule.intensity_config
+                params["storage_dtype"] = ic.storage_dtype
+                params["intensity_mode"] = ic.mode
+                params["intensity_max_value"] = ic.max_value
+                params["window_center"] = ic.window_center
+                params["window_width"] = ic.window_width
+                params["percentile_low"] = ic.percentile_low
+                params["percentile_high"] = ic.percentile_high
+                params["scale_factor"] = ic.scale_factor
+                params["min_value"] = ic.min_value
+                params["repeat_channels"] = ic.repeat_channels
             get_model_args["data_input_params"] = params
 
             model = self._auto_configurator.get_model(**get_model_args)
