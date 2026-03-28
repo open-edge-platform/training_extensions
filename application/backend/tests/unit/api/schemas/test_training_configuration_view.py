@@ -10,7 +10,18 @@ from app.models.training_configuration import (
     AlgoLevelTrainingParameters,
     TaskLevelDatasetPreparationParameters,
 )
-from app.models.training_configuration.augmentation import AugmentationParameters, ColorJitter
+from app.models.training_configuration.augmentation import (
+    AugmentationParameters,
+    ColorJitter,
+    Mixup,
+    Mosaic,
+    RandomAffine,
+    RandomErasing,
+    RandomGrayscale,
+    RandomIOUCrop,
+    RandomSharpness,
+    RandomZoomOut,
+)
 from app.models.training_configuration.configuration import TaskLevelParameters, TrainingConfiguration
 from app.models.training_configuration.dataset_preparation import (
     Filtering,
@@ -19,7 +30,14 @@ from app.models.training_configuration.dataset_preparation import (
     MinAnnotationPixels,
     SubsetSplit,
 )
-from app.models.training_configuration.training import EarlyStopping
+from app.models.training_configuration.training import (
+    EarlyStopping,
+    GradientAccumulationParameters,
+    GradientClipParameters,
+    LrLinearWarmupParameters,
+    SchedulerParameters,
+    SchedulerType,
+)
 
 
 @pytest.fixture
@@ -46,13 +64,69 @@ def fxt_training_configuration() -> TrainingConfiguration:
                         saturation=(0.8, 1.2),
                         hue=(-0.05, 0.05),
                         probability=0.6,
-                    )
+                    ),
+                    random_erasing=RandomErasing(
+                        enable=True,
+                        scale=(0.03, 0.25),
+                        ratio=(0.5, 2.0),
+                        probability=0.4,
+                        value=0.1,
+                    ),
+                    random_grayscale=RandomGrayscale(
+                        enable=True,
+                        probability=0.2,
+                    ),
+                    random_sharpness=RandomSharpness(
+                        enable=True,
+                        sharpness=0.8,
+                        probability=0.3,
+                    ),
+                    random_affine=RandomAffine(
+                        enable=True,
+                        max_rotate_degree=15.0,
+                        max_translate_ratio=0.2,
+                        scaling_ratio_range=(0.6, 1.4),
+                        max_shear_degree=5.0,
+                        probability=0.7,
+                    ),
+                    random_zoom_out=RandomZoomOut(
+                        enable=True,
+                        fill=128,
+                        side_range=(1.0, 3.0),
+                        probability=0.4,
+                    ),
+                    iou_random_crop=RandomIOUCrop(
+                        enable=True,
+                        probability=0.9,
+                        min_scale=0.4,
+                        max_scale=0.9,
+                    ),
+                    mosaic=Mosaic(
+                        enable=True,
+                        probability=0.8,
+                    ),
+                    mixup=Mixup(
+                        enable=True,
+                        probability=0.6,
+                        mix_ratio=0.4,
+                    ),
                 )
             ),
             training=AlgoLevelTrainingParameters(
                 max_epochs=120,
+                batch_size=8,
                 early_stopping=EarlyStopping(enable=True, patience=5),
                 learning_rate=0.001,
+                weight_decay=0.01,
+                scheduler=SchedulerParameters(
+                    type=SchedulerType.COSINE_ANNEALING,
+                    warmup=LrLinearWarmupParameters(enable=True, epochs=3),
+                    factor=0.5,
+                    patience=7,
+                    min_lr=1e-5,
+                ),
+                gradient_accumulation=GradientAccumulationParameters(enable=True, batches=4),
+                gradient_clip=GradientClipParameters(enable=True, max_grad_norm=2.0),
                 input_size_width=256,
                 input_size_height=256,
                 allowed_values_input_size=[128, 256, 512],
@@ -76,13 +150,69 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                         saturation=(0.9, 1.1),
                         hue=(-0.1, 0.1),
                         probability=0.5,
-                    )
+                    ),
+                    random_erasing=RandomErasing(
+                        enable=False,
+                        scale=(0.02, 0.33),
+                        ratio=(0.3, 3.3),
+                        probability=0.5,
+                        value=0.0,
+                    ),
+                    random_grayscale=RandomGrayscale(
+                        enable=False,
+                        probability=0.1,
+                    ),
+                    random_sharpness=RandomSharpness(
+                        enable=False,
+                        sharpness=0.5,
+                        probability=0.5,
+                    ),
+                    random_affine=RandomAffine(
+                        enable=False,
+                        max_rotate_degree=10.0,
+                        max_translate_ratio=0.1,
+                        scaling_ratio_range=(0.5, 1.5),
+                        max_shear_degree=2.0,
+                        probability=0.5,
+                    ),
+                    random_zoom_out=RandomZoomOut(
+                        enable=False,
+                        fill=0,
+                        side_range=(1.0, 4.0),
+                        probability=0.5,
+                    ),
+                    iou_random_crop=RandomIOUCrop(
+                        enable=False,
+                        probability=1.0,
+                        min_scale=0.3,
+                        max_scale=1.0,
+                    ),
+                    mosaic=Mosaic(
+                        enable=False,
+                        probability=1.0,
+                    ),
+                    mixup=Mixup(
+                        enable=False,
+                        probability=1.0,
+                        mix_ratio=0.5,
+                    ),
                 )
             ),
             training=AlgoLevelTrainingParameters(
                 max_epochs=250,
+                batch_size=4,
                 early_stopping=EarlyStopping(enable=False, patience=1),
                 learning_rate=0.0015,
+                weight_decay=1e-4,
+                scheduler=SchedulerParameters(
+                    type=SchedulerType.REDUCE_LR_ON_PLATEAU,
+                    warmup=LrLinearWarmupParameters(enable=False, epochs=5),
+                    factor=0.1,
+                    patience=10,
+                    min_lr=1e-6,
+                ),
+                gradient_accumulation=GradientAccumulationParameters(enable=False, batches=1),
+                gradient_clip=GradientClipParameters(enable=False, max_grad_norm=1.0),
                 input_size_width=512,
                 input_size_height=512,
                 allowed_values_input_size=[128, 256, 512],
@@ -126,6 +256,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 1,
                                 "max_value": 100,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                             {
                                 "type": "parameter",
@@ -138,6 +269,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 1,
                                 "max_value": 100,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                             {
                                 "type": "parameter",
@@ -150,6 +282,7 @@ def fxt_training_configuration_view_json() -> dict:
                                 "min_value": 1,
                                 "max_value": 100,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                         ],
                     },
@@ -177,9 +310,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -192,6 +323,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0,
                                         "max_value": 200000000,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             },
@@ -209,9 +341,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -224,6 +354,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0,
                                         "max_value": None,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             },
@@ -241,9 +372,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": False,
                                         "default_value": False,
                                         "value_type": "bool",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -256,6 +385,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0,
                                         "max_value": None,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
                             },
@@ -274,10 +404,11 @@ def fxt_training_configuration_view_json() -> dict:
                         "parameters": [
                             {
                                 "type": "parameter_group",
-                                "key": "color_jitter",
-                                "name": "Color jitter",
+                                "key": "random_zoom_out",
+                                "name": "Random zoom out",
                                 "description": (
-                                    "Randomly adjust brightness, contrast, saturation, and hue of the image."
+                                    "Randomly zoom out the image by placing it on a larger canvas with "
+                                    "padding. Applied before resize."
                                 ),
                                 "parameters": [
                                     {
@@ -288,9 +419,339 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": True,
                                         "default_value": False,
                                         "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "fill",
+                                        "name": "Fill value",
+                                        "description": (
+                                            "Fill value for the area outside the image when zooming out. "
+                                            "Typically 0 for black padding. Value should be between 0 and 255."
+                                        ),
+                                        "value": 128,
+                                        "default_value": 0,
+                                        "value_type": "int",
+                                        "min_value": 0,
+                                        "max_value": 255,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "side_range",
+                                        "name": "Side range",
+                                        "description": (
+                                            "Range (min, max) of the zoom-out scale factor for each side. "
+                                            "The image will be placed on a canvas scaled by a random factor "
+                                            "from this range. For example, (1.0, 4.0) means the canvas can "
+                                            "be up to 4x the original image size. The minimum value must "
+                                            "be >= 1.0."
+                                        ),
+                                        "value": [1.0, 3.0],
+                                        "default_value": [1.0, 4.0],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying random zoom out. "
+                                            "A value of 0.5 means each image has a 50% chance to be zoomed out."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "iou_random_crop",
+                                "name": "IoU random crop",
+                                "description": (
+                                    "Randomly crop images based on Intersection over Union (IoU) criteria. "
+                                    "Applied before resize. Note: this augmentation is not supported when "
+                                    "Tiling algorithm is enabled."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying IoU random crop. "
+                                            "A value of 1.0 means the crop is always applied when enabled."
+                                        ),
+                                        "value": 0.9,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "min_scale",
+                                        "name": "Minimum scale",
+                                        "description": (
+                                            "Minimum fraction of the original image area to retain after "
+                                            "cropping. For example, 0.3 means the crop will be at least 30% "
+                                            "of the original area."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.3,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_scale",
+                                        "name": "Maximum scale",
+                                        "description": (
+                                            "Maximum fraction of the original image area to retain after "
+                                            "cropping. A value of 1.0 means the crop can be as large as the "
+                                            "entire image."
+                                        ),
+                                        "value": 0.9,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "mosaic",
+                                "name": "Mosaic",
+                                "description": (
+                                    "Combines 4 images into one mosaic for augmentation. Applied before resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying mosaic augmentation. "
+                                            "A value of 1.0 means mosaic is always applied when enabled."
+                                        ),
+                                        "value": 0.8,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_affine",
+                                "name": "Random affine",
+                                "description": (
+                                    "Apply random affine transformations (rotation, translation, scaling, shear) "
+                                    "to the image. Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_rotate_degree",
+                                        "name": "Rotation degrees",
+                                        "description": (
+                                            "Maximum rotation angle in degrees for affine transformation. "
+                                            "A random angle in the range [-max_rotate_degree, max_rotate_degree] "
+                                            "will be applied. For example, max_rotate_degree=10 allows up to ±10 "
+                                            "degrees rotation."
+                                        ),
+                                        "value": 15.0,
+                                        "default_value": 10.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_translate_ratio",
+                                        "name": "Horizontal translation",
+                                        "description": (
+                                            "Maximum translation as a fraction of image width or height. "
+                                            "A random translation in the range [-max_translate_ratio, "
+                                            "max_translate_ratio] will be applied along both axes. For example, "
+                                            "0.1 allows up to ±10% translation."
+                                        ),
+                                        "value": 0.2,
+                                        "default_value": 0.1,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "scaling_ratio_range",
+                                        "name": "Scaling ratio range",
+                                        "description": (
+                                            "Range (min, max) of scaling factors to apply during affine "
+                                            "transformation. Both values should be > 0.0. For example, "
+                                            "(0.8, 1.2) will randomly scale the image between 80% and 120% "
+                                            "of its original size."
+                                        ),
+                                        "value": [0.6, 1.4],
+                                        "default_value": [0.5, 1.5],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "max_shear_degree",
+                                        "name": "Maximum shear degree",
+                                        "description": (
+                                            "Maximum absolute shear angle in degrees to apply during affine "
+                                            "transformation. A random shear in the range [-max_shear_degree, "
+                                            "max_shear_degree] will be applied."
+                                        ),
+                                        "value": 5.0,
+                                        "default_value": 2.0,
+                                        "value_type": "float",
                                         "min_value": None,
                                         "max_value": None,
                                         "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying the affine transformation. "
+                                            "A value of 0.5 means each image has a 50% chance to be transformed."
+                                        ),
+                                        "value": 0.7,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "mixup",
+                                "name": "Mixup",
+                                "description": (
+                                    "Blends two images and their labels for augmentation. Applied before resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": "Probability of applying mixup augmentation",
+                                        "value": 0.6,
+                                        "default_value": 1.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "mix_ratio",
+                                        "name": "Mix ratio",
+                                        "description": (
+                                            "Blending ratio between the two images. "
+                                            "A value of 0.5 means equal blending of both images. "
+                                            "Lower values give more weight to the original image."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "color_jitter",
+                                "name": "Color jitter",
+                                "description": (
+                                    "Randomly adjust brightness, contrast, saturation, and hue of the image. "
+                                    "Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -305,9 +766,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.9, 1.1],
                                         "default_value": [0.8, 1.2],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -322,9 +781,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.85, 1.15],
                                         "default_value": [0.75, 1.25],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -339,9 +796,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [0.8, 1.2],
                                         "default_value": [0.9, 1.1],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -355,9 +810,7 @@ def fxt_training_configuration_view_json() -> dict:
                                         "value": [-0.05, 0.05],
                                         "default_value": [-0.1, 0.1],
                                         "value_type": "float_range",
-                                        "min_value": None,
-                                        "max_value": None,
-                                        "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                     {
                                         "type": "parameter",
@@ -373,9 +826,194 @@ def fxt_training_configuration_view_json() -> dict:
                                         "min_value": 0.0,
                                         "max_value": 1.0,
                                         "allowed_values": None,
+                                        "depends_on": None,
                                     },
                                 ],
-                            }
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_erasing",
+                                "name": "Random erasing",
+                                "description": (
+                                    "Randomly erase a rectangular region in the image and fill it with a "
+                                    "constant value. "
+                                    "Also known as Cutout. Helps the model learn to rely on broader context "
+                                    "rather than "
+                                    "specific local features. Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "scale",
+                                        "name": "Erasing area scale range",
+                                        "description": (
+                                            "Range (min, max) of the proportion of the image area to erase. "
+                                            "For example, (0.02, 0.33) means erasing between 2% and 33% of the "
+                                            "image area."
+                                        ),
+                                        "value": [0.03, 0.25],
+                                        "default_value": [0.02, 0.33],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "ratio",
+                                        "name": "Erasing aspect ratio range",
+                                        "description": (
+                                            "Range (min, max) of the aspect ratio of the erased area. "
+                                            "For example, (0.3, 3.3) allows the erased rectangle to have "
+                                            "varying proportions."
+                                        ),
+                                        "value": [0.5, 2.0],
+                                        "default_value": [0.3, 3.3],
+                                        "value_type": "float_range",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying random erasing. "
+                                            "A value of 0.5 means each image has a 50% chance to have a "
+                                            "region erased."
+                                        ),
+                                        "value": 0.4,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "value",
+                                        "name": "Fill value",
+                                        "description": (
+                                            "Fill value for the erased region, normalized to [0, 1]. "
+                                            "A value of 0.0 fills with black. A value of 1.0 fills with white."
+                                        ),
+                                        "value": 0.1,
+                                        "default_value": 0.0,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_grayscale",
+                                "name": "Random grayscale",
+                                "description": (
+                                    "Randomly convert the image to grayscale. Forces the model to learn "
+                                    "shape and texture "
+                                    "features rather than relying solely on color information. "
+                                    "Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of converting the image to grayscale. "
+                                            "A value of 0.1 means each image has a 10% chance to be "
+                                            "converted to grayscale."
+                                        ),
+                                        "value": 0.2,
+                                        "default_value": 0.1,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "random_sharpness",
+                                "name": "Random sharpness",
+                                "description": (
+                                    "Randomly adjust the sharpness of the image. Complements Gaussian "
+                                    "blur by also "
+                                    "allowing images to become sharper, improving robustness to varying "
+                                    "image quality. "
+                                    "Applied after resize."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": "Toggle to apply this augmentation.",
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "sharpness",
+                                        "name": "Sharpness factor",
+                                        "description": (
+                                            "Factor controlling the strength of the sharpness adjustment. "
+                                            "A value of 0.0 means no sharpening, higher values increase "
+                                            "the effect. "
+                                            "Typical values are between 0.0 and 1.0."
+                                        ),
+                                        "value": 0.8,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "probability",
+                                        "name": "Probability",
+                                        "description": (
+                                            "Probability of applying sharpness adjustment. "
+                                            "A value of 0.5 means each image has a 50% chance to be "
+                                            "sharpened."
+                                        ),
+                                        "value": 0.3,
+                                        "default_value": 0.5,
+                                        "value_type": "float",
+                                        "min_value": 0.0,
+                                        "max_value": 1.0,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
                         ],
                     },
                 ],
@@ -391,50 +1029,68 @@ def fxt_training_configuration_view_json() -> dict:
                         "key": "max_epochs",
                         "name": "Maximum epochs",
                         "description": (
-                            "Maximum number of epochs to train the model. "
-                            "An epoch is one complete pass through the training dataset."
+                            "Maximum number of epochs to train the model. An epoch is one complete pass through the "
+                            "training dataset."
                         ),
                         "value": 120,
                         "default_value": 250,
                         "value_type": "int",
-                        "min_value": 0,
+                        "min_value": 1,
                         "max_value": None,
                         "allowed_values": None,
+                        "depends_on": None,
+                    },
+                    {
+                        "type": "parameter",
+                        "key": "batch_size",
+                        "name": "Batch size",
+                        "description": (
+                            "Number of training samples processed before the model's internal parameters are updated. "
+                            "A larger batch size can speed up training but may require more memory, while a smaller "
+                            "batch size can help avoid OOM (Out of Memory) errors at the cost of longer training times "
+                            "and potentially noisier gradient estimates."
+                        ),
+                        "value": 8,
+                        "default_value": 4,
+                        "value_type": "int",
+                        "min_value": 1,
+                        "max_value": None,
+                        "allowed_values": None,
+                        "depends_on": None,
                     },
                     {
                         "type": "parameter_group",
                         "key": "early_stopping",
                         "name": "Early stopping",
                         "description": (
-                            "Early stopping is a technique to prevent overfitting by stopping training "
-                            "when performance on a validation set stops improving."
+                            "Early stopping is a technique to prevent overfitting by stopping training when "
+                            "performance on a validation set stops improving."
                         ),
                         "parameters": [
                             {
                                 "type": "parameter",
                                 "key": "enable",
-                                "name": "Toggle early stopping",
-                                "description": "Whether to stop training early when performance stops improving",
+                                "name": "Enable",
+                                "description": "Toggle to enable or disable early stopping during training.",
                                 "value": True,
                                 "default_value": False,
                                 "value_type": "bool",
-                                "min_value": None,
-                                "max_value": None,
-                                "allowed_values": None,
+                                "depends_on": None,
                             },
                             {
                                 "type": "parameter",
                                 "key": "patience",
                                 "name": "Patience",
                                 "description": (
-                                    "Number of epochs with no improvement after which training will be stopped"
+                                    "Number of epochs with no improvement after which training will be stopped."
                                 ),
                                 "value": 5,
                                 "default_value": 1,
                                 "value_type": "int",
-                                "min_value": 0,
+                                "min_value": 1,
                                 "max_value": None,
                                 "allowed_values": None,
+                                "depends_on": None,
                             },
                         ],
                     },
@@ -453,14 +1109,218 @@ def fxt_training_configuration_view_json() -> dict:
                         "min_value": 0,
                         "max_value": 1,
                         "allowed_values": None,
+                        "depends_on": None,
+                    },
+                    {
+                        "type": "parameter",
+                        "key": "weight_decay",
+                        "name": "Weight decay",
+                        "description": (
+                            "Weight decay is a regularization technique that adds a penalty to the loss function "
+                            "based on the squared magnitude of the model weights (L2 regularization). "
+                            "It helps prevent overfitting by discouraging large weight values."
+                        ),
+                        "value": 0.01,
+                        "default_value": 1e-4,
+                        "value_type": "float",
+                        "min_value": 0,
+                        "max_value": 1,
+                        "allowed_values": None,
+                        "depends_on": None,
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "scheduler",
+                        "name": "Learning rate scheduler",
+                        "description": (
+                            "The learning rate scheduler adjusts the learning rate during training according to a "
+                            "predefined schedule or based on validation performance, helping to improve convergence "
+                            "and training stability."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "type",
+                                "name": "Scheduler type",
+                                "description": (
+                                    "Type of learning rate scheduler to use during training. With ReduceLROnPlateau, "
+                                    "the learning rate will be reduced by a predetermined factor when the validation "
+                                    "metric stops improving. With CosineAnnealing, the learning rate will follow a "
+                                    "cosine decay schedule, gradually decreasing over the course of training."
+                                ),
+                                "value": "cosine_annealing",
+                                "default_value": "reduce_lr_on_plateau",
+                                "value_type": "str",
+                                "allowed_values": ["reduce_lr_on_plateau", "cosine_annealing"],
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter_group",
+                                "key": "warmup",
+                                "name": "Learning rate linear warmup",
+                                "description": (
+                                    "Learning rate warmup is a technique where the learning rate starts at a lower "
+                                    "value and gradually increases to the initial learning rate over a specified "
+                                    "number of epochs at the beginning of training. This can help stabilize training "
+                                    "and improve convergence, especially when using large learning rates or training "
+                                    "on complex datasets."
+                                ),
+                                "parameters": [
+                                    {
+                                        "type": "parameter",
+                                        "key": "enable",
+                                        "name": "Enable",
+                                        "description": (
+                                            "Toggle to enable or disable the LR linear warmup phase at the "
+                                            "beginning of training."
+                                        ),
+                                        "value": True,
+                                        "default_value": False,
+                                        "value_type": "bool",
+                                        "depends_on": None,
+                                    },
+                                    {
+                                        "type": "parameter",
+                                        "key": "epochs",
+                                        "name": "Warmup epochs",
+                                        "description": "Number of epochs for the LR linear warmup phase.",
+                                        "value": 3,
+                                        "default_value": 5,
+                                        "value_type": "int",
+                                        "min_value": 1,
+                                        "max_value": None,
+                                        "allowed_values": None,
+                                        "depends_on": None,
+                                    },
+                                ],
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "factor",
+                                "name": "Factor",
+                                "description": (
+                                    "Factor by which the learning rate will be reduced. new_lr = lr * factor."
+                                ),
+                                "value": 0.5,
+                                "default_value": 0.1,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": 1,
+                                "allowed_values": None,
+                                "depends_on": {"type": "reduce_lr_on_plateau"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "patience",
+                                "name": "Patience",
+                                "description": (
+                                    "Number of epochs with no improvement after which learning rate will be reduced."
+                                ),
+                                "value": 7,
+                                "default_value": 10,
+                                "value_type": "int",
+                                "min_value": 1,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": {"type": "reduce_lr_on_plateau"},
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "min_lr",
+                                "name": "Minimum learning rate",
+                                "description": "Minimum learning rate after annealing.",
+                                "value": 1e-5,
+                                "default_value": 1e-6,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": 1,
+                                "allowed_values": None,
+                                "depends_on": {"type": "cosine_annealing"},
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "gradient_accumulation",
+                        "name": "Gradient accumulation",
+                        "description": (
+                            "Gradient accumulation allows simulating larger batch sizes by accumulating gradients "
+                            "over multiple forward/backward passes before updating the model weights."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "enable",
+                                "name": "Enable",
+                                "description": "Toggle to enable or disable gradient accumulation during training.",
+                                "value": True,
+                                "default_value": False,
+                                "value_type": "bool",
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "batches",
+                                "name": "Gradient accumulation batches",
+                                "description": (
+                                    "Number of steps (batches) to accumulate gradients before performing gradient "
+                                    "descent step. Effective batch size during training: "
+                                    "batch_size * accumulate_grad_batches."
+                                ),
+                                "value": 4,
+                                "default_value": 1,
+                                "value_type": "int",
+                                "min_value": 1,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": None,
+                            },
+                        ],
+                    },
+                    {
+                        "type": "parameter_group",
+                        "key": "gradient_clip",
+                        "name": "Gradient clipping",
+                        "description": (
+                            "Gradient clipping prevents exploding gradients by capping gradient norms during "
+                            "backpropagation."
+                        ),
+                        "parameters": [
+                            {
+                                "type": "parameter",
+                                "key": "enable",
+                                "name": "Enable",
+                                "description": "Toggle to enable or disable gradient clipping during training.",
+                                "value": True,
+                                "default_value": False,
+                                "value_type": "bool",
+                                "depends_on": None,
+                            },
+                            {
+                                "type": "parameter",
+                                "key": "max_grad_norm",
+                                "name": "Maximum gradient L2 norm",
+                                "description": (
+                                    "Maximum L2 norm of the gradients. Gradients with norm larger than this value will "
+                                    "be clipped."
+                                ),
+                                "value": 2.0,
+                                "default_value": 1.0,
+                                "value_type": "float",
+                                "min_value": 0,
+                                "max_value": None,
+                                "allowed_values": None,
+                                "depends_on": None,
+                            },
+                        ],
                     },
                     {
                         "type": "parameter",
                         "key": "input_size_width",
                         "name": "Input size width",
                         "description": (
-                            "Width size in pixels for model input images. "
-                            "Determines the horizontal resolution at which images are processed."
+                            "Width size in pixels for model input images. Determines the horizontal resolution at "
+                            "which images are processed."
                         ),
                         "value": 256,
                         "default_value": 512,
@@ -468,14 +1328,15 @@ def fxt_training_configuration_view_json() -> dict:
                         "min_value": 0,
                         "max_value": None,
                         "allowed_values": [128, 256, 512],
+                        "depends_on": None,
                     },
                     {
                         "type": "parameter",
                         "key": "input_size_height",
                         "name": "Input size height",
                         "description": (
-                            "Height size in pixels for model input images. "
-                            "Determines the vertical resolution at which images are processed."
+                            "Height size in pixels for model input images. Determines the vertical resolution at "
+                            "which images are processed."
                         ),
                         "value": 256,
                         "default_value": 512,
@@ -483,10 +1344,12 @@ def fxt_training_configuration_view_json() -> dict:
                         "min_value": 0,
                         "max_value": None,
                         "allowed_values": [128, 256, 512],
+                        "depends_on": None,
                     },
                 ],
             },
             {
+                "type": "parameter_group",
                 "key": "evaluation",
                 "name": "Evaluation parameters",
                 "description": "Configurable parameters related to the model evaluation.",
@@ -499,12 +1362,10 @@ def fxt_training_configuration_view_json() -> dict:
                         "value": "default",
                         "default_value": "default",
                         "value_type": "str",
-                        "min_value": None,
-                        "max_value": None,
                         "allowed_values": ["default"],
+                        "depends_on": None,
                     },
                 ],
-                "type": "parameter_group",
             },
         ]
     }

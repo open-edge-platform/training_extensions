@@ -3,7 +3,7 @@
 !define pk(x) <u>x</u>
 
 title
-<size:16><b>Geti Tune - Complete Entity-Relationship Diagram</b></size>
+<size:16><b>Geti - Complete Entity-Relationship Diagram</b></size>
 <size:12>System Entities and Relationships</size>
 end title
 

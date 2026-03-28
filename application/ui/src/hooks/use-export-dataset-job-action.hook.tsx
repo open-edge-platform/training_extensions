@@ -20,7 +20,7 @@ const initialState: FormValues = {
     labels: [],
     dataset_id: null,
     export_format: 'geti',
-    include_unannotated: false,
+    include_unannotated: true,
 };
 
 type useExportDatasetJobActionProps = {

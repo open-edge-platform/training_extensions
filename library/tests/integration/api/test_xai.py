@@ -4,8 +4,8 @@
 from pathlib import Path
 
 import numpy as np
-import openvino.runtime as ov
 import pytest
+from openvino import Core
 
 from otx.backend.native.engine import OTXEngine
 from otx.data.entity.sample import OTXPredictionBatch
@@ -21,7 +21,7 @@ INST_SEG_LIST = [recipe for recipe in RECIPE_LIST_ALL if "instance_segmentation"
 EXPLAIN_MODEL_LIST = MC_ML_CLS + DETECTION_LIST + INST_SEG_LIST
 
 MEAN_TORCH_OV_DIFF = 150
-UNSUPPORTED_MODEL_SUBSTRS = ("dino", "mobilenet_v4", "rtmdet_tiny", "rfdetr")
+UNSUPPORTED_MODEL_SUBSTRS = ("dino", "rfdetr")
 
 
 @pytest.mark.parametrize(
@@ -123,7 +123,7 @@ def test_predict_with_explain(
     engine.trainer.save_checkpoint(ckpt_path)
     exported_model_path = engine.export(checkpoint=ckpt_path, explain=True)
 
-    model = ov.Core().read_model(exported_model_path)
+    model = Core().read_model(exported_model_path)
     feature_vector_output = None
     saliency_map_output = None
     for output in model.outputs:
@@ -164,7 +164,7 @@ def test_predict_with_explain(
 
     assert len(maps_torch) == len(maps_ov)
 
-    if "tv_efficientnet_b3" in recipe or "efficientnet_b0" in recipe:
+    if "efficientnet_b3" in recipe or "efficientnet_b0" in recipe or "deit_tiny" in recipe:
         # There is the issue with different predict results for Pytorch and OpenVINO tasks.
         # Probably because of the different preprocessed images passed as an input. Skip the rest of the checks for now.
         # Tickets: 142087, 141639

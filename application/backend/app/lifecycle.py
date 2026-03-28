@@ -19,7 +19,16 @@ from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
-from app.execution import ExportDataset, ImportDatasetToProject, OTXTrainer, PrepareDataset, TrainingDependencies
+from app.execution import (
+    ExportDataset,
+    ImportDatasetToProject,
+    OTXQuantizer,
+    OTXTrainer,
+    PrepareDataset,
+    QuantizationDependencies,
+    TrainingDependencies,
+)
+from app.execution.dataset_import.import_as_new_project import ImportDatasetAsNewProject
 from app.scheduler import Scheduler
 from app.services import (
     DatasetRevisionService,
@@ -27,11 +36,14 @@ from app.services import (
     LabelService,
     MediaService,
     ModelService,
+    PipelineService,
+    ProjectService,
     TrainingConfigurationService,
 )
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
+from app.services.inference import InferenceServer
 from app.services.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
@@ -59,9 +71,15 @@ def setup_job_controller(
         raise ValueError("staged_datasets_dir must be provided")
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
+    label_service = LabelService()
     dataset_service = DatasetService(
-        label_service=LabelService(),
+        label_service=label_service,
         media_service=MediaService(data_dir=data_dir),
+    )
+    project_service = ProjectService(
+        data_dir=data_dir,
+        label_service=label_service,
+        pipeline_service=PipelineService(),
     )
     dataset_revision_service = DatasetRevisionService(data_dir=data_dir)
     job_runnable_factory.register(
@@ -77,6 +95,20 @@ def setup_job_controller(
                 model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),
                 data_dir=data_dir,
+                db_session_factory=get_db_session,
+            ),
+        ),
+    )
+    job_runnable_factory.register(
+        JobType.QUANTIZE,
+        partial(
+            OTXQuantizer,
+            quantization_deps=QuantizationDependencies(
+                data_dir=data_dir,
+                model_service=ModelService(data_dir=data_dir),
+                dataset_revision_service=dataset_revision_service,
+                project_service=project_service,
+                training_configuration_service=TrainingConfigurationService(),
                 db_session_factory=get_db_session,
             ),
         ),
@@ -104,7 +136,19 @@ def setup_job_controller(
             ImportDatasetToProject,
             staged_datasets_dir=staged_datasets_dir,
             dataset_service=dataset_service,
-            label_service=LabelService(),
+            label_service=label_service,
+            media_service=MediaService(data_dir=data_dir),
+            db_session_factory=get_db_session,
+        ),
+    )
+    job_runnable_factory.register(
+        JobType.IMPORT_DATASET_AS_NEW_PROJECT,
+        partial(
+            ImportDatasetAsNewProject,
+            staged_datasets_dir=staged_datasets_dir,
+            project_service=project_service,
+            dataset_service=dataset_service,
+            label_service=label_service,
             media_service=MediaService(data_dir=data_dir),
             db_session_factory=get_db_session,
         ),
@@ -135,10 +179,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.error("Failed to initialize database. Application cannot start.")
         raise RuntimeError("Database initialization failed")
 
+    # Worker processes are created with the "spawn" method to ensure a clean state and avoid issues with shared
+    # resources, especially when the workers involve GPU usage or complex libraries that may not be fork-safe.
+    # See https://github.com/open-edge-platform/training_extensions/issues/5701 for more details.
+    mp_ctx = mp.get_context("spawn")
+
     # Condition to notify processes about source updates
-    source_changed_condition: Condition = mp.Condition()
+    source_changed_condition: Condition = mp_ctx.Condition()
     # Event to signal that the model has to be reloaded
-    model_reload_event = mp.Event()
+    model_reload_event = mp_ctx.Event()
 
     event_bus = EventBus(source_changed_condition=source_changed_condition, model_reload_event=model_reload_event)
     app.state.event_bus = event_bus
@@ -146,8 +195,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
     app.state.data_collector = data_collector
 
+    inference_server = InferenceServer(data_dir=settings.data_dir)
+    app.state.inference_server = inference_server
+
     # Initialize Scheduler
-    app_scheduler = Scheduler(event_bus=event_bus, data_collector=data_collector)
+    app_scheduler = Scheduler(
+        event_bus=event_bus, data_collector=data_collector, inference_server=inference_server, mp_ctx=mp_ctx
+    )
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 

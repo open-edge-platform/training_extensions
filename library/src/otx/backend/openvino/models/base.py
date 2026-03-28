@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for base model entity used in OTX."""
 
@@ -8,14 +8,15 @@ import contextlib
 import inspect
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
+import nncf
 import numpy as np
 import openvino
 import torch
 from jsonargparse import ArgumentParser
 from model_api.adapters import OpenvinoAdapter, create_core
-from model_api.models import Model
+from model_api.models import ImageModel, Model
 from model_api.tilers import Tiler
 from torch import Tensor
 
@@ -30,16 +31,80 @@ from otx.types.task import OTXTaskType
 from .utils import get_default_num_async_infer_requests
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     from model_api.models.result import Result
-    from torchmetrics import Metric
+    from torchmetrics import Metric, MetricCollection
 
     from otx.data.module import OTXDataModule
     from otx.metrics import MetricCallable, MetricInput
     from otx.types import PathLike
 
 logger = logging.getLogger()
+
+
+class _FP32OpenvinoAdapter(OpenvinoAdapter):
+    """OpenvinoAdapter that forces float32 input tensors.
+
+    Sets ``dtype=float`` so ModelAPI builds an f32 input tensor matching
+    the 0-1 normalisation scale used by new OTX exports.  Raises
+    ``ValueError`` if the IR still stores mean/scale in the 0-255 range.
+    """
+
+    # Values above this threshold indicate uint8 (0-255) scale rather than 0-1 scale.
+    _UINT8_SCALE_THRESHOLD = 1.0
+
+    def embed_preprocessing(self, *args, **kwargs) -> None:
+        mean = kwargs.get("mean")
+        scale = kwargs.get("scale")
+        bad_mean = mean and any(v > self._UINT8_SCALE_THRESHOLD for v in mean)
+        bad_scale = scale and any(v > self._UINT8_SCALE_THRESHOLD for v in scale)
+        if bad_mean or bad_scale:
+            msg = (
+                f"IR mean_values {mean} / scale_values {scale} appear to be in "
+                "uint8 (0-255) scale, but _FP32OpenvinoAdapter expects float32 "
+                "[0, 1] inputs with values in 0-1 scale "
+                "(e.g. mean=0.485 0.456 0.406, std=0.229 0.224 0.225). "
+                "Re-export the model with the current OTX version."
+            )
+            raise ValueError(msg)
+        kwargs["dtype"] = float
+        _patch_pad_constant_type(super().embed_preprocessing, *args, **kwargs)
+
+
+def _patch_pad_constant_type(embed_fn: Callable, *args: object, **kwargs: object) -> None:
+    """Call ``embed_fn`` while monkey-patching ``opset.pad`` to fix pad-value dtype.
+
+    ModelAPI hardcodes pad constants as ``uint8``.  With f32 input this causes
+    a type-mismatch error, so we temporarily wrap ``opset.pad`` to insert a
+    ``Convert`` when the element types differ.
+    """
+    import model_api.adapters.utils as _mapi_utils
+
+    _opset = _mapi_utils.opset
+    _orig_pad = _opset.pad
+
+    def _pad_with_type_cast(
+        arg: openvino.Node,
+        pads_begin: openvino.Node,
+        pads_end: openvino.Node,
+        pad_mode: str,
+        arg_pad_value: openvino.Node | None = None,
+        name: str | None = None,
+    ) -> openvino.Node:
+        if arg_pad_value is not None:
+            data_et = arg.get_element_type()
+            pad_et = arg_pad_value.get_element_type()
+            if data_et != pad_et:
+                arg_pad_value = _opset.convert(arg_pad_value, data_et)
+        return _orig_pad(arg, pads_begin, pads_end, pad_mode, arg_pad_value, name)
+
+    _opset.pad = _pad_with_type_cast  # pyrefly: ignore[bad-assignment]
+    try:
+        embed_fn(*args, **kwargs)
+    finally:
+        _opset.pad = _orig_pad
 
 
 class OVModel:
@@ -129,7 +194,7 @@ class OVModel:
         if self.use_throughput_mode:
             plugin_config["PERFORMANCE_HINT"] = "THROUGHPUT"
 
-        model_adapter = OpenvinoAdapter(
+        model_adapter = _FP32OpenvinoAdapter(
             ie,
             self.model_path,
             device=ov_device,
@@ -207,8 +272,6 @@ class OVModel:
         Returns:
             Path: Path to the optimized model.
         """
-        import nncf
-
         output_model_path = output_dir / (optimized_model_name + ".xml")
 
         def check_if_quantized(model: openvino.Model) -> bool:
@@ -238,17 +301,114 @@ class OVModel:
         else:
             ptq_config = ptq_config_from_ir
 
-        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)  # type: ignore[attr-defined]
+        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)
 
-        compressed_model = nncf.quantize(  # type: ignore[attr-defined]
-            ov_model,
-            quantization_dataset,
-            **ptq_config,
-        )
+        if ptq_config.get("max_drop") is not None:
+            validation_dataset = nncf.Dataset(data_module.val_dataloader(), self.transform_fn)
+            validation_fn = self._create_validation_fn(data_module)
+            compressed_model = nncf.quantize_with_accuracy_control(
+                model=ov_model,
+                calibration_dataset=quantization_dataset,
+                validation_dataset=validation_dataset,
+                validation_fn=validation_fn,
+                **ptq_config,
+            )
+        else:
+            compressed_model = nncf.quantize(
+                model=ov_model,
+                calibration_dataset=quantization_dataset,
+                **ptq_config,
+            )
 
         openvino.save_model(compressed_model, output_model_path)
 
         return output_model_path
+
+    def _create_validation_fn(
+        self, data_module: OTXDataModule
+    ) -> Callable[[openvino.CompiledModel, Any], tuple[float, None]]:
+        """Create a validation function for accuracy-aware quantization.
+
+        The returned function computes accuracy on the validation set using the
+        compiled model provided by NNCF. It is compatible with
+        ``nncf.quantize_with_accuracy_control``.
+
+        Args:
+            data_module (OTXDataModule): Data module providing the validation dataloader.
+
+        Returns:
+            Callable: A function ``(compiled_model, validation_dataset) -> (float, None)``
+            where the float is the primary accuracy metric value.
+        """
+
+        def _infer_compiled_model(
+            compiled_model: openvino.CompiledModel,
+            inputs: OTXSampleBatch,
+        ) -> OTXPredictionBatch:
+            """Run inference using the NNCF-provided compiled model.
+
+            This replaces ``self.forward`` so that accuracy is measured on the
+            quantized candidate, not the original FP model.
+
+            Args:
+                compiled_model: Compiled OpenVINO model supplied by NNCF.
+                inputs: Input data batch.
+
+            Returns:
+                OTXPredictionBatch with predictions from the compiled model.
+            """
+            numpy_inputs = self._customize_inputs(inputs)["inputs"]
+            infer_request = compiled_model.create_infer_request()
+            outputs: list[Result] = []
+            for image in numpy_inputs:
+                model_ref: ImageModel = self.model.model if isinstance(self.model, Tiler) else self.model  # type: ignore[assignment]
+                resized = model_ref.resize(image, (model_ref.w, model_ref.h))
+                resized = model_ref.input_transform(resized)
+                input_tensor = model_ref._change_layout(resized)  # noqa: SLF001
+                infer_request.infer({0: input_tensor})
+                raw_result = {
+                    out.get_any_name(): infer_request.get_tensor(out).data.copy() for out in compiled_model.outputs
+                }
+                result = model_ref.postprocess(raw_result, {"original_shape": image.shape})
+                outputs.append(result)
+            return self._customize_outputs(outputs, inputs)
+
+        def validation_fn(
+            compiled_model: openvino.CompiledModel,
+            validation_dataset: nncf.Dataset,  # noqa: ARG001 required by NNCF signature
+        ) -> tuple[float, None]:
+            """Evaluate the compiled OpenVINO model on the validation dataset.
+
+            Args:
+                compiled_model: Compiled OpenVINO model provided by NNCF during
+                    accuracy-aware quantization.
+                validation_dataset: Validation NNCF dataset (unused, we iterate
+                    via the dataloader for proper batching and transforms).
+
+            Returns:
+                Tuple of (metric_value, None).
+            """
+            metric = self.metric_callable(data_module.label_info)
+
+            val_dataloader = data_module.val_dataloader()
+            for data_batch in val_dataloader:
+                preds = _infer_compiled_model(compiled_model, data_batch)
+                metric_inputs = self.prepare_metric_inputs(preds, data_batch)
+                if isinstance(metric_inputs, list):
+                    for mi in metric_inputs:
+                        metric.update(**mi)
+                else:
+                    metric.update(**metric_inputs)
+
+            results = self.compute_metrics(metric)
+            # Take the first scalar metric value as the accuracy indicator
+            metric_value = next(iter(results.values()))
+            if isinstance(metric_value, torch.Tensor):
+                metric_value = metric_value.item()
+
+            return float(metric_value), None
+
+        return validation_fn
 
     def transform_fn(self, data_batch: OTXSampleBatch) -> np.array:
         """Transform data for PTQ.
@@ -261,7 +421,7 @@ class OVModel:
         """
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
-        model = self.model.model if isinstance(self.model, Tiler) else self.model
+        model: ImageModel = self.model.model if isinstance(self.model, Tiler) else self.model  # type: ignore[assignment]
         resized_image = model.resize(image, (model.w, model.h))
         resized_image = model.input_transform(resized_image)
         return model._change_layout(resized_image)  # noqa: SLF001
@@ -318,22 +478,22 @@ class OVModel:
         """
         raise NotImplementedError
 
-    def compute_metrics(self, metric: Metric) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
         """Compute metrics using the provided metric object.
 
         Args:
-            metric (Metric): Metric object.
+            metric (Metric | MetricCollection): Metric object.
 
         Returns:
             dict: Computed metrics.
         """
         return self._compute_metrics(metric)
 
-    def _compute_metrics(self, metric: Metric, **compute_kwargs) -> dict:
+    def _compute_metrics(self, metric: Metric | MetricCollection, **compute_kwargs) -> dict:
         """Compute metrics with additional arguments.
 
         Args:
-            metric (Metric): Metric object.
+            metric (Metric | MetricCollection): Metric object.
             **compute_kwargs: Additional arguments for metric computation.
 
         Returns:
@@ -421,16 +581,9 @@ class OVModel:
         Returns:
             OTXSampleBatch: Dummy input data.
         """
-        images = [torch.rand(3, 224, 224) for _ in range(batch_size)]
-        infos = []
-        for i, img in enumerate(images):
-            infos.append(
-                ImageInfo(
-                    img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
-                ),
-            )
+        images = torch.stack([torch.rand(3, 224, 224) for _ in range(batch_size)])
+        img_shape = (224, 224)
+        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):

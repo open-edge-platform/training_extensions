@@ -11,45 +11,22 @@ import { $api } from '../../api/client';
 import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
-import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { isVideoFrame } from '../media-item-utils';
 import type { Annotation, Shape } from '../types';
+import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './annotation-mappers';
+import type { AnnotatorMode } from './annotator-mode';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
-
-const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
-    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
-
-    return serverAnnotations.map((annotation) => {
-        // We only get the ids of the labels
-        const labels = (annotation.labels ?? [])
-            .map((labelRef) => labelMap.get(labelRef.id))
-            .filter((label): label is Label => label !== undefined)
-            .map((label, idx) => ({ ...label, probability: annotation.confidences?.at(idx) }));
-
-        return {
-            ...annotation,
-            id: uuid(),
-            labels,
-        };
-    });
-};
-
-const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): AnnotationDTO[] => {
-    return localAnnotations.map((annotation) => ({
-        // We only want to send the ids of the labels
-        labels: annotation.labels.map((label) => ({ id: label.id })),
-        shape: annotation.shape,
-        ...(annotation.confidences !== undefined && { confidences: annotation.confidences }),
-    }));
-};
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
+    canSubmit: boolean;
     addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
+    resetAnnotations: () => void;
+    replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
@@ -112,20 +89,28 @@ export const AnnotationActionsProvider = ({
         return mapServerAnnotationsToLocal(initialPredictionsDTO, projectLabels);
     }, [initialPredictionsDTO, projectLabels]);
 
-    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
+    const initialAnnotations = useMemo(() => {
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-    });
+    }, [initialAnnotationsDTO, projectLabels]);
+
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(initialAnnotations);
+
+    const resetAnnotations = () => {
+        undoRedoActions.reset(initialAnnotations);
+    };
 
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
 
+    // Reset annotations when source annotations change.
     if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
-        setAnnotations(mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels), true);
+        undoRedoActions.reset(initialAnnotations);
         prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
     }
 
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {
             const idsToUpdate = new Set(updatedAnnotations.map((a) => a.id));
+
             setAnnotations((prevAnnotations) =>
                 prevAnnotations.map((annotation) =>
                     idsToUpdate.has(annotation.id) ? { ...annotation, labels } : annotation
@@ -133,6 +118,7 @@ export const AnnotationActionsProvider = ({
             );
         } else {
             const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
+
             setAnnotations((prevAnnotations) =>
                 prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
             );
@@ -166,6 +152,10 @@ export const AnnotationActionsProvider = ({
         );
     };
 
+    const replaceAnnotations = (newAnnotations: Annotation[]) => {
+        setAnnotations(() => newAnnotations);
+    };
+
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
         const query = isVideoFrame(mediaItem)
             ? {
@@ -178,7 +168,7 @@ export const AnnotationActionsProvider = ({
             body: { annotations: annotationsDTO },
         });
 
-        undoRedoActions.reset([]);
+        undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
     const submitPredictions = async () => {
@@ -200,6 +190,19 @@ export const AnnotationActionsProvider = ({
         }
     };
 
+    const hasChangedAnnotations = useMemo(() => {
+        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+        const currentServerAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
+
+        return !isEqual(currentServerAnnotations, initialAnnotationsDTO);
+    }, [annotations, initialAnnotationsDTO]);
+
+    const hasEmptyLabelSelection = useMemo(() => {
+        return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
+    }, [annotations]);
+
+    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations || hasEmptyLabelSelection;
+
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
@@ -208,12 +211,15 @@ export const AnnotationActionsProvider = ({
             value={{
                 isUserReviewed,
                 annotations: annotationsToRender,
+                canSubmit,
 
                 // Local
                 addAnnotations,
                 updateAnnotations,
                 deleteAnnotations,
                 addAnnotationWithEmptyLabel,
+                resetAnnotations,
+                replaceAnnotations,
 
                 // Remote
                 submitAnnotations,

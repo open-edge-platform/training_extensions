@@ -5,7 +5,7 @@ import type { ImagesFolderSourceConfig } from '../../../../constants/shared-type
 
 export const getImagesFolderInitialConfig = (): ImagesFolderSourceConfig => ({
     id: '',
-    name: '',
+    name: 'Images folder source',
     source_type: 'images_folder',
     images_folder_path: '',
     ignore_existing_images: false,

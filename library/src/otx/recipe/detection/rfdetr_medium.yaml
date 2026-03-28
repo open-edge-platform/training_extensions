@@ -30,7 +30,7 @@ engine:
 
 callback_monitor: val/f1-score
 
-data: ../_base_/data/torchvision_base.yaml
+data: ../_base_/data/detection.yaml
 
 callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
@@ -66,66 +66,20 @@ overrides:
       - 576
       - 576
     task: DETECTION
-    data_format: coco_instances
     train_subset:
       batch_size: 8
-      to_tv_image: true
-      transforms:
+      augmentations_cpu:
         - class_path: torchvision.transforms.v2.RandomZoomOut
-          enable: true
           init_args:
             fill: 0
-        - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
-          enable: true
-          init_args:
-            probability: 1.0
+            p: 0.5
+        - class_path: otx.data.augmentation.transforms.RandomIoUCrop
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
             min_size: 1
-        - class_path: torchvision.transforms.v2.RandomHorizontalFlip
-          enable: true
-          init_args:
-            p: 0.5
-        - class_path: torchvision.transforms.v2.Resize
+        - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
-        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+            keep_aspect_ratio: false
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
-
-    val_subset:
-      batch_size: 8
-      to_tv_image: true
-      transforms:
-        - class_path: torchvision.transforms.v2.Resize
-          init_args:
-            size: $(input_size)
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]
-
-    test_subset:
-      batch_size: 8
-      to_tv_image: true
-      transforms:
-        - class_path: torchvision.transforms.v2.Resize
-          init_args:
-            size: $(input_size)
-        - class_path: torchvision.transforms.v2.ToDtype
-          init_args:
-            dtype: ${as_torch_dtype:torch.float32}
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [123.675, 116.28, 103.53]
-            std: [58.395, 57.12, 57.375]

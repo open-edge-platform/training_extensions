@@ -7,11 +7,20 @@ hyperparameters:
     augmentation:
       tiling:
         enable: false
-        adaptive_tiling: true
+        enable_adaptive_tiling: true
         tile_size: 400
         tile_overlap: 0.2
       iou_random_crop:
         enable: true
+        probability: 1.0
+        min_scale: 0.3
+        max_scale: 1.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
       random_affine:
         enable: false
         max_rotate_degree: 10.0
@@ -20,11 +29,6 @@ hyperparameters:
           - 0.5
           - 1.5
         max_shear_degree: 2.0
-      random_horizontal_flip:
-        enable: true
-        probability: 0.5
-      random_vertical_flip:
-        enable: false
         probability: 0.5
       gaussian_blur:
         enable: false
@@ -53,13 +57,38 @@ hyperparameters:
         mean: 0.0
         sigma: 0.1
         probability: 0.5
+      random_erasing:
+        enable: false
+        scale:
+          - 0.02
+          - 0.33
+        ratio:
+          - 0.3
+          - 3.3
+        probability: 0.5
+        value: 0.0
+      random_grayscale:
+        enable: false
+        probability: 0.1
+      random_sharpness:
+        enable: false
+        sharpness: 0.5
+        probability: 0.5
   evaluation:
     metric: f_measure
   training:
-    max_epochs: 200
+    batch_size: 8
     early_stopping:
       enable: true
       patience: 10
+    scheduler:
+      type: reduce_lr_on_plateau
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: false
+    gradient_accumulation:
+      enable: false
     allowed_values_input_size:
       - 128
       - 256

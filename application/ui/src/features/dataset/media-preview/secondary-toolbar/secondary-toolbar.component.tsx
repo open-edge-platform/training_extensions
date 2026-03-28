@@ -1,18 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, Flex, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Flex, Icon, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
+import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { useSubmitPredictions } from '../use-submit-predictions.hook';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
-import type { AnnotatorMode } from './annotator-modes/mode';
 import { getNextItem } from './util';
 
 import classes from './secondary-toolbar.module.scss';
@@ -99,7 +99,9 @@ export const SecondaryToolbar = ({
                             marginStart={'size-100'}
                             UNSAFE_className={classes.closeButton}
                         >
-                            <CloseSemiBold width={14} height={14} />
+                            <Icon height={'size-150'} width={'size-150'}>
+                                <CloseSemiBold />
+                            </Icon>
                             <Text>Close</Text>
                         </ActionButton>
                     </ButtonGroup>

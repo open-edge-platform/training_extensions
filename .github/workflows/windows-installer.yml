@@ -43,7 +43,7 @@ env:
   BACKEND_PATH: .\application\backend
   UI_PATH: .\application\ui
   BACKEND_BUILD_PATH: .\application\backend\.build
-  BACKEND_DIST_PATH: .\application\backend\dist\geti-tune-backend
+  BACKEND_DIST_PATH: .\application\backend\dist\geti-backend
   UI_SRC_API_PATH: .\application\ui\src\api
   UI_SRC_TAURI_PATH: .\application\ui\src-tauri
   UI_TARGET_PATH: .\application\ui\src-tauri\target
@@ -79,32 +79,25 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
 
           $PREFIX = $(IF ($env:DEBUG_BUILD -eq "true") {"-debug"} else {""})
-          $MSIX_FILE_NAME = "geti-tune-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
+          $MSIX_FILE_NAME = "geti-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
           $MSIX_FILE_PATH = $UI_MSIX_BUNDLE_PATH + "\" + $MSIX_FILE_NAME
           Write-Host "MSIX_FILE_PATH=$MSIX_FILE_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"
 
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       # Install and setup build tools
 
-      - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      - name: Install Python, uv and Just
+        uses: ./.github/actions/install-common-deps
         with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@a02a550bdd3185dba2ebb6aa98d77047ce54ad21 # v6.2.1
-        with:
-          version: "0.10.4"
-          enable-cache: true
-          cache-dependency-glob: "application/backend/uv.lock"
+          uv-version-file: application/backend/pyproject.toml
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@6d9817901c499d6b02debbb57edb38d33daa680b
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
         with:
           toolchain: stable
 
@@ -116,30 +109,29 @@ jobs:
 
       # Build backend
 
-      - name: Build venv
+      - name: Prepare venv and install Python dependencies
         working-directory: application/backend
         env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: |
-          uv lock --check
-          uv sync --extra installer --extra $env:DEVICE --extra mqtt --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+        run: just venv --accelerator "$env:DEVICE"
 
       - name: Build OpenAPI spec
         working-directory: application/backend
-        env:
-          PYTHONPATH: "."
-        run: uv run --no-sync app/cli.py gen-api --target-path .build/openapi-spec.json
+        run: just gen-api-spec -o .build/openapi-spec.json
 
       - name: Build executable
         working-directory: application/backend
-        run: uv run pyinstaller --noconfirm geti-tune.spec
+        env:
+          DEVICE: ${{ inputs.device || 'xpu' }}
+        run: just pyinstaller --accelerator "$env:DEVICE"
 
       # Copy backend artifacts to UI
 
       - name: Copy backend artifacts to UI
         run: |
           cp -r ${{ env.BACKEND_DIST_PATH }}\_internal ${{ env.UI_SRC_TAURI_PATH }}
-          cp -r ${{ env.BACKEND_DIST_PATH }}\geti-tune-backend.exe ${{ env.UI_SRC_TAURI_PATH }}\geti-tune-backend-x86_64-pc-windows-msvc.exe
+          cp -r ${{ env.BACKEND_DIST_PATH }}\geti-backend.exe ${{ env.UI_SRC_TAURI_PATH }}\geti-backend-x86_64-pc-windows-msvc.exe
 
       - name: Copy OpenAPI spec
         run: cp -r ${{ env.BACKEND_BUILD_PATH }}\openapi-spec.json ${{ env.UI_SRC_API_PATH }}
@@ -147,7 +139,7 @@ jobs:
       # Build UI with Tauri
 
       - name: Setup Node & npm
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: application/ui/.nvmrc
           cache: "npm"
@@ -188,8 +180,8 @@ jobs:
       - name: Create MSIX package
         run: |
           mkdir -p $env:UI_MSIX_BUNDLE_PATH
-          cp $env:UI_BUILD_PATH\geti-tune-backend.exe $env:UI_MSIX_BUNDLE_PATH
-          cp $env:UI_BUILD_PATH\geti_tune_ui.exe $env:UI_MSIX_BUNDLE_PATH
+          cp $env:UI_BUILD_PATH\geti-backend.exe $env:UI_MSIX_BUNDLE_PATH
+          cp $env:UI_BUILD_PATH\geti_ui.exe $env:UI_MSIX_BUNDLE_PATH
           cp -r $env:UI_BUILD_PATH\_internal $env:UI_MSIX_BUNDLE_PATH
           cp -r ${{ env.UI_SRC_TAURI_PATH }}\msix\* $env:UI_MSIX_BUNDLE_PATH
           & "${{ env.MAKEAPP_PATH }}" pack /d $env:UI_MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
@@ -211,7 +203,7 @@ jobs:
           }
 
       - name: Upload MSIX package
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           path: ${{ env.MSIX_FILE_PATH }}
           retention-days: 20

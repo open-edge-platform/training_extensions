@@ -15,8 +15,7 @@ from starlette.responses import FileResponse
 
 from app.api.dependencies import get_model_service, get_project, get_training_configuration_service
 from app.api.schemas import ModelView, ProjectView, TrainingConfigurationView, TrainingMetricsView
-from app.api.validators import DatasetRevisionID, ModelID
-from app.models.model_revision import ModelFormat
+from app.api.validators import DatasetRevisionID, ModelID, ModelVariantID
 from app.services import (
     ModelService,
     ResourceInUseError,
@@ -77,26 +76,33 @@ def get_model(
 
 
 @router.get(
-    "/{model_id}/binary",
+    "/{model_id}/variants/{model_variant_id}/binary",
     responses={
-        status.HTTP_200_OK: {"description": "Model weights in either OpenVINO or ONNX format (zip archive)"},
+        status.HTTP_200_OK: {"description": "Model weights of the model variant (zip archive)"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
     },
 )
 def download_model_binary(
     project: Annotated[ProjectView, Depends(get_project)],
-    model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-    format: Annotated[ModelFormat, Query()] = ModelFormat.OPENVINO,
+    model_id: ModelID,
+    model_variant_id: ModelVariantID,
 ) -> StreamingResponse:
-    """Download trained model weights in a desired format as a zip archive"""
-    files_exist, paths = model_service.get_model_binary_files(project_id=project.id, model_id=model_id, format=format)
+    """Download trained model weights of a desired model variant as a zip archive"""
+    files_exist, paths = model_service.get_model_binary_files(
+        project_id=project.id,
+        model_id=model_id,
+        model_variant_id=model_variant_id,
+    )
     if not files_exist:
         raise ResourceNotFoundError(
             resource_type=ResourceType.MODEL,
-            resource_id=f"{model_id} with format {format.value}",
+            resource_id=f"{model_id} with variant {model_variant_id}",
         )
+
+    model_variant = model_service.get_variant(variant_id=model_variant_id)
+    filename = f"model-{model_id}-{model_variant.format}-{model_variant.precision}.zip"
 
     # Create an in-memory zip file
     zip_buffer = io.BytesIO()
@@ -105,9 +111,6 @@ def download_model_binary(
             zip_file.write(path, arcname=os.path.split(path)[1])
 
     zip_buffer.seek(0)
-
-    precision = "fp16" if format != ModelFormat.PYTORCH else "fp32"
-    filename = f"model-{model_id}-{format.value}-{precision}.zip"
 
     return StreamingResponse(
         zip_buffer,

@@ -5,8 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { getMultipleMockedMediaImage } from 'mocks/mock-media';
+import { getMockedMediaImage, getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
+import { v4 as uuid } from 'uuid';
 
 import { expect, http, test } from '../fixtures';
 
@@ -93,5 +94,43 @@ test.describe('Dataset', () => {
         await expect(annotatorPage.getAnnotationsList()).toBeInViewport();
 
         expect(page.url()).toContain(`/dataset/${firstElement.id}`);
+    });
+
+    test('upload shows start, progress and finish toasts', async ({ page, network }) => {
+        let uploadRequestCount = 0;
+        const firstBatchCount = 10;
+        const totalFiles = firstBatchCount + 1;
+
+        network.use(
+            http.post('/api/projects/{project_id}/dataset/media', async () => {
+                uploadRequestCount += 1;
+                const isLastUploadRequest = uploadRequestCount === totalFiles;
+
+                // Small delay to test the "in progress" toast or else we would only see start and finish toasts
+                await new Promise((resolve) => setTimeout(resolve, isLastUploadRequest ? 250 : 30));
+
+                return HttpResponse.json(getMockedMediaImage({ id: uuid() }), {
+                    status: 201,
+                });
+            })
+        );
+
+        await page.goto('projects/id-1/dataset');
+
+        await page.getByLabel('Upload media files').setInputFiles(
+            Array.from({ length: totalFiles }, (_, index) => ({
+                name: `upload-${index + 1}.png`,
+                mimeType: 'image/png',
+                buffer: sampleImageBuffer,
+            }))
+        );
+
+        await expect(page.getByRole('button', { name: 'Upload media' })).toBeDisabled();
+
+        await expect(
+            page.getByText(`Uploading ${totalFiles} item(s)... (${firstBatchCount} succeeded, 0 failed)`)
+        ).toBeVisible();
+
+        await expect(page.getByText(`Uploaded ${totalFiles} item(s)`)).toBeVisible();
     });
 });

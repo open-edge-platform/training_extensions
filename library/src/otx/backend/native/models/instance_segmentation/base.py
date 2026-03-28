@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for instance segmentation model entity used in OTX."""
@@ -11,7 +11,7 @@ import copy
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence, cast
 
 import torch
 from torch import Tensor
@@ -58,7 +58,7 @@ class OTXInstanceSegModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
@@ -74,7 +74,7 @@ class OTXInstanceSegModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -85,7 +85,6 @@ class OTXInstanceSegModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.INSTANCE_SEGMENTATION,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
@@ -470,16 +469,9 @@ class OTXInstanceSegModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for instance segmentation model."""
-        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
-        infos = []
-        for i, img in enumerate(images):
-            infos.append(
-                ImageInfo(
-                    img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
-                ),
-            )
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
+        img_shape = (images.shape[2], images.shape[3])
+        infos = [ImageInfo(img_idx=i, img_shape=img_shape, ori_shape=img_shape) for i in range(batch_size)]
         return OTXSampleBatch(images=images, imgs_info=infos)
 
     def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
@@ -510,7 +502,8 @@ class OTXInstanceSegModel(OTXModel):
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:
         """Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model."""
-        x = self.backbone(entity.images) if isinstance(self, MaskRCNN) else self.extract_feat(entity.images)
+        _images = cast("torch.Tensor", entity.images)
+        x = self.backbone(_images) if isinstance(self, MaskRCNN) else self.extract_feat(_images)
 
         feature_vector = self.feature_vector_fn(x)
         predictions = self.get_results_from_head(x, entity)
@@ -553,7 +546,7 @@ class OTXInstanceSegModel(OTXModel):
         if isinstance(self, MaskRCNNTV):
             ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
             img_shapes = [img_info.img_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
-            image_list = ImageList(entity.images, img_shapes)
+            image_list = ImageList(cast("torch.Tensor", entity.images), img_shapes)
             proposals, _ = self.model.rpn(image_list, x)
             detections, _ = self.model.roi_heads(
                 x,
@@ -616,4 +609,9 @@ class OTXInstanceSegModel(OTXModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(1024, 1024), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))
+        return DataInputParams(input_size=(1024, 1024), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+
+    @property
+    def task(self) -> OTXTaskType:
+        """Return task type."""
+        return OTXTaskType.INSTANCE_SEGMENTATION

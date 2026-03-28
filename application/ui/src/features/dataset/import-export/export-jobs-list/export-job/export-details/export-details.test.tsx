@@ -25,7 +25,7 @@ describe('ExportJobDetails', () => {
                                 getMockedLabel({ id: 'label-2', name: 'label 2' }),
                                 getMockedLabel({ id: 'label-3', name: 'label 3' }),
                             ],
-                            task_type: 'classification',
+                            task_type: 'detection',
                             exclusive_labels: false,
                         },
                     })
@@ -48,7 +48,7 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText(/Included images by label: label 1, label 2, label 3/)).toBeVisible();
+        expect(await screen.findByText(/With labels: label 1, label 2, label 3/)).toBeVisible();
     });
 
     it('displays selected labels when specific labels are filtered', async () => {
@@ -64,7 +64,7 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText(/Included images by label: label 1, label 2/)).toBeVisible();
+        expect(await screen.findByText(/With labels: label 1, label 2/)).toBeVisible();
     });
 
     it('filters out labels that are not in the project', async () => {
@@ -80,11 +80,11 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText(/Included images by label: label 1/)).toBeVisible();
+        expect(await screen.findByText(/With labels: label 1/)).toBeVisible();
         expect(screen.queryByText(/NonExistentLabel/)).not.toBeInTheDocument();
     });
 
-    it('displays "Excluded: Unannotated" when include_unannotated is false', async () => {
+    it('displays "Only media with annotations" when include_unannotated is false', async () => {
         const metadata: ExportDatasetMetadata = {
             dataset_id: 'dataset-123',
             project_id: 'project-123',
@@ -94,10 +94,10 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        expect(await screen.findByText('Exclude: media without annotations')).toBeVisible();
+        expect(await screen.findByText('Only media with annotations')).toBeVisible();
     });
 
-    it('does not display "Excluded: Unannotated" when include_unannotated is true', async () => {
+    it('does not display "Only media with annotations" when include_unannotated is true', async () => {
         const metadata: ExportDatasetMetadata = {
             dataset_id: 'dataset-123',
             project_id: 'project-123',
@@ -107,8 +107,8 @@ describe('ExportJobDetails', () => {
 
         renderApp(metadata);
 
-        await screen.findByText(/Export dataset - COCO format/);
+        await screen.findByText('COCO');
 
-        expect(await screen.findByText('Include: media without annotations')).toBeVisible();
+        expect(await screen.findByText('All media')).toBeVisible();
     });
 });

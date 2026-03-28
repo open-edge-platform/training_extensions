@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import abc
-import multiprocessing as mp
 import os
 import signal
 import threading
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from multiprocessing.context import SpawnProcess
 from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
 
@@ -53,7 +53,7 @@ class StoppableMixin:
         return self._stop_event.wait(seconds)  # type: ignore
 
 
-class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
+class BaseProcessWorker(SpawnProcess, StoppableMixin, ABC):
     """
     Reusable worker with a clean lifecycle: setup() -> run_loop() [until stop_event] -> teardown()
     Subclasses only implement what's specific to their job.

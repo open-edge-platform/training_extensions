@@ -1,0 +1,6 @@
+.graphContainer {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: var(--spectrum-global-dimension-size-5000);
+}

@@ -11,10 +11,11 @@ from app.core.jobs.models import Job, JobStatus, JobType
 
 from .dataset_export import ExportDatasetMetadata
 from .dataset_import import ImportDatasetMetadata
+from .quantization import QuantizationMetadata
 from .training import TrainingMetadata
 
 JobMetadata = Annotated[
-    TrainingMetadata | ImportDatasetMetadata | ExportDatasetMetadata,
+    TrainingMetadata | QuantizationMetadata | ImportDatasetMetadata | ExportDatasetMetadata,
     Field(..., description="Metadata associated with the job"),
 ]
 
@@ -61,6 +62,8 @@ class JobView(BaseModel):
         match job.job_type:
             case JobType.TRAIN:
                 metadata = TrainingMetadata.model_validate(job)
+            case JobType.QUANTIZE:
+                metadata = QuantizationMetadata.model_validate(job)
             case (
                 JobType.IMPORT_DATASET_AS_NEW_PROJECT
                 | JobType.IMPORT_DATASET_TO_PROJECT

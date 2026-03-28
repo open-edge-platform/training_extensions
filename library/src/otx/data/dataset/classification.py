@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTXClassificationDatasets using new Datumaro experimental Dataset."""
@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import torch
 from torch.nn import functional
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx import HLabelInfo, LabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
@@ -18,10 +17,12 @@ from otx.data.entity.sample import (
     ClassificationMultiLabelSample,
     ClassificationSample,
 )
+from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
+    from datumaro.experimental.categories import HierarchicalLabelCategories
 
 
 class OTXMulticlassClsDataset(OTXDataset):
@@ -32,12 +33,11 @@ class OTXMulticlassClsDataset(OTXDataset):
     multi-class classification training and inference.
 
     Args:
-        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        dm_subset (Dataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         stack_images (bool): Whether to stack images in batch processing.
-        to_tv_image (bool): Whether to convert images to torchvision format.
-        data_format (str): Format of the source data (e.g., "arrow", "coco").
+
 
     Raises:
         ValueError: If an image has multiple labels (multi-label case).
@@ -57,22 +57,18 @@ class OTXMulticlassClsDataset(OTXDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
-        data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = ClassificationSample
+        sample_type = with_image_dtype(ClassificationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
-            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            to_tv_image=to_tv_image,
-            data_format=data_format,
         )
 
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -119,8 +115,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         stack_images (bool): Whether to stack images in batch processing.
-        to_tv_image (bool): Whether to convert images to torchvision format.
-        data_format (str): Format of the source data (e.g., "arrow", "coco").
+
 
     Attributes:
         num_classes (int): Number of classes in the dataset.
@@ -140,21 +135,18 @@ class OTXMultilabelClsDataset(OTXDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
-        data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = ClassificationMultiLabelSample
+        sample_type = with_image_dtype(ClassificationMultiLabelSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            to_tv_image=to_tv_image,
-            data_format=data_format,
         )
 
-        labels = dm_subset.schema.attributes["label"].categories.labels
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
         self.label_info = LabelInfo(
             label_names=labels,
             label_groups=[labels],
@@ -163,8 +155,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         self.num_classes = len(labels)
 
     def _get_item_impl(self, index: int) -> ClassificationMultiLabelSample | None:
-        item = self.dm_subset[index]
-        item.image = to_dtype(to_image(item.image), dtype=torch.float32)
+        item = self._read_dm_item(index)
         item.label = self._convert_to_onehot(torch.as_tensor(list(item.label)), ignored_labels=[])
         return self._apply_transforms(item)
 
@@ -230,11 +221,9 @@ class OTXHlabelClsDataset(OTXDataset):
         transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         stack_images (bool): Whether to stack images in batch processing.
-        to_tv_image (bool): Whether to convert images to torchvision format.
-        data_format (str): Format of the source data (e.g., "arrow", "coco").
+
 
     Attributes:
-        dm_categories (datumaro.components.annotation.LabelCategories): Datumaro label categories for the dataset.
         label_info (HLabelInfo): HLabelInfo containing hierarchical label structure information.
         id_to_name_mapping (dict[str, str]): Mapping from label IDs to label names.
 
@@ -257,21 +246,20 @@ class OTXHlabelClsDataset(OTXDataset):
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
-        data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = ClassificationHierarchicalSample
-        dm_subset = dm_subset.convert_to_schema(sample_type)
+        sample_type = with_image_dtype(ClassificationHierarchicalSample, storage_dtype)
+        label_categories = dm_subset.schema.attributes["label"].categories
+        # Pass target categories manually to ensure HierarchicalLabelCategories are not converted to regular Labels.
+        target_categories = {"label": label_categories} if label_categories is not None else None
+        dm_subset = dm_subset.convert_to_schema(sample_type, target_categories=target_categories)  # type: ignore[arg-type]
         super().__init__(
             dm_subset=dm_subset,
-            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            to_tv_image=to_tv_image,
-            data_format=data_format,
         )
-        self.dm_categories = dm_subset.schema.attributes["label"].categories
+        self.dm_categories: HierarchicalLabelCategories = dm_subset.schema.attributes["label"].categories  # type: ignore[assignment]
         self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
 
         self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
@@ -282,8 +270,7 @@ class OTXHlabelClsDataset(OTXDataset):
             raise ValueError(msg)
 
     def _get_item_impl(self, index: int) -> ClassificationHierarchicalSample | None:
-        item = self.dm_subset[index]
-        item.image = to_dtype(to_image(item.image), dtype=torch.float32)
+        item = self._read_dm_item(index)
         item.label = torch.as_tensor(self._convert_label_to_hlabel_format(list(item.label), []))
         return self._apply_transforms(item)
 
@@ -331,13 +318,7 @@ class OTXHlabelClsDataset(OTXDataset):
             class_indices[i] = -1
 
         for ann in label_anns:
-            if self.data_format == "arrow":
-                # skips unknown labels for instance, the empty one
-                if self.dm_categories.items[ann].name not in self.id_to_name_mapping:
-                    continue
-                ann_name = self.id_to_name_mapping[self.dm_categories.items[ann].name]
-            else:
-                ann_name = self.dm_categories.items[ann].name
+            ann_name = self.dm_categories.items[ann].name
             group_idx, in_group_idx = self.label_info.class_to_group_idx[ann_name]
 
             if group_idx < num_multiclass_heads:

@@ -3,7 +3,7 @@
 
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .task import TaskType
 from .training_configuration import AlgoLevelParameters
@@ -21,36 +21,41 @@ class ModelManifestDeprecationStatus(str, Enum):
         return str(self.name)
 
 
-class PerformanceRatings(BaseModel):
-    """Ratings for different performance aspects of a model."""
+class BenchmarkMetrics(BaseModel):
+    """Benchmark metrics for different model tasks."""
 
     model_config = ConfigDict(extra="forbid")
-    accuracy: int = Field(
-        ge=1,
-        le=3,
-        default=1,
-        title="Accuracy rating",
-        description="Rating of the model accuracy. "
-        "The value should be interpreted relatively to the other available models, "
-        "and it ranges from 1 (below average) to 3 (above average).",
+
+    # Classification metrics
+    imagenet_top1_accuracy: float | None = Field(
+        default=None,
+        title="ImageNet Top-1 Accuracy",
+        description="Top-1 accuracy on ImageNet (percentage)",
+        ge=0,
+        le=100,
     )
-    training_time: int = Field(
-        ge=1,
-        le=3,
-        default=1,
-        title="Training time rating",
-        description="Rating of the model training time. "
-        "The value should be interpreted relatively to the other available models, "
-        "and it ranges from 1 (below average/slower) to 3 (above average/faster).",
+    imagenet_top5_accuracy: float | None = Field(
+        default=None,
+        title="ImageNet Top-5 Accuracy",
+        description="Top-5 accuracy on ImageNet (percentage, null if N/A)",
+        ge=0,
+        le=100,
     )
-    inference_speed: int = Field(
-        ge=1,
-        le=3,
-        default=1,
-        title="Inference speed rating",
-        description="Rating of the model inference speed. "
-        "The value should be interpreted relatively to the other available models, "
-        "and it ranges from 1 (below average/slower) to 3 (above average/faster).",
+
+    # Detection/Segmentation metrics
+    coco_map_50_95: float | None = Field(
+        default=None,
+        title="COCO mAP 50-95",
+        description="COCO mean Average Precision at IoU=0.50:0.95 (percentage)",
+        ge=0,
+        le=100,
+    )
+    coco_map_50: float | None = Field(
+        default=None,
+        title="COCO mAP 50",
+        description="COCO mean Average Precision at IoU=0.50 (percentage, null if N/A)",
+        ge=0,
+        le=100,
     )
 
 
@@ -67,8 +72,8 @@ class ModelStats(BaseModel):
         title="Trainable parameters (millions)",
         description="Number of trainable parameters in the model, expressed in millions",
     )
-    performance_ratings: PerformanceRatings = Field(
-        title="Performance ratings", description="Standardized ratings for model performance metrics"
+    benchmark_metrics: BenchmarkMetrics = Field(
+        title="Benchmark metrics", description="Standardized benchmark metrics for model performance"
     )
 
 
@@ -117,3 +122,29 @@ class ModelManifest(BaseModel):
     hyperparameters: AlgoLevelParameters = Field(
         title="Hyperparameters", description="Configuration parameters for model training"
     )
+
+    @model_validator(mode="after")
+    def validate_metrics(self) -> "ModelManifest":
+        if self.task in {TaskType.CLASSIFICATION}:
+            if self.stats.benchmark_metrics.imagenet_top1_accuracy is None:
+                raise ValueError("For classification 'imagenet_top1_accuracy' benchmark metric is required")
+            if (
+                self.stats.benchmark_metrics.coco_map_50 is not None
+                or self.stats.benchmark_metrics.coco_map_50_95 is not None
+            ):
+                raise ValueError(
+                    "For classification, only ImageNet Accuracy benchmark metrics can be set. However, one of the COCO "
+                    "mAP benchmark metrics was not 'None'."
+                )
+        if self.task in {TaskType.DETECTION, TaskType.INSTANCE_SEGMENTATION}:
+            if self.stats.benchmark_metrics.coco_map_50_95 is None:
+                raise ValueError("For detection or instance segmentation 'coco_map_50_95' benchmark metric is required")
+            if (
+                self.stats.benchmark_metrics.imagenet_top1_accuracy is not None
+                or self.stats.benchmark_metrics.imagenet_top5_accuracy is not None
+            ):
+                raise ValueError(
+                    "For detection or instance segmentation, only COCO mAP benchmark metrics can be set. However, one "
+                    "of the ImageNet Accuracy benchmark metrics was not 'None'."
+                )
+        return self

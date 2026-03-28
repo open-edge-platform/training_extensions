@@ -1,11 +1,16 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { getMockedProject } from 'mocks/mock-project';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { getMockedPrepareImportDatasetJob } from '../../../../../mocks/mock-job';
+import { http } from '../../../../api/utils';
 import { useImportDatasetToProject } from '../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { server } from '../../../../msw-node-setup';
 import {
     ImportDatasetDialogStateProvider,
     useImportDatasetDialogState,
@@ -15,16 +20,48 @@ import { ImportDatasetToProject } from './Import-dataset-to-project.component';
 vi.mock('../../../../hooks/localStorage/use-import-dataset-to-project.hook');
 
 describe('ImportDatasetToProject', () => {
-    const renderApp = (data: null | { id: string; fileName: string }) => {
+    const mockedStagedDatasetId = 'staged-dataset-123';
+    const mockedPrepareImportDatasetJob = getMockedPrepareImportDatasetJob({});
+
+    const renderApp = (data: null | { id: string; fileName: string }, mockedAppendImportEntry = vi.fn()) => {
         vi.mocked(useImportDatasetToProject).mockReturnValue({
             getImportEntry: vi.fn().mockReturnValue(data),
             getAllImportEntries: vi.fn(),
-            appendImportEntry: vi.fn(),
+            appendImportEntry: mockedAppendImportEntry,
             deleteImportEntry: vi.fn(),
             updateImportEntryStep: vi.fn(),
-            getLastImportEntry: vi.fn(),
             updateImportEntry: vi.fn(),
         });
+
+        server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(
+                    getMockedProject({
+                        task: {
+                            task_type: 'instance_segmentation',
+                            exclusive_labels: false,
+                        },
+                    })
+                );
+            }),
+            http.post('/api/staged_datasets', () => {
+                return HttpResponse.json(
+                    {
+                        id: mockedStagedDatasetId,
+                        format: 'geti',
+                        size: 123,
+                        metadata: null,
+                        compressed: true,
+                        ready_for_export: false,
+                        ready_for_import: true,
+                    },
+                    { status: 201 }
+                );
+            }),
+            http.post('/api/jobs', () => {
+                return HttpResponse.json(mockedPrepareImportDatasetJob, { status: 202 });
+            })
+        );
 
         const App = () => {
             const { datasetImportDialogState } = useImportDatasetDialogState();
@@ -44,10 +81,27 @@ describe('ImportDatasetToProject', () => {
         );
     };
 
-    it('renders ImportDropZone component in initial state', async () => {
-        renderApp(null);
+    it("appends import entry with 'preparing' step after file upload", async () => {
+        const mockedAppendImportEntry = vi.fn();
+        const file = new File(['file content'], 'test.zip', { type: 'application/zip' });
 
-        userEvent.click(screen.getByRole('button', { name: /open import dialog/i }));
+        renderApp(null, mockedAppendImportEntry);
+
+        await userEvent.click(await screen.findByRole('button', { name: /open import dialog/i }));
         expect(await screen.findByText('Drop the dataset .zip file here')).toBeVisible();
+        const uploadFileElement = screen.getByTestId(/upload-zip-file/i);
+
+        await userEvent.upload(uploadFileElement, [file]);
+
+        await waitFor(() => {
+            expect(mockedAppendImportEntry).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    step: 'preparing',
+                    fileName: file.name,
+                    stagedDatasetId: mockedStagedDatasetId,
+                    prepareJobId: mockedPrepareImportDatasetJob.job_id,
+                })
+            );
+        });
     });
 });

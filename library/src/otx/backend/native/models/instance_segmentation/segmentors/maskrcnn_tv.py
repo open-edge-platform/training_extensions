@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Torchvision MaskRCNN model with forward method accepting TorchDataBatch."""
@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
 from torch import Tensor, nn
@@ -36,7 +36,7 @@ class MaskRCNN(_MaskRCNN):
         ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
         img_shapes = [img_info.img_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
 
-        image_list = ImageList(entity.images, img_shapes)
+        image_list = ImageList(cast("torch.Tensor", entity.images), img_shapes)
         targets = []
         if self.training:
             for i in range(len(entity.imgs_info)):  # type: ignore[arg-type]

@@ -1,6 +1,6 @@
 # Pipeline management
 
-In Geti Tune, the _inference pipeline_ (or _pipeline_ for short) is the central concept that represents the entire
+In Geti, the _inference pipeline_ (or _pipeline_ for short) is the central concept that represents the entire
 processing and inference flow of a video stream from input sources to output sinks.
 Each project has its own pipeline, which can be thought of as an "engine" that manages and executes a sequence
 of processing steps, ensuring data flows through them properly.
@@ -19,7 +19,7 @@ In practice, there are usually other stages in between that analyze or transform
 - Monitoring of the model predictions, to detect potential issues with the model (e.g. concept drift, out-of-distribution samples, ...)
 - Data collection, to save interesting frames for later inspection or to improve the model via fine-tuning.
 
-In Geti Tune, the configuration of sources and sinks is decoupled from the configuration of the pipeline.
+In Geti, the configuration of sources and sinks is decoupled from the configuration of the pipeline.
 In other words, sources and sinks are configured independently, then the pipeline connects to the selected ones.
 This abstraction not only makes it easy to switch from one source to another (e.g. two or more cameras),
 but also allows the reuse of these pre-configured components in other projects and pipelines.

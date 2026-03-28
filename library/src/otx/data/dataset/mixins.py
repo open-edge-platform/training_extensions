@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Mixins for OTX datasets."""
@@ -12,25 +12,24 @@ if TYPE_CHECKING:
 
 
 class DataAugSwitchMixin:
-    """Mixin class that provides dynamic augmentation switching functionality.
+    """Mixin that provides dynamic augmentation switching for the CPU/GPU pipeline.
 
-    This mixin can be used by any dataset that needs to switch between different
-    augmentation policies during training based on epoch information.
+    At each ``__getitem__`` call the dataset checks the current policy from
+    ``DataAugSwitch`` and swaps ``self.transforms`` to the corresponding
+    ``CPUAugmentationPipeline``. GPU augmentations are swapped separately by
+    ``AugmentationSchedulerCallback`` at epoch boundaries.
 
-    Usage:
+    Usage::
+
         class MyDataset(OTXDataset, DataAugSwitchMixin):
-            def _get_item_impl(self, index: int) -> OTXSample | None:
-                # ... get your data ...
-                self._apply_augmentation_switch()
-                return self._apply_transforms(entity)
+            def _apply_transforms(self, entity):
+                if self.has_dynamic_augmentation:
+                    self._apply_augmentation_switch()
+                return super()._apply_transforms(entity)
     """
 
     def _ensure_data_aug_switch_initialized(self) -> None:
-        """Ensure data_aug_switch attribute is initialized.
-
-        This method is called lazily since __init__ may not be called
-        due to multiple inheritance MRO in some dataset classes.
-        """
+        """Ensure data_aug_switch attribute is initialized."""
         if not hasattr(self, "data_aug_switch"):
             self.data_aug_switch: DataAugSwitch | None = None
 
@@ -38,27 +37,25 @@ class DataAugSwitchMixin:
         """Set data augmentation switch.
 
         Args:
-            data_aug_switch: DataAugSwitch instance that manages dynamic augmentation policies
+            data_aug_switch: DataAugSwitch instance that manages dynamic augmentation policies.
         """
         self._ensure_data_aug_switch_initialized()
         self.data_aug_switch = data_aug_switch
 
     def _apply_augmentation_switch(self) -> str | None:
-        """Update the dataset's transform configuration based on the current augmentation policy.
+        """Swap ``self.transforms`` to the active policy's CPU pipeline.
 
-        This method should be called before applying the regular transforms.
-        It updates the dataset's transform configuration based on the current
-        augmentation policy from DataAugSwitch, if available.
+        Called before ``_apply_transforms`` in each ``__getitem__``.
+        Only swaps the CPU pipeline; GPU pipeline is handled by the callback.
 
         Returns:
-            str | None: The name of the current policy, or None if no policy is set.
+            Policy name, or None if no switch is configured.
         """
         self._ensure_data_aug_switch_initialized()
         if self.data_aug_switch is None:
             return None
         policy_name = self.data_aug_switch.current_policy_name
-        policy = self.data_aug_switch.policies[policy_name]
-        self.to_tv_image, self.transforms = policy["to_tv_image"], policy["transforms"]
+        self.transforms = self.data_aug_switch.get_cpu_pipeline(policy_name)
         return policy_name
 
     @property

@@ -7,6 +7,7 @@ import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import { DatasetItemAnnotationStatus } from '../../constants/shared-types';
+import { useMediaUpload } from '../../features/dataset/api/use-media-upload';
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import type { FilterByStatusKey } from '../../features/dataset/gallery/toolbar/filter-by-status/filter-by-status.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
@@ -19,6 +20,7 @@ export const Dataset = () => {
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage, isPending } = useGetDatasetMediaItems({
         annotationStatus: filterStatus ?? undefined,
     });
+    const { uploadMedia } = useMediaUpload();
 
     const handleFilterByStatusChange = (status: FilterByStatusKey) => {
         if (status === 'all') {
@@ -54,12 +56,14 @@ export const Dataset = () => {
             <View gridRow='3'>
                 <Gallery
                     items={items}
+                    annotationStatus={filterStatus ?? undefined}
                     viewMode={viewMode}
                     isPending={isPending}
                     hasActiveFilter={filterStatus !== null}
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
+                    onFilesDropped={uploadMedia}
                 />
             </View>
         </Grid>

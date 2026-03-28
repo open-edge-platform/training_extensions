@@ -3,6 +3,15 @@
 
 import { isNil } from 'lodash-es';
 
+export type DatasetImportState<T> = {
+    size: number;
+    fileName: string;
+    importJobId: string | null;
+    prepareJobId: string;
+    stagedDatasetId: string;
+    step: T;
+};
+
 export const getParsedLocalStorage = <T>(key: string): T | null => {
     const item = localStorage.getItem(key);
 

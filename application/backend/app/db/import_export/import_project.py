@@ -33,6 +33,7 @@ IMPORT_ORDER = [
     "media",
     "dataset_revisions",
     "model_revisions",
+    "model_variants",
     "dataset_items",
     "dataset_items_labels",
     "evaluations",

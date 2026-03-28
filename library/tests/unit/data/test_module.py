@@ -1,10 +1,9 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,10 +22,6 @@ from otx.data.module import (
     OTXDataModule,
     OTXTaskType,
 )
-from otx.data.transform_libs.torchvision import Compose, RandomFlip
-
-if TYPE_CHECKING:
-    from datumaro.components.dataset import Dataset as DmDataset
 
 
 class TestOTXDataModule:
@@ -39,7 +34,7 @@ class TestOTXDataModule:
         train_subset.num_workers = 0
         train_subset.batch_size = 4
         train_subset.input_size = None
-        train_subset.subset_name = "train_1"
+        train_subset.subset_name = "train"
         train_subset.transforms = []
         val_subset = MagicMock(spec=SubsetConfig)
         val_subset.sampler = DictConfig(
@@ -48,7 +43,7 @@ class TestOTXDataModule:
         val_subset.num_workers = 0
         val_subset.batch_size = 3
         val_subset.input_size = None
-        val_subset.subset_name = "val_1"
+        val_subset.subset_name = "val"
         test_subset = MagicMock(spec=SubsetConfig)
         test_subset.sampler = DictConfig(
             {"class_path": "torch.utils.data.RandomSampler", "init_args": {"num_samples": 3}},
@@ -56,13 +51,12 @@ class TestOTXDataModule:
         test_subset.num_workers = 0
         test_subset.batch_size = 1
         test_subset.input_size = None
-        test_subset.subset_name = "test_1"
+        test_subset.subset_name = "test"
         tile_config = MagicMock(spec=TileConfig)
         tile_config.enable_tiler = False
 
         mock = MagicMock(spec=DictConfig)
         mock.task = "MULTI_LABEL_CLS"
-        mock.data_format = "coco_instances"
         mock.data_root = "."
         mock.train_subset = train_subset
         mock.val_subset = val_subset
@@ -73,28 +67,11 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def mock_dm_dataset(self, mocker) -> MagicMock:
-        return mocker.patch("otx.data.module.DmDataset.import_from")
+        return mocker.patch("otx.data.module.import_dataset")
 
     @pytest.fixture
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
         return mocker.patch("otx.data.module.OTXDatasetFactory")
-
-    @pytest.fixture
-    def mock_data_filtering(self, mocker) -> MagicMock:
-        def func(
-            dataset: DmDataset,
-            data_format: str,
-            unannotated_items_ratio: float,
-            task: OTXTaskType,
-            ignore_index: int | None,
-        ) -> DmDataset:
-            del data_format
-            del unannotated_items_ratio
-            del ignore_index
-            del task
-            return dataset
-
-        return mocker.patch("otx.data.module.pre_filtering", side_effect=func)
 
     @pytest.mark.parametrize(
         "task",
@@ -111,17 +88,17 @@ class TestOTXDataModule:
         self,
         mock_dm_dataset,
         mock_otx_dataset_factory,
-        mock_data_filtering,
         task,
         fxt_config,
     ) -> None:
-        # Dataset will have "train_0", "train_1", "val_0", ..., "test_1" subsets
-        mock_dm_subsets = {f"{name}_{idx}": MagicMock() for name in ["train", "val", "test"] for idx in range(2)}
-        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+        # Make filter_by_subset return a non-empty MagicMock for each subset
+        mock_subset = MagicMock()
+        mock_subset.__len__ = lambda _: 10
+        mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
+        mock_dm_dataset.return_value.format = "datumaro"
 
         module = OTXDataModule(
             task=task,
-            data_format=fxt_config.data_format,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -163,19 +140,18 @@ class TestOTXDataModule:
         self,
         mock_dm_dataset,
         mock_otx_dataset_factory,
-        mock_data_filtering,
         fxt_config,
     ) -> None:
-        # Dataset will have "train_0", "train_1", "val_0", ..., "test_1" subsets
-        mock_dm_subsets = {f"{name}_{idx}": MagicMock() for name in ["train", "val", "test"] for idx in range(2)}
-        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+        mock_subset = MagicMock()
+        mock_subset.__len__ = lambda _: 10
+        mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
+        mock_dm_dataset.return_value.format = "datumaro"
         fxt_config.train_subset.input_size = None
         fxt_config.val_subset.input_size = None
         fxt_config.test_subset.input_size = (800, 800)
 
         OTXDataModule(
             task=OTXTaskType.MULTI_CLASS_CLS,
-            data_format=fxt_config.data_format,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -215,13 +191,14 @@ class TestOTXDataModule:
         self,
         mock_dm_dataset,
         mock_otx_dataset_factory,
-        mock_data_filtering,
         fxt_real_tv_cls_config,
         tmpdir,
     ) -> None:
         # Dataset will have "train", "val", and "test" subsets
-        mock_dm_subsets = {name: MagicMock() for name in ["train", "val", "test"]}
-        mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
+        mock_subset = MagicMock()
+        mock_subset.__len__ = lambda _: 10
+        mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
+        mock_dm_dataset.return_value.format = "datumaro"
         module = OTXDataModule(**fxt_real_tv_cls_config, input_size=(240, 240))
         logger = CSVLogger(tmpdir)
         logger.log_hyperparams(module.hparams_initial)
@@ -259,7 +236,6 @@ class TestOTXDataModule:
             mock_dataset = MagicMock()
             mock_dataset.label_info = label_info or MagicMock()
             mock_dataset.task_type = task
-            mock_dataset.data_format = "coco"
             mock_dataset.image_color_channel = "RGB"
             mock_dataset.transforms = transforms or []
             mock_dataset_item = MagicMock(
@@ -395,36 +371,6 @@ class TestOTXDataModule:
                 val_dataset=mock_val,
             )
 
-    def test_from_otx_datasets_with_normalization(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets correctly extracts normalization parameters."""
-        from torchvision.transforms.v2 import Normalize
-
-        # Create mock dataset with Normalize transform
-        normalize_transform = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-        shared_label_info = MagicMock()
-        mock_train = fxt_mock_dataset(
-            transforms=[normalize_transform],
-            label_info=shared_label_info,
-        )
-        mock_val = fxt_mock_dataset(label_info=shared_label_info)
-
-        mocker.patch.object(
-            OTXDataModule,
-            "get_default_subset_configs",
-            return_value=fxt_mock_subset_configs,
-        )
-
-        # Create module
-        module = OTXDataModule.from_otx_datasets(
-            train_dataset=mock_train,
-            val_dataset=mock_val,
-        )
-
-        # Assertions - normalization params should be extracted
-        assert module.input_mean == tuple(normalize_transform.mean)
-        assert module.input_std == tuple(normalize_transform.std)
-
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets with auto_num_workers enabled."""
         # Create mock datasets
@@ -458,37 +404,20 @@ class TestOTXDataModule:
         assert module.device == DeviceType.auto  # Default value
 
     @pytest.mark.parametrize(
-        "transforms_source",
+        ("transforms_source", "expected"),
         [
-            None,
-            [
-                {"class_path": "otx.data.transform_libs.torchvision.RandomFlip", "init_args": {"probability": 0.5}},
-                {
-                    "class_path": "otx.data.transform_libs.torchvision.Normalize",
-                    "init_args": {"mean": [123.675, 116.28, 103.53], "std": [58.395, 57.12, 57.375]},
-                },
-            ],
-            [
-                RandomFlip(probability=0.5),
-                Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-            ],
-            Compose(
-                [
-                    RandomFlip(probability=0.5),
-                    Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
-                ]
+            (None, (None, None)),
+            (
+                [Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375])],
+                ((123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
             ),
         ],
-        ids=["from None", "from list of configs", "from list of objects", "from compose"],
+        ids=["no normalize", "with normalize"],
     )
-    def test_extract_normalization_params(self, transforms_source) -> None:
-        """Test _extract_normalization_params with various transform sources."""
-        mean, std = OTXDataModule.extract_normalization_params(transforms_source)
+    def test_extract_normalization_params(self, transforms_source, expected) -> None:
+        """Test CPUAugmentationPipeline._extract_normalization_params."""
+        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 
-        # Assertions based on expected values
-        if transforms_source is None:
-            assert mean == (0.0, 0.0, 0.0)
-            assert std == (1.0, 1.0, 1.0)
-        else:
-            assert mean == (123.675, 116.28, 103.53)
-            assert std == (58.395, 57.12, 57.375)
+        pipeline = CPUAugmentationPipeline(augmentations=transforms_source)
+        result = (pipeline.mean, pipeline.std)
+        assert result == expected

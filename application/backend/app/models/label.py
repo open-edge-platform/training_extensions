@@ -23,4 +23,11 @@ class Label(BaseEntity):
     project_id: UUID | None = None
     name: str
     color: str
-    hotkey: str | None
+    hotkey: str | None = None
+
+
+class LabelUpdateInfo(BaseEntity):
+    id: UUID
+    new_name: str | None = None
+    new_color: str | None = None
+    new_hotkey: str | None = None

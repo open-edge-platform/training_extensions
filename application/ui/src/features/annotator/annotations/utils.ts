@@ -20,3 +20,18 @@ export const isPrediction = (
 ): label is Required<Pick<AnnotationLabel, 'probability'>> => {
     return label.probability !== undefined;
 };
+
+export const convertPredictionToAnnotation = (prediction: Annotation): Annotation => {
+    const convertedLabels = prediction.labels.map((label) => {
+        if (isPrediction(label)) {
+            const { probability, ...rest } = label;
+            return rest;
+        }
+        return label;
+    });
+
+    return {
+        ...prediction,
+        labels: convertedLabels,
+    };
+};

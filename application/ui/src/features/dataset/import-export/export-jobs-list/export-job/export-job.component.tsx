@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
+import { isJobDone, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isNil, isString } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
-import { isJobDone, isJobFailed, isJobPending, isJobRunning } from '../../util';
 import { useExportStatus } from '../hooks/use-export-status.hook';
 import { ExportActiveJob } from './export-active-job.component';
 import { ExportCompletedJob } from './export-completed-job/export-completed-job.component';
@@ -26,12 +26,8 @@ export const ExportJob = ({ jobId, datasetId }: ExportJobProps) => {
     const { data: datasetDetails } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}',
-        {
-            params: { path: { project_id: projectId, dataset_revision_id: datasetId } },
-        },
-        {
-            enabled: isString(datasetId),
-        }
+        { params: { path: { project_id: projectId, dataset_revision_id: datasetId } } },
+        { enabled: isString(datasetId) }
     );
 
     if (isNil(job)) {

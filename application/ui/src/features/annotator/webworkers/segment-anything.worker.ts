@@ -4,7 +4,9 @@
 import { buildSegmentAnythingInstance } from '@geti/smart-tools/segment-anything';
 import { expose, proxy } from 'comlink';
 
-const WorkerApi = {
+import type { SegmentAnythingWorkerApi } from './segment-anything.worker.interface';
+
+const WorkerApi: SegmentAnythingWorkerApi = {
     build: async () => {
         const instance = await buildSegmentAnythingInstance();
 

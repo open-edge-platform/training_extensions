@@ -7,7 +7,7 @@ import { isEqual } from 'lodash-es';
 import { useParams } from 'react-router';
 
 import type { Media } from '../../constants/shared-types';
-import { isVideo } from '../../shared/media-item-utils';
+import { isVideo, isVideoFrame } from '../../shared/media-item-utils';
 import type { RegionOfInterest } from '../../shared/types';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 import { getImageData } from './tools/utils';
@@ -27,7 +27,7 @@ type SelectedMediaItemProviderProps = {
     children: ReactNode;
 };
 
-const useVideoFrameNumberQueryParam = () => {
+const useVideoFrameNumberPathParam = () => {
     const { frameNumber } = useParams<{ frameNumber?: string }>();
 
     if (frameNumber === undefined) {
@@ -44,7 +44,8 @@ const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
         return {
             ...mediaItem,
             type: 'video_frame',
-            frame_stride: mediaItem.fps,
+            fps: Math.round(mediaItem.fps),
+            frame_stride: Math.round(mediaItem.fps),
             frame_number: frameNumber,
         };
     }
@@ -53,7 +54,10 @@ const convertMediaItem = (mediaItem: Media, frameNumber: number): Media => {
 };
 
 const useMediaItem = (initialMediaItem: Media) => {
-    const frameNumber = useVideoFrameNumberQueryParam();
+    const frameNumberFromPathParam = useVideoFrameNumberPathParam();
+    const maxFrameNumber =
+        isVideo(initialMediaItem) || isVideoFrame(initialMediaItem) ? initialMediaItem.frame_count - 1 : 0;
+    const frameNumber = Math.max(0, Math.min(frameNumberFromPathParam, maxFrameNumber));
 
     const [mediaItem, setMediaItem] = useState<Media>(() => convertMediaItem(initialMediaItem, frameNumber));
     const prevInitialMediaItem = useRef(initialMediaItem);

@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 import cv2
 import numpy as np
 import pytest
+from PIL import ExifTags
 from PIL import Image as PILImage
 from sqlalchemy.orm import Session
 
@@ -21,7 +22,7 @@ from app.models.media import ImageFormat, MediaType, VideoFormat
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
-from app.services.media_service import InvalidImageError, MediaFilters, MediaService
+from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters, MediaService
 
 
 @pytest.fixture
@@ -524,15 +525,18 @@ class TestMediaServiceIntegration:
     ) -> None:
         """Test creating a media."""
         image = PILImage.new("RGB", (1024, 768))
+        image.getexif()[ExifTags.Base.Software] = "Intel Geti"
 
         project, pipeline = fxt_project_with_pipeline
 
         created_media = fxt_media_service.create_image(
-            project_id=project.id,
-            name="test",
-            format=format,
-            data=image,
-            source_id=pipeline.source_id if use_pipeline_source else None,
+            ImageMetadata(
+                project_id=project.id,
+                name="test",
+                image_format=format,
+                data=image,
+                source_id=pipeline.source_id if use_pipeline_source else None,
+            )
         )
 
         media = db_session.get(MediaDB, str(created_media.id))
@@ -555,8 +559,128 @@ class TestMediaServiceIntegration:
         assert os.path.exists(binary_file_path)
         assert created_media.size == os.path.getsize(binary_file_path)
 
+        with PILImage.open(binary_file_path) as stored_image:
+            stored_exif = stored_image.getexif()
+        assert stored_exif is not None
+        if format != ImageFormat.BMP:  # BMP images do not support EXIF information
+            assert stored_exif[ExifTags.Base.Software] == "Intel Geti"
+
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
+
+    def test_create_image_16bit_png_thumbnail(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+    ) -> None:
+        """Test that a thumbnail is generated correctly for a 16-bit PNG image (mode I;16).
+
+        Specifically, the full dynamic range of the 16-bit source must be
+        preserved through normalization — a naive PIL convert("RGB") only
+        keeps the most-significant byte, producing washed-out thumbnails.
+        """
+        # Create a 16-bit grayscale image that uses the full 0-65535 range
+        rng = np.random.default_rng(seed=0)
+        data_16bit = rng.integers(0, 65535, (512, 512), dtype=np.uint16)
+        image = PILImage.fromarray(data_16bit, mode="I;16")
+
+        # Ensure the image is recognised as 16-bit by PIL
+        assert image.mode == "I;16"
+
+        project, _ = fxt_project_with_pipeline
+
+        created_media = fxt_media_service.create_image(
+            ImageMetadata(
+                project_id=project.id,
+                name="test_16bit",
+                image_format=ImageFormat.PNG,
+                data=image,
+            )
+        )
+
+        # The thumbnail must exist and be a valid JPEG readable by PIL
+        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
+        assert os.path.exists(thumbnail_file_path), "Thumbnail file was not created for 16-bit PNG"
+
+        with PILImage.open(thumbnail_file_path) as thumb:
+            assert thumb.format == "JPEG"
+            assert thumb.mode == "RGB"
+
+            # The normalized thumbnail must use a wide tonal range.
+            # A naive MSB-only conversion collapses most pixels to black (max≈255,
+            # but the vast majority of values cluster near 0), while correct
+            # normalization spreads values across the full 0-255 range.
+            arr = np.array(thumb)
+            assert arr.min() < 10, "Shadow end of range missing — normalization likely clipped low values"
+            assert arr.max() > 245, "Highlight end of range missing — normalization likely clipped high values"
+
+    @pytest.mark.parametrize("format", [ImageFormat.TIF, ImageFormat.TIFF])
+    def test_create_tiff_image_with_problematic_exif(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+        format: ImageFormat,
+    ) -> None:
+        """Test that TIFF images with EXIF data that cannot be re-serialized by
+        PIL's libtiff encoder are still saved successfully (without EXIF).
+
+        Regression test for RuntimeError: 'Error setting from dictionary' when
+        uploading certain TIFF files whose IFD contains tags incompatible with
+        the libtiff encoder round-trip.
+        """
+        image = PILImage.new("RGB", (896, 768))
+
+        # Inject a problematic EXIF tag that triggers the libtiff encoder error.
+        # Tag 0x8769 (ExifOffset / ExifIFD) with an invalid dict value causes
+        # PIL's libtiff encoder to raise RuntimeError when saving.
+        exif = image.getexif()
+        exif[ExifTags.Base.Software] = "Intel Geti"
+        exif.get_ifd(ExifTags.IFD.Exif)[ExifTags.Base.ExifVersion] = b"0232"
+        image.info["exif"] = exif.tobytes()
+
+        # Patch image.save to simulate the libtiff RuntimeError when exif= is
+        # passed, then succeed on the retry without exif.
+        original_save = PILImage.Image.save
+        exif_save_attempted = False
+        fallback_save_done = False
+
+        def patched_save(self_img, *args, **kwargs):
+            nonlocal exif_save_attempted, fallback_save_done
+            if "exif" in kwargs:
+                exif_save_attempted = True
+                raise RuntimeError("Error setting from dictionary")
+            # Track that the immediate retry (same path, no exif) succeeded
+            if exif_save_attempted and not fallback_save_done:
+                fallback_save_done = True
+            return original_save(self_img, *args, **kwargs)
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(PILImage.Image, "save", patched_save)
+
+            project, _ = fxt_project_with_pipeline
+            created_media = fxt_media_service.create_image(
+                ImageMetadata(
+                    project_id=project.id,
+                    name="test_tiff_exif",
+                    image_format=format,
+                    data=image,
+                )
+            )
+
+        assert exif_save_attempted, "Expected save with exif= to be attempted"
+        assert fallback_save_done, "Expected fallback save without exif to succeed"
+
+        media = db_session.get(MediaDB, str(created_media.id))
+        assert media is not None
+        assert media.width == 896
+        assert media.height == 768
+        assert media.format == format
+
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
+        assert os.path.exists(binary_file_path)
 
     @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("format", VideoFormat)
@@ -583,7 +707,7 @@ class TestMediaServiceIntegration:
                 created_media = fxt_media_service.create_video(
                     project_id=project.id,
                     name="test",
-                    format=format,
+                    video_format=format,
                     data=data,
                     source_id=pipeline.source_id if use_pipeline_source else None,
                 )
@@ -623,10 +747,12 @@ class TestMediaServiceIntegration:
 
         with pytest.raises(InvalidImageError):
             fxt_media_service.create_image(
-                project_id=project.id,
-                name="test",
-                format=ImageFormat.JPG,
-                data=BytesIO(b"123"),
+                ImageMetadata(
+                    project_id=project.id,
+                    name="test",
+                    image_format=ImageFormat.JPG,
+                    data=BytesIO(b"123"),
+                )
             )
 
     @pytest.mark.parametrize(
@@ -774,6 +900,33 @@ class TestMediaServiceIntegration:
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_media_service.get_media_by_id(project_id=project.id, media_id=non_existent_id)
 
+        assert excinfo.value.resource_type == ResourceType.MEDIA
+        assert excinfo.value.resource_id == str(non_existent_id)
+
+    def test_get_media_by_ids(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving multiple media items by their IDs."""
+        project, db_media_list = fxt_project_with_media
+        media_ids = [UUID(media.id) for media in db_media_list[:2]]
+
+        fetched_media = fxt_media_service.get_media_by_ids(project_id=project.id, media_ids=media_ids)
+        assert len(fetched_media) == 2
+        assert sorted([media.id for media in fetched_media]) == sorted(media_ids)
+
+    def test_get_media_by_ids_not_found(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving multiple media items by non-existent IDs."""
+        project, db_media_list = fxt_project_with_media
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_media_service.get_media_by_ids(project_id=project.id, media_ids=[non_existent_id])
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
@@ -1283,7 +1436,7 @@ class TestMediaServiceIntegration:
         )
         assert len(testing_items) == 1
 
-    def test_extract_video_frame(
+    def test_save_video_frame(
         self,
         tmp_path: Path,
         fxt_video_data: Callable[[Path], None],
@@ -1292,19 +1445,19 @@ class TestMediaServiceIntegration:
         fxt_project_with_media: tuple[Project, list[MediaDB]],
         db_session: Session,
     ):
-        """Test extracting a videoframe."""
+        """Test saving a videoframe."""
         project, db_media_list = fxt_project_with_media
         media = Video.model_validate(db_media_list[3], from_attributes=True)
 
-        # Create the dataset directory and a test video file
+        # Create the dataset directory
         dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
-        video_path = dataset_dir / f"{media.id}.{media.format}"
 
-        # Generate video
-        fxt_video_data(video_path)
+        frame_image = PILImage.new("RGB", (640, 480))
 
-        video_frame = fxt_media_service.extract_video_frame(project=project, video=media, frame_index=50)
+        video_frame = fxt_media_service.save_video_frame(
+            project=project, video=media, frame_index=50, frame_image=frame_image
+        )
 
         video_frame_binary_path = dataset_dir / f"{video_frame.id}.jpg"
         assert os.path.exists(video_frame_binary_path)
@@ -1357,6 +1510,26 @@ class TestMediaServiceIntegration:
             project=project, video_id=UUID(media.id), frame_index=500
         )
         assert video_frame is None
+
+    def test_search_video_frames_by_video_id_and_indexes(
+        self,
+        fxt_media_service: MediaService,
+        fxt_video_frame: Callable[[float], tuple[DatasetItemDB, MediaDB]],
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ) -> None:
+        """Test searching video frames by video ID and indexes."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+        fxt_video_frame(250)
+        fxt_video_frame(260)
+        fxt_video_frame(270)
+
+        video_frames = fxt_media_service.search_video_frames_by_video_id_and_indexes(
+            project=project, video_id=UUID(media.id), frame_indexes=[250, 260, 280]
+        )
+        assert video_frames is not None
+        assert len(video_frames) == 2
+        assert sorted([video_frame.frame_index for video_frame in video_frames]) == [250, 260]
 
     def test_get_video_frames_by_video_id(
         self,

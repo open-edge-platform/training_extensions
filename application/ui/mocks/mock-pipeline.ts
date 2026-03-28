@@ -22,7 +22,7 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
                 label_schema_revision: {},
             },
             files_deleted: false,
-            evaluations: [],
+            variants: [],
         },
         sink: {
             id: 'sink-id',

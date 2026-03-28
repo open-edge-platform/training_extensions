@@ -1,38 +1,62 @@
 task: MULTI_CLASS_CLS
-data_format: imagenet_with_subset_dirs
 unannotated_items_ratio: 0.0
+
 train_subset:
   subset_name: train
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: torchvision.transforms.v2.ToImage
   batch_size: 1
   num_workers: 2
+  augmentations_cpu: []
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
 
 val_subset:
   subset_name: val
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: torchvision.transforms.v2.ToImage
   batch_size: 1
   num_workers: 2
+  augmentations_cpu: []
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
 
 test_subset:
   subset_name: test
-  transform_lib_type: TORCHVISION
-  to_tv_image: true
-  transforms:
-    - class_path: torchvision.transforms.v2.ToImage
   batch_size: 1
   num_workers: 2
+  augmentations_cpu: []
+  augmentations_gpu:
+    - class_path: kornia.augmentation.Normalize
+      init_args:
+        mean:
+          - 0.485
+          - 0.456
+          - 0.406
+        std:
+          - 0.229
+          - 0.224
+          - 0.225
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null

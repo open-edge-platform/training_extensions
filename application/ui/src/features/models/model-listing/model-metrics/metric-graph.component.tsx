@@ -27,12 +27,7 @@ export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraph
             <Box
                 title={title}
                 content={
-                    <View
-                        paddingY={'size-200'}
-                        paddingX={'size-550'}
-                        backgroundColor={'gray-50'}
-                        minHeight={'size-3800'}
-                    >
+                    <View backgroundColor={'gray-50'} minHeight={'size-3800'}>
                         <LineChart
                             responsive
                             width={'100%'}
@@ -43,12 +38,14 @@ export const MetricGraph = ({ title, data, xAxisLabel, yAxisLabel }: MetricGraph
                             <CartesianGrid />
                             <XAxis
                                 dataKey='x'
+                                type='number'
+                                domain={[0, 'auto']}
                                 label={{ value: xAxisLabel ?? 'x', position: 'bottom', fill: '#666', offset: 12 }}
                                 tickCount={X_AXIS_TICK_COUNT}
                                 tickMargin={12}
                             />
                             <YAxis
-                                label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -38 }}
+                                label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -38, fill: '#666' }}
                                 tickCount={Y_AXIS_TICK_COUNT}
                                 tickMargin={12}
                                 tickFormatter={(value) => Number(value).toFixed(4)}

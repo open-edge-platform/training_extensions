@@ -6,8 +6,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../../../../api/client';
 import { AnnotatedVideoFrame } from '../../../../constants/shared-types';
 import { useVideoPlayer } from '../video-player-provider.component';
-
-const CHUNK_SIZE = 30;
+import { getVideoFrameRangeIndexes } from './utils';
 
 export const useVideoFramesAnnotations = <T>({
     frameNumber,
@@ -21,12 +20,9 @@ export const useVideoFramesAnnotations = <T>({
     const projectId = useProjectIdentifier();
     const { videoFrame } = useVideoPlayer();
 
-    const annotationChunkSize = CHUNK_SIZE * frameSkip;
-
     const frames = videoFrame.frame_count - 1;
 
-    const startFrameIndex = Math.floor(frameNumber / annotationChunkSize) * annotationChunkSize;
-    const endFrameIndex = Math.min(startFrameIndex + annotationChunkSize - 1, frames);
+    const { startFrameIndex, endFrameIndex } = getVideoFrameRangeIndexes({ frames, frameSkip, frameNumber });
 
     return $api.useQuery(
         'get',
@@ -45,6 +41,9 @@ export const useVideoFramesAnnotations = <T>({
         },
         {
             select: selector,
+            // We invalidate cache manually when the user annotates a frame, so we can set an infinite stale time to
+            // avoid unnecessary refetches
+            staleTime: Infinity,
         }
     );
 };
