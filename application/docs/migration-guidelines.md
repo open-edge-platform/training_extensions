@@ -30,8 +30,8 @@
 | Component         | Technology                                     | Location                       |
 | ----------------- | ---------------------------------------------- | ------------------------------ |
 | Database          | SQLite (via SQLAlchemy 2.x)                    | `data/geti.db`                 |
-| Schema models     | `app/db/schema.py` (`Base` declarative models) | —                              |
-| Migration engine  | Alembic 1.17                                   | `app/alembic/`                 |
+| Schema models     | `app/db/schema.py` (`Base` declarative models) | `app/db/schema.py`             |
+| Migration engine  | Alembic                                        | `app/alembic/`                 |
 | Migration scripts | Python (auto-generated + hand-edited)          | `app/alembic/versions/`        |
 | File storage      | Local filesystem                               | `data/projects/<project_id>/…` |
 | Migration runner  | `app/db/migration.py` → `MigrationManager`     | Runs on app startup            |
