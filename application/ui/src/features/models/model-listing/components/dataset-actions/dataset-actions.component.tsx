@@ -10,7 +10,7 @@ import { ExportDatasetConfig } from '../../../../../components/export-dataset-co
 import { useDeleteDatasetRevision } from '../../hooks/use-delete-dataset-revision.hook';
 import { useRenameDatasetRevision } from '../../hooks/use-rename-dataset-revision.hook';
 import type { DatasetGroup } from '../../types';
-import { RenameDatasetRevisionDialog } from '../group-headers/rename-dataset-revision-dialog.component';
+import { RenameDatasetRevisionDialog } from '../rename-dataset-revision-dialog.component';
 import { DatasetRevisionStatistics } from './dataset-revision-statistics/dataset-revision-statistics.component';
 
 type DatasetActionsProps = {
