@@ -3,13 +3,27 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import {
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    DialogContainer,
+    dimensionValue,
+    Divider,
+    Flex,
+    Heading,
+    Text,
+    toast,
+} from '@geti/ui';
 import { Info } from '@geti/ui/icons';
+import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 
-import { MediaDTO } from '../../../../constants/shared-types';
 import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/labels';
 import { isImage } from '../../../../shared/media-item-utils';
+import { isMultiLabelClassificationTask } from '../../../project/task-type-guards';
+import { useMediaUpload } from '../../api/use-media-upload';
 import { useAssignLabel } from './api/use-assign-label';
 import { LabelsList } from './labels-list/labels-list.component';
 
@@ -17,27 +31,27 @@ type BulkLabelsAssignmentDialogContentProps = {
     onClose: () => void;
     onSkip: () => void;
     isSkipPending: boolean;
-    onAccept: (labelIds: string[]) => Promise<void>;
-    isAcceptPending: boolean;
+    onContinue: (labelIds: string[]) => Promise<void>;
+    isContinuePending: boolean;
     isMultiLabelClassification: boolean;
 };
 
 const BulkLabelsAssignmentDialogContent = ({
     onClose,
     onSkip,
-    onAccept,
+    onContinue,
     isSkipPending,
-    isAcceptPending,
+    isContinuePending,
     isMultiLabelClassification,
 }: BulkLabelsAssignmentDialogContentProps) => {
     const projectLabels = useProjectLabelsWithEmptyLabel();
 
     const [selectedLabels, setSelectedLabels] = useState<Set<string>>(() => new Set([]));
 
-    const isAcceptDisabled = selectedLabels.size === 0 || isAcceptPending;
+    const isContinueDisabled = selectedLabels.size === 0 || isContinuePending;
 
-    const handleAccept = async () => {
-        await onAccept(Array.from(selectedLabels));
+    const handleContinue = async () => {
+        await onContinue(Array.from(selectedLabels));
     };
 
     return (
@@ -46,6 +60,11 @@ const BulkLabelsAssignmentDialogContent = ({
             <Divider />
             <Content>
                 <Flex direction={'column'} gap={'size-100'} height={'100%'} minHeight={0}>
+                    <Text>
+                        Choose the label(s) to assign to the uploaded images, then click {"'Continue'"}. If you instead
+                        prefer to annotate the images at a later time, choose {"'Skip'"}.
+                    </Text>
+                    <Divider size={'S'} marginY={'size-100'} />
                     <LabelsList
                         ariaLabel={'Labels to assign'}
                         labels={projectLabels}
@@ -53,9 +72,12 @@ const BulkLabelsAssignmentDialogContent = ({
                         onSelectedLabelsChange={setSelectedLabels}
                         isMultiple={isMultiLabelClassification}
                     />
-                    <Flex alignItems={'center'} gap={'size-50'}>
+                    <Flex gap={'size-50'}>
                         <Info />
-                        <Text>Labeling applies only to images</Text>
+                        <Text UNSAFE_style={{ lineHeight: dimensionValue('size-225') }}>
+                            The selected labels apply only to images, videos (if any) will be uploaded without
+                            annotations.
+                        </Text>
                     </Flex>
                 </Flex>
             </Content>
@@ -68,11 +90,11 @@ const BulkLabelsAssignmentDialogContent = ({
                 </Button>
                 <Button
                     variant={'accent'}
-                    onPress={handleAccept}
-                    isDisabled={isAcceptDisabled}
-                    isPending={isAcceptPending}
+                    onPress={handleContinue}
+                    isDisabled={isContinueDisabled}
+                    isPending={isContinuePending}
                 >
-                    Accept
+                    Continue
                 </Button>
             </ButtonGroup>
         </Dialog>
@@ -82,28 +104,23 @@ const BulkLabelsAssignmentDialogContent = ({
 type BulkLabelsAssignmentDialogProps = {
     files: File[];
     onClose: () => void;
-    isMultiLabelClassification: boolean;
-    isUploadingDatasetItems: boolean;
-    onDatasetItemsUpload: (files: File[]) => Promise<MediaDTO[]>;
 };
 
-export const BulkLabelsAssignmentDialog = ({
-    files,
-    onClose,
-    onDatasetItemsUpload,
-    isUploadingDatasetItems,
-    isMultiLabelClassification,
-}: BulkLabelsAssignmentDialogProps) => {
+export const BulkLabelsAssignmentDialog = ({ files, onClose }: BulkLabelsAssignmentDialogProps) => {
     const isVisible = !isEmpty(files);
+    const { data: project } = useProject();
+    const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
+    const { uploadMedia, uploadProgress } = useMediaUpload();
+
     const assignLabel = useAssignLabel();
 
     const handleSkip = async () => {
-        await onDatasetItemsUpload(files);
+        await uploadMedia(files);
         onClose();
     };
 
     const handleAccept = async (labelIds: string[]) => {
-        const mediaItems = await onDatasetItemsUpload(files);
+        const mediaItems = await uploadMedia(files);
         const mediaItemImages = mediaItems.filter(isImage);
 
         const result = await Promise.allSettled(mediaItemImages.map((media) => assignLabel.mutate(media.id, labelIds)));
@@ -141,9 +158,9 @@ export const BulkLabelsAssignmentDialog = ({
                 <BulkLabelsAssignmentDialogContent
                     onClose={onClose}
                     onSkip={handleSkip}
-                    onAccept={handleAccept}
-                    isAcceptPending={isUploadingDatasetItems || assignLabel.isPending}
-                    isSkipPending={isUploadingDatasetItems}
+                    onContinue={handleAccept}
+                    isContinuePending={uploadProgress.isUploading || assignLabel.isPending}
+                    isSkipPending={uploadProgress.isUploading}
                     isMultiLabelClassification={isMultiLabelClassification}
                 />
             )}

@@ -21,9 +21,9 @@ import { TrainModel } from '../../../models/train-model/train-model.component';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
 import { BulkLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-labels-assignment-dialog.component';
-import { useBulkUploadAndAssignLabel } from '../bulk-labels-assignment/use-bulk-upload-and-assign-label';
 import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
+import { useUploadFiles } from '../use-upload-files';
 import { AddMediaButton } from './add-media-button/add-media-button.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { toggleMultipleSelection } from './util';
@@ -49,31 +49,14 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
 };
 
 const MediaUpload = () => {
-    const {
-        isClassification,
-        isMultiLabelClassification,
-        setFilesForLabelAssignment,
-        filesForLabelAssignment,
-        uploadAndAssign,
-        uploadMedia,
-        uploadMediaLoading,
-    } = useBulkUploadAndAssignLabel();
-
-    const handleClose = () => {
-        setFilesForLabelAssignment([]);
-    };
+    const { isClassification, uploadFiles, uploadMediaLoading, clearFilesForLabelAssignment, filesForLabelAssignment } =
+        useUploadFiles();
 
     return (
         <>
-            <AddMediaButton onFileUpload={uploadAndAssign} isDisabled={uploadMediaLoading} />
+            <AddMediaButton onFileUpload={uploadFiles} isDisabled={uploadMediaLoading} />
             {isClassification && (
-                <BulkLabelsAssignmentDialog
-                    onClose={handleClose}
-                    files={filesForLabelAssignment}
-                    onDatasetItemsUpload={uploadMedia}
-                    isUploadingDatasetItems={uploadMediaLoading}
-                    isMultiLabelClassification={isMultiLabelClassification}
-                />
+                <BulkLabelsAssignmentDialog onClose={clearFilesForLabelAssignment} files={filesForLabelAssignment} />
             )}
         </>
     );

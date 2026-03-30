@@ -16,11 +16,11 @@ import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { BulkLabelsAssignmentDialog } from './bulk-labels-assignment/bulk-labels-assignment-dialog.component';
-import { useBulkUploadAndAssignLabel } from './bulk-labels-assignment/use-bulk-upload-and-assign-label';
 import { DatasetDropZone } from './drop-zone.component';
 import { EmptyDataset } from './empty-dataset.component';
 import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 import { MediaItemActions } from './media-item-actions/media-item-actions.component';
+import { useUploadFiles } from './use-upload-files';
 
 type GalleryProps = {
     items: Media[];
@@ -138,15 +138,7 @@ export const Gallery = ({
 }: GalleryProps) => {
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
 
-    const {
-        isClassification,
-        isMultiLabelClassification,
-        setFilesForLabelAssignment,
-        filesForLabelAssignment,
-        uploadAndAssign,
-        uploadMedia,
-        uploadMediaLoading,
-    } = useBulkUploadAndAssignLabel();
+    const { isClassification, uploadFiles, clearFilesForLabelAssignment, filesForLabelAssignment } = useUploadFiles();
 
     const content =
         !isPending && isEmpty(items) ? (
@@ -165,7 +157,7 @@ export const Gallery = ({
 
     return (
         <>
-            <DatasetDropZone onFilesDropped={uploadAndAssign}>
+            <DatasetDropZone onFilesDropped={uploadFiles}>
                 {content}
 
                 <DialogContainer type={'fullscreenTakeover'} onDismiss={() => onSelectedMediaItemChange(null)}>
@@ -179,13 +171,7 @@ export const Gallery = ({
                 </DialogContainer>
             </DatasetDropZone>
             {isClassification && (
-                <BulkLabelsAssignmentDialog
-                    files={filesForLabelAssignment}
-                    onClose={() => setFilesForLabelAssignment([])}
-                    isMultiLabelClassification={isMultiLabelClassification}
-                    isUploadingDatasetItems={uploadMediaLoading}
-                    onDatasetItemsUpload={uploadMedia}
-                />
+                <BulkLabelsAssignmentDialog files={filesForLabelAssignment} onClose={clearFilesForLabelAssignment} />
             )}
         </>
     );
