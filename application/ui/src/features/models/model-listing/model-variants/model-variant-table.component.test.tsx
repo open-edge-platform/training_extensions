@@ -51,7 +51,7 @@ describe('ModelVariantTable', () => {
         expect(screen.getByText('92%')).toBeInTheDocument();
     });
 
-    it('falls back to fp32 pytorch primary metric when current variant evaluations are empty', () => {
+    it('falls back to fp32 pytorch primary metric when evaluations are empty', () => {
         const model = getMockedModel({
             variants: [
                 getMockedVariant({
@@ -79,6 +79,44 @@ describe('ModelVariantTable', () => {
 
         expect(screen.getByText('mAP')).toBeInTheDocument();
         expect(screen.getByText('87%')).toBeInTheDocument();
+    });
+
+    it('shows size and performance deltas for the quantized variant', () => {
+        const model = getMockedModel({
+            variants: [
+                getMockedVariant({
+                    id: 'ov-fp16',
+                    format: 'openvino',
+                    precision: 'fp16',
+                    weights_size: 1000,
+                    evaluations: [
+                        {
+                            dataset_revision_id: 'dataset-1',
+                            subset: 'testing',
+                            metrics: [{ name: 'Accuracy', value: 0.92, primary: true }],
+                        },
+                    ],
+                }),
+                getMockedVariant({
+                    id: 'ov-int8',
+                    format: 'openvino',
+                    precision: 'int8',
+                    weights_size: 500,
+                    evaluations: [
+                        {
+                            dataset_revision_id: 'dataset-1',
+                            subset: 'testing',
+                            metrics: [{ name: 'Accuracy', value: 0.89, primary: true }],
+                        },
+                    ],
+                }),
+            ],
+        });
+
+        render(<ModelVariantTable model={model} format='openvino' />);
+
+        expect(screen.getByText('-50%')).toHaveStyle({ color: 'var(--moss-tint-1)' });
+        expect(screen.getByText('-3%')).toHaveStyle({ color: 'var(--coral-shade-1)' });
     });
 
     it('does not fallback value when variant has evaluations but no primary metric', () => {
@@ -114,7 +152,7 @@ describe('ModelVariantTable', () => {
         render(<ModelVariantTable model={model} format='openvino' />);
 
         expect(screen.getByText('mAP')).toBeInTheDocument();
-        expect(screen.getByText('-')).toBeInTheDocument();
+        expect(screen.getByTestId('variant-value')).toBeInTheDocument();
         expect(screen.queryByText('87%')).not.toBeInTheDocument();
     });
 
@@ -133,7 +171,7 @@ describe('ModelVariantTable', () => {
         render(<ModelVariantTable model={model} format='openvino' />);
 
         expect(screen.getByText('Score')).toBeInTheDocument();
-        expect(screen.getByText('-')).toBeInTheDocument();
+        expect(screen.getByTestId('variant-value')).toBeInTheDocument();
     });
 
     it('triggers download for selected variant', async () => {
