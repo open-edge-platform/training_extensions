@@ -149,7 +149,9 @@ class TestOTXDataModule:
     def fxt_real_tv_cls_config(self) -> DictConfig:
         cfg_path = files("otx") / "recipe" / "_base_" / "data" / "classification.yaml"
         cfg = OmegaConf.load(cfg_path)
-        cfg.pop("input_size", None)
+        assert isinstance(cfg, DictConfig)
+        OmegaConf.set_struct(cfg, False)
+        del cfg["input_size"]
         cfg.data_root = "."
         cfg.train_subset.subset_name = "train"
         cfg.train_subset.num_workers = 0
