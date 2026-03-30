@@ -190,7 +190,7 @@ class OVModel:
                     ov_device = device
                     break
 
-        plugin_config = {}
+        plugin_config = {"INFERENCE_PRECISION_HINT": "f32"}
         if self.use_throughput_mode:
             plugin_config["PERFORMANCE_HINT"] = "THROUGHPUT"
 
