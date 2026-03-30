@@ -173,11 +173,19 @@ class OVDetectionModel(OVModel):
             log.warning(f"label_shift: {label_shift}")
 
         for i, output in enumerate(outputs):
+            pred_boxes = torch.tensor(output.bboxes, dtype=torch.float32)
+            img_h, img_w = inputs.imgs_info[i].img_shape  # type: ignore[union-attr, index]
+            ori_h, ori_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr, index]
+            if (img_h, img_w) != (ori_h, ori_w) and len(pred_boxes) > 0:
+                scale_h = ori_h / img_h
+                scale_w = ori_w / img_w
+                pred_boxes[:, 0::2] *= scale_w  # x coords
+                pred_boxes[:, 1::2] *= scale_h  # y coords
             bboxes.append(
                 tv_tensors.BoundingBoxes(
-                    data=output.bboxes,
+                    data=pred_boxes,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[i].img_shape,  # type: ignore[union-attr, index]
+                    canvas_size=(ori_h, ori_w),
                     dtype=torch.float32,
                 ),
             )
