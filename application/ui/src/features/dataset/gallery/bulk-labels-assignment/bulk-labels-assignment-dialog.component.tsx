@@ -3,9 +3,20 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import {
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    DialogContainer,
+    dimensionValue,
+    Divider,
+    Flex,
+    Heading,
+    Text,
+    toast,
+} from '@geti/ui';
 import { Info } from '@geti/ui/icons';
-import { dimensionValue } from '@react-spectrum/utils';
 import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 
@@ -15,7 +26,6 @@ import { isMultiLabelClassificationTask } from '../../../project/task-type-guard
 import { useMediaUpload } from '../../api/use-media-upload';
 import { useAssignLabel } from './api/use-assign-label';
 import { LabelsList } from './labels-list/labels-list.component';
-import { useBulkUploadAndAssignLabel } from './use-bulk-upload-and-assign-label';
 
 type BulkLabelsAssignmentDialogContentProps = {
     onClose: () => void;
