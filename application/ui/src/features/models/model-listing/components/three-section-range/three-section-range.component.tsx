@@ -12,9 +12,10 @@ type ThreeSectionRangeProps = {
     testingValue: number;
 };
 
-const formatPercentage = (value: number) => Math.round(value);
+const formatter = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 });
 
 export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
+    const total = trainingValue + validationValue + testingValue;
     const gridColumns = [
         trainingValue > 0 ? `${trainingValue}fr` : '1fr',
         validationValue > 0 ? `${validationValue}fr` : '1fr',
@@ -41,9 +42,9 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
             </Grid>
 
             <Text UNSAFE_className={classes.label}>
-                {`${formatPercentage(trainingValue)}% / ${formatPercentage(validationValue)}% / ${formatPercentage(
-                    testingValue
-                )}%`}
+                {[trainingValue, validationValue, testingValue]
+                    .map((value) => formatter.format(value / total))
+                    .join(' / ')}
             </Text>
         </Flex>
     );

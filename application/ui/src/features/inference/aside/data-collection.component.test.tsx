@@ -62,7 +62,7 @@ describe('DataCollection capture rate fields', () => {
         expect(screen.queryByLabelText('Rate')).not.toBeInTheDocument();
     });
 
-    it('patches fixed_rate using frames divided by seconds', async () => {
+    it('patches fixed_rate using frames divided by seconds on blur', async () => {
         const pipelinePatchSpy = renderApp();
 
         const framesInput = await screen.findByLabelText('Frames');
@@ -72,19 +72,38 @@ describe('DataCollection capture rate fields', () => {
         await userEvent.type(framesInput, '6');
         framesInput.blur();
 
+        await waitFor(() => {
+            expect(pipelinePatchSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data_collection: expect.objectContaining({
+                        policies: expect.arrayContaining([
+                            expect.objectContaining({
+                                type: 'fixed_rate',
+                                rate: 6, // 6 frames / 1 second
+                            }),
+                        ]),
+                    }),
+                })
+            );
+        });
+
         await userEvent.clear(secondsInput);
         await userEvent.type(secondsInput, '3');
         secondsInput.blur();
 
         await waitFor(() => {
-            expect(pipelinePatchSpy).toHaveBeenCalled();
+            expect(pipelinePatchSpy).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    data_collection: expect.objectContaining({
+                        policies: expect.arrayContaining([
+                            expect.objectContaining({
+                                type: 'fixed_rate',
+                                rate: 2, // 6 frames / 3 seconds
+                            }),
+                        ]),
+                    }),
+                })
+            );
         });
-
-        const lastMutationPayload = pipelinePatchSpy.mock.calls.at(-1)?.[0];
-        const fixedRatePolicy = lastMutationPayload.data_collection.policies.find(
-            (policy: { type: string }) => policy.type === 'fixed_rate'
-        );
-
-        expect(fixedRatePolicy.rate).toBe(2);
     });
 });
