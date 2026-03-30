@@ -69,10 +69,18 @@ export const DataCollection = () => {
             ],
         };
 
-        patchPipelineMutation.mutate({
-            params: { path: { project_id: projectId } },
-            body: { data_collection: newDataCollectionPolicies },
-        });
+        patchPipelineMutation.mutate(
+            {
+                params: { path: { project_id: projectId } },
+                body: { data_collection: newDataCollectionPolicies },
+            },
+            {
+                onError: () => {
+                    setLocalRateFrames(serverRate);
+                    setLocalRateSeconds(1);
+                },
+            }
+        );
     };
 
     return (
