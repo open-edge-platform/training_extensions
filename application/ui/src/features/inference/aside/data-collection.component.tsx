@@ -14,6 +14,10 @@ const DEFAULTS = {
     MAX_DATASET_SIZE: 500,
 } as const;
 
+const MIN_FRAME_SAMPLING_VALUE = 0.1;
+
+const isPositiveFiniteNumber = (value: number): boolean => Number.isFinite(value) && value > 0;
+
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
     const pipelineQuery = usePipeline();
@@ -27,10 +31,19 @@ export const DataCollection = () => {
     const serverRate = ratePolicy?.rate ?? DEFAULTS.RATE;
     const serverConfidenceThreshold = confidencePolicy?.confidence_threshold ?? DEFAULTS.CONFIDENCE_THRESHOLD;
 
-    const [localRate, setLocalRate] = useState(serverRate);
+    const [localRateFrames, setLocalRateFrames] = useState(serverRate);
+    const [localRateSeconds, setLocalRateSeconds] = useState(1);
     const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(serverConfidenceThreshold);
 
     const isUpdating = patchPipelineMutation.isPending;
+
+    const updateRatePolicy = (frames: number, seconds: number) => {
+        if (!isPositiveFiniteNumber(frames) || !isPositiveFiniteNumber(seconds)) {
+            return;
+        }
+
+        updatePolicies({ rate: frames / seconds });
+    };
 
     const updatePolicies = (updates: {
         maxDatasetSize?: number;
@@ -56,10 +69,18 @@ export const DataCollection = () => {
             ],
         };
 
-        patchPipelineMutation.mutate({
-            params: { path: { project_id: projectId } },
-            body: { data_collection: newDataCollectionPolicies },
-        });
+        patchPipelineMutation.mutate(
+            {
+                params: { path: { project_id: projectId } },
+                body: { data_collection: newDataCollectionPolicies },
+            },
+            {
+                onError: () => {
+                    setLocalRateFrames(serverRate);
+                    setLocalRateSeconds(1);
+                },
+            }
+        );
     };
 
     return (
@@ -103,16 +124,31 @@ export const DataCollection = () => {
                     Toggle auto capturing
                 </Switch>
 
-                <Slider
-                    step={0.1}
-                    minValue={0}
-                    maxValue={60}
-                    value={localRate}
-                    onChange={setLocalRate}
-                    onChangeEnd={(rate) => updatePolicies({ rate })}
-                    label='Rate'
-                    isDisabled={!ratePolicy?.enabled || isUpdating}
-                />
+                <Flex direction='row' gap='size-100' alignItems={'end'} marginBottom={'size-200'}>
+                    <NumberField
+                        label='Frames'
+                        minValue={MIN_FRAME_SAMPLING_VALUE}
+                        step={0.1}
+                        value={localRateFrames}
+                        onChange={(nextFrames) => {
+                            setLocalRateFrames(nextFrames);
+                            updateRatePolicy(nextFrames, localRateSeconds);
+                        }}
+                        isDisabled={!ratePolicy?.enabled || isUpdating}
+                    />
+                    <Text>every</Text>
+                    <NumberField
+                        label='Seconds'
+                        minValue={1}
+                        step={1}
+                        value={localRateSeconds}
+                        onChange={(nextSeconds) => {
+                            setLocalRateSeconds(nextSeconds);
+                            updateRatePolicy(localRateFrames, nextSeconds);
+                        }}
+                        isDisabled={!ratePolicy?.enabled || isUpdating}
+                    />
+                </Flex>
 
                 <Divider marginY={'size-400'} size={'S'} />
 

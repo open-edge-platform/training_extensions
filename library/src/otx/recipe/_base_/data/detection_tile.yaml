@@ -10,7 +10,7 @@ tile_config:
 train_subset:
   subset_name: train
   batch_size: 1
-  num_workers: 2
+  num_workers: 4
   augmentations_cpu:
     - class_path: otx.data.augmentation.transforms.RandomIoUCrop
       enable: true
@@ -39,7 +39,7 @@ train_subset:
 val_subset:
   subset_name: val
   batch_size: 1
-  num_workers: 2
+  num_workers: 4
   augmentations_cpu:
     - class_path: otx.data.augmentation.transforms.Resize
       init_args:
@@ -64,7 +64,7 @@ val_subset:
 test_subset:
   subset_name: test
   batch_size: 1
-  num_workers: 2
+  num_workers: 4
   augmentations_cpu:
     - class_path: otx.data.augmentation.transforms.Resize
       init_args:

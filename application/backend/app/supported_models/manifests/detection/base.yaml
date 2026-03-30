@@ -5,6 +5,14 @@ capabilities:
 hyperparameters:
   dataset_preparation:
     augmentation:
+      deim_framework: null
+      random_zoom_out:
+        enable: false
+        fill: 0
+        side_range:
+          - 1.0
+          - 4.0
+        probability: 0.5
       tiling:
         enable: false
         enable_adaptive_tiling: true
