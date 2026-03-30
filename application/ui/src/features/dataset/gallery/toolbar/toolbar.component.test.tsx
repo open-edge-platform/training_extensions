@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ViewModes } from '@geti/ui';
-import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -45,11 +46,18 @@ vi.mock('../../import-export/import-export.component', () => ({
     ImportExport: () => <div>ImportExport</div>,
 }));
 
+vi.mock('hooks/use-project-identifier.hook', () => ({
+    useProjectIdentifier: () => 'project-123',
+}));
+
 describe('Toolbar', () => {
     const renderToolbar = async (items: Media[] = []) => {
         server.use(
             http.get('/api/projects/{project_id}', () => {
-                return HttpResponse.json(getMockedProject());
+                return HttpResponse.json(getMockedProject({ id: 'project-123' }));
+            }),
+            http.get('/api/projects/{project_id}/dataset/statistics', () => {
+                return HttpResponse.json(getMockedDatasetStatistics({}));
             })
         );
 
@@ -110,5 +118,19 @@ describe('Toolbar', () => {
 
         expect(screen.getByText('2 selected')).toBeVisible();
         expect(screen.getByLabelText(/delete media item/i)).toBeVisible();
+    });
+
+    it('opens dataset statistics modal when clicking the statistics button', async () => {
+        renderToolbar();
+
+        const statsButton = await screen.findByLabelText('dataset statistics');
+        fireEvent.click(statsButton);
+
+        await waitFor(() => {
+            expect(screen.getByText('Dataset Statistics')).toBeVisible();
+        });
+
+        expect(screen.getByText('Number of media')).toBeVisible();
+        expect(screen.getByText('Annotated images')).toBeVisible();
     });
 });

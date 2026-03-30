@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, Suspense } from 'react';
 
 import {
     Button,
@@ -11,6 +11,7 @@ import {
     Divider,
     Flex,
     Heading,
+    Loading,
     MediaViewModes,
     Text,
     ViewModes,
@@ -25,6 +26,7 @@ import { DeleteMediaItem } from '../delete-media-item/delete-media-item.componen
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { useUploadFiles } from '../use-upload-files';
 import { AddMediaButton } from './add-media-button/add-media-button.component';
+import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { toggleMultipleSelection } from './util';
 
@@ -136,6 +138,11 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <Flex gap={'size-200'} alignItems={'center'}>
                     <FilterByStatus onChange={onFilter} />
                     <Text>{message}</Text>
+
+                    <Suspense fallback={<Loading size='S' mode='inline' />}>
+                        <DatasetStatistics />
+                    </Suspense>
+
                     <MediaViewModes
                         viewMode={viewMode}
                         setViewMode={setViewMode}
