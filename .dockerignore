@@ -15,6 +15,7 @@
 !application/ui/packages
 !application/ui/package.json
 !application/ui/package-lock.json
+!application/ui/tsconfig.base.json
 !application/ui/tsconfig.json
 !application/ui/rsbuild.config.ts
 
