@@ -90,7 +90,7 @@ export const SubsetGallery = ({
 
     if (isPending) {
         return (
-            <Flex height={'100%'}>
+            <Flex height={'100%'} alignItems={'center'} justifyContent={'center'}>
                 <Loading mode='inline' />
             </Flex>
         );
@@ -98,7 +98,7 @@ export const SubsetGallery = ({
 
     if (items.length === 0) {
         return (
-            <Flex height={'100%'}>
+            <Flex height={'100%'} alignItems={'center'} justifyContent={'center'}>
                 <Text>No items in this subset</Text>
             </Flex>
         );

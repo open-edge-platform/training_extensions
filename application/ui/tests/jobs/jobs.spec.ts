@@ -20,13 +20,17 @@ const mockedTrainingJob = getMockedJob({
             parent_revision_id: null,
             dataset_revision_id: 'dataset-1',
         },
+        device: {
+            type: 'cpu',
+            name: 'CPU',
+        },
     },
     started_at: '2026-01-19T08:15:00.000000+00:00',
     finished_at: null,
 });
 
-test.describe('Jobs - Current Training', () => {
-    test('displays current training section when a job is running', async ({ jobsPage, network }) => {
+test.describe('Jobs - Current Running', () => {
+    test('displays current running section when a job is running', async ({ jobsPage, network }) => {
         network.use(
             http.get('/api/jobs', () => {
                 return HttpResponse.json([mockedTrainingJob]);
@@ -38,8 +42,8 @@ test.describe('Jobs - Current Training', () => {
 
         await jobsPage.goto();
 
-        await expect(jobsPage.getCurrentTrainingSection()).toBeVisible();
-        await expect(jobsPage.getTrainingTag()).toBeVisible();
+        await expect(jobsPage.getCurrentRunningSection()).toBeVisible();
+        await expect(jobsPage.getRunningTag()).toBeVisible();
         await expect(jobsPage.getStatusTag()).toBeVisible();
     });
 
@@ -74,17 +78,17 @@ test.describe('Jobs - Current Training', () => {
 
         await jobsPage.goto();
 
-        await expect(jobsPage.getCurrentTrainingSection()).toBeVisible();
+        await expect(jobsPage.getCurrentRunningSection()).toBeVisible();
 
-        await jobsPage.cancelTrainingJob();
+        await jobsPage.cancelRunningJob();
 
-        await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
+        await expect(jobsPage.getCurrentRunningSection()).toBeHidden();
     });
 
-    test('hides current training section when no jobs are running', async ({ jobsPage }) => {
+    test('hides current running section when no jobs are running', async ({ jobsPage }) => {
         await jobsPage.goto('id-2');
 
-        await expect(jobsPage.getCurrentTrainingSection()).toBeHidden();
+        await expect(jobsPage.getCurrentRunningSection()).toBeHidden();
     });
 
     test('opens and closes training logs dialog when "Logs" button is clicked', async ({ jobsPage, network }) => {

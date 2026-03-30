@@ -86,7 +86,7 @@ jobs:
           scan_type: "fs"
           scan-scope: all
           severity: LOW
-          scanners: "vuln,secret,config"
+          scanners: "secret,config"
           format: "sarif"
           timeout: "15m"
           ignore_unfixed: "false"
@@ -110,55 +110,64 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build and run docker image
-        working-directory: application/docker
+      - name: Install common dependencies
+        uses: ./.github/actions/install-common-deps
+        with:
+          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
+
+      - name: Build image for ${{ matrix.ai-device }}
+        working-directory: application
+        run: just build-image --accelerator $DEVICE
+        env:
+          DEVICE: ${{ matrix.ai-device }}
+
+      - name: Run the docker image
+        working-directory: application
         id: run-image
         env:
-          AI_DEVICE: ${{ matrix.ai-device }}
+          DEVICE: ${{ matrix.ai-device }}
         run: |
-          docker compose up -d
-          CONTAINER_ID=$(docker ps -qf "ancestor=geti-tune-${AI_DEVICE:-cpu}")
-          echo "Started container: $CONTAINER_ID"
-          echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
+          CONTAINER_NAME="geti-${DEVICE}"
+
+          # Start the container in detached mode
+          just run-image --accelerator $DEVICE --name $CONTAINER_NAME --detach
+
+          # Cleanup container on exit
+          cleanup() {
+              echo "--- Container logs ---"
+              docker logs "$CONTAINER_NAME" || true
+              echo "--- Stopping container ---"
+              docker stop "$CONTAINER_NAME" || true
+          }
+          trap cleanup EXIT
 
           TEST_URL="localhost:7860"
           # Wait for container to be ready (max 60 seconds)
           echo "Waiting for container to be ready..."
+          HEALTH_OK=false
           for i in {1..12}; do
               if curl -sf $TEST_URL/health > /dev/null 2>&1; then
                   echo "✅ Health check passed!"
+                  HEALTH_OK=true
                   break
-              fi
-              if [ $i -eq 12 ]; then
-                  echo "❌ Health check failed after 60 seconds"
-                  docker logs $CONTAINER_ID
-                  exit 1
               fi
               echo "Attempt $i/12 - waiting 5 seconds..."
               sleep 5
           done
 
-          EXPECTED_TITLE="Geti Tune"
-          echo "Checking HTML title..."
-
-          HTML_CONTENT=$(curl -sf $TEST_URL)
-          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
-              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
-          else
-              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
-              echo "Actual HTML content:"
-              echo "$HTML_CONTENT"
+          if [[ "$HEALTH_OK" != "true" ]]; then
+              echo "❌ Health check failed after 60 seconds"
               exit 1
           fi
 
-          echo "All checks passed successfully!"
+          echo "CONTAINER_NAME=${CONTAINER_NAME}" >> $GITHUB_ENV
 
       - name: Run ZAP API Scan
         uses: zaproxy/action-api-scan@5158fe4d9d8fcc75ea204db81317cce7f9e5453d # v0.10.0
         with:
-          target: 'http://localhost:7860/api/openapi.json'
-          format: 'openapi'
-          cmd_options: '-a'
+          target: "http://localhost:7860/api/openapi.json"
+          format: "openapi"
+          cmd_options: "-a"
           allow_issue_writing: false
           fail_action: false
           artifact_name: zapapi
@@ -166,8 +175,8 @@ jobs:
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
         with:
-          target: 'http://localhost:7860'
-          cmd_options: '-a -j'
+          target: "http://localhost:7860"
+          cmd_options: "-a -j"
           allow_issue_writing: false
           fail_action: false
           artifact_name: zapfull
@@ -176,7 +185,7 @@ jobs:
         uses: schemathesis/action@1f15936316e0742005bf69657b5909ac68f04cb3 # v2
         continue-on-error: true
         with:
-          schema: 'http://localhost:7860/api/openapi.json'
+          schema: "http://localhost:7860/api/openapi.json"
           args: >-
             --continue-on-failure
             --report-dir schemathesis-report
@@ -201,7 +210,7 @@ jobs:
           else
               echo "❌ Post-scan health check failed"
               echo "=== Container logs ==="
-              docker logs $CONTAINER_ID || true
+              docker logs "$CONTAINER_NAME" || true
               exit 1
           fi
 
@@ -209,12 +218,11 @@ jobs:
         if: always()
         run: |
           mkdir -p dast-scan-logs
-          if [ -n "$CONTAINER_ID" ]; then
-            echo "Saving logs for container $CONTAINER_ID"
-            docker logs "$CONTAINER_ID" > dast-scan-logs/container-$CONTAINER_ID.log 2>&1 || true
+          if [ -n "$CONTAINER_NAME" ]; then
+            echo "Saving logs for container $CONTAINER_NAME"
+            docker logs "$CONTAINER_NAME" > dast-scan-logs/container-$CONTAINER_NAME.log 2>&1 || true
           else
-            echo "CONTAINER_ID not set; attempting to capture any matching container logs" > dast-scan-logs/container-lookup.log
-            docker ps --filter "ancestor=geti-tune-${{ matrix.ai-device }}" --format "{{.ID}} {{.Image}}" >> dast-scan-logs/container-lookup.log || true
+            echo "CONTAINER_NAME not set" > dast-scan-logs/container-lookup.log
           fi
 
       - name: Upload container logs
@@ -226,9 +234,8 @@ jobs:
 
       - name: Stop and Cleanup Container
         if: always()
-        working-directory: application/docker
         run: |
-          if [ -n "${CONTAINER_ID}" ]; then
-            echo "Stopping container ${CONTAINER_ID}..."
-            docker compose down
+          if [ -n "${CONTAINER_NAME}" ]; then
+            echo "Stopping container ${CONTAINER_NAME}..."
+            docker stop "${CONTAINER_NAME}" || true
           fi

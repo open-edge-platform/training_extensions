@@ -36,7 +36,7 @@ const Header = () => {
                 alignItems={'center'}
             >
                 <View paddingEnd={'size-200'}>
-                    <Link to={paths.project.index({})}>Geti Tune</Link>
+                    <Link to={paths.project.index({})}>Geti</Link>
                 </View>
 
                 <TabList height={'100%'} UNSAFE_className={classes.tabList}>

@@ -1,0 +1,215 @@
+#!/usr/bin/env just --justfile
+import "recipes.justfile"
+
+# -------------------------------------------------------------------------------------------------
+# Build variables
+# -------------------------------------------------------------------------------------------------
+docker-build-context := shell("git -C " + justfile_directory() + " rev-parse --show-toplevel")
+docker-build-args := "--build-arg http_proxy --build-arg https_proxy --build-arg no_proxy --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY"
+application-name := "geti"
+
+# -------------------------------------------------------------------------------------------------
+# Runtime variables
+# -------------------------------------------------------------------------------------------------
+docker-run-args := "--env http_proxy --env https_proxy --env no_proxy --env HTTP_PROXY --env HTTPS_PROXY --env NO_PROXY"
+webrtc-ports := "50000-51000"
+data-volume := application-name + "-data"
+logs-volume := application-name + "-logs"
+
+# Build Geti Docker image for a specific training backend
+[arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
+[arg("tag", long="tag", short="t")]
+build-image accelerator="cpu" tag="latest": install-uv
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    IMAGE="{{ application-name }}-{{ accelerator }}"
+
+    CACHE_FROM_ARGS=""
+    if [[ -n "${BUILDX_CACHE_FROM:-}" ]]; then
+        for src in ${BUILDX_CACHE_FROM}; do
+            CACHE_FROM_ARGS="${CACHE_FROM_ARGS} --cache-from ${src}"
+        done
+    fi
+
+    CACHE_TO_ARGS=""
+    if [[ -n "${BUILDX_CACHE_TO:-}" ]]; then
+        for dst in ${BUILDX_CACHE_TO}; do
+            CACHE_TO_ARGS="${CACHE_TO_ARGS} --cache-to ${dst}"
+        done
+    fi
+
+    TAG_ARGS="--tag ${IMAGE}:{{ tag }}"
+
+    echo "Building docker image for accelerator: {{ accelerator }}"
+    docker buildx build \
+        {{ docker-build-args }} \
+        {{ docker-build-context }} \
+        -f "{{ justfile_directory() }}/docker/Dockerfile" \
+        --target "${IMAGE}" \
+        ${TAG_ARGS} \
+        ${CACHE_FROM_ARGS} \
+        ${CACHE_TO_ARGS} \
+        --load
+
+# Run Geti as a Docker container for a specific training backend
+[arg("accelerator", long="accelerator", short="a", pattern="cpu|xpu|cuda")]
+[arg("tag", long="tag", short="t")]
+[arg("host", long="host", short="h", help="Host address to bind the server to")]
+[arg("port", long="port", short="p", help="Port number to bind the server to")]
+[arg("container-name", long="name", short="n", help="Custom name for the container (defaults to geti-<accelerator>)")]
+[arg("detach", long="detach", short="d", value="true", help="Run the container in detached mode")]
+[arg("remove", long="remove", value="true", help="Automatically remove the container after it exits")]
+[arg("reload", long="reload", short="r", value="true", help="Automatically reload the container if it is already running")]
+[arg("shm-size", long="shm-size", help="Size of /dev/shm inside the container (e.g. 256m, 4g). Defaults to 8g")]
+[arg("passthrough-devices", long="passthrough-devices", help="Space-separated list of additional device paths to pass through to the container (e.g. '/dev/video0 /dev/video1')")]
+[arg("volumes", long="volumes", help="Space-separated list of host:container path mappings to mount (e.g. '/host/path:/container/path /host/path2:/container/path2')")]
+[arg("enable_coturn", long="coturn", help="Enable coturn server for WebRTC relay (only needed if the server is behind a restrictive NAT)")]
+[arg("coturn_host", long="coturn-host", help="Coturn server listening host (default: server's public IP)")]
+[arg("coturn_port", long="coturn-port", help="Coturn server listening port (default: 443)")]
+[arg("stun_server", long="stun", help="STUN server URL to use for WebRTC")]
+run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-name="" detach="false" remove="false" reload="false" shm-size="8g" passthrough-devices="" volumes="" enable_coturn="false" coturn_host="" coturn_port="443" stun_server="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    IMAGE_NAME="{{ application-name }}-{{ accelerator }}:{{ tag }}"
+    if [[ -n "{{ container-name }}" ]]; then
+        CONTAINER_NAME="{{ container-name }}"
+    else
+        CONTAINER_NAME="{{ application-name }}-{{ accelerator }}"
+    fi
+
+    if ! docker image inspect "${IMAGE_NAME}" > /dev/null 2>&1; then
+        echo "Error: Docker image '${IMAGE_NAME}' not found." >&2
+        echo "Build it first with: just build-image --accelerator {{ accelerator }} --tag {{ tag }}" >&2
+        exit 1
+    fi
+
+    EXISTING_CONTAINER_ID=$(docker ps -aq -f "name=^/${CONTAINER_NAME}$")
+    if [[ -n "$EXISTING_CONTAINER_ID" ]]; then
+        if [[ "{{ reload }}" == "true" ]]; then
+            # If a container with this name is running, stop it first
+            RUNNING_CONTAINER_ID=$(docker ps -q -f "name=^/${CONTAINER_NAME}$")
+            if [[ -n "$RUNNING_CONTAINER_ID" ]]; then
+                echo "Stopping existing running container: ${CONTAINER_NAME}"
+                docker stop "$RUNNING_CONTAINER_ID"
+            fi
+            echo "Removing existing container: ${CONTAINER_NAME}"
+            docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1 || true
+        else
+            echo "Error: A container named '${CONTAINER_NAME}' is already running." >&2
+            echo "Either pass --reload to stop and replace it, or specify a different --name." >&2
+            exit 1
+        fi
+    fi
+
+    DETACH_FLAG=""
+    if [[ "{{ detach }}" == "true" ]]; then
+        DETACH_FLAG="--detach"
+    fi
+
+    REMOVE_FLAG=""
+    if [[ "{{ remove }}" == "true" ]]; then
+        REMOVE_FLAG="--rm"
+    fi
+
+    # Resolve Python interpreter
+    if command -v uv > /dev/null && uv run python --version > /dev/null 2>&1; then
+        PYTHON="uv run python"
+    elif command -v python3 > /dev/null; then
+        PYTHON="python3"
+    else
+        echo "Error: No Python interpreter found. Run 'just install-uv' to install it through uv." >&2
+        exit 1
+    fi
+
+    COTURN_ENV=""
+    if [[ "{{ enable_coturn }}" == "true" ]]; then
+        if [[ -n "{{ coturn_host }}" ]]; then
+            COTURN_HOST="{{ coturn_host }}"
+        else
+            COTURN_HOST=`$PYTHON -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
+        fi
+        COTURN_ENV="--env COTURN_HOST=$COTURN_HOST --env COTURN_PORT={{ coturn_port }}"
+    fi
+
+    STUN_ENV=""
+    if [[ -n "{{ stun_server }}" ]]; then
+        STUN_ENV="--env STUN_SERVER={{ stun_server }}"
+    fi
+
+    HOST_IP=$($PYTHON -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()")
+
+    # For XPU acceleration, we need to pass through the appropriate render device and group permissions
+    extra_render_args=()
+    if [[ "{{ accelerator }}" == "xpu" ]]; then
+      RENDER_GID=$($PYTHON -c "import grp; print((grp.getgrnam('render').gr_gid) if any(g.gr_name == 'render' for g in grp.getgrall()) else '')")
+      RENDER_NODE=$($PYTHON -c "from pathlib import Path; print(render_nodes[0]) if (render_nodes := sorted(Path('/dev/dri').glob('renderD*'))) else ''")
+      if [[ -n "$RENDER_NODE" ]]; then
+        extra_render_args+=(--device "$RENDER_NODE")
+      fi
+      if [[ -n "$RENDER_GID" ]]; then
+        extra_render_args+=(--group-add "$RENDER_GID")
+      fi
+    fi
+
+    passthrough_devices_args=()
+    for dev in {{ passthrough-devices }}; do
+        if [[ -e "$dev" ]]; then
+            passthrough_devices_args+=(--device "$dev":"$dev")
+        else
+            echo "Warning: device '$dev' not found, skipping." >&2
+        fi
+    done
+
+    SHM_SIZE_FLAG=""
+    if [[ -n "{{ shm-size }}" ]]; then
+        SHM_SIZE_FLAG="--shm-size {{ shm-size }}"
+    fi
+
+    # For GPU acceleration on WSL2, it's necessary to pass through the /dev/dxg device and mount the WSL libraries
+    WSL_LIB_FLAG=""
+    if [[ "{{ accelerator }}" != "cpu" ]]; then
+        if [[ -e "/dev/dxg" ]]; then
+            passthrough_devices_args+=(--device "/dev/dxg":"/dev/dxg")
+        fi
+        if [[ -d "/usr/lib/wsl" ]]; then
+            WSL_LIB_FLAG="--volume /usr/lib/wsl:/usr/lib/wsl:ro"
+        fi
+    fi
+
+    volume_args=()
+    for vol in {{ volumes }}; do
+        volume_args+=(--volume "$vol")
+    done
+
+    echo "Running docker container from image: ${IMAGE_NAME}"
+    docker run \
+        {{ docker-run-args }} \
+        --publish {{ webrtc-ports }}:{{ webrtc-ports }}/udp \
+        --publish {{ port }}:{{ port }} \
+        --env HOST={{ host }} \
+        --env PORT={{ port }} \
+        --env WEBRTC_ADVERTISE_IP="${HOST_IP}" \
+        $COTURN_ENV \
+        $STUN_ENV \
+        --sysctl net.ipv4.ip_local_port_range="{{ replace(webrtc-ports, '-', ' ') }}" \
+        --volume {{ data-volume }}:/application/data/ \
+        --volume {{ logs-volume }}:/application/logs/ \
+        "${volume_args[@]}" \
+        $WSL_LIB_FLAG \
+        "${passthrough_devices_args[@]}" \
+        "${extra_render_args[@]}" \
+        $SHM_SIZE_FLAG \
+        --name "${CONTAINER_NAME}" \
+        $DETACH_FLAG \
+        $REMOVE_FLAG \
+        "${IMAGE_NAME}"
+
+    if [[ "{{ detach }}" == "true" ]]; then
+        echo "Container started: ${CONTAINER_NAME}"
+    fi
+
+# Remove persisted data and logs volumes
+clean-volumes:
+    docker volume rm {{ data-volume }} {{ logs-volume }} || true

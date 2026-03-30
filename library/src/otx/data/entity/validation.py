@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Validation functions for OTX data entities."""
@@ -18,35 +18,31 @@ if TYPE_CHECKING:
 
 def validate_images(image_batch: torch.Tensor | list[torch.Tensor]) -> None:
     """Validate the image batch."""
-    if not isinstance(image_batch, list) and not isinstance(image_batch, torch.Tensor):
-        msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
+    if not isinstance(image_batch, (torch.Tensor, list)):
+        msg = f"Image batch must be a torch.Tensor or a list of torch.Tensors. Got {type(image_batch)}"
         raise TypeError(msg)
     if isinstance(image_batch, torch.Tensor):
-        if image_batch.dtype not in (torch.float32, torch.uint8):
-            msg = f"Image batch must have dtype float32 or uint8. Found {image_batch.dtype}"
+        if image_batch.dtype != torch.float32:
+            msg = f"Image batch must have dtype float32. Found {image_batch.dtype}"
             raise ValueError(msg)
         if image_batch.ndim != 4:
-            msg = "Image batch must have 4 dimensions"
+            msg = f"Image batch must have 4 dimensions (BCHW), got {image_batch.ndim}"
             raise ValueError(msg)
         if image_batch.shape[1] not in [1, 3]:
-            msg = "Image batch must have 1 or 3 channels"
+            msg = f"Image batch must have 1 or 3 channels, got {image_batch.shape[1]}"
             raise ValueError(msg)
-    else:
-        if not all(isinstance(image, torch.Tensor) for image in image_batch):
-            msg = "Image batch must be a list of torch tensors"
+    if isinstance(image_batch, list):
+        if not all(isinstance(img, torch.Tensor) for img in image_batch):
+            msg = "All items in image batch list must be torch.Tensors"
             raise TypeError(msg)
-        dtype = image_batch[0].dtype
-        if dtype not in (torch.float32, torch.uint8):
-            msg = "Image batch must have dtype float32 or uint8"
+        if not all(img.dtype == torch.float32 for img in image_batch):
+            msg = "All images in batch must have dtype float32"
             raise ValueError(msg)
-        if not all(image.dtype == dtype for image in image_batch):
-            msg = f"Not all tensors have the same dtype: expected {dtype}"
-            raise TypeError(msg)
-        if not all(image.ndim == 3 for image in image_batch):
-            msg = "Image batch must have 3 dimensions"
+        if not all(img.ndim == 3 for img in image_batch):
+            msg = "All images in batch must have 3 dimensions (CHW)"
             raise ValueError(msg)
-        if not all(image.shape[0] in [1, 3] for image in image_batch):
-            msg = "Image batch must have 1 or 3 channels"
+        if not all(img.shape[0] in [1, 3] for img in image_batch):
+            msg = "All images in batch must have 1 or 3 channels"
             raise ValueError(msg)
 
 

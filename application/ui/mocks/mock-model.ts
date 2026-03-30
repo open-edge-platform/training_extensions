@@ -42,10 +42,11 @@ export const getMockedModelArchitecture = (
     stats: {
         gigaflops: 91,
         trainable_parameters: 31,
-        performance_ratings: {
-            accuracy: 2,
-            training_time: 2,
-            inference_speed: 2,
+        benchmark_metrics: {
+            imagenet_top1_accuracy: 2,
+            imagenet_top5_accuracy: 5,
+            coco_map_50_95: 2,
+            coco_map_50: 2,
         },
     },
     support_status: 'active',

@@ -76,7 +76,7 @@ def get_model(
 
 
 @router.get(
-    "/{model_id}/binary",
+    "/{model_id}/variants/{model_variant_id}/binary",
     responses={
         status.HTTP_200_OK: {"description": "Model weights of the model variant (zip archive)"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
@@ -85,9 +85,9 @@ def get_model(
 )
 def download_model_binary(
     project: Annotated[ProjectView, Depends(get_project)],
-    model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-    model_variant_id: Annotated[ModelVariantID, Query()],
+    model_id: ModelID,
+    model_variant_id: ModelVariantID,
 ) -> StreamingResponse:
     """Download trained model weights of a desired model variant as a zip archive"""
     files_exist, paths = model_service.get_model_binary_files(

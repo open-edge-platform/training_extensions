@@ -1,4 +1,4 @@
-name: Geti Tune server checks
+name: Geti server checks
 on:
   merge_group:
     branches:

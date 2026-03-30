@@ -74,7 +74,12 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
     };
 
     const handleDelete = () => {
-        deleteModelMutation.mutate({ params: { path: { project_id: projectId, model_id: model.id } } });
+        deleteModelMutation.mutate({
+            params: {
+                path: { project_id: projectId, model_id: model.id },
+                query: { files_only: true },
+            },
+        });
     };
 
     return (
@@ -104,13 +109,13 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
             <DialogContainer onDismiss={() => setIsDialogOpen(null)}>
                 {isDialogOpen === DIALOG_TYPES.DELETE && (
                     <AlertDialog
-                        title='Delete model'
+                        title='Delete model files'
                         variant='destructive'
-                        primaryActionLabel='Delete'
+                        primaryActionLabel='Delete files'
                         onPrimaryAction={handleDelete}
                         cancelLabel='Cancel'
                     >
-                        {`Are you sure you want to delete model "${model.name ?? 'Unnamed Model'}"?`}
+                        {`Are you sure you want to delete files for model "${model.name ?? 'Unnamed Model'}"?`}
                     </AlertDialog>
                 )}
             </DialogContainer>

@@ -5,9 +5,6 @@ on:
     branches:
       - develop
       - release/**
-  push:
-    tags:
-      - "v*"
   pull_request:
   workflow_call:
   workflow_dispatch:
@@ -20,7 +17,7 @@ concurrency:
 
 jobs:
   # Determines if workflow should execute based on event type and changed paths
-  # If push or workflow_dispatch -> always run
+  # If workflow_dispatch or workflow_call -> always run
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
@@ -28,8 +25,7 @@ jobs:
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
-      - &checkout
-        name: Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -46,223 +42,161 @@ jobs:
               - .github/**
 
   build:
-    name: Build and upload docker image (${{ matrix.device }})
+    name: Build and push docker image (${{ matrix.device }})
     runs-on: overflow
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
+      fail-fast: false
       matrix:
-        device: [cpu, xpu, gpu]
+        device: [cpu, xpu, cuda]
     permissions:
       contents: read
+      packages: write
+      pull-requests: write
     steps:
-      - *checkout
-
-      - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          type: "initial"
+          persist-credentials: false
 
-      - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
+      - name: Read application version
+        id: version
+        run: |
+          echo "value=$(cat application/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
-          type: "pre-build"
-
-      # Install the latest Docker, since the version available by default on the runners may be outdated
-      - name: Set up Docker
-        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
-
-      - name: Set up Docker Compose
-        uses: docker/setup-compose-action@112d3e30db3bf437d207fea57f22510569d1ab97 # v2.0.0
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
+          images: ghcr.io/open-edge-platform/geti-${{ matrix.device }}
           tags: |
             type=sha
             type=ref,event=branch
             type=ref,event=pr
+            type=raw,value=${{ steps.version.outputs.value }}-dev-${{ steps.version.outputs.short_sha }},enable=${{ github.event_name == 'pull_request' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
-      - name: Build image for ${{ matrix.device }}
-        working-directory: application/docker
-        run: |
-          # Build and tag images using provided metadata
-          for TAG in $TAGS ; do
-              AI_DEVICE=${DEVICE} TAG=${TAG} docker compose build
-          done
+      - name: Build Docker image
+        id: docker_build
+        uses: ./.github/actions/docker-build
+        with:
+          device: ${{ matrix.device }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: ${{ github.event_name != 'pull_request' }}
+          # Fork PRs cannot write packages to the upstream org, so disable
+          # cache export to avoid 403 errors from GHCR.
+          cache-write: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request' }}
+
+      - name: Smoke-test docker image
+        if: github.event_name == 'pull_request'
         env:
-          TAGS: ${{ steps.meta.outputs.tags }}
+          IMAGE: ${{ steps.docker_build.outputs.image-name }}
           DEVICE: ${{ matrix.device }}
-          PUBLIC_API_BASE_URL: "/"
-
-      - name: Run simple checks on the built image
-        working-directory: application/docker
         run: |
-          # Get the first tag for testing
-          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
-          echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
+          CONTAINER_NAME="geti-healthcheck-${DEVICE}"
 
-          # Start the container in detached mode
-          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 7860:7860 geti-tune-${DEVICE}:${FIRST_TAG})
-          echo "Started container: $CONTAINER_ID"
+          echo "Starting container from ${IMAGE} ..."
+          docker run -d --name "${CONTAINER_NAME}" -p 7860:7860 "${IMAGE}"
 
-          # Function to cleanup container on exit
-          cleanup() {
-              echo "Cleaning up container: $CONTAINER_ID"
-              docker stop $CONTAINER_ID || true
-          }
-          trap cleanup EXIT
-
-          TEST_URL="localhost:7860"
-          # Wait for container to be ready (max 60 seconds)
-          echo "Waiting for container to be ready..."
-          for i in {1..12}; do
-              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
-                  echo "✅ Health check passed!"
-                  break
-              fi
-              if [ $i -eq 12 ]; then
-                  echo "❌ Health check failed after 60 seconds"
-                  docker logs $CONTAINER_ID
-                  exit 1
-              fi
-              echo "Attempt $i/12 - waiting 5 seconds..."
-              sleep 5
+          # Wait up to 60 seconds for the /health endpoint to respond
+          echo "Waiting for /health endpoint ..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:7860/health; then
+              echo ""
+              echo "Backend health check passed!"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Backend health check failed after 60 seconds."
+              docker logs "${CONTAINER_NAME}"
+              docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
+              exit 1
+            fi
+            sleep 2
           done
 
-          EXPECTED_TITLE="Geti Tune"
+          # Verify the UI is being served
+          TEST_URL="http://localhost:7860"
+          EXPECTED_TITLE="Geti"
           echo "Checking HTML title..."
 
           HTML_CONTENT=$(curl -sf $TEST_URL)
           if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
-              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
+            echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
           else
-              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
-              echo "Actual HTML content:"
-              echo "$HTML_CONTENT"
-              exit 1
+            echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
+            echo "Actual HTML content:"
+            echo "$HTML_CONTENT"
+            docker logs "${CONTAINER_NAME}"
+            docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
+            exit 1
           fi
 
-          echo "All checks passed successfully!"
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DEVICE: ${{ matrix.device }}
+          docker rm -f "${CONTAINER_NAME}" > /dev/null 2>&1
 
-      - name: Get Docker image sizes
-        working-directory: application/docker
-        id: image-sizes
+      - name: Get Docker image size
         if: github.event_name == 'pull_request'
+        id: image_size
+        env:
+          IMAGE: ${{ steps.docker_build.outputs.image-name }}
         run: |
-          mkdir -p image-sizes
+          SIZE_BYTES=$(docker image inspect "${IMAGE}" --format='{{.Size}}')
+          SIZE_MB=$(awk "BEGIN {printf \"%.1f\", ${SIZE_BYTES} / 1024 / 1024}")
+          SIZE_GB=$(awk "BEGIN {printf \"%.2f\", ${SIZE_BYTES} / 1024 / 1024 / 1024}")
+          echo "bytes=${SIZE_BYTES}" >> "$GITHUB_OUTPUT"
+          echo "human=${SIZE_MB} MB (${SIZE_GB} GB)" >> "$GITHUB_OUTPUT"
 
-          echo "| Image | Size |" > image-sizes/${DEVICE}.md
-          echo "|-------|------|" >> image-sizes/${DEVICE}.md
+      - name: Post image size comment
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          DEVICE: ${{ matrix.device }}
+          SIZE_HUMAN: ${{ steps.image_size.outputs.human }}
+        run: |
+          MARKER="<!-- docker-image-size -->"
+          HEADER="${MARKER}
+          ### 🐳 Docker image sizes
 
-          for TAG in $TAGS ; do
-            IMAGE="geti-tune-${DEVICE}:${TAG}"
-            if docker image inspect "$IMAGE" >/dev/null 2>&1; then
-              size_bytes=$(docker image inspect "$IMAGE" --format='{{.Size}}')
-              size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
-              echo "| $IMAGE | $size_readable |" >> image-sizes/${DEVICE}.md
+          | Device | Size |
+          |--------|------|"
+          NEW_ROW="| \`${DEVICE}\` | ${SIZE_HUMAN} |"
+
+          # Find the shared comment
+          COMMENT_ID=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" \
+          | head -n1)
+
+          if [ -n "${COMMENT_ID}" ]; then
+            # Read the current body, replace or append the device row
+            EXISTING=$(gh api "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" --jq .body)
+            if echo "${EXISTING}" | grep -q "| \`${DEVICE}\`"; then
+              BODY=$(echo "${EXISTING}" | sed "s/| \`${DEVICE}\` |.*/${NEW_ROW}/")
+            else
+              BODY="${EXISTING}
+          ${NEW_ROW}"
             fi
-          done
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DEVICE: ${{ matrix.device }}
-
-      - name: Upload image sizes
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: image-sizes-${{ matrix.device }}
-          path: application/docker/image-sizes/${{ matrix.device }}.md
-          retention-days: 1
-
-      - name: Extract first tag
-        id: first-tag
-        run: |
-          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
-          echo "tag=${FIRST_TAG}" >> $GITHUB_OUTPUT
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-
-      - name: Upload image as artifact
-        # Image upload is heavy and slow, so we skip it on PRs
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714
-        with:
-          image: "geti-tune-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
-          retention_days: "3"
-        continue-on-error: true
-        env:
-          FIRST_TAG: ${{ steps.first-tag.outputs.tag }}
-
-  comment-sizes:
-    name: Comment PR with all image sizes
-    needs: build
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: overflow
-    permissions:
-      pull-requests: write
-    continue-on-error: true
-    steps:
-      - name: Download all image size artifacts
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
-        with:
-          pattern: image-sizes-*
-          merge-multiple: true
-          path: image-sizes
-
-      - name: Combine image sizes and comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-
-            // Read all device size files
-            const sizesDir = 'image-sizes';
-            const files = fs.readdirSync(sizesDir).sort();
-
-            let comment = '## Docker Image Sizes\n\n';
-
-            for (const file of files) {
-              const device = path.basename(file, '.md');
-              const content = fs.readFileSync(path.join(sizesDir, file), 'utf8');
-              comment += `### ${device.toUpperCase()}\n\n${content}\n\n`;
-            }
-
-            // Find existing comment
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existingComment = comments.data.find(comment =>
-              comment.body.includes('## Docker Image Sizes')
-            );
-
-            if (existingComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existingComment.id,
-                body: comment
-              });
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: comment
-              });
-            }
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" \
+              -f body="${BODY}"
+          else
+            BODY="${HEADER}
+          ${NEW_ROW}"
+            gh pr comment "${PR_NUMBER}" --body "${BODY}"
+          fi
 
   required_check:
     name: Required Check build

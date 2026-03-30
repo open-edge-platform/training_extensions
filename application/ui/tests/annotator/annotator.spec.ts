@@ -8,10 +8,11 @@ import { fileURLToPath } from 'url';
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedMediaImage } from 'mocks/mock-media';
+import { getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { AnnotationDTO } from '../../src/constants/shared-types';
+import { AnnotationDTO, PredictionDTO } from '../../src/constants/shared-types';
 import { Polygon } from '../../src/shared/types';
 import { http, test } from '../fixtures';
 
@@ -52,14 +53,14 @@ test.describe('Annotator', () => {
         );
     });
 
-    test('Add and change annotations labels', async ({ page, boundingBoxTool }) => {
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    test('Add and change annotations labels', async ({ page, boundingBoxTool, annotatorPage }) => {
+        await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
         await test.step('Draw an annotation', async () => {
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+
+            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
         });
 
         await test.step('Change annotation label by clicking label badge', async () => {
@@ -73,7 +74,7 @@ test.describe('Annotator', () => {
 
             await page.getByRole('button', { name: `Label ${blueLabel.name}` }).click();
 
-            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(1);
             await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toHaveAttribute(
                 'aria-pressed',
                 'true'
@@ -84,7 +85,7 @@ test.describe('Annotator', () => {
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox({ x: 300, y: 200, width: 150, height: 150 });
 
-            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(2);
         });
 
         await test.step('Change second annotation to red label', async () => {
@@ -92,21 +93,17 @@ test.describe('Annotator', () => {
             await page.getByLabel('annotation rect').nth(3).click();
             await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
         });
 
         await test.step('Verify both annotations have correct labels', async () => {
-            await page.getByLabel('annotation rect').nth(2).click();
-            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
-
-            await page.getByLabel('annotation rect').nth(3).click();
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(1);
+            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
         });
     });
 
-    test('change multiple labels at once', async ({ page, boundingBoxTool }) => {
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    test('change multiple labels at once', async ({ page, boundingBoxTool, annotatorPage }) => {
+        await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
         const annotations = [
             { x: 100, y: 100, width: 150, height: 150 },
@@ -146,9 +143,8 @@ test.describe('Annotator', () => {
     });
 
     test.describe('Handles empty label', () => {
-        test('label assignment', async ({ page, boundingBoxTool }) => {
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        test('label assignment', async ({ page, boundingBoxTool, annotatorPage }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             const annotations = [
                 { x: 100, y: 100, width: 150, height: 150 },
@@ -183,101 +179,10 @@ test.describe('Annotator', () => {
             });
         });
 
-        test('renders "No object" when server returns empty annotations list', async ({ page }) => {
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        test('renders "No object" when server returns empty annotations list', async ({ page, annotatorPage }) => {
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await expect(page.getByLabel(`label No object background`)).toHaveCount(1);
-        });
-    });
-
-    test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
-        const predictions = [
-            {
-                shape: {
-                    type: 'rectangle',
-                    x: 3,
-                    y: 0,
-                    width: 780,
-                    height: 421,
-                },
-                labels: [{ id: blueLabel.id }],
-                confidences: [0.9619140625],
-            },
-            {
-                shape: {
-                    type: 'rectangle',
-                    x: 1007,
-                    y: 624,
-                    width: 909,
-                    height: 456,
-                },
-                labels: [{ id: blueLabel.id }],
-                confidences: [0.9599609375],
-            },
-            {
-                shape: {
-                    type: 'rectangle',
-                    x: 291,
-                    y: 0,
-                    width: 1553,
-                    height: 889,
-                },
-                labels: [{ id: blueLabel.id }],
-                confidences: [0.904296875],
-            },
-        ] satisfies AnnotationDTO[];
-
-        network.use(
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
-                return HttpResponse.json({
-                    annotations: predictions,
-                    user_reviewed: false,
-                    prediction_model_id: '123',
-                });
-            })
-        );
-
-        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
-
-        await test.step('Draws an annotation in annotation mode', async () => {
-            await expect(annotatorPage.getAnnotationMode('Annotation')).toHaveAttribute('aria-pressed', 'true');
-            await expect(annotatorPage.getAnnotationMode('Prediction')).toHaveAttribute('aria-pressed', 'false');
-
-            const annotation = { x: 100, y: 100, width: 150, height: 150 };
-
-            await boundingBoxTool.selectTool();
-            await boundingBoxTool.drawBoundingBox(annotation);
-
-            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
-
-            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
-
-            expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
-        });
-
-        await test.step('Displays server prediction in prediction mode', async () => {
-            await annotatorPage.openPredictionMode();
-
-            await expect(annotatorPage.getAnnotationMode('Prediction')).toHaveAttribute('aria-pressed', 'true');
-            await expect(annotatorPage.getAnnotationMode('Annotation')).toHaveAttribute('aria-pressed', 'false');
-
-            await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
-            await expect(page.getByLabel('Labels')).toBeHidden();
-
-            await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
-            expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);
-
-            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
-            await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(0);
-        });
-
-        await test.step('Hides predictions in annotation mode, restores annotation', async () => {
-            await annotatorPage.openAnnotationMode();
-
-            expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
-            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
         });
     });
 
@@ -328,8 +233,7 @@ test.describe('Annotator', () => {
             })
         );
 
-        await page.goto(`/projects/${mockedSegmentationProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+        await annotatorPage.goto(mockedSegmentationProject.id, 'media-1');
 
         await test.step('Select polygon tool on first media item', async () => {
             await polygonTool.selectPolygonTool();
@@ -346,7 +250,7 @@ test.describe('Annotator', () => {
             // If polygon tool persisted, we should be able to draw immediately without reselecting
             await polygonTool.drawPolygon(smallPolygon);
 
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(1);
         });
 
         await test.step('Navigate back to first media item', async () => {
@@ -360,7 +264,7 @@ test.describe('Annotator', () => {
             // Draw another polygon to verify tool is still active
             await polygonTool.drawPolygon(smallPolygon);
 
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
+            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(1);
         });
 
         await test.step('Verify tool resets when switching modes', async () => {
@@ -377,7 +281,389 @@ test.describe('Annotator', () => {
 
             // Verify polygon tool is active by drawing a polygon without manually selecting it
             await polygonTool.drawPolygon(smallPolygon);
-            await expect(page.getByLabel(`label ${redLabel.name}`).nth(2)).toBeInViewport();
+            expect(await annotatorPage.getAnnotationsListItems('annotation polygon')).toHaveLength(2);
+        });
+    });
+
+    test('Annotations reset correctly when switching media items', async ({ page, annotatorPage, network }) => {
+        const mediaItems = [
+            getMockedMediaImage({ id: 'media-reset-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-reset-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+
+        const mediaAnnotations: Record<string, AnnotationDTO[]> = {
+            'media-reset-1': [
+                {
+                    shape: {
+                        type: 'rectangle',
+                        x: 80,
+                        y: 120,
+                        width: 140,
+                        height: 120,
+                    },
+                    labels: [{ id: redLabel.id }],
+                },
+            ],
+            'media-reset-2': [],
+        };
+
+        network.use(
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ params }) => {
+                return HttpResponse.json({
+                    annotations: mediaAnnotations[params.media_id] ?? [],
+                    user_reviewed: true,
+                });
+            })
+        );
+
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-reset-1');
+
+        await test.step('Check first media annotations', async () => {
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+        });
+
+        await test.step('Switching to media 2 clears media 1 annotations', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+        });
+
+        await test.step('Switching back restores media 1 annotations', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+        });
+    });
+
+    test('Selected annotations reset when switching media items', async ({ page, annotatorPage, network }) => {
+        const mediaItems = [
+            getMockedMediaImage({ id: 'media-selection-reset-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-selection-reset-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+
+        const mediaAnnotations: Record<string, AnnotationDTO[]> = {
+            'media-selection-reset-1': [
+                {
+                    shape: {
+                        type: 'rectangle',
+                        x: 80,
+                        y: 120,
+                        width: 140,
+                        height: 120,
+                    },
+                    labels: [{ id: redLabel.id }],
+                },
+            ],
+            'media-selection-reset-2': [],
+        };
+
+        network.use(
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ params }) => {
+                return HttpResponse.json({
+                    annotations: mediaAnnotations[params.media_id] ?? [],
+                    user_reviewed: true,
+                });
+            })
+        );
+
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-selection-reset-1');
+
+        await test.step('Select annotation on media 1', async () => {
+            await page.getByRole('button', { name: 'selection tool' }).click();
+            await page.getByLabel('annotation rect').nth(1).click();
+
+            const selectedAnnotations = annotatorPage.getAnnotationsList().getByLabel('selected annotation');
+            await expect(selectedAnnotations).toHaveCount(1);
+        });
+
+        await test.step('Switch to media 2 and back to media 1 resets selection', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+
+            await sidebarItems.getByRole('img', { name: 'item-1.jpg' }).click();
+            await expect(annotatorPage.getAnnotationsList()).toBeVisible();
+
+            expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+
+            const selectedAnnotations = annotatorPage.getAnnotationsList().getByLabel('selected annotation');
+            await expect(selectedAnnotations).toHaveCount(0);
+        });
+    });
+
+    test('Selected label persists when switching media items', async ({ page, network, annotatorPage }) => {
+        const mediaItems = [
+            getMockedMediaImage({ id: 'media-1', name: 'item-1.jpg', width: 1920, height: 1080 }),
+            getMockedMediaImage({ id: 'media-2', name: 'item-2.jpg', width: 1920, height: 1080 }),
+        ];
+
+        network.use(
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: mediaItems,
+                    pagination: {
+                        offset: 0,
+                        limit: 10,
+                        count: mediaItems.length,
+                        total: mediaItems.length,
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', () => {
+                return HttpResponse.json({
+                    annotations: [],
+                    user_reviewed: true,
+                });
+            })
+        );
+
+        await annotatorPage.goto(mockedDetectionProject.id, 'media-1');
+
+        await test.step('Select non-default label on first media item', async () => {
+            const blueLabelButton = page.getByRole('button', { name: `Label ${blueLabel.name}` });
+            await blueLabelButton.click();
+
+            await expect(blueLabelButton).toHaveAttribute('aria-pressed', 'true');
+        });
+
+        await test.step('Switching media keeps selected label active', async () => {
+            const sidebarItems = page.getByRole('listbox', { name: 'sidebar-items' });
+            await sidebarItems.getByRole('img', { name: 'item-2.jpg' }).click();
+
+            await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toHaveAttribute(
+                'aria-pressed',
+                'true'
+            );
+        });
+    });
+
+    test.describe('Annotation and prediction modes', () => {
+        const predictions = [
+            {
+                shape: {
+                    type: 'rectangle',
+                    x: 3,
+                    y: 0,
+                    width: 780,
+                    height: 421,
+                },
+                labels: [{ id: blueLabel.id }],
+                confidences: [0.9619140625],
+            },
+            {
+                shape: {
+                    type: 'rectangle',
+                    x: 1007,
+                    y: 624,
+                    width: 909,
+                    height: 456,
+                },
+                labels: [{ id: blueLabel.id }],
+                confidences: [0.9599609375],
+            },
+            {
+                shape: {
+                    type: 'rectangle',
+                    x: 291,
+                    y: 0,
+                    width: 1553,
+                    height: 889,
+                },
+                labels: [{ id: blueLabel.id }],
+                confidences: [0.904296875],
+            },
+        ] satisfies PredictionDTO[];
+
+        test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json({
+                        annotations: [],
+                        user_reviewed: true,
+                    });
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+            await test.step('Draws an annotation in annotation mode', async () => {
+                await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+                await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+
+                const annotation = { x: 100, y: 100, width: 150, height: 150 };
+
+                await boundingBoxTool.selectTool();
+                await boundingBoxTool.drawBoundingBox(annotation);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
+
+                expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
+            });
+
+            await test.step('Displays server prediction in prediction mode', async () => {
+                await annotatorPage.openPredictionMode();
+
+                await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+                await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
+
+                await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
+                await expect(page.getByLabel('Labels')).toBeHidden();
+
+                await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
+                expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);
+
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(0);
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(0);
+            });
+
+            await test.step('Hides predictions in annotation mode, restores annotation', async () => {
+                await annotatorPage.openAnnotationMode();
+
+                expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(0);
+                expect(await annotatorPage.getAnnotationsListItems('annotation rect')).toHaveLength(1);
+            });
+
+            await test.step('Edits prediction by overwriting existing annotations with prediction in annotation mode', async () => {
+                await annotatorPage.openPredictionMode();
+                await annotatorPage.editPrediction();
+
+                await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+                await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+
+                await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeHidden();
+            });
+        });
+
+        test('Automatically switches to annotation mode when there are annotations, no matter predictions', async ({
+            annotatorPage,
+            page,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json({
+                        annotations: [
+                            {
+                                shape: {
+                                    type: 'rectangle',
+                                    x: 1007,
+                                    y: 624,
+                                    width: 909,
+                                    height: 456,
+                                },
+                                labels: [{ id: redLabel.id }],
+                            },
+                        ],
+                        user_reviewed: true,
+                    });
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+
+            await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
+        });
+
+        test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
+            annotatorPage,
+            page,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json(
+                        {
+                            // @ts-expect-error We care only about mocking detail
+                            detail: 'Media has not been annotated yet',
+                        },
+                        { status: 404 }
+                    );
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: {
+                                    id: '123',
+                                },
+                                prediction: predictions,
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+
+            await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
         });
     });
 });

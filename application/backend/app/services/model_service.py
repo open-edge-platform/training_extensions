@@ -19,7 +19,13 @@ from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB, ModelVar
 from app.models import EvaluationResult, ModelRevision, ModelVariant, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository, ModelVariantRepository
+from app.repositories import (
+    EvaluationRepository,
+    LabelRepository,
+    ModelRevisionRepository,
+    ModelVariantRepository,
+    PipelineRepository,
+)
 from app.services.dataset_revision_service import DatasetRevisionService
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
@@ -235,6 +241,10 @@ class ModelService(BaseSessionManagedService):
         if model_to_delete is None:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
+        active_pipeline = PipelineRepository(db=self.db_session).get_active_pipeline()
+        if active_pipeline and active_pipeline.model_revision_id == str(model_id):
+            raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
         path = self._projects_dir / str(project_id) / "models" / str(model_id)
         if path.exists():
             shutil.rmtree(path)
@@ -270,12 +280,17 @@ class ModelService(BaseSessionManagedService):
 
         Raises:
             ResourceNotFoundError: If no model with the given model_id is found.
+            ResourceInUseError: If the model is currently active in a pipeline.
         """
-        # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         model_rev_db = model_rev_repo.get_by_id(str(model_id))
         if model_rev_db is None:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        active_pipeline = PipelineRepository(db=self.db_session).get_active_pipeline()
+        if active_pipeline and active_pipeline.model_revision_id == str(model_id):
+            raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
 
@@ -442,6 +457,7 @@ class ModelService(BaseSessionManagedService):
         format: ModelFormat,
         precision: ModelPrecision,
         quantization_info: dict | None = None,
+        model_variant_id: UUID | None = None,
     ) -> ModelVariant:
         """
         Create a new model variant record in the database.
@@ -451,12 +467,14 @@ class ModelService(BaseSessionManagedService):
             format: The format of the model variant.
             precision: The precision of the model variant.
             quantization_info: Optional quantization metadata.
+            model_variant_id: Optional UUID for the model variant. If not provided, a new UUID will be generated.
 
         Returns:
             ModelVariant: The created model variant.
         """
         model_variant_repo = ModelVariantRepository(db=self.db_session)
         variant_db = ModelVariantDB(
+            id=str(model_variant_id) if model_variant_id else None,
             model_revision_id=str(model_revision_id),
             format=format.value,
             precision=precision.value,

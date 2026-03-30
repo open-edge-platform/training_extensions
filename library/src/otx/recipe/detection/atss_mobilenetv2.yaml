@@ -4,7 +4,6 @@ model:
   init_args:
     model_name: atss_mobilenetv2
     label_info: 80
-
     optimizer:
       class_path: torch.optim.SGD
       init_args:

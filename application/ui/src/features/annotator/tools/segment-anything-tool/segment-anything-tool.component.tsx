@@ -1,14 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
+import { toast } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import type { Label } from '../../../../constants/shared-types';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { useNextMediaItem } from '../../../dataset/media-preview/utils';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
@@ -56,7 +56,6 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 
 export const SegmentAnythingTool = () => {
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
-    const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
@@ -65,19 +64,16 @@ export const SegmentAnythingTool = () => {
     const nextMediaItem = useNextMediaItem(mediaItem, items);
     const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { isLoading, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
+    const { isLoading, isError, error, decodingQueryFn } = useSegmentAnythingModel({ nextMediaItem });
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
     const cancellableThrottledDecodingQueryFn = useWithCancel(throttledDecodingQueryFn);
 
     const canvasRef = useRef<SVGRectElement>(null);
+    const hasShownErrorToastRef = useRef(false);
 
     const clampPoint = clampPointBetweenImage(image);
 
     const handleMouseMove = (event: PointerEvent<SVGSVGElement>) => {
-        if (acceptedShapes !== null) {
-            return;
-        }
-
         if (!canvasRef.current) {
             return;
         }
@@ -86,21 +82,9 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
-        cancellableThrottledDecodingQueryFn
-            .call([{ ...point, positive: true }])
-            .then((shapes) => {
-                setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
-            })
-            .catch(() => {
-                // If getting decoding went wrong we set an empty preview and
-                // start to compute the next decoding
-                return [];
-            });
-    };
-
-    const handleAddAnnotations = (shapes: Shape[], label: Label) => {
-        addAndSelectAnnotations(shapes, [label]);
-        setPreviewShapes([]);
+        cancellableThrottledDecodingQueryFn.call([{ ...point, positive: true }]).then((shapes) => {
+            setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
+        });
     };
 
     const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
@@ -116,13 +100,9 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        if (selectedLabel == null) {
-            setAcceptedShapes(previewShapes);
-
-            return;
-        }
-
-        handleAddAnnotations(previewShapes, selectedLabel);
+        cancellableThrottledDecodingQueryFn.cancel();
+        addAndSelectAnnotations(previewShapes, selectedLabel ? [selectedLabel] : []);
+        setPreviewShapes([]);
     };
 
     const handlePointerLeave = () => {
@@ -130,13 +110,29 @@ export const SegmentAnythingTool = () => {
         setPreviewShapes([]);
     };
 
-    const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
+    const previewAnnotations = previewShapes.map((shape, idx): Annotation => {
         return {
             shape,
             labels: selectedLabel ? [selectedLabel] : [],
             id: `${idx}`,
         };
     });
+
+    useEffect(() => {
+        if (isError && !hasShownErrorToastRef.current) {
+            toast({
+                type: 'error',
+                message: `
+                Error in Segment Anything tool: ${error?.message ?? 'Unknown error, please try refreshing the page.'}`,
+            });
+
+            hasShownErrorToastRef.current = true;
+        }
+
+        if (!isError) {
+            hasShownErrorToastRef.current = false;
+        }
+    }, [isError, error]);
 
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;

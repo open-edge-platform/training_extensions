@@ -12,12 +12,12 @@ export class JobsPage {
         await this.page.goto(paths.project.models({ projectId }));
     }
 
-    getCurrentTrainingSection() {
-        return this.page.getByRole('heading', { name: 'Current training' });
+    getCurrentRunningSection() {
+        return this.page.getByRole('heading', { name: 'Currently running' });
     }
 
-    getTrainingTag() {
-        return this.page.getByRole('button', { name: 'Training', exact: true });
+    getRunningTag() {
+        return this.page.getByRole('button', { name: 'Running', exact: true });
     }
 
     getStatusTag() {
@@ -25,14 +25,14 @@ export class JobsPage {
     }
 
     getCancelButton() {
-        return this.page.getByRole('button', { name: 'Cancel training job' });
+        return this.page.getByRole('button', { name: 'Cancel running job' });
     }
 
     getConfirmCancelDialog() {
-        return this.page.getByRole('alertdialog', { name: 'Cancel training' });
+        return this.page.getByRole('alertdialog', { name: 'Stop running job' });
     }
 
-    async cancelTrainingJob() {
+    async cancelRunningJob() {
         await this.getCancelButton().click();
         await this.getConfirmCancelDialog().getByRole('button', { name: 'Cancel' }).click();
     }

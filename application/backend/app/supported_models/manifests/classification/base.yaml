@@ -11,6 +11,27 @@ hyperparameters:
         aspect_ratio_range:
           - 0.75
           - 1.34
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      color_jitter:
+        enable: true
+        brightness:
+          - 0.8
+          - 1.2
+        contrast:
+          - 0.8
+          - 1.2
+        saturation:
+          - 0.8
+          - 1.2
+        hue:
+          - -0.05
+          - 0.05
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
       random_affine:
         enable: false
         max_rotate_degree: 10.0
@@ -19,11 +40,6 @@ hyperparameters:
           - 0.5
           - 1.5
         max_shear_degree: 2.0
-      random_horizontal_flip:
-        enable: true
-        probability: 0.5
-      random_vertical_flip:
-        enable: false
         probability: 0.5
       gaussian_blur:
         enable: false
@@ -32,33 +48,46 @@ hyperparameters:
           - 0.1
           - 2.0
         probability: 0.5
-      color_jitter:
-        enable: false
-        brightness:
-          - 0.875
-          - 1.125
-        contrast:
-          - 0.5
-          - 1.5
-        saturation:
-          - 0.5
-          - 1.5
-        hue:
-          - -0.05
-          - 0.05
-        probability: 0.5
       gaussian_noise:
         enable: false
         mean: 0.0
         sigma: 0.1
         probability: 0.5
+      random_erasing:
+        enable: false
+        scale:
+          - 0.02
+          - 0.33
+        ratio:
+          - 0.3
+          - 3.3
+        probability: 0.5
+        value: 0.0
+      random_grayscale:
+        enable: false
+        probability: 0.1
+      random_sharpness:
+        enable: false
+        sharpness: 0.5
+        probability: 0.5
   evaluation:
     metric: accuracy
   training:
     max_epochs: 100
+    batch_size: 64
     early_stopping:
       enable: true
       patience: 7
+    scheduler:
+      type: reduce_lr_on_plateau
+      factor: 0.5
+      patience: 3
+      warmup:
+        enable: false
+    gradient_clip:
+      enable: false
+    gradient_accumulation:
+      enable: false
     allowed_values_input_size:
       - 64
       - 128

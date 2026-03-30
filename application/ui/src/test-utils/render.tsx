@@ -69,7 +69,14 @@ export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult
     const Wrapper = ({ children }: { children: ReactNode }) => {
         const router = createTestRouter(children, options, testQueryClient);
 
-        return <RouterProvider router={router} />;
+        return (
+            <RouterProvider
+                router={router}
+                future={{
+                    v7_startTransition: true,
+                }}
+            />
+        );
     };
 
     return rtlRenderHook(callback, { wrapper: Wrapper });

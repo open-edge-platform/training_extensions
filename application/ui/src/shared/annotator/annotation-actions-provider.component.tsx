@@ -19,12 +19,14 @@ import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
+    canSubmit: boolean;
     addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
     resetAnnotations: () => void;
+    replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
@@ -87,20 +89,28 @@ export const AnnotationActionsProvider = ({
         return mapServerAnnotationsToLocal(initialPredictionsDTO, projectLabels);
     }, [initialPredictionsDTO, projectLabels]);
 
-    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
+    const initialAnnotations = useMemo(() => {
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-    });
+    }, [initialAnnotationsDTO, projectLabels]);
+
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(initialAnnotations);
+
+    const resetAnnotations = () => {
+        undoRedoActions.reset(initialAnnotations);
+    };
 
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
 
+    // Reset annotations when source annotations change.
     if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
-        setAnnotations(mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels), true);
+        undoRedoActions.reset(initialAnnotations);
         prevInitialAnnotationsDTORef.current = initialAnnotationsDTO;
     }
 
     const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
         if (labels !== undefined) {
             const idsToUpdate = new Set(updatedAnnotations.map((a) => a.id));
+
             setAnnotations((prevAnnotations) =>
                 prevAnnotations.map((annotation) =>
                     idsToUpdate.has(annotation.id) ? { ...annotation, labels } : annotation
@@ -108,6 +118,7 @@ export const AnnotationActionsProvider = ({
             );
         } else {
             const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
+
             setAnnotations((prevAnnotations) =>
                 prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
             );
@@ -141,8 +152,8 @@ export const AnnotationActionsProvider = ({
         );
     };
 
-    const resetAnnotations = () => {
-        undoRedoActions.reset([]);
+    const replaceAnnotations = (newAnnotations: Annotation[]) => {
+        setAnnotations(() => newAnnotations);
     };
 
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
@@ -157,7 +168,7 @@ export const AnnotationActionsProvider = ({
             body: { annotations: annotationsDTO },
         });
 
-        resetAnnotations();
+        undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
     const submitPredictions = async () => {
@@ -179,6 +190,19 @@ export const AnnotationActionsProvider = ({
         }
     };
 
+    const hasChangedAnnotations = useMemo(() => {
+        const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+        const currentServerAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
+
+        return !isEqual(currentServerAnnotations, initialAnnotationsDTO);
+    }, [annotations, initialAnnotationsDTO]);
+
+    const hasEmptyLabelSelection = useMemo(() => {
+        return annotations.some((annotation) => annotation.labels.some((label) => label.id === EMPTY_LABEL_ID));
+    }, [annotations]);
+
+    const canSubmit = mode === 'prediction' ? predictions.length > 0 : hasChangedAnnotations || hasEmptyLabelSelection;
+
     const annotationsToRender = mode === 'annotation' ? annotations : predictions;
     const isReadOnlyMode = isReadOnly || mode === 'prediction';
 
@@ -187,6 +211,7 @@ export const AnnotationActionsProvider = ({
             value={{
                 isUserReviewed,
                 annotations: annotationsToRender,
+                canSubmit,
 
                 // Local
                 addAnnotations,
@@ -194,6 +219,7 @@ export const AnnotationActionsProvider = ({
                 deleteAnnotations,
                 addAnnotationWithEmptyLabel,
                 resetAnnotations,
+                replaceAnnotations,
 
                 // Remote
                 submitAnnotations,

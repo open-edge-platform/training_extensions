@@ -19,12 +19,12 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useMatch } from 'react-router';
 
 import { paths } from '../../../constants/paths';
-import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
-import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
 import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
+import { useIsTrainingButtonDisabled } from './hooks/use-is-training-button-disabled';
+import { useTrainModel } from './hooks/use-train-model';
 import { TrainModelDialogLayout } from './train-model-dialog-layout.component';
-import { useTrainModel } from './train-model-provider.component';
+import { useTrainModelState } from './train-model-provider.component';
 
 type TrainModelDialogProps = {
     onClose: () => void;
@@ -34,35 +34,24 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const {
         selectedTrainingDevice,
         selectedModelArchitectureId,
-        selectedDatasetRevisionId,
-        selectedModelRevisionId,
-        datasetRevisions,
-        modelRevisions,
         isAdvancedSettingsMode,
         onToggleAdvancedSettingsMode,
-    } = useTrainModel();
-    const trainModelMutation = useTrainModelMutation();
+        trainingConfiguration,
+    } = useTrainModelState();
     const projectId = useProjectIdentifier();
     const isModelsPage = useMatch(paths.project.models.pattern);
     const isTrainingDisabled = useIsTrainingButtonDisabled();
 
+    const { trainModel, isPending } = useTrainModel();
+
     const isStartButtonDisabled =
-        isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null;
+        isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null || isPending;
 
-    const trainModel = () => {
-        if (isStartButtonDisabled) return;
+    const isAdvancedSettingsModeDisabled = selectedModelArchitectureId === null || trainingConfiguration === undefined;
 
-        const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
-        const parentModelRevisionId = modelRevisions.find((revision) => revision.id === selectedModelRevisionId)?.value;
-
-        trainModelMutation.mutate(
-            {
-                datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
-                parentModelRevisionId: parentModelRevisionId === undefined ? null : parentModelRevisionId,
-                device: selectedTrainingDevice,
-                modelArchitectureId: selectedModelArchitectureId,
-            },
-            () => {
+    const handleTrainModel = () => {
+        trainModel({
+            onSuccess: () => {
                 onClose();
 
                 toast({
@@ -80,8 +69,8 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     ),
                     type: 'success',
                 });
-            }
-        );
+            },
+        });
     };
 
     return (
@@ -115,10 +104,29 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     <Button variant={'secondary'} onPress={onClose}>
                         Cancel
                     </Button>
-                    <Button variant={'primary'} onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}>
-                        {isAdvancedSettingsMode ? 'Back' : 'Advanced settings'}
-                    </Button>
-                    <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
+                    {isAdvancedSettingsMode ? (
+                        <Button
+                            variant={'primary'}
+                            onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
+                        >
+                            Back
+                        </Button>
+                    ) : (
+                        <Button
+                            variant={'primary'}
+                            isDisabled={isAdvancedSettingsModeDisabled}
+                            onPress={() => onToggleAdvancedSettingsMode(!isAdvancedSettingsMode)}
+                        >
+                            Advanced settings
+                        </Button>
+                    )}
+
+                    <Button
+                        variant={'accent'}
+                        onPress={handleTrainModel}
+                        isDisabled={isStartButtonDisabled}
+                        isPending={isPending}
+                    >
                         Start
                     </Button>
                 </ButtonGroup>

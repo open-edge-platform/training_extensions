@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
+import { getMockedJob } from 'mocks/mock-job';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
@@ -59,10 +60,10 @@ const mockedDatasetRevision = getMockedDatasetRevision({
     id: 'dataset-1',
     name: 'Dataset Revision 1',
     item_counts: {
-        training: 70,
-        validation: 20,
-        testing: 10,
-        total: 100,
+        training: 150,
+        validation: 200,
+        testing: 150,
+        total: 500,
     },
 });
 
@@ -138,7 +139,7 @@ test.describe('Model Details', () => {
                     pagination: { offset: 0, limit: 20, count, total },
                 });
             }),
-            http.get('/api/projects/{project_id}/models/{model_id}/binary', () => {
+            http.get('/api/projects/{project_id}/models/{model_id}/variants/{model_variant_id}/binary', () => {
                 return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
                     headers: {
                         'content-type': 'application/zip',
@@ -178,7 +179,7 @@ test.describe('Model Details', () => {
             await modelsPage.expandModel('YOLOX Model v1');
             await page.getByRole('tab', { name: 'Model variants' }).click();
 
-            await expect(page.getByText('There are no model variants available.')).toBeVisible();
+            await expect(page.getByText('No available model variants.')).toBeVisible();
         });
 
         test('displays model variants in separate tabs for each format', async ({ page, modelsPage }) => {
@@ -203,21 +204,23 @@ test.describe('Model Details', () => {
             let modelVariantId: string | undefined;
 
             network.use(
-                http.get('/api/projects/{project_id}/models/{model_id}/binary', ({ request }) => {
-                    const url = new URL(request.url);
-                    modelVariantId = url.searchParams.get('model_variant_id') ?? undefined;
+                http.get(
+                    '/api/projects/{project_id}/models/{model_id}/variants/{model_variant_id}/binary',
+                    ({ params }) => {
+                        modelVariantId = params.model_variant_id;
 
-                    if (!modelVariantId) {
-                        return new HttpResponse(null, { status: 400 });
+                        if (!modelVariantId) {
+                            return new HttpResponse(null, { status: 400 });
+                        }
+
+                        return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
+                            headers: {
+                                'content-type': 'application/zip',
+                                'content-disposition': `attachment; filename="model-model-1-${modelVariantId}.zip"`,
+                            },
+                        });
                     }
-
-                    return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
-                        headers: {
-                            'content-type': 'application/zip',
-                            'content-disposition': `attachment; filename="model-model-1-${modelVariantId}.zip"`,
-                        },
-                    });
-                })
+                )
             );
 
             await modelsPage.goto();
@@ -230,6 +233,55 @@ test.describe('Model Details', () => {
             await downloadButton.click();
 
             await expect.poll(() => modelVariantId).not.toBeUndefined();
+        });
+
+        test('can start quantization with custom parameters', async ({ network, modelsPage }) => {
+            let submittedJobBody: Record<string, unknown> | null = null;
+
+            network.use(
+                http.post('/api/jobs', async ({ request }) => {
+                    submittedJobBody = await request.json();
+
+                    return HttpResponse.json(
+                        getMockedJob({
+                            job_id: 'quantize-job-1',
+                            job_type: 'quantize',
+                        }),
+                        { status: 201 }
+                    );
+                }),
+                http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                    return HttpResponse.json([mockedDatasetRevision]);
+                })
+            );
+
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await modelsPage.clickModelVariantsTab();
+
+            await modelsPage.openQuantizationDialog();
+
+            const dialog = modelsPage.getQuantizationDialog();
+            await expect(dialog).toBeVisible();
+            await expect(dialog.getByRole('heading', { name: /Quantize model to INT8/ })).toBeVisible();
+
+            await modelsPage.getNoMaximumCheckbox().click();
+            await modelsPage.getAccuracyDropInput().fill('5');
+            await modelsPage.getCalibrationSizeInput().fill('300');
+
+            await modelsPage.submitQuantization();
+
+            await expect(modelsPage.getToast('Quantization job started.')).toBeVisible();
+
+            expect(submittedJobBody).toMatchObject({
+                job_type: 'quantize',
+                project_id: 'id-1',
+                parameters: {
+                    model_id: 'model-1',
+                    max_drop: 0.05,
+                    max_calibration_subset_size: 300,
+                },
+            });
         });
     });
 

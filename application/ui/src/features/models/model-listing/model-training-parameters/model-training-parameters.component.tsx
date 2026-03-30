@@ -7,6 +7,7 @@ import { Grid, Text } from '@geti/ui';
 
 import { TrainingConfigurationParameter } from '../../../../constants/shared-types';
 import { useGetModelTrainingConfiguration } from '../../hooks/api/use-get-model-training-configuration.hook';
+import { filterDependentParameters } from '../../train-model/advanced-settings/training/learning-parameters/utils';
 import { Box } from '../components/box/box.component';
 import { findGroupByKey, flattenParameters } from './utils';
 
@@ -29,10 +30,17 @@ const TrainingConfigurationParametersList = ({ parameters }: TrainingConfigurati
 
     return (
         <Grid columns={['1fr', '1fr']} gap={'size-100'}>
-            {parameterRows.map((row) => (
-                <Fragment key={`${row.name}-${row.value}`}>
-                    <Text>{row.name}</Text>
-                    <Text>{row.value}</Text>
+            {parameterRows.map((row, index) => (
+                <Fragment key={`${index}-${row.isGroup}-${row.depth}-${row.name}-${row.value}`}>
+                    <Text
+                        UNSAFE_style={{
+                            paddingInlineStart: `calc(${row.depth} * var(--spectrum-global-dimension-size-200))`,
+                        }}
+                    >
+                        {row.isGroup ? row.name : `• ${row.name}`}
+                    </Text>
+
+                    <Text>{row.isGroup ? '' : row.value}</Text>
                 </Fragment>
             ))}
         </Grid>
@@ -47,20 +55,25 @@ export const ModelTrainingParameters = ({ modelId }: ModelTrainingParametersProp
     const filteringGroup = findGroupByKey(datasetPreparationGroup?.parameters, 'filtering');
     const augmentationGroup = findGroupByKey(datasetPreparationGroup?.parameters, 'augmentation');
 
+    const learningParameters = filterDependentParameters(trainingGroup?.parameters ?? []);
+
     return (
         <Grid columns={['1fr', '1fr', '1fr']} gap={'size-200'}>
             <Box
-                customClasses={classes.box}
+                testId={'Box-LEARNING PARAMETERS'}
+                contentClassName={classes.scrollableContent}
                 title={'LEARNING PARAMETERS'}
-                content={<TrainingConfigurationParametersList parameters={trainingGroup?.parameters || []} />}
+                content={<TrainingConfigurationParametersList parameters={learningParameters} />}
             />
             <Box
-                customClasses={classes.box}
+                testId={'Box-FILTERS'}
+                contentClassName={classes.scrollableContent}
                 title={'FILTERS'}
                 content={<TrainingConfigurationParametersList parameters={filteringGroup?.parameters || []} />}
             />
             <Box
-                customClasses={classes.box}
+                testId={'Box-AUGMENTATIONS'}
+                contentClassName={classes.scrollableContent}
                 title={'AUGMENTATIONS'}
                 content={<TrainingConfigurationParametersList parameters={augmentationGroup?.parameters || []} />}
             />

@@ -43,7 +43,7 @@ env:
   BACKEND_PATH: .\application\backend
   UI_PATH: .\application\ui
   BACKEND_BUILD_PATH: .\application\backend\.build
-  BACKEND_DIST_PATH: .\application\backend\dist\geti-tune-backend
+  BACKEND_DIST_PATH: .\application\backend\dist\geti-backend
   UI_SRC_API_PATH: .\application\ui\src\api
   UI_SRC_TAURI_PATH: .\application\ui\src-tauri
   UI_TARGET_PATH: .\application\ui\src-tauri\target
@@ -79,7 +79,7 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
 
           $PREFIX = $(IF ($env:DEBUG_BUILD -eq "true") {"-debug"} else {""})
-          $MSIX_FILE_NAME = "geti-tune-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
+          $MSIX_FILE_NAME = "geti-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
           $MSIX_FILE_PATH = $UI_MSIX_BUNDLE_PATH + "\" + $MSIX_FILE_NAME
           Write-Host "MSIX_FILE_PATH=$MSIX_FILE_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"
@@ -114,7 +114,7 @@ jobs:
         env:
           GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: just venv --device "$env:DEVICE"
+        run: just venv --accelerator "$env:DEVICE"
 
       - name: Build OpenAPI spec
         working-directory: application/backend
@@ -124,14 +124,14 @@ jobs:
         working-directory: application/backend
         env:
           DEVICE: ${{ inputs.device || 'xpu' }}
-        run: just pyinstaller --device "$env:DEVICE"
+        run: just pyinstaller --accelerator "$env:DEVICE"
 
       # Copy backend artifacts to UI
 
       - name: Copy backend artifacts to UI
         run: |
           cp -r ${{ env.BACKEND_DIST_PATH }}\_internal ${{ env.UI_SRC_TAURI_PATH }}
-          cp -r ${{ env.BACKEND_DIST_PATH }}\geti-tune-backend.exe ${{ env.UI_SRC_TAURI_PATH }}\geti-tune-backend-x86_64-pc-windows-msvc.exe
+          cp -r ${{ env.BACKEND_DIST_PATH }}\geti-backend.exe ${{ env.UI_SRC_TAURI_PATH }}\geti-backend-x86_64-pc-windows-msvc.exe
 
       - name: Copy OpenAPI spec
         run: cp -r ${{ env.BACKEND_BUILD_PATH }}\openapi-spec.json ${{ env.UI_SRC_API_PATH }}
@@ -180,8 +180,8 @@ jobs:
       - name: Create MSIX package
         run: |
           mkdir -p $env:UI_MSIX_BUNDLE_PATH
-          cp $env:UI_BUILD_PATH\geti-tune-backend.exe $env:UI_MSIX_BUNDLE_PATH
-          cp $env:UI_BUILD_PATH\geti_tune_ui.exe $env:UI_MSIX_BUNDLE_PATH
+          cp $env:UI_BUILD_PATH\geti-backend.exe $env:UI_MSIX_BUNDLE_PATH
+          cp $env:UI_BUILD_PATH\geti_ui.exe $env:UI_MSIX_BUNDLE_PATH
           cp -r $env:UI_BUILD_PATH\_internal $env:UI_MSIX_BUNDLE_PATH
           cp -r ${{ env.UI_SRC_TAURI_PATH }}\msix\* $env:UI_MSIX_BUNDLE_PATH
           & "${{ env.MAKEAPP_PATH }}" pack /d $env:UI_MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH

@@ -11,6 +11,7 @@ from datumaro.experimental import Dataset
 from datumaro.experimental.data_formats.base import DataFormat
 from datumaro.experimental.fields import Subset
 
+from app.datumaro_converter import SampleMode
 from app.execution import ExportDataset
 from app.models import (
     DatasetFormat,
@@ -51,15 +52,16 @@ def fxt_export_params() -> ExportDatasetJobParams:
 
 class TestDatasetExporter:
     @pytest.mark.parametrize(
-        "subsets, labels",
+        "include_unannotated, subsets, labels",
         [
-            ([DatasetItemSubset.TESTING], ["label1"]),
-            ([DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], ["label1", "label2"]),
-            (None, None),
+            (True, [DatasetItemSubset.TESTING], ["label1"]),
+            (False, [DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION], ["label1", "label2"]),
+            (True, None, None),
         ],
     )
     def test_prepare_project_dataset(
         self,
+        include_unannotated: bool,
         subsets: list[DatasetItemSubset] | None,
         labels: list[str] | None,
         fxt_export: ExportDataset,
@@ -71,6 +73,7 @@ class TestDatasetExporter:
         dataset.filter_by_subset.return_value = dataset
         dataset.filter_by_labels.return_value = dataset
         fxt_dataset_service.get_dm_dataset.return_value = dataset
+        fxt_export_params.include_unannotated = include_unannotated
         fxt_export_params.subsets = subsets
         fxt_export_params.labels = labels
 
@@ -79,7 +82,9 @@ class TestDatasetExporter:
         fxt_dataset_service.get_dm_dataset.assert_called_once_with(
             project_id=fxt_export_params.project_id,
             task=fxt_export_params.task,
-            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            annotation_status=None if include_unannotated else DatasetItemAnnotationStatus.REVIEWED,
+            sample_mode=SampleMode.IMPORT_EXPORT,
+            keep_predictions=False,
         )
         if subsets:
             dataset.filter_by_subset.assert_called_once_with(subset=[Subset[subset.name] for subset in subsets])
@@ -144,12 +149,12 @@ class TestDatasetExporter:
         dataset = MagicMock(spec=Dataset)
         dataset_id = uuid4()
 
-        with patch("app.execution.dataset_export.export.save_dataset") as mock_save_dataset:
+        with patch("app.execution.dataset_export.export.export_dataset") as mock_export_dataset:
             target_dir = fxt_export.export_dataset(dataset_id, dataset, export_format)
 
             assert target_dir
             assert target_dir == fxt_staged_datasets_dir / str(dataset_id)
-            mock_save_dataset.assert_called_once_with(
+            mock_export_dataset.assert_called_once_with(
                 dataset=dataset,
                 data_format=data_format,
                 output_path=str(fxt_staged_datasets_dir / str(dataset_id) / f"dataset-{export_format}.zip"),

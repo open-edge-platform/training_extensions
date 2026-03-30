@@ -9,7 +9,7 @@ from uuid import UUID
 import datumaro.experimental as dm
 from sqlalchemy.orm import Session
 
-from app.datumaro_converter import convert_dataset
+from app.datumaro_converter import SampleMode, convert_dataset
 from app.db.schema import DatasetItemDB, MediaDB
 from app.models import (
     DatasetItem,
@@ -26,7 +26,7 @@ from app.models import (
     TaskType,
 )
 from app.models.dataset import DatasetStatistics
-from app.models.media import MediaAdapter
+from app.models.media import MediaAdapter, VideoFrame
 from app.repositories import DatasetItemRepository
 from app.services.media_service import MediaService
 
@@ -165,24 +165,30 @@ class DatasetService(BaseSessionManagedService):
         self,
         project_id: UUID,
         filters: DatasetItemFilters | None = None,
+        keep_predictions: bool = True,
     ) -> list[tuple[DatasetItem, Media]]:
         """Get information about available dataset items with corresponding media info"""
         if filters is None:
             filters = DatasetItemFilters()
         repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
-        return [
-            (DatasetItem.model_validate(db_dataset_item), MediaAdapter.validate_python(db_media))
-            for (db_dataset_item, db_media) in repo.list_items_with_media(
-                limit=filters.limit,
-                offset=filters.offset,
-                start_date=filters.start_date,
-                end_date=filters.end_date,
-                annotation_status=filters.annotation_status,
-                label_ids=label_ids_str,
-                subset=filters.subset,
-            )
-        ]
+        items_with_media = []
+        for db_dataset_item, db_media in repo.list_items_with_media(
+            limit=filters.limit,
+            offset=filters.offset,
+            start_date=filters.start_date,
+            end_date=filters.end_date,
+            annotation_status=filters.annotation_status,
+            label_ids=label_ids_str,
+            subset=filters.subset,
+        ):
+            dataset_item = DatasetItem.model_validate(db_dataset_item)
+            media = MediaAdapter.validate_python(db_media)
+            # remove predictions if not requested
+            if not keep_predictions and dataset_item.annotation_data and not dataset_item.user_reviewed:
+                dataset_item.annotation_data = []
+            items_with_media.append((dataset_item, media))
+        return items_with_media
 
     def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
@@ -323,20 +329,28 @@ class DatasetService(BaseSessionManagedService):
         project_id: UUID,
         task: Task,
         annotation_status: DatasetItemAnnotationStatus | None,
+        sample_mode: SampleMode,
+        keep_predictions: bool = True,
     ) -> dm.Dataset:
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
                 project_id=project_id,
                 filters=DatasetItemFilters(limit=limit, offset=offset, annotation_status=annotation_status),
+                keep_predictions=keep_predictions,
             )
 
-        def _get_image_path(item: DatasetItem) -> str:
-            return str(self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=item.id))
+        def _get_media_path(media: Media) -> str:
+            if isinstance(media, VideoFrame):
+                return str(
+                    self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=media.video_id)
+                )
+            return str(self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=media.id))
 
         labels = self._label_service.list_all(project_id=project_id)
         return convert_dataset(
             task=task,
             labels=labels,
             get_dataset_items_and_media=get_dataset_items_and_media,
-            get_image_path=_get_image_path,
+            get_media_path=_get_media_path,
+            sample_mode=sample_mode,
         )

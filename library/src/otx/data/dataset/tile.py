@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX tile dataset."""
@@ -23,7 +23,7 @@ from otx.data.entity.tile import (
 )
 from otx.types.task import OTXTaskType
 
-from .base import OTXDataset
+from .base import OTXDataset, _ensure_chw_format
 
 if TYPE_CHECKING:
     from otx.config.data import TileConfig
@@ -59,10 +59,10 @@ class OTXTileDatasetFactory:
         Returns:
             OTXTileDataset: Tile dataset.
         """
-        subset = dataset.dm_subset[0].subset
+        subset = dataset.dm_subset[0].subset  # type: ignore[attr-defined]
         if subset == Subset.TRAINING:
             dm_dataset = dataset.dm_subset
-            dm_dataset = dm_dataset.transform(
+            dm_dataset = dm_dataset.transform(  # type: ignore[attr-defined]
                 create_tiling_transform(
                     TilingConfig(
                         tile_height=tile_config.tile_size[0],
@@ -72,9 +72,9 @@ class OTXTileDatasetFactory:
                     ),
                     threshold_drop_ann=0.5,
                 ),
-                dtype=dm_dataset.dtype,
+                dtype=dm_dataset.dtype,  # type: ignore[attr-defined]
             )
-            dm_dataset = dm_dataset.transform(create_filtering_transform(), dtype=dm_dataset.dtype)
+            dm_dataset = dm_dataset.transform(create_filtering_transform(), dtype=dm_dataset.dtype)  # type: ignore[attr-defined]
             dataset.dm_subset = dm_dataset
             return dataset
 
@@ -103,7 +103,6 @@ class OTXTileDataset(OTXDataset):
             dataset.transforms,
             dataset.max_refetch,
             dataset.stack_images,
-            dataset.to_tv_image,
         )
         self.tile_config = tile_config
         self._dataset = dataset
@@ -145,8 +144,8 @@ class OTXTileDataset(OTXDataset):
             A tuple containing two lists:
             - tile_entities (list[OTXSample]): List of tile entities.
         """
-        parent_slice_ds = self.dm_subset.slice(parent_idx, 1)
-        tile_ds = parent_slice_ds.transform(
+        parent_slice_ds = self.dm_subset.slice(parent_idx, 1)  # type: ignore[attr-defined]
+        tile_ds = parent_slice_ds.transform(  # type: ignore[attr-defined]
             create_tiling_transform(
                 TilingConfig(
                     tile_height=self.tile_config.tile_size[0],
@@ -156,12 +155,12 @@ class OTXTileDataset(OTXDataset):
                 ),
                 threshold_drop_ann=0.5,
             ),
-            dtype=parent_slice_ds.dtype,
+            dtype=parent_slice_ds.dtype,  # type: ignore[attr-defined]
         )
 
         if self._subset == Subset.VALIDATION:
             # NOTE: filter validation tiles with annotations only to avoid evaluation on empty tiles.
-            tile_ds = tile_ds.transform(create_filtering_transform(), dtype=parent_slice_ds.dtype)
+            tile_ds = tile_ds.transform(create_filtering_transform(), dtype=parent_slice_ds.dtype)  # type: ignore[attr-defined]
 
             # if tile dataset is empty it means objects are too big to fit in any tile, in this case include full image
             if len(tile_ds) == 0:
@@ -169,6 +168,8 @@ class OTXTileDataset(OTXDataset):
 
         tile_entities: list[OTXSample] = []
         for tile in tile_ds:
+            # Fix datumaro HWC→CHW format issue for tile images
+            tile.image = _ensure_chw_format(tile.image)
             # apply the same transforms as the original dataset
             object.__setattr__(tile.tile, "source_sample_idx", parent_idx)
             transformed_tile = self._apply_transforms(tile)
@@ -220,9 +221,9 @@ class OTXTileDetTestDataset(OTXTileDataset):
         return TileDetDataEntity(
             num_tiles=len(tile_entities),
             entity_list=tile_entities,
-            ori_img_info=item.img_info,
-            ori_bboxes=item.bboxes,
-            ori_labels=item.label,
+            ori_img_info=item.img_info,  # type: ignore[attr-defined]
+            ori_bboxes=item.bboxes,  # type: ignore[attr-defined]
+            ori_labels=item.label,  # type: ignore[attr-defined]
         )
 
 
@@ -268,10 +269,10 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
         return TileInstSegDataEntity(
             num_tiles=len(tile_entities),
             entity_list=tile_entities,
-            ori_img_info=item.img_info,
-            ori_bboxes=item.bboxes,
-            ori_labels=item.label,
-            ori_masks=item.masks,
+            ori_img_info=item.img_info,  # type: ignore[attr-defined]
+            ori_bboxes=item.bboxes,  # type: ignore[attr-defined]
+            ori_labels=item.label,  # type: ignore[attr-defined]
+            ori_masks=item.masks,  # type: ignore[attr-defined]
         )
 
 
@@ -312,6 +313,6 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
         return TileSegDataEntity(
             num_tiles=len(tile_entities),
             entity_list=tile_entities,
-            ori_img_info=item.img_info,
-            ori_masks=item.masks,
+            ori_img_info=item.img_info,  # type: ignore[attr-defined]
+            ori_masks=item.masks,  # type: ignore[attr-defined]
         )

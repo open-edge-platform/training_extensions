@@ -7,7 +7,7 @@ import { Button } from '@geti/ui';
 
 type AddMediaButtonProps = {
     onFilesSelected: (files: File[]) => void;
-    multiple?: boolean;
+    isDisabled?: boolean;
 };
 
 const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
@@ -16,7 +16,7 @@ const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
 
 export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 
-export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaButtonProps) => {
+export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -42,14 +42,14 @@ export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaBut
             <input
                 ref={fileInputRef}
                 type='file'
-                multiple={multiple}
+                multiple
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
                 aria-label={'Upload media files'}
                 accept={acceptedExtensions}
             />
-            <Button variant={'secondary'} onPress={handleClick}>
-                Upload Files
+            <Button variant={'secondary'} isDisabled={isDisabled} onPress={handleClick}>
+                Upload media
             </Button>
         </>
     );

@@ -33,25 +33,22 @@ export const AnnotatorProviders = ({
 }: AnnotatorProvidersProps) => {
     return (
         <ZoomProvider>
-            <SelectAnnotationProvider>
-                <AnnotationVisibilityProvider>
-                    <CanvasSettingsProvider>
-                        <AnnotatorLabelsProvider>
-                            <AnnotationActionsProvider
-                                key={mediaItem.id}
-                                mediaItem={mediaItem}
-                                initialAnnotationsDTO={initialAnnotationsDTO}
-                                initialPredictionsDTO={initialPredictionsDTO}
-                                isUserReviewed={isUserReviewed}
-                                mode={mode}
-                                isReadOnly={isReadOnly}
-                            >
-                                {children}
-                            </AnnotationActionsProvider>
-                        </AnnotatorLabelsProvider>
-                    </CanvasSettingsProvider>
-                </AnnotationVisibilityProvider>
-            </SelectAnnotationProvider>
+            <AnnotationVisibilityProvider>
+                <CanvasSettingsProvider>
+                    <AnnotatorLabelsProvider>
+                        <AnnotationActionsProvider
+                            mediaItem={mediaItem}
+                            initialAnnotationsDTO={initialAnnotationsDTO}
+                            initialPredictionsDTO={initialPredictionsDTO}
+                            isUserReviewed={isUserReviewed}
+                            mode={mode}
+                            isReadOnly={isReadOnly}
+                        >
+                            <SelectAnnotationProvider>{children}</SelectAnnotationProvider>
+                        </AnnotationActionsProvider>
+                    </AnnotatorLabelsProvider>
+                </CanvasSettingsProvider>
+            </AnnotationVisibilityProvider>
         </ZoomProvider>
     );
 };

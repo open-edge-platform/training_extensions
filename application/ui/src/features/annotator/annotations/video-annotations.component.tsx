@@ -3,10 +3,42 @@
 
 import { mapServerAnnotationsToLocal } from '../../../shared/annotator/annotation-mappers';
 import { useProjectLabelsWithEmptyLabel } from '../../../shared/annotator/labels';
+import { Annotation } from '../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { useVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
+import { useVideoFramesPredictions } from '../video-player/api/use-video-frames-predictions';
 import { useVideoPlayer } from '../video-player/video-player-provider.component';
 import { AnnotationShapeRenderer } from './annotation-shape-renderer.component';
+
+type AnnotationsRendererProps = {
+    annotations: Annotation[];
+    height: number;
+    width: number;
+    ariaLabel: string;
+};
+
+const AnnotationsRenderer = ({ annotations, width, height, ariaLabel }: AnnotationsRendererProps) => {
+    return (
+        <svg
+            aria-label={ariaLabel}
+            data-testid={'annotation-layer'}
+            width={width}
+            height={height}
+            tabIndex={-1}
+            style={{
+                position: 'absolute',
+                inset: 0,
+                outline: 'none',
+                overflow: 'visible',
+                ...DEFAULT_ANNOTATION_STYLES,
+            }}
+        >
+            {annotations.map((annotation) => (
+                <AnnotationShapeRenderer key={annotation.id} annotation={annotation} />
+            ))}
+        </svg>
+    );
+};
 
 export const VideoAnnotations = () => {
     const { step, videoFrame } = useVideoPlayer();
@@ -25,23 +57,38 @@ export const VideoAnnotations = () => {
     });
 
     return (
-        <svg
-            aria-label={'video annotations'}
-            data-testid={'annotation-layer'}
-            width={videoFrame.width}
+        <AnnotationsRenderer
+            annotations={annotations}
             height={videoFrame.height}
-            tabIndex={-1}
-            style={{
-                position: 'absolute',
-                inset: 0,
-                outline: 'none',
-                overflow: 'visible',
-                ...DEFAULT_ANNOTATION_STYLES,
-            }}
-        >
-            {annotations.map((annotation) => (
-                <AnnotationShapeRenderer key={annotation.id} annotation={annotation} />
-            ))}
-        </svg>
+            width={videoFrame.width}
+            ariaLabel={'video annotations'}
+        />
+    );
+};
+
+export const VideoPredictions = () => {
+    const { step, videoFrame } = useVideoPlayer();
+
+    const labels = useProjectLabelsWithEmptyLabel();
+    const { data: predictions = [] } = useVideoFramesPredictions({
+        frameNumber: videoFrame.frame_number,
+        frameSkip: step,
+        selector: (data) => {
+            const framePredictions =
+                data.find((prediction) => {
+                    return prediction.media.frame_index === videoFrame.frame_number;
+                })?.prediction ?? [];
+
+            return mapServerAnnotationsToLocal(framePredictions, labels);
+        },
+    });
+
+    return (
+        <AnnotationsRenderer
+            annotations={predictions}
+            height={videoFrame.height}
+            width={videoFrame.width}
+            ariaLabel={'video predictions'}
+        />
     );
 };

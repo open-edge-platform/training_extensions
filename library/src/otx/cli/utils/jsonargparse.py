@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Functions related to jsonargparse."""
@@ -230,18 +230,23 @@ def list_override(configs: Namespace, key: str, overrides: list, convert_dict_to
     """
     if key not in configs or configs[key] is None:
         return
+
+    base_list = configs[key]
+    override_class_paths = []
+
     for target in overrides:
         class_path = target.get("class_path", None)
         if class_path is None:
             msg = "class_path is required in the override list."
             raise ValueError(msg)
+        override_class_paths.append(class_path)
 
-        item = next((item for item in configs[key] if item["class_path"] == class_path), None)
+        item = next((item for item in base_list if item["class_path"] == class_path), None)
         if item is not None:
             Namespace(item).update(target)
         else:
             converted_target = dict_to_namespace(target) if convert_dict_to_namespace else target
-            configs[key].append(converted_target)
+            base_list.append(converted_target)
 
 
 def apply_override(cfg: Namespace, overrides: Namespace) -> None:

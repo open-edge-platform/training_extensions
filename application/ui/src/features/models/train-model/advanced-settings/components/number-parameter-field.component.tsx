@@ -1,12 +1,22 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Flex, NumberField, Slider } from '@geti/ui';
 
 import { NumberConfigurableParameter } from '../../../../../constants/shared-types';
-import { getFloatingPointStep } from '../utils';
+
+const getDecimalPoints = (value: number): number => {
+    // When log10 returns 0 (log10(1) = 0) we need to return 1
+    return Math.abs(Math.ceil(Math.log10(value))) || 1;
+};
+
+const getFloatingPointStep = (minValue: number, maxValue: number): number => {
+    const exponent = getDecimalPoints(maxValue - minValue);
+
+    return 1 / Math.pow(10, exponent + 3);
+};
 
 type NumberGroupParamsProps = {
     name: string;
@@ -22,7 +32,7 @@ type NumberGroupParamsProps = {
 const DEFAULT_INT_STEP = 1;
 const DEFAULT_FLOAT_STEP = 0.1;
 
-const getStep = ({
+export const getStep = ({
     step,
     maxValue,
     minValue,
@@ -54,19 +64,16 @@ export const NumberParameterField = ({
     name,
     step,
 }: NumberGroupParamsProps) => {
-    const [parameterValue, setParameterValue] = useState<number>(value);
+    const [draftValue, setDraftValue] = useState<number | null>(null);
+    const parameterValue = draftValue ?? value;
 
     const fieldStep = getStep({ step, type, maxValue, minValue });
     const formatOptions = type === 'float' ? { maximumFractionDigits: Math.abs(Math.log10(fieldStep)) } : undefined;
 
     const handleValueChange = (inputValue: number): void => {
-        setParameterValue(inputValue);
+        setDraftValue(null);
         onChange(inputValue);
     };
-
-    useEffect(() => {
-        setParameterValue(value);
-    }, [value]);
 
     if (maxValue === null || minValue === null) {
         return (
@@ -76,7 +83,7 @@ export const NumberParameterField = ({
                 value={parameterValue}
                 minValue={minValue === null ? undefined : minValue}
                 maxValue={maxValue === null ? undefined : maxValue}
-                onChange={handleValueChange}
+                onChange={onChange}
                 isDisabled={isDisabled}
             />
         );
@@ -85,10 +92,11 @@ export const NumberParameterField = ({
     return (
         <Flex gap={'size-100'}>
             <Slider
+                aria-label={`Change ${name} slider`}
                 value={parameterValue}
                 minValue={minValue}
                 maxValue={maxValue}
-                onChange={setParameterValue}
+                onChange={setDraftValue}
                 onChangeEnd={handleValueChange}
                 step={fieldStep}
                 isFilled

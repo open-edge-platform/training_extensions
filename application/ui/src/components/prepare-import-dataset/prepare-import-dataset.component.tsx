@@ -1,12 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
 import { isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 
-import { ImportActiveJob } from './import-active-job/import-active-job.component';
-import { ImportFailedJob } from './import-failed-job/import-failed-job.component';
+import { ImportActiveJob } from '../import-card-status/import-active-job/import-active-job.component';
+import { ImportFailedJob } from '../import-card-status/import-failed-job/import-failed-job.component';
 
 type PrepareImportDatasetProps = {
     size: number;
@@ -25,18 +24,12 @@ export const PrepareImportDataset = ({
     onSuccess,
     deleteEntry,
 }: PrepareImportDatasetProps) => {
-    const { data: job, isError, error } = useImportJobStatus({ jobId, onError: deleteEntry, onSuccess });
+    const { data: job, isError, error } = useImportJobStatus({ jobId, onSuccess });
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 
     return (
-        <View
-            position='relative'
-            borderColor='gray-200'
-            borderRadius='regular'
-            backgroundColor='gray-75'
-            borderWidth='thin'
-        >
+        <>
             {isJobFailed(job) && (
                 <ImportFailedJob
                     size={size}
@@ -68,6 +61,6 @@ export const PrepareImportDataset = ({
                     deleteEntry={deleteEntry}
                 />
             )}
-        </View>
+        </>
     );
 };

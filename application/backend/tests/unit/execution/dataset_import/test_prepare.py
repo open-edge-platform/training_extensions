@@ -5,9 +5,11 @@ from unittest.mock import Mock, patch
 from uuid import UUID, uuid4
 
 import pytest
+from datumaro.experimental.categories import HierarchicalLabelCategories
 from loguru import logger
 
 from app.execution import PrepareDataset
+from app.execution.base import ExecutionErr
 from app.models.jobs import PrepareDatasetForImportJobParams
 
 
@@ -22,13 +24,13 @@ def fxt_prepare(
 
 class TestPrepareDataset:
     def test_check_archive_no_directory(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
-        with pytest.raises(ValueError, match="Dataset directory does not exist"):
+        with pytest.raises(ExecutionErr, match="Dataset directory does not exist"):
             fxt_prepare.check_archive(staged_dataset_id=uuid4())
 
     def test_check_archive_no_zip(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
         dataset_dir = fxt_staged_datasets_dir / str(uuid4())
         dataset_dir.mkdir()
-        with pytest.raises(ValueError, match="Cannot find dataset zip archive"):
+        with pytest.raises(ExecutionErr, match="Cannot find dataset zip archive"):
             fxt_prepare.check_archive(staged_dataset_id=UUID(dataset_dir.name))
 
     def test_check_archive_multiple_zips(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
@@ -56,7 +58,38 @@ class TestPrepareDataset:
 
         assert archive_path.name == "dataset-coco.zip"
 
-    def test_convert_archive(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
+    def test_convert_archive_dataset_error(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
+        archive_path = fxt_staged_datasets_dir / str(uuid4()) / "dataset.zip"
+        with (
+            pytest.raises(
+                ExecutionErr,
+                match="The dataset could not be recognized in any of the supported formats. "
+                "Please verify that the dataset is well-formed and in a supported "
+                "format; if the problem persists, report the issue.",
+            ),
+            patch("app.execution.dataset_import.prepare.import_dataset", side_effect=ValueError),
+        ):
+            fxt_prepare.convert_archive(archive_path)
+
+    def test_convert_archive_hierarchical_error(
+        self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path
+    ) -> None:
+        archive_path = fxt_staged_datasets_dir / str(uuid4()) / "dataset.zip"
+        archive_path.parent.mkdir(parents=True)
+        dataset = Mock()
+        dataset.label_categories = HierarchicalLabelCategories()
+        with (
+            pytest.raises(
+                ExecutionErr,
+                match="The dataset with hierarchical labels is not supported.",
+            ),
+            patch("app.execution.dataset_import.prepare.import_dataset", return_value=dataset),
+        ):
+            fxt_prepare.convert_archive(archive_path)
+
+        assert not archive_path.parent.exists()
+
+    def test_convert_archive_success(self, fxt_prepare: PrepareDataset, fxt_staged_datasets_dir: Path) -> None:
         archive_path = fxt_staged_datasets_dir / str(uuid4()) / "dataset.zip"
         dataset = Mock()
         with (

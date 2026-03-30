@@ -18,7 +18,7 @@ export const ImportProcess = ({ currentStagedId }: ImportProcessProps) => {
         <ImportJobProcess
             jobId={importLsEntry?.prepareJobId}
             fileName={importLsEntry?.fileName ?? ''}
-            message='Prepare dataset import to existing project'
+            message='Scanning and analyzing the dataset archive to import...'
             onError={() => {
                 setCurrentStep('uploading');
                 deleteImportEntry(currentStagedId);

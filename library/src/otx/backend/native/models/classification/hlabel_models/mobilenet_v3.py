@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MobileNetV3 model implementation."""
@@ -40,7 +40,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -64,6 +64,9 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
         if not isinstance(self.label_info, HLabelInfo):
             raise TypeError(self.label_info)
 
+        if self.data_input_params.input_size is None:
+            msg = "input_size should not be None."
+            raise ValueError(msg)
         copied_head_config = copy(head_config)
         copied_head_config["step_size"] = (
             ceil(self.data_input_params.input_size[0] / 32),

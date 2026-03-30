@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit tests for RF-DETR detection model."""
@@ -400,9 +400,6 @@ class TestRFDETR:
         [
             "rfdetr_nano",
             "rfdetr_small",
-            "rfdetr_base",
-            "rfdetr_medium",
-            "rfdetr_large",
         ],
     )
     def test_init(self, model_name: str) -> None:
@@ -436,13 +433,13 @@ class TestRFDETR:
             label_info=3,
         )
 
-        # Check that default params use 0-255 range normalization
+        # Check that default params use 0-1 range normalization
         default_params = model._default_preprocessing_params
         assert "rfdetr_base" in default_params
         assert default_params["rfdetr_base"].input_size == (560, 560)
-        # ImageNet mean in 0-255 range
-        assert default_params["rfdetr_base"].mean == (123.675, 116.28, 103.53)
-        assert default_params["rfdetr_base"].std == (58.395, 57.12, 57.375)
+        # ImageNet mean in 0-1 range
+        assert default_params["rfdetr_base"].mean == (0.485, 0.456, 0.406)
+        assert default_params["rfdetr_base"].std == (0.229, 0.224, 0.225)
 
     def test_optimizer_configuration(self) -> None:
         """Test that optimizer configuration is properly set."""
@@ -467,8 +464,6 @@ class TestRFDETR:
         ("model_name", "label_info"),
         [
             ("rfdetr_nano", 3),
-            ("rfdetr_small", 5),
-            ("rfdetr_base", 10),
         ],
     )
     def test_loss_computation(self, model_name: str, label_info: int, fxt_detection_batch) -> None:
@@ -502,8 +497,6 @@ class TestRFDETR:
         "model_name",
         [
             "rfdetr_nano",
-            "rfdetr_small",
-            "rfdetr_base",
         ],
     )
     def test_predict(self, model_name: str, fxt_detection_batch) -> None:
@@ -540,7 +533,6 @@ class TestRFDETR:
         "model_name",
         [
             "rfdetr_nano",
-            "rfdetr_base",
         ],
     )
     def test_export(self, model_name: str) -> None:

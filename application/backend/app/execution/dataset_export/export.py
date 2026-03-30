@@ -6,12 +6,13 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from datumaro.experimental import Dataset
-from datumaro.experimental.data_formats.base import DataFormat, save_dataset
+from datumaro.experimental.data_formats.base import DataFormat
 from datumaro.experimental.export_import import export_dataset
 from datumaro.experimental.fields import Subset
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
 from app.models import DatasetFormat, DatasetItemAnnotationStatus, ExportDatasetJobParams
 from app.services import DatasetRevisionService, DatasetService
@@ -30,6 +31,7 @@ def get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
     format_mapping = {
         DatasetFormat.COCO: DataFormat.COCO,
         DatasetFormat.YOLO: DataFormat.YOLO,
+        DatasetFormat.VOC: DataFormat.VOC,
     }
     if dataset_format not in format_mapping:
         raise ValueError(f"Unsupported dataset format for export: {dataset_format}")
@@ -57,10 +59,13 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         with self._db_session_factory() as session:
             if export_params.dataset_id is None:
                 self._dataset_service.set_db_session(session)
+                annotation_status = None if export_params.include_unannotated else DatasetItemAnnotationStatus.REVIEWED
                 dataset = self._dataset_service.get_dm_dataset(
                     project_id=export_params.project_id,
                     task=export_params.task,
-                    annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                    annotation_status=annotation_status,
+                    sample_mode=SampleMode.IMPORT_EXPORT,
+                    keep_predictions=False,
                 )
             else:
                 self._dataset_revision_service.set_db_session(session)
@@ -81,17 +86,13 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
         logger.info("Exporting dataset {} to {} in {} format", dataset_id, target_dir, export_format)
         target_dir.mkdir(parents=True, exist_ok=True)
         match export_format:
-            case DatasetFormat.COCO | DatasetFormat.YOLO:
-                save_dataset(
+            case DatasetFormat.COCO | DatasetFormat.YOLO | DatasetFormat.VOC:
+                export_dataset(
                     dataset=dataset,
                     data_format=get_dm_format(export_format),
                     output_path=str(target_dir / f"dataset-{export_format}.zip"),
                     as_zip=True,
                 )
-            case DatasetFormat.VOC:
-                # todo: implement after datumaro VOC exporter is implemented:
-                #  https://github.com/open-edge-platform/datumaro/issues/2003
-                raise NotImplementedError("VOC export is not implemented yet")
             case DatasetFormat.GETI:
                 export_dataset(
                     dataset=dataset,

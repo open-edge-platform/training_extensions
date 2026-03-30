@@ -42,7 +42,7 @@ describe('ImportUploadFile', () => {
 
         render(
             <ImportDatasetDialogStateProvider>
-                <ImportUploadFile onFileUploaded={mockedOnFileUploaded} />
+                <ImportUploadFile formatOptions='coco' onFileUploaded={mockedOnFileUploaded} />
             </ImportDatasetDialogStateProvider>
         );
 

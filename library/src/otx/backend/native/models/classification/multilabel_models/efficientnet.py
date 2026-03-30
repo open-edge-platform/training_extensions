@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """EfficientNet-B0 model implementation."""
@@ -33,7 +33,7 @@ class EfficientNetMultilabelCls(OTXMultilabelClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | None = None,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: Literal[
             "efficientnet_b0",
             "efficientnet_b1",

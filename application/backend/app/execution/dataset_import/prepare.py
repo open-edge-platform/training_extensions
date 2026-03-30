@@ -4,10 +4,11 @@ import shutil
 from pathlib import Path
 from uuid import UUID
 
+from datumaro.experimental.categories import HierarchicalLabelCategories
 from datumaro.experimental.export_import import export_dataset, import_dataset
 from loguru import logger
 
-from app.execution.base import Execution, step
+from app.execution.base import Execution, ExecutionErr, step
 from app.models.jobs import PrepareDatasetForImportJobParams
 
 
@@ -27,7 +28,7 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
     Supported formats:
     - COCO: Images and annotations in COCO JSON format
     - YOLO: YOLO format with root directory structure
-    - VOC: Pascal VOC format (not yet implemented)
+    - VOC: Pascal VOC format
     - GETI: Native Geti format (pass-through)
     - DATUMARO_V1: Legacy Datumaro v1 format
 
@@ -38,11 +39,15 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
         staged_datasets_dir: Path to the directory containing staged dataset archives.
 
     Raises:
-        ValueError: If the dataset archive is not found, cannot be extracted, or has an invalid format.
-        NotImplementedError: If attempting to import VOC format (not yet supported).
+        ExecutionErr: If the dataset archive is not found, cannot be extracted, or has an invalid format.
     """
 
     params_type = PrepareDatasetForImportJobParams
+    IMPORT_ERR = (
+        "The dataset could not be recognized in any of the supported formats. Please verify that the dataset "
+        "is well-formed and in a supported format; if the problem persists, report the issue."
+    )
+    HIERARCHICAL_LABELS_ERR = "The dataset with hierarchical labels is not supported."
 
     def __init__(self, staged_datasets_dir: Path) -> None:
         super().__init__()
@@ -52,10 +57,10 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
     def check_archive(self, staged_dataset_id: UUID) -> Path:
         dataset_dir = self._staged_datasets_dir / str(staged_dataset_id)
         if not dataset_dir.exists() or not dataset_dir.is_dir():
-            raise ValueError(f"Dataset directory does not exist: {dataset_dir}")
+            raise ExecutionErr(f"Dataset directory does not exist: {dataset_dir}")
         zip_archives = list(dataset_dir.glob("*.zip"))
         if not zip_archives:
-            raise ValueError(f"Cannot find dataset zip archive in {dataset_dir}")
+            raise ExecutionErr(f"Cannot find dataset zip archive in {dataset_dir}")
         dataset_archive = sorted(zip_archives)[0]
         if len(zip_archives) > 1:
             logger.warning(f"Found more than one zip archive in {dataset_dir}. Using the first one: {dataset_archive}")
@@ -64,7 +69,13 @@ class PrepareDataset(Execution[PrepareDatasetForImportJobParams]):
     @step("Convert dataset archive to Geti format", 90)
     def convert_archive(self, archive_path: Path) -> Path:
         tmp_dir = archive_path.parent / f"{archive_path.stem}_import"
-        dataset = import_dataset(archive_path, extract_dir=tmp_dir)
+        try:
+            dataset = import_dataset(archive_path, extract_dir=tmp_dir)
+        except ValueError as err:
+            raise ExecutionErr(self.IMPORT_ERR) from err
+        if isinstance(dataset.label_categories, HierarchicalLabelCategories):
+            shutil.rmtree(archive_path.parent)
+            raise ExecutionErr(self.HIERARCHICAL_LABELS_ERR)
         export_dataset(dataset, output_path=archive_path.parent / "dataset", as_zip=False)
         return tmp_dir
 

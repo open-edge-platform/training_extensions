@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, Flex, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Flex, Icon, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 
 import type { Media } from '../../../../constants/shared-types';
@@ -99,7 +99,9 @@ export const SecondaryToolbar = ({
                             marginStart={'size-100'}
                             UNSAFE_className={classes.closeButton}
                         >
-                            <CloseSemiBold width={14} height={14} />
+                            <Icon height={'size-150'} width={'size-150'}>
+                                <CloseSemiBold />
+                            </Icon>
                             <Text>Close</Text>
                         </ActionButton>
                     </ButtonGroup>

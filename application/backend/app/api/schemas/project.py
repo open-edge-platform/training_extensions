@@ -3,7 +3,7 @@
 
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.core.models import HasID, RequiresID
 from app.models import TaskType
@@ -25,6 +25,14 @@ class TaskView(TaskBase):
 
 class TaskCreate(TaskBase):
     labels: list[LabelCreate] = Field(default_factory=list, description="List of task labels to create.")
+
+    @model_validator(mode="after")
+    def validate_labels(self) -> "TaskCreate":
+        if self.task_type is TaskType.CLASSIFICATION and self.exclusive_labels and len(self.labels) < 2:
+            raise ValueError("Multi-class classification requires at least two labels.")
+        if len(self.labels) == 0:
+            raise ValueError("A project requires at least one label.")
+        return self
 
 
 class ProjectUpdateName(BaseModel):

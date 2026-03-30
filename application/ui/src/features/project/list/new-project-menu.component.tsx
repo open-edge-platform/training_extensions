@@ -37,10 +37,10 @@ export const NewProjectMenu = () => {
                 <ActionButton UNSAFE_className={classes.menu}>
                     <AddCircle />
 
-                    <Text>Create project</Text>
+                    <Text UNSAFE_className={classes.create}>Create project</Text>
                 </ActionButton>
                 <Menu onAction={handleAction}>
-                    <Item key='newEmptyProject'>Create new empty project</Item>
+                    <Item key='newEmptyProject'>Create new project</Item>
                     <Item key='newFromDataset'>Create from dataset</Item>
                 </Menu>
             </MenuTrigger>

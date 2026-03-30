@@ -23,6 +23,12 @@ export const useStagedDataset = (stagedDatasetId: string | null | undefined) => 
     );
 };
 
+export const useStagedDatasetSuspense = (stagedDatasetId: string | null | undefined) => {
+    return $api.useSuspenseQuery('get', '/api/staged_datasets/{staged_dataset_id}', {
+        params: { path: { staged_dataset_id: stagedDatasetId } },
+    });
+};
+
 export const useDeleteStagedDataset = ({
     stagedDatasetId,
     onError,

@@ -10,6 +10,7 @@ import pytest
 from app.db.schema import PipelineDB, ProjectDB
 from app.models import DataCollectionConfig, PipelineStatus
 from app.models.data_collection_policy import FixedRateDataCollectionPolicy
+from app.models.model_revision import TrainingStatus
 from app.services import PipelineService, ResourceNotFoundError, ResourceType, SystemService
 from app.services.event.event_bus import EventType
 from app.services.pipeline_service import OtherProjectActiveError
@@ -192,12 +193,55 @@ class TestPipelineServiceIntegration:
         _, db_pipeline = fxt_project_with_pipeline(is_running=True)
 
         model_id = fxt_db_models[1].id
+
         updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {model_attr: model_id})
 
         fxt_event_bus.emit_event.assert_called_once_with(EventType.MODEL_CHANGED)
         db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         assert str(updated.model_id) == model_id
         assert str(updated.model_id) == db_updated.model_revision_id
+
+    @pytest.mark.parametrize(
+        "training_status",
+        [TrainingStatus.NOT_STARTED, TrainingStatus.IN_PROGRESS, TrainingStatus.FAILED],
+    )
+    def test_update_model_raises_when_not_successfully_trained(
+        self,
+        training_status,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """Test that updating the pipeline model raises ValueError when the target model is not successfully trained."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        new_model = fxt_db_models[1]
+        new_model.training_status = training_status
+        db_session.flush()
+
+        with pytest.raises(ValueError, match="points to a model that was not successfully trained"):
+            fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"model_id": new_model.id})
+
+        # Pipeline model should remain unchanged
+        db_unchanged = db_session.get(PipelineDB, db_pipeline.project_id)
+        assert db_unchanged.model_revision_id == db_pipeline.model_revision_id
+
+    def test_update_model_raises_when_model_not_found(
+        self,
+        fxt_project_with_pipeline,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """Test that updating the pipeline model raises ResourceNotFoundError when the model ID does not exist."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+        non_existent_model_id = str(uuid4())
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"model_id": non_existent_model_id})
+
+        assert exc_info.value.resource_type == ResourceType.MODEL
+        assert exc_info.value.resource_id == non_existent_model_id
 
     @pytest.mark.parametrize("pipeline_status", [PipelineStatus.IDLE, PipelineStatus.RUNNING])
     def test_enable_disable_pipeline(

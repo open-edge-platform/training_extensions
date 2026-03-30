@@ -5,6 +5,8 @@ import type { components } from '../api/openapi-spec';
 
 export type Label = components['schemas']['LabelView'];
 
+export type Pipeline = components['schemas']['PipelineView'];
+
 export type Model = components['schemas']['ModelView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
@@ -15,6 +17,14 @@ export type Metric = components['schemas']['MetricView'];
 export type LineMetric = components['schemas']['LineMetric'];
 
 export type Job = components['schemas']['JobView'];
+export type TrainJob = Job & {
+    job_type: 'train';
+    metadata: components['schemas']['TrainingMetadata'];
+};
+export type QuantizeJob = Job & {
+    job_type: 'quantize';
+    metadata: components['schemas']['QuantizationMetadata'];
+};
 export type ExportDatasetJob = Job & {
     type: 'export_dataset';
     metadata: components['schemas']['ExportDatasetMetadata'];
@@ -77,9 +87,16 @@ export type SourceConfig =
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
 
 export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];
+export type PredictionDTO = components['schemas']['DatasetItemAnnotation-Output'];
 export type DatasetItemAnnotationStatus = components['schemas']['DatasetItemAnnotationStatus'];
 
 export type AnnotatedVideoFrame = components['schemas']['AnnotatedVideoFrame'];
+export type VideoFramePrediction = {
+    media: components['schemas']['BatchInferenceMedia'];
+    prediction: components['schemas']['DatasetItemAnnotation-Output'][];
+};
+
+export type PredictionVideoRangePayload = components['schemas']['VideoRange'];
 
 export type AnnotationType = components['schemas']['AnnotationType'];
 
@@ -91,18 +108,17 @@ export type FloatConfigurableRangeParameter = components['schemas']['FloatRangeP
 
 export type NumberConfigurableParameter = IntConfigurableParameter | FloatConfigurableParameter;
 
-type EnumerableConfigurableParameter = StringConfigurableParameter | NumberConfigurableParameter;
-
-type CreateEnumerableConfigurableParameterType<T extends EnumerableConfigurableParameter> = Omit<
-    T,
-    'allowed_values' | 'value' | 'default_value'
-> & {
-    allowed_values: Exclude<T['allowed_values'], null | undefined>;
-    value: Exclude<T['value'], null | undefined>;
-    default_value: Exclude<T['default_value'], null | undefined>;
-};
+type CreateEnumerableConfigurableParameterType<T extends StringConfigurableParameter | NumberConfigurableParameter> =
+    Omit<T, 'allowed_values' | 'value' | 'default_value'> & {
+        allowed_values: Exclude<T['allowed_values'], null | undefined>;
+        value: Exclude<T['value'], null | undefined>;
+        default_value: Exclude<T['default_value'], null | undefined>;
+    };
 
 export type NumberEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<NumberConfigurableParameter>;
+export type StringEnumConfigurableParameter = CreateEnumerableConfigurableParameterType<StringConfigurableParameter>;
+
+export type EnumConfigurableParameter = StringEnumConfigurableParameter | NumberEnumConfigurableParameter;
 
 export type ConfigurableParameter =
     | BoolConfigurableParameter
@@ -115,3 +131,8 @@ export type ConfigurableParameterGroup = components['schemas']['ConfigurablePara
 export type TrainingConfigurationParameter = ConfigurableParameter | ConfigurableParameterGroup;
 
 export type TrainingConfiguration = components['schemas']['TrainingConfigurationView'];
+
+export type TrainingRequestPayload = components['schemas']['TrainingRequest'];
+export type TrainingConfigurationRequestPayload = {
+    [key: string]: unknown;
+};

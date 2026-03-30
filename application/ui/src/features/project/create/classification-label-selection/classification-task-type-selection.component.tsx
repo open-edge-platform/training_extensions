@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Radio, RadioGroup, Text } from '@geti/ui';
+import { InfoOutline } from '@geti/ui/icons';
 
-import styles from './classification-task-type-selection.module.scss';
+import classes from './classification-task-type-selection.module.scss';
 
 export type ClassificationTaskType = 'single-label' | 'multi-label';
 
@@ -12,14 +13,27 @@ type ClassificationTaskTypeItemProps = {
     label: string;
     description: string;
     onSelect: (type: ClassificationTaskType) => void;
+    warning?: string;
 };
 
-const ClassificationTaskTypeItem = ({ type, label, description, onSelect }: ClassificationTaskTypeItemProps) => {
+const ClassificationTaskTypeItem = ({
+    type,
+    label,
+    description,
+    onSelect,
+    warning,
+}: ClassificationTaskTypeItemProps) => {
     return (
-        <div onClick={() => onSelect(type)} className={styles.itemType}>
+        <div onClick={() => onSelect(type)} className={classes.itemType}>
             <Radio value={type}>{label}</Radio>
 
-            <Text UNSAFE_className={styles.typeDescription}>{description}</Text>
+            <Text UNSAFE_className={classes.typeDescription}>{description}</Text>
+            {warning && (
+                <Flex alignItems={'center'} gap={'size-50'} marginTop={'size-100'}>
+                    <InfoOutline />
+                    <Text UNSAFE_className={classes.warning}>{warning}</Text>
+                </Flex>
+            )}
         </div>
     );
 };
@@ -35,7 +49,7 @@ export const ClassificationTaskSelection = ({
 }: ClassificationTaskSelectionProps) => {
     return (
         <Flex direction={'column'} gap={'size-250'}>
-            <Text UNSAFE_className={styles.title}>What classification type should the model use?</Text>
+            <Text UNSAFE_className={classes.title}>What classification type should the model use?</Text>
             <RadioGroup
                 isEmphasized
                 aria-label={'Classification type'}
@@ -49,6 +63,7 @@ export const ClassificationTaskSelection = ({
                             label={'Single-label'}
                             description={'Assign one label from mutually exclusive labels'}
                             onSelect={onSelectedTypeChange}
+                            warning={'Requires at least 2 labels'}
                         />
                         <ClassificationTaskTypeItem
                             type={'multi-label'}

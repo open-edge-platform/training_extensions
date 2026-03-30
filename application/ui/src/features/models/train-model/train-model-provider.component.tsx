@@ -15,13 +15,13 @@ import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions
 import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetModels } from '../hooks/api/use-get-models.hook';
-import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
-import { useTrainingConfiguration } from './use-training-configuration';
+import { useGetTrainingDevices } from './api/use-get-training-devices';
+import { useTrainingConfiguration } from './hooks/use-training-configuration';
 
 type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
 type ModelRevisionWithValue = Pick<Model, 'id' | 'name' | 'architecture'> & { value: string | null };
 
-type TrainModelContextProps = {
+export type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 
     activeModelArchitectureId: string | undefined;
@@ -128,14 +128,16 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
 
     const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
 
-    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] = useTrainingConfiguration({
-        modelArchitectureId: selectedModelArchitectureId,
-        modelRevisionId: selectedModelRevisionId,
-    });
-
     const modelRevisions = useMemo(() => {
         return getModelRevisionsForArchitecture(allModelRevisions, selectedModelArchitectureId);
     }, [allModelRevisions, selectedModelArchitectureId]);
+
+    const selectedModelRevision = modelRevisions.find((modelRevision) => modelRevision.id === selectedModelRevisionId);
+
+    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] = useTrainingConfiguration({
+        modelArchitectureId: selectedModelArchitectureId,
+        modelRevisionId: selectedModelRevision?.value ?? null,
+    });
 
     const onSelectModelArchitectureId = (modelArchitectureId: string | null) => {
         setSelectedModelArchitectureId(modelArchitectureId);
@@ -177,7 +179,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     );
 };
 
-export const useTrainModel = () => {
+export const useTrainModelState = () => {
     const context = use(TrainModelContext);
 
     if (context === null) {

@@ -2,7 +2,7 @@
 #  SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Annotated, Literal, Union, cast
+from typing import Annotated, Literal, Union, cast, get_args, get_origin
 
 from pydantic import BaseModel, Discriminator, Field, Tag
 from pydantic.fields import FieldInfo
@@ -22,6 +22,15 @@ class _BaseConfigurableParameterView(BaseModel):
     key: str = Field(title="Key to identify the parameter")
     name: str = Field(title="User-friendly name of the parameter")
     description: str = Field(title="Extended description of the parameter", default="")
+    depends_on: dict[str, str] | None = Field(
+        default=None,
+        title="Dependency condition",
+        description=(
+            "If set, this parameter is only applicable when the specified sibling parameter has the given value. "
+            "For example, {'type': 'cosine_annealing'} means this parameter only applies when the 'type' "
+            "parameter in the same group is set to 'cosine_annealing'."
+        ),
+    )
 
 
 class BoolParameterView(_BaseConfigurableParameterView):
@@ -126,6 +135,16 @@ class TrainingConfigurationView(BaseModel):
     )
 
     @classmethod
+    def _get_literal_strenum_class(cls, annotation: type) -> type[StrEnum] | None:
+        """If annotation is Literal[<StrEnum member>, ...], return the StrEnum class. Otherwise return None."""
+        if get_origin(annotation) is not Literal:
+            return None
+        args = get_args(annotation)
+        if args and isinstance(args[0], StrEnum):
+            return type(args[0])
+        return None
+
+    @classmethod
     def _extract_constraints(cls, field_info: FieldInfo) -> tuple[float | None, float | None]:
         """Extract min/max constraints from field metadata."""
         min_value = None
@@ -145,14 +164,12 @@ class TrainingConfigurationView(BaseModel):
         return min_value, max_value
 
     @classmethod
-    def _get_value_type(cls, field_info: FieldInfo) -> Literal["bool", "int", "float", "str", "float_range"]:
+    def _get_value_type(cls, field_info: FieldInfo) -> Literal["bool", "int", "float", "str", "float_range"]:  # noqa: C901, PLR0911
         """Determine the value type from field annotation."""
         annotation = field_info.annotation
 
         # Handle Optional/Union types by extracting the non-None type
         if hasattr(annotation, "__origin__"):
-            from typing import get_args, get_origin
-
             origin = get_origin(annotation)
             if origin is Union:
                 args = [arg for arg in get_args(annotation) if arg is not type(None)]
@@ -160,11 +177,19 @@ class TrainingConfigurationView(BaseModel):
                     annotation = args[0]
                     origin = get_origin(annotation)
 
+            # Detect Literal[StrEnum member] -> treat as str
+            if cls._get_literal_strenum_class(annotation) is not None:  # pyrefly: ignore[bad-argument-type]
+                return "str"
+
             # Detect tuple[float, float]
             if origin is tuple:
                 args = get_args(annotation)
                 if len(args) == 2 and all(a is float for a in args):
                     return "float_range"
+
+        # Check if annotation is a StrEnum subclass -> treat as str
+        if isinstance(annotation, type) and issubclass(annotation, StrEnum):
+            return "str"
 
         # Map Python types to string representations
         if annotation is bool:
@@ -179,6 +204,15 @@ class TrainingConfigurationView(BaseModel):
         return "str"
 
     @classmethod
+    def _extract_depends_on(cls, field_info: FieldInfo) -> dict[str, str] | None:
+        """Extract depends_on condition from field's json_schema_extra."""
+        if isinstance(field_info.json_schema_extra, dict):
+            depends_on = field_info.json_schema_extra.get("depends_on")
+            if isinstance(depends_on, dict):
+                return depends_on  # pyrefly: ignore[bad-return]
+        return None
+
+    @classmethod
     def _field_to_configurable_parameter(
         cls,
         key: str,
@@ -190,18 +224,48 @@ class TrainingConfigurationView(BaseModel):
         """Convert a single field to the appropriate ConfigurableParameterView variant."""
         value_type = cls._get_value_type(field_info)
 
-        if field_info.title is None:
+        # For StrEnum fields, derive title and description from the enum class
+        annotation = field_info.annotation
+        enum_class = None
+
+        # Check Literal[StrEnum member]
+        if annotation is not None:
+            enum_class = cls._get_literal_strenum_class(annotation)
+
+        # Check plain StrEnum subclass
+        if enum_class is None and isinstance(annotation, type) and issubclass(annotation, StrEnum):
+            enum_class = annotation
+
+        if enum_class is not None:
+            # Try to get title/description from enum member instance
+            literal_args = get_args(annotation) if get_origin(annotation) is Literal else None
+            if literal_args and isinstance(literal_args[0], StrEnum):
+                member = literal_args[0]
+                title = getattr(member, "title", None) or field_info.title
+                description = getattr(member, "description", None) or field_info.description or ""
+            else:
+                # Plain StrEnum annotation — try class-level attributes or field info
+                title = field_info.title
+                description = field_info.description or ""
+        else:
+            title = field_info.title
+            description = field_info.description or ""
+
+        if title is None:
             raise ValueError(
                 f"Field '{key}' is missing a title in its FieldInfo, "
                 f"which is required to associate a user-friendly name to the parameter."
             )
 
+        depends_on = cls._extract_depends_on(field_info)
+
         common_kwargs = {
             "key": key,
-            "name": field_info.title,
-            "description": field_info.description or "",
+            "name": title,
+            "description": description,
             "value": value,
             "default_value": default_value,
+            "depends_on": depends_on,
         }
 
         if value_type == "int":
@@ -237,11 +301,18 @@ class TrainingConfigurationView(BaseModel):
             if allowed_values_from is not None:
                 allowed_values = getattr(model, allowed_values_from, None)
 
-        # Check if annotation is a StrEnum subclass
         if allowed_values is None:
             annotation = field_info.annotation
+
+            # Check if annotation is a plain StrEnum subclass
             if isinstance(annotation, type) and issubclass(annotation, StrEnum):
                 allowed_values = [member.value for member in annotation]
+
+            # Check if annotation is Literal[<StrEnum member>, ...]
+            elif annotation is not None:
+                enum_class = cls._get_literal_strenum_class(annotation)
+                if enum_class is not None:
+                    allowed_values = [member.value for member in enum_class]
 
         return allowed_values
 
@@ -278,7 +349,7 @@ class TrainingConfigurationView(BaseModel):
 
                 # Get the default value from the default model, falling back to field_info.default
                 if default_model is not None:
-                    default_value = getattr(default_model, field_name)
+                    default_value = getattr(default_model, field_name, child_field_info.default)
                 else:
                     default_value = child_field_info.default
 
@@ -973,7 +1044,7 @@ class TrainingConfigurationView(BaseModel):
                                             },
                                             {
                                                 "type": "parameter",
-                                                "key": "adaptive_tiling",
+                                                "key": "enable_adaptive_tiling",
                                                 "name": "Adaptive tiling",
                                                 "description": "Whether to use adaptive tiling based on image content",
                                                 "value": True,
@@ -993,9 +1064,9 @@ class TrainingConfigurationView(BaseModel):
                                                     "of most annotations."
                                                 ),
                                                 "value": 400,
-                                                "default_value": 400,
+                                                "default_value": 128,
                                                 "value_type": "int",
-                                                "min_value": 0,
+                                                "min_value": 64,
                                                 "max_value": None,
                                                 "allowed_values": None,
                                             },

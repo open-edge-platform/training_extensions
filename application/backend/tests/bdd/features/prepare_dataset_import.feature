@@ -13,16 +13,20 @@ Feature: Prepare Dataset For Import
       | Chardonnay      | 10       | 5          |
       | Sauvignon Blanc | 10       | 5          |
       | Cabernet Franc  | 10       | 5          |
+    And the project contains the following video frame distribution:
+      | Label           | Training | Validation | Testing |
+      | Chardonnay      | 2        | 1          | 1       |
     And the project dataset is exported in <export format> format
     When I prepare the staged dataset archive for import
     Then the staged dataset is ready for import
-    And the staged dataset with name=dataset has <expected images> images
+    And the staged dataset with name=dataset has <image count> images
+    And the staged dataset with name=dataset has <frame count> video frames
 
     Examples:
-      | export format | expected images |
-      | YOLO          | 45              |
-      | GETI          | 45              |
-      | COCO          | 45              |
+      | export format | image count | frame count |
+      | YOLO          | 49          | 0           |
+      | GETI          | 45          | 4           |
+      | COCO          | 49          | 0           |
 
   @prepare @classification
   Scenario Outline: Prepare classification dataset for import
@@ -31,15 +35,20 @@ Feature: Prepare Dataset For Import
       | Label | Training | Validation | Testing |
       | cat   | 10       | 3          | 2       |
       | dog   | 10       | 3          | 2       |
+    And the project contains the following video frame distribution:
+      | Label | Training | Validation | Testing |
+      | cat   | 3        | 1          | 1       |
+      | dog   | 3        | 1          | 1       |
     And the project dataset is exported in <export format> format
     When I prepare the staged dataset archive for import
     Then the staged dataset is ready for import
-    And the staged dataset with name=dataset has <expected images> images
+    And the staged dataset with name=dataset has <image count> images
+    And the staged dataset with name=dataset has <frame count> video frames
 
     Examples:
-      | export format | expected images |
-      | GETI          | 30              |
-#     | VOC           | 30              |
+      | export format | image count | frame count |
+      | GETI          | 30          | 10          |
+      | VOC           | 40          | 0           |
 
   @prepare @segmentation
   Scenario Outline: Prepare segmentation dataset for import
@@ -48,12 +57,17 @@ Feature: Prepare Dataset For Import
       | Label | Training | Validation | Testing |
       | car   | 10       | 3          | 2       |
       | person| 10       | 3          | 2       |
+    And the project contains the following video frame distribution:
+      | Label  | Training | Validation | Testing |
+      | car    | 1        | 1          | 1       |
+      | person | 1        | 1          | 1       |
     And the project dataset is exported in <export format> format
     When I prepare the staged dataset archive for import
     Then the staged dataset is ready for import
-    And the staged dataset with name=dataset has <expected images> images
+    And the staged dataset with name=dataset has <image count> images
+    And the staged dataset with name=dataset has <frame count> video frames
 
     Examples:
-      | export format | expected images |
-      | COCO          | 30              |
-      | GETI          | 30              |
+      | export format | image count | frame count |
+      | COCO          | 36          | 0           |
+      | GETI          | 30          | 6           |

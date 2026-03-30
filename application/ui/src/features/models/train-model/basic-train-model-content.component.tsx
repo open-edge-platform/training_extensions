@@ -10,7 +10,7 @@ import { SelectTrainingDevice } from './select-training-device.component';
 
 export const BasicTrainModelContent = () => {
     return (
-        <View padding={'size-300'} backgroundColor={'gray-50'} height={'100%'}>
+        <View backgroundColor={'gray-50'} height={'100%'}>
             <Flex height={'100%'} direction={'column'} gap={'size-300'}>
                 <View flex={1} minHeight={0} overflow={'auto'}>
                     <ModelArchitecturesList />

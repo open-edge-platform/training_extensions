@@ -13,8 +13,16 @@ from .dataset import AnnotationType, DatasetFormat, StagedDataset
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
-from .jobs import ExportDatasetJob, ExportDatasetJobParams, TrainingJob, TrainingJobParams
-from .label import Label, LabelReference
+from .inference import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult
+from .jobs import (
+    ExportDatasetJob,
+    ExportDatasetJobParams,
+    QuantizationJob,
+    QuantizationJobParams,
+    TrainingJob,
+    TrainingJobParams,
+)
+from .label import Label, LabelReference, LabelUpdateInfo
 from .media import Image, Media, MediaFormat, MediaType, Video, VideoFrame
 from .model_manifest import ModelManifest
 from .model_revision import ModelRevision, ModelVariant, TrainingInfo, TrainingStatus
@@ -47,6 +55,10 @@ from .task import Task, TaskType
 __all__ = [
     "AnnotationType",
     "BaseEntity",
+    "BatchInferenceInput",
+    "BatchInferenceMedia",
+    "BatchInferencePrediction",
+    "BatchInferenceResult",
     "ConfidenceThresholdDataCollectionPolicy",
     "DataCollectionConfig",
     "DataCollectionPolicy",
@@ -70,6 +82,7 @@ __all__ = [
     "ImagesFolderSourceConfig",
     "Label",
     "LabelReference",
+    "LabelUpdateInfo",
     "Media",
     "MediaFormat",
     "MediaType",
@@ -83,6 +96,8 @@ __all__ = [
     "Point",
     "Polygon",
     "Project",
+    "QuantizationJob",
+    "QuantizationJobParams",
     "Rectangle",
     "RosSinkConfig",
     "Shape",

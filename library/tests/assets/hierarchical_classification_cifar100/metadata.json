@@ -1,0 +1,326 @@
+{
+  "version": "2.0.0",
+  "schema": {
+    "attributes": {
+      "image": {
+        "type": [
+          {
+            "name": "Image",
+            "module": "torchvision.tv_tensors._image"
+          },
+          {
+            "name": "ndarray",
+            "module": "numpy"
+          },
+          {
+            "name": "Tensor",
+            "module": "torch"
+          }
+        ],
+        "type_module": "__union__",
+        "field": {
+          "type": "ImageField",
+          "semantic": "default",
+          "dtype": "UInt8",
+          "channels_first": true,
+          "format": "RGB"
+        }
+      },
+      "subset": {
+        "type": "Subset",
+        "type_module": "datumaro.experimental.fields.datasets",
+        "field": {
+          "type": "SubsetField",
+          "semantic": "default",
+          "categories": null,
+          "dtype": "Categorical"
+        }
+      },
+      "label": {
+        "type": [
+          {
+            "name": "ndarray",
+            "module": "numpy"
+          },
+          {
+            "name": "Tensor",
+            "module": "torch"
+          }
+        ],
+        "type_module": "__union__",
+        "field": {
+          "type": "LabelField",
+          "semantic": "default",
+          "dtype": "UInt8",
+          "multi_label": false,
+          "is_list": true
+        }
+      },
+      "dm_image_info": {
+        "type": "ImageInfo",
+        "type_module": "datumaro.experimental.fields.images",
+        "field": {
+          "type": "ImageInfoField",
+          "semantic": "default",
+          "dtype": "Struct({'width': Int32, 'height': Int32})"
+        }
+      }
+    },
+    "categories": {
+      "label": {
+        "type": "HierarchicalLabelCategories",
+        "items": [
+          {
+            "name": "aquatic_mammals",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "fish",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "fruit_and_vegetables",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "insects",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "large_carnivores",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "large_natural_outdoor_scenes",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "large_omnivores_and_herbivores",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "people",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "reptiles",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "vehicles_1",
+            "parent": "",
+            "label_semantics": {}
+          },
+          {
+            "name": "apple",
+            "parent": "fruit_and_vegetables",
+            "label_semantics": {}
+          },
+          {
+            "name": "aquarium_fish",
+            "parent": "fish",
+            "label_semantics": {}
+          },
+          {
+            "name": "beaver",
+            "parent": "aquatic_mammals",
+            "label_semantics": {}
+          },
+          {
+            "name": "bicycle",
+            "parent": "vehicles_1",
+            "label_semantics": {}
+          },
+          {
+            "name": "boy",
+            "parent": "people",
+            "label_semantics": {}
+          },
+          {
+            "name": "butterfly",
+            "parent": "insects",
+            "label_semantics": {}
+          },
+          {
+            "name": "camel",
+            "parent": "large_omnivores_and_herbivores",
+            "label_semantics": {}
+          },
+          {
+            "name": "cattle",
+            "parent": "large_omnivores_and_herbivores",
+            "label_semantics": {}
+          },
+          {
+            "name": "chimpanzee",
+            "parent": "people",
+            "label_semantics": {}
+          },
+          {
+            "name": "cloud",
+            "parent": "large_natural_outdoor_scenes",
+            "label_semantics": {}
+          },
+          {
+            "name": "cockroach",
+            "parent": "insects",
+            "label_semantics": {}
+          },
+          {
+            "name": "dinosaur",
+            "parent": "reptiles",
+            "label_semantics": {}
+          },
+          {
+            "name": "elephant",
+            "parent": "large_omnivores_and_herbivores",
+            "label_semantics": {}
+          },
+          {
+            "name": "forest",
+            "parent": "large_natural_outdoor_scenes",
+            "label_semantics": {}
+          },
+          {
+            "name": "leopard",
+            "parent": "large_carnivores",
+            "label_semantics": {}
+          },
+          {
+            "name": "lion",
+            "parent": "large_carnivores",
+            "label_semantics": {}
+          },
+          {
+            "name": "mountain",
+            "parent": "large_natural_outdoor_scenes",
+            "label_semantics": {}
+          },
+          {
+            "name": "mushroom",
+            "parent": "fruit_and_vegetables",
+            "label_semantics": {}
+          },
+          {
+            "name": "otter",
+            "parent": "aquatic_mammals",
+            "label_semantics": {}
+          },
+          {
+            "name": "sea",
+            "parent": "large_natural_outdoor_scenes",
+            "label_semantics": {}
+          },
+          {
+            "name": "seal",
+            "parent": "aquatic_mammals",
+            "label_semantics": {}
+          },
+          {
+            "name": "shark",
+            "parent": "fish",
+            "label_semantics": {}
+          },
+          {
+            "name": "snake",
+            "parent": "reptiles",
+            "label_semantics": {}
+          },
+          {
+            "name": "sunflower",
+            "parent": "fruit_and_vegetables",
+            "label_semantics": {}
+          },
+          {
+            "name": "train",
+            "parent": "vehicles_1",
+            "label_semantics": {}
+          },
+          {
+            "name": "tulip",
+            "parent": "fruit_and_vegetables",
+            "label_semantics": {}
+          },
+          {
+            "name": "turtle",
+            "parent": "reptiles",
+            "label_semantics": {}
+          },
+          {
+            "name": "wolf",
+            "parent": "large_carnivores",
+            "label_semantics": {}
+          }
+        ],
+        "label_groups": [
+          {
+            "name": "aquatic_mammals",
+            "labels": ["beaver", "otter", "seal"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "fish",
+            "labels": ["aquarium_fish", "shark"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "fruit_and_vegetables",
+            "labels": ["apple", "mushroom", "sunflower", "tulip"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "insects",
+            "labels": ["butterfly", "cockroach"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "large_carnivores",
+            "labels": ["leopard", "lion", "wolf"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "large_natural_outdoor_scenes",
+            "labels": ["cloud", "forest", "mountain", "sea"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "large_omnivores_and_herbivores",
+            "labels": ["camel", "cattle", "elephant"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "people",
+            "labels": ["boy", "chimpanzee"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "reptiles",
+            "labels": ["dinosaur", "snake", "turtle"],
+            "group_type": "EXCLUSIVE"
+          },
+          {
+            "name": "vehicles_1",
+            "labels": ["bicycle", "train"],
+            "group_type": "EXCLUSIVE"
+          }
+        ],
+        "label_semantics": {}
+      }
+    }
+  },
+  "object_columns": [],
+  "videos": {
+    "fields": [],
+    "export_mode": "copy",
+    "original_paths": {}
+  }
+}

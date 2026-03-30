@@ -20,7 +20,7 @@ from otx.types.task import OTXTaskType
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
-    from torchmetrics import Metric
+    from torchmetrics import Metric, MetricCollection
 
     from otx.types import PathLike
 
@@ -241,7 +241,7 @@ class OVDetectionModel(OVModel):
             ],
         }
 
-    def compute_metrics(self, metric: Metric) -> dict:
+    def compute_metrics(self, metric: Metric | MetricCollection) -> dict:
         """Compute metrics for the model."""
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}

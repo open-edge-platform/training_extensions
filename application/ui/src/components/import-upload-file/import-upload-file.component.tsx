@@ -17,17 +17,19 @@ import { LinkOut } from '@geti/ui/icons';
 
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
-import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
+import { getFilesFromDropEvent } from '../../shared/drop-zone.utils';
+import { formatToFileArray, isSupportedDatasetZip } from './util';
 
 import classes from './import-upload-file.module.scss';
 
 export type FileUploadedResponse = { size: number; fileName: string; prepareJobId: string; stagedDatasetId: string };
 
 type ImportUploadFileProps = {
+    formatOptions: string;
     onFileUploaded: (data: FileUploadedResponse) => void;
 };
 
-export const ImportUploadFile = ({ onFileUploaded }: ImportUploadFileProps) => {
+export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUploadFileProps) => {
     const stagedDatasetMutation = $api.useMutation('post', '/api/staged_datasets');
     const prepareImportJobMutation = $api.useMutation('post', '/api/jobs');
 
@@ -57,10 +59,8 @@ export const ImportUploadFile = ({ onFileUploaded }: ImportUploadFileProps) => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const stagedDataset = await stagedDatasetMutation.mutateAsync({
-            // @ts-expect-error There is an incorrect type in OpenAPI
-            body: formData,
-        });
+        // @ts-expect-error There is an incorrect type in OpenAPI
+        const stagedDataset = await stagedDatasetMutation.mutateAsync({ body: formData });
 
         const prepareImportJob = await prepareImportJobMutation.mutateAsync({
             body: {
@@ -108,7 +108,7 @@ export const ImportUploadFile = ({ onFileUploaded }: ImportUploadFileProps) => {
                                 </Button>
                             </FileTrigger>
 
-                            <Text UNSAFE_className={classes.formatOptions}>(Geti, COCO).zip</Text>
+                            <Text UNSAFE_className={classes.formatOptions}>({formatOptions}).zip</Text>
 
                             <SpectrumLink UNSAFE_className={classes.link}>
                                 <a href={'/'} target={'_blank'} rel={'noopener noreferrer'}>

@@ -5,6 +5,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getMockedDatasetItem } from 'mocks/mock-dataset-item';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
+import { getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -27,6 +28,12 @@ describe('TrainModel', () => {
             http.get('/api/projects/{project_id}/models', () => {
                 return HttpResponse.json([]);
             }),
+            http.get('/api/projects/{project_id}/models/{model_id}/training_configuration', () => {
+                return HttpResponse.json({ parameters: getMockedTrainingConfiguration() });
+            }),
+            http.get('/api/projects/{project_id}/training_configuration', () => {
+                return HttpResponse.json({ parameters: getMockedTrainingConfiguration() });
+            }),
             http.get('/api/model_architectures', () => {
                 return HttpResponse.json({
                     model_architectures: [],
@@ -39,7 +46,7 @@ describe('TrainModel', () => {
         );
     });
 
-    it.skip('shows warning message when there are not enough annotated media items', async () => {
+    it('shows warning message when there are not enough annotated media items', async () => {
         server.use(
             http.get('/api/projects/{project_id}/dataset/items', () => {
                 return HttpResponse.json({
@@ -65,7 +72,7 @@ describe('TrainModel', () => {
 
         render(<TrainModel />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Train model' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Train model' }));
 
         expect(
             await screen.findByText(/In order to train a model, you need to annotate at least 3 items/)
@@ -106,7 +113,7 @@ describe('TrainModel', () => {
 
         render(<TrainModel />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Train model' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Train model' }));
 
         await waitFor(() => {
             expect(

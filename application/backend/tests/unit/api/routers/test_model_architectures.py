@@ -17,7 +17,7 @@ class TestModelArchitecturesEndpoint:
 
         data = response.json()
         assert "model_architectures" in data
-        assert len(data["model_architectures"]) == 11
+        assert len(data["model_architectures"]) == 17
 
         # Verify structure of first detection model
         detection_model = next(
@@ -45,21 +45,21 @@ class TestModelArchitecturesEndpoint:
         assert "stats" in detection_model
         assert detection_model["stats"]["gigaflops"] == 20.6
         assert detection_model["stats"]["trainable_parameters"] == 3.9
-        assert "performance_ratings" in detection_model["stats"]
+        assert "benchmark_metrics" in detection_model["stats"]
 
         # Verify top picks
         assert "top_picks" in data
         top_picks = data["top_picks"]
-        assert top_picks["balance"] == "object-detection-atss-mobilenet-v2"
+        assert top_picks["balance"] == "object-detection-deim-d-fine-m"
         assert top_picks["speed"] == "object-detection-yolox-s"
-        assert top_picks["accuracy"] == "object-detection-d-fine-x"
+        assert top_picks["accuracy"] == "object-detection-deim-d-fine-l"
 
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [
-            ("detection", 11),
-            ("instance_segmentation", 4),
-            ("classification", 5),
+            ("detection", 17),
+            ("instance_segmentation", 8),
+            ("classification", 6),
         ],
     )
     def test_get_model_architectures_various_tasks(self, fxt_client: TestClient, task_filter, total_models):

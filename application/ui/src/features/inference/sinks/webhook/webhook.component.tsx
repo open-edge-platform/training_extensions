@@ -17,7 +17,7 @@ export const Webhook = ({ defaultState }: WebhookProps) => {
         <Flex direction='column' gap='size-200'>
             <Flex direction={'row'} gap='size-200'>
                 <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
-                <TextField isRequired flex='1' label='Name' name='name' defaultValue={defaultState.name} />
+                <TextField flex='1' label='Name' name='name' defaultValue={defaultState.name || 'Webhook sink'} />
             </Flex>
             <Flex>
                 <RateLimitFields rateLimit={defaultState.rate_limit} />

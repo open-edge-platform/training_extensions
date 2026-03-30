@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTXInstanceSegDataset."""
@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from otx import LabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.sample import InstanceSegmentationSample
+from otx.data.entity.utils import with_image_dtype
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
@@ -27,8 +28,7 @@ class OTXInstanceSegDataset(OTXDataset):
         task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
         max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
         stack_images (bool, optional): Whether to stack images. Defaults to True.
-        to_tv_image (bool, optional): Whether to convert images to torchvision format. Defaults to True.
-        data_format (str, optional): Data format string. Defaults to "".
+
     """
 
     def __init__(
@@ -38,19 +38,15 @@ class OTXInstanceSegDataset(OTXDataset):
         task_type: OTXTaskType = OTXTaskType.INSTANCE_SEGMENTATION,
         max_refetch: int = 1000,
         stack_images: bool = True,
-        to_tv_image: bool = True,
-        data_format: str = "",
+        storage_dtype: str = "uint8",
     ) -> None:
-        sample_type = InstanceSegmentationSample
+        sample_type = with_image_dtype(InstanceSegmentationSample, storage_dtype)
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
-            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
             stack_images=stack_images,
-            to_tv_image=to_tv_image,
-            data_format=data_format,
         )
 
         labels = list(dm_subset.schema.attributes["label"].categories.labels)

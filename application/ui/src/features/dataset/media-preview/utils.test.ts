@@ -1,10 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { act } from '@testing-library/react';
+import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { getMockedMediaImage, getMockedVideoFrame, getMultipleMockedMediaImage } from 'mocks/mock-media';
+import { renderHook } from 'test-utils/render';
 
 import type { AnnotationDTO } from '../../../constants/shared-types';
-import { getInitialAnnotations, getInitialPredictions, getNextMediaItem } from './utils';
+import { getInitialAnnotations, getNextMediaItem, useAnnotatorMode } from './utils';
 
 describe('getInitialAnnotations', () => {
     const mockAnnotations: AnnotationDTO[] = [
@@ -36,39 +39,6 @@ describe('getInitialAnnotations', () => {
     it('returns empty array when user has not reviewed', () => {
         const result = getInitialAnnotations(false, mockAnnotations);
         expect(result).toEqual([]);
-    });
-});
-
-describe('getInitialPredictions', () => {
-    const mockAnnotations: AnnotationDTO[] = [
-        {
-            shape: { type: 'rectangle', x: 0, y: 0, width: 100, height: 100 },
-            labels: [{ id: '1' }],
-        },
-        {
-            shape: {
-                type: 'polygon',
-                points: [
-                    { x: 0, y: 0 },
-                    { x: 100, y: 100 },
-                ],
-            },
-            labels: [{ id: '2' }],
-        },
-        {
-            shape: { type: 'full_image' },
-            labels: [{ id: '3' }],
-        },
-    ];
-
-    it('returns empty array when user has reviewed', () => {
-        const result = getInitialPredictions(true, mockAnnotations);
-        expect(result).toEqual([]);
-    });
-
-    it('returns annotations when user has not reviewed', () => {
-        const result = getInitialPredictions(false, mockAnnotations);
-        expect(result).toEqual(mockAnnotations);
     });
 });
 
@@ -132,5 +102,70 @@ describe('getNextMediaItem', () => {
             const result = getNextMediaItem(frame, [frame], 3);
             expect(result).toEqual({ ...frame, frame_number: 6 });
         });
+    });
+});
+
+describe('useAnnotatorMode', () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    it('sets mode to "annotation" when there are no annotations and no predictions', () => {
+        const { result } = renderHook(() => useAnnotatorMode({ predictions: [], annotations: [] }));
+
+        expect(result.current[0]).toBe('annotation');
+    });
+
+    it('sets mode to "annotation" when there are annotations and predictions', () => {
+        const { result } = renderHook(() =>
+            useAnnotatorMode({
+                predictions: [getMockedAnnotation({ id: '1' })],
+                annotations: [getMockedAnnotation({ id: '2' })],
+            })
+        );
+
+        expect(result.current[0]).toBe('annotation');
+    });
+
+    it('sets mode to "annotation" when there are annotations and no predictions', () => {
+        const { result } = renderHook(() =>
+            useAnnotatorMode({
+                predictions: [],
+                annotations: [getMockedAnnotation({ id: '1' })],
+            })
+        );
+
+        expect(result.current[0]).toBe('annotation');
+    });
+
+    it('sets mode to "prediction" when there are no annotations and there are predictions', () => {
+        const { result } = renderHook(() =>
+            useAnnotatorMode({
+                predictions: [getMockedAnnotation({ id: '1' })],
+                annotations: [],
+            })
+        );
+
+        expect(result.current[0]).toBe('prediction');
+    });
+
+    it('updates mode manually properly', async () => {
+        const { result } = renderHook(() => useAnnotatorMode({ predictions: [], annotations: [] }));
+
+        const [_, setMode] = result.current;
+
+        expect(result.current[0]).toBe('annotation');
+
+        act(() => {
+            setMode('prediction');
+        });
+
+        expect(result.current[0]).toBe('prediction');
+
+        act(() => {
+            setMode('annotation');
+        });
+
+        expect(result.current[0]).toBe('annotation');
     });
 });

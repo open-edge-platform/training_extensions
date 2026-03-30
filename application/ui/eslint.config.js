@@ -67,6 +67,12 @@ export default [
             ],
         },
     },
+    {
+        files: ['**/*.test.ts', '**/*.test.tsx', '**/*mock*.ts', '**/*.spec.ts'],
+        rules: {
+            'max-len': ['off'],
+        },
+    },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({
         ...config,
         files: ['tests/**/*.ts'],

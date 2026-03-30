@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os.path
+import os
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -9,10 +9,18 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
-from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_media_service, get_project
+from app.api.dependencies import (
+    get_dataset_service,
+    get_file_name_and_extension,
+    get_inference_media_limit,
+    get_media_prediction_service,
+    get_media_service,
+    get_project,
+)
 from app.api.io_utils import write_file_to_response, write_image_to_response
 from app.api.schemas.media import (
     AnnotatedVideoFrame,
+    BulkDeleteMedia,
     MediaAnnotations,
     MediaView,
     MediaViewAdapter,
@@ -21,11 +29,13 @@ from app.api.schemas.media import (
 )
 from app.api.validators import MediaID
 from app.core.models import Pagination
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
-from app.models.media import ImageFormat, MediaType, NotAnnotatedVideoFrame, VideoFormat
-from app.services import DatasetService, MediaService
+from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
+from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
+from app.services import DatasetService, MediaPredictionService, MediaService
+from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError
-from app.services.media_service import InvalidImageError, MediaFilters
+from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
+from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/media", tags=["Media"])
 
@@ -96,6 +106,13 @@ SET_MEDIA_ANNOTATIONS_BODY_EXAMPLES = {
     ),
 }
 
+BULK_MEDIA_DELETE_EXAMPLE = {
+    "list_of_media_ids": Example(
+        summary="List of Media IDs",
+        value={"media_ids": ["d476573e-d43c-42a6-9327-199a9aa75c33", "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"]},
+    )
+}
+
 
 def _parse_media_format(extension: str) -> ImageFormat | VideoFormat:
     try:
@@ -151,14 +168,16 @@ def add_media(
 ) -> MediaView:
     """Add a new media to the dataset by uploading an image or a video"""
     name, extension = file_name_and_extension
-    format = _parse_media_format(extension)
+    media_format = _parse_media_format(extension)
     try:
-        if isinstance(format, ImageFormat):
+        if isinstance(media_format, ImageFormat):
             media = media_service.create_image(
-                project_id=project.id,
-                data=file.file,
-                name=name,
-                format=format,
+                ImageMetadata(
+                    project_id=project.id,
+                    data=file.file,
+                    name=name,
+                    image_format=media_format,
+                )
             )
             dataset_service.create_dataset_item(
                 project_id=project.id,
@@ -172,7 +191,7 @@ def add_media(
                 project_id=project.id,
                 data=file.file,
                 name=name,
-                format=format,
+                video_format=media_format,
             )
         return MediaViewAdapter.validate_python(media, from_attributes=True)
     except InvalidImageError:
@@ -369,6 +388,30 @@ def delete_media(
     media_service.delete_media(project=project, media_id=media_id)
 
 
+@router.delete(
+    "",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Requested media has been deleted"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def bulk_delete_media(
+    project: Annotated[Project, Depends(get_project)],
+    media_ids_list: Annotated[BulkDeleteMedia, Body(openapi_examples=BULK_MEDIA_DELETE_EXAMPLE)],
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+) -> None:
+    """Bulk delete media"""
+    for media_id in media_ids_list.media_ids:
+        try:
+            media_service.delete_media(project=project, media_id=media_id)
+        except ResourceNotFoundError as error:
+            # Ignore not-found errors only for media resources; re-raise for others (e.g., project)
+            if getattr(error, "resource_type", None) != ResourceType.MEDIA:
+                raise
+
+
 @router.post(
     "/{media_id}/annotations",
     status_code=status.HTTP_201_CREATED,
@@ -413,6 +456,7 @@ def set_media_annotations(
             prediction_model_id=None,
         )
         return MediaAnnotations(
+            media_id=media.id,
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,
@@ -478,3 +522,49 @@ def delete_media_annotation(
     # Dataset item has the same ID as media
     dataset_item_id = media.id
     dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
+
+
+@router.post(
+    "/media:predict",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {"description": "Media predictions are calculated"},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Missing frame range, range is specified for non-video media, "
+            "or media inference limit exceeded"
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+    },
+)
+def media_predict(
+    inference_media_limit: Annotated[int, Depends(get_inference_media_limit)],
+    project: Annotated[Project, Depends(get_project)],
+    request: Annotated[MediaListPredictionRequest, Body()],
+    media_prediction_service: Annotated[MediaPredictionService, Depends(get_media_prediction_service)],
+) -> BatchInferenceResult:
+    """Get predictions for media"""
+    items_count = sum(
+        [
+            1
+            if media_request.range is None
+            else len(
+                range(media_request.range.start_frame, media_request.range.end_frame + 1, media_request.range.stride)
+            )
+            for media_request in request.media
+        ]
+    )
+    if items_count > inference_media_limit:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Too many media items to predict, requested number is {items_count} "
+            f"while limit is {inference_media_limit}. "
+            f"Please reduce the number of media or frame range size or set INFERENCE_MEDIA_LIMIT "
+            f"environment variable with higher value .",
+        )
+
+    try:
+        return media_prediction_service.predict_media(project=project, request=request)
+    except VideoRangeError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except BinaryNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
