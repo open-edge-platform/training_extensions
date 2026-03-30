@@ -528,7 +528,9 @@ class AugmentationParameters(BaseModel):
             "automatically transition between strong and light augmentation phases "
             "during training. This may lead to better accuracy but increases "
             "training time. When disabled, a simpler static augmentation pipeline "
-            "is used instead, allowing direct control over individual augmentations."
+            "is used instead, allowing direct control over individual augmentations. "
+            "WARNING: when the DEIM framework is enabled, all other augmentation "
+            "parameters below are ignored and will have no effect on training."
         ),
     )
     random_zoom_out: RandomZoomOut | None = Field(
