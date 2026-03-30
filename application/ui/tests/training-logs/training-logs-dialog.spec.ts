@@ -7,6 +7,7 @@ import { getMockedModel } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
+import { TrainJob } from '../../src/constants/shared-types';
 
 const mockedJob = getMockedJob({
     job_id: 'job-logs-test',
@@ -22,10 +23,11 @@ const mockedJob = getMockedJob({
             parent_revision_id: null,
             dataset_revision_id: 'dataset-1',
         },
+        device: { type: 'cpu', name: 'CPU' },
     },
     started_at: '2026-02-06T10:00:00.000000+00:00',
     finished_at: null,
-});
+} as Partial<TrainJob>);
 
 const mockedSuccessfulModel = getMockedModel({
     id: 'model-logs-test',
