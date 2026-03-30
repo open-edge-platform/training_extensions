@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, View } from '@geti/ui';
+import { Flex, View } from '@geti-ui/ui';
 
 import { Label } from '../../../../../../constants/shared-types';
 

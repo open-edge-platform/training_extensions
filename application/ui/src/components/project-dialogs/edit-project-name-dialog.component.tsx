@@ -3,21 +3,11 @@
 
 import { FormEvent, useState } from 'react';
 
-import {
-    Button,
-    ButtonGroup,
-    Content,
-    Dialog,
-    DialogContainer,
-    Divider,
-    Form,
-    Heading,
-    TextField,
-    toast,
-} from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Form, Heading, TextField } from '@geti-ui/ui';
 import { isEmpty } from 'lodash-es';
 
 import { usePatchProject } from '../../hooks/api/project.hook';
+import { toast } from '../toast';
 
 type EditProjectNameDialogProps = {
     onClose: () => void;

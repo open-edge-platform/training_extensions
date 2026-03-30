@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid, Text } from '@geti/ui';
+import { Grid, Text } from '@geti-ui/ui';
 
 import type { Evaluation } from '../../../../constants/shared-types';
 import { Box } from '../components/box/box.component';

@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Button, DialogTrigger, Loading, View } from '@geti/ui';
+import { Button, DialogTrigger, Loading, View } from '@geti-ui/ui';
 
 import { usePrefetchTrainModelData } from './api/use-prefetch-train-model-data';
 import { TrainModelDialog } from './train-model-dialog.component';

@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Flex, View } from '@geti/ui';
+import { Flex, View } from '@geti-ui/ui';
 
 import { type AnnotatorMode } from '../../../../../shared/annotator/annotator-mode';
 

@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti/ui';
+import { Content, Dialog, DialogContainer, Divider, Heading, View } from '@geti-ui/ui';
 import { OverlayTriggerState } from '@react-stately/overlays';
 
 import {

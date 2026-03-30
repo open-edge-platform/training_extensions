@@ -3,7 +3,8 @@
 
 import { useDeferredValue, useMemo, useState } from 'react';
 
-import { Flex, Item, ListView, Selection, Text, TextField, View } from '@geti/ui';
+import { Flex, Item, ListView, Text, TextField, View } from '@geti-ui/ui';
+import type { Selection } from '@react-types/shared';
 import { isEmpty } from 'lodash-es';
 
 import { Label } from '../../../../../constants/shared-types';

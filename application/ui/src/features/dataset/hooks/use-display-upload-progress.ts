@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { toast } from '@geti/ui';
+import { toast } from '../../../components/toast';
 
 export type UploadProgress = {
     total: number;
@@ -83,26 +83,18 @@ export const useUploadProgress = () => {
                 isUploading: false,
             };
 
-            let toastType: 'success' | 'error' | 'warning' = 'success';
-            let msg = `Uploaded ${nextProgress.succeeded} item(s)`;
+            let msg: string;
 
             if (nextProgress.failed === 0) {
-                toastType = 'success';
                 msg = `Uploaded ${nextProgress.succeeded} item(s)`;
+                toast({ id: UPLOAD_TOAST_ID, type: 'success', message: msg, duration: 5000 });
             } else if (nextProgress.succeeded === 0) {
-                toastType = 'error';
                 msg = `Failed to upload ${nextProgress.failed} item(s)`;
+                toast({ id: UPLOAD_TOAST_ID, type: 'error', message: msg, duration: 5000 });
             } else {
-                toastType = 'warning';
                 msg = `Uploaded ${nextProgress.succeeded} item(s), ${nextProgress.failed} failed`;
+                toast({ id: UPLOAD_TOAST_ID, type: 'warning', message: msg, duration: 5000 });
             }
-
-            toast({
-                id: UPLOAD_TOAST_ID,
-                type: toastType,
-                message: msg,
-                duration: 5000,
-            });
 
             return nextProgress;
         });

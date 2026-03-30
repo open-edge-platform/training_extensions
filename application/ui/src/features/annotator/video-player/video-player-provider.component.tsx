@@ -15,8 +15,8 @@ import {
     useState,
 } from 'react';
 
-import { VisuallyHidden } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { VisuallyHidden } from 'react-aria';
 
 import type { MediaVideoFrame } from '../../../constants/shared-types';
 import { getMediaBinaryUrl } from '../../../shared/media-url.utils';

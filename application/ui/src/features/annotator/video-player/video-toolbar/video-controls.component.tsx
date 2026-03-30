@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex } from '@geti/ui';
-import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti/ui/icons';
+import { ActionButton, Flex } from '@geti-ui/ui';
+import { Pause, Play, SoundOff, SoundOn, StepBackward, StepForward } from '@geti-ui/ui/icons';
 
 import { useVideoPlayer } from '../video-player-provider.component';
 

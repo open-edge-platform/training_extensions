@@ -3,8 +3,9 @@
 
 import { ComponentRef, RefObject, useRef } from 'react';
 
-import { useNumberFormatter, VisuallyHidden, type SpectrumSliderProps } from '@geti/ui';
-import { AriaSliderProps, mergeProps, useFocusRing, useSlider, useSliderThumb } from 'react-aria';
+import { SpectrumSliderProps } from '@adobe/react-spectrum';
+import { useNumberFormatter } from '@geti-ui/ui';
+import { AriaSliderProps, mergeProps, useFocusRing, useSlider, useSliderThumb, VisuallyHidden } from 'react-aria';
 import { SliderState, useSliderState } from 'react-stately';
 
 import classes from './video-slider.module.scss';
@@ -99,7 +100,7 @@ export const VideoSlider = ({
             }}
         >
             <div {...trackProps} ref={trackRef} className={classes.track} style={{ left: `${leftOffset}px` }}>
-                {buffers.map(({ startFrame, endFrame, status }, idx) => {
+                {buffers.map(({ startFrame, endFrame, status }: BufferRange, idx: number) => {
                     const isLoading = status === 'loading';
 
                     return (
@@ -129,7 +130,7 @@ export const VideoSlider = ({
 
                 <div className={classes.lowerTrack} style={{ width: trackWidth }}></div>
 
-                {highlightedFrames.map((frame) => (
+                {highlightedFrames.map((frame: number) => (
                     <div
                         key={`highlight-${frame}`}
                         className={classes.highlightPosition}

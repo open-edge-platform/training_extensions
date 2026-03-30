@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Text } from '@geti/ui';
-import { Alert } from '@geti/ui/icons';
+import { Divider, Flex, Text } from '@geti-ui/ui';
+import { Alert } from '@geti-ui/ui/icons';
 import { isNil } from 'lodash-es';
 
 import { AnnotationType } from '../../../../../../constants/shared-types';

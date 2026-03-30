@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Tooltip, TooltipTrigger } from '@geti/ui';
+import { ActionButton, Tooltip, TooltipTrigger } from '@geti-ui/ui';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Fragment } from 'react/jsx-runtime';
 

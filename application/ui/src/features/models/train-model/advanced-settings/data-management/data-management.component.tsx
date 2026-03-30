@@ -3,7 +3,7 @@
 
 import { Dispatch, RefObject, SetStateAction } from 'react';
 
-import { View } from '@geti/ui';
+import { View } from '@geti-ui/ui';
 
 import { TrainingConfiguration } from '../../../../../constants/shared-types';
 import { LazyLoadSection } from '../components/lazy-load-section.component';

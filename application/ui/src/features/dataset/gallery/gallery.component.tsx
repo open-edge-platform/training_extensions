@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogContainer, Flex, Size, ViewModes } from '@geti/ui';
+import { AriaSize, Checkbox, DialogContainer, Flex, ViewModes } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 import { GridLayoutOptions } from 'react-aria-components';
@@ -35,9 +35,9 @@ type GalleryProps = {
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
 const VIEW_MODE_SETTINGS = {
-    [ViewModes.LARGE]: { minItemSize: new Size(300, 300), minSpace: new Size(10, 10), preserveAspectRatio: true },
-    [ViewModes.MEDIUM]: { minItemSize: new Size(200, 200), minSpace: new Size(6, 6), preserveAspectRatio: true },
-    [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
+    [ViewModes.LARGE]: { minItemSize: new AriaSize(300, 300), minSpace: new AriaSize(10, 10), preserveAspectRatio: true },
+    [ViewModes.MEDIUM]: { minItemSize: new AriaSize(200, 200), minSpace: new AriaSize(6, 6), preserveAspectRatio: true },
+    [ViewModes.SMALL]: { minItemSize: new AriaSize(120, 120), minSpace: new AriaSize(4, 4), preserveAspectRatio: true },
 } as Record<ViewModes, GridLayoutOptions>;
 
 type GalleryListProps = {

@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, PressableElement, Text, Tooltip, TooltipTrigger } from '@geti/ui';
-import { Cross } from '@geti/ui/icons';
+import { ActionButton, Flex, PressableElement, Text, Tooltip, TooltipTrigger } from '@geti-ui/ui';
+import { Close } from '@geti-ui/ui/icons';
 
 import type { Label } from '../../../../constants/shared-types';
 import { formatHotkeyForDisplay } from '../../../../shared/hotkeys-definition';
@@ -29,7 +29,7 @@ const LabelTagContent = ({ label, onDelete }: LabelTagProps) => {
                 aria-label={`Delete label ${label.name}`}
                 UNSAFE_className={styles.deleteLabel}
             >
-                <Cross />
+                <Close />
             </ActionButton>
         </Flex>
     );

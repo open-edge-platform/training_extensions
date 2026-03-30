@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup } from '@geti/ui';
+import { Button, ButtonGroup } from '@geti-ui/ui';
 import { useCancelJob } from 'hooks/api/jobs/jobs.hook';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 

@@ -3,7 +3,7 @@
 
 import { Fragment, useActionState } from 'react';
 
-import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti/ui';
+import { Checkbox, dimensionValue, Flex, Form, Grid, Heading, Item, Picker, Text, View } from '@geti-ui/ui';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { $api } from '../../../../../api/client';

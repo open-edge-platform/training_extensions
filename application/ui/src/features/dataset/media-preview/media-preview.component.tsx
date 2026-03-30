@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 
-import { Content, Dialog, Grid, View } from '@geti/ui';
+import { Content, Dialog, Grid, View } from '@geti-ui/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';

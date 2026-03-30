@@ -3,8 +3,8 @@
 
 import { ReactNode, Suspense } from 'react';
 
-import { Button, Heading, IllustratedMessage, IntelBrandedLoading, View } from '@geti/ui';
-import { CloudErrorIcon } from '@geti/ui/icons';
+import { Button, Heading, IllustratedMessage, IntelBrandedLoading, View } from '@geti-ui/ui';
+import { CloudErrorIcon } from '@geti-ui/ui/icons';
 import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';

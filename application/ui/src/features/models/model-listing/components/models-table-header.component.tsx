@@ -3,8 +3,8 @@
 
 import { useMemo } from 'react';
 
-import { dimensionValue, Flex, Grid, Text } from '@geti/ui';
-import { SortDown } from '@geti/ui/icons';
+import { dimensionValue, Flex, Grid, Text } from '@geti-ui/ui';
+import { SortDown } from '@geti-ui/ui/icons';
 
 import { GRID_COLUMNS } from '../constants';
 import { useModelListing } from '../provider/model-listing-provider';

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, Key, Picker } from '@geti/ui';
+import { Item, Key, Picker } from '@geti-ui/ui';
 
 import { usePatchPipeline } from '../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';

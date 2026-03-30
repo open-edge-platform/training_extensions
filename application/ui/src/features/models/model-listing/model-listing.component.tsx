@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { Flex } from '@geti-ui/ui';
 
 import { EmptySearchResults } from './components/expandable-search/empty-search-results.component';
 import { GroupModelsContainer } from './components/group-models-container/group-models-container.component';

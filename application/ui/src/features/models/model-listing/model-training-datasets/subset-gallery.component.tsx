@@ -3,7 +3,7 @@
 
 import { Suspense, useState } from 'react';
 
-import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View } from '@geti/ui';
+import { AriaSize, Content, Dialog, DialogContainer, Flex, Grid, Loading, Text, View } from '@geti-ui/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
@@ -20,8 +20,8 @@ import { getImageData } from '../../../annotator/tools/utils';
 import { datasetRevisionItemToMedia } from './utils';
 
 const layoutOptions = {
-    minSpace: new Size(4, 4),
-    minItemSize: new Size(80, 80),
+    minSpace: new AriaSize(4, 4),
+    minItemSize: new AriaSize(80, 80),
     maxColumns: 4,
     preserveAspectRatio: true,
 };

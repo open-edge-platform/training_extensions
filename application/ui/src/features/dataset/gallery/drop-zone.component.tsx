@@ -3,16 +3,8 @@
 
 import { ReactNode } from 'react';
 
-import {
-    AriaDropZone,
-    Content,
-    Flex,
-    Heading,
-    IllustratedMessage,
-    Text,
-    View,
-    type SpectrumDropZoneProps,
-} from '@geti/ui';
+import { Content, Flex, Heading, IllustratedMessage, Text, View, type DropZoneProps } from '@geti-ui/ui';
+import { DropZone } from 'react-aria-components';
 
 import { ReactComponent as DropFiles } from '../../../assets/drop-files.svg';
 import { getFilesFromDropEvent } from '../../../shared/drop-zone.utils';
@@ -24,7 +16,7 @@ type DatasetDropZoneProps = {
     onFilesDropped?: (files: File[]) => void | Promise<void>;
 };
 
-type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
+type DropEvent = Parameters<NonNullable<DropZoneProps['onDrop']>>[0];
 
 export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZoneProps) => {
     const handleDrop = async (event: DropEvent) => {
@@ -40,7 +32,7 @@ export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZonePro
     };
 
     return (
-        <AriaDropZone onDrop={handleDrop} className={classes.dropZone}>
+        <DropZone onDrop={handleDrop} className={classes.dropZone}>
             {(dropZoneState) => (
                 <View UNSAFE_className={classes.container}>
                     {children}
@@ -63,6 +55,6 @@ export const DatasetDropZone = ({ children, onFilesDropped }: DatasetDropZonePro
                     )}
                 </View>
             )}
-        </AriaDropZone>
+        </DropZone>
     );
 };

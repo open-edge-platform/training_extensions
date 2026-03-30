@@ -3,7 +3,7 @@
 
 import { useRef } from 'react';
 
-import { Size, useUnwrapDOMRef, View } from '@geti/ui';
+import { AriaSize, useUnwrapDOMRef, View } from '@geti-ui/ui';
 
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../../constants/shared-types';
@@ -15,9 +15,9 @@ import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
 const layoutOptions = {
     maxColumns: 1,
-    minSpace: new Size(8, 8),
-    minItemSize: new Size(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
-    maxItemSize: new Size(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
+    minSpace: new AriaSize(8, 8),
+    minItemSize: new AriaSize(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
+    maxItemSize: new AriaSize(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
     preserveAspectRatio: true,
 };
 

@@ -15,8 +15,8 @@ import {
     Heading,
     Meter,
     Text,
-} from '@geti/ui';
-import { GraphChart } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { GraphChart } from '@geti-ui/ui/icons';
 import { useDatasetStatistics } from 'hooks/api/dataset.hook';
 import { isEmpty } from 'lodash-es';
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Heading, View } from '@geti/ui';
+import { dimensionValue, Flex, Heading, View } from '@geti-ui/ui';
 import { useCancelJob, useGetCurrentRunningJob } from 'hooks/api/jobs/jobs.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';

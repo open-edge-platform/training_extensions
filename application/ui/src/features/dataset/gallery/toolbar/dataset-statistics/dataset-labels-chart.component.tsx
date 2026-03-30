@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue } from '@geti/ui';
+import { dimensionValue } from '@geti-ui/ui';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import { useProjectLabelsWithEmptyLabel } from '../../../../../shared/annotator/labels';

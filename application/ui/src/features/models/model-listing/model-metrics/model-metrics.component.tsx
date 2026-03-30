@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Loading, Text } from '@geti/ui';
+import { Flex, Loading, Text } from '@geti-ui/ui';
 
 import type { Evaluation } from '../../../../constants/shared-types';
 import { useGetModelTrainingMetrics } from '../../hooks/api/use-get-model-training-metrics.hook';

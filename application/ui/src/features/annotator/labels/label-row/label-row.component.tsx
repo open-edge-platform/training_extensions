@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
-import { Delete, Pin, Unpin } from '@geti/ui/icons';
+import { ActionButton, Grid, TextField, Tooltip, TooltipTrigger, View } from '@geti-ui/ui';
+import { Delete, Pin, Unpin } from '@geti-ui/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';

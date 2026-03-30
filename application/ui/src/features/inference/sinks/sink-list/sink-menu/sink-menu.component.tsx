@@ -3,10 +3,11 @@
 
 import { Key } from 'react';
 
-import { ActionButton, Item, Menu, MenuTrigger, toast } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Item, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 
 import { $api } from '../../../../../api/client';
+import { toast } from '../../../../../components/toast';
 import { useProjectIdentifier } from '../../../../../hooks/use-project-identifier.hook';
 
 export interface SinkMenuProps {
@@ -52,10 +53,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
             },
             {
                 onSuccess: () => {
-                    toast({
-                        type: 'success',
-                        message: `Successfully connected to "${name}"`,
-                    });
+                    toast({ type: 'success', message: `Successfully connected to "${name}"` });
                 },
             }
         );
@@ -66,10 +64,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
             { params: { path: { sink_id: id } } },
             {
                 onSuccess: () => {
-                    toast({
-                        type: 'success',
-                        message: `${name} has been removed successfully!`,
-                    });
+                    toast({ type: 'success', message: `${name} has been removed successfully!` });
                 },
             }
         );

@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@geti/ui';
-import { CheckCircleOutlined } from '@geti/ui/icons';
+import { Button } from '@geti-ui/ui';
+import { CheckCircleOutlined } from '@geti-ui/ui/icons';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { formatBytes } from '../../../shared/util';

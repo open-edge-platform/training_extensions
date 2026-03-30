@@ -1,12 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { type SpectrumDropZoneProps } from '@geti/ui';
-
-import { GetElementType } from './util';
-
-type DropItem = GetElementType<DropEvent['items']>;
-type DropEvent = Parameters<NonNullable<SpectrumDropZoneProps['onDrop']>>[0];
+import type { DirectoryDropItem, DropEvent, DropItem, FileDropItem } from '@react-types/shared';
 
 const toArray = async <T>(asyncIterator: AsyncIterable<T>): Promise<T[]> => {
     const arr: T[] = [];
@@ -16,9 +11,9 @@ const toArray = async <T>(asyncIterator: AsyncIterable<T>): Promise<T[]> => {
     return arr;
 };
 
-const flattenDropItemToFiles = async (item: DropItem): Promise<File[]> => {
+const flattenDropItemToFiles = async (item: DropItem | DirectoryDropItem): Promise<File[]> => {
     if (item.kind === 'file') {
-        const file = await item.getFile();
+        const file = await (item as FileDropItem).getFile();
 
         return [file];
     }
@@ -27,10 +22,10 @@ const flattenDropItemToFiles = async (item: DropItem): Promise<File[]> => {
         return [];
     }
 
-    const entries = await toArray(item.getEntries());
+    const entries = await toArray((item as DirectoryDropItem).getEntries());
 
     const filesFromDirectory: File[] = [];
-    for await (const entry of entries) {
+    for (const entry of entries) {
         if (entry.kind === 'directory') {
             filesFromDirectory.push(...(await flattenDropItemToFiles(entry)));
         } else {
@@ -46,7 +41,7 @@ const flattenDropItemToFiles = async (item: DropItem): Promise<File[]> => {
  */
 export const getFilesFromDropEvent = async (event: DropEvent): Promise<File[]> => {
     const files: File[] = [];
-    for await (const item of event.items) {
+    for (const item of event.items) {
         files.push(...(await flattenDropItemToFiles(item)));
     }
 

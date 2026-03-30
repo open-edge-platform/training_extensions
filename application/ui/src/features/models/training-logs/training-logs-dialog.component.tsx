@@ -1,19 +1,9 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    ActionButton,
-    Content,
-    Dialog,
-    Divider,
-    Flex,
-    Header,
-    Heading,
-    Loading,
-    Text,
-    useDialogContainer,
-} from '@geti/ui';
-import { CloseSemiBold, DownloadIcon } from '@geti/ui/icons';
+import { ActionButton, Content, Dialog, Divider, Flex, Header, Heading, Loading, Text } from '@geti-ui/ui';
+import { CloseSemiBold, DownloadIcon } from '@geti-ui/ui/icons';
+import { useDialogContainer } from '@react-spectrum/dialog';
 
 import { useDownloadModelLogs, useModelLogs } from './hooks/use-model-logs.hook';
 import { useStreamJobLogs } from './hooks/use-stream-job-logs.hook';

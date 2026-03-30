@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Divider, Flex, Icon, Text, View } from '@geti/ui';
-import { Checkmark, CloseSemiBold, Edit } from '@geti/ui/icons';
+import { ActionButton, Divider, Flex, Icon, Text, View } from '@geti-ui/ui';
+import { Checkmark, CloseSemiBold, Edit } from '@geti-ui/ui/icons';
 
 import type { Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';

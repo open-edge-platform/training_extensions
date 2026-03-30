@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 
-import { Flex, NumberField, RangeSlider, type RangeValue } from '@geti/ui';
+import { Flex, NumberField, RangeSlider } from '@geti-ui/ui';
+import type { RangeValue } from '@react-types/shared';
 
 import { FloatConfigurableRangeParameter } from '../../../../../../constants/shared-types';
 import { getFloatingPointStep } from '../../utils';

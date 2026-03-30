@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 
-import { Flex, Grid, ToggleButton, Tooltip, TooltipTrigger, View } from '@geti/ui';
-import { Gear, GraphChart } from '@geti/ui/icons';
+import { Flex, Grid, ToggleButton, Tooltip, TooltipTrigger, View } from '@geti-ui/ui';
+import { Gear, GraphChart } from '@geti-ui/ui/icons';
 
 import { DataCollection } from './data-collection.component';
 import { Graphs } from './graphs.component';

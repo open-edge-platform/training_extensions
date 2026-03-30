@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
+import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti-ui/ui';
 
 import { useGetDatasetRevisions } from '../../../../hooks/use-get-dataset-revisions.hook';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';

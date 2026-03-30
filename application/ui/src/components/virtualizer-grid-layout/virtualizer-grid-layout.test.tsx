@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { AriaSize } from '@geti-ui/ui';
 import { screen } from '@testing-library/react';
 import { getMultipleMockedMediaImage } from 'mocks/mock-media';
-import { Size } from 'react-aria-components';
 import { render } from 'test-utils/render';
 
 import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
@@ -11,7 +11,7 @@ import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
 // required configuration; otherwise, the list renders empty
 const mockedLayoutOptions = {
     maxColumns: 1,
-    maxItemSize: new Size(100, 100),
+    maxItemSize: new AriaSize(100, 100),
     maxHorizontalSpace: 1000,
 };
 

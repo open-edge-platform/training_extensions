@@ -1,11 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Item, Key, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
+import { toast } from '../../../../components/toast';
 
 export interface SourceMenuProps {
     id: string;
@@ -48,10 +49,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
             },
             {
                 onSuccess: () => {
-                    toast({
-                        type: 'success',
-                        message: `Successfully connected to "${name}".`,
-                    });
+                    toast({ type: 'success', message: `Successfully connected to "${name}".` });
                 },
             }
         );
@@ -68,10 +66,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
             { params: { path: { source_id: id } } },
             {
                 onSuccess: () => {
-                    toast({
-                        type: 'success',
-                        message: `${name} has been removed successfully!`,
-                    });
+                    toast({ type: 'success', message: `${name} has been removed successfully!` });
                 },
             }
         );

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Flex, Heading, Text } from '@geti/ui';
+import { dimensionValue, Flex, Heading, Text } from '@geti-ui/ui';
 import { capitalize } from 'lodash-es';
 
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';

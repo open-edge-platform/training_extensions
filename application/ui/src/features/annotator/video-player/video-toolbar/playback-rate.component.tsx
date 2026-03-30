@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, DialogTrigger, Flex, Slider, Text, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { ActionButton, DialogTrigger, Flex, Slider, Text, Tooltip, TooltipTrigger, View } from '@geti-ui/ui';
 
 import { ReactComponent as PlayRate } from '../../../../assets/icons/play-rate.svg';
 import { useVideoPlayer } from '../video-player-provider.component';

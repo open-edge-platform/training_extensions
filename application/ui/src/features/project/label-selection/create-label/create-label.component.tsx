@@ -3,8 +3,10 @@
 
 import { useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Grid, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
-import { Add } from '@geti/ui/icons';
+import { ActionButton, Grid, useUnwrapDOMRef, View } from '@geti-ui/ui';
+import { Add } from '@geti-ui/ui/icons';
+import { TextField } from '@react-spectrum/textfield';
+import type { TextFieldRef } from '@react-types/textfield';
 import { useEventListener } from 'hooks/event-listener.hook';
 import { v4 as uuid } from 'uuid';
 
@@ -25,7 +27,6 @@ type CreateLabelProps = {
 
 export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) => {
     const [newLabel, setNewLabel] = useState<Label>(getInitialLabel);
-    const containerRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
     const inputRefUnwrapped = useUnwrapDOMRef(inputRef);
 
@@ -66,7 +67,6 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
             maxWidth={'640px'}
             width={'100%'}
             alignItems={'start'}
-            ref={containerRef}
         >
             <LabelColorPicker
                 onChange={(newColor) => {

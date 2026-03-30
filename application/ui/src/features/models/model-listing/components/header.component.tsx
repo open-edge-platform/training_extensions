@@ -3,8 +3,8 @@
 
 import { Key } from 'react';
 
-import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Picker } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 
 import { TrainModel } from '../../train-model/train-model.component';
 import { useModelListing } from '../provider/model-listing-provider';

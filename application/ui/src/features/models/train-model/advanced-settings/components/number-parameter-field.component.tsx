@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Flex, NumberField, Slider } from '@geti/ui';
+import { Flex, NumberField, Slider } from '@geti-ui/ui';
 
 import { NumberConfigurableParameter } from '../../../../../constants/shared-types';
 

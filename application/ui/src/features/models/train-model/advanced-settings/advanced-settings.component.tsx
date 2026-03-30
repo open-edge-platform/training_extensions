@@ -3,7 +3,8 @@
 
 import { ReactNode, RefObject, useRef } from 'react';
 
-import { DOMRefValue, Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, View } from '@geti/ui';
+import { Item, TabList, TabPanels, Tabs, Text, useUnwrapDOMRef, View } from '@geti-ui/ui';
+import type { DOMRefValue } from '@react-types/shared';
 
 import { useTrainModelState } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
@@ -27,7 +28,7 @@ type TabProps = {
 export const AdvancedSettings = () => {
     const { trainingConfiguration, onTrainingConfigurationChange, defaultTrainingConfiguration } = useTrainModelState();
     const containerRef = useRef<DOMRefValue<HTMLDivElement>>(null);
-    const unwrappedContainerRef = useUnwrapDOMRef(containerRef);
+    const unwrappedContainerRef = useUnwrapDOMRef<HTMLDivElement>(containerRef);
 
     // Should never happen, but just in case, to prevent errors in the UI
     if (trainingConfiguration === undefined || defaultTrainingConfiguration === undefined) {

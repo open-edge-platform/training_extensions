@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Divider, Flex, Grid, Text } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Grid, Text } from '@geti-ui/ui';
 import { isEmpty, isNil } from 'lodash-es';
 
 import { ExportDatasetMetadata } from '../../../../../../constants/shared-types';

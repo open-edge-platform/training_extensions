@@ -3,19 +3,8 @@
 
 import { Key, ReactNode } from 'react';
 
-import {
-    Content,
-    ContextualHelp,
-    DimensionValue,
-    Flex,
-    Grid,
-    Item,
-    minmax,
-    Picker,
-    Text,
-    ToggleButtons,
-    View,
-} from '@geti/ui';
+import { Content, ContextualHelp, Flex, Grid, Item, minmax, Picker, Text, ToggleButtons, View } from '@geti-ui/ui';
+import type { DimensionValue } from '@react-types/shared';
 import { isBoolean, isFunction } from 'lodash-es';
 
 import {

@@ -1,12 +1,12 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { toast } from '../../../components/toast';
 
 const useDeleteMediaItemMutation = (projectId: string) => {
     return $api.useMutation('delete', `/api/projects/{project_id}/dataset/media/{media_id}`, {
@@ -28,11 +28,8 @@ const useDeleteMediaItemMutation = (projectId: string) => {
         onError: (error, { params: { path } }) => {
             const { media_id: itemId } = path;
 
-            toast({
-                id: String(itemId),
-                type: 'error',
-                message: `Failed to delete, ${error?.detail}`,
-            });
+            void itemId;
+            toast({ id: String(itemId), type: 'error', message: `Failed to delete, ${error?.detail}` });
         },
     });
 };

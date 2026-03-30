@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Flex, Loading } from '@geti/ui';
+import { Flex, Loading } from '@geti-ui/ui';
 
 import type { LineMetric } from '../../../../constants/shared-types';
 import { useIsVisible } from '../../../../hooks/use-is-visible.hook';

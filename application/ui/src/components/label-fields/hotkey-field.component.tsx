@@ -3,7 +3,7 @@
 
 import { KeyboardEvent } from 'react';
 
-import { TextField } from '@geti/ui';
+import { TextField } from '@geti-ui/ui';
 
 import { formatHotkeyForDisplay } from '../../shared/hotkeys-definition';
 

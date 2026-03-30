@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Text, useNumberFormatter, View } from '@geti/ui';
+import { Flex, Grid, Text, useNumberFormatter, View } from '@geti-ui/ui';
 
 import classes from './three-section-range.module.scss';
 

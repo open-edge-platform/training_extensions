@@ -15,7 +15,7 @@ import {
     MediaViewModes,
     Text,
     ViewModes,
-} from '@geti/ui';
+} from '@geti-ui/ui';
 import { isString } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';

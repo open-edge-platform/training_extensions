@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Button, Flex } from '@geti/ui';
+import { Button, Flex } from '@geti-ui/ui';
 
 import { SortModelArchitectures } from '../sort-model-architectures/sort-model-architectures.component';
 import { SORT_OPTIONS, SortingOptions } from '../sort-model-architectures/utils';

@@ -3,8 +3,8 @@
 
 import { ReactNode, useState } from 'react';
 
-import { ActionButton, DialogContainer, dimensionValue, Divider, Flex, Heading } from '@geti/ui';
-import { Collapse, Expand } from '@geti/ui/icons';
+import { ActionButton, DialogContainer, dimensionValue, Divider, Flex, Heading } from '@geti-ui/ui';
+import { Collapse, Expand } from '@geti-ui/ui/icons';
 
 type DatasetCardProps = {
     title: string;

@@ -3,7 +3,7 @@
 
 import { ComponentProps, ReactNode, useRef } from 'react';
 
-import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtualizer } from '@geti/ui';
+import { AriaGridLayout, AriaListBox, AriaListBoxItem, Loading, View, Virtualizer } from '@geti-ui/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
 
@@ -11,7 +11,7 @@ import { useGetTargetPosition } from './use-get-target-position.hook';
 
 import classes from './virtualizer-grid-layout.module.scss';
 
-type AriaComponentsListBoxProps = ComponentProps<typeof AriaComponentsListBox>;
+type AriaListBoxProps = ComponentProps<typeof AriaListBox>;
 
 interface GridItem {
     id: string;
@@ -19,7 +19,7 @@ interface GridItem {
 }
 
 interface VirtualizerGridLayoutProps<T extends GridItem>
-    extends Pick<AriaComponentsListBoxProps, 'selectedKeys' | 'onSelectionChange'> {
+    extends Pick<AriaListBoxProps, 'selectedKeys' | 'onSelectionChange'> {
     items: T[];
     ariaLabel: string;
     scrollToIndex?: number;
@@ -62,8 +62,8 @@ export const VirtualizerGridLayout = <T extends GridItem>({
 
     return (
         <View UNSAFE_className={classes.mainContainer}>
-            <Virtualizer layout={GridLayout} layoutOptions={layoutOptions}>
-                <AriaComponentsListBox
+            <Virtualizer layout={AriaGridLayout} layoutOptions={layoutOptions}>
+                <AriaListBox
                     ref={ref}
                     layout='grid'
                     aria-label={ariaLabel}
@@ -76,22 +76,22 @@ export const VirtualizerGridLayout = <T extends GridItem>({
                         const itemId = getItemId(item);
 
                         return (
-                            <ListBoxItem
+                            <AriaListBoxItem
                                 id={itemId}
                                 key={`${ariaLabel}-${itemId}-${index}`}
                                 textValue={String(itemId)}
                                 className={classes.mediaItem}
                             >
                                 {contentItem(item)}
-                            </ListBoxItem>
+                            </AriaListBoxItem>
                         );
                     })}
                     {isLoadingMore && (
-                        <ListBoxItem id={'loader'} textValue={'loading'}>
+                        <AriaListBoxItem id={'loader'} textValue={'loading'}>
                             <Loading mode='overlay' />
-                        </ListBoxItem>
+                        </AriaListBoxItem>
                     )}
-                </AriaComponentsListBox>
+                </AriaListBox>
             </Virtualizer>
         </View>
     );

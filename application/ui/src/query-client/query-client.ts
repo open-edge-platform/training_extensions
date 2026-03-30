@@ -1,10 +1,10 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
 import { matchQuery, MutationCache, QueryClient } from '@tanstack/react-query';
 
 import { paths } from '../api/openapi-spec';
+import { toast } from '../components/toast';
 import { Meta, QueryKey } from './query-client.interface';
 
 declare module '@tanstack/react-query' {
@@ -13,8 +13,6 @@ declare module '@tanstack/react-query' {
         queryMeta: Meta;
     }
 }
-
-const TOAST_DURATION = 5000;
 
 export const getErrorMessage = (error: unknown): string => {
     if (!error || typeof error !== 'object') {
@@ -64,11 +62,7 @@ export const createQueryClient = () => {
                 }
             },
             onError: (error) => {
-                toast({
-                    type: 'error',
-                    message: getErrorMessage(error),
-                    duration: TOAST_DURATION,
-                });
+                toast({ type: 'error', message: getErrorMessage(error) });
             },
         }),
     });

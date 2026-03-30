@@ -3,9 +3,9 @@
 
 import { useActionState } from 'react';
 
-import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
+import { toast } from '../../../../components/toast';
 import { SinkConfig } from '../utils';
 import { useSinkMutation } from './use-sink-mutation.hook';
 
@@ -41,10 +41,7 @@ export const useSinkAction = <T extends SinkConfig>({
         } catch (error: unknown) {
             const details = (error as { detail?: string })?.detail;
 
-            toast({
-                type: 'error',
-                message: `Failed to save sink configuration, ${details ?? 'please try again'}`,
-            });
+            toast({ type: 'error', message: `Failed to save sink configuration, ${details ?? 'please try again'}` });
         }
 
         return body;

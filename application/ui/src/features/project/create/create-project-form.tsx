@@ -3,10 +3,11 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField, toast } from '@geti/ui';
+import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField } from '@geti-ui/ui';
 import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
+import { toast } from '../../../components/toast';
 import { paths } from '../../../constants/paths';
 import type { Label, Project, TaskType } from '../../../constants/shared-types';
 import { useCreateProject } from '../../../hooks/api/project.hook';
@@ -56,10 +57,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         }
 
         if (needsMinimumNumberOfLabels) {
-            toast({
-                message: 'At least 2 labels are required for single-label classification',
-                type: 'warning',
-            });
+            toast({ type: 'warning', message: 'At least 2 labels are required for single-label classification' });
 
             return;
         }

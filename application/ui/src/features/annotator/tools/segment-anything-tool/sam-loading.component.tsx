@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Heading, IntelBrandedLoading, View } from '@geti/ui';
+import { Flex, Heading, IntelBrandedLoading, View } from '@geti-ui/ui';
 
 export const SAMLoading = ({ isLoading }: { isLoading: boolean }) => {
     return (

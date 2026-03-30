@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Key, Selection } from '@geti/ui';
+import { Key } from '@geti-ui/ui';
+import type { Selection } from '@react-types/shared';
 
 export const toggleMultipleSelection =
     (items: Key[]) =>

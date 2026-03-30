@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@geti/ui';
-import { InfoOutline } from '@geti/ui/icons';
+import { Button } from '@geti-ui/ui';
+import { InfoOutline } from '@geti-ui/ui/icons';
 import { useStagedDataset } from 'hooks/api/staged-dataset.hook';
 
 import { getErrorMessage } from '../../../query-client/query-client';

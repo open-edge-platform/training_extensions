@@ -3,8 +3,8 @@
 
 import { useState, type CSSProperties } from 'react';
 
-import { ActionButton, Item, Menu, MenuTrigger } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Item, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 import { useOverlayTriggerState } from 'react-stately';
 
 import { EnablePipelineBlockedDialog } from '../../../../components/enable-pipeline-blocked-dialog/enable-pipeline-blocked-dialog.component';

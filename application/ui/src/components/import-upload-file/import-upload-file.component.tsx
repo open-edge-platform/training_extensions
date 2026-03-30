@@ -11,13 +11,13 @@ import {
     IllustratedMessage,
     Link as SpectrumLink,
     Text,
-    toast,
-} from '@geti/ui';
-import { LinkOut } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { LinkOut } from '@geti-ui/ui/icons';
 
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
 import { getFilesFromDropEvent } from '../../shared/drop-zone.utils';
+import { toast } from '../toast';
 import { formatToFileArray, isSupportedDatasetZip } from './util';
 
 import classes from './import-upload-file.module.scss';
@@ -38,17 +38,14 @@ export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUpload
 
         if (hasMultipleFiles) {
             toast({
-                message: 'Adding folders or multiple files is not allowed. Please load a single file.',
                 type: 'error',
+                message: 'Adding folders or multiple files is not allowed. Please load a single file.',
             });
             return;
         }
 
         if (!isSupportedDatasetZip(files[0])) {
-            toast({
-                message: 'Unsupported file format. Please upload a valid .zip file.',
-                type: 'error',
-            });
+            toast({ type: 'error', message: 'Unsupported file format. Please upload a valid .zip file.' });
             return;
         }
 

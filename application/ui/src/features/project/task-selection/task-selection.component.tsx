@@ -3,7 +3,7 @@
 
 import type { Dispatch, SetStateAction } from 'react';
 
-import { Divider, Flex, Grid, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
+import { Divider, Flex, Grid, Heading, Image, Radio, RadioGroup, Text, View } from '@geti-ui/ui';
 
 import classificationImageUrl from '../../../assets/classification.webp';
 import detectionImageUrl from '../../../assets/detection.webp';

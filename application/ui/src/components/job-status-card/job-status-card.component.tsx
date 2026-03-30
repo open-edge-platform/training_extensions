@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { dimensionValue, Divider, Flex, Text, View } from '@geti/ui';
+import { dimensionValue, Divider, Flex, Text, View } from '@geti-ui/ui';
 
 import { isNonEmptyString } from '../../shared/util';
 

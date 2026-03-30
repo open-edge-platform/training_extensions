@@ -3,7 +3,8 @@
 
 import { RefObject, useRef } from 'react';
 
-import { Content, ContextualHelp, Flex, Text, View, VisuallyHidden } from '@geti/ui';
+import { Content, ContextualHelp, Flex, Text, View } from '@geti-ui/ui';
+import { VisuallyHidden } from '@react-aria/visually-hidden';
 import { clsx } from 'clsx';
 import { mergeProps, useFocusRing, useNumberFormatter, useSlider, useSliderThumb } from 'react-aria';
 import { SliderState, useSliderState } from 'react-stately';

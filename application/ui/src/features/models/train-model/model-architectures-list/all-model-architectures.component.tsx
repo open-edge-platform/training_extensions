@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { Flex } from '@geti-ui/ui';
 
 import type { ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
 import { SORTING_HANDLERS, SortingOptions } from '../sort-model-architectures/utils';

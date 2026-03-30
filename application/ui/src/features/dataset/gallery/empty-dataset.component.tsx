@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Heading } from '@geti/ui';
+import { Flex, Heading } from '@geti-ui/ui';
 
 import { ReactComponent as EmptyDatasetImage } from '../../../assets/empty-dataset.svg';
 

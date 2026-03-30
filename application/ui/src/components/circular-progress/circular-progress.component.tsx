@@ -3,20 +3,18 @@
 
 import { useMemo } from 'react';
 
-import { type ColorValue } from '@geti/ui';
-
 interface CircularProgressProps {
     percentage: number;
     size?: number;
     labelFontSize?: number;
     strokeWidth?: number;
-    labelFontColor?: ColorValue;
-    backStrokeColor?: ColorValue;
-    color?: ColorValue;
+    labelFontColor?: string;
+    backStrokeColor?: string;
+    color?: string;
     hasError?: boolean;
     checkMarkOnComplete?: boolean;
     checkMarkSize?: number;
-    checkMarkColor?: ColorValue | string;
+    checkMarkColor?: string;
 }
 
 export const CircularProgress = ({

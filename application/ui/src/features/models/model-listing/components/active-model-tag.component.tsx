@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { dimensionValue, Tag } from '@geti/ui';
+import { dimensionValue, Tag } from '@geti-ui/ui';
 
 import { ReactComponent as StartIcon } from '../../../../assets/icons/start.svg';
 

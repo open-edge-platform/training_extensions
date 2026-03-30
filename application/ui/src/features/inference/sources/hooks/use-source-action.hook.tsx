@@ -3,9 +3,9 @@
 
 import { useActionState } from 'react';
 
-import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
+import { toast } from '../../../../components/toast';
 import type { SourceConfigPayload } from '../../../../constants/shared-types';
 import { useSourceMutation } from './use-source-mutation.hook';
 
@@ -40,10 +40,7 @@ export const useSourceAction = <T extends SourceConfigPayload>({
         } catch (error: unknown) {
             const details = (error as { detail?: string })?.detail;
 
-            toast({
-                type: 'error',
-                message: `Failed to save source configuration, ${details ?? 'please try again'}`,
-            });
+            toast({ type: 'error', message: `Failed to save source configuration, ${details ?? 'please try again'}` });
         }
 
         return body;

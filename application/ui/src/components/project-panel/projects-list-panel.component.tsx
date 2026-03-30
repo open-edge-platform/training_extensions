@@ -15,8 +15,8 @@ import {
     Tag,
     Text,
     View,
-} from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { AddCircle } from '@geti-ui/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 

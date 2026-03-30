@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Button, Flex, Form } from '@geti/ui';
+import { Button, Flex, Form } from '@geti-ui/ui';
 
 import type { SourceConfigPayload } from '../../../../constants/shared-types';
 import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';

@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
+import { toast } from '../../../../components/toast';
 
 export const useDownloadModel = (modelId: string) => {
     const projectId = useProjectIdentifier();

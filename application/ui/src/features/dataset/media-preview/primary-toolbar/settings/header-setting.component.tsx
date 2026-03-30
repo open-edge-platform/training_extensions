@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Text } from '@geti/ui';
-import { Revisit } from '@geti/ui/icons';
+import { ActionButton, Flex, Text } from '@geti-ui/ui';
+import { Revisit } from '@geti-ui/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
 export interface HeaderSettingProps {

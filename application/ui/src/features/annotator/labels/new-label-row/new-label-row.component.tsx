@@ -1,10 +1,10 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { FocusEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { FocusEvent, KeyboardEvent, useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Grid, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
-import { Close } from '@geti/ui/icons';
+import { ActionButton, Grid, TextField, View } from '@geti-ui/ui';
+import { Close } from '@geti-ui/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { getRandomDistinctColor } from '../../label-utils';
@@ -18,19 +18,11 @@ type NewLabelRowProps = {
 };
 
 export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps) => {
-    const rowRef = useRef<DOMRefValue<HTMLDivElement>>(null);
-    const rowRefUnwrapped = useUnwrapDOMRef(rowRef);
-    const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
-    const inputRefUnwrapped = useUnwrapDOMRef(inputRef);
+    const rowRef = useRef<HTMLDivElement>(null);
     const [name, setName] = useState('');
     const [color, setColor] = useState(getRandomDistinctColor);
 
     const validationError = name.trim() === '' ? undefined : validateName(name);
-
-    useEffect(() => {
-        // Focus the input when the component mounts
-        inputRefUnwrapped.current?.focus();
-    }, [inputRefUnwrapped]);
 
     const handleSave = () => {
         if (name.trim() !== '' && !validationError) {
@@ -49,7 +41,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
     const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
         // Check if the blur target is within the row (e.g., clicking color picker)
         const relatedTarget = event.relatedTarget as Node | null;
-        if (relatedTarget && rowRefUnwrapped.current?.contains(relatedTarget)) {
+        if (relatedTarget && rowRef.current?.contains(relatedTarget)) {
             return;
         }
 
@@ -61,43 +53,42 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
     };
 
     return (
-        <Grid
-            ref={rowRef}
-            columns={['size-350', 'size-400', '1fr', 'size-400', 'size-400']}
-            gap={'size-100'}
-            alignItems={'start'}
-            UNSAFE_className={classes.labelRow}
-            UNSAFE_style={{ '--label-color': color }}
-        >
-            <View />
-
-            <LabelColorPicker color={color} onChange={setColor} />
-
-            <View>
-                <TextField
-                    ref={inputRef}
-                    aria-label={'New label name'}
-                    placeholder={'Label name'}
-                    value={name}
-                    onChange={setName}
-                    onKeyDown={handleNameKeyDown}
-                    onBlur={handleBlur}
-                    width={'100%'}
-                    errorMessage={validationError}
-                    validationState={validationError ? 'invalid' : undefined}
-                />
-            </View>
-
-            <View />
-
-            <ActionButton
-                aria-label='Cancel new label'
-                isQuiet
-                onPress={onCancel}
-                UNSAFE_className={classes.deleteButton}
+        <div ref={rowRef} className={classes.labelRow} style={{ '--label-color': color } as React.CSSProperties}>
+            <Grid
+                columns={['size-350', 'size-400', '1fr', 'size-400', 'size-400']}
+                gap={'size-100'}
+                alignItems={'start'}
             >
-                <Close />
-            </ActionButton>
-        </Grid>
+                <View />
+
+                <LabelColorPicker color={color} onChange={setColor} />
+
+                <View>
+                    <TextField
+                        autoFocus
+                        aria-label={'New label name'}
+                        placeholder={'Label name'}
+                        value={name}
+                        onChange={setName}
+                        onKeyDown={handleNameKeyDown}
+                        onBlur={handleBlur}
+                        width={'100%'}
+                        errorMessage={validationError}
+                        validationState={validationError ? 'invalid' : undefined}
+                    />
+                </View>
+
+                <View />
+
+                <ActionButton
+                    aria-label='Cancel new label'
+                    isQuiet
+                    onPress={onCancel}
+                    UNSAFE_className={classes.deleteButton}
+                >
+                    <Close />
+                </ActionButton>
+            </Grid>
+        </div>
     );
 };

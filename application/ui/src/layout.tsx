@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
+import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti-ui/ui';
 import { useProject } from 'hooks/api/project.hook';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';

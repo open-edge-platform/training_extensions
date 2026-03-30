@@ -3,8 +3,8 @@
 
 import { useRef, useState } from 'react';
 
-import { ActionButton, AlertDialog, CustomPopover, DialogContainer, FocusableRefValue, Text } from '@geti/ui';
-import { Add, Edit } from '@geti/ui/icons';
+import { ActionButton, AlertDialog, CustomPopover, DialogContainer, Text } from '@geti-ui/ui';
+import { Add, Edit } from '@geti-ui/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 
 import type { Label } from '../../../../constants/shared-types';
@@ -24,7 +24,7 @@ export const LabelsEditorPopover = ({
 }: LabelsEditorPopoverProps) => {
     const { deleteLabel } = useLabels({ isClassification, isMultiLabel });
 
-    const triggerRef = useRef<FocusableRefValue<HTMLElement, HTMLButtonElement>>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const popoverState = useOverlayTriggerState({});
     const deleteDialogState = useOverlayTriggerState({});
     const [labelToDelete, setLabelToDelete] = useState<Label | null>(null);
@@ -52,17 +52,19 @@ export const LabelsEditorPopover = ({
     return (
         <>
             {hasLabels ? (
-                <ActionButton ref={triggerRef} isQuiet aria-label='Edit labels' onPress={popoverState.open}>
+                <ActionButton isQuiet aria-label='Edit labels' onPress={popoverState.open}>
+                    <button ref={triggerRef} style={{ display: 'none' }} aria-hidden />
                     <Edit />
                 </ActionButton>
             ) : (
-                <ActionButton ref={triggerRef} isQuiet aria-label='Create label' onPress={popoverState.open}>
+                <ActionButton isQuiet aria-label='Create label' onPress={popoverState.open}>
+                    <button ref={triggerRef} style={{ display: 'none' }} aria-hidden />
                     <Add />
                     <Text>Create label</Text>
                 </ActionButton>
             )}
             {popoverState.isOpen && (
-                <CustomPopover ref={triggerRef} state={popoverState} placement='bottom end'>
+                <CustomPopover triggerRef={triggerRef} placement='bottom end'>
                     <LabelsEditor
                         isClassification={isClassification}
                         isMultiLabel={isMultiLabel}

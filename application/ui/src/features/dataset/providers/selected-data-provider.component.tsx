@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
-import { Selection } from '@geti/ui';
+import type { Selection } from '@react-types/shared';
 
 type SelectedDataState = null | {
     selectedKeys: Selection;
@@ -17,8 +17,8 @@ export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
     const toggleSelectedKeys = (keys: string[]) => {
-        setSelectedKeys((prevSelectedKeys) => {
-            const updatedSelectedKeys = new Set(prevSelectedKeys);
+        setSelectedKeys((prevSelectedKeys: Selection) => {
+            const updatedSelectedKeys = new Set(prevSelectedKeys === 'all' ? [] : prevSelectedKeys);
 
             keys.forEach((key) => {
                 updatedSelectedKeys.has(key) ? updatedSelectedKeys.delete(key) : updatedSelectedKeys.add(key);

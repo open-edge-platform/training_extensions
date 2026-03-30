@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { View } from '@geti-ui/ui';
 import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../constants/shared-types';

@@ -14,11 +14,12 @@ import {
     Flex,
     Heading,
     Text,
-} from '@geti/ui';
-import { Info } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { Info } from '@geti-ui/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 
+import { toast } from '../../../../components/toast';
 import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/labels';
 import { isImage } from '../../../../shared/media-item-utils';
 import { isMultiLabelClassificationTask } from '../../../project/task-type-guards';

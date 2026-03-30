@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Flex, View } from '@geti/ui';
+import { Flex, View } from '@geti-ui/ui';
 import { useNumberFormatter } from 'react-aria';
 
 import { AnnotatedVideoFrame, Label, VideoFramePrediction } from '../../../../../../../constants/shared-types';

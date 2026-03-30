@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Slider } from '@geti/ui';
+import { Slider } from '@geti-ui/ui';
 
 import { HeaderSetting, HeaderSettingProps } from './header-setting.component';
 

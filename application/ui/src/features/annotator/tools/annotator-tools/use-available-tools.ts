@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { BoundingBox, DetectionTool, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
+import { BoundingBox, DetectionTool, Polygon, SegmentAnythingIcon, Selector } from '@geti-ui/ui/icons';
 
 import { ReactComponent as MagneticLasso } from '../../../../assets/icons/magnetic-lasso.svg';
 import { useProjectTask } from '../../../../hooks/use-project-task.hook';

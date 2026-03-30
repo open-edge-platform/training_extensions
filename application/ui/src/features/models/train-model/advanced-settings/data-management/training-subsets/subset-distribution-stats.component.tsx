@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Text, View } from '@geti/ui';
+import { Flex, Text, View } from '@geti-ui/ui';
 
 import classes from './training-subsets.module.scss';
 

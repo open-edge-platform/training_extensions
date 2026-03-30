@@ -17,8 +17,8 @@ import {
     RadioGroup,
     Link as SpectrumLink,
     View,
-} from '@geti/ui';
-import { LinkOut } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { LinkOut } from '@geti-ui/ui/icons';
 import { OverlayTriggerState } from '@react-stately/overlays';
 import { useProject } from 'hooks/api/project.hook';
 

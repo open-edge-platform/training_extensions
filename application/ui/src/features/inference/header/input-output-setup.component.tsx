@@ -16,7 +16,7 @@ import {
     Tabs,
     Text,
     View,
-} from '@geti/ui';
+} from '@geti-ui/ui';
 
 import { ReactComponent as PipelineIcon } from '../../../assets/icons/pipeline.svg';
 import { SinkActions } from '../sinks/sink-actions.component';

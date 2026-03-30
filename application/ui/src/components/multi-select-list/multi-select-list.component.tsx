@@ -3,7 +3,7 @@
 
 import { ComponentProps, useState } from 'react';
 
-import { Checkbox, Flex, Item, ListView, Selection, Text } from '@geti/ui';
+import { AriaSelection, Checkbox, Flex, Item, ListView, Text } from '@geti-ui/ui';
 
 import classes from './multi-select-list.module.scss';
 
@@ -38,7 +38,7 @@ export const MultiSelectList = ({
         setSelectedLabels(selectedItems);
     };
 
-    const handleSelectChange = (keys: Selection) => {
+    const handleSelectChange = (keys: AriaSelection) => {
         const selection = keys === 'all' ? new Set(items.map(({ id }) => id)) : new Set(keys as Set<string>);
         setSelectedLabels(selection);
     };

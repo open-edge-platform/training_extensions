@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
+import { dimensionValue, Grid, View, ViewModes } from '@geti-ui/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import { DatasetItemAnnotationStatus } from '../../constants/shared-types';
@@ -14,7 +14,7 @@ import { ExportJobsList } from '../../features/dataset/import-export/export-jobs
 import { ImportJobsList } from '../../features/dataset/import-export/import-jobs-list/import-jobs-list.component';
 
 export const Dataset = () => {
-    const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
+    const [viewMode, setViewMode] = useState<ViewModes>(ViewModes.MEDIUM);
     const [filterStatus, setFilterStatus] = useState<DatasetItemAnnotationStatus | null>(null);
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage, isPending } = useGetDatasetMediaItems({
         annotationStatus: filterStatus ?? undefined,

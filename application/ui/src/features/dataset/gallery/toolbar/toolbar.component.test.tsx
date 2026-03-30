@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ViewModes } from '@geti/ui';
+import { ViewModes } from '@geti-ui/ui';
 import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';

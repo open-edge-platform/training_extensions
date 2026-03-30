@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Item, Key, Picker } from '@geti/ui';
+import { Item, Key, Picker } from '@geti-ui/ui';
 
 import { $api } from '../../../api/client';
 import { usePatchPipeline, usePipeline } from '../../../hooks/api/pipeline.hook';

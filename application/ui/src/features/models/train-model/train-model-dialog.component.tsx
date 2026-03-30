@@ -1,24 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    ButtonGroup,
-    Content,
-    Dialog,
-    Divider,
-    Flex,
-    Footer,
-    Heading,
-    InlineAlert,
-    Link,
-    Text,
-    toast,
-} from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { useMatch } from 'react-router';
+import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Footer, Heading, InlineAlert } from '@geti-ui/ui';
 
-import { paths } from '../../../constants/paths';
+import { toast } from '../../../components/toast';
 import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
 import { useIsTrainingButtonDisabled } from './hooks/use-is-training-button-disabled';
@@ -38,8 +23,6 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         onToggleAdvancedSettingsMode,
         trainingConfiguration,
     } = useTrainModelState();
-    const projectId = useProjectIdentifier();
-    const isModelsPage = useMatch(paths.project.models.pattern);
     const isTrainingDisabled = useIsTrainingButtonDisabled();
 
     const { trainModel, isPending } = useTrainModel();
@@ -54,21 +37,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
             onSuccess: () => {
                 onClose();
 
-                toast({
-                    message: isModelsPage ? (
-                        <Text>Model training started successfully.</Text>
-                    ) : (
-                        <Flex alignItems={'center'} gap={'size-50'} wrap={'wrap'}>
-                            <Text>
-                                Model training started successfully.{' '}
-                                <Link href={paths.project.models({ projectId })} UNSAFE_style={{ color: '#fff' }}>
-                                    Open models screen to see progress.
-                                </Link>
-                            </Text>
-                        </Flex>
-                    ),
-                    type: 'success',
-                });
+                toast({ type: 'success', message: 'Model training started successfully.' });
             },
         });
     };

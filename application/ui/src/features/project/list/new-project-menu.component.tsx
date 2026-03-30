@@ -3,8 +3,8 @@
 
 import { Key } from 'react';
 
-import { ActionButton, Item, Menu, MenuTrigger, Text } from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
+import { ActionButton, Item, Menu, MenuTrigger, Text } from '@geti-ui/ui';
+import { AddCircle } from '@geti-ui/ui/icons';
 import { useNavigate } from 'react-router-dom';
 
 import { paths } from '../../../constants/paths';

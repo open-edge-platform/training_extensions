@@ -3,7 +3,7 @@
 
 import { CSSProperties, Fragment, useMemo } from 'react';
 
-import { Divider, Flex, Text } from '@geti/ui';
+import { Divider, Flex, Text } from '@geti-ui/ui';
 import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useHotkeys } from 'react-hotkeys-hook';

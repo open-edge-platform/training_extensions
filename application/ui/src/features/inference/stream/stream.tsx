@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { View } from '@geti/ui';
+import { View } from '@geti-ui/ui';
 
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
