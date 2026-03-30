@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue } from '@geti/ui';
-import { useProject } from 'hooks/api/project.hook';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+
+import { useProjectLabelsWithEmptyLabel } from '../../../../../shared/annotator/labels';
 
 type DatasetLabelsChartProps = {
     totalItems: number;
@@ -13,23 +14,28 @@ type DatasetLabelsChartProps = {
     }[];
 };
 
-const getAxisTicks = (total: number, step: number): number[] => {
-    const ticks = Array.from({ length: Math.floor(total / step) + 1 }, (_, i) => i * step);
+const getAxisTicks = (total: number): number[] => {
+    const TICK_SPACING = 20;
 
-    return total % step !== 0 ? [...ticks, total] : ticks;
+    const ticks = Array.from({ length: Math.floor(total / TICK_SPACING) + 1 }, (_, i) => i * TICK_SPACING);
+
+    return total % TICK_SPACING !== 0 ? [...ticks, total] : ticks;
 };
 
 export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLabelsChartProps) => {
-    const { data: selectedProject } = useProject();
-    const projectLabels = selectedProject?.task?.labels ?? [];
+    const projectLabels = useProjectLabelsWithEmptyLabel();
 
-    const chartData = instancesPerLabel.map((item) => ({
-        label: projectLabels.find((label) => label.id === item.label_id)?.name ?? item.label_id,
-        score: item.instances,
-    }));
+    const chartData = projectLabels.map((projectLabel) => {
+        const matchingInstances = instancesPerLabel.find(({ label_id }) => label_id === projectLabel.id);
+
+        return {
+            label: projectLabel.name,
+            score: matchingInstances?.instances ?? 0,
+        };
+    });
 
     return (
-        <ResponsiveContainer width='100%' height={'100%'} minHeight={'size-2400'}>
+        <ResponsiveContainer width='100%' height={'100%'} minHeight={dimensionValue('size-2400')}>
             <BarChart
                 data={chartData}
                 layout='vertical'
@@ -40,11 +46,11 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
 
                 <XAxis
                     type='number'
-                    domain={[0, totalItems]}
-                    ticks={getAxisTicks(totalItems, 20)}
-                    tick={{ fill: 'var(--spectrum-global-color-gray-800)', fontSize: dimensionValue('size-200') }}
-                    axisLine={{ stroke: 'var(--spectrum-global-color-gray-600)', strokeWidth: 1 }}
                     tickLine={false}
+                    domain={[0, totalItems]}
+                    ticks={getAxisTicks(totalItems)}
+                    axisLine={{ stroke: 'var(--spectrum-global-color-gray-600)', strokeWidth: 1 }}
+                    tick={{ fill: 'var(--spectrum-global-color-gray-800)', fontSize: dimensionValue('size-200') }}
                 />
 
                 <YAxis
