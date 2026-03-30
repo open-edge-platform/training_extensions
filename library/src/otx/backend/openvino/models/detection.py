@@ -94,6 +94,10 @@ class OVDetectionModel(OVModel):
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         **kwargs,
     ) -> None:
+        # Disable ModelAPI's confidence filtering so all detections reach the metric
+        if model_api_configuration is None:
+            model_api_configuration = {}
+        model_api_configuration.setdefault("confidence_threshold", 0.0)
         super().__init__(
             model_path=model_path,
             model_type=model_type,
