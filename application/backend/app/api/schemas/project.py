@@ -69,7 +69,7 @@ class ProjectBase(BaseModel, Generic[T]):
             **({"id": "7b073838-99d3-42ff-9018-4e901eb047fc"} if view else {}),
             "name": "animals",
             "active_pipeline": False if view else None,
-            **({"created_at": "2025-01-01T00:00:00"} if view else {}),
+            **({"created_at": "2025-01-01T00:00:00Z"} if view else {}),
             "task": {
                 "task_type": "classification",
                 "exclusive_labels": True,
