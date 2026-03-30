@@ -362,22 +362,17 @@
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;object-detection-d-fine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;dfine_x.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;object-detection-deim-d-fine-m&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-dfine-m&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_m.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;object-detection-deim-d-fine-l&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-dfine-l&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_l.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;object-detection-deim-d-fine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-dfine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_x.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -930,11 +925,20 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">augmentation_params</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_preparation&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;augmentation&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">tiling</span> <span class="o">=</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tiling&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">deim_framework</span> <span class="o">=</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;deim_framework&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">training_parameters</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="p">{})</span>
 
-        <span class="c1"># Update augmentations and tiling</span>
+        <span class="c1"># Update tiling (always applied regardless of DEIM state)</span>
         <span class="n">TransformsUpdater</span><span class="o">.</span><span class="n">update_tiling</span><span class="p">(</span><span class="n">tiling</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-        <span class="n">TransformsUpdater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="c1"># When DEIM is enabled, the AugmentationSchedulerCallback owns the pipeline;</span>
+        <span class="c1"># user augmentation overrides must be ignored.</span>
+        <span class="n">deim_enabled</span> <span class="o">=</span> <span class="n">deim_framework</span> <span class="ow">is</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">deim_enabled</span><span class="p">:</span>
+            <span class="n">TransformsUpdater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">deim_framework</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="c1"># User explicitly disabled DEIM -&gt; remove the scheduler callback</span>
+                <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">_disable_deim_framework</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
         <span class="c1"># Update training hyperparameters</span>
         <span class="n">hyperparams</span> <span class="o">=</span> <span class="p">{</span>
@@ -959,6 +963,23 @@
                 <span class="k">return</span> <span class="n">idx</span>
         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_disable_deim_framework</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Disable the DEIM adaptive augmentation scheduling framework.</span>
+
+<span class="sd">        Removes the AugmentationSchedulerCallback from the callbacks list,</span>
+<span class="sd">        falling back to the static augmentation pipeline defined in</span>
+<span class="sd">        ``data.train_subset``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;callbacks&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">get_callback_idx</span><span class="p">(</span>
+            <span class="n">callbacks</span><span class="p">,</span>
+            <span class="s2">&quot;otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;DEIM framework disabled: removed AugmentationSchedulerCallback&quot;</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_remove_unused_key</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
