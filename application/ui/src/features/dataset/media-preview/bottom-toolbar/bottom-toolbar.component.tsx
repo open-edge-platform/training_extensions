@@ -7,11 +7,11 @@ import { clsx } from 'clsx';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { capitalize } from 'lodash-es';
 
-import { $api, fetchClient } from '../../../../api/client';
+import { $api } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { getQueryKey } from '../../../../query-client/query-client';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
-import { isUnannotatedError } from '../api/use-annotations-query';
+import { useAnnotationsQuery } from '../api/use-annotations-query';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -37,6 +37,7 @@ const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !==
 
 const useSubsets = (mediaItem: Media) => {
     const projectId = useProjectIdentifier();
+    const annotationsQuery = useAnnotationsQuery(mediaItem);
     const query = isVideoFrame(mediaItem)
         ? {
               frame_index: mediaItem.frame_number,
@@ -70,34 +71,15 @@ const useSubsets = (mediaItem: Media) => {
         },
     });
 
-    const handleSubsetChange = async (key: Key | null) => {
+    const handleSubsetChange = (key: Key | null) => {
         if (!isAssignableSubset(key)) return;
-
-        // We need to first fetch the annotations to make sure we dont send
-        // stale data to the server when changing the subset, which could lead to wrongly overwriting changes
-        // TODO: We could optimize this by caching the annotations, then we could just
-        // `getQueryData` instead of making an additional request
-        const {
-            data: annotationsResponse,
-            error: annotationsError,
-            response,
-        } = await fetchClient.GET('/api/projects/{project_id}/dataset/media/{media_id}/annotations', {
-            params: {
-                path: { project_id: projectId, media_id: mediaItem.id },
-                query,
-            },
-        });
-
-        if (annotationsError && response.status !== 404 && !isUnannotatedError(annotationsError)) {
-            return;
-        }
 
         updateSubsetMutation.mutate({
             params: {
                 path: { project_id: projectId, media_id: mediaItem.id },
                 query,
             },
-            body: { annotations: annotationsResponse?.annotations ?? [], subset: key },
+            body: { annotations: annotationsQuery.data?.annotations ?? [], subset: key },
         });
     };
 
