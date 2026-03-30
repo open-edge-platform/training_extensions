@@ -297,7 +297,6 @@ test.describe('Model Details', () => {
 
             await expect(modelsPage.getQuantizationDialog()).toBeHidden();
 
-            // INT8 variant row is visible with its quantized size
             await expect(page.getByText('INT8', { exact: true })).toBeVisible();
             await expect(page.getByText('52.4 MB')).toBeVisible();
 
