@@ -17,27 +17,27 @@ type BulkLabelsAssignmentDialogContentProps = {
     onClose: () => void;
     onSkip: () => void;
     isSkipPending: boolean;
-    onAccept: (labelIds: string[]) => Promise<void>;
-    isAcceptPending: boolean;
+    onContinue: (labelIds: string[]) => Promise<void>;
+    isContinuePending: boolean;
     isMultiLabelClassification: boolean;
 };
 
 const BulkLabelsAssignmentDialogContent = ({
     onClose,
     onSkip,
-    onAccept,
+    onContinue,
     isSkipPending,
-    isAcceptPending,
+    isContinuePending,
     isMultiLabelClassification,
 }: BulkLabelsAssignmentDialogContentProps) => {
     const projectLabels = useProjectLabelsWithEmptyLabel();
 
     const [selectedLabels, setSelectedLabels] = useState<Set<string>>(() => new Set([]));
 
-    const isAcceptDisabled = selectedLabels.size === 0 || isAcceptPending;
+    const isContinueDisabled = selectedLabels.size === 0 || isContinuePending;
 
-    const handleAccept = async () => {
-        await onAccept(Array.from(selectedLabels));
+    const handleContinue = async () => {
+        await onContinue(Array.from(selectedLabels));
     };
 
     return (
@@ -68,11 +68,11 @@ const BulkLabelsAssignmentDialogContent = ({
                 </Button>
                 <Button
                     variant={'accent'}
-                    onPress={handleAccept}
-                    isDisabled={isAcceptDisabled}
-                    isPending={isAcceptPending}
+                    onPress={handleContinue}
+                    isDisabled={isContinueDisabled}
+                    isPending={isContinuePending}
                 >
-                    Accept
+                    Continue
                 </Button>
             </ButtonGroup>
         </Dialog>
@@ -141,8 +141,8 @@ export const BulkLabelsAssignmentDialog = ({
                 <BulkLabelsAssignmentDialogContent
                     onClose={onClose}
                     onSkip={handleSkip}
-                    onAccept={handleAccept}
-                    isAcceptPending={isUploadingDatasetItems || assignLabel.isPending}
+                    onContinue={handleAccept}
+                    isContinuePending={isUploadingDatasetItems || assignLabel.isPending}
                     isSkipPending={isUploadingDatasetItems}
                     isMultiLabelClassification={isMultiLabelClassification}
                 />
