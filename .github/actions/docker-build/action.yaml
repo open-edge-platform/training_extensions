@@ -51,13 +51,15 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@8016837eba79c3b51bf2025379f48b6fc50f1236 # v4.0.0
       with:
-        # Use the native docker driver when the image stays local (load).
-        # The default docker-container driver would serialise the entire
-        # image as an OCI tarball to load it back into the daemon, adding
-        # ~2 min of pure I/O.  The docker driver builds directly in the
-        # daemon so the image is available instantly.
-        # When pushing we need docker-container for registry cache support.
-        driver: ${{ inputs.push == 'true' && 'docker-container' || 'docker' }}
+        # Always use docker-container driver so that registry cache
+        # (type=registry) works for both PR and push builds.
+        # The docker driver doesn't support external cache, which means PR
+        # builds on ephemeral runners would have zero cache and rebuild
+        # everything from scratch (~10+ min for PyTorch layers).
+        # The trade-off is ~2 min of OCI tarball I/O when loading the image
+        # back into the daemon for smoke tests, but that is far cheaper than
+        # a full uncached rebuild.
+        driver: docker-container
 
     - name: Build Docker image
       id: build
@@ -66,9 +68,9 @@ runs:
         context: .
         file: application/docker/Dockerfile
         target: geti-${{ inputs.device }}
-        # Explicit platform is only needed for docker-container driver;
-        # the docker driver always builds for the host architecture.
-        platforms: ${{ inputs.push == 'true' && 'linux/amd64' || '' }}
+        # Explicit platform prevents docker-container driver from inferring
+        # a multi-platform build, which would slow things down.
+        platforms: linux/amd64
         push: ${{ inputs.push }}
         tags: ${{ inputs.tags }}
         labels: ${{ inputs.labels }}
