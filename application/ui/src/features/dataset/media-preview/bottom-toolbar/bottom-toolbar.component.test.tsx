@@ -152,7 +152,7 @@ describe('BottomToolbar', () => {
                     media_id: 'media-123',
                 }),
                 expect.objectContaining({
-                    annotations: [],
+                    annotations: [{ shape: { type: 'full_image' }, labels: [{ id: 'empty-label' }] }],
                     subset: 'validation',
                 })
             );
