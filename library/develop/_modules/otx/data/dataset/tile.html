@@ -368,6 +368,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="n">tile_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span> <span class="o">=</span> <span class="n">dataset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_subset</span> <span class="o">=</span> <span class="n">subset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tiling_config</span> <span class="o">=</span> <span class="n">TilingConfig</span><span class="p">(</span>
+            <span class="n">tile_height</span><span class="o">=</span><span class="n">tile_config</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">tile_width</span><span class="o">=</span><span class="n">tile_config</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">overlap_x</span><span class="o">=</span><span class="n">tile_config</span><span class="o">.</span><span class="n">overlap</span><span class="p">,</span>
+            <span class="n">overlap_y</span><span class="o">=</span><span class="n">tile_config</span><span class="o">.</span><span class="n">overlap</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tiling_transform</span> <span class="o">=</span> <span class="n">create_tiling_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tiling_config</span><span class="p">,</span> <span class="n">threshold_drop_ann</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filtering_transform</span> <span class="o">=</span> <span class="n">create_filtering_transform</span><span class="p">()</span>
 
         <span class="c1"># LabelInfo differs from SegLabelInfo, thus we need to update it for semantic segmentation.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">!=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
@@ -407,21 +415,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">parent_slice_ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">parent_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
-            <span class="n">create_tiling_transform</span><span class="p">(</span>
-                <span class="n">TilingConfig</span><span class="p">(</span>
-                    <span class="n">tile_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                    <span class="n">tile_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">overlap_x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">overlap</span><span class="p">,</span>
-                    <span class="n">overlap_y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">overlap</span><span class="p">,</span>
-                <span class="p">),</span>
-                <span class="n">threshold_drop_ann</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-            <span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tiling_transform</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subset</span> <span class="o">==</span> <span class="n">Subset</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">:</span>
             <span class="c1"># NOTE: filter validation tiles with annotations only to avoid evaluation on empty tiles.</span>
-            <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">tile_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">create_filtering_transform</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">tile_ds</span> <span class="o">=</span> <span class="n">tile_ds</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_filtering_transform</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">parent_slice_ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
 
             <span class="c1"># if tile dataset is empty it means objects are too big to fit in any tile, in this case include full image</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_ds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
