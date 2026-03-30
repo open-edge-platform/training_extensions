@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ViewModes } from '@geti/ui';
-import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
