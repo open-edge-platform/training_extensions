@@ -7,7 +7,7 @@ import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
 import { getQueryKey } from '../../../../../query-client/query-client';
-import { EMPTY_LABEL_ID } from '../../../../../shared/annotator/labels';
+import { filterOutEmptyLabels } from '../../../../../shared/annotator/labels';
 
 export const useAssignLabel = () => {
     const projectId = useProjectIdentifier();
@@ -36,7 +36,7 @@ export const useAssignLabel = () => {
     };
 
     const assignLabel = async (mediaId: string, labelIds: string[]) => {
-        const labelsWithoutEmptyLabel = labelIds.filter((id) => id !== EMPTY_LABEL_ID);
+        const labelsWithoutEmptyLabel = filterOutEmptyLabels(labelIds.map((id) => ({ id })));
 
         return mutation.mutateAsync({
             params: {
@@ -48,7 +48,7 @@ export const useAssignLabel = () => {
             body: {
                 annotations: isEmpty(labelsWithoutEmptyLabel)
                     ? []
-                    : [{ shape: { type: 'full_image' }, labels: labelsWithoutEmptyLabel.map((id) => ({ id })) }],
+                    : [{ shape: { type: 'full_image' }, labels: labelsWithoutEmptyLabel }],
             },
         });
     };
