@@ -5,18 +5,16 @@ import { useState } from 'react';
 
 import { useProject } from 'hooks/api/project.hook';
 
-import { isClassificationTask, isMultiLabelClassificationTask } from '../../../project/task-type-guards';
-import { useMediaUpload } from '../../api/use-media-upload';
-import { isVideoFile } from '../utils';
+import { isClassificationTask } from '../../project/task-type-guards';
+import { useMediaUpload } from '../api/use-media-upload';
+import { isVideoFile } from './utils';
 
-export const useBulkUploadAndAssignLabel = () => {
+export const useUploadFiles = () => {
     const { data: project } = useProject();
     const { uploadMedia, uploadProgress } = useMediaUpload();
 
     const [filesForLabelAssignment, setFilesForLabelAssignment] = useState<File[]>([]);
-
     const isClassification = isClassificationTask(project.task.task_type);
-    const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
 
     const handleFileUpload = async (files: File[]) => {
         if (files.length === 0) {
@@ -30,14 +28,16 @@ export const useBulkUploadAndAssignLabel = () => {
         }
     };
 
+    const clearFilesForLabelAssignment = () => {
+        setFilesForLabelAssignment([]);
+    };
+
     return {
         uploadMedia,
         uploadMediaLoading: uploadProgress.isUploading,
-        uploadAndAssign: handleFileUpload,
+        uploadFiles: handleFileUpload,
         isClassification,
-        isMultiLabelClassification,
-
         filesForLabelAssignment,
-        setFilesForLabelAssignment,
+        clearFilesForLabelAssignment,
     };
 };
