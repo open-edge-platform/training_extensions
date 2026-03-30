@@ -7,18 +7,13 @@ import { fileURLToPath } from 'url';
 
 import { NetworkFixture } from '@msw/playwright';
 import { getMockedLabel } from 'mocks/mock-labels';
-import {
-    getMockedMediaImage,
-    getMockedVideo,
-    getMockedVideoFrame,
-    getMultipleMockedMediaImage,
-} from 'mocks/mock-media';
+import { getMockedMediaImage, getMockedVideo, getMultipleMockedMediaImage } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { v4 as uuid } from 'uuid';
 
 import { SchemaProjectView } from '../../src/api/openapi-spec';
-import { AnnotationDTO, MediaDTO } from '../../src/constants/shared-types';
+import { AnnotationDTO } from '../../src/constants/shared-types';
 import { expect, http, test } from '../fixtures';
 
 const mockedItems = getMultipleMockedMediaImage(20, '1');
@@ -206,7 +201,7 @@ test.describe('Dataset', () => {
             return createAnnotationPayloads;
         };
 
-        test('Single label: bulk labelling is only disabled for classification task and only for images', async ({
+        test('Single label: bulk labelling is only enabled for classification task and only for images', async ({
             network,
             page,
         }) => {
@@ -259,7 +254,7 @@ test.describe('Dataset', () => {
             }).toPass();
         });
 
-        test('Multi label: bulk labelling is only disabled for classification task and only for images', async ({
+        test('Multi label: bulk labelling is only enabled for classification task and only for images', async ({
             network,
             page,
         }) => {
@@ -309,6 +304,36 @@ test.describe('Dataset', () => {
                             },
                         ],
                     ],
+                ]);
+            }).toPass();
+        });
+
+        test('Multi label: empty label creates empty annotations', async ({ network, page }) => {
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: false,
+                        labels: mockedLabels,
+                    },
+                })
+            );
+
+            await page.goto('projects/id-1/dataset');
+
+            await page.getByLabel('Upload media files').setInputFiles(filesToUpload);
+
+            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+
+            await page.getByRole('checkbox', { name: `Select No label` }).click();
+
+            await page.getByRole('button', { name: 'Continue' }).click();
+
+            await expect(() => {
+                expect(createAnnotationPayloads).toEqual([
+                    [mockedImages[0].id, []],
+                    [mockedImages[1].id, []],
                 ]);
             }).toPass();
         });

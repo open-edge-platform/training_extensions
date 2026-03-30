@@ -3,9 +3,11 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
 import { getQueryKey } from '../../../../../query-client/query-client';
+import { EMPTY_LABEL_ID } from '../../../../../shared/annotator/labels';
 
 export const useAssignLabel = () => {
     const projectId = useProjectIdentifier();
@@ -34,6 +36,8 @@ export const useAssignLabel = () => {
     };
 
     const assignLabel = async (mediaId: string, labelIds: string[]) => {
+        const labelsWithoutEmptyLabel = labelIds.filter((id) => id !== EMPTY_LABEL_ID);
+
         return mutation.mutateAsync({
             params: {
                 path: {
@@ -42,14 +46,9 @@ export const useAssignLabel = () => {
                 },
             },
             body: {
-                annotations: [
-                    {
-                        shape: {
-                            type: 'full_image',
-                        },
-                        labels: labelIds.map((id) => ({ id })),
-                    },
-                ],
+                annotations: isEmpty(labelsWithoutEmptyLabel)
+                    ? []
+                    : [{ shape: { type: 'full_image' }, labels: labelsWithoutEmptyLabel.map((id) => ({ id })) }],
             },
         });
     };
