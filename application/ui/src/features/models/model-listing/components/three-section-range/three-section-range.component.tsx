@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Text, View } from '@geti/ui';
+import { Flex, Grid, Text, useNumberFormatter, View } from '@geti/ui';
 
 import classes from './three-section-range.module.scss';
 
@@ -12,9 +12,8 @@ type ThreeSectionRangeProps = {
     testingValue: number;
 };
 
-const formatter = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 });
-
 export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
+    const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
     const total = trainingValue + validationValue + testingValue;
     const gridColumns = [
         trainingValue > 0 ? `${trainingValue}fr` : '1fr',
