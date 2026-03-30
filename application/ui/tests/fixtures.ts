@@ -123,6 +123,7 @@ const test = testBase.extend<Fixtures>({
                                     labels: [],
                                 },
                                 active_pipeline: false,
+                                created_at: '2024-10-01T12:00:00Z',
                             },
                         ]);
                     }),
@@ -139,6 +140,7 @@ const test = testBase.extend<Fixtures>({
                                 ],
                             },
                             active_pipeline: true,
+                            created_at: '2024-10-01T12:00:00Z',
                         });
                     }),
                     http.delete('/api/projects/{project_id}', () => {

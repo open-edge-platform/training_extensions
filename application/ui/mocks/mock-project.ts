@@ -20,6 +20,7 @@ export const getMockedProject = (customProject: Partial<SchemaProjectView>): Sch
             task_type: 'classification',
         },
         active_pipeline: false,
+        created_at: '2024-10-01T12:00:00Z',
         ...customProject,
     };
 };
