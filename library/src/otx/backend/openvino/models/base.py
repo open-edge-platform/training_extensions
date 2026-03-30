@@ -167,6 +167,22 @@ class OVModel:
         """Set up the tiler for tile-based tasks."""
         raise NotImplementedError
 
+    @property
+    def input_size(self) -> tuple[int, int] | None:
+        """Return ``(H, W)`` input size from the underlying ModelAPI model.
+
+        Returns ``None`` when the model uses dynamic shapes (h or w <= 0)
+        or when the underlying model attributes are not accessible.
+        """
+        try:
+            base = self.model.model if isinstance(self.model, Tiler) else self.model
+            h, w = int(base.h), int(base.w)  # pyrefly: ignore[missing-attribute]
+        except (AttributeError, TypeError, ValueError):
+            return None
+        if h > 0 and w > 0:
+            return (h, w)
+        return None
+
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.
 

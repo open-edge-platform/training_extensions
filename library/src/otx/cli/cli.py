@@ -302,13 +302,6 @@ class OTXCLI:
             # For num_classes update, Model and Metric are instantiated separately.
 
             model_config = self.config[self.subcommand].pop("model")
-            # if input_size == "auto" will be executed adaptive input size
-            # input_size_multiplier is needed when we have constraints on the input size to the model
-            if self.config[self.subcommand].data.get("input_size") == "auto":
-                from otx.utils.utils import get_model_cls_from_config
-
-                model_cls = get_model_cls_from_config(model_config)
-                self.config[self.subcommand].data.input_size_multiplier = model_cls.input_size_multiplier
 
             # Instantiate the things that don't need to special handling
             self.config_init = self.parser.instantiate_classes(self.config)

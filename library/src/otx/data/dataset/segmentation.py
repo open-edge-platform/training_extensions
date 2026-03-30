@@ -28,9 +28,6 @@ class OTXSegmentationDataset(OTXDataset):
         dm_subset: Datumaro dataset subset containing the data items.
         transforms: Transform operations to apply to the data items.
         max_refetch: Maximum number of retries when fetching a data item fails.
-        image_color_channel: Color channel format for images (RGB, BGR, etc.).
-        stack_images: Whether to stack images in batch processing.
-
         ignore_index: Index value for pixels to be ignored during training.
 
     Attributes:

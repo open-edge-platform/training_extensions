@@ -108,19 +108,6 @@ class TestAutoConfigurator:
         assert isinstance(datamodule, OTXDataModule)
         assert datamodule.task == task
 
-    def test_get_datamodule_set_input_size_multiplier(self, mocker) -> None:
-        mock_otxdatamodule = mocker.patch.object(target_file, "OTXDataModule")
-        auto_configurator = AutoConfigurator(
-            data_root="tests/assets/detection_coco",
-            task=OTXTaskType.DETECTION,
-            model="yolox_tiny",
-        )
-        auto_configurator.config["data"]["input_size"] = "auto"
-
-        auto_configurator.get_datamodule()
-
-        assert mock_otxdatamodule.call_args.kwargs["input_size_multiplier"] == 32
-
     def test_get_model(self, fxt_task: OTXTaskType, fxt_data_root_per_task_type) -> None:
         if fxt_task is OTXTaskType.H_LABEL_CLS:
             pytest.xfail(reason="Not working")
@@ -167,7 +154,9 @@ class TestAutoConfigurator:
         assert any("Resize" in aug.get("class_path", "") for aug in datamodule.test_subset.augmentations_cpu)
 
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(datamodule, subset="test")
-        assert updated_datamodule.test_subset.augmentations_cpu == [{"class_path": "torchvision.transforms.v2.ToImage"}]
+        # OV recipes now use Resize (preprocessing moved from ModelAPI to OTX)
+        assert len(updated_datamodule.test_subset.augmentations_cpu) == 1
+        assert "Resize" in updated_datamodule.test_subset.augmentations_cpu[0]["class_path"]
         assert not updated_datamodule.tile_config.enable_tiler
 
     def test_update_ov_subset_pipeline_from_pre_constructed_datasets(self) -> None:
@@ -190,9 +179,8 @@ class TestAutoConfigurator:
 
         # This should NOT raise ValueError about dataset format detection
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(pre_constructed_datamodule, subset="train")
-        assert updated_datamodule.train_subset.augmentations_cpu == [
-            {"class_path": "torchvision.transforms.v2.ToImage"}
-        ]
+        assert len(updated_datamodule.train_subset.augmentations_cpu) == 1
+        assert "Resize" in updated_datamodule.train_subset.augmentations_cpu[0]["class_path"]
         assert not updated_datamodule.tile_config.enable_tiler
         # Verify subsets are preserved
         assert "train" in updated_datamodule.subsets

@@ -193,10 +193,6 @@ class AutoConfigurator:
         _ = data_config.pop("__path__", {})  # Remove __path__ key that for CLI
         _ = data_config.pop("config", {})  # Remove config key that for CLI
 
-        if data_config.get("input_size") == "auto":
-            model_cls = get_model_cls_from_config(Namespace(self.config["model"]))
-            data_config["input_size_multiplier"] = model_cls.input_size_multiplier
-
         return OTXDataModule(
             train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
             val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
@@ -316,12 +312,17 @@ class AutoConfigurator:
         datamodule: OTXDataModule,
         subset: str = "test",
         task: OTXTaskType | None = None,
+        input_size: tuple[int, int] | None = None,
     ) -> OTXDataModule:
         """Returns an OTXDataModule object with OpenVINO subset transforms applied.
 
         Args:
             datamodule (OTXDataModule): The original OTXDataModule object.
             subset (str, optional): The subset to update. Defaults to "test".
+            input_size (tuple[int, int] | None, optional): Model input size (H, W)
+                from the OV model metadata.  When provided this overrides
+                ``datamodule.input_size`` so that ``$(input_size)`` placeholders
+                in the OV recipe augmentations resolve to the correct value.
 
         Returns:
             OTXDataModule: The modified OTXDataModule object with OpenVINO subset transforms applied.
@@ -333,9 +334,24 @@ class AutoConfigurator:
         ov_config_path = DEFAULT_CONFIG_PER_TASK[task].parent / "openvino_model.yaml"
         ov_config = self._load_default_config(config_path=ov_config_path)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
-        subset_config.batch_size = ov_config[f"{subset}_subset"]["batch_size"]
-        subset_config.augmentations_cpu = ov_config[f"{subset}_subset"]["augmentations_cpu"]
+        ov_subset = ov_config.get(f"{subset}_subset", ov_config["test_subset"])
+        subset_config.batch_size = ov_subset["batch_size"]
+        subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
+        subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
         datamodule.tile_config.enable_tiler = False
+
+        # Resolve input size: prefer model IR metadata, fall back to
+        # the training recipe's default, raise if neither is available.
+        actual_input_size = input_size or datamodule.input_size
+        if actual_input_size is None:
+            msg = (
+                "Cannot determine input_size for the OpenVINO pipeline. "
+                "The OV model has dynamic input shapes and the datamodule "
+                "does not specify input_size. Please provide input_size "
+                "explicitly when calling update_ov_subset_pipeline()."
+            )
+            raise ValueError(msg)
+
         msg = (
             f"For OpenVINO IR models, Update the following {subset} \n"
             f"\t augmentations_cpu: {subset_config.augmentations_cpu} \n"
@@ -365,7 +381,7 @@ class AutoConfigurator:
             train_subset=datamodule.train_subset,
             val_subset=datamodule.val_subset,
             test_subset=datamodule.test_subset,
-            input_size=datamodule.input_size,
+            input_size=actual_input_size,
             tile_config=datamodule.tile_config,
             ignore_index=datamodule.ignore_index,
             unannotated_items_ratio=datamodule.unannotated_items_ratio,
