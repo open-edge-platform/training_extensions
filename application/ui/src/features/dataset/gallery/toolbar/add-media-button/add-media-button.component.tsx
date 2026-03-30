@@ -5,26 +5,25 @@ import { ChangeEvent, useRef } from 'react';
 
 import { Button } from '@geti/ui';
 
-type AddMediaButtonProps = {
-    onFilesSelected: (files: File[]) => void;
-    isDisabled?: boolean;
-};
-
-const VALID_VIDEO_EXT = ['mp4', 'avi', 'mkv', 'mov', 'webm', 'm4v'];
-const VALID_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'jfif', 'tif', 'tiff', 'webp', 'bmp'];
-const VALID_EXT = [...VALID_VIDEO_EXT, ...VALID_IMAGE_EXT];
+import { VALID_EXT } from '../../utils';
 
 export const acceptedExtensions = VALID_EXT.map((ext) => `.${ext}`).join(',');
 
-export const AddMediaButton = ({ onFilesSelected, isDisabled = false }: AddMediaButtonProps) => {
+type AddMediaButtonProps = {
+    onFileUpload: (files: File[]) => Promise<void>;
+    isDisabled?: boolean;
+};
+
+export const AddMediaButton = ({ onFileUpload, isDisabled = false }: AddMediaButtonProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
 
         if (files && files.length > 0) {
             const fileArray = Array.from(files);
-            onFilesSelected(fileArray);
+
+            await onFileUpload(fileArray);
         }
 
         // Clear the input value to allow selecting the same file again

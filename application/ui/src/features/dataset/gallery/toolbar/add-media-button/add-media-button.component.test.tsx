@@ -14,7 +14,7 @@ describe('AddMediaButton', () => {
             lastModified: Date.now(),
         });
 
-        render(<AddMediaButton onFilesSelected={mockOnFilesSelected} />);
+        render(<AddMediaButton onFileUpload={mockOnFilesSelected} />);
 
         const input = screen.getByLabelText(/Upload media files/);
         fireEvent.change(input, { target: { files: [mockFile] } });
@@ -23,7 +23,7 @@ describe('AddMediaButton', () => {
     });
 
     it('sets the expected accepted file extensions', () => {
-        render(<AddMediaButton onFilesSelected={vi.fn()} />);
+        render(<AddMediaButton onFileUpload={vi.fn()} />);
 
         const input = screen.getByLabelText(/Upload media files/);
 
@@ -33,7 +33,7 @@ describe('AddMediaButton', () => {
     it('opens file picker when button is clicked', () => {
         const mockOnFilesSelected = vi.fn();
 
-        render(<AddMediaButton onFilesSelected={mockOnFilesSelected} />);
+        render(<AddMediaButton onFileUpload={mockOnFilesSelected} />);
 
         const button = screen.getByRole('button', { name: /Upload media/ });
         const input = screen.getByLabelText(/Upload media files/) as HTMLInputElement;
@@ -45,7 +45,7 @@ describe('AddMediaButton', () => {
     });
 
     it('disables button when isDisabled prop is true', () => {
-        render(<AddMediaButton onFilesSelected={vi.fn()} isDisabled />);
+        render(<AddMediaButton onFileUpload={vi.fn()} isDisabled />);
 
         const button = screen.getByRole('button', { name: /Upload media/ });
 

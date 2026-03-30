@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ViewModes } from '@geti/ui';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedMediaImage } from 'mocks/mock-media';
+import { getMockedProject } from 'mocks/mock-project';
+import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
+import { http } from '../../../../api/utils';
 import type { Media } from '../../../../constants/shared-types';
+import { server } from '../../../../msw-node-setup';
 import { SelectedDataProvider } from '../../providers/selected-data-provider.component';
 import { Toolbar } from './toolbar.component';
 
@@ -42,12 +46,22 @@ vi.mock('../../import-export/import-export.component', () => ({
 }));
 
 describe('Toolbar', () => {
-    const renderToolbar = (items: Media[] = []) => {
-        return render(
+    const renderToolbar = async (items: Media[] = []) => {
+        server.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(getMockedProject());
+            })
+        );
+
+        const result = render(
             <SelectedDataProvider>
                 <Toolbar items={items} viewMode={ViewModes.LARGE} setViewMode={vi.fn()} onFilter={vi.fn()} />
             </SelectedDataProvider>
         );
+
+        await waitForElementToBeRemoved(screen.getByRole('progressbar'));
+
+        return result;
     };
 
     beforeEach(() => {
@@ -55,10 +69,10 @@ describe('Toolbar', () => {
         onSelectedMediaItemChangeMock.mockClear();
     });
 
-    it('delegates selected files to useMediaUpload', () => {
+    it('delegates selected files to useMediaUpload', async () => {
         const file = new File(['file-content'], 'media-item.jpg', { type: 'image/jpeg' });
 
-        renderToolbar();
+        await renderToolbar();
 
         const input = screen.getByLabelText(/Upload media files/);
         fireEvent.change(input, { target: { files: [file] } });
@@ -66,31 +80,31 @@ describe('Toolbar', () => {
         expect(uploadMediaMock).toHaveBeenCalledWith([file]);
     });
 
-    it('shows total images count when no items are selected', () => {
-        renderToolbar([getMockedMediaImage({ id: '1' }), getMockedMediaImage({ id: '2' })]);
+    it('shows total images count when no items are selected', async () => {
+        await renderToolbar([getMockedMediaImage({ id: '1' }), getMockedMediaImage({ id: '2' })]);
 
         expect(screen.getByText('2 images')).toBeVisible();
     });
 
-    it('disables annotate button when there are no items', () => {
-        renderToolbar();
+    it('disables annotate button when there are no items', async () => {
+        await renderToolbar();
 
         expect(screen.getByRole('button', { name: 'Annotate' })).toBeDisabled();
     });
 
-    it('calls onSelectedMediaItemChange with first item when annotate is clicked', () => {
+    it('calls onSelectedMediaItemChange with first item when annotate is clicked', async () => {
         const firstItem = getMockedMediaImage({ id: 'first-item' });
         const secondItem = getMockedMediaImage({ id: 'second-item' });
 
-        renderToolbar([firstItem, secondItem]);
+        await renderToolbar([firstItem, secondItem]);
 
         fireEvent.click(screen.getByRole('button', { name: 'Annotate' }));
 
         expect(onSelectedMediaItemChangeMock).toHaveBeenCalledWith(firstItem);
     });
 
-    it('selects all items and updates selected count', () => {
-        renderToolbar([getMockedMediaImage({ id: '1' }), getMockedMediaImage({ id: '2' })]);
+    it('selects all items and updates selected count', async () => {
+        await renderToolbar([getMockedMediaImage({ id: '1' }), getMockedMediaImage({ id: '2' })]);
 
         fireEvent.click(screen.getByLabelText('select all'));
 

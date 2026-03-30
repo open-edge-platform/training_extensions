@@ -16,14 +16,15 @@ import {
     ViewModes,
 } from '@geti/ui';
 
-import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
-import { useMediaUpload } from '../../api/use-media-upload';
-import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
+import { BulkLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-labels-assignment-dialog.component';
+import { useBulkUploadAndAssignLabel } from '../bulk-labels-assignment/use-bulk-upload-and-assign-label';
+import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
+import { AddMediaButton } from './add-media-button/add-media-button.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { toggleMultipleSelection } from './util';
 
@@ -47,10 +48,40 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
+const MediaUpload = () => {
+    const {
+        isClassification,
+        isMultiLabelClassification,
+        setFilesForLabelAssignment,
+        filesForLabelAssignment,
+        uploadAndAssign,
+        uploadMedia,
+        uploadMediaLoading,
+    } = useBulkUploadAndAssignLabel();
+
+    const handleClose = () => {
+        setFilesForLabelAssignment([]);
+    };
+
+    return (
+        <>
+            <AddMediaButton onFileUpload={uploadAndAssign} isDisabled={uploadMediaLoading} />
+            {isClassification && (
+                <BulkLabelsAssignmentDialog
+                    onClose={handleClose}
+                    files={filesForLabelAssignment}
+                    onDatasetItemsUpload={uploadMedia}
+                    isUploadingDatasetItems={uploadMediaLoading}
+                    isMultiLabelClassification={isMultiLabelClassification}
+                />
+            )}
+        </>
+    );
+};
+
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { uploadMedia, uploadProgress } = useMediaUpload();
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -68,7 +99,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                 <ButtonGroup UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                     <ImportExport />
 
-                    <AddMediaButton onFilesSelected={uploadMedia} isDisabled={uploadProgress.isUploading} />
+                    <MediaUpload />
 
                     <TrainModel />
 
@@ -104,7 +135,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                                 onDeleted={toggleSelectedKeys}
                             />
 
-                            {/* 
+                            {/*
                                 TODO: In the future we will have a single endpoint to accept/decline
                                     multiple media items at once instead of sending multiple requests in a loop.
                                     Once we have that, we can reenable these buttons.
