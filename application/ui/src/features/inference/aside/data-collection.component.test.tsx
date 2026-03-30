@@ -105,5 +105,7 @@ describe('DataCollection capture rate fields', () => {
                 })
             );
         });
+
+        expect(pipelinePatchSpy).toHaveBeenCalledTimes(2);
     });
 });
