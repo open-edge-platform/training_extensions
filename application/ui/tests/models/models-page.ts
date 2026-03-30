@@ -151,12 +151,12 @@ export class ModelsPage {
         await this.page.getByRole('tab', { name: 'Training datasets' }).click();
     }
 
-    async openAdvancedSettings() {
-        await this.page.getByRole('button', { name: 'Advanced settings' }).click();
+    async clickModelVariantsTab() {
+        await this.page.getByRole('tab', { name: 'Model variants' }).click();
     }
 
-    async openBasicMode() {
-        await this.page.getByRole('button', { name: 'Back' }).click();
+    async openAdvancedSettings() {
+        await this.page.getByRole('button', { name: 'Advanced settings' }).click();
     }
 
     async openTrainingParameters() {
@@ -175,5 +175,33 @@ export class ModelsPage {
             .getByRole('listbox', { name: 'Select Input size height' })
             .getByRole('option', { name: inputSizeHeight.toString() })
             .click();
+    }
+
+    getQuantizationDialog() {
+        return this.page.getByRole('dialog');
+    }
+
+    async openQuantizationDialog() {
+        await this.page.getByRole('button', { name: 'Start quantization' }).click();
+    }
+
+    getAccuracyDropInput() {
+        return this.getQuantizationDialog().getByRole('textbox', { name: 'Change Max accuracy drop' });
+    }
+
+    getCalibrationSizeInput() {
+        return this.getQuantizationDialog().getByRole('textbox', { name: 'Change Max calibration size' });
+    }
+
+    getNoMaximumCheckbox() {
+        return this.getQuantizationDialog().getByLabel('No maximum');
+    }
+
+    async submitQuantization() {
+        await this.getQuantizationDialog().getByRole('button', { name: 'Start quantization' }).click();
+    }
+
+    getToast(message: string) {
+        return this.page.getByLabel('toast').filter({ hasText: message });
     }
 }

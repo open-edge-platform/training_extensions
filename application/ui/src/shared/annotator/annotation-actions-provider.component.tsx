@@ -26,6 +26,7 @@ interface AnnotationsContextValue {
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
     resetAnnotations: () => void;
+    replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
@@ -151,6 +152,10 @@ export const AnnotationActionsProvider = ({
         );
     };
 
+    const replaceAnnotations = (newAnnotations: Annotation[]) => {
+        setAnnotations(() => newAnnotations);
+    };
+
     const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
         const query = isVideoFrame(mediaItem)
             ? {
@@ -214,6 +219,7 @@ export const AnnotationActionsProvider = ({
                 deleteAnnotations,
                 addAnnotationWithEmptyLabel,
                 resetAnnotations,
+                replaceAnnotations,
 
                 // Remote
                 submitAnnotations,

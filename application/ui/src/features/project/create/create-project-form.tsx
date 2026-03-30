@@ -17,6 +17,7 @@ import {
     ClassificationTaskSelection,
     ClassificationTaskType,
 } from './classification-label-selection/classification-task-type-selection.component';
+import { generateUniqueProjectName } from './utils';
 import { validateProjectName } from './validator';
 
 import classes from './create-project-form.module.scss';
@@ -28,8 +29,7 @@ type CreateProjectFormProps = {
 export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
     const [labels, setLabels] = useState<Label[]>([]);
-    const numberOfProjects = projects.length;
-    const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
+    const [name, setName] = useState<string>(() => generateUniqueProjectName(projects.map((project) => project.name)));
     const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask);
 
     const [classificationTaskType, setClassificationTaskType] = useState<ClassificationTaskType>('single-label');

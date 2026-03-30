@@ -54,6 +54,7 @@
         "react-router-dom": "~6.30.1",
         "recharts": "~3.7.0",
         "static-path": "~0.0.4",
+        "utif": "^3.1.0",
         "uuid": "~11.1.0"
     },
     "devDependencies": {
@@ -77,6 +78,7 @@
         "@types/node": "~24.0.15",
         "@types/react": "~19.1.10",
         "@types/react-dom": "~19.1.7",
+        "@types/utif": "^3.0.6",
         "@types/uuid": "~10.0.0",
         "@typescript-eslint/eslint-plugin": "~8.31.1",
         "@vitejs/plugin-react": "~4.7.0",

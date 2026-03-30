@@ -112,7 +112,7 @@ class TestClassificationConversion:
 
         result = fxt_converter.convert_sample(sample)
 
-        assert result == []
+        assert result is None
 
     def test_convert_classification_sample_with_label_mapping(
         self, fxt_project_labels_for_mapping, fxt_converter_with_mapping
@@ -134,7 +134,7 @@ class TestClassificationConversion:
         sample = MulticlassClassificationImportExportSample(label=2, confidence=0.9)
         result = converter.convert_sample(sample)
 
-        assert result == []  # Label should be filtered out and no annotations returned
+        assert result is None  # Label should be filtered out and no annotations returned
 
 
 class TestMultilabelConversion:

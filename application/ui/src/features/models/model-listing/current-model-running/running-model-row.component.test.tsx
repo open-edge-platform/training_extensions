@@ -10,9 +10,9 @@ import { render } from 'test-utils/render';
 import { getMockedJob } from '../../../../../mocks/mock-job';
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
-import { TrainingModelRow } from './training-model-row.component';
+import { RunningModelRow } from './running-model-row.component';
 
-describe('TrainingModelRow', () => {
+describe('RunningModelRow', () => {
     const mockModel = getMockedModel({
         id: 'model-123',
         architecture: 'arch-123',
@@ -75,7 +75,7 @@ describe('TrainingModelRow', () => {
         });
 
         render(
-            <TrainingModelRow
+            <RunningModelRow
                 job={job}
                 groupBy={'dataset'}
                 datasetRevisions={[datasetRevision]}
@@ -84,7 +84,6 @@ describe('TrainingModelRow', () => {
         );
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
-        expect(screen.getByText('Training')).toBeVisible();
         expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
 
@@ -126,7 +125,7 @@ describe('TrainingModelRow', () => {
         });
 
         render(
-            <TrainingModelRow
+            <RunningModelRow
                 job={job}
                 groupBy={'architecture'}
                 datasetRevisions={[datasetRevision]}
@@ -135,7 +134,7 @@ describe('TrainingModelRow', () => {
         );
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
-        expect(screen.getByText('Training')).toBeVisible();
+        expect(screen.getByText('Running')).toBeVisible();
         expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
 
@@ -174,7 +173,7 @@ describe('TrainingModelRow', () => {
         });
 
         render(
-            <TrainingModelRow
+            <RunningModelRow
                 job={job}
                 onCancel={mockCancel}
                 datasetRevisions={[]}
@@ -183,7 +182,7 @@ describe('TrainingModelRow', () => {
             />
         );
 
-        const cancelButton = await screen.findByRole('button', { name: /cancel training job/i });
+        const cancelButton = await screen.findByRole('button', { name: /cancel running job/i });
         expect(cancelButton).toBeVisible();
         expect(cancelButton).toBeEnabled();
     });
@@ -208,7 +207,7 @@ describe('TrainingModelRow', () => {
         });
 
         render(
-            <TrainingModelRow
+            <RunningModelRow
                 job={job}
                 onCancel={mockCancel}
                 datasetRevisions={[]}
@@ -217,7 +216,7 @@ describe('TrainingModelRow', () => {
             />
         );
 
-        const cancelButton = await screen.findByRole('button', { name: /cancel training job/i });
+        const cancelButton = await screen.findByRole('button', { name: /cancel running job/i });
         expect(cancelButton).toBeDisabled();
     });
 });

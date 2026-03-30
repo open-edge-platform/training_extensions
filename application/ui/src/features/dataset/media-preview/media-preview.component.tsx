@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { Content, Dialog, Grid, View } from '@geti/ui';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
@@ -22,7 +22,7 @@ import { useAnnotationsQuery } from './api/use-annotations-query';
 import { SIDEBAR_WIDTH } from './constants';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { useAnnotatorMediaTransition } from './use-annotator-media-transition.hook';
-import { getInitialAnnotations } from './utils';
+import { getInitialAnnotations, useAnnotatorMode } from './utils';
 
 type MediaPreviewProps = {
     mediaItem: Media;
@@ -95,7 +95,6 @@ const MediaPreviewContent = ({
     isFetchingNextPage,
     fetchNextPage,
 }: MediaPreviewContentProps) => {
-    const [mode, setMode] = useState<AnnotatorMode>('annotation');
     const { mediaItem } = useSelectedMediaItem();
     const { selectedModelId } = usePredictionSetup();
 
@@ -117,6 +116,8 @@ const MediaPreviewContent = ({
     const initialPredictions = useMemo(() => {
         return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
     }, [predictionsData]);
+
+    const [mode, setMode] = useAnnotatorMode({ predictions: initialPredictions, annotations: initialAnnotations });
 
     return (
         <ToolProvider mode={mode}>

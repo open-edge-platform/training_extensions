@@ -11,10 +11,12 @@ from .dataset_import import (
     ImportDatasetToProjectRequest,
     PrepareDatasetForImportRequest,
 )
+from .quantization import QuantizationRequest
 from .training import TrainingRequest
 
 JobRequest = Annotated[
     TrainingRequest
+    | QuantizationRequest
     | ImportDatasetToProjectRequest
     | PrepareDatasetForImportRequest
     | ImportDatasetAsNewProjectRequest

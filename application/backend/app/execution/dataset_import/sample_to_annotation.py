@@ -102,7 +102,7 @@ class DatumaroSampleToGetiAnnotationConverter:
         """
         match sample:
             case MulticlassClassificationImportExportSample(label=label, confidence=confidence):
-                return self.__convert_classification_sample(label, confidence)
+                return self.__convert_multiclass_sample(label, confidence)
             case MultilabelClassificationImportExportSample(label=labels, confidence=confidences):
                 return self.__convert_multilabel_sample(labels, confidences)
             case DetectionImportExportSample(label=labels, bboxes=bboxes, confidence=confidences):
@@ -112,9 +112,9 @@ class DatumaroSampleToGetiAnnotationConverter:
             case _:
                 raise ValueError(f"Unsupported sample type: {type(sample)}")
 
-    def __convert_classification_sample(
+    def __convert_multiclass_sample(
         self, label: int | None, confidence: float | None
-    ) -> list[DatasetItemAnnotation]:
+    ) -> list[DatasetItemAnnotation] | None:
         if (label_refs := self.__convert_labels_to_refs(label)) and label_refs[0] is not None:
             return [
                 DatasetItemAnnotation(
@@ -123,11 +123,11 @@ class DatumaroSampleToGetiAnnotationConverter:
                     confidences=[confidence] if confidence is not None else None,
                 )
             ]
-        return []
+        return None
 
     def __convert_multilabel_sample(
         self, labels: NDArrayInt | None, confidences: NDArrayFloat32 | None
-    ) -> list[DatasetItemAnnotation]:
+    ) -> list[DatasetItemAnnotation] | None:
         if label_refs := self.__convert_labels_to_refs(labels):
             return [
                 DatasetItemAnnotation(
@@ -136,7 +136,7 @@ class DatumaroSampleToGetiAnnotationConverter:
                     confidences=confidences,
                 )
             ]
-        return []
+        return None
 
     def __convert_detection_sample(
         self, labels: NDArrayInt | None, bboxes: NDArrayInt | None, confidences: NDArrayFloat32 | None
