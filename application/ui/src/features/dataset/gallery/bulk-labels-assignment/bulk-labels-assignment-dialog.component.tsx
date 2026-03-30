@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { Info } from '@geti/ui/icons';
+import { dimensionValue } from '@react-spectrum/utils';
 import { isEmpty } from 'lodash-es';
 
 import { MediaDTO } from '../../../../constants/shared-types';
@@ -46,6 +47,11 @@ const BulkLabelsAssignmentDialogContent = ({
             <Divider />
             <Content>
                 <Flex direction={'column'} gap={'size-100'} height={'100%'} minHeight={0}>
+                    <Text>
+                        Choose the label(s) to assign to the uploaded images, then click {"'Continue'"}. If you instead
+                        prefer to annotate the images at a later time, choose {"'Skip'"}.
+                    </Text>
+                    <Divider size={'S'} marginY={'size-100'} />
                     <LabelsList
                         ariaLabel={'Labels to assign'}
                         labels={projectLabels}
@@ -53,9 +59,12 @@ const BulkLabelsAssignmentDialogContent = ({
                         onSelectedLabelsChange={setSelectedLabels}
                         isMultiple={isMultiLabelClassification}
                     />
-                    <Flex alignItems={'center'} gap={'size-50'}>
+                    <Flex gap={'size-50'}>
                         <Info />
-                        <Text>Labeling applies only to images</Text>
+                        <Text UNSAFE_style={{ lineHeight: dimensionValue('size-225') }}>
+                            The selected labels apply only to images, videos (if any) will be uploaded without
+                            annotations.
+                        </Text>
                     </Flex>
                 </Flex>
             </Content>
