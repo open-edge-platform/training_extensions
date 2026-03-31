@@ -4,59 +4,34 @@
 import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, toast } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 
-import type { Model, ModelFormat, ModelVariant } from '../../../../constants/shared-types';
+import type { Model, ModelFormat } from '../../../../constants/shared-types';
 import { formatBytes } from '../../../../shared/util';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
-import { getTestingMetrics } from '../components/model-row/utils';
+import {
+    getBaselineVariant,
+    getFp32PytorchVariant,
+    getPerformanceColumnName,
+    getPrimaryTestingMetricValue,
+    getVariantPerformanceValue,
+} from '../utils/variant-metrics';
+import { ValueWithDelta } from './model-variant-delta.component';
 
-const getPrimaryTestingMetric = (variant: ModelVariant) => {
-    return getTestingMetrics(variant.evaluations).find(({ primary }) => primary);
-};
-
-const getPrimaryTestingMetricValue = (
-    variant: ModelVariant | undefined
-): { name: string; value: number } | undefined => {
-    const primaryMetric = variant ? getPrimaryTestingMetric(variant) : undefined;
-
-    if (primaryMetric === undefined) {
-        return undefined;
-    }
-
-    return { name: primaryMetric.name, value: Math.round(primaryMetric.value * 100) };
-};
-
-interface ModelVariantTableProps {
+type ModelVariantTableProps = {
     model: Model;
     format: ModelFormat;
-}
-
+};
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
     const { downloadModel, isDownloading } = useDownloadModel(model.id);
     const allVariants = model.variants ?? [];
-    const variants = (model.variants ?? []).filter((variant) => variant.format === format);
-    const fp32PytorchVariant = allVariants.find(
-        (variant) => variant.format === 'pytorch' && variant.precision === 'fp32'
-    );
+    const variants = allVariants.filter((variant) => variant.format === format);
+    const baselineVariant = getBaselineVariant(variants);
+    const fp32PytorchVariant = getFp32PytorchVariant(allVariants);
 
     const fp32PytorchMetric = getPrimaryTestingMetricValue(fp32PytorchVariant);
-    const performanceColumnName =
-        variants.map((variant) => getPrimaryTestingMetricValue(variant)).find((metric) => metric !== undefined)?.name ??
-        fp32PytorchMetric?.name ??
-        'Score';
-
-    const getVariantPerformanceValue = (variant: ModelVariant): number | undefined => {
-        const metric = getPrimaryTestingMetricValue(variant);
-
-        if (metric !== undefined) {
-            return metric.value;
-        }
-
-        if ((variant.evaluations?.length ?? 0) === 0) {
-            return fp32PytorchMetric?.value;
-        }
-
-        return undefined;
-    };
+    const performanceColumnName = getPerformanceColumnName(variants, fp32PytorchMetric);
+    const baselinePerformanceValue = baselineVariant
+        ? getVariantPerformanceValue(baselineVariant, fp32PytorchMetric)
+        : undefined;
 
     const handleDownloadModel = (modelVariantId: string) => {
         toast({ type: 'info', message: 'Model download started...please wait.' });
@@ -75,13 +50,31 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
             </TableHeader>
             <TableBody items={variants}>
                 {(variant) => {
-                    const performanceValue = getVariantPerformanceValue(variant);
+                    const performanceValue = getVariantPerformanceValue(variant, fp32PytorchMetric);
+                    const isBaselineVariant = variant.id === baselineVariant?.id;
 
                     return (
                         <Row key={`${variant.format}-${variant.precision}`}>
                             <Cell>{variant.precision.toUpperCase()}</Cell>
-                            <Cell>{formatBytes(variant.weights_size)}</Cell>
-                            <Cell>{performanceValue === undefined ? '-' : `${performanceValue}%`}</Cell>
+                            <Cell>
+                                <ValueWithDelta
+                                    value={variant.weights_size}
+                                    baselineValue={baselineVariant?.weights_size}
+                                    changeType='size'
+                                    displayValue={formatBytes(variant.weights_size)}
+                                    showDelta={!isBaselineVariant}
+                                    precision={variant.precision}
+                                />
+                            </Cell>
+                            <Cell>
+                                <ValueWithDelta
+                                    value={performanceValue}
+                                    baselineValue={baselinePerformanceValue}
+                                    displayValue={performanceValue === undefined ? '-' : `${performanceValue}%`}
+                                    showDelta={!isBaselineVariant}
+                                    precision={variant.precision}
+                                />
+                            </Cell>
                             <Cell>
                                 <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
                                     <ActionButton
