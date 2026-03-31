@@ -5,8 +5,9 @@ import { toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
+import { ModelVariant } from '../../../../constants/shared-types';
 
-export const useDownloadModel = (modelId: string) => {
+export const useDownloadModel = (modelId: string, format: ModelVariant['format']) => {
     const projectId = useProjectIdentifier();
 
     const mutation = $api.useMutation(
@@ -20,7 +21,7 @@ export const useDownloadModel = (modelId: string) => {
 
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = modelVariantId ? `model-${modelId}-${modelVariantId}.zip` : `model-${modelId}.zip`;
+                link.download = modelVariantId ? `${format}-${modelVariantId}.zip` : `${format}-${modelId}.zip`;
                 link.click();
 
                 URL.revokeObjectURL(url);
