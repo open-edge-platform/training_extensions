@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, Suspense, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, Suspense, useMemo } from 'react';
 
 import {
     Button,
@@ -16,23 +16,19 @@ import {
     Text,
     ViewModes,
 } from '@geti/ui';
-import { useProject } from 'hooks/api/project.hook';
-import { isEmpty, isString } from 'lodash-es';
+import { isString } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
 import { isImage } from '../../../../shared/media-item-utils';
 import { TrainModel } from '../../../models/train-model/train-model.component';
-import { isClassificationTask } from '../../../project/task-type-guards';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
-import { BulkLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-labels-assignment-dialog.component';
-import { BulkSelectedMediaLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-selected-media-labels-assignment-dialog.component';
 import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
-import { useUploadFiles } from '../use-upload-files';
-import { AddMediaButton } from './add-media-button/add-media-button.component';
+import { AssignLabel } from './assign-label.component';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
+import { MediaUpload } from './media-upload.component';
 import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
@@ -53,47 +49,6 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
             Annotate
         </Button>
     );
-};
-
-const MediaUpload = () => {
-    const { isClassification, uploadFiles, uploadMediaLoading, clearFilesForLabelAssignment, filesForLabelAssignment } =
-        useUploadFiles();
-
-    return (
-        <>
-            <AddMediaButton onFileUpload={uploadFiles} isDisabled={uploadMediaLoading} />
-            {isClassification && (
-                <BulkLabelsAssignmentDialog onClose={clearFilesForLabelAssignment} files={filesForLabelAssignment} />
-            )}
-        </>
-    );
-};
-
-type AssignLabelProps = {
-    selectedImagesIds: string[];
-};
-
-const AssignLabel = ({ selectedImagesIds }: AssignLabelProps) => {
-    const { data: project } = useProject();
-    const isClassification = isClassificationTask(project.task.task_type);
-    const [isVisible, setIsVisible] = useState<boolean>(false);
-
-    if (isClassification && !isEmpty(selectedImagesIds)) {
-        return (
-            <>
-                <Button margin={0} variant={'secondary'} onPress={() => setIsVisible(true)}>
-                    Assign label
-                </Button>
-                <BulkSelectedMediaLabelsAssignmentDialog
-                    isVisible={isVisible}
-                    selectedImagesIds={selectedImagesIds}
-                    onClose={() => setIsVisible(false)}
-                />
-            </>
-        );
-    }
-
-    return null;
 };
 
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {

@@ -4,7 +4,7 @@
 import { toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, partition } from 'lodash-es';
 
 import { $api } from '../../../../../api/client';
 import { getQueryKey } from '../../../../../query-client/query-client';
@@ -57,8 +57,7 @@ export const useBulkAssignLabel = () => {
     const bulkAssignLabel = async (mediaIds: string[], labelIds: string[]) => {
         const result = await Promise.allSettled(mediaIds.map((mediaId) => assignLabel(mediaId, labelIds)));
 
-        const successfulMediaItems = result.filter(({ status }) => status === 'fulfilled');
-        const failedMediaItems = result.filter(({ status }) => status === 'rejected');
+        const [successfulMediaItems, failedMediaItems] = partition(result, ({ status }) => status === 'fulfilled');
 
         if (failedMediaItems.length === 0) {
             toast({
