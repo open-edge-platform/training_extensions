@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from collections import Counter
 from datetime import UTC, datetime
-from typing import Any, NamedTuple, cast
+from typing import Any, cast
 
 from sqlalchemy import CursorResult, Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
@@ -12,12 +12,6 @@ from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
 from app.models import DatasetItemSubset
 
 from .filters import _apply_annotation_status_filter, _apply_subset_filter
-
-
-class UpdateDatasetItemAnnotation(NamedTuple):
-    annotation_data: list
-    user_reviewed: bool
-    prediction_model_id: str | None
 
 
 class DatasetItemRepository:
@@ -126,14 +120,9 @@ class DatasetItemRepository:
 
     def set_annotation_data(
         self, obj_id: str, annotation_data: list, user_reviewed: bool, prediction_model_id: str | None
-    ) -> UpdateDatasetItemAnnotation | None:
+    ) -> bool:
         stmt = (
             update(DatasetItemDB)
-            .returning(
-                DatasetItemDB.annotation_data,
-                DatasetItemDB.user_reviewed,
-                DatasetItemDB.prediction_model_id,
-            )
             .where(
                 DatasetItemDB.project_id == self.project_id,
                 DatasetItemDB.id == obj_id,
@@ -145,9 +134,8 @@ class DatasetItemRepository:
                 updated_at=datetime.now(UTC),
             )
         )
-        result = self.db.execute(stmt)
-        row = result.mappings().first()
-        return UpdateDatasetItemAnnotation(**row) if row else None  # pyrefly: ignore[missing-argument,bad-unpacking]
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount > 0
 
     def delete_annotation_data(self, obj_id: str) -> bool:
         stmt = (
