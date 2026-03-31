@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, Suspense } from 'react';
+import { Dispatch, SetStateAction, Suspense, useMemo } from 'react';
 
 import {
     Button,
@@ -16,18 +16,19 @@ import {
     Text,
     ViewModes,
 } from '@geti/ui';
+import { isString } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
+import { isImage } from '../../../../shared/media-item-utils';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { ImportExport } from '../../import-export/import-export.component';
 import { useSelectedData } from '../../providers/selected-data-provider.component';
-import { BulkLabelsAssignmentDialog } from '../bulk-labels-assignment/bulk-labels-assignment-dialog.component';
 import { DeleteMediaItem } from '../delete-media-item/delete-media-item.component';
 import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
-import { useUploadFiles } from '../use-upload-files';
-import { AddMediaButton } from './add-media-button/add-media-button.component';
+import { AssignLabel } from './assign-label.component';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
+import { MediaUpload } from './media-upload.component';
 import { toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
@@ -50,25 +51,13 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
     );
 };
 
-const MediaUpload = () => {
-    const { isClassification, uploadFiles, uploadMediaLoading, clearFilesForLabelAssignment, filesForLabelAssignment } =
-        useUploadFiles();
-
-    return (
-        <>
-            <AddMediaButton onFileUpload={uploadFiles} isDisabled={uploadMediaLoading} />
-            {isClassification && (
-                <BulkLabelsAssignmentDialog onClose={clearFilesForLabelAssignment} files={filesForLabelAssignment} />
-            )}
-        </>
-    );
-};
-
 export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps) => {
     const { onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
-    const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
+    const selectedMediaItems = selectedKeys instanceof Set ? selectedKeys : null;
+
+    const totalSelectedElements = selectedMediaItems?.size ?? 0;
     const hasSelectedElements = totalSelectedElements > 0;
     const message = hasSelectedElements ? `${totalSelectedElements} selected` : `${items.length} images`;
 
@@ -76,6 +65,14 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
         const images = items.map((item) => String(item.id));
         setSelectedKeys(toggleMultipleSelection(images));
     };
+
+    const selectedImagesIds = useMemo(() => {
+        if (selectedMediaItems === null) return [];
+
+        return Array.from(selectedMediaItems)
+            .filter((itemId) => items.some((item) => itemId === item.id && isImage(item)))
+            .filter((itemId) => isString(itemId));
+    }, [selectedMediaItems, items]);
 
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
@@ -85,6 +82,8 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                     <ImportExport />
 
                     <MediaUpload />
+
+                    <AssignLabel selectedImagesIds={selectedImagesIds} />
 
                     <TrainModel />
 
