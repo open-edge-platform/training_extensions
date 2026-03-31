@@ -47,7 +47,7 @@ export const SortProjects = ({ sortBy, onSort }: SortProjectsProps) => {
         >
             {(item) => {
                 return (
-                    <Section key={`${item[0].name}-${item[1].name}`}>
+                    <Section key={item.map((option) => option.key).join('-')}>
                         {item.map((option) => (
                             <Item key={option.key} textValue={option.name}>
                                 {option.name}
