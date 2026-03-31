@@ -42,7 +42,7 @@ const getMaxInstancesPerLabel = (instancesPerLabel: { label_id: string; instance
 };
 
 export const DatasetStatistics = () => {
-    const { data: statistics } = useDatasetStatistics();
+    const { data: statistics, refetch } = useDatasetStatistics();
 
     const totalMediaItems = statistics.media_counts.images + statistics.media_counts.videos;
 
@@ -57,7 +57,7 @@ export const DatasetStatistics = () => {
 
     return (
         <DialogTrigger>
-            <ActionButton isQuiet aria-label={'dataset statistics'}>
+            <ActionButton isQuiet aria-label={'dataset statistics'} onPress={() => refetch()}>
                 <GraphChart />
             </ActionButton>
             {(close) => (
