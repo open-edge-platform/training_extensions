@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import tempfile
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -24,6 +25,7 @@ def fxt_project() -> ProjectView:
         id=uuid4(),
         name="Test Project",
         active_pipeline=False,
+        created_at=datetime.now(tz=UTC),
         task=TaskView(
             task_type=TaskType.CLASSIFICATION,
             exclusive_labels=True,

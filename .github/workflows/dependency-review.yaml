@@ -6,9 +6,9 @@ permissions: {} # No permissions by default
 
 jobs:
   dependency-review:
-    runs-on: ubuntu-24.04
+    runs-on: overflow
     permissions:
-      contents: read    
+      contents: read
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
