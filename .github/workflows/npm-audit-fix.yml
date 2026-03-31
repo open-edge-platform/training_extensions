@@ -14,7 +14,7 @@ permissions: {} # No permissions by default on workflow level
 
 jobs:
   npm-audit-fix:
-    runs-on: ubuntu-latest
+    runs-on: overflow
     permissions:
       contents: read # to checkout code
 
