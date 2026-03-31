@@ -187,7 +187,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(vi.mocked(useDownloadModel)).toHaveBeenCalledWith(model.id, 'openvino');
+        expect(vi.mocked(useDownloadModel)).toHaveBeenCalledWith(model.id);
 
         await userEvent.click(screen.getByRole('button', { name: 'Download model ov-1' }));
 

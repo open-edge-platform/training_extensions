@@ -21,7 +21,7 @@ type ModelVariantTableProps = {
     format: ModelFormat;
 };
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
-    const { downloadModel, isDownloading } = useDownloadModel(model.id, format);
+    const { downloadModel, isDownloading } = useDownloadModel(model.id);
     const allVariants = model.variants ?? [];
     const variants = allVariants.filter((variant) => variant.format === format);
     const baselineVariant = getBaselineVariant(variants);
