@@ -1,38 +1,48 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
 import { Content, Flex, Grid, Heading, Loading, Text, View } from '@geti/ui';
+import { useProjects } from 'hooks/api/project.hook';
 import { isEmpty } from 'lodash-es';
 
-import { useProjects } from '../../../hooks/api/project.hook';
 import { ImportJobsList } from './import-jobs-list/import-jobs-list.component';
 import { NewProjectMenu } from './new-project-menu.component';
 import { ProjectCard } from './project-card.component';
+import { SORT_BY_HANDLERS, SortBy, SortProjects } from './sort-projects/sort-projects.component';
 
 import backgroundStyles from '../project-background.module.scss';
 import classes from './project-list.module.scss';
 
 const ProjectGrid = () => {
     const projects = useProjects();
+    const [sortBy, setSortBy] = useState<SortBy>('createdAt-descending');
+
+    const sortedProjects = useMemo(() => {
+        return SORT_BY_HANDLERS[sortBy](projects.data);
+    }, [projects.data, sortBy]);
 
     return (
-        <Grid
-            gap={'size-300'}
-            marginX={'auto'}
-            autoRows={'size-2000'}
-            height={'100%'}
-            justifyContent={'center'}
-            UNSAFE_style={{ overflowY: 'auto' }}
-            columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
-        >
-            <NewProjectMenu />
+        <Flex direction={'column'} gap={'size-100'} height={'100%'}>
+            <SortProjects sortBy={sortBy} onSort={setSortBy} />
 
-            {projects.data.map((item, index) => (
-                <ProjectCard key={item.id} item={item} prioritizeImage={index === 0} />
-            ))}
-        </Grid>
+            <Grid
+                flex={1}
+                gap={'size-300'}
+                marginX={'auto'}
+                autoRows={'size-2000'}
+                justifyContent={'center'}
+                UNSAFE_style={{ overflowY: 'auto' }}
+                columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
+            >
+                <NewProjectMenu />
+
+                {sortedProjects.map((item, index) => (
+                    <ProjectCard key={item.id} item={item} prioritizeImage={index === 0} />
+                ))}
+            </Grid>
+        </Flex>
     );
 };
 
