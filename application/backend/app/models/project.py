@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from datetime import datetime
 from uuid import UUID
 
 from app.models.base import BaseEntity
@@ -20,9 +21,11 @@ class Project(BaseEntity):
         active_pipeline: Flag indicating whether the project has an active running pipeline. Defaults to False.
         name: Human-readable name of the project.
         task: The annotation task configuration associated with this project.
+        created_at: Timestamp when the project was created.
     """
 
     id: UUID
     active_pipeline: bool = False
     name: str
     task: Task
+    created_at: datetime
