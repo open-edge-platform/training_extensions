@@ -214,15 +214,14 @@ class OTXDataModule(LightningDataModule):
             train_dataset (OTXDataset): Pre-constructed training dataset.
             val_dataset (OTXDataset): Pre-constructed validation dataset.
             test_dataset (OTXDataset | None, optional): Pre-constructed test dataset. Defaults to None.
-            train_subset (SubsetConfig | None, optional): Configuration for the training dataloader.
-                If None, default configuration will be used. Defaults to None.
-                Transforms should be left unspecified as they will be taken from the provided train_dataset.
+            train_subset (SubsetConfig): Configuration for the training dataloader.
+                Must have ``input_size`` set to the fixed model input size (H, W).
+                The ``input_size`` value is used to resolve ``$(input_size)`` placeholders
+                in the augmentation pipeline and is exposed as ``datamodule.input_size``.
             val_subset (SubsetConfig | None, optional): Configuration for the validation dataloader.
-                If None, default configuration will be used. Defaults to None.
-                Transforms should be left unspecified as they will be taken from the provided val_dataset.
+                Defaults to None.
             test_subset (SubsetConfig | None, optional): Configuration for the test dataloader.
-                If None, default configuration will be used. Defaults to None.
-                Transforms should be left unspecified as they will be taken from the provided test_dataset.
+                Defaults to None.
             auto_num_workers (bool, optional): Whether to automatically determine the number of workers.
                 Defaults to False.
             device (DeviceType, optional): Device type to use (e.g., 'cpu', 'gpu').
@@ -232,24 +231,16 @@ class OTXDataModule(LightningDataModule):
             OTXDataModule: Configured data module with the provided datasets.
 
         Raises:
-            ValueError: If datasets dictionary is empty or datasets have inconsistent metadata.
+            ValueError: If datasets have inconsistent label metadata.
+            ValueError: If ``train_subset`` is None or ``train_subset.input_size`` is not set.
 
         Examples:
-            >>> from otx.data.module import OTXDataModule
-            >>> from otx.types.task import OTXTaskType
-            >>>
-            >>> # Create datamodule with minimal configuration
-            >>> datamodule = OTXDataModule.from_otx_datasets(
-            ...     train_dataset=my_train_dataset,
-            ...     val_dataset=my_val_dataset,
-            ...     test_dataset=my_test_dataset,
-            ... )
-            >>>
-            >>> # Create datamodule with custom subset configurations
             >>> from otx.config.data import SubsetConfig
+            >>> from otx.data.module import OTXDataModule
+            >>>
             >>> train_config = SubsetConfig(
-            ...     batch_size=64,
-            ...     num_workers=8,
+            ...     batch_size=8,
+            ...     input_size=(512, 512),
             ... )
             >>> datamodule = OTXDataModule.from_otx_datasets(
             ...     train_dataset=my_train_dataset,
@@ -287,8 +278,6 @@ class OTXDataModule(LightningDataModule):
         instance.label_info = train_dataset.label_info
 
         # input_size must come from the subset config (set by recipe / manifest).
-        # We never infer it from image data — the caller is responsible for
-        # providing a SubsetConfig with a valid input_size.
         if train_subset is not None and getattr(train_subset, "input_size", None) is not None:
             instance.input_size = train_subset.input_size
         else:

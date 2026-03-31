@@ -106,6 +106,14 @@ class OTXTileDataset(OTXDataset):
         self.tile_config = tile_config
         self._dataset = dataset
         self._subset = subset
+        self._tiling_config = TilingConfig(
+            tile_height=tile_config.tile_size[0],
+            tile_width=tile_config.tile_size[1],
+            overlap_x=tile_config.overlap,
+            overlap_y=tile_config.overlap,
+        )
+        self._tiling_transform = create_tiling_transform(self._tiling_config, threshold_drop_ann=0.5)
+        self._filtering_transform = create_filtering_transform()
 
         # LabelInfo differs from SegLabelInfo, thus we need to update it for semantic segmentation.
         if self.label_info != dataset.label_info:
@@ -145,21 +153,13 @@ class OTXTileDataset(OTXDataset):
         """
         parent_slice_ds = self.dm_subset.slice(parent_idx, 1)  # type: ignore[attr-defined]
         tile_ds = parent_slice_ds.transform(  # type: ignore[attr-defined]
-            create_tiling_transform(
-                TilingConfig(
-                    tile_height=self.tile_config.tile_size[0],
-                    tile_width=self.tile_config.tile_size[1],
-                    overlap_x=self.tile_config.overlap,
-                    overlap_y=self.tile_config.overlap,
-                ),
-                threshold_drop_ann=0.5,
-            ),
+            self._tiling_transform,
             dtype=parent_slice_ds.dtype,  # type: ignore[attr-defined]
         )
 
         if self._subset == Subset.VALIDATION:
             # NOTE: filter validation tiles with annotations only to avoid evaluation on empty tiles.
-            tile_ds = tile_ds.transform(create_filtering_transform(), dtype=parent_slice_ds.dtype)  # type: ignore[attr-defined]
+            tile_ds = tile_ds.transform(self._filtering_transform, dtype=parent_slice_ds.dtype)  # type: ignore[attr-defined]
 
             # if tile dataset is empty it means objects are too big to fit in any tile, in this case include full image
             if len(tile_ds) == 0:

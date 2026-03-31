@@ -8,6 +8,7 @@ export type Label = components['schemas']['LabelView'];
 export type Pipeline = components['schemas']['PipelineView'];
 
 export type Model = components['schemas']['ModelView'];
+export type ModelVariant = components['schemas']['ModelVariantView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
 export type ModelFormat = components['schemas']['ModelFormat'];
@@ -40,6 +41,8 @@ export type ImportDatasetToProjectJob = Job & {
     type: 'import_dataset_to_project';
     metadata: components['schemas']['ImportDatasetToProjectRequest'];
 };
+
+export type DatasetStatisticsView = components['schemas']['DatasetStatisticsView'];
 
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];

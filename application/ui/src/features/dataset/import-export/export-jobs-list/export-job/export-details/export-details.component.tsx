@@ -37,7 +37,7 @@ export const ExportJobDetails = ({ datasetName, metadata }: ExportJobDetailsProp
                         }}
                     >
                         {metadata.export_format}
-                    </Text>
+                    </Text>{' '}
                     format
                 </Text>
 

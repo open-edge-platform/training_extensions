@@ -3,20 +3,12 @@
 
 import { ReactNode } from 'react';
 
-import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCameraIcon } from '../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
 import { ReactComponent as WebcamIcon } from '../../../assets/icons/webcam.svg';
-import {
-    ImagesFolderSourceConfig,
-    IPCameraSourceConfig,
-    USBCameraSourceConfig,
-    VideoFileSourceConfig,
-} from '../../../constants/shared-types';
+import { IPCameraSourceConfig, USBCameraSourceConfig, VideoFileSourceConfig } from '../../../constants/shared-types';
 import { AddSource } from './add-source/add-source.component';
 import { DisclosureGroup } from './disclosure-group.component';
-import { ImageFolder } from './image-folder/image-folder.component';
-import { getImagesFolderInitialConfig, imagesFolderBodyFormatter } from './image-folder/utils';
 import { IpCamera } from './ip-camera/ip-camera.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from './ip-camera/utils';
 import { UsbCamera } from './usb-camera/usb-camera-fields.component';
@@ -95,21 +87,22 @@ export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsPro
                             />
                         ),
                     },
-                    {
-                        label: 'Images folder',
-                        value: 'images_folder',
-                        icon: <Image width={'24px'} />,
-                        content: (
-                            <AddSource
-                                onSaved={onSaved}
-                                config={getImagesFolderInitialConfig()}
-                                componentFields={(state: ImagesFolderSourceConfig) => (
-                                    <ImageFolder defaultState={state} />
-                                )}
-                                bodyFormatter={imagesFolderBodyFormatter}
-                            />
-                        ),
-                    },
+                    // TODO: Reenable after MVP
+                    // {
+                    //     label: 'Images folder',
+                    //     value: 'images_folder',
+                    //     icon: <Image width={'24px'} />,
+                    //     content: (
+                    //         <AddSource
+                    //             onSaved={onSaved}
+                    //             config={getImagesFolderInitialConfig()}
+                    //             componentFields={(state: ImagesFolderSourceConfig) => (
+                    //                 <ImageFolder defaultState={state} />
+                    //             )}
+                    //             bodyFormatter={imagesFolderBodyFormatter}
+                    //         />
+                    //     ),
+                    // },
                 ]}
             />
         </>

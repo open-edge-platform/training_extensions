@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 import { defineNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
+import { getMockedDatasetStatistics } from 'mocks/mock-dataset-item';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
@@ -123,6 +124,7 @@ const test = testBase.extend<Fixtures>({
                                     labels: [],
                                 },
                                 active_pipeline: false,
+                                created_at: '2024-10-01T12:00:00Z',
                             },
                         ]);
                     }),
@@ -139,6 +141,7 @@ const test = testBase.extend<Fixtures>({
                                 ],
                             },
                             active_pipeline: true,
+                            created_at: '2024-10-01T12:00:00Z',
                         });
                     }),
                     http.delete('/api/projects/{project_id}', () => {
@@ -183,6 +186,9 @@ const test = testBase.extend<Fixtures>({
                                 'Cache-Control': 'no-cache',
                             },
                         });
+                    }),
+                    http.get('/api/projects/{project_id}/dataset/statistics', () => {
+                        return HttpResponse.json(getMockedDatasetStatistics({}));
                     }),
                 ],
             });

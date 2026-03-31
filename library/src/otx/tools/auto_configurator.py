@@ -364,6 +364,7 @@ class AutoConfigurator:
         # rebuild using from_otx_datasets to avoid re-importing from disk.
         # This is useful for the quantization pipeline.
         if not datamodule.data_root and datamodule.subsets:
+            datamodule.train_subset.input_size = actual_input_size
             return OTXDataModule.from_otx_datasets(
                 train_dataset=datamodule.subsets["train"],
                 val_dataset=datamodule.subsets["val"],

@@ -5,6 +5,7 @@ data: ../_base_/data/detection.yaml
 overrides:
   reset:
     - data.train_subset.augmentations_cpu
+    - data.train_subset.augmentations_gpu
     - data.test_subset.augmentations_cpu
 
   data:

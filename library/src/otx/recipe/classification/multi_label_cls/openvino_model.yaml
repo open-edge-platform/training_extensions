@@ -1,8 +1,14 @@
 callback_monitor: val/accuracy
 
-data: ../../_base_/data/torchvision_base.yaml
+data: ../../_base_/data/classification.yaml
 
 overrides:
+  reset:
+    - data.train_subset.augmentations_cpu
+    - data.train_subset.augmentations_gpu
+    - data.val_subset.augmentations_cpu
+    - data.test_subset.augmentations_cpu
+
   data:
     task: MULTI_LABEL_CLS
     train_subset:
