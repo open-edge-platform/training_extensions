@@ -19,6 +19,7 @@ permissions: {}
 jobs:
   remove-stale-branches:
     name: Remove Stale Branches
+    if: github.repository == 'open-edge-platform/training_extensions'
     runs-on: ubuntu-latest
     permissions:
       contents: write
