@@ -634,7 +634,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_finished_at=training_finish_time,
             )
         except CancelledExc:
-            self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
+            try:
+                self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
+            except Exception as cleanup_exc:
+                logger.error(
+                    "Failed to delete model revision during cancellation (project_id={}, model_id={}): {}",
+                    project_id,
+                    params.model_id,
+                    cleanup_exc,
+                )
             raise
         except Exception:
             training_finish_time = datetime.now(UTC)
