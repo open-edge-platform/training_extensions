@@ -23,7 +23,7 @@ on:
       - develop
       - "release/**"
   schedule:
-    - cron: "0 2 * * *" # Run security checks every day at 2 AM UTC
+    - cron: "0 4 * * *" # Run security checks every day at 4 AM UTC (after daily build)
   workflow_dispatch:
 
 permissions: {} # No permissions by default
