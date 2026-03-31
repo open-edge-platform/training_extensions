@@ -53,57 +53,56 @@ test.describe('Dataset', () => {
         );
     });
 
-    test('list items', async ({ page }) => {
-        await page.goto('projects/id-1/dataset');
+    test('list items', async ({ datasetPage }) => {
+        await datasetPage.goto();
         const loadedItems = 40;
 
-        await expect(page.getByText(`${loadedItems} images`)).toBeVisible();
+        await expect(datasetPage.getImagesCountText(loadedItems)).toBeVisible();
 
-        await page.getByLabel('select all').click();
+        await datasetPage.selectAll();
 
-        await expect(page.getByText(`${loadedItems} selected`)).toBeVisible();
+        await expect(datasetPage.getSelectedCountText(loadedItems)).toBeVisible();
     });
 
-    test('select multiple images', async ({ page }) => {
+    test('select multiple images', async ({ datasetPage }) => {
         const selectedElements = 5;
 
-        await page.goto('projects/id-1/dataset');
+        await datasetPage.goto();
 
-        await expect(page.getByText('40 images')).toBeVisible();
+        await expect(datasetPage.getImagesCountText(40)).toBeVisible();
 
-        const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
-        const options = listbox.getByRole('option');
+        const options = datasetPage.getMediaGridOptions();
 
         for (let i = 0; i < selectedElements; i++) {
             await options.nth(i).click();
         }
 
-        await expect(page.getByText(`${selectedElements} selected`)).toBeVisible();
+        await expect(datasetPage.getSelectedCountText(selectedElements)).toBeVisible();
     });
 
-    test('loads additional items when scrolling to the end of the container', async ({ page }) => {
-        await page.goto('projects/id-1/dataset');
+    test('loads additional items when scrolling to the end of the container', async ({ datasetPage }) => {
+        await datasetPage.goto();
 
-        await expect(page.getByText('40 images')).toBeVisible();
+        await expect(datasetPage.getImagesCountText(40)).toBeVisible();
 
-        await page.getByRole('listbox', { name: 'data-collection-grid' }).press('End');
+        await datasetPage.getMediaGrid().press('End');
 
-        await expect(page.getByText(`${totalElements} images`)).toBeVisible();
+        await expect(datasetPage.getImagesCountText(totalElements)).toBeVisible();
     });
 
-    test('selected media item is saved in the URL', async ({ page, annotatorPage }) => {
+    test('selected media item is saved in the URL', async ({ page, annotatorPage, datasetPage }) => {
         const [firstElement] = mockedItems;
-        await page.goto('projects/id-1/dataset');
+        await datasetPage.goto();
         await expect(annotatorPage.getAnnotationsList()).not.toBeInViewport();
 
-        await page.getByRole('img', { name: firstElement.name, exact: true }).dblclick();
+        await datasetPage.dblClickMediaItem(firstElement.name);
 
         await expect(annotatorPage.getAnnotationsList()).toBeInViewport();
 
         expect(page.url()).toContain(`/dataset/${firstElement.id}`);
     });
 
-    test('upload shows start, progress and finish toasts', async ({ page, network }) => {
+    test('upload shows start, progress and finish toasts', async ({ network, datasetPage }) => {
         let uploadRequestCount = 0;
         const firstBatchCount = 10;
         const totalFiles = firstBatchCount + 1;
@@ -122,9 +121,9 @@ test.describe('Dataset', () => {
             })
         );
 
-        await page.goto('projects/id-1/dataset');
+        await datasetPage.goto();
 
-        await page.getByLabel('Upload media files').setInputFiles(
+        await datasetPage.uploadFiles(
             Array.from({ length: totalFiles }, (_, index) => ({
                 name: `upload-${index + 1}.png`,
                 mimeType: 'image/png',
@@ -132,13 +131,11 @@ test.describe('Dataset', () => {
             }))
         );
 
-        await expect(page.getByRole('button', { name: 'Upload media' })).toBeDisabled();
+        await expect(datasetPage.getUploadButton()).toBeDisabled();
 
-        await expect(
-            page.getByText(`Uploading ${totalFiles} item(s)... (${firstBatchCount} succeeded, 0 failed)`)
-        ).toBeVisible();
+        await expect(datasetPage.getUploadProgressText(totalFiles, firstBatchCount)).toBeVisible();
 
-        await expect(page.getByText(`Uploaded ${totalFiles} item(s)`)).toBeVisible();
+        await expect(datasetPage.getUploadFinishedText(totalFiles)).toBeVisible();
     });
 
     test.describe('Bulk labelling while uploading media items', () => {
@@ -203,7 +200,7 @@ test.describe('Dataset', () => {
 
         test('Single label: bulk labelling is only enabled for classification task and only for images', async ({
             network,
-            page,
+            datasetPage,
         }) => {
             const createAnnotationPayloads = mockNetwork(
                 network,
@@ -216,15 +213,15 @@ test.describe('Dataset', () => {
                 })
             );
 
-            await page.goto('projects/id-1/dataset');
+            await datasetPage.goto();
 
-            await page.getByLabel('Upload media files').setInputFiles(filesToUpload);
+            await datasetPage.uploadFiles(filesToUpload);
 
-            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
+            await datasetPage.selectLabel(mockedLabels[0].name);
 
-            await page.getByRole('button', { name: 'Continue' }).click();
+            await datasetPage.clickContinue();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
@@ -256,7 +253,7 @@ test.describe('Dataset', () => {
 
         test('Multi label: bulk labelling is only enabled for classification task and only for images', async ({
             network,
-            page,
+            datasetPage,
         }) => {
             const createAnnotationPayloads = mockNetwork(
                 network,
@@ -269,16 +266,16 @@ test.describe('Dataset', () => {
                 })
             );
 
-            await page.goto('projects/id-1/dataset');
+            await datasetPage.goto();
 
-            await page.getByLabel('Upload media files').setInputFiles(filesToUpload);
+            await datasetPage.uploadFiles(filesToUpload);
 
-            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[1].name}` }).click();
+            await datasetPage.selectLabel(mockedLabels[0].name);
+            await datasetPage.selectLabel(mockedLabels[1].name);
 
-            await page.getByRole('button', { name: 'Continue' }).click();
+            await datasetPage.clickContinue();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
@@ -308,7 +305,7 @@ test.describe('Dataset', () => {
             }).toPass();
         });
 
-        test('Multi label: empty label creates empty annotations', async ({ network, page }) => {
+        test('Multi label: empty label creates empty annotations', async ({ network, datasetPage }) => {
             const createAnnotationPayloads = mockNetwork(
                 network,
                 getMockedProject({
@@ -320,15 +317,15 @@ test.describe('Dataset', () => {
                 })
             );
 
-            await page.goto('projects/id-1/dataset');
+            await datasetPage.goto();
 
-            await page.getByLabel('Upload media files').setInputFiles(filesToUpload);
+            await datasetPage.uploadFiles(filesToUpload);
 
-            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await page.getByRole('checkbox', { name: `Select No label` }).click();
+            await datasetPage.selectNoLabel();
 
-            await page.getByRole('button', { name: 'Continue' }).click();
+            await datasetPage.clickContinue();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
@@ -395,7 +392,7 @@ test.describe('Dataset', () => {
 
         test('Single label: bulk labelling is only enabled for classification task and only for images', async ({
             network,
-            page,
+            datasetPage,
         }) => {
             const createAnnotationPayloads = mockNetwork(
                 network,
@@ -408,20 +405,20 @@ test.describe('Dataset', () => {
                 })
             );
 
-            await page.goto('projects/id-1/dataset');
+            await datasetPage.goto();
 
-            await expect(page.getByRole('button', { name: 'Assign label' })).toBeHidden();
+            await expect(datasetPage.getAssignLabelButton()).toBeHidden();
 
-            await page.getByRole('img', { name: 'media-1' }).click();
-            await page.getByRole('img', { name: 'media-2' }).click();
+            await datasetPage.clickMediaItem('media-1');
+            await datasetPage.clickMediaItem('media-2');
 
-            await page.getByRole('button', { name: 'Assign label' }).click();
+            await datasetPage.clickAssignLabel();
 
-            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
+            await datasetPage.selectLabel(mockedLabels[0].name);
 
-            await page.getByRole('dialog').getByRole('button', { name: 'Assign' }).click();
+            await datasetPage.clickDialogAssign();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
@@ -453,7 +450,7 @@ test.describe('Dataset', () => {
 
         test('Multi label: bulk labelling is only enabled for classification task and only for images', async ({
             network,
-            page,
+            datasetPage,
         }) => {
             const createAnnotationPayloads = mockNetwork(
                 network,
@@ -466,20 +463,20 @@ test.describe('Dataset', () => {
                 })
             );
 
-            await page.goto('projects/id-1/dataset');
+            await datasetPage.goto();
 
-            await page.getByRole('img', { name: 'media-1' }).click();
-            await page.getByRole('img', { name: 'media-2' }).click();
-            await page.getByRole('img', { name: 'media-3' }).click();
+            await datasetPage.clickMediaItem('media-1');
+            await datasetPage.clickMediaItem('media-2');
+            await datasetPage.clickMediaItem('media-3');
 
-            await page.getByRole('button', { name: 'Assign label' }).click();
+            await datasetPage.clickAssignLabel();
 
-            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[1].name}` }).click();
+            await datasetPage.selectLabel(mockedLabels[0].name);
+            await datasetPage.selectLabel(mockedLabels[1].name);
 
-            await page.getByRole('dialog').getByRole('button', { name: 'Assign' }).click();
+            await datasetPage.clickDialogAssign();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
@@ -509,7 +506,7 @@ test.describe('Dataset', () => {
             }).toPass();
         });
 
-        test('Multi label: empty label creates empty annotations', async ({ network, page }) => {
+        test('Multi label: empty label creates empty annotations', async ({ network, datasetPage }) => {
             const createAnnotationPayloads = mockNetwork(
                 network,
                 getMockedProject({
@@ -521,20 +518,20 @@ test.describe('Dataset', () => {
                 })
             );
 
-            await page.goto('projects/id-1/dataset');
+            await datasetPage.goto();
 
-            await page.getByRole('img', { name: 'media-1' }).click();
-            await page.getByRole('img', { name: 'media-2' }).click();
-            await page.getByRole('img', { name: 'media-3' }).click();
+            await datasetPage.clickMediaItem('media-1');
+            await datasetPage.clickMediaItem('media-2');
+            await datasetPage.clickMediaItem('media-3');
 
-            await page.getByRole('button', { name: 'Assign label' }).click();
+            await datasetPage.clickAssignLabel();
 
-            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+            await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
-            await page.getByRole('checkbox', { name: `No label` }).click();
+            await datasetPage.selectLabel(mockedLabels[0].name);
+            await datasetPage.selectNoLabel();
 
-            await page.getByRole('dialog').getByRole('button', { name: 'Assign' }).click();
+            await datasetPage.clickDialogAssign();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
