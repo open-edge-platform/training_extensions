@@ -816,7 +816,7 @@ class GetiConfigConverter:
         )
         if idx > -1:
             callbacks.pop(idx)
-            logging.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
+            logger.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
 
     @staticmethod
     def _remove_unused_key(config: dict) -> None:
