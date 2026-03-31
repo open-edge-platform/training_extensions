@@ -86,16 +86,8 @@ export class DatasetPage {
         return this.page.getByRole('checkbox', { name: `Select ${labelName}` });
     }
 
-    getNoLabelCheckbox() {
-        return this.page.getByRole('checkbox', { name: 'No label' });
-    }
-
     async selectLabel(labelName: string) {
         await this.getLabelCheckbox(labelName).click();
-    }
-
-    async selectNoLabel() {
-        await this.getNoLabelCheckbox().click();
     }
 
     getContinueButton() {

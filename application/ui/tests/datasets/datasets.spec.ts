@@ -323,7 +323,7 @@ test.describe('Dataset', () => {
 
             await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
-            await datasetPage.selectNoLabel();
+            await datasetPage.selectLabel('No label');
 
             await datasetPage.clickContinue();
 
@@ -529,7 +529,7 @@ test.describe('Dataset', () => {
             await expect(datasetPage.getLabelAssignmentHeading()).toBeVisible();
 
             await datasetPage.selectLabel(mockedLabels[0].name);
-            await datasetPage.selectNoLabel();
+            await datasetPage.selectLabel('No label');
 
             await datasetPage.clickDialogAssign();
 

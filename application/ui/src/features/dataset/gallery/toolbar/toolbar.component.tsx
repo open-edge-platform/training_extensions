@@ -111,14 +111,13 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
         setSelectedKeys(toggleMultipleSelection(images));
     };
 
-    const selectedImages = useMemo(
-        () =>
-            items
-                .filter(isImage)
-                .filter((item) => selectedMediaItems?.has(String(item.id)))
-                .map((item) => item.id),
-        [selectedMediaItems, items]
-    );
+    const selectedImagesIds = useMemo(() => {
+        if (selectedMediaItems === null) return [];
+
+        return Array.from(selectedMediaItems).filter((itemId) =>
+            items.some((item) => itemId === item.id && isImage(item))
+        );
+    }, [selectedMediaItems, items]);
 
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
@@ -129,7 +128,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
 
                     <MediaUpload />
 
-                    <AssignLabel selectedImagesIds={Object.values(selectedImages)} />
+                    <AssignLabel selectedImagesIds={selectedImagesIds} />
 
                     <TrainModel />
 
