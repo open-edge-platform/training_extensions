@@ -298,7 +298,7 @@ class DatasetItemRepository:
             DatasetItemDB.user_reviewed,
         )
         annotated_counts["instances"] = sum(
-            len(item.annotation_data) for item in self.db.execute(annotated_dataset_items_stmt)
+            len(item.annotation_data) for item in self.db.execute(annotated_dataset_items_stmt) if item.annotation_data
         )
 
         # instances_per_label
@@ -309,6 +309,7 @@ class DatasetItemRepository:
         labels_counts = Counter(
             label["id"]
             for item in self.db.execute(annotated_dataset_items_stmt)
+            if item.annotation_data
             for annotation in item.annotation_data
             for label in annotation["labels"]
         )
