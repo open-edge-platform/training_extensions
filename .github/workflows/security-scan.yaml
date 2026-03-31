@@ -23,7 +23,7 @@ on:
       - develop
       - "release/**"
   schedule:
-    - cron: "0 2 * * *" # Run security checks every day at 2 AM UTC
+    - cron: "0 4 * * *" # Run security checks every day at 4 AM UTC (after daily build)
   workflow_dispatch:
 
 permissions: {} # No permissions by default
@@ -98,7 +98,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        ai-device: [xpu]
+        ai-device: [cpu]
     steps:
       - name: Runner cleanup
         uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
@@ -110,27 +110,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install common dependencies
-        uses: ./.github/actions/install-common-deps
-        with:
-          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
-
-      - name: Build image for ${{ matrix.ai-device }}
-        working-directory: application
-        run: just build-image --accelerator $DEVICE
+      - name: Pull container image for ${{ matrix.ai-device }}
         env:
           DEVICE: ${{ matrix.ai-device }}
+        run: |
+          IMAGE_NAME="ghcr.io/open-edge-platform/geti-${DEVICE}:develop"
+          echo "Pulling image: $IMAGE_NAME"
+          docker pull "$IMAGE_NAME"
 
       - name: Run the docker image
-        working-directory: application
         id: run-image
         env:
           DEVICE: ${{ matrix.ai-device }}
         run: |
           CONTAINER_NAME="geti-${DEVICE}"
+          IMAGE_NAME="ghcr.io/open-edge-platform/geti-${DEVICE}:develop"
 
           # Start the container in detached mode
-          just run-image --accelerator $DEVICE --name $CONTAINER_NAME --detach
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            -p 7860:7860 \
+            "$IMAGE_NAME"
 
           # Cleanup container on exit
           cleanup() {
@@ -239,3 +239,25 @@ jobs:
             echo "Stopping container ${CONTAINER_NAME}..."
             docker stop "${CONTAINER_NAME}" || true
           fi
+
+  trivy-image-scan:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: overflow
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        ai-device: [cpu, cuda, xpu]
+    steps:
+      - name: Run container image scan (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
+        with:
+          artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
+          scan_type: "image"
+          scan_target: "ghcr.io/open-edge-platform/geti-${{ matrix.ai-device }}:develop"
+          scan-scope: all
+          severity: "LOW"
+          scanners: "vuln,secret,config"
+          format: "table"
+          timeout: "15m"
+          ignore_unfixed: "true"
