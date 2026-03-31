@@ -33,3 +33,4 @@ jobs:
           days-before-branch-delete: 7
           operations-per-run: 10
           exempt-branches-regex: "^(develop|release/.*)$"
+          exempt-protected-branches: true
