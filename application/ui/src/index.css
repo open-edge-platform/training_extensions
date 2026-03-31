@@ -34,6 +34,7 @@
     --annotation-fill: var(--energy-blue);
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
 
+    --moss: #8bae46;
     --moss-tint-1: #b1d272;
 
     --annotation-fill-opacity: 0.4;

@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -49,6 +50,7 @@ class TestDatasetServiceUnit:
                 exclusive_labels=True,
             ),
             active_pipeline=False,
+            created_at=datetime.now(tz=UTC),
         )
 
     @pytest.fixture
@@ -58,6 +60,7 @@ class TestDatasetServiceUnit:
             name="Test Multilabel Classification Project",
             task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False),
             active_pipeline=False,
+            created_at=datetime.now(tz=UTC),
         )
 
     @pytest.fixture
@@ -67,6 +70,7 @@ class TestDatasetServiceUnit:
             name="Test Detection Project",
             task=Task(task_type=TaskType.DETECTION),
             active_pipeline=False,
+            created_at=datetime.now(tz=UTC),
         )
 
     @pytest.fixture
@@ -76,6 +80,7 @@ class TestDatasetServiceUnit:
             name="Test Instance Segmentation Project",
             task=Task(task_type=TaskType.INSTANCE_SEGMENTATION),
             active_pipeline=False,
+            created_at=datetime.now(tz=UTC),
         )
 
     def test_validate_annotations_labels(self) -> None:

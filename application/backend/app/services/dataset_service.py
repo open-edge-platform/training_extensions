@@ -340,7 +340,14 @@ class DatasetService(BaseSessionManagedService):
             )
 
         def _get_media_path(media: Media) -> str:
-            if isinstance(media, VideoFrame):
+            """
+            Returns the media path used to construct the sample during conversion.
+
+            Video frames for import/export samples should use the video binary path to ensure that the frame
+            information is preserved in the sample, while for other media types or training samples, the media binary
+            path is sufficient.
+            """
+            if isinstance(media, VideoFrame) and sample_mode == SampleMode.IMPORT_EXPORT:
                 return str(
                     self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=media.video_id)
                 )

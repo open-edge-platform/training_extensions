@@ -60,7 +60,6 @@ overrides:
     task: DETECTION
     train_subset:
       batch_size: 8
-      num_workers: 4
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.RandomZoomOut
           init_args:

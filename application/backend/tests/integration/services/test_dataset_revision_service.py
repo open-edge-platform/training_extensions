@@ -4,7 +4,9 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import cv2
 import datumaro.experimental as dm
+import numpy as np
 import polars as pl
 import pytest
 from PIL import Image
@@ -256,6 +258,106 @@ def fxt_project_with_subset_items_on_disk(
 
 
 @pytest.fixture
+def fxt_project_with_video_frame_items_on_disk(
+    fxt_projects_dir, fxt_db_labels, fxt_project_with_pipeline, db_session, fxt_label_service
+) -> tuple[Project, list[tuple[MediaDB, DatasetItemDB]], MediaDB]:
+    """Fixture with video frame dataset items (video + frames with annotations) and media on disk."""
+    project, _ = fxt_project_with_pipeline
+
+    label = fxt_db_labels[0]
+    label_id = str(label.id)
+
+    def annotation():
+        return [
+            {
+                "shape": {
+                    "type": "rectangle",
+                    "x": 10,
+                    "y": 10,
+                    "width": 100,
+                    "height": 100,
+                },
+                "labels": [{"id": label_id, "name": label.name, "color": label.color}],
+            }
+        ]
+
+    # Create the parent video media entry
+    db_video = MediaDB(
+        type="video",
+        name="test_video",
+        format="mp4",
+        size=10240,
+        width=1920,
+        height=1080,
+        fps=30.0,
+        frame_count=100,
+        project_id=str(project.id),
+        created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+    )
+    db_session.add(db_video)
+    db_session.flush()
+
+    # Create video frame media entries referencing the parent video
+    media_and_dataset_items: list[tuple[MediaDB, DatasetItemDB]] = []
+    for idx, (subset, frame_index) in enumerate(
+        [
+            (DatasetItemSubset.TRAINING, 5),
+            (DatasetItemSubset.TRAINING, 15),
+            (DatasetItemSubset.VALIDATION, 30),
+        ]
+    ):
+        db_frame = MediaDB(
+            type="video_frame",
+            name=f"frame_{frame_index}",
+            format="jpg",
+            size=1024,
+            width=1920,
+            height=1080,
+            video_id=str(db_video.id),
+            frame_index=frame_index,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        )
+        db_session.add(db_frame)
+        db_session.flush()
+
+        dataset_item = DatasetItemDB(
+            subset=subset.name.lower(),
+            user_reviewed=True,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            updated_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            annotation_data=annotation(),
+        )
+        dataset_item.id = db_frame.id
+        db_session.add(dataset_item)
+        db_session.flush()
+
+        media_and_dataset_items.append((db_frame, dataset_item))
+
+    # Create media files on disk
+    images_dir = fxt_projects_dir / str(project.id) / "dataset"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create the video file on disk (dummy)
+    video_path = images_dir / f"{db_video.id}.{db_video.format}"
+    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(video_path), fourcc, 30.0, (1920, 1080))
+    # Write enough frames to cover max frame_index used (30)
+    for _ in range(31):
+        frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
+        writer.write(frame)
+    writer.release()
+
+    # Create the frame image files on disk (dummy)
+    for db_frame, _ in media_and_dataset_items:
+        frame_path = images_dir / f"{db_frame.id}.{db_frame.format}"
+        frame_path.write_bytes(b"\x00")
+
+    return project, media_and_dataset_items, db_video
+
+
+@pytest.fixture
 def fxt_dataset_revision_with_parquet(
     fxt_projects_dir: Path,
     fxt_project_with_pipeline: tuple[Project, Pipeline],
@@ -308,6 +410,56 @@ def fxt_dataset_revision_with_parquet(
 
 class TestDatasetRevisionServiceIntegration:
     """Integration tests for DatasetRevisionService."""
+
+    def test_get_dm_dataset_video_frames_training_mode(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_video_frame_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]], MediaDB],
+    ) -> None:
+        """Test that get_dm_dataset with video frames in TRAINING mode uses frame binary paths."""
+        project, media_and_dataset_items, db_video = fxt_project_with_video_frame_items_on_disk
+
+        dataset = fxt_dataset_service.get_dm_dataset(
+            project_id=project.id,
+            task=project.task,
+            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            sample_mode=SampleMode.TRAINING,
+        )
+
+        assert isinstance(dataset, dm.Dataset)
+        # All 3 video frame items should be in the dataset
+        assert len(dataset) == len(media_and_dataset_items)
+
+        # In TRAINING mode, media paths should point to the individual frame files, not the video
+        for idx, sample in enumerate(dataset):
+            media_item = media_and_dataset_items[idx][0]
+            media_path = str(fxt_projects_dir / str(project.id) / "dataset" / f"{media_item.id}.{media_item.format}")
+            assert sample.image.path == media_path
+
+    def test_get_dm_dataset_video_frames_import_export_mode(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_video_frame_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]], MediaDB],
+    ) -> None:
+        """Test that get_dm_dataset with video frames in IMPORT_EXPORT mode uses the video binary path."""
+        project, media_and_dataset_items, db_video = fxt_project_with_video_frame_items_on_disk
+
+        dataset = fxt_dataset_service.get_dm_dataset(
+            project_id=project.id,
+            task=project.task,
+            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            sample_mode=SampleMode.IMPORT_EXPORT,
+        )
+
+        assert isinstance(dataset, dm.Dataset)
+        assert len(dataset) == len(media_and_dataset_items)
+
+        # In IMPORT_EXPORT mode, media paths for video frames should point to the parent video file
+        expected_video_path = str(fxt_projects_dir / str(project.id) / "dataset" / f"{db_video.id}.{db_video.format}")
+        for sample in dataset:
+            assert sample.media.video_path == expected_video_path
 
     def test_save_revision(
         self,

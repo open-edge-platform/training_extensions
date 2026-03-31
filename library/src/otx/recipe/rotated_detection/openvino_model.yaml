@@ -19,6 +19,7 @@ overrides:
   task: ROTATED_DETECTION
   reset:
     - data.train_subset.augmentations_cpu
+    - data.train_subset.augmentations_gpu
     - data.val_subset.augmentations_cpu
     - data.test_subset.augmentations_cpu
 

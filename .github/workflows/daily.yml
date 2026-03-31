@@ -37,7 +37,7 @@ jobs:
 
   create-issue-on-failure:
     name: Create issue on scheduled workflow failure
-    runs-on: ubuntu-latest
+    runs-on: overflow
     needs:
       - build
       - backend-lint-and-test
