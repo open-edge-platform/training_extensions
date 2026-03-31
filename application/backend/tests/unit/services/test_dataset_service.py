@@ -403,3 +403,75 @@ class TestDatasetServiceUnit:
             label_ids={str(label_id)},
         )
         assert result == dataset_item
+
+    def test_set_annotations_user_reviewed_strips_confidences(self, fxt_dataset_service, fxt_detection_project) -> None:
+        """When user submits annotations (user_reviewed=True), confidences must be stripped."""
+        dataset_service = fxt_dataset_service
+        dataset_item_id = uuid4()
+        dataset_item = MagicMock(spec=DatasetItem)
+        label_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                confidences=[0.95],
+            ),
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=20, y=20, width=30, height=30),
+                confidences=None,
+            ),
+        ]
+
+        with (
+            patch.object(DatasetService, "_validate_annotations_labels"),
+            patch.object(DatasetService, "_validate_annotations"),
+            patch.object(DatasetService, "_validate_annotations_coordinates"),
+            patch.object(DatasetService, "get_dataset_item_by_id", return_value=dataset_item),
+            patch.object(DatasetItemRepository, "set_annotation_data") as mock_repo_set_annotation_data,
+            patch.object(DatasetItemRepository, "set_labels"),
+        ):
+            dataset_service.set_dataset_item_annotations(
+                project=fxt_detection_project,
+                dataset_item_id=dataset_item_id,
+                annotations=annotations,
+                user_reviewed=True,
+                prediction_model_id=None,
+            )
+
+        saved_annotation_data = mock_repo_set_annotation_data.call_args.kwargs["annotation_data"]
+        assert all(ann["confidences"] is None for ann in saved_annotation_data)
+
+    def test_set_annotations_prediction_preserves_confidences(self, fxt_dataset_service, fxt_detection_project) -> None:
+        """When predictions are stored (user_reviewed=False), confidences must be preserved."""
+        dataset_service = fxt_dataset_service
+        dataset_item_id = uuid4()
+        dataset_item = MagicMock(spec=DatasetItem)
+        label_id = uuid4()
+        model_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                confidences=[0.95],
+            ),
+        ]
+
+        with (
+            patch.object(DatasetService, "_validate_annotations_labels"),
+            patch.object(DatasetService, "_validate_annotations"),
+            patch.object(DatasetService, "_validate_annotations_coordinates"),
+            patch.object(DatasetService, "get_dataset_item_by_id", return_value=dataset_item),
+            patch.object(DatasetItemRepository, "set_annotation_data") as mock_repo_set_annotation_data,
+            patch.object(DatasetItemRepository, "set_labels"),
+        ):
+            dataset_service.set_dataset_item_annotations(
+                project=fxt_detection_project,
+                dataset_item_id=dataset_item_id,
+                annotations=annotations,
+                user_reviewed=False,
+                prediction_model_id=model_id,
+            )
+
+        saved_annotation_data = mock_repo_set_annotation_data.call_args.kwargs["annotation_data"]
+        assert saved_annotation_data[0]["confidences"] == [0.95]

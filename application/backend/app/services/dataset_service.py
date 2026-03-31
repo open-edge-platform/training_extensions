@@ -278,6 +278,11 @@ class DatasetService(BaseSessionManagedService):
         Returns:
             The updated dataset item.
         """
+        if user_reviewed:
+            # if user reviewed, user has accepted all predictions and/or added new annotations,
+            # so confidence scores are no longer meaningful
+            annotations = [annotation.model_copy(update={"confidences": None}) for annotation in annotations]
+
         labels = self._label_service.list_all(project_id=project.id)
         DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
         DatasetService._validate_annotations(annotations=annotations, task=project.task)
