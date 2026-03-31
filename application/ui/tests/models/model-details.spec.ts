@@ -297,15 +297,16 @@ test.describe('Model Details', () => {
 
             await expect(modelsPage.getQuantizationDialog()).toBeHidden();
 
-            await expect(page.getByText('INT8', { exact: true })).toBeVisible();
-            await expect(page.getByText('52.4 MB')).toBeVisible();
+            const variantsTable = page.getByLabel(`Model variants for ${mockedModel.id}`);
+            await expect(variantsTable.getByRole('gridcell', { name: 'INT8' })).toBeVisible();
 
-            // Size delta: INT8 is -75% smaller than the FP32 baseline
-            await expect(page.getByText('-75%')).toBeVisible();
+            // Size: INT8 is -75% smaller than the FP32 baseline
+            await expect(variantsTable.getByTestId('model-variant-value-size-int8')).toContainText('52.4 MB');
+            await expect(variantsTable.getByTestId('model-variant-delta-size')).toContainText('-75%');
 
-            // Accuracy delta: INT8 is 79% vs FP32 baseline 82% -> -4% drop
-            await expect(page.getByText('79%')).toBeVisible();
-            await expect(page.getByText('-4%')).toBeVisible();
+            // Accuracy: INT8 is 79% vs FP32 baseline 82% -> -4% drop
+            await expect(variantsTable.getByTestId('model-variant-value-accuracy-int8')).toContainText('79%');
+            await expect(variantsTable.getByTestId('model-variant-delta-accuracy')).toContainText('-4%');
         });
     });
 

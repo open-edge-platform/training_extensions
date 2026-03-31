@@ -50,6 +50,7 @@ type ValueWithDeltaProps = {
     changeType?: 'accuracy' | 'size';
     displayValue: string;
     showDelta: boolean;
+    precision?: string;
 };
 
 export const ValueWithDelta = ({
@@ -58,8 +59,9 @@ export const ValueWithDelta = ({
     changeType = 'accuracy',
     displayValue,
     showDelta,
+    precision,
 }: ValueWithDeltaProps) => {
-    const testId = `model-variant-value-${changeType}`;
+    const testId = precision ? `model-variant-value-${changeType}-${precision}` : `model-variant-value-${changeType}`;
 
     return (
         <Flex direction={'column'} gap={'size-25'}>

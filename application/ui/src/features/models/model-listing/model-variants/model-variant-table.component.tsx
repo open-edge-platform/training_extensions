@@ -8,6 +8,7 @@ import type { Model, ModelFormat } from '../../../../constants/shared-types';
 import { formatBytes } from '../../../../shared/util';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
 import {
+    getBaselineVariant,
     getFp32PytorchVariant,
     getPerformanceColumnName,
     getPrimaryTestingMetricValue,
@@ -23,7 +24,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
     const { downloadModel, isDownloading } = useDownloadModel(model.id);
     const allVariants = model.variants ?? [];
     const variants = allVariants.filter((variant) => variant.format === format);
-    const baselineVariant = variants[0];
+    const baselineVariant = getBaselineVariant(variants);
     const fp32PytorchVariant = getFp32PytorchVariant(allVariants);
 
     const fp32PytorchMetric = getPrimaryTestingMetricValue(fp32PytorchVariant);
@@ -62,6 +63,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                                     changeType='size'
                                     displayValue={formatBytes(variant.weights_size)}
                                     showDelta={!isBaselineVariant}
+                                    precision={variant.precision}
                                 />
                             </Cell>
                             <Cell>
@@ -70,6 +72,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                                     baselineValue={baselinePerformanceValue}
                                     displayValue={performanceValue === undefined ? '-' : `${performanceValue}%`}
                                     showDelta={!isBaselineVariant}
+                                    precision={variant.precision}
                                 />
                             </Cell>
                             <Cell>

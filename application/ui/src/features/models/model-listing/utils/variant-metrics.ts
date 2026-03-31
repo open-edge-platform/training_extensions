@@ -29,6 +29,13 @@ export const getFp32PytorchVariant = (variants: ModelVariant[]): ModelVariant | 
     return variants.find((variant) => variant.format === 'pytorch' && variant.precision === 'fp32');
 };
 
+export const getBaselineVariant = (variants: ModelVariant[]): ModelVariant | undefined => {
+    return (
+        variants.find((variant) => variant.precision === 'fp16') ??
+        variants.find((variant) => variant.precision === 'fp32')
+    );
+};
+
 export const getPerformanceColumnName = (
     variants: ModelVariant[],
     fp32PytorchMetric: PrimaryTestingMetricValue | undefined
