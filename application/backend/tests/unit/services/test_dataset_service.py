@@ -372,9 +372,11 @@ class TestDatasetServiceUnit:
         ]
 
         with (
-            patch.object(DatasetService, "_validate_annotations_labels") as mock_validate_labels,
-            patch.object(DatasetService, "_validate_annotations") as mock_validate_annotations,
-            patch.object(DatasetService, "_validate_annotations_coordinates") as mock_validate_coordinates,
+            patch.object(
+                DatasetService,
+                "_cleanup_and_validate_annotations",
+                side_effect=lambda annotations, **kwargs: annotations,
+            ) as mock_cleanup_and_validate,
             patch.object(DatasetService, "get_dataset_item_by_id", return_value=dataset_item),
             patch.object(DatasetItemRepository, "set_annotation_data") as mock_repo_set_annotation_data,
             patch.object(DatasetItemRepository, "set_labels") as mock_repo_set_labels,
@@ -387,9 +389,7 @@ class TestDatasetServiceUnit:
                 prediction_model_id=None,
             )
 
-        mock_validate_labels.assert_called_once()
-        mock_validate_annotations.assert_called_once()
-        mock_validate_coordinates.assert_called_once()
+        mock_cleanup_and_validate.assert_called_once()
         mock_repo_set_annotation_data.assert_called_once_with(
             obj_id=str(dataset_item_id),
             annotation_data=[
@@ -429,7 +429,7 @@ class TestDatasetServiceUnit:
 
         with (
             patch.object(DatasetService, "_validate_annotations_labels"),
-            patch.object(DatasetService, "_validate_annotations"),
+            patch.object(DatasetService, "_validate_annotation_shapes"),
             patch.object(DatasetService, "_validate_annotations_coordinates"),
             patch.object(DatasetService, "get_dataset_item_by_id", return_value=dataset_item),
             patch.object(DatasetItemRepository, "set_annotation_data") as mock_repo_set_annotation_data,
@@ -463,7 +463,7 @@ class TestDatasetServiceUnit:
 
         with (
             patch.object(DatasetService, "_validate_annotations_labels"),
-            patch.object(DatasetService, "_validate_annotations"),
+            patch.object(DatasetService, "_validate_annotation_shapes"),
             patch.object(DatasetService, "_validate_annotations_coordinates"),
             patch.object(DatasetService, "get_dataset_item_by_id", return_value=dataset_item),
             patch.object(DatasetItemRepository, "set_annotation_data") as mock_repo_set_annotation_data,
