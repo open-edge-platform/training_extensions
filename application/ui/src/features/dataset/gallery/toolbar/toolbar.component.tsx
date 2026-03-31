@@ -17,7 +17,7 @@ import {
     ViewModes,
 } from '@geti/ui';
 import { useProject } from 'hooks/api/project.hook';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isString } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
 import { isImage } from '../../../../shared/media-item-utils';
@@ -114,9 +114,9 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
     const selectedImagesIds = useMemo(() => {
         if (selectedMediaItems === null) return [];
 
-        return Array.from(selectedMediaItems).filter((itemId) =>
-            items.some((item) => itemId === item.id && isImage(item))
-        );
+        return Array.from(selectedMediaItems)
+            .filter((itemId) => items.some((item) => itemId === item.id && isImage(item)))
+            .filter((itemId) => isString(itemId));
     }, [selectedMediaItems, items]);
 
     return (
