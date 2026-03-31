@@ -29,6 +29,7 @@ from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
+from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, ExecutionErr, step
 from app.execution.common.otx_converters import (
@@ -632,6 +633,9 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 status=TrainingStatus.SUCCESSFUL,
                 training_finished_at=training_finish_time,
             )
+        except CancelledExc:
+            self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
+            raise
         except Exception:
             training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
@@ -763,3 +767,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_started_at=training_started_at,
                 training_finished_at=training_finished_at,
             )
+
+    def __delete_model_revision(self, project_id: UUID, model_id: UUID):
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            self._model_service.delete_model(project_id=project_id, model_id=model_id)
