@@ -18,6 +18,7 @@ import classes from './project-list.module.scss';
 const ProjectGrid = () => {
     const projects = useProjects();
     const [sortBy, setSortBy] = useState<SortBy>('createdAt-descending');
+    const hasProjects = !isEmpty(projects.data);
 
     const sortedProjects = useMemo(() => {
         return SORT_BY_HANDLERS[sortBy](projects.data);
@@ -25,7 +26,7 @@ const ProjectGrid = () => {
 
     return (
         <Flex direction={'column'} gap={'size-100'} height={'100%'}>
-            <SortProjects sortBy={sortBy} onSort={setSortBy} />
+            {hasProjects && <SortProjects sortBy={sortBy} onSort={setSortBy} />}
 
             <Grid
                 flex={1}
