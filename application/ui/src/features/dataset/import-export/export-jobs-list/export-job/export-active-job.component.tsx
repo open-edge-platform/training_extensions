@@ -40,7 +40,9 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
                 <Flex justifyContent='space-between'>
                     <Flex alignItems='center' gap='size-100'>
                         <Loading mode='inline' size='S' />
-                        <Text>{job?.message ?? job.status.toLocaleLowerCase()}</Text>
+                        <Text UNSAFE_style={{ textTransform: 'capitalize' }}>
+                            {job?.message ?? job.status.toLocaleLowerCase()}
+                        </Text>
                     </Flex>
 
                     {isRunning && <Text>{progress}%</Text>}

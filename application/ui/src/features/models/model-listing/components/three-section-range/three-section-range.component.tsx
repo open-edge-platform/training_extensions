@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Text, View } from '@geti/ui';
+import { Flex, Grid, Text, useNumberFormatter, View } from '@geti/ui';
 
 import classes from './three-section-range.module.scss';
 
@@ -13,6 +13,8 @@ type ThreeSectionRangeProps = {
 };
 
 export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
+    const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
+    const total = trainingValue + validationValue + testingValue;
     const gridColumns = [
         trainingValue > 0 ? `${trainingValue}fr` : '1fr',
         validationValue > 0 ? `${validationValue}fr` : '1fr',
@@ -38,7 +40,11 @@ export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingV
                 {testingValue > 0 && <View height='100%' UNSAFE_style={{ backgroundColor: 'var(--geode-tint)' }} />}
             </Grid>
 
-            <Text UNSAFE_className={classes.label}>{`${trainingValue}% / ${validationValue}% / ${testingValue}%`}</Text>
+            <Text UNSAFE_className={classes.label}>
+                {[trainingValue, validationValue, testingValue]
+                    .map((value) => formatter.format(value / total))
+                    .join(' / ')}
+            </Text>
         </Flex>
     );
 };

@@ -2,20 +2,24 @@ version = 1
 revision = 3
 requires-python = "==3.13.*"
 resolution-markers = [
-    "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
+    "platform_machine != 's390x' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
     "sys_platform != 'darwin' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
     "sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
-    "extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine != 's390x' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "sys_platform != 'darwin' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
-    "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
-    "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "(platform_machine != 's390x' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (platform_machine != 's390x' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
+    "(platform_machine == 's390x' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (platform_machine == 's390x' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
+    "platform_machine != 's390x' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
 ]
@@ -207,14 +211,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d
 
 [[package]]
 name = "anyio"
-version = "4.12.1"
+version = "4.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "idna" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/f0/5eb65b2bb0d09ac6776f2eb54adee6abe8228ea05b20a5ad0e4945de8aac/anyio-4.12.1.tar.gz", hash = "sha256:41cfcc3a4c85d3f05c932da7c26d0201ac36f72abd4435ba90d0464a3ffed703", size = 228685, upload-time = "2026-01-06T11:45:21.246Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/14/2c5dd9f512b66549ae92767a9c7b330ae88e1932ca57876909410251fe13/anyio-4.13.0.tar.gz", hash = "sha256:334b70e641fd2221c1505b3890c69882fe4a2df910cba14d97019b90b24439dc", size = 231622, upload-time = "2026-03-24T12:59:09.671Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/0e/27be9fdef66e72d64c0cdc3cc2823101b80585f8119b5c112c2e8f5f7dab/anyio-4.12.1-py3-none-any.whl", hash = "sha256:d405828884fc140aa80a3c667b8beed277f1dfedec42ba031bd6ac3db606ab6c", size = 113592, upload-time = "2026-01-06T11:45:19.497Z" },
+    { url = "https://files.pythonhosted.org/packages/da/42/e921fccf5015463e32a3cf6ee7f980a6ed0f395ceeaa45060b61d86486c2/anyio-4.13.0-py3-none-any.whl", hash = "sha256:08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708", size = 114353, upload-time = "2026-03-24T12:59:08.246Z" },
 ]
 
 [[package]]
@@ -460,10 +464,10 @@ wheels = [
 
 [[package]]
 name = "cuda-pathfinder"
-version = "1.4.3"
+version = "1.5.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/59/911a1a597264f1fb7ac176995a0f0b6062e37f8c1b6e0f23071a76838507/cuda_pathfinder-1.4.3-py3-none-any.whl", hash = "sha256:4345d8ead1f701c4fb8a99be6bc1843a7348b6ba0ef3b031f5a2d66fb128ae4c", size = 47951, upload-time = "2026-03-16T21:31:25.526Z" },
+    { url = "https://files.pythonhosted.org/packages/93/66/0c02bd330e7d976f83fa68583d6198d76f23581bcbb5c0e98a6148f326e5/cuda_pathfinder-1.5.0-py3-none-any.whl", hash = "sha256:498f90a9e9de36044a7924742aecce11c50c49f735f1bc53e05aa46de9ea4110", size = 49739, upload-time = "2026-03-24T21:14:30.869Z" },
 ]
 
 [[package]]
@@ -662,25 +666,26 @@ wheels = [
 
 [[package]]
 name = "fastar"
-version = "0.8.0"
+version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/69/e7/f89d54fb04104114dd0552836dc2b47914f416cc0e200b409dd04a33de5e/fastar-0.8.0.tar.gz", hash = "sha256:f4d4d68dbf1c4c2808f0e730fac5843493fc849f70fe3ad3af60dfbaf68b9a12", size = 68524, upload-time = "2025-11-26T02:36:00.72Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/00/dab9ca274cf1fde19223fea7104631bea254751026e75bf99f2b6d0d1568/fastar-0.9.0.tar.gz", hash = "sha256:d49114d5f0b76c5cc242875d90fa4706de45e0456ddedf416608ecd0787fb410", size = 70124, upload-time = "2026-03-20T14:26:34.503Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/a5/79ecba3646e22d03eef1a66fb7fc156567213e2e4ab9faab3bbd4489e483/fastar-0.8.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:a3253a06845462ca2196024c7a18f5c0ba4de1532ab1c4bad23a40b332a06a6a", size = 706112, upload-time = "2025-11-26T02:34:39.237Z" },
-    { url = "https://files.pythonhosted.org/packages/0a/03/4f883bce878218a8676c2d7ca09b50c856a5470bb3b7f63baf9521ea6995/fastar-0.8.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:5cbeb3ebfa0980c68ff8b126295cc6b208ccd81b638aebc5a723d810a7a0e5d2", size = 628954, upload-time = "2025-11-26T02:34:23.705Z" },
-    { url = "https://files.pythonhosted.org/packages/4f/f1/892e471f156b03d10ba48ace9384f5a896702a54506137462545f38e40b8/fastar-0.8.0-cp313-cp313-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:1c0d5956b917daac77d333d48b3f0f3ff927b8039d5b32d8125462782369f761", size = 868685, upload-time = "2025-11-26T02:33:53.077Z" },
-    { url = "https://files.pythonhosted.org/packages/39/ba/e24915045852e30014ec6840446975c03f4234d1c9270394b51d3ad18394/fastar-0.8.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:27b404db2b786b65912927ce7f3790964a4bcbde42cdd13091b82a89cd655e1c", size = 765044, upload-time = "2025-11-26T02:32:48.187Z" },
-    { url = "https://files.pythonhosted.org/packages/14/2c/1aa11ac21a99984864c2fca4994e094319ff3a2046e7a0343c39317bd5b9/fastar-0.8.0-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:0902fc89dcf1e7f07b8563032a4159fe2b835e4c16942c76fd63451d0e5f76a3", size = 764322, upload-time = "2025-11-26T02:33:03.859Z" },
-    { url = "https://files.pythonhosted.org/packages/ba/f0/4b91902af39fe2d3bae7c85c6d789586b9fbcf618d7fdb3d37323915906d/fastar-0.8.0-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:069347e2f0f7a8b99bbac8cd1bc0e06c7b4a31dc964fc60d84b95eab3d869dc1", size = 931016, upload-time = "2025-11-26T02:33:19.902Z" },
-    { url = "https://files.pythonhosted.org/packages/c9/97/8fc43a5a9c0a2dc195730f6f7a0f367d171282cd8be2511d0e87c6d2dad0/fastar-0.8.0-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:7fd135306f6bfe9a835918280e0eb440b70ab303e0187d90ab51ca86e143f70d", size = 821308, upload-time = "2025-11-26T02:33:34.664Z" },
-    { url = "https://files.pythonhosted.org/packages/0c/e9/058615b63a7fd27965e8c5966f393ed0c169f7ff5012e1674f21684de3ba/fastar-0.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:78d06d6897f43c27154b5f2d0eb930a43a81b7eec73f6f0b0114814d4a10ab38", size = 821171, upload-time = "2025-11-26T02:34:08.498Z" },
-    { url = "https://files.pythonhosted.org/packages/ca/cf/69e16a17961570a755c37ffb5b5aa7610d2e77807625f537989da66f2a9d/fastar-0.8.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:a922f8439231fa0c32b15e8d70ff6d415619b9d40492029dabbc14a0c53b5f18", size = 986227, upload-time = "2025-11-26T02:34:55.06Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/83/2100192372e59b56f4ace37d7d9cabda511afd71b5febad1643d1c334271/fastar-0.8.0-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:a739abd51eb766384b4caff83050888e80cd75bbcfec61e6d1e64875f94e4a40", size = 1039395, upload-time = "2025-11-26T02:35:12.166Z" },
-    { url = "https://files.pythonhosted.org/packages/75/15/cdd03aca972f55872efbb7cf7540c3fa7b97a75d626303a3ea46932163dc/fastar-0.8.0-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:5a65f419d808b23ac89d5cd1b13a2f340f15bc5d1d9af79f39fdb77bba48ff1b", size = 1044766, upload-time = "2025-11-26T02:35:29.62Z" },
-    { url = "https://files.pythonhosted.org/packages/3d/29/945e69e4e2652329ace545999334ec31f1431fbae3abb0105587e11af2ae/fastar-0.8.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:7bb2ae6c0cce58f0db1c9f20495e7557cca2c1ee9c69bbd90eafd54f139171c5", size = 994740, upload-time = "2025-11-26T02:35:47.887Z" },
-    { url = "https://files.pythonhosted.org/packages/4b/5d/dbfe28f8cd1eb484bba0c62e5259b2cf6fea229d6ef43e05c06b5a78c034/fastar-0.8.0-cp313-cp313-win32.whl", hash = "sha256:b28753e0d18a643272597cb16d39f1053842aa43131ad3e260c03a2417d38401", size = 455990, upload-time = "2025-11-26T02:36:28.502Z" },
-    { url = "https://files.pythonhosted.org/packages/e1/01/e965740bd36e60ef4c5aa2cbe42b6c4eb1dc3551009238a97c2e5e96bd23/fastar-0.8.0-cp313-cp313-win_amd64.whl", hash = "sha256:620e5d737dce8321d49a5ebb7997f1fd0047cde3512082c27dc66d6ac8c1927a", size = 490227, upload-time = "2025-11-26T02:36:14.363Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/10/c99202719b83e5249f26902ae53a05aea67d840eeb242019322f20fc171c/fastar-0.8.0-cp313-cp313-win_arm64.whl", hash = "sha256:c4c4bd08df563120cd33e854fe0a93b81579e8571b11f9b7da9e84c37da2d6b6", size = 461078, upload-time = "2025-11-26T02:36:04.94Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/26/ea9339facfe4ee224be673c6888dbf077f28b0f81185f80353966c9f4925/fastar-0.9.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:7b55ae4a3a481fd90a63ac558a7e8aab652ac1dfd15d8657266e71bf65346408", size = 706740, upload-time = "2026-03-20T14:25:33.741Z" },
+    { url = "https://files.pythonhosted.org/packages/77/52/f3b06867e5ca8d5b2c1c15a1563415e0037b5831f2058ee72b03960296d9/fastar-0.9.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f07c6bdeedfeb30ef459f21fa9ab06e2b6727f7e7653176d3abb7a85f447c400", size = 627615, upload-time = "2026-03-20T14:25:21.608Z" },
+    { url = "https://files.pythonhosted.org/packages/52/32/021b0a633bca18bca4f831392c2938c15c4605de2d9895b783ad6d64679c/fastar-0.9.0-cp313-cp313-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:90f46492e05141089766699e95c79d470e8013192fbbb16ef16b576281f3b8ee", size = 864584, upload-time = "2026-03-20T14:24:56.941Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/54/e2e1b4c8512d670373047e5e585b1d1ff9ffd722b0a17647d22c9c9bd248/fastar-0.9.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:108bb46c080ca152bb331f1e0576177d36e9badba51b1d5724d2823542e0dd1f", size = 760246, upload-time = "2026-03-20T14:23:51.964Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/7d/1e283dd8dbb3647049594bb477bdc053045c6fff2d3f06386d2dcacce7aa/fastar-0.9.0-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:d17d311cfbb559154ba940972b6d07a3a7ac221a2a01208f119ad03495f01d32", size = 757024, upload-time = "2026-03-20T14:24:04.69Z" },
+    { url = "https://files.pythonhosted.org/packages/87/ac/82d3cb64d318ce16c5d1a26a40b8aa570fcc9b23684221aece838c4cbada/fastar-0.9.0-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:d2ef34e7088f308e73460e1b8d9b0479a743f679816782a80db6ae87ee68714a", size = 921630, upload-time = "2026-03-20T14:24:18.155Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/b8/3e7892f1a25a1a2054a20de6c846c0794b8fa361e5b9d3d00915b41e97bd/fastar-0.9.0-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:c93bf4732d0dd6adae4a8b3bbebe19af76ee1072b7688bf39c5a1d120425a772", size = 815791, upload-time = "2026-03-20T14:24:43.28Z" },
+    { url = "https://files.pythonhosted.org/packages/db/5e/8fcc662db1fd0985f4f8a54e79276416565a0d1fcb8da66665b2061ead30/fastar-0.9.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5a67b061b1099cf3b8b6234dd3605fa16f5078ab6b51c8d77ad7a5d11c3cf834", size = 818980, upload-time = "2026-03-20T14:25:09.545Z" },
+    { url = "https://files.pythonhosted.org/packages/68/ed/37291fbd6c9b5b0905712da6191bdfc25a7dc236efbf130e3a1a7d1b9440/fastar-0.9.0-cp313-cp313-manylinux_2_31_riscv64.whl", hash = "sha256:912efe3121dc1f3c05940cfa1c6b09b8868d702d24566506aa1d0d96e429923a", size = 884578, upload-time = "2026-03-20T14:24:30.584Z" },
+    { url = "https://files.pythonhosted.org/packages/94/19/7b3b7af978ae4f012664781554716d67549ab19ddbcb6e6d1adc04d7a5e7/fastar-0.9.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:2394980cc126a3263e115600bc4ff9e7320cddde83c99fc334ab530be5b7166e", size = 967790, upload-time = "2026-03-20T14:25:46.975Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/38/4cce2a8e529a7d3e99e427c9bbcccd7013ff6b3ba295613e6f1c573c9e6c/fastar-0.9.0-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:d0aff74ea98642784c941d3cd8c35943258d4b9626157858901c5b181683339b", size = 1033892, upload-time = "2026-03-20T14:26:00.22Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/3f/86f25d79b1b369c2756ee338b76d1696a9cac3a737e819459b0ad7822ede/fastar-0.9.0-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:3e8a1deaf490f4ec15eca7e66127ff89cdefd20217f358739d4b7b1cb322f663", size = 1072969, upload-time = "2026-03-20T14:26:13.089Z" },
+    { url = "https://files.pythonhosted.org/packages/10/4f/6ec0c123c15bbcb9a9b82e979dc81273789ebbfbb4a2b41a1a6941577c94/fastar-0.9.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:c9bd8879ebf05aa247e60e454bb7568cbdd44f016b8c58e31e5398039403e61d", size = 1025768, upload-time = "2026-03-20T14:26:25.957Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/d1/cbdcdb78ca034ed51a9f53c2650885873d8b06727452c1cc33f56ad0c66a/fastar-0.9.0-cp313-cp313-win32.whl", hash = "sha256:11b35e6453a2da8715dd8415b3999ea57805125493e44ce41a32404bf9a510a7", size = 452742, upload-time = "2026-03-20T14:26:58.014Z" },
+    { url = "https://files.pythonhosted.org/packages/74/ee/138d2f8e3504232a279afa224d3e5922c15dc7126613e6c135cfc8e10ec9/fastar-0.9.0-cp313-cp313-win_amd64.whl", hash = "sha256:10a1e7f7bfa1c6f03e4c657fdc0a32ebe42d8e48f681403dc0c67258e1cb5bef", size = 484917, upload-time = "2026-03-20T14:26:46.135Z" },
+    { url = "https://files.pythonhosted.org/packages/db/ca/f518ee9dccc45097560a2cff245590c65b7b348171c8d2f2e487cf92a69f/fastar-0.9.0-cp313-cp313-win_arm64.whl", hash = "sha256:e5484ac1415e0ca8bc7b69231e3e3afb52887fed10b839ca676767635a13f06f", size = 461202, upload-time = "2026-03-20T14:26:37.937Z" },
 ]
 
 [[package]]
@@ -893,7 +898,7 @@ requires-dist = [
     { name = "uvicorn", specifier = "~=0.38.0" },
     { name = "watchdog", specifier = "==6.0.0" },
 ]
-provides-extras = ["cpu", "xpu", "cuda", "mqtt", "installer"]
+provides-extras = ["cpu", "cuda", "installer", "mqtt", "xpu"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1274,14 +1279,14 @@ wheels = [
 
 [[package]]
 name = "json-stream"
-version = "2.4.1"
+version = "2.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "json-stream-rs-tokenizer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/3a/18dc5aaf006e19632bb0cb3d14854ff7c8b84d18a65fda10f09a41495f44/json_stream-2.4.1.tar.gz", hash = "sha256:9491041faae7ea05fdd3d40768b8f9ee7ea4e40b168f27240b028a8bb0a1a3c2", size = 35170, upload-time = "2025-11-08T10:26:57.175Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/fd/6a417ce654a44c0471c5c07f4ce1bf0e92943844717a7f78b4212af6117a/json_stream-2.5.0.tar.gz", hash = "sha256:3275296b042b55eed361b6589215f829c90c356e8b6f36226138d9609db87957", size = 37257, upload-time = "2026-03-24T09:55:13.812Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/42/754adf29fd19e81024dc507bcf42d4184c89210c3db0f1c866f4b658214c/json_stream-2.4.1-py3-none-any.whl", hash = "sha256:d31dc2dbc8586c21a6e71e4bf4868133f86c53fc7fd62eb482005db579a6e3e6", size = 35009, upload-time = "2025-11-08T10:26:55.83Z" },
+    { url = "https://files.pythonhosted.org/packages/07/44/1747a046ee10035252cf224af8217c9168910ffd54d4aeb6bacf8ee40672/json_stream-2.5.0-py3-none-any.whl", hash = "sha256:84faf1364b9eafd057a7df1a6cab52834868a98d092bbe423ba11246442c3c99", size = 36740, upload-time = "2026-03-24T09:55:12.404Z" },
 ]
 
 [[package]]
@@ -1929,8 +1934,8 @@ name = "oneccl"
 version = "2021.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "impi-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
-    { name = "intel-sycl-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
+    { name = "impi-rt", marker = "(platform_machine != 's390x' and extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (platform_machine == 's390x' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
+    { name = "intel-sycl-rt", marker = "(platform_machine != 's390x' and extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (platform_machine == 's390x' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3d/69/8050e96e5b099b349d9109f727ce39b4f57414a24d3eb71a12fdc48bad87/oneccl-2021.17.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:c77b16a1686d252ece7df331da8e4feeb3776c40bdd03a8f8e9942ad378d8ff8", size = 181268831, upload-time = "2025-11-17T20:43:27.546Z" },
@@ -1941,7 +1946,7 @@ name = "oneccl-devel"
 version = "2021.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "oneccl", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
+    { name = "oneccl", marker = "(platform_machine != 's390x' and extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (platform_machine == 's390x' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6f/69/761af812bbccc4decd4f5b7492aa533654773ae9dfc3487edec44a4d8126/oneccl_devel-2021.17.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:c3f7438f12b9763dd2bcb3ce4f48b2462788534947545a68117f503b9ab01d2a", size = 45851455, upload-time = "2025-11-17T20:43:15.198Z" },
@@ -2030,7 +2035,7 @@ wheels = [
 
 [[package]]
 name = "onnx"
-version = "1.20.1"
+version = "1.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ml-dtypes", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
@@ -2038,19 +2043,19 @@ dependencies = [
     { name = "protobuf", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "typing-extensions", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/8a/335c03a8683a88a32f9a6bb98899ea6df241a41df64b37b9696772414794/onnx-1.20.1.tar.gz", hash = "sha256:ded16de1df563d51fbc1ad885f2a426f814039d8b5f4feb77febe09c0295ad67", size = 12048980, upload-time = "2026-01-10T01:40:03.043Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c5/93/942d2a0f6a70538eea042ce0445c8aefd46559ad153469986f29a743c01c/onnx-1.21.0.tar.gz", hash = "sha256:4d8b67d0aaec5864c87633188b91cc520877477ec0254eda122bef8be43cd764", size = 12074608, upload-time = "2026-03-27T21:33:36.118Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/4c/4b17e82f91ab9aa07ff595771e935ca73547b035030dc5f5a76e63fbfea9/onnx-1.20.1-cp312-abi3-macosx_12_0_universal2.whl", hash = "sha256:1d923bb4f0ce1b24c6859222a7e6b2f123e7bfe7623683662805f2e7b9e95af2", size = 17903547, upload-time = "2026-01-10T01:39:31.015Z" },
-    { url = "https://files.pythonhosted.org/packages/64/5e/1bfa100a9cb3f2d3d5f2f05f52f7e60323b0e20bb0abace1ae64dbc88f25/onnx-1.20.1-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ddc0b7d8b5a94627dc86c533d5e415af94cbfd103019a582669dad1f56d30281", size = 17412021, upload-time = "2026-01-10T01:39:33.885Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/71/d3fec0dcf9a7a99e7368112d9c765154e81da70fcba1e3121131a45c245b/onnx-1.20.1-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9336b6b8e6efcf5c490a845f6afd7e041c89a56199aeda384ed7d58fb953b080", size = 17510450, upload-time = "2026-01-10T01:39:36.589Z" },
-    { url = "https://files.pythonhosted.org/packages/74/a7/edce1403e05a46e59b502fae8e3350ceeac5841f8e8f1561e98562ed9b09/onnx-1.20.1-cp312-abi3-win32.whl", hash = "sha256:564c35a94811979808ab5800d9eb4f3f32c12daedba7e33ed0845f7c61ef2431", size = 16238216, upload-time = "2026-01-10T01:39:39.46Z" },
-    { url = "https://files.pythonhosted.org/packages/8b/c7/8690c81200ae652ac550c1df52f89d7795e6cc941f3cb38c9ef821419e80/onnx-1.20.1-cp312-abi3-win_amd64.whl", hash = "sha256:9fe7f9a633979d50984b94bda8ceb7807403f59a341d09d19342dc544d0ca1d5", size = 16389207, upload-time = "2026-01-10T01:39:41.955Z" },
-    { url = "https://files.pythonhosted.org/packages/01/a0/4fb0e6d36eaf079af366b2c1f68bafe92df6db963e2295da84388af64abc/onnx-1.20.1-cp312-abi3-win_arm64.whl", hash = "sha256:21d747348b1c8207406fa2f3e12b82f53e0d5bb3958bcd0288bd27d3cb6ebb00", size = 16344155, upload-time = "2026-01-10T01:39:45.536Z" },
-    { url = "https://files.pythonhosted.org/packages/ea/bb/715fad292b255664f0e603f1b2ef7bf2b386281775f37406beb99fa05957/onnx-1.20.1-cp313-cp313t-macosx_12_0_universal2.whl", hash = "sha256:29197b768f5acdd1568ddeb0a376407a2817844f6ac1ef8c8dd2d974c9ab27c3", size = 17912296, upload-time = "2026-01-10T01:39:48.21Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/c3/541af12c3d45e159a94ee701100ba9e94b7bd8b7a8ac5ca6838569f894f8/onnx-1.20.1-cp313-cp313t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1f0371aa67f51917a09cc829ada0f9a79a58f833449e03d748f7f7f53787c43c", size = 17416925, upload-time = "2026-01-10T01:39:50.82Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/3b/d5660a7d2ddf14f531ca66d409239f543bb290277c3f14f4b4b78e32efa3/onnx-1.20.1-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:be1e5522200b203b34327b2cf132ddec20ab063469476e1f5b02bb7bd259a489", size = 17515602, upload-time = "2026-01-10T01:39:54.132Z" },
-    { url = "https://files.pythonhosted.org/packages/9c/b4/47225ab2a92562eff87ba9a1a028e3535d659a7157d7cde659003998b8e3/onnx-1.20.1-cp313-cp313t-win_amd64.whl", hash = "sha256:15c815313bbc4b2fdc7e4daeb6e26b6012012adc4d850f4e3b09ed327a7ea92a", size = 16395729, upload-time = "2026-01-10T01:39:57.577Z" },
-    { url = "https://files.pythonhosted.org/packages/aa/7d/1bbe626ff6b192c844d3ad34356840cc60fca02e2dea0db95e01645758b1/onnx-1.20.1-cp313-cp313t-win_arm64.whl", hash = "sha256:eb335d7bcf9abac82a0d6a0fda0363531ae0b22cfd0fc6304bff32ee29905def", size = 16348968, upload-time = "2026-01-10T01:40:00.491Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/ae/cb644ec84c25e63575d9d8790fdcc5d1a11d67d3f62f872edb35fa38d158/onnx-1.21.0-cp312-abi3-macosx_12_0_universal2.whl", hash = "sha256:fc2635400fe39ff37ebc4e75342cc54450eadadf39c540ff132c319bf4960095", size = 17965930, upload-time = "2026-03-27T21:32:48.089Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/b6/eeb5903586645ef8a49b4b7892580438741acc3df91d7a5bd0f3a59ea9cb/onnx-1.21.0-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9003d5206c01fa2ff4b46311566865d8e493e1a6998d4009ec6de39843f1b59b", size = 17531344, upload-time = "2026-03-27T21:32:50.837Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/00/4823f06357892d1e60d6f34e7299d2ba4ed2108c487cc394f7ce85a3ff14/onnx-1.21.0-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a9261bd580fb8548c9c37b3c6750387eb8f21ea43c63880d37b2c622e1684285", size = 17613697, upload-time = "2026-03-27T21:32:54.222Z" },
+    { url = "https://files.pythonhosted.org/packages/23/1d/391f3c567ae068c8ac4f1d1316bae97c9eb45e702f05975fe0e17ad441f0/onnx-1.21.0-cp312-abi3-win32.whl", hash = "sha256:9ea4e824964082811938a9250451d89c4ec474fe42dd36c038bfa5df31993d1e", size = 16287200, upload-time = "2026-03-27T21:32:57.277Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/a6/5eefbe5b40ea96de95a766bd2e0e751f35bdea2d4b951991ec9afaa69531/onnx-1.21.0-cp312-abi3-win_amd64.whl", hash = "sha256:458d91948ad9a7729a347550553b49ab6939f9af2cddf334e2116e45467dc61f", size = 16441045, upload-time = "2026-03-27T21:33:00.081Z" },
+    { url = "https://files.pythonhosted.org/packages/63/c4/0ed8dc037a39113d2a4d66e0005e07751c299c46b993f1ad5c2c35664c20/onnx-1.21.0-cp312-abi3-win_arm64.whl", hash = "sha256:ca14bc4842fccc3187eb538f07eabeb25a779b39388b006db4356c07403a7bbb", size = 16403134, upload-time = "2026-03-27T21:33:03.987Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/89/0e1a9beb536401e2f45ac88735e123f2735e12fc7b56ff6c11727e097526/onnx-1.21.0-cp313-cp313t-macosx_12_0_universal2.whl", hash = "sha256:257d1d1deb6a652913698f1e3f33ef1ca0aa69174892fe38946d4572d89dd94f", size = 17975430, upload-time = "2026-03-27T21:33:07.005Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/46/e6dc71a7b3b317265591b20a5f71d0ff5c0d26c24e52283139dc90c66038/onnx-1.21.0-cp313-cp313t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7cd7cb8f6459311bdb557cbf6c0ccc6d8ace11c304d1bba0a30b4a4688e245f8", size = 17537435, upload-time = "2026-03-27T21:33:09.765Z" },
+    { url = "https://files.pythonhosted.org/packages/49/2e/27affcac63eaf2ef183a44fd1a1354b11da64a6c72fe6f3fdcf5571bcee5/onnx-1.21.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7b58a4cfec8d9311b73dc083e4c1fa362069267881144c05139b3eba5dc3a840", size = 17617687, upload-time = "2026-03-27T21:33:12.619Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/5c/ac8ed15e941593a3672ce424280b764979026317811f2e8508432bfc3429/onnx-1.21.0-cp313-cp313t-win_amd64.whl", hash = "sha256:1a9baf882562c4cebf79589bebb7cd71a20e30b51158cac3e3bbaf27da6163bd", size = 16449402, upload-time = "2026-03-27T21:33:15.555Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/aa/d2231e0dcaad838217afc64c306c8152a080134d2034e247cc973d577674/onnx-1.21.0-cp313-cp313t-win_arm64.whl", hash = "sha256:bba12181566acf49b35875838eba49536a327b2944664b17125577d230c637ad", size = 16408273, upload-time = "2026-03-27T21:33:18.599Z" },
 ]
 
 [[package]]
@@ -2136,7 +2141,7 @@ wheels = [
 [[package]]
 name = "openvino-model-api"
 version = "0.4.0.0"
-source = { git = "https://github.com/open-edge-platform/model_api.git#2493b91978fe67e952aa645d184c1f5e2c1778f8" }
+source = { git = "https://github.com/open-edge-platform/model_api.git#50788d5723ac5bd74c85fb0a2b4737f0ab1ca58e" }
 dependencies = [
     { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "opencv-python-headless", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
@@ -2248,7 +2253,7 @@ requires-dist = [
     { name = "nncf", specifier = "~=3.0" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "omegaconf", specifier = "==2.3.0" },
-    { name = "onnx", specifier = "==1.20.1" },
+    { name = "onnx", specifier = "==1.21.0" },
     { name = "onnxconverter-common", specifier = "==1.16.0" },
     { name = "onnxscript", specifier = "==0.6.2" },
     { name = "openvino", specifier = "~=2026.0.0" },
@@ -2580,17 +2585,17 @@ wheels = [
 
 [[package]]
 name = "protobuf"
-version = "7.34.0"
+version = "7.34.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f2/00/04a2ab36b70a52d0356852979e08b44edde0435f2115dc66e25f2100f3ab/protobuf-7.34.0.tar.gz", hash = "sha256:3871a3df67c710aaf7bb8d214cc997342e63ceebd940c8c7fc65c9b3d697591a", size = 454726, upload-time = "2026-02-27T00:30:25.421Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/6b/a0e95cad1ad7cc3f2c6821fcab91671bd5b78bd42afb357bb4765f29bc41/protobuf-7.34.1.tar.gz", hash = "sha256:9ce42245e704cc5027be797c1db1eb93184d44d1cdd71811fb2d9b25ad541280", size = 454708, upload-time = "2026-03-20T17:34:47.036Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/c4/6322ab5c8f279c4c358bc14eb8aefc0550b97222a39f04eb3c1af7a830fa/protobuf-7.34.0-cp310-abi3-macosx_10_9_universal2.whl", hash = "sha256:8e329966799f2c271d5e05e236459fe1cbfdb8755aaa3b0914fa60947ddea408", size = 429248, upload-time = "2026-02-27T00:30:14.924Z" },
-    { url = "https://files.pythonhosted.org/packages/45/99/b029bbbc61e8937545da5b79aa405ab2d9cf307a728f8c9459ad60d7a481/protobuf-7.34.0-cp310-abi3-manylinux2014_aarch64.whl", hash = "sha256:9d7a5005fb96f3c1e64f397f91500b0eb371b28da81296ae73a6b08a5b76cdd6", size = 325753, upload-time = "2026-02-27T00:30:17.247Z" },
-    { url = "https://files.pythonhosted.org/packages/cc/79/09f02671eb75b251c5550a1c48e7b3d4b0623efd7c95a15a50f6f9fc1e2e/protobuf-7.34.0-cp310-abi3-manylinux2014_s390x.whl", hash = "sha256:4a72a8ec94e7a9f7ef7fe818ed26d073305f347f8b3b5ba31e22f81fd85fca02", size = 340200, upload-time = "2026-02-27T00:30:18.672Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/57/89727baef7578897af5ed166735ceb315819f1c184da8c3441271dbcfde7/protobuf-7.34.0-cp310-abi3-manylinux2014_x86_64.whl", hash = "sha256:964cf977e07f479c0697964e83deda72bcbc75c3badab506fb061b352d991b01", size = 324268, upload-time = "2026-02-27T00:30:20.088Z" },
-    { url = "https://files.pythonhosted.org/packages/1f/3e/38ff2ddee5cc946f575c9d8cc822e34bde205cf61acf8099ad88ef19d7d2/protobuf-7.34.0-cp310-abi3-win32.whl", hash = "sha256:f791ec509707a1d91bd02e07df157e75e4fb9fbdad12a81b7396201ec244e2e3", size = 426628, upload-time = "2026-02-27T00:30:21.555Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/71/7c32eaf34a61a1bae1b62a2ac4ffe09b8d1bb0cf93ad505f42040023db89/protobuf-7.34.0-cp310-abi3-win_amd64.whl", hash = "sha256:9f9079f1dde4e32342ecbd1c118d76367090d4aaa19da78230c38101c5b3dd40", size = 437901, upload-time = "2026-02-27T00:30:22.836Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/e7/14dc9366696dcb53a413449881743426ed289d687bcf3d5aee4726c32ebb/protobuf-7.34.0-py3-none-any.whl", hash = "sha256:e3b914dd77fa33fa06ab2baa97937746ab25695f389869afdf03e81f34e45dc7", size = 170716, upload-time = "2026-02-27T00:30:23.994Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/11/3325d41e6ee15bf1125654301211247b042563bcc898784351252549a8ad/protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl", hash = "sha256:d8b2cc79c4d8f62b293ad9b11ec3aebce9af481fa73e64556969f7345ebf9fc7", size = 429247, upload-time = "2026-03-20T17:34:37.024Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/9d/aa69df2724ff63efa6f72307b483ce0827f4347cc6d6df24b59e26659fef/protobuf-7.34.1-cp310-abi3-manylinux2014_aarch64.whl", hash = "sha256:5185e0e948d07abe94bb76ec9b8416b604cfe5da6f871d67aad30cbf24c3110b", size = 325753, upload-time = "2026-03-20T17:34:38.751Z" },
+    { url = "https://files.pythonhosted.org/packages/92/e8/d174c91fd48e50101943f042b09af9029064810b734e4160bbe282fa1caa/protobuf-7.34.1-cp310-abi3-manylinux2014_s390x.whl", hash = "sha256:403b093a6e28a960372b44e5eb081775c9b056e816a8029c61231743d63f881a", size = 340198, upload-time = "2026-03-20T17:34:39.871Z" },
+    { url = "https://files.pythonhosted.org/packages/53/1b/3b431694a4dc6d37b9f653f0c64b0a0d9ec074ee810710c0c3da21d67ba7/protobuf-7.34.1-cp310-abi3-manylinux2014_x86_64.whl", hash = "sha256:8ff40ce8cd688f7265326b38d5a1bed9bfdf5e6723d49961432f83e21d5713e4", size = 324267, upload-time = "2026-03-20T17:34:41.1Z" },
+    { url = "https://files.pythonhosted.org/packages/85/29/64de04a0ac142fb685fd09999bc3d337943fb386f3a0ec57f92fd8203f97/protobuf-7.34.1-cp310-abi3-win32.whl", hash = "sha256:34b84ce27680df7cca9f231043ada0daa55d0c44a2ddfaa58ec1d0d89d8bf60a", size = 426628, upload-time = "2026-03-20T17:34:42.536Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/87/cb5e585192a22b8bd457df5a2c16a75ea0db9674c3a0a39fc9347d84e075/protobuf-7.34.1-cp310-abi3-win_amd64.whl", hash = "sha256:e97b55646e6ce5cbb0954a8c28cd39a5869b59090dfaa7df4598a7fba869468c", size = 437901, upload-time = "2026-03-20T17:34:44.112Z" },
+    { url = "https://files.pythonhosted.org/packages/88/95/608f665226bca68b736b79e457fded9a2a38c4f4379a4a7614303d9db3bc/protobuf-7.34.1-py3-none-any.whl", hash = "sha256:bb3812cd53aefea2b028ef42bd780f5b96407247f20c6ef7c679807e9d188f11", size = 170715, upload-time = "2026-03-20T17:34:45.384Z" },
 ]
 
 [[package]]
@@ -3426,15 +3431,15 @@ wheels = [
 
 [[package]]
 name = "sentry-sdk"
-version = "2.55.0"
+version = "2.56.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/b8/285293dc60fc198fffc3fcdbc7c6d4e646e0f74e61461c355d40faa64ceb/sentry_sdk-2.55.0.tar.gz", hash = "sha256:3774c4d8820720ca4101548131b9c162f4c9426eb7f4d24aca453012a7470f69", size = 424505, upload-time = "2026-03-17T14:15:51.707Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/df/5008954f5466085966468612a7d1638487596ee6d2fd7fb51783a85351bf/sentry_sdk-2.56.0.tar.gz", hash = "sha256:fdab72030b69625665b2eeb9738bdde748ad254e8073085a0ce95382678e8168", size = 426820, upload-time = "2026-03-24T09:56:36.575Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/66/20465097782d7e1e742d846407ea7262d338c6e876ddddad38ca8907b38f/sentry_sdk-2.55.0-py2.py3-none-any.whl", hash = "sha256:97026981cb15699394474a196b88503a393cbc58d182ece0d3abe12b9bd978d4", size = 449284, upload-time = "2026-03-17T14:15:49.604Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/1a/b3a3e9f6520493fed7997af4d2de7965d71549c62f994a8fd15f2ecd519e/sentry_sdk-2.56.0-py2.py3-none-any.whl", hash = "sha256:5afafb744ceb91d22f4cc650c6bd048ac6af5f7412dcc6c59305a2e36f4dbc02", size = 451568, upload-time = "2026-03-24T09:56:34.807Z" },
 ]
 
 [[package]]
@@ -3759,7 +3764,8 @@ name = "torch"
 version = "2.10.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine != 's390x' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
 ]
 dependencies = [
@@ -3790,7 +3796,8 @@ name = "torch"
 version = "2.10.0+cpu"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
-    "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
+    "(platform_machine != 's390x' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (platform_machine != 's390x' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
+    "(platform_machine == 's390x' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (platform_machine == 's390x' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
     "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
 ]
 dependencies = [
@@ -3820,6 +3827,11 @@ wheels = [
 name = "torch"
 version = "2.10.0+cu128"
 source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "platform_machine != 's390x' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+]
 dependencies = [
     { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "filelock", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cuda' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
@@ -3859,6 +3871,11 @@ wheels = [
 name = "torch"
 version = "2.10.0+xpu"
 source = { registry = "https://download.pytorch.org/whl/xpu" }
+resolution-markers = [
+    "platform_machine != 's390x' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
+    "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+]
 dependencies = [
     { name = "dpcpp-cpp-rt", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "filelock", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
@@ -3920,7 +3937,8 @@ name = "torchvision"
 version = "0.25.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine != 's390x' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
     "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
 ]
 dependencies = [
@@ -3944,7 +3962,8 @@ name = "torchvision"
 version = "0.25.0+cpu"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
-    "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
+    "(platform_machine != 's390x' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (platform_machine != 's390x' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
+    "(platform_machine == 's390x' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu') or (platform_machine == 's390x' and sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu')",
     "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
 ]
 dependencies = [
@@ -3965,6 +3984,11 @@ wheels = [
 name = "torchvision"
 version = "0.25.0+cu128"
 source = { registry = "https://download.pytorch.org/whl/cu128" }
+resolution-markers = [
+    "platform_machine != 's390x' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+    "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+]
 dependencies = [
     { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cuda' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "pillow", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-3-otx-cuda' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
@@ -3983,6 +4007,11 @@ wheels = [
 name = "torchvision"
 version = "0.25.0+xpu"
 source = { registry = "https://download.pytorch.org/whl/xpu" }
+resolution-markers = [
+    "platform_machine != 's390x' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
+    "platform_machine == 's390x' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu' and extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu'",
+    "extra != 'extra-4-geti-cpu' and extra != 'extra-4-geti-cuda' and extra != 'extra-4-geti-xpu'",
+]
 dependencies = [
     { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "pillow", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
@@ -4100,14 +4129,14 @@ wheels = [
 
 [[package]]
 name = "types-requests"
-version = "2.32.4.20260107"
+version = "2.32.4.20260324"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/f3/a0663907082280664d745929205a89d41dffb29e89a50f753af7d57d0a96/types_requests-2.32.4.20260107.tar.gz", hash = "sha256:018a11ac158f801bfa84857ddec1650750e393df8a004a8a9ae2a9bec6fcb24f", size = 23165, upload-time = "2026-01-07T03:20:54.091Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/b1/66bafdc85965e5aa3db42e1b9128bf8abe252edd7556d00a07ef437a3e0e/types_requests-2.32.4.20260324.tar.gz", hash = "sha256:33a2a9ccb1de7d4e4da36e347622c35418f6761269014cc32857acabd5df739e", size = 23765, upload-time = "2026-03-24T04:06:35.106Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/12/709ea261f2bf91ef0a26a9eed20f2623227a8ed85610c1e54c5805692ecb/types_requests-2.32.4.20260107-py3-none-any.whl", hash = "sha256:b703fe72f8ce5b31ef031264fe9395cac8f46a04661a79f7ed31a80fb308730d", size = 20676, upload-time = "2026-01-07T03:20:52.929Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/5a/ce5999f9bd72c7fac681d26cd0a5782b379053bfc2214e2a3fbe30852c9e/types_requests-2.32.4.20260324-py3-none-any.whl", hash = "sha256:f83ef2deb284fe99a249b8b0b0a3e4b9809e01ff456063c4df0aac7670c07ab9", size = 20735, upload-time = "2026-03-24T04:06:33.9Z" },
 ]
 
 [[package]]
@@ -4283,14 +4312,14 @@ wheels = [
 
 [[package]]
 name = "werkzeug"
-version = "3.1.6"
+version = "3.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markupsafe", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/f1/ee81806690a87dab5f5653c1f146c92bc066d7f4cebc603ef88eb9e13957/werkzeug-3.1.6.tar.gz", hash = "sha256:210c6bede5a420a913956b4791a7f4d6843a43b6fcee4dfa08a65e93007d0d25", size = 864736, upload-time = "2026-02-19T15:17:18.884Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/43/76ded108b296a49f52de6bac5192ca1c4be84e886f9b5c9ba8427d9694fd/werkzeug-3.1.7.tar.gz", hash = "sha256:fb8c01fe6ab13b9b7cdb46892b99b1d66754e1d7ab8e542e865ec13f526b5351", size = 875700, upload-time = "2026-03-24T01:08:07.687Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/ec/d58832f89ede95652fd01f4f24236af7d32b70cab2196dfcc2d2fd13c5c2/werkzeug-3.1.6-py3-none-any.whl", hash = "sha256:7ddf3357bb9564e407607f988f683d72038551200c704012bb9a4c523d42f131", size = 225166, upload-time = "2026-02-19T15:17:17.475Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/b2/0bba9bbb4596d2d2f285a16c2ab04118f6b957d8441566e1abb892e6a6b2/werkzeug-3.1.7-py3-none-any.whl", hash = "sha256:4b314d81163a3e1a169b6a0be2a000a0e204e8873c5de6586f453c55688d422f", size = 226295, upload-time = "2026-03-24T01:08:06.133Z" },
 ]
 
 [[package]]

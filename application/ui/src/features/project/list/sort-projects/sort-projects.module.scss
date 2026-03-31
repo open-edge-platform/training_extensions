@@ -1,0 +1,14 @@
+.sortProjects {
+    & span[class*='spectrum-FieldLabel'] {
+        font-size: var(--spectrum-global-dimension-font-size-100);
+        color: var(--spectrum-global-color-gray-900);
+    }
+
+    & button[class*='spectrum-Dropdown-trigger'] {
+        align-items: end;
+
+        & svg[class*='spectrum-Icon'] {
+            align-self: center;
+        }
+    }
+}
