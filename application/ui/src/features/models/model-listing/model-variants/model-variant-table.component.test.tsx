@@ -47,8 +47,8 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('Accuracy')).toBeInTheDocument();
-        expect(screen.getByText('92%')).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('Accuracy');
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('92%');
     });
 
     it('falls back to fp32 pytorch primary metric when evaluations are empty', () => {
@@ -77,8 +77,8 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('mAP')).toBeInTheDocument();
-        expect(screen.getByText('87%')).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('mAP');
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('87%');
     });
 
     it('shows size and performance deltas for the quantized variant', () => {
@@ -151,8 +151,8 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('mAP')).toBeInTheDocument();
-        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('mAP');
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
         expect(screen.queryByText('87%')).not.toBeInTheDocument();
     });
 
@@ -170,8 +170,8 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('Score')).toBeInTheDocument();
-        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('Score');
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
     });
 
     it('triggers download for selected variant', async () => {

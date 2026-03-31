@@ -43,7 +43,9 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
             <TableHeader>
                 <Column isRowHeader>PRECISION</Column>
                 <Column isRowHeader>SIZE</Column>
-                <Column isRowHeader>{performanceColumnName}</Column>
+                <Column isRowHeader data-testid='model-variant-performance-column'>
+                    {performanceColumnName}
+                </Column>
                 <Column align='end'>
                     <></>
                 </Column>
