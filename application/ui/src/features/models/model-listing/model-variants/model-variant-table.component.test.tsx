@@ -152,7 +152,7 @@ describe('ModelVariantTable', () => {
         render(<ModelVariantTable model={model} format='openvino' />);
 
         expect(screen.getByText('mAP')).toBeInTheDocument();
-        expect(screen.getByTestId('model-variant-value-accuracy')).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toBeInTheDocument();
         expect(screen.queryByText('87%')).not.toBeInTheDocument();
     });
 
@@ -171,7 +171,7 @@ describe('ModelVariantTable', () => {
         render(<ModelVariantTable model={model} format='openvino' />);
 
         expect(screen.getByText('Score')).toBeInTheDocument();
-        expect(screen.getByTestId('model-variant-value-accuracy')).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toBeInTheDocument();
     });
 
     it('triggers download for selected variant', async () => {
