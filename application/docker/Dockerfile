@@ -128,6 +128,7 @@ COPY --from=geti-ui-packages /home/application/ui/packages/ /home/application/ui
 RUN npm ci --audit=false --ignore-scripts
 
 COPY --link application/ui/tsconfig.json ./
+COPY --link application/ui/tsconfig.base.json ./
 COPY --link application/ui/rsbuild.config.ts ./
 COPY --link application/ui/src/ src/
 COPY --link application/ui/public/ public/
