@@ -2,7 +2,7 @@
 #  SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Annotated, Literal, Union, cast, get_args, get_origin
+from typing import Annotated, Any, Literal, Union, cast, get_args, get_origin
 
 from pydantic import BaseModel, Discriminator, Field, Tag
 from pydantic.fields import FieldInfo
@@ -22,7 +22,7 @@ class _BaseConfigurableParameterView(BaseModel):
     key: str = Field(title="Key to identify the parameter")
     name: str = Field(title="User-friendly name of the parameter")
     description: str = Field(title="Extended description of the parameter", default="")
-    depends_on: dict[str, str] | None = Field(
+    depends_on: dict[str, Any] | None = Field(
         default=None,
         title="Dependency condition",
         description=(
@@ -114,6 +114,13 @@ class ConfigurableParameterGroupView(BaseModel):
     key: str = Field(title="Key to identify the parameter group")
     name: str = Field(title="User-friendly name of the parameter group")
     description: str = Field(title="Extended description of the parameter group", default="")
+    depends_on: dict[str, Any] | None = Field(
+        default=None,
+        title="Dependency condition",
+        description=(
+            "If set, this parameter group is only applicable when the specified sibling parameter has the given value."
+        ),
+    )
     parameters: list[Union[ConfigurableParameterView, "ConfigurableParameterGroupView"]] = Field(
         title="List of parameters in the group"
     )
@@ -204,7 +211,7 @@ class TrainingConfigurationView(BaseModel):
         return "str"
 
     @classmethod
-    def _extract_depends_on(cls, field_info: FieldInfo) -> dict[str, str] | None:
+    def _extract_depends_on(cls, field_info: FieldInfo) -> dict[str, Any] | None:
         """Extract depends_on condition from field's json_schema_extra."""
         if isinstance(field_info.json_schema_extra, dict):
             depends_on = field_info.json_schema_extra.get("depends_on")
@@ -370,6 +377,7 @@ class TrainingConfigurationView(BaseModel):
             key=key,
             name=field_info.title,
             description=field_info.description if field_info.description else "",
+            depends_on=cls._extract_depends_on(field_info),
             parameters=parameters,
         )
 
