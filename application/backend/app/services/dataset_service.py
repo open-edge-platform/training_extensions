@@ -299,7 +299,7 @@ class DatasetService(BaseSessionManagedService):
         """
         labels = self._label_service.list_all(project_id=project.id)
         media = self._media_service.get_media_by_id(project_id=project.id, media_id=dataset_item_id)
-        DatasetService._cleanup_and_validate_annotations(
+        annotations = DatasetService._cleanup_and_validate_annotations(
             annotations=annotations, task=project.task, labels=labels, media=media, user_reviewed=user_reviewed
         )
 
