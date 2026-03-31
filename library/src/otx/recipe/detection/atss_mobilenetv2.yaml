@@ -60,5 +60,26 @@ overrides:
 
   data:
     train_subset:
+      augmentations_gpu:
+        - class_path: kornia.augmentation.RandomHorizontalFlip
+          init_args:
+            p: 0.5
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [1.0, 1.0, 1.0]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
+
+    val_subset:
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [1.0, 1.0, 1.0]
+    test_subset:
+      augmentations_gpu:
+        - class_path: kornia.augmentation.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [1.0, 1.0, 1.0]
