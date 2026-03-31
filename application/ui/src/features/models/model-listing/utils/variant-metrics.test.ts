@@ -90,7 +90,7 @@ describe('variant-metrics utilities', () => {
         });
 
         expect(getVariantPerformanceValue(withMetric, fp32Metric)).toBe(89);
-        expect(getVariantPerformanceValue(emptyEvaluations, fp32Metric)).toBe(87);
+        expect(getVariantPerformanceValue(emptyEvaluations, fp32Metric)).toBe(fp32Metric.value);
         expect(getVariantPerformanceValue(noPrimaryButHasEvaluations, fp32Metric)).toBeUndefined();
     });
 });
