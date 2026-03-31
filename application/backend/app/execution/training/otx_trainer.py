@@ -23,7 +23,6 @@ from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.dataset.base import OTXDataset
 from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.tools.converter import GetiConfigConverter
 from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -31,6 +30,7 @@ from sqlalchemy.orm import Session
 
 from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, step
+from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.otx_converters import (
     convert_metrics,
     get_metric_by_task,
@@ -411,6 +411,9 @@ class OTXTrainer(Execution[TrainingJobParams]):
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
         train_kwargs = {"devices": [device.index]} if device.type is not DeviceType.CPU and device.index else {}
+        gradient_clip_val = training_config.get("gradient_clip_val")
+        if gradient_clip_val is not None:
+            train_kwargs["gradient_clip_val"] = gradient_clip_val
         otx_engine.train(
             max_epochs=training_config["max_epochs"],
             precision=training_config["precision"],
