@@ -4,9 +4,10 @@
 import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, toast } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 
+import { API_BASE_URL } from '../../../../api/client';
 import type { Model, ModelFormat } from '../../../../constants/shared-types';
-import { formatBytes } from '../../../../shared/util';
-import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
+import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
+import { downloadFile, formatBytes } from '../../../../shared/util';
 import {
     getBaselineVariant,
     getFp32PytorchVariant,
@@ -21,7 +22,7 @@ type ModelVariantTableProps = {
     format: ModelFormat;
 };
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
-    const { downloadModel, isDownloading } = useDownloadModel(model.id);
+    const projectId = useProjectIdentifier();
     const allVariants = model.variants ?? [];
     const variants = allVariants.filter((variant) => variant.format === format);
     const baselineVariant = getBaselineVariant(variants);
@@ -35,7 +36,9 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
 
     const handleDownloadModel = (modelVariantId: string) => {
         toast({ type: 'info', message: 'Model download started...please wait.' });
-        downloadModel(modelVariantId);
+
+        const url = `${API_BASE_URL}/api/projects/${projectId}/models/${model.id}/variants/${modelVariantId}/binary`;
+        downloadFile(url);
     };
 
     return (
@@ -80,7 +83,6 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                                     <ActionButton
                                         isQuiet
                                         aria-label={`Download model ${variant.id}`}
-                                        isDisabled={isDownloading}
                                         onPress={() => handleDownloadModel(variant.id)}
                                     >
                                         <DownloadIcon />
