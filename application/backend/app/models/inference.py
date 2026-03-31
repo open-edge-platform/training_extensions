@@ -8,6 +8,7 @@ from uuid import UUID
 import numpy as np
 
 from app.models import DatasetItemAnnotation
+from app.models.system import DeviceInfo
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ class InferenceModel:
     """
 
     model_id: UUID
-    device: str
+    device: DeviceInfo
     load_timestamp: datetime
 
 

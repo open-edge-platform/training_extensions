@@ -9,6 +9,7 @@ from uuid import UUID
 
 from loguru import logger
 
+from app.models.system import DeviceInfo
 from app.services.inference import InferenceServer
 from app.workers.base import BaseThreadWorker
 
@@ -42,7 +43,7 @@ class InferenceServerMonitorThread(BaseThreadWorker):
         orig_set_inference_model = self._server.set_inference_model
 
         @wraps(orig_set_inference_model)
-        def wrapped_set_inference_model(project_id: UUID, model_id: UUID, device: str, ttl: int):
+        def wrapped_set_inference_model(project_id: UUID, model_id: UUID, device: DeviceInfo, ttl: int):
             model_loaded = orig_set_inference_model(project_id=project_id, model_id=model_id, device=device, ttl=ttl)
             if model_loaded:
                 self._ttl = ttl
