@@ -47,7 +47,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('Accuracy');
+        expect(screen.getByRole('columnheader', { name: 'Accuracy' })).toBeInTheDocument();
         expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('92%');
     });
 
@@ -77,7 +77,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('mAP');
+        expect(screen.getByRole('columnheader', { name: 'mAP' })).toBeInTheDocument();
         expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('87%');
     });
 
@@ -151,7 +151,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('mAP');
+        expect(screen.getByRole('columnheader', { name: 'mAP' })).toBeInTheDocument();
         expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
         expect(screen.queryByText('87%')).not.toBeInTheDocument();
     });
@@ -170,7 +170,7 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByTestId('model-variant-performance-column')).toHaveTextContent('Score');
+        expect(screen.getByRole('columnheader', { name: 'Score' })).toBeInTheDocument();
         expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
     });
 
