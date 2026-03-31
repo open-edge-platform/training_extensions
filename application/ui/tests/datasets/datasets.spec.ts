@@ -141,7 +141,7 @@ test.describe('Dataset', () => {
         await expect(page.getByText(`Uploaded ${totalFiles} item(s)`)).toBeVisible();
     });
 
-    test.describe('Bulk labelling', () => {
+    test.describe('Bulk labelling while uploading media items', () => {
         const mockedImages = [getMockedMediaImage({ id: uuid() }), getMockedMediaImage({ id: uuid() })];
         const mockedVideo = getMockedVideo({ id: uuid() });
         const mockedMedia = [...mockedImages, mockedVideo];
@@ -329,6 +329,212 @@ test.describe('Dataset', () => {
             await page.getByRole('checkbox', { name: `Select No label` }).click();
 
             await page.getByRole('button', { name: 'Continue' }).click();
+
+            await expect(() => {
+                expect(createAnnotationPayloads).toEqual([
+                    [mockedImages[0].id, []],
+                    [mockedImages[1].id, []],
+                ]);
+            }).toPass();
+        });
+    });
+
+    test.describe('Bulk labelling for selected images', () => {
+        const mockedImages = [
+            getMockedMediaImage({ id: uuid(), name: 'media-1' }),
+            getMockedMediaImage({ id: uuid(), name: 'media-2' }),
+        ];
+        const mockedVideo = getMockedVideo({ id: uuid(), name: 'media-3' });
+        const mockedMedia = [...mockedImages, mockedVideo];
+        const mockedLabels = [
+            getMockedLabel({
+                id: 'id-cat',
+                name: 'cat',
+            }),
+            getMockedLabel({
+                id: 'id-dog',
+                name: 'dog',
+            }),
+        ];
+
+        const mockNetwork = (network: NetworkFixture, project: SchemaProjectView) => {
+            const createAnnotationPayloads: [string, AnnotationDTO[]][] = [];
+
+            network.use(
+                http.get('/api/projects/{project_id}/dataset/media', () => {
+                    return HttpResponse.json({
+                        items: mockedMedia,
+                        pagination: {
+                            offset: 0,
+                            limit: 10,
+                            count: mockedMedia.length,
+                            total: mockedMedia.length,
+                        },
+                    });
+                }),
+                http.get('/api/projects/{project_id}', async () => {
+                    return HttpResponse.json(project);
+                }),
+                http.post(
+                    '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
+                    async ({ request, params }) => {
+                        const payload = await request.json();
+
+                        createAnnotationPayloads.push([params.media_id, payload.annotations]);
+
+                        return HttpResponse.json({
+                            annotations: payload.annotations,
+                            user_reviewed: true,
+                        });
+                    }
+                )
+            );
+
+            return createAnnotationPayloads;
+        };
+
+        test('Single label: bulk labelling is only enabled for classification task and only for images', async ({
+            network,
+            page,
+        }) => {
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: true,
+                        labels: mockedLabels,
+                    },
+                })
+            );
+
+            await page.goto('projects/id-1/dataset');
+
+            await expect(page.getByRole('button', { name: 'Assign label' })).toBeHidden();
+
+            await page.getByRole('img', { name: 'media-1' }).click();
+            await page.getByRole('img', { name: 'media-2' }).click();
+
+            await page.getByRole('button', { name: 'Assign label' }).click();
+
+            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+
+            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
+
+            await page.getByRole('dialog').getByRole('button', { name: 'Assign' }).click();
+
+            await expect(() => {
+                expect(createAnnotationPayloads).toEqual([
+                    [
+                        mockedImages[0].id,
+                        [
+                            {
+                                shape: {
+                                    type: 'full_image',
+                                },
+                                labels: [{ id: mockedLabels[0].id }],
+                            },
+                        ],
+                    ],
+                    [
+                        mockedImages[1].id,
+                        [
+                            {
+                                shape: {
+                                    type: 'full_image',
+                                },
+                                labels: [{ id: mockedLabels[0].id }],
+                            },
+                        ],
+                    ],
+                ]);
+            }).toPass();
+        });
+
+        test('Multi label: bulk labelling is only enabled for classification task and only for images', async ({
+            network,
+            page,
+        }) => {
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: false,
+                        labels: mockedLabels,
+                    },
+                })
+            );
+
+            await page.goto('projects/id-1/dataset');
+
+            await page.getByRole('img', { name: 'media-1' }).click();
+            await page.getByRole('img', { name: 'media-2' }).click();
+            await page.getByRole('img', { name: 'media-3' }).click();
+
+            await page.getByRole('button', { name: 'Assign label' }).click();
+
+            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+
+            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
+            await page.getByRole('checkbox', { name: `Select ${mockedLabels[1].name}` }).click();
+
+            await page.getByRole('dialog').getByRole('button', { name: 'Assign' }).click();
+
+            await expect(() => {
+                expect(createAnnotationPayloads).toEqual([
+                    [
+                        mockedImages[0].id,
+                        [
+                            {
+                                shape: {
+                                    type: 'full_image',
+                                },
+                                labels: [{ id: mockedLabels[0].id }, { id: mockedLabels[1].id }],
+                            },
+                        ],
+                    ],
+                    [
+                        mockedImages[1].id,
+                        [
+                            {
+                                shape: {
+                                    type: 'full_image',
+                                },
+                                labels: [{ id: mockedLabels[0].id }, { id: mockedLabels[1].id }],
+                            },
+                        ],
+                    ],
+                ]);
+            }).toPass();
+        });
+
+        test('Multi label: empty label creates empty annotations', async ({ network, page }) => {
+            const createAnnotationPayloads = mockNetwork(
+                network,
+                getMockedProject({
+                    task: {
+                        task_type: 'classification',
+                        exclusive_labels: false,
+                        labels: mockedLabels,
+                    },
+                })
+            );
+
+            await page.goto('projects/id-1/dataset');
+
+            await page.getByRole('img', { name: 'media-1' }).click();
+            await page.getByRole('img', { name: 'media-2' }).click();
+            await page.getByRole('img', { name: 'media-3' }).click();
+
+            await page.getByRole('button', { name: 'Assign label' }).click();
+
+            await expect(page.getByRole('heading', { name: 'Label assignment' })).toBeVisible();
+
+            await page.getByRole('checkbox', { name: `Select ${mockedLabels[0].name}` }).click();
+            await page.getByRole('checkbox', { name: `No label` }).click();
+
+            await page.getByRole('dialog').getByRole('button', { name: 'Assign' }).click();
 
             await expect(() => {
                 expect(createAnnotationPayloads).toEqual([
