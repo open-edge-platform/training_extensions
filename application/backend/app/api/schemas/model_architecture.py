@@ -48,12 +48,14 @@ class ModelArchitectures(BaseModel):
             "example": {
                 "model_architectures": [
                     {
-                        "id": "object-detection-deim-d-fine-m",
+                        "id": "object-detection-dfine-m",
                         "task": "detection",
-                        "name": "DEIM-D-FINE-M",
-                        "description": "DEIM is an advanced training framework designed to enhance the matching"
-                        " mechanism in DETRs, enabling faster convergence and improved accuracy.",
-                        "capabilities": {"xai": True, "tiling": True},
+                        "name": "D-FINE-M",
+                        "description": "D-FINE is a powerful real-time object detector that redefines the bounding box"
+                        " regression task in DETRs as Fine-grained Distribution Refinement (FDR)."
+                        " Combined with the DEIM adaptive augmentation scheduling framework"
+                        " (enabled by default), it achieves outstanding performance with faster convergence.",
+                        "capabilities": {"tiling": False},
                         "stats": {
                             "gigaflops": 57,
                             "trainable_parameters": 19,
@@ -65,7 +67,7 @@ class ModelArchitectures(BaseModel):
                 "top_picks": {
                     "balance": "object-detection-atss-mobilenet-v2",
                     "speed": "object-detection-yolox-s",
-                    "accuracy": "object-detection-d-fine-x",
+                    "accuracy": "object-detection-dfine-l",
                 },
             }
         }

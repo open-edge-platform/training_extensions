@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { MediaImage, MediaVideoFrame } from '../src/constants/shared-types';
+import type { MediaImage, MediaVideo, MediaVideoFrame } from '../src/constants/shared-types';
 
 export const getMockedMediaImage = (props: Partial<MediaImage> = {}): MediaImage => ({
     id: 'item-1',
@@ -11,6 +11,21 @@ export const getMockedMediaImage = (props: Partial<MediaImage> = {}): MediaImage
     width: 0,
     height: 0,
     size: 0,
+    ...props,
+});
+
+export const getMockedVideo = (props: Partial<MediaVideo> = {}): MediaVideo => ({
+    id: 'video-1',
+    type: 'video',
+    fps: 60,
+    duration: 123,
+    width: 400,
+    height: 400,
+    size: 123,
+    name: 'video',
+    format: 'mp4',
+    frame_count: 400,
+    source_id: undefined,
     ...props,
 });
 

@@ -39,3 +39,6 @@ export const useProjectLabelsWithEmptyLabel = (): Label[] => {
         return labels;
     }, [exclusive_labels, labels, task_type]);
 };
+
+export const filterOutEmptyLabels = <T extends Pick<Label, 'id'>>(labels: T[]): T[] =>
+    labels.filter((label) => label.id !== EMPTY_LABEL_ID);

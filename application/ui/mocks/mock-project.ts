@@ -3,7 +3,7 @@
 
 import { SchemaProjectView } from './../src/api/openapi-spec.d';
 
-export const getMockedProject = (customProject: Partial<SchemaProjectView>): SchemaProjectView => {
+export const getMockedProject = (customProject: Partial<SchemaProjectView> = {}): SchemaProjectView => {
     return {
         id: '7b073838-99d3-42ff-9018-4e901eb047fc',
         name: 'animals',
@@ -17,9 +17,10 @@ export const getMockedProject = (customProject: Partial<SchemaProjectView>): Sch
                     name: 'Object',
                 },
             ],
-            task_type: 'classification',
+            task_type: 'detection',
         },
         active_pipeline: false,
+        created_at: '2024-10-01T12:00:00Z',
         ...customProject,
     };
 };

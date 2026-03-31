@@ -194,11 +194,14 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        const rateSlider = page.getByRole('slider', { name: 'Rate' });
-        await expect(rateSlider).toBeVisible();
-        await expect(rateSlider).toBeEnabled();
-        await rateSlider.fill('20');
-        await expect(rateSlider).toHaveValue('20');
+        const framesField = page.getByRole('textbox', { name: 'Frames' });
+        const secondsField = page.getByRole('textbox', { name: 'Seconds' });
+
+        await expect(framesField).toBeEnabled();
+        await expect(secondsField).toBeEnabled();
+
+        await framesField.fill('20');
+        await expect(framesField).toHaveValue('20');
 
         await expect(page.getByRole('switch', { name: 'Confidence threshold' })).not.toBeChecked();
 
