@@ -152,7 +152,23 @@ jobs:
         env:
           IMAGE: ${{ steps.docker_build.outputs.image-name }}
         run: |
-          SIZE_BYTES=$(docker image inspect "${IMAGE}" --format='{{.Size}}')
+          # docker image inspect .Size may undercount with the docker buildx
+          # driver because it only reports the diff/top-layer size.  Summing
+          # all layer sizes via `docker history` gives the true uncompressed
+          # on-disk total.
+          SIZE_BYTES=$(docker history "${IMAGE}" --format '{{.Size}}' \
+            | awk '
+                /[0-9]+(\.[0-9]+)?[kKmMgG]?[bB]/ {
+                  n = $1+0; unit = $1;
+                  gsub(/[0-9.]+/, "", unit);
+                  unit = toupper(unit);
+                  if (unit == "KB") n *= 1024;
+                  else if (unit == "MB") n *= 1024*1024;
+                  else if (unit == "GB") n *= 1024*1024*1024;
+                  total += n
+                }
+                END { printf "%d", total }
+              ')
           SIZE_MB=$(awk "BEGIN {printf \"%.1f\", ${SIZE_BYTES} / 1024 / 1024}")
           SIZE_GB=$(awk "BEGIN {printf \"%.2f\", ${SIZE_BYTES} / 1024 / 1024 / 1024}")
           echo "bytes=${SIZE_BYTES}" >> "$GITHUB_OUTPUT"
