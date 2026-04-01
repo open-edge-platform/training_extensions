@@ -75,11 +75,9 @@ const Annotator = ({
                 </View>
             )}
 
-            {isAnnotationMode && (
-                <View gridArea={'bottom'}>
-                    <BottomToolbar mediaItem={mediaItem} />
-                </View>
-            )}
+            <View gridArea={'bottom'}>
+                <BottomToolbar mediaItem={mediaItem} hideHotkeys={isPredictionMode} />
+            </View>
 
             <AnnotationsCanvas isReadOnly={isPredictionMode}>
                 <AnnotatorCanvasSettings>
