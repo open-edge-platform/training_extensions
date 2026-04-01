@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Text } from '@geti/ui';
-import { capitalize } from 'lodash-es';
 
-import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
 import { type ModelArchitectureWithPerformanceCategory } from '../../../../../constants/shared-types';
-import { ModelBadge } from './model-badge.component';
+import { PerformanceCategoryBadge } from './performance-category-badge.component';
 
 import classes from './model-row.module.scss';
 
@@ -23,11 +21,11 @@ export const ArchitectureColumn = ({ architecture }: ArchitectureColumnProps) =>
     return (
         <Flex direction={'column'} gap={'size-100'}>
             <Text UNSAFE_className={classes.smallText}>{architecture.name} (Apache 2.0)</Text>
-            {architecture.performanceCategory && (
-                <ModelBadge id={'architecture-name'}>
-                    <ThumbsUp />
-                    <Text>{capitalize(architecture.performanceCategory)}</Text>
-                </ModelBadge>
+            {architecture.performanceCategory !== undefined && (
+                <PerformanceCategoryBadge
+                    id={'architecture-name'}
+                    performanceCategory={architecture.performanceCategory}
+                />
             )}
         </Flex>
     );
