@@ -10,11 +10,17 @@ import styles from './model-row.module.scss';
 type ModelBadgeProps = {
     children: ReactNode;
     id?: string;
+    color?: string;
 };
 
-export const ModelBadge = ({ children, id }: ModelBadgeProps) => {
+export const ModelBadge = ({ children, id, color = 'var(--spectrum-global-color-gray-200)' }: ModelBadgeProps) => {
     return (
-        <Badge variant={'neutral'} UNSAFE_className={styles.modelBadge} data-testid={id}>
+        <Badge
+            data-testid={id}
+            variant={'neutral'}
+            UNSAFE_style={{ '--modelBadgeColor': color }}
+            UNSAFE_className={styles.modelBadge}
+        >
             <Text>
                 <Flex alignItems={'center'} gap={'size-50'}>
                     {children}
