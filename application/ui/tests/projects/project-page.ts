@@ -27,10 +27,6 @@ export class ProjectPage {
         return this.page.getByRole('button', { name: /Create project/ });
     }
 
-    getMultiLabelValidationMessage() {
-        return this.page.getByText('At least 2 labels are required for single-label classification');
-    }
-
     async setProjectName(name: string) {
         await this.page.getByRole('textbox', { name: 'Project name input' }).fill(name);
     }

@@ -17,6 +17,7 @@ import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { PolygonToolPage } from './annotator/polygon-tool-page';
 import { VideoPage } from './annotator/video-page';
 import { AnnotatorPage } from './datasets/annotator-page';
+import { DatasetPage } from './datasets/dataset-page';
 import { ImportDatasetPage } from './datasets/import-dataset-page';
 import { StreamPage } from './inference/stream-page';
 import { JobsPage } from './jobs/jobs-page';
@@ -52,6 +53,7 @@ interface Fixtures {
     videoPage: VideoPage;
     annotatorPage: AnnotatorPage;
     importDatasetPage: ImportDatasetPage;
+    datasetPage: DatasetPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -124,6 +126,7 @@ const test = testBase.extend<Fixtures>({
                                     labels: [],
                                 },
                                 active_pipeline: false,
+                                created_at: '2024-10-01T12:00:00Z',
                             },
                         ]);
                     }),
@@ -140,6 +143,7 @@ const test = testBase.extend<Fixtures>({
                                 ],
                             },
                             active_pipeline: true,
+                            created_at: '2024-10-01T12:00:00Z',
                         });
                     }),
                     http.delete('/api/projects/{project_id}', () => {
@@ -247,6 +251,10 @@ const test = testBase.extend<Fixtures>({
     importDatasetPage: async ({ page }, use) => {
         const importDatasetPage = new ImportDatasetPage(page);
         await use(importDatasetPage);
+    },
+    datasetPage: async ({ page }, use) => {
+        const datasetPage = new DatasetPage(page);
+        await use(datasetPage);
     },
 });
 

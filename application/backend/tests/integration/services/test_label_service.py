@@ -54,6 +54,7 @@ def _db_project_to_project(db_project: ProjectDB) -> Project:
     return Project(
         id=UUID(db_project.id),
         name=db_project.name,
+        created_at=db_project.created_at,
         task=Task(
             task_type=TaskType(db_project.task_type),
             labels=[],
@@ -582,6 +583,7 @@ class TestLabelServiceIntegration:
         project = Project(
             id=UUID(db_project.id),
             name=db_project.name,
+            created_at=db_project.created_at,
             task=Task(task_type=TaskType.CLASSIFICATION, labels=[], exclusive_labels=True),
         )
 

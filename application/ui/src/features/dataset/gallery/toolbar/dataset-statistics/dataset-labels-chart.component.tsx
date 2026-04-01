@@ -2,7 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue } from '@geti/ui';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Label,
+    LabelList,
+    LabelProps,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 import { useProjectLabelsWithEmptyLabel } from '../../../../../shared/annotator/labels';
 
@@ -20,6 +31,16 @@ const getAxisTicks = (total: number): number[] => {
     const ticks = Array.from({ length: Math.floor(total / TICK_SPACING) + 1 }, (_, i) => i * TICK_SPACING);
 
     return total % TICK_SPACING !== 0 ? [...ticks, total] : ticks;
+};
+
+const ItemLabel = (props: LabelProps) => {
+    const minBarHeight = 20;
+    const height = Number(props?.height ?? 0);
+
+    if (props.value === 0 || height <= minBarHeight) {
+        return null;
+    }
+    return <Label {...props} fill={'white'} />;
 };
 
 export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLabelsChartProps) => {
@@ -62,7 +83,16 @@ export const DatasetLabelsChart = ({ totalItems, instancesPerLabel }: DatasetLab
                     tickLine={false}
                 />
 
-                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={36} />
+                <Bar dataKey='score' fill='var(--moss)' radius={[4, 4, 4, 4]} barSize={36}>
+                    <LabelList content={ItemLabel} position='insideEnd' />
+                </Bar>
+
+                <Tooltip
+                    shared={false}
+                    formatter={(value) => [value, 'Annotations']}
+                    itemStyle={{ color: 'var(--spectrum-global-color-gray-800)' }}
+                    contentStyle={{ background: 'var(--spectrum-global-color-gray-50)' }}
+                />
             </BarChart>
         </ResponsiveContainer>
     );

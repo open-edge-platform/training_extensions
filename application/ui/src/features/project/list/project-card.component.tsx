@@ -76,7 +76,7 @@ export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps)
     const isMultiLabelClassification = isMultiLabelClassificationTask(item.task);
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} aria-label={`Project: ${item.name}`}>
             <NavLink to={paths.project.dataset.index({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <View

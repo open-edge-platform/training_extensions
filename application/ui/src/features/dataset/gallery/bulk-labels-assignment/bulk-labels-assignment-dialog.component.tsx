@@ -14,7 +14,6 @@ import {
     Flex,
     Heading,
     Text,
-    toast,
 } from '@geti/ui';
 import { Info } from '@geti/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
@@ -24,7 +23,7 @@ import { useProjectLabelsWithEmptyLabel } from '../../../../shared/annotator/lab
 import { isImage } from '../../../../shared/media-item-utils';
 import { isMultiLabelClassificationTask } from '../../../project/task-type-guards';
 import { useMediaUpload } from '../../api/use-media-upload';
-import { useAssignLabel } from './api/use-assign-label';
+import { useBulkAssignLabel } from './api/use-bulk-assign-label';
 import { LabelsList } from './labels-list/labels-list.component';
 
 type BulkLabelsAssignmentDialogContentProps = {
@@ -112,7 +111,7 @@ export const BulkLabelsAssignmentDialog = ({ files, onClose }: BulkLabelsAssignm
     const isMultiLabelClassification = isMultiLabelClassificationTask(project.task);
     const { uploadMedia, uploadProgress } = useMediaUpload();
 
-    const assignLabel = useAssignLabel();
+    const bulkAssignLabel = useBulkAssignLabel();
 
     const handleSkip = async () => {
         await uploadMedia(files);
@@ -123,31 +122,10 @@ export const BulkLabelsAssignmentDialog = ({ files, onClose }: BulkLabelsAssignm
         const mediaItems = await uploadMedia(files);
         const mediaItemImages = mediaItems.filter(isImage);
 
-        const result = await Promise.allSettled(mediaItemImages.map((media) => assignLabel.mutate(media.id, labelIds)));
-
-        const successfulMediaItems = result.filter(({ status }) => status === 'fulfilled');
-        const failedMediaItems = result.filter(({ status }) => status === 'rejected');
-
-        if (failedMediaItems.length === 0) {
-            toast({
-                type: 'success',
-                message: `Successfully assigned labels to all ${successfulMediaItems.length} media items`,
-            });
-        } else if (successfulMediaItems.length === 0) {
-            toast({
-                type: 'error',
-                message: `Failed to assign labels to all ${failedMediaItems.length} media items`,
-            });
-        } else {
-            toast({
-                type: 'info',
-                message:
-                    `Assigned labels to ${successfulMediaItems.length} of ${mediaItems.length} media items ` +
-                    `(${failedMediaItems.length} failed)`,
-            });
-        }
-
-        assignLabel.invalidateQueries();
+        await bulkAssignLabel.mutate(
+            mediaItemImages.map(({ id }) => id),
+            labelIds
+        );
 
         onClose();
     };
@@ -159,7 +137,7 @@ export const BulkLabelsAssignmentDialog = ({ files, onClose }: BulkLabelsAssignm
                     onClose={onClose}
                     onSkip={handleSkip}
                     onContinue={handleAccept}
-                    isContinuePending={uploadProgress.isUploading || assignLabel.isPending}
+                    isContinuePending={uploadProgress.isUploading || bulkAssignLabel.isPending}
                     isSkipPending={uploadProgress.isUploading}
                     isMultiLabelClassification={isMultiLabelClassification}
                 />

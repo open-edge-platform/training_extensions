@@ -7,24 +7,21 @@ import { getMockedModel } from 'mocks/mock-model';
 import { getMockedVariant } from 'mocks/mock-model-variant';
 import { render } from 'test-utils/render';
 
-import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
+import { downloadFile } from '../../../../shared/util';
 import { ModelVariantTable } from './model-variant-table.component';
 
-vi.mock('../../hooks/api/use-download-model.hook', () => ({
-    useDownloadModel: vi.fn(),
+vi.mock('../../../../shared/util', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../../../../shared/util')>()),
+    downloadFile: vi.fn(),
 }));
 
-const mockDownloadModel = vi.fn();
+vi.mock('hooks/use-project-identifier.hook', () => ({
+    useProjectIdentifier: () => 'project-123',
+}));
 
 describe('ModelVariantTable', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-
-        vi.mocked(useDownloadModel).mockReturnValue({
-            downloadModel: mockDownloadModel,
-            isDownloading: false,
-            error: null,
-        });
     });
 
     it('shows primary testing metric value for a variant', () => {
@@ -47,11 +44,11 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('Accuracy')).toBeInTheDocument();
-        expect(screen.getByText('92%')).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', { name: 'Accuracy' })).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('92%');
     });
 
-    it('falls back to fp32 pytorch primary metric when current variant evaluations are empty', () => {
+    it('falls back to fp32 pytorch primary metric when evaluations are empty', () => {
         const model = getMockedModel({
             variants: [
                 getMockedVariant({
@@ -77,8 +74,46 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('mAP')).toBeInTheDocument();
-        expect(screen.getByText('87%')).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', { name: 'mAP' })).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('87%');
+    });
+
+    it('shows size and performance deltas for the quantized variant', () => {
+        const model = getMockedModel({
+            variants: [
+                getMockedVariant({
+                    id: 'ov-fp16',
+                    format: 'openvino',
+                    precision: 'fp16',
+                    weights_size: 1000,
+                    evaluations: [
+                        {
+                            dataset_revision_id: 'dataset-1',
+                            subset: 'testing',
+                            metrics: [{ name: 'Accuracy', value: 0.92, primary: true }],
+                        },
+                    ],
+                }),
+                getMockedVariant({
+                    id: 'ov-int8',
+                    format: 'openvino',
+                    precision: 'int8',
+                    weights_size: 500,
+                    evaluations: [
+                        {
+                            dataset_revision_id: 'dataset-1',
+                            subset: 'testing',
+                            metrics: [{ name: 'Accuracy', value: 0.89, primary: true }],
+                        },
+                    ],
+                }),
+            ],
+        });
+
+        render(<ModelVariantTable model={model} format='openvino' />);
+
+        expect(screen.getByText('-50%')).toHaveStyle({ color: 'var(--moss-tint-1)' });
+        expect(screen.getByText('-3%')).toHaveStyle({ color: 'var(--coral-shade-1)' });
     });
 
     it('does not fallback value when variant has evaluations but no primary metric', () => {
@@ -113,8 +148,8 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('mAP')).toBeInTheDocument();
-        expect(screen.getByText('-')).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', { name: 'mAP' })).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
         expect(screen.queryByText('87%')).not.toBeInTheDocument();
     });
 
@@ -132,8 +167,8 @@ describe('ModelVariantTable', () => {
 
         render(<ModelVariantTable model={model} format='openvino' />);
 
-        expect(screen.getByText('Score')).toBeInTheDocument();
-        expect(screen.getByText('-')).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', { name: 'Score' })).toBeInTheDocument();
+        expect(screen.getByTestId('model-variant-value-accuracy-fp16')).toHaveTextContent('-');
     });
 
     it('triggers download for selected variant', async () => {
@@ -151,6 +186,8 @@ describe('ModelVariantTable', () => {
 
         await userEvent.click(screen.getByRole('button', { name: 'Download model ov-1' }));
 
-        expect(mockDownloadModel).toHaveBeenCalledWith('ov-1');
+        expect(downloadFile).toHaveBeenCalledWith(
+            expect.stringContaining(`/api/projects/project-123/models/${model.id}/variants/ov-1/binary`)
+        );
     });
 });
