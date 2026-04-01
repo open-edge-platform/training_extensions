@@ -528,8 +528,7 @@ test.describe('Annotator', () => {
                 })
             );
 
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await test.step('Draws an annotation in annotation mode', async () => {
                 await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
@@ -554,7 +553,7 @@ test.describe('Annotator', () => {
                 await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
 
                 await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
-                await expect(page.getByLabel('Labels')).toBeHidden();
+                await expect(page.getByLabel('Labels', { exact: true })).toBeHidden();
 
                 await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
                 expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);
@@ -584,7 +583,6 @@ test.describe('Annotator', () => {
 
         test('Automatically switches to annotation mode when there are annotations, no matter predictions', async ({
             annotatorPage,
-            page,
             network,
         }) => {
             network.use(
@@ -622,7 +620,7 @@ test.describe('Annotator', () => {
                 })
             );
 
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
@@ -630,7 +628,6 @@ test.describe('Annotator', () => {
 
         test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
             annotatorPage,
-            page,
             network,
         }) => {
             network.use(
@@ -660,7 +657,7 @@ test.describe('Annotator', () => {
                 })
             );
 
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
