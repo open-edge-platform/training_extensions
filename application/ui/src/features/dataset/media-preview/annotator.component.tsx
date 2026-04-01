@@ -1,9 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { useState } from 'react';
 
-import type { Media } from '../../../constants/shared-types';
+import { Key, View } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
+import { $api } from '../../../api/client';
+import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
@@ -15,6 +19,43 @@ import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { useNextMediaPrefetch } from './utils';
+
+const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
+const isDatasetSubset = (key: Key | null): key is DatasetSubset => DATASET_SUBSETS.includes(key as DatasetSubset);
+
+const useSubsets = (mediaItem: Media) => {
+    const projectId = useProjectIdentifier();
+    const [pendingSubset, setPendingSubset] = useState<DatasetSubset | null>(null);
+    const [prevMediaItemId, setPrevMediaItemId] = useState(mediaItem.id);
+
+    if (prevMediaItemId !== mediaItem.id) {
+        setPrevMediaItemId(mediaItem.id);
+        setPendingSubset(null);
+    }
+
+    const datasetItemParams = { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } };
+
+    const { data } = $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/dataset/items/{dataset_item_id}',
+        datasetItemParams
+    );
+
+    const handleSubsetChange = (key: Key | null) => {
+        if (isDatasetSubset(key)) {
+            setPendingSubset(key);
+        }
+    };
+
+    const currentSubset: DatasetSubset = data?.subset ?? 'unassigned';
+    const subset: DatasetSubset = pendingSubset ?? currentSubset;
+
+    return {
+        isUserReviewed: data?.user_reviewed ?? false,
+        subset,
+        handleSubsetChange,
+    };
+};
 
 type AnnotatorProps = {
     image: ImageData;
@@ -36,6 +77,7 @@ const Annotator = ({
     onClose,
 }: AnnotatorProps) => {
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
+    const { isUserReviewed, subset, handleSubsetChange } = useSubsets(mediaItem);
 
     const selectNextMediaItem = async () => {
         if (nextMediaItem === undefined) {
@@ -59,6 +101,7 @@ const Annotator = ({
                     onSelectedMediaItem={onSelectedMediaItem}
                     onModeChange={onChangeAnnotatorMode}
                     onSelectNextMediaItem={selectNextMediaItem}
+                    subset={subset}
                 />
             </View>
 
@@ -75,7 +118,12 @@ const Annotator = ({
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} hideHotkeys={isPredictionMode} />
+                <BottomToolbar
+                    isUserReviewed={isUserReviewed}
+                    subset={subset}
+                    handleSubsetChange={handleSubsetChange}
+                    mediaItem={mediaItem}
+                />
             </View>
 
             <View gridArea={'canvas'} overflow={'hidden'}>

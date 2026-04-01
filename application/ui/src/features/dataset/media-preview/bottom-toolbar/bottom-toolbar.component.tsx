@@ -4,12 +4,9 @@
 import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
 import { clsx } from 'clsx';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { capitalize } from 'lodash-es';
 
-import { $api } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -21,46 +18,21 @@ import classes from './bottom-toolbar.module.scss';
 
 type BottomToolbarProps = {
     mediaItem: Media;
+    isUserReviewed?: boolean;
+    subset: DatasetSubset;
+    handleSubsetChange?: (key: Key | null) => void;
     hideHotkeys?: boolean;
 };
 
-const DATASET_ITEM_OPERATION = 'get';
-const DATASET_ITEM_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}';
-
-type AssignableSubset = Exclude<DatasetSubset, 'unassigned'>;
-
-const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !== null && key !== 'unassigned';
-
-const useSubsets = (mediaItem: Media) => {
-    const projectId = useProjectIdentifier();
-    const { pendingSubset, setPendingSubset } = useAnnotationActions();
-
-    const datasetItemParams = { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } };
-
-    const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
-
-    const handleSubsetChange = (key: Key | null) => {
-        if (!isAssignableSubset(key)) return;
-
-        setPendingSubset(key);
-    };
-
-    const currentSubset = data?.subset ?? null;
-    const isUnassigned = (currentSubset === 'unassigned' || currentSubset === null) && pendingSubset === null;
-    const displaySubset = pendingSubset ?? currentSubset;
-
-    return {
-        isUserReviewed: data?.user_reviewed ?? false,
-        isUnassigned,
-        displaySubset,
-        handleSubsetChange,
-    };
-};
-
-export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) => {
+export const BottomToolbar = ({
+    hideHotkeys,
+    mediaItem,
+    isUserReviewed,
+    subset,
+    handleSubsetChange,
+}: BottomToolbarProps) => {
+    const isUnassigned = subset === 'unassigned';
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
-
-    const { isUserReviewed, isUnassigned, displaySubset, handleSubsetChange } = useSubsets(mediaItem);
 
     return (
         <Flex justifyContent={'end'}>
@@ -96,7 +68,7 @@ export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) =>
                                     <Item key={'training'}>Training</Item>
                                 </Picker>
                             ) : (
-                                <Tag withDot={false} text={capitalize(String(displaySubset))} />
+                                <Tag withDot={false} text={capitalize(subset)} />
                             )}
                         </Flex>
                     </Toolbar.Section>

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useMemo, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useRef } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEqual } from 'lodash-es';
@@ -17,8 +17,6 @@ import { mapLocalAnnotationsToServer, mapServerAnnotationsToLocal } from './anno
 import type { AnnotatorMode } from './annotator-mode';
 import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
-type AssignableSubset = Exclude<DatasetSubset, 'unassigned'>;
-
 type AnnotationsContextValue = {
     annotations: Annotation[];
     canSubmit: boolean;
@@ -26,14 +24,12 @@ type AnnotationsContextValue = {
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
-    submitAnnotations: () => Promise<void>;
+    submitAnnotations: (subset?: DatasetSubset) => Promise<void>;
     resetAnnotations: () => void;
     replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
     isSaving: boolean;
     isReadOnlyMode: boolean;
-    pendingSubset: AssignableSubset | null;
-    setPendingSubset: (subset: AssignableSubset) => void;
 };
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
@@ -98,20 +94,12 @@ export const AnnotationActionsProvider = ({
     }, [initialAnnotationsDTO, projectLabels]);
 
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(initialAnnotations);
-    const [pendingSubset, setPendingSubset] = useState<AssignableSubset | null>(null);
 
     const resetAnnotations = () => {
         undoRedoActions.reset(initialAnnotations);
     };
 
     const prevInitialAnnotationsDTORef = useRef(initialAnnotationsDTO);
-    const prevMediaItemIdRef = useRef(mediaItem.id);
-
-    // Reset annotations and pending subset when the media item changes.
-    if (prevMediaItemIdRef.current !== mediaItem.id) {
-        setPendingSubset(null);
-        prevMediaItemIdRef.current = mediaItem.id;
-    }
 
     // Reset annotations when source annotations change.
     if (!isEqual(prevInitialAnnotationsDTORef.current, initialAnnotationsDTO)) {
@@ -168,7 +156,7 @@ export const AnnotationActionsProvider = ({
         setAnnotations(() => newAnnotations);
     };
 
-    const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
+    const saveAnnotations = async (annotationsDTO: AnnotationDTO[], subset?: DatasetSubset) => {
         const query = isVideoFrame(mediaItem)
             ? {
                   frame_index: mediaItem.frame_number,
@@ -177,10 +165,9 @@ export const AnnotationActionsProvider = ({
 
         await saveMutation.mutateAsync({
             params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
-            body: { annotations: annotationsDTO, subset: pendingSubset ?? undefined },
+            body: { annotations: annotationsDTO, subset: subset ?? undefined },
         });
 
-        setPendingSubset(null);
         undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
@@ -192,14 +179,14 @@ export const AnnotationActionsProvider = ({
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
     };
 
-    const submitAnnotations = async () => {
+    const submitAnnotations = async (subset?: DatasetSubset) => {
         if (mode === 'prediction') {
             await submitPredictions();
         } else {
             const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
             const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
 
-            await saveAnnotations(serverAnnotations);
+            await saveAnnotations(serverAnnotations, subset);
         }
     };
 
@@ -239,8 +226,6 @@ export const AnnotationActionsProvider = ({
 
                 isSaving: saveMutation.isPending,
                 isReadOnlyMode,
-                pendingSubset,
-                setPendingSubset,
             }}
         >
             <UndoRedoProvider state={undoRedoActions}>{children}</UndoRedoProvider>
