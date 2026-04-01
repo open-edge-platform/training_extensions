@@ -72,7 +72,9 @@ export const Dataset = () => {
                     fetchNextPage={handleNextPageFetch}
                     isUserReviewed={handleUserReviewedChange}
                     hasActiveFilter={filterStatus !== null}
-                    isFetchingNextPage={mediaItemsResponse.isFetchingNextPage}
+                    isFetchingNextPage={
+                        mediaItemsResponse.isFetchingNextPage || responseDatasetItems.isFetchingNextPage
+                    }
                 />
             </View>
         </Grid>

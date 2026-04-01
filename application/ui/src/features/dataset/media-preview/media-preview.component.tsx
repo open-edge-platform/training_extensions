@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 
 import { Content, Dialog, Grid, View } from '@geti/ui';
+import { useGetDatasetItemsById } from 'hooks/use-get-dataset-items-by-id.hook';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';
@@ -34,9 +35,9 @@ type MediaPreviewContentProps = {
     items: Media[];
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
-    hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
+    isUserReviewed: (mediaItemId: string) => boolean;
 };
 
 type MediaPreviewPanelsProps = {
@@ -45,9 +46,9 @@ type MediaPreviewPanelsProps = {
     items: Media[];
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
-    hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
+    isUserReviewed: (mediaItemId: string) => boolean;
 };
 
 const MediaPreviewPanels = ({
@@ -56,9 +57,9 @@ const MediaPreviewPanels = ({
     items,
     onClose,
     onSelectedMediaItem,
-    hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    isUserReviewed,
 }: MediaPreviewPanelsProps) => {
     const { mediaItem } = useSelectedMediaItem();
     const handleMediaTransition = useAnnotatorMediaTransition({ onSelectedMediaItem });
@@ -77,9 +78,9 @@ const MediaPreviewPanels = ({
                 <SidebarItems
                     items={items}
                     mediaItem={mediaItem}
-                    hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
+                    isUserReviewed={isUserReviewed}
                     onSelectedMediaItem={handleMediaTransition}
                 />
             </View>
@@ -91,9 +92,9 @@ const MediaPreviewContent = ({
     items,
     onSelectedMediaItem,
     onClose,
-    hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    isUserReviewed,
 }: MediaPreviewContentProps) => {
     const { mediaItem } = useSelectedMediaItem();
     const { selectedModelId } = usePredictionSetup();
@@ -107,11 +108,11 @@ const MediaPreviewContent = ({
             : null,
     });
 
-    const isUserReviewed = annotationsData?.user_reviewed ?? false;
+    const isCurrentMediaReviewed = annotationsData?.user_reviewed ?? false;
 
     const initialAnnotations = useMemo(() => {
-        return getInitialAnnotations(isUserReviewed, annotationsData?.annotations ?? []);
-    }, [isUserReviewed, annotationsData?.annotations]);
+        return getInitialAnnotations(isCurrentMediaReviewed, annotationsData?.annotations ?? []);
+    }, [isCurrentMediaReviewed, annotationsData?.annotations]);
 
     const initialPredictions = useMemo(() => {
         return predictionsData?.flatMap((predictionData) => predictionData.prediction) ?? [];
@@ -125,7 +126,7 @@ const MediaPreviewContent = ({
                 mediaItem={mediaItem}
                 initialAnnotationsDTO={initialAnnotations}
                 initialPredictionsDTO={initialPredictions}
-                isUserReviewed={isUserReviewed}
+                isUserReviewed={isCurrentMediaReviewed}
                 mode={mode}
             >
                 <MediaPreviewPanels
@@ -134,9 +135,9 @@ const MediaPreviewContent = ({
                     items={items}
                     onClose={onClose}
                     onSelectedMediaItem={onSelectedMediaItem}
-                    hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
+                    isUserReviewed={isUserReviewed}
                 />
             </AnnotatorProviders>
         </ToolProvider>
@@ -144,7 +145,22 @@ const MediaPreviewContent = ({
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetMediaItems();
+    const mediaItemsResponse = useGetDatasetMediaItems();
+    const responseDatasetItems = useGetDatasetItemsById({});
+
+    const handleNextPageFetch = () => {
+        if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
+            mediaItemsResponse.fetchNextPage();
+        }
+
+        if (responseDatasetItems.hasNextPage && !responseDatasetItems.isFetchingNextPage) {
+            responseDatasetItems.fetchNextPage();
+        }
+    };
+
+    const handleUserReviewedChange = (mediaItemId: string) => {
+        return responseDatasetItems.reviewStatus.get(mediaItemId) ?? false;
+    };
 
     return (
         <Dialog
@@ -171,12 +187,14 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     <SelectedMediaItemProvider mediaItem={mediaItem}>
                         <PredictionsSetupProvider>
                             <MediaPreviewContent
-                                items={items}
+                                items={mediaItemsResponse.items}
                                 onClose={close}
                                 onSelectedMediaItem={onSelectedMediaItem}
-                                hasNextPage={hasNextPage}
-                                isFetchingNextPage={isFetchingNextPage}
-                                fetchNextPage={fetchNextPage}
+                                isFetchingNextPage={
+                                    mediaItemsResponse.isFetchingNextPage || responseDatasetItems.isFetchingNextPage
+                                }
+                                fetchNextPage={handleNextPageFetch}
+                                isUserReviewed={handleUserReviewedChange}
                             />
                         </PredictionsSetupProvider>
                     </SelectedMediaItemProvider>
