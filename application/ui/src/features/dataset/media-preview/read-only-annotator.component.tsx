@@ -9,7 +9,6 @@ import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
-import { AnnotationsCanvas } from './annotations-canvas/annotations-canvas.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { Toolbar } from './toolbar-container/toolbar-container.component';
@@ -52,11 +51,11 @@ export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose }: ReadOnlyA
                 </Flex>
             </View>
 
-            <AnnotationsCanvas isReadOnly>
+            <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
                     <AnnotatorCanvas isReadOnly mediaItem={mediaItem} image={image} mode={mode} />
                 </AnnotatorCanvasSettings>
-            </AnnotationsCanvas>
+            </View>
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>

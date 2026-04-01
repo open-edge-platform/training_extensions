@@ -1,8 +1,0 @@
-.readOnlyCanvas {
-    /* Disable interactions on annotation shapes only */
-    & [aria-label*='annotation'] *,
-    & [aria-label*='prediction'] *,
-    & [aria-label*='Annotation labels'] * {
-        pointer-events: none !important;
-    }
-}

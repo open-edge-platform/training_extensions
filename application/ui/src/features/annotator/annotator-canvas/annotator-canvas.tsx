@@ -111,6 +111,7 @@ export const AnnotatorCanvas = ({ mode, mediaItem, image, isReadOnly = false }: 
             <div
                 style={{ position: 'relative', height: '100%', width: '100%' }}
                 onContextMenu={(event: MouseEvent): void => event.preventDefault()}
+                className={isReadOnly ? classes.readOnlyCanvas : undefined}
             >
                 <MediaImage image={image} mediaItem={mediaItem} />
 

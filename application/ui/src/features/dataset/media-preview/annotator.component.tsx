@@ -10,7 +10,6 @@ import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canv
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
 import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-toolbar.component';
-import { AnnotationsCanvas } from './annotations-canvas/annotations-canvas.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
@@ -79,11 +78,11 @@ const Annotator = ({
                 <BottomToolbar mediaItem={mediaItem} hideHotkeys={isPredictionMode} />
             </View>
 
-            <AnnotationsCanvas isReadOnly={isPredictionMode}>
+            <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
                     <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} isReadOnly={isPredictionMode} />
                 </AnnotatorCanvasSettings>
-            </AnnotationsCanvas>
+            </View>
         </>
     );
 };
