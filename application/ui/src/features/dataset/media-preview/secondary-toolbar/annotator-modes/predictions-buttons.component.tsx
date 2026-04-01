@@ -46,7 +46,10 @@ export const PredictionButtons = ({ onSubmit, onModeChange, isDisabled }: Predic
                 <Text>Confirm prediction</Text>
             </ActionButton>
 
-            <EditPredictionButton onEditPrediction={handleEditPrediction} isDisabled={isEmpty(annotations)} />
+            <EditPredictionButton
+                onEditPrediction={handleEditPrediction}
+                isDisabled={isEmpty(annotations) || isDisabled}
+            />
         </>
     );
 };
