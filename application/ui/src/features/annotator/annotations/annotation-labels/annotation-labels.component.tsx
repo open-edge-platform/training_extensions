@@ -62,6 +62,7 @@ export const AnnotationLabels = ({
             width={foreignObjectWidth}
             height={foreignObjectHeight}
             overflow='visible'
+            aria-label={`Annotation labels`}
         >
             <div
                 className={useBottomCorners ? classes.labelsContainerPolygon : classes.labelsContainerRect}
