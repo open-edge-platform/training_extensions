@@ -1,39 +1,71 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { usePrefetchQuery, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { $api } from '../api/client';
 import type { DatasetItemAnnotationStatus, DatasetSubset } from '../constants/shared-types';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
+const DATASET_ITEMS_LIMIT = 20;
+
 type UseGetDatasetItemsOptions = {
-    limit: number;
     annotationStatus?: DatasetItemAnnotationStatus;
     subset?: DatasetSubset;
-};
-
-const getDatasetItemsQueryOptions = (projectId: string, options?: UseGetDatasetItemsOptions) => {
-    return $api.queryOptions('get', '/api/projects/{project_id}/dataset/items', {
-        params: {
-            path: { project_id: projectId },
-            query: {
-                annotation_status: options?.annotationStatus,
-                limit: options?.limit,
-                subset: options?.subset,
-            },
-        },
-    });
 };
 
 export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
     const projectId = useProjectIdentifier();
 
-    return useQuery(getDatasetItemsQueryOptions(projectId, options));
-};
+    const query: {
+        offset: number;
+        limit: number;
+        subset?: DatasetSubset;
+        annotation_status?: DatasetItemAnnotationStatus;
+    } = {
+        offset: 0,
+        limit: DATASET_ITEMS_LIMIT,
+    };
 
-export const usePrefetchDatasetItems = (options?: UseGetDatasetItemsOptions) => {
-    const projectId = useProjectIdentifier();
+    if (options?.subset !== undefined) {
+        query.subset = options.subset;
+    }
 
-    return usePrefetchQuery(getDatasetItemsQueryOptions(projectId, options));
+    if (options?.annotationStatus !== undefined) {
+        query.annotation_status = options.annotationStatus;
+    }
+
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
+        'get',
+        '/api/projects/{project_id}/dataset/items',
+        {
+            params: {
+                query,
+                path: { project_id: projectId },
+            },
+        },
+        {
+            pageParamName: 'offset',
+            getNextPageParam: ({
+                pagination,
+            }: {
+                pagination: { offset: number; limit: number; count: number; total: number };
+            }) => {
+                const total = pagination.offset + pagination.count;
+
+                if (total >= pagination.total) {
+                    return undefined;
+                }
+
+                return pagination.offset + DATASET_ITEMS_LIMIT;
+            },
+        }
+    );
+
+    const items = useMemo(() => {
+        return data?.pages.flatMap((page) => page.items) ?? [];
+    }, [data?.pages]);
+    const totalCount = data?.pages[0]?.pagination?.total ?? 0;
+
+    return { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount };
 };

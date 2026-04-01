@@ -9,8 +9,7 @@ import { GridLayoutOptions } from 'react-aria-components';
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItemAnnotationStatus, Media } from '../../../constants/shared-types';
-import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
+import type { Media } from '../../../constants/shared-types';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../providers/selected-data-provider.component';
@@ -24,13 +23,12 @@ import { useUploadFiles } from './use-upload-files';
 
 type GalleryProps = {
     items: Media[];
-    annotationStatus?: DatasetItemAnnotationStatus;
     viewMode: ViewModes;
     isPending: boolean;
     hasActiveFilter: boolean;
-    hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
+    isUserReviewed: (mediaItemId: string) => boolean;
 };
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
@@ -42,26 +40,23 @@ const VIEW_MODE_SETTINGS = {
 
 type GalleryListProps = {
     items: Media[];
-    annotationStatus?: DatasetItemAnnotationStatus;
     viewMode: ViewModes;
-    hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
+    isUserReviewed: (mediaItemId: string) => boolean;
     onSelectedMediaItemChange: (item: Media) => void;
 };
 
 const GalleryList = ({
     items,
-    annotationStatus,
     viewMode,
-    hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
     onSelectedMediaItemChange,
+    isUserReviewed,
 }: GalleryListProps) => {
     const projectId = useProjectIdentifier();
     const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length, annotationStatus });
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
@@ -73,7 +68,7 @@ const GalleryList = ({
             selectedKeys={selectedKeys}
             layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
             isLoadingMore={isFetchingNextPage}
-            onLoadMore={() => hasNextPage && fetchNextPage()}
+            onLoadMore={fetchNextPage}
             onSelectionChange={setSelectedKeys}
             contentItem={(item) => {
                 const mediaUrl = getThumbnailUrl(projectId, item.id);
@@ -113,12 +108,9 @@ const GalleryList = ({
                                 onAnnotate={() => onSelectedMediaItemChange(item)}
                             />
                         )}
-                        bottomRightElement={() => {
-                            const mediaItemId = String(item.id);
-                            const isUserReviewed = datasetItemsById.get(mediaItemId) ?? false;
-
-                            return <AnnotationStatusIcon state={isUserReviewed ? 'accepted' : undefined} />;
-                        }}
+                        bottomRightElement={() => (
+                            <AnnotationStatusIcon state={isUserReviewed(item.id) ? 'accepted' : undefined} />
+                        )}
                     />
                 );
             }}
@@ -128,13 +120,12 @@ const GalleryList = ({
 
 export const Gallery = ({
     items,
-    annotationStatus,
     viewMode,
     isPending,
     hasActiveFilter,
-    hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    isUserReviewed,
 }: GalleryProps) => {
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
 
@@ -147,11 +138,10 @@ export const Gallery = ({
             <GalleryList
                 items={items}
                 viewMode={viewMode}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
                 fetchNextPage={fetchNextPage}
-                annotationStatus={annotationStatus}
+                isUserReviewed={isUserReviewed}
                 onSelectedMediaItemChange={onSelectedMediaItemChange}
+                isFetchingNextPage={isFetchingNextPage}
             />
         );
 
@@ -170,6 +160,7 @@ export const Gallery = ({
                     )}
                 </DialogContainer>
             </DatasetDropZone>
+
             {isClassification && (
                 <BulkLabelsAssignmentDialog files={filesForLabelAssignment} onClose={clearFilesForLabelAssignment} />
             )}
