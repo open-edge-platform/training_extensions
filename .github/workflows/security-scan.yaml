@@ -132,15 +132,6 @@ jobs:
             -p 7860:7860 \
             "$IMAGE_NAME"
 
-          # Cleanup container on exit
-          cleanup() {
-              echo "--- Container logs ---"
-              docker logs "$CONTAINER_NAME" || true
-              echo "--- Stopping container ---"
-              docker stop "$CONTAINER_NAME" || true
-          }
-          trap cleanup EXIT
-
           TEST_URL="localhost:7860"
           # Wait for container to be ready (max 60 seconds)
           echo "Waiting for container to be ready..."
