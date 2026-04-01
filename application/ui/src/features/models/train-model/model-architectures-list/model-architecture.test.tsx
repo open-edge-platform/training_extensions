@@ -13,11 +13,7 @@ import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/
 import { ModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-const renderComponent = ({
+const renderModelArchitecture = ({
     activeModelArchitectureId = undefined,
     selectedModelArchitectureId = null,
     onSelectedModelArchitectureIdChange = vi.fn(),
@@ -49,14 +45,14 @@ const renderComponent = ({
 describe('ModelArchitecture', () => {
     it('renders the model architecture name and number of parameters', () => {
         const modelArchitecture = getMockedModelArchitecture({ name: 'Deim-DFine-L' });
-        renderComponent({ modelArchitecture });
+        renderModelArchitecture({ modelArchitecture });
 
         expect(screen.getByText(modelArchitecture.name)).toBeVisible();
         expect(screen.getByText(`${modelArchitecture.stats.trainable_parameters} million`)).toBeVisible();
     });
 
     it('does not render the "Active model" badge when the architecture is not active', () => {
-        renderComponent({
+        renderModelArchitecture({
             activeModelArchitectureId: 'some-other-id',
             modelArchitecture: getMockedModelArchitecture({ id: 'Object_Detection_Deim_DFine_L' }),
         });
@@ -65,7 +61,7 @@ describe('ModelArchitecture', () => {
     });
 
     it('renders the "Active model" badge when the architecture is active', () => {
-        renderComponent({
+        renderModelArchitecture({
             activeModelArchitectureId: 'Object_Detection_Deim_DFine_L',
             modelArchitecture: getMockedModelArchitecture({ id: 'Object_Detection_Deim_DFine_L' }),
         });
@@ -74,19 +70,19 @@ describe('ModelArchitecture', () => {
     });
 
     it('does not render a performance category badge when performanceCategory is undefined', () => {
-        renderComponent({ modelArchitecture: getMockedModelArchitecture({ performanceCategory: undefined }) });
+        renderModelArchitecture({ modelArchitecture: getMockedModelArchitecture({ performanceCategory: undefined }) });
 
         expect(screen.queryByText(/speed|balance|accuracy/i)).not.toBeInTheDocument();
     });
 
     it('renders the performance category badge when performanceCategory is defined', () => {
-        renderComponent({ modelArchitecture: getMockedModelArchitecture({ performanceCategory: 'speed' }) });
+        renderModelArchitecture({ modelArchitecture: getMockedModelArchitecture({ performanceCategory: 'speed' }) });
 
         expect(screen.getByText('Speed')).toBeVisible();
     });
 
     it('renders both "Active model" badge and performance category badge when both apply', () => {
-        renderComponent({
+        renderModelArchitecture({
             activeModelArchitectureId: 'Object_Detection_Deim_DFine_L',
             modelArchitecture: getMockedModelArchitecture({ performanceCategory: 'balance' }),
         });
@@ -99,7 +95,7 @@ describe('ModelArchitecture', () => {
         const user = userEvent.setup();
         const onSelectedModelArchitectureIdChange = vi.fn();
 
-        renderComponent({ onSelectedModelArchitectureIdChange });
+        renderModelArchitecture({ onSelectedModelArchitectureIdChange });
 
         await user.click(screen.getByText('Deim-DFine-L'));
 
@@ -107,7 +103,7 @@ describe('ModelArchitecture', () => {
     });
 
     it('renders the radio button as selected when selectedModelArchitectureId matches', () => {
-        renderComponent({
+        renderModelArchitecture({
             selectedModelArchitectureId: 'Object_Detection_Deim_DFine_L',
             modelArchitecture: getMockedModelArchitecture({ id: 'Object_Detection_Deim_DFine_L' }),
         });
@@ -116,7 +112,7 @@ describe('ModelArchitecture', () => {
     });
 
     it('renders the radio button as not selected when selectedModelArchitectureId does not match', () => {
-        renderComponent({
+        renderModelArchitecture({
             selectedModelArchitectureId: 'some-other-id',
             modelArchitecture: getMockedModelArchitecture({ id: 'Object_Detection_Deim_DFine_L' }),
         });
@@ -125,7 +121,7 @@ describe('ModelArchitecture', () => {
     });
 
     it('renders the radio button as not selected when selectedModelArchitectureId is null', () => {
-        renderComponent({ selectedModelArchitectureId: null });
+        renderModelArchitecture({ selectedModelArchitectureId: null });
 
         expect(screen.getByRole('radio', { name: 'Deim-DFine-L' })).not.toBeChecked();
     });
