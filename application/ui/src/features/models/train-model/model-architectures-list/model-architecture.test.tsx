@@ -48,7 +48,9 @@ describe('ModelArchitecture', () => {
         renderModelArchitecture({ modelArchitecture });
 
         expect(screen.getByText(modelArchitecture.name)).toBeVisible();
-        expect(screen.getByText(`${modelArchitecture.stats.trainable_parameters} million`)).toBeVisible();
+        expect(
+            screen.getByText(`Number of parameters: ${modelArchitecture.stats.trainable_parameters} million`)
+        ).toBeVisible();
     });
 
     it('does not render the "Active model" badge when the architecture is not active', () => {
