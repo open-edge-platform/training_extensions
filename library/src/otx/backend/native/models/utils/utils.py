@@ -8,11 +8,14 @@ from __future__ import annotations
 import copy
 import os
 import re
+import ssl
+import urllib.request
 from collections import OrderedDict, abc, namedtuple
 from pathlib import Path
 from typing import Any, Callable, Iterator, Sequence, Union
 from warnings import warn
 
+import certifi
 import numpy as np
 import torch
 from torch import distributed as torch_dist
@@ -131,6 +134,10 @@ def load_from_http(
         None
 
     """
+    # Use certifi's CA bundle to fix SSL certificate verification on Windows
+    ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+    urllib.request.install_opener(urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_ctx)))
+
     rank, world_size = get_dist_info()
     if rank == 0:
         checkpoint = load_url(filename, model_dir=model_dir, map_location=map_location, progress=progress)
