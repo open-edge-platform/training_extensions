@@ -58,7 +58,6 @@ class ResizeObserverMock {
 
 global.ResizeObserver = ResizeObserverMock;
 
-// Mock IntersectionObserver which is not available in jsdom
 class IntersectionObserverMock {
     constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
 
