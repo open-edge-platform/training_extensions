@@ -56,7 +56,7 @@ jobs:
   renovate:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: overflow
 
     steps:
       - name: Checkout

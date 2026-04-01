@@ -58,7 +58,6 @@ overrides:
       - 640
       - 640
     train_subset:
-      num_workers: 4
       batch_size: 8
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.Resize
@@ -80,7 +79,6 @@ overrides:
             std: [1.0, 1.0, 1.0]
       augmentations_gpu: []
     val_subset:
-      num_workers: 4
       batch_size: 8
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.Resize
@@ -94,7 +92,6 @@ overrides:
             std: [1.0, 1.0, 1.0]
       augmentations_gpu: []
     test_subset:
-      num_workers: 4
       batch_size: 8
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.Resize

@@ -16,6 +16,7 @@ from app.db import get_db_session
 from app.models import BatchInferenceInput, BatchInferenceMedia, BatchInferencePrediction, BatchInferenceResult, Label
 from app.models.inference import InferenceModel, InferenceState, InferenceStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
+from app.models.system import DeviceInfo
 from app.services import ResourceNotFoundError, ResourceType
 from app.services.data_collect.prediction_converter import convert_prediction
 from app.utils.ir_format import FP32OpenvinoAdapter
@@ -27,7 +28,7 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 class _LoadedModel:
     id: UUID
     model: Model
-    device: str
+    device: DeviceInfo
     load_timestamp: datetime
 
 
@@ -46,7 +47,7 @@ class InferenceServer:
         self._loading_model: bool = False
         self._lock = threading.Lock()
 
-    def set_inference_model(self, project_id: UUID, model_id: UUID, device: str, ttl: int) -> bool:
+    def set_inference_model(self, project_id: UUID, model_id: UUID, device: DeviceInfo, ttl: int) -> bool:
         """
         Load the specified model for inference.
         If the same model is already loaded on the same device, it does nothing.
@@ -103,7 +104,7 @@ class InferenceServer:
                 adapter = FP32OpenvinoAdapter(
                     ie,
                     str(model_xml_path),
-                    device=device,
+                    device=device.as_openvino,
                     max_num_requests=int(MODELAPI_NSTREAMS),
                 )
                 model = Model.create_model(adapter)

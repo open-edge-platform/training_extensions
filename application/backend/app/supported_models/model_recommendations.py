@@ -19,8 +19,8 @@ RECOMMENDED_MODEL_ARCHITECTURES = {
         ModelArchitectureCategory.SPEED: "image-classification-mobilenet-v3-large",
     },
     TaskType.DETECTION: {
-        ModelArchitectureCategory.BALANCE: "object-detection-deim-d-fine-m",
-        ModelArchitectureCategory.ACCURACY: "object-detection-deim-d-fine-l",
+        ModelArchitectureCategory.BALANCE: "object-detection-dfine-m",
+        ModelArchitectureCategory.ACCURACY: "object-detection-dfine-l",
         ModelArchitectureCategory.SPEED: "object-detection-yolox-s",
     },
     TaskType.INSTANCE_SEGMENTATION: {

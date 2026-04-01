@@ -30,14 +30,7 @@ hyperparameters:
     input_size_width: 640
     input_size_height: 640
   dataset_preparation:
-    augmentation: # will be configurable with the future release
-      iou_random_crop: null
-      random_affine: null
-      random_horizontal_flip: null
-      random_vertical_flip: null
-      gaussian_blur: null
-      color_jitter: null
-      gaussian_noise: null
-      random_erasing: null
-      random_grayscale: null
-      random_sharpness: null
+    augmentation:
+      deim_framework: true
+      random_zoom_out:
+        enable: true

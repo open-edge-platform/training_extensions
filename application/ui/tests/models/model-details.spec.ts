@@ -22,19 +22,31 @@ const mockedModel = getMockedModel({
     },
     variants: [
         {
-            id: 'variant-openvino-int8',
-            format: 'openvino',
-            precision: 'int8',
-            weights_size: 52428800,
-            evaluations: [],
-            files_deleted: false,
-        },
-        {
             id: 'variant-openvino-fp32',
             format: 'openvino',
             precision: 'fp32',
             weights_size: 209715200,
-            evaluations: [],
+            evaluations: [
+                {
+                    dataset_revision_id: 'dataset-1',
+                    subset: 'testing',
+                    metrics: [{ name: 'Accuracy', value: 0.82, primary: true }],
+                },
+            ],
+            files_deleted: false,
+        },
+        {
+            id: 'variant-openvino-int8',
+            format: 'openvino',
+            precision: 'int8',
+            weights_size: 52428800,
+            evaluations: [
+                {
+                    dataset_revision_id: 'dataset-1',
+                    subset: 'testing',
+                    metrics: [{ name: 'Accuracy', value: 0.79, primary: true }],
+                },
+            ],
             files_deleted: false,
         },
         {
@@ -235,7 +247,7 @@ test.describe('Model Details', () => {
             await expect.poll(() => modelVariantId).not.toBeUndefined();
         });
 
-        test('can start quantization with custom parameters', async ({ network, modelsPage }) => {
+        test('can start quantization with custom parameters', async ({ network, page, modelsPage }) => {
             let submittedJobBody: Record<string, unknown> | null = null;
 
             network.use(
@@ -282,6 +294,19 @@ test.describe('Model Details', () => {
                     max_calibration_subset_size: 300,
                 },
             });
+
+            await expect(modelsPage.getQuantizationDialog()).toBeHidden();
+
+            const variantsTable = page.getByLabel(`Model variants for ${mockedModel.id}`);
+            await expect(variantsTable.getByRole('gridcell', { name: 'INT8' })).toBeVisible();
+
+            // Size: INT8 is -75% smaller than the FP32 baseline
+            await expect(variantsTable.getByTestId('model-variant-value-size-int8')).toContainText('52.4 MB');
+            await expect(variantsTable.getByTestId('model-variant-delta-size')).toContainText('-75%');
+
+            // Accuracy: INT8 is 79% vs FP32 baseline 82% -> -4% drop
+            await expect(variantsTable.getByTestId('model-variant-value-accuracy-int8')).toContainText('79%');
+            await expect(variantsTable.getByTestId('model-variant-delta-accuracy')).toContainText('-4%');
         });
     });
 
@@ -353,7 +378,7 @@ test.describe('Model Details', () => {
             await modelsPage.expandModel('YOLOX Model v1');
             await page.getByRole('tab', { name: 'Model metrics' }).click();
 
-            await expect(page.getByRole('heading', { name: /Evaluations/i })).toBeVisible();
+            await expect(page.getByRole('heading', { name: 'Accuracy' })).toBeVisible();
             await expect(page.getByRole('heading', { name: 'Learning rate (SGD)' })).toBeVisible();
         });
 

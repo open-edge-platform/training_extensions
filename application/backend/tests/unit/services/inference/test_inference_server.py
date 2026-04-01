@@ -11,6 +11,7 @@ from model_api.models import Model
 
 from app.models import BatchInferenceInput, DatasetItemAnnotation, Label
 from app.models.model_revision import ModelFormat, ModelPrecision, ModelVariant
+from app.models.system import DeviceInfo, DeviceType
 from app.services import ModelService
 from app.services.inference import InferenceModel, InferenceServer, InferenceState, InferenceStatus
 from app.services.inference.inference_server import _LoadedModel
@@ -21,7 +22,7 @@ class TestInferenceServer:
         project_id = uuid4()
         model_id = uuid4()
         model_variant_id = uuid4()
-        device = "AUTO"
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
         model_variant = MagicMock(
             spec=ModelVariant, id=model_variant_id, format=ModelFormat.OPENVINO, precision=ModelPrecision.FP16
@@ -63,7 +64,7 @@ class TestInferenceServer:
             mock_fp32_adapter.assert_called_once_with(
                 mock_create_core.return_value,
                 str(tmp_path / "model.xml"),
-                device=device,
+                device=device.as_openvino,
                 max_num_requests=2,
             )
             mock_create_model.assert_called_once_with(mock_fp32_adapter.return_value)
@@ -71,7 +72,7 @@ class TestInferenceServer:
     def test_set_inference_model_already_loaded(self, tmp_path) -> None:
         project_id = uuid4()
         model_id = uuid4()
-        device = "AUTO"
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
         model = MagicMock(spec=Model)
 
@@ -99,7 +100,7 @@ class TestInferenceServer:
 
     def test_get_status_active(self, tmp_path) -> None:
         model_id = uuid4()
-        device = "AUTO"
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
         model = MagicMock(spec=Model)
 
@@ -120,11 +121,12 @@ class TestInferenceServer:
         )
 
     def test_stop(self, tmp_path) -> None:
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
         model = MagicMock(spec=Model)
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device="AUTO", load_timestamp=datetime.now()
+            id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
         )
 
         inference_server.stop()
@@ -142,6 +144,7 @@ class TestInferenceServer:
             inference_server.infer_batch(labels=[label], inputs=[input])
 
     def test_infer_batch(self, tmp_path) -> None:
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
         media_id = uuid4()
 
         model = MagicMock(spec=Model)
@@ -156,7 +159,7 @@ class TestInferenceServer:
 
         inference_server = InferenceServer(data_dir=Path(tmp_path))
         inference_server._loaded_model = _LoadedModel(
-            id=uuid4(), model=model, device="AUTO", load_timestamp=datetime.now()
+            id=uuid4(), model=model, device=device, load_timestamp=datetime.now()
         )
 
         with patch("app.services.inference.inference_server.convert_prediction") as mock_convert_prediction:
