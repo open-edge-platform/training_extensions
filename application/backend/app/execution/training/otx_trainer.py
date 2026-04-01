@@ -408,12 +408,16 @@ class OTXTrainer(Execution[TrainingJobParams]):
         callbacks_list = parser.instantiate_classes(parsed_callbacks_cfg).get("callbacks", [])
         callbacks_list.append(TrainingProgressCallback(self.update_progress, min_p=10, max_p=80))
 
+        # Determine the precision to use for training (default to fp32 if not specified in the configuration)
+        precision = training_config.get("precision", "32")
+        logger.info("Using precision '{}' for training", precision)
+
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
         train_kwargs = {"devices": [device.index]} if device.type is not DeviceType.CPU and device.index else {}
         otx_engine.train(
             max_epochs=training_config["max_epochs"],
-            precision=training_config["precision"],
+            precision=precision,
             callbacks=callbacks_list,
             **train_kwargs,  # pyrefly: ignore[bad-argument-type]
         )
