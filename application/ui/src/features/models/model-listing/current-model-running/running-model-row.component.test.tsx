@@ -3,11 +3,11 @@
 
 import { screen, within } from '@testing-library/react';
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
+import { getMockedJob } from 'mocks/mock-job';
 import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { getMockedJob } from '../../../../../mocks/mock-job';
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { RunningModelRow } from './running-model-row.component';
@@ -86,6 +86,7 @@ describe('RunningModelRow', () => {
         expect(await screen.findByText('My Detection Model')).toBeVisible();
         expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
+        expect(screen.getByText('Device: CPU')).toBeVisible();
 
         expect(screen.getByText(new RegExp(modelArchitecture.name))).toBeVisible();
         expect(screen.queryByText(datasetRevision.name)).not.toBeInTheDocument();
@@ -137,6 +138,7 @@ describe('RunningModelRow', () => {
         expect(screen.getByText('Running')).toBeVisible();
         expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
+        expect(screen.getByText('Device: CPU')).toBeVisible();
 
         expect(screen.queryByText(new RegExp(modelArchitecture.name))).not.toBeInTheDocument();
 
