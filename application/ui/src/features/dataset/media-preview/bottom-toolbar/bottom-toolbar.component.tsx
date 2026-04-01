@@ -9,9 +9,7 @@ import { capitalize } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
 import { DatasetSubset, Media } from '../../../../constants/shared-types';
-import { getQueryKey } from '../../../../query-client/query-client';
-import { isVideoFrame } from '../../../../shared/media-item-utils';
-import { useAnnotationsQuery } from '../api/use-annotations-query';
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -28,8 +26,6 @@ type BottomToolbarProps = {
 
 const DATASET_ITEM_OPERATION = 'get';
 const DATASET_ITEM_URL = '/api/projects/{project_id}/dataset/items/{dataset_item_id}';
-const UPDATE_SUBSET_OPERATION = 'post';
-const UPDATE_SUBSET_URL = '/api/projects/{project_id}/dataset/media/{media_id}/annotations';
 
 type AssignableSubset = Exclude<DatasetSubset, 'unassigned'>;
 
@@ -37,61 +33,34 @@ const isAssignableSubset = (key: Key | null): key is AssignableSubset => key !==
 
 const useSubsets = (mediaItem: Media) => {
     const projectId = useProjectIdentifier();
-    const annotationsQuery = useAnnotationsQuery(mediaItem);
-    const query = isVideoFrame(mediaItem)
-        ? {
-              frame_index: mediaItem.frame_number,
-          }
-        : undefined;
+    const { pendingSubset, setPendingSubset } = useAnnotationActions();
 
-    const datasetItemParamsPath = {
-        project_id: projectId,
-        dataset_item_id: mediaItem.id,
-    };
-    const datasetItemParams = { params: { path: datasetItemParamsPath } };
-    const mediaAnnotationsParams = {
-        params: {
-            path: { project_id: projectId, media_id: mediaItem.id },
-            query,
-        },
-    };
+    const datasetItemParams = { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } };
 
     const { data } = $api.useQuery(DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams);
-
-    const updateSubsetMutation = $api.useMutation(UPDATE_SUBSET_OPERATION, UPDATE_SUBSET_URL, {
-        meta: {
-            invalidateQueries: [
-                getQueryKey([DATASET_ITEM_OPERATION, DATASET_ITEM_URL, datasetItemParams]),
-                getQueryKey([
-                    'get',
-                    '/api/projects/{project_id}/dataset/media/{media_id}/annotations',
-                    mediaAnnotationsParams,
-                ]),
-            ],
-        },
-    });
 
     const handleSubsetChange = (key: Key | null) => {
         if (!isAssignableSubset(key)) return;
 
-        updateSubsetMutation.mutate({
-            params: {
-                path: { project_id: projectId, media_id: mediaItem.id },
-                query,
-            },
-            body: { annotations: annotationsQuery.data?.annotations ?? [], subset: key },
-        });
+        setPendingSubset(key);
     };
 
-    return { currentSubset: data?.subset ?? null, isUserReviewed: data?.user_reviewed ?? false, handleSubsetChange };
+    const currentSubset = data?.subset ?? null;
+    const isUnassigned = (currentSubset === 'unassigned' || currentSubset === null) && pendingSubset === null;
+    const displaySubset = pendingSubset ?? currentSubset;
+
+    return {
+        isUserReviewed: data?.user_reviewed ?? false,
+        isUnassigned,
+        displaySubset,
+        handleSubsetChange,
+    };
 };
 
 export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
-    const { currentSubset, isUserReviewed, handleSubsetChange } = useSubsets(mediaItem);
-
-    const isUnassigned = currentSubset === 'unassigned' || currentSubset === null;
+    const { isUserReviewed, isUnassigned, displaySubset, handleSubsetChange } = useSubsets(mediaItem);
 
     return (
         <Flex justifyContent={'end'}>
@@ -127,7 +96,7 @@ export const BottomToolbar = ({ mediaItem, hideHotkeys }: BottomToolbarProps) =>
                                     <Item key={'training'}>Training</Item>
                                 </Picker>
                             ) : (
-                                <Tag withDot={false} text={capitalize(String(currentSubset))} />
+                                <Tag withDot={false} text={capitalize(String(displaySubset))} />
                             )}
                         </Flex>
                     </Toolbar.Section>
