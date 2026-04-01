@@ -13,7 +13,9 @@ jobs:
     uses: ./.github/workflows/build.yaml
     permissions:
       contents: read
-      pull-requests: write # to comment PR with coverage report
+      packages: write # to push Docker images to GHCR
+      pull-requests: write # required by nested job
+      id-token: write # required for signing container images
 
   backend-lint-and-test:
     name: Daily backend lint and test
@@ -33,7 +35,7 @@ jobs:
     uses: ./.github/workflows/ui-lint-and-test.yaml
     permissions:
       contents: read
-      pull-requests: write # to comment PR with coverage report
+      pull-requests: write # required by nested job
 
   check-existing-issue:
     name: Check for existing failure issue
