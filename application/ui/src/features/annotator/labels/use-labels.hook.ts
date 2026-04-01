@@ -9,7 +9,7 @@ import { isEmpty } from 'lodash-es';
 import { validateLabelName } from '../../../components/label-fields/label-validation';
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
-import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
+import { EMPTY_LABEL_ID, filterOutEmptyLabels } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation } from '../../../shared/types';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
@@ -20,8 +20,6 @@ type UseLabelsOptions = {
     isClassification?: boolean;
     isMultiLabel?: boolean;
 };
-
-const filterOutEmptyLabels = (labels: Label[]): Label[] => labels.filter((label) => label.id !== EMPTY_LABEL_ID);
 
 export const useLabels = ({ isClassification = false, isMultiLabel = false }: UseLabelsOptions = {}) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotatorLabels();

@@ -8,6 +8,7 @@ import { $api } from '../../../api/client';
 import { Job } from '../../../constants/shared-types';
 import { getQueryKey } from '../../../query-client/query-client';
 import { useSSE } from '../../use-sse.hook';
+import { isQuantizeJob, isTrainJob } from '../util';
 
 const TERMINAL_STATUSES: string[] = ['DONE', 'FAILED', 'CANCELLED'];
 
@@ -55,24 +56,23 @@ const useListJobs = () => {
     return $api.useQuery('get', '/api/jobs');
 };
 
-export const useGetCurrentTrainingJob = () => {
+export const useGetCurrentRunningJob = () => {
     const projectId = useProjectIdentifier();
     const activeJobs = useListJobs();
 
-    const activeTrainingJob = activeJobs.data?.find((job) => {
-        const jobProjectId =
-            'project' in job.metadata &&
-            job.metadata.project &&
-            'id' in job.metadata.project &&
-            job.metadata.project.id;
+    const activeRunningJob = activeJobs.data?.find((job) => {
         const isActive = job.status === 'RUNNING' || job.status === 'PENDING';
 
-        return jobProjectId === projectId && isActive && (job.job_type === 'train' || job.job_type === 'quantize');
+        if (isActive && (isTrainJob(job) || isQuantizeJob(job))) {
+            return job.metadata.project.id === projectId;
+        }
+
+        return false;
     });
 
-    useStreamJobStatus(activeTrainingJob?.job_id);
+    useStreamJobStatus(activeRunningJob?.job_id);
 
-    return activeTrainingJob;
+    return activeRunningJob;
 };
 
 export const useCancelJob = () => {

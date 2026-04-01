@@ -96,43 +96,39 @@ test.describe('Project', () => {
         await expect(page.getByText('New Project')).toBeVisible();
     });
 
-    test('shows warning for multi-class classification based on label count', async ({ page, network }) => {
+    test('disables create button for single-label classification based if there are no at least two labels', async ({
+        page,
+        network,
+    }) => {
         const projectPage = new ProjectPage(page);
 
         await projectPage.gotoCreate();
 
         await projectPage.fillProjectForm({
-            name: 'Multi-class project labels check',
+            name: 'Single-label project labels check',
             task: 'classification',
             classificationType: 'Single-label',
             labelNames: ['Person'],
         });
 
+        await expect(projectPage.getCreateProjectButton()).toBeDisabled();
+
+        await projectPage.addLabel('Plane');
+
         await expect(projectPage.getCreateProjectButton()).toBeEnabled();
-        await projectPage.getCreateProjectButton().click();
-
-        await expect(projectPage.getMultiLabelValidationMessage()).toBeVisible();
-
-        // Close the notification
-        const toast = page
-            .getByLabel('toast')
-            .filter({ hasText: 'At least 2 labels are required for single-label classification' });
-        await toast.getByRole('button').first().click();
-
-        await projectPage.addLabel('Car');
 
         network.use(
             http.post('/api/projects', ({ response }) => {
                 return response(201).json(
                     getMockedProject({
                         id: 'single-label-project-id',
-                        name: 'Multi-class project labels check',
+                        name: 'Single-label project labels check',
                         task: {
                             task_type: 'classification',
                             exclusive_labels: true,
                             labels: [
                                 { id: '1', color: 'red', name: 'Person' },
-                                { id: '2', color: 'blue', name: 'Car' },
+                                { id: '2', color: 'blue', name: 'Plane' },
                             ],
                         },
                     })

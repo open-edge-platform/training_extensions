@@ -17,7 +17,8 @@ import { LinkOut } from '@geti/ui/icons';
 
 import { $api } from '../../api/client';
 import { ReactComponent as EmptyDataset } from '../../assets/drop-files.svg';
-import { formatToFileArray, getFilesFromDropEvent, isSupportedDatasetZip } from './util';
+import { getFilesFromDropEvent } from '../../shared/drop-zone.utils';
+import { formatToFileArray, isSupportedDatasetZip } from './util';
 
 import classes from './import-upload-file.module.scss';
 

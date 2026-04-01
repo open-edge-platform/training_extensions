@@ -6,7 +6,7 @@ import { getJobProgress, isJobRunning } from 'hooks/api/util';
 import { useExportDataset } from 'hooks/localStorage/use-export-dataset.hook';
 
 import { ExportDatasetJob } from '../../../../../constants/shared-types';
-import { BottomProgressBar } from '../../../../models/model-listing/current-model-training/bottom-progress-bar.component';
+import { BottomProgressBar } from '../../../../models/model-listing/current-model-running/bottom-progress-bar.component';
 import { CancelJobConfirmation } from '../../cancel-job-confirmation/cancel-job-confirmation.component';
 import { ExportJobDetails } from './export-details/export-details.component';
 
@@ -40,7 +40,9 @@ export const ExportActiveJob = ({ job, datasetName }: ExportActiveJobProps) => {
                 <Flex justifyContent='space-between'>
                     <Flex alignItems='center' gap='size-100'>
                         <Loading mode='inline' size='S' />
-                        <Text>{job?.message ?? job.status.toLocaleLowerCase()}</Text>
+                        <Text UNSAFE_style={{ textTransform: 'capitalize' }}>
+                            {job?.message ?? job.status.toLocaleLowerCase()}
+                        </Text>
                     </Flex>
 
                     {isRunning && <Text>{progress}%</Text>}

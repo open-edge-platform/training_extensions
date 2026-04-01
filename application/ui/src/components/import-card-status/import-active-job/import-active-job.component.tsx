@@ -7,7 +7,7 @@ import { getJobProgress, isJobRunning } from 'hooks/api/util';
 
 import { Job } from '../../../constants/shared-types';
 import { CancelJobConfirmation } from '../../../features/dataset/import-export/cancel-job-confirmation/cancel-job-confirmation.component';
-import { BottomProgressBar } from '../../../features/models/model-listing/current-model-training/bottom-progress-bar.component';
+import { BottomProgressBar } from '../../../features/models/model-listing/current-model-running/bottom-progress-bar.component';
 import { formatBytes } from '../../../shared/util';
 import { JobStatusCard } from '../../job-status-card/job-status-card.component';
 

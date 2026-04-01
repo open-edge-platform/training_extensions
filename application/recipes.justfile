@@ -1,10 +1,10 @@
 set unstable
 
 # Demo project archives hosted in S3
-demo_project_urls := "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/apples-tomatoes-classification.zip https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-detection.zip https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/horses-segmentation.zip"
+demo_project_urls := "https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/flowers-classification.zip https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/airplanes-detection.zip https://storage.geti.intel.com/test-data/geti/demo-projects/pre-release/horses-segmentation.zip"
 
 # Demo video sources hosted in S3
-demo_video_urls := "https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/apples.mp4 https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/horses.mp4 https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/airplanes.mp4"
+demo_video_urls := "https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/sunflower.mp4 https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/horses.mp4 https://storage.geti.intel.com/test-data/geti/demo-videos/pre-release/airplanes.mp4"
 
 # Cache directories
 demo_archives_dir := "data/.demo_cache/archives"

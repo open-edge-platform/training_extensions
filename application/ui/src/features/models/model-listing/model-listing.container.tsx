@@ -2,20 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
-import { useGetCurrentTrainingJob } from 'hooks/api/jobs/jobs.hook';
+import { useGetCurrentRunningJob } from 'hooks/api/jobs/jobs.hook';
 import { isEmpty, isString } from 'lodash-es';
 
 import { ReactComponent as NoTrainedModels } from '../../../assets/no-trained-models.svg';
 import { ExportJobsList } from '../../dataset/import-export/export-jobs-list/export-jobs-list.component';
 import { TrainModel } from '../train-model/train-model.component';
 import { Header } from './components/header.component';
-import { CurrentModelTraining } from './current-model-training/current-model-training.component';
+import { CurrentModelRunning } from './current-model-running/current-model-running.component';
 import { ModelListing } from './model-listing.component';
 import { ModelListingProvider, useModelListing } from './provider/model-listing-provider';
 
 const ModelListingContent = () => {
     const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
-    const trainingJob = useGetCurrentTrainingJob();
+    const runningJob = useGetCurrentRunningJob();
 
     const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
     const hasNoModels = groupedModels.length === 0 && searchBy.length === 0;
@@ -26,12 +26,12 @@ const ModelListingContent = () => {
                 direction={'column'}
                 height={'100%'}
                 alignItems={'center'}
-                justifyContent={isEmpty(trainingJob) ? 'center' : 'start'}
+                justifyContent={isEmpty(runningJob) ? 'center' : 'start'}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
-                <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
+                <CurrentModelRunning groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
-                {isEmpty(trainingJob) && (
+                {isEmpty(runningJob) && (
                     <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
                         <NoTrainedModels />
                         <Heading level={2}>No models yet. Train your first model to get started.</Heading>
@@ -49,7 +49,7 @@ const ModelListingContent = () => {
             <Divider size={'S'} marginY={'size-300'} />
 
             <Flex direction={'column'} flex={1} UNSAFE_style={{ overflowY: 'auto', scrollbarGutter: 'stable' }}>
-                <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
+                <CurrentModelRunning groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
                 <ExportJobsList predicate={({ datasetId }) => isString(datasetId)} />
 

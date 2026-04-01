@@ -11,7 +11,7 @@ import placeholderThumbnailIconUrl from '../../../assets/icons/image-icon.svg?ur
 import { paths } from '../../../constants/paths';
 import { Project, TaskType } from '../../../constants/shared-types';
 import { getProjectThumbnailUrl } from '../../../shared/media-url.utils';
-import { isClassificationTask } from '../task-type-guards';
+import { isMultiLabelClassificationTask } from '../task-type-guards';
 import { MenuActions } from './menu-actions/menu-actions.component';
 
 import classes from './project-list.module.scss';
@@ -73,11 +73,10 @@ type ProjectCardProps = {
 
 export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps) => {
     const isActive = item.active_pipeline;
-    const isClassification = isClassificationTask(item.task.task_type);
-    const isMultiLabel = isClassification && item.task.exclusive_labels === false;
+    const isMultiLabelClassification = isMultiLabelClassificationTask(item.task);
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} aria-label={`Project: ${item.name}`}>
             <NavLink to={paths.project.dataset.index({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <View
@@ -101,7 +100,7 @@ export const ProjectCard = ({ item, prioritizeImage = false }: ProjectCardProps)
 
                         <Flex marginBottom={cardPadding} gap={'size-50'}>
                             {isActive && <ActiveProjectBadge />}
-                            {isMultiLabel ? (
+                            {isMultiLabelClassification ? (
                                 <ProjectTypeBadge type={'Multi-label classification'} />
                             ) : (
                                 <ProjectTypeBadge type={MAP_PROJECT_TYPE_TO_TITLE[item.task.task_type]} />

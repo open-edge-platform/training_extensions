@@ -8,6 +8,7 @@ export type Label = components['schemas']['LabelView'];
 export type Pipeline = components['schemas']['PipelineView'];
 
 export type Model = components['schemas']['ModelView'];
+export type ModelVariant = components['schemas']['ModelVariantView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
 export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
 export type ModelFormat = components['schemas']['ModelFormat'];
@@ -17,6 +18,14 @@ export type Metric = components['schemas']['MetricView'];
 export type LineMetric = components['schemas']['LineMetric'];
 
 export type Job = components['schemas']['JobView'];
+export type TrainJob = Job & {
+    job_type: 'train';
+    metadata: components['schemas']['TrainingMetadata'];
+};
+export type QuantizeJob = Job & {
+    job_type: 'quantize';
+    metadata: components['schemas']['QuantizationMetadata'];
+};
 export type ExportDatasetJob = Job & {
     type: 'export_dataset';
     metadata: components['schemas']['ExportDatasetMetadata'];
@@ -32,6 +41,8 @@ export type ImportDatasetToProjectJob = Job & {
     type: 'import_dataset_to_project';
     metadata: components['schemas']['ImportDatasetToProjectRequest'];
 };
+
+export type DatasetStatisticsView = components['schemas']['DatasetStatisticsView'];
 
 export type MediaImage = components['schemas']['ImageView'];
 export type MediaVideo = components['schemas']['VideoView'];
@@ -62,6 +73,7 @@ export type DatasetRevisionItem = components['schemas']['DatasetRevisionItemView
 export type Project = components['schemas']['ProjectView'];
 
 export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
+export type Task = components['schemas']['TaskView'];
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];
