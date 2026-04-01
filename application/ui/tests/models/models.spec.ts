@@ -449,7 +449,7 @@ test.describe('Models - Training Logs', () => {
 
         await modelsPage.goto();
 
-        await modelsPage.openModelMenu();
+        await modelsPage.openModelMenuForModel('YOLOX Model v1');
         await modelsPage.clickViewTrainingLogsAction();
 
         await expect(modelsPage.getLogsDialog()).toBeVisible();
@@ -465,7 +465,7 @@ test.describe('Models - Training Logs', () => {
 
         await modelsPage.goto();
 
-        await modelsPage.openModelMenu();
+        await modelsPage.openModelMenuForModel('YOLOX Model v1');
         await modelsPage.clickViewTrainingLogsAction();
 
         await expect(modelsPage.getLogsDialog()).toBeVisible();

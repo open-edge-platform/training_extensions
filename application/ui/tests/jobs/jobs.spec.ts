@@ -91,7 +91,7 @@ test.describe('Jobs - Current Running', () => {
         await expect(jobsPage.getCurrentRunningSection()).toBeHidden();
     });
 
-    test('opens and closes training logs dialog when "Logs" button is clicked', async ({ jobsPage, network }) => {
+    test('opens and closes training logs dialog when "View logs" button is clicked', async ({ jobsPage, network }) => {
         network.use(
             http.get('/api/jobs', () => {
                 return HttpResponse.json([mockedTrainingJob]);

@@ -57,7 +57,7 @@ export const render = (ui: ReactNode, options: RenderOptions = {}) => {
     const Wrapper = ({ children }: { children: ReactNode }) => {
         const router = createTestRouter(children, options, testQueryClient);
 
-        return <RouterProvider router={router} />;
+        return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
     };
 
     return rtlRender(ui, { ...options, wrapper: Wrapper });

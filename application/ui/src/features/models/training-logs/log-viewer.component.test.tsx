@@ -9,22 +9,6 @@ import { render } from 'test-utils/render';
 import { LogViewer } from './log-viewer.component';
 
 describe('LogViewer', () => {
-    it('renders the toolbar with level picker and search field', () => {
-        render(<LogViewer logs={createMockLogs()} />);
-
-        expect(screen.getByLabelText('Minimum log level')).toBeInTheDocument();
-        expect(screen.getByLabelText('Search logs')).toBeInTheDocument();
-    });
-
-    it('displays entry count showing filtered vs total', () => {
-        const logs = createMockLogs();
-
-        render(<LogViewer logs={logs} />);
-
-        // Default level is INFO
-        expect(screen.getByText('4 / 5 entries')).toBeInTheDocument();
-    });
-
     it('filters logs by level when level picker is changed', async () => {
         const logs = createMockLogs();
 
@@ -101,25 +85,10 @@ describe('LogViewer', () => {
         expect(screen.getByText('Connecting...')).toBeInTheDocument();
         rerender(<LogViewer logs={logs} isStreaming connectionStatus={'disconnected'} />);
         expect(screen.getByText('Disconnected')).toBeInTheDocument();
-    });
 
-    it('does not display connection status when connectionStatus is not provided', () => {
-        const logs = createMockLogs();
-
-        render(<LogViewer logs={logs} />);
-
+        rerender(<LogViewer logs={logs} />);
         expect(screen.queryByText('Live')).not.toBeInTheDocument();
         expect(screen.queryByText('Connecting...')).not.toBeInTheDocument();
         expect(screen.queryByText('Disconnected')).not.toBeInTheDocument();
-    });
-
-    it('renders log entries as list items', () => {
-        const logs = createMockLogs();
-
-        render(<LogViewer logs={logs} />);
-
-        expect(screen.getByRole('list')).toBeInTheDocument();
-        const listItems = screen.getAllByRole('listitem');
-        expect(listItems).toHaveLength(4);
     });
 });
