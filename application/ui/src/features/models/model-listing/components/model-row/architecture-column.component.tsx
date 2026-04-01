@@ -23,10 +23,12 @@ export const ArchitectureColumn = ({ architecture }: ArchitectureColumnProps) =>
     return (
         <Flex direction={'column'} gap={'size-100'}>
             <Text UNSAFE_className={classes.smallText}>{architecture.name} (Apache 2.0)</Text>
-            <ModelBadge id={'architecture-name'}>
-                <ThumbsUp />
-                <Text>{capitalize(architecture.performanceCategory)}</Text>
-            </ModelBadge>
+            {architecture.performanceCategory && (
+                <ModelBadge id={'architecture-name'}>
+                    <ThumbsUp />
+                    <Text>{capitalize(architecture.performanceCategory)}</Text>
+                </ModelBadge>
+            )}
         </Flex>
     );
 };
