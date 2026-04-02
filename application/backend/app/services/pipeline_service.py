@@ -35,8 +35,8 @@ class OtherProjectActiveError(Exception):
         )
 
 
-class InvalidModelVariantError(ValueError):
-    """Exception raised when a model variant is invalid for pipeline inference (e.g., not OpenVINO format)."""
+class IncompatibleModelVariantError(ValueError):
+    """Exception raised when a model variant is incompatible for pipeline inference (e.g., not OpenVINO format)."""
 
 
 class DeviceInt8NotSupportedError(Exception):
@@ -152,7 +152,7 @@ class PipelineService(BaseSessionManagedService):
         Raises:
             ResourceNotFoundError: If the model revision or variant is not found.
             ValueError: If the model revision is not successfully trained.
-            InvalidModelVariantError: If the variant is not OpenVINO or cannot be resolved.
+            IncompatibleModelVariantError: If the variant is not OpenVINO or cannot be resolved.
             DeviceInt8NotSupportedError: If the device does not support INT8 inference.
         """
         model_revision_id: str = pipeline_db.model_revision_id  # type: ignore[union-attr]
@@ -176,12 +176,12 @@ class PipelineService(BaseSessionManagedService):
             if variant_db is None:
                 raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=pipeline_db.model_variant_id)
             if variant_db.model_revision_id != model_revision_id:
-                raise InvalidModelVariantError(
+                raise IncompatibleModelVariantError(
                     f"Model variant '{pipeline_db.model_variant_id}' does not belong to "
                     f"model revision '{model_revision_id}'."
                 )
             if variant_db.format != ModelFormat.OPENVINO:
-                raise InvalidModelVariantError(
+                raise IncompatibleModelVariantError(
                     f"Only OpenVINO model variants can be used for inference. "
                     f"The selected variant has format '{variant_db.format}'."
                 )
@@ -195,7 +195,7 @@ class PipelineService(BaseSessionManagedService):
                 precision=ModelPrecision.FP16,
             )
             if default_variant is None:
-                raise InvalidModelVariantError(
+                raise IncompatibleModelVariantError(
                     f"No FP16 OpenVINO variant found for model revision '{model_revision_id}'. "
                     f"Please specify a model_variant_id explicitly."
                 )

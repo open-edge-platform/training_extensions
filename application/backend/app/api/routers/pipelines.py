@@ -15,7 +15,11 @@ from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, PipelineStatus
 from app.services import PipelineMetricsService, PipelineService, SystemService
-from app.services.pipeline_service import DeviceInt8NotSupportedError, InvalidModelVariantError, OtherProjectActiveError
+from app.services.pipeline_service import (
+    DeviceInt8NotSupportedError,
+    IncompatibleModelVariantError,
+    OtherProjectActiveError,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
@@ -146,7 +150,7 @@ def update_pipeline(
         return PipelineView.model_validate(updated, from_attributes=True)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except InvalidModelVariantError as e:
+    except IncompatibleModelVariantError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except DeviceInt8NotSupportedError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))

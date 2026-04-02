@@ -14,7 +14,11 @@ from app.main import app
 from app.models import DataCollectionConfig, FixedRateDataCollectionPolicy, PipelineStatus
 from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
-from app.services.pipeline_service import DeviceInt8NotSupportedError, InvalidModelVariantError, OtherProjectActiveError
+from app.services.pipeline_service import (
+    DeviceInt8NotSupportedError,
+    IncompatibleModelVariantError,
+    OtherProjectActiveError,
+)
 
 
 @pytest.fixture
@@ -204,10 +208,10 @@ class TestPipelineEndpoints:
             project_id, {"model_id": model_id, "model_variant_id": variant_id}
         )
 
-    def test_update_pipeline_invalid_model_variant(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
-        """Test that InvalidModelVariantError returns 422."""
+    def test_update_pipeline_incompatible_model_variant(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test that IncompatibleModelVariantError returns 422."""
         project_id = fxt_pipeline.project_id
-        fxt_pipeline_service.update_pipeline.side_effect = InvalidModelVariantError(
+        fxt_pipeline_service.update_pipeline.side_effect = IncompatibleModelVariantError(
             "Only OpenVINO model variants can be used for inference."
         )
 
