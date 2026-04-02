@@ -28,6 +28,7 @@ from app.datumaro_converter.domain.samples.training import (
     MulticlassClassificationTrainingSample,
     MultilabelClassificationTrainingSample,
 )
+from app.execution.base import ExecutionErr
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -201,7 +202,6 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         project_id = uuid4()
         parent_model_revision_id = uuid4()
-        parent_model_variant_id = uuid4()
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
@@ -210,18 +210,6 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
         )
-        expected_weights_path = (
-            tmp_path
-            / "projects"
-            / str(project_id)
-            / "models"
-            / str(parent_model_revision_id)
-            / "variants"
-            / str(parent_model_variant_id)
-            / "model.ckpt"
-        )
-        expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
-        expected_weights_path.touch()
         otx_trainer = fxt_otx_trainer()
 
         otx_trainer._model_service.get_model_variants.return_value = []
@@ -231,7 +219,7 @@ class TestOTXTrainerPrepareWeights:
             "Can't start training - the parent revision has no variants (it may have failed). "
             "Review the previous revision and retry."
         )
-        with pytest.raises(ValueError, match=re.escape(msg)):
+        with pytest.raises(ExecutionErr, match=re.escape(msg)):
             otx_trainer.prepare_weights(training_params)
 
     def test_prepare_weights_with_parent_model_no_file_raises_error(
