@@ -4,8 +4,7 @@
 import { useMemo } from 'react';
 
 import { Content, Dialog, Grid, View } from '@geti/ui';
-import { useGetDatasetItemsById } from 'hooks/use-get-dataset-items-by-id.hook';
-import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
+import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
@@ -145,22 +144,7 @@ const MediaPreviewContent = ({
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const mediaItemsResponse = useGetDatasetMediaItems();
-    const responseDatasetItems = useGetDatasetItemsById({});
-
-    const handleNextPageFetch = () => {
-        if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
-            mediaItemsResponse.fetchNextPage();
-        }
-
-        if (responseDatasetItems.hasNextPage && !responseDatasetItems.isFetchingNextPage) {
-            responseDatasetItems.fetchNextPage();
-        }
-    };
-
-    const isUserReviewed = (mediaItemId: string) => {
-        return responseDatasetItems.reviewStatus.get(mediaItemId) ?? false;
-    };
+    const { items, isFetchingNextPage, fetchNextPage, isUserReviewed } = useDatasetMediaWithReviewStatus({});
 
     return (
         <Dialog
@@ -187,13 +171,11 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     <SelectedMediaItemProvider mediaItem={mediaItem}>
                         <PredictionsSetupProvider>
                             <MediaPreviewContent
-                                items={mediaItemsResponse.items}
+                                items={items}
                                 onClose={close}
                                 onSelectedMediaItem={onSelectedMediaItem}
-                                isFetchingNextPage={
-                                    mediaItemsResponse.isFetchingNextPage || responseDatasetItems.isFetchingNextPage
-                                }
-                                fetchNextPage={handleNextPageFetch}
+                                isFetchingNextPage={isFetchingNextPage}
+                                fetchNextPage={fetchNextPage}
                                 isUserReviewed={isUserReviewed}
                             />
                         </PredictionsSetupProvider>

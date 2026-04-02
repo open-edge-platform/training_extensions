@@ -10,11 +10,11 @@ import { useProjectIdentifier } from './use-project-identifier.hook';
 const DATASET_ITEMS_LIMIT = 20;
 
 type UseGetDatasetItemsOptions = {
-    annotationStatus?: DatasetItemAnnotationStatus;
     subset?: DatasetSubset;
+    annotationStatus?: DatasetItemAnnotationStatus;
 };
 
-export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
+export const useGetDatasetItems = ({ subset, annotationStatus }: UseGetDatasetItemsOptions = {}) => {
     const projectId = useProjectIdentifier();
 
     const query: {
@@ -27,12 +27,12 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
         limit: DATASET_ITEMS_LIMIT,
     };
 
-    if (options?.subset !== undefined) {
-        query.subset = options.subset;
+    if (subset !== undefined) {
+        query.subset = subset;
     }
 
-    if (options?.annotationStatus !== undefined) {
-        query.annotation_status = options.annotationStatus;
+    if (annotationStatus !== undefined) {
+        query.annotation_status = annotationStatus;
     }
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(

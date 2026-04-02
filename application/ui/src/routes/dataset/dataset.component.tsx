@@ -4,8 +4,7 @@
 import { useState } from 'react';
 
 import { dimensionValue, Grid, useViewMode, View } from '@geti/ui';
-import { useGetDatasetItemsById } from 'hooks/use-get-dataset-items-by-id.hook';
-import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
+import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 
 import { DatasetItemAnnotationStatus } from '../../constants/shared-types';
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
@@ -17,30 +16,12 @@ import { ImportJobsList } from '../../features/dataset/import-export/import-jobs
 export const Dataset = () => {
     const [viewMode, setViewMode] = useViewMode('dataset-gallery-view-mode');
     const [filterStatus, setFilterStatus] = useState<DatasetItemAnnotationStatus | null>(null);
-    const mediaItemsResponse = useGetDatasetMediaItems({
-        annotationStatus: filterStatus ?? undefined,
-    });
-
-    const responseDatasetItems = useGetDatasetItemsById({
+    const { items, isPending, isFetchingNextPage, fetchNextPage, isUserReviewed } = useDatasetMediaWithReviewStatus({
         annotationStatus: filterStatus ?? undefined,
     });
 
     const handleFilterByStatusChange = (status: FilterByStatusKey) => {
         setFilterStatus(status === 'all' ? null : status);
-    };
-
-    const handleNextPageFetch = () => {
-        if (mediaItemsResponse.hasNextPage && !mediaItemsResponse.isFetchingNextPage) {
-            mediaItemsResponse.fetchNextPage();
-        }
-
-        if (responseDatasetItems.hasNextPage && !responseDatasetItems.isFetchingNextPage) {
-            responseDatasetItems.fetchNextPage();
-        }
-    };
-
-    const isUserReviewed = (mediaItemId: string) => {
-        return responseDatasetItems.reviewStatus.get(mediaItemId) ?? false;
     };
 
     return (
@@ -57,7 +38,7 @@ export const Dataset = () => {
 
             <View gridRow='2'>
                 <Toolbar
-                    items={mediaItemsResponse.items}
+                    items={items}
                     viewMode={viewMode}
                     setViewMode={setViewMode}
                     onFilter={handleFilterByStatusChange}
@@ -66,15 +47,13 @@ export const Dataset = () => {
 
             <View gridRow='3'>
                 <Gallery
-                    items={mediaItemsResponse.items}
+                    items={items}
                     viewMode={viewMode}
-                    isPending={mediaItemsResponse.isPending || responseDatasetItems.isPending}
-                    fetchNextPage={handleNextPageFetch}
+                    isPending={isPending}
+                    fetchNextPage={fetchNextPage}
                     isUserReviewed={isUserReviewed}
                     hasActiveFilter={filterStatus !== null}
-                    isFetchingNextPage={
-                        mediaItemsResponse.isFetchingNextPage || responseDatasetItems.isFetchingNextPage
-                    }
+                    isFetchingNextPage={isFetchingNextPage}
                 />
             </View>
         </Grid>
