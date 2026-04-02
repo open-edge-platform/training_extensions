@@ -30,7 +30,7 @@ from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
 from app.datumaro_converter import SampleMode
-from app.execution.base import Execution, step
+from app.execution.base import Execution, ExecutionErr, step
 from app.execution.common.otx_converters import (
     convert_metrics,
     get_metric_by_task,
@@ -143,6 +143,11 @@ class OTXTrainer(Execution[TrainingJobParams]):
             parent_variants = self._model_service.get_model_variants(
                 project_id=project_id, model_id=parent_model_revision_id
             )
+            if not parent_variants:
+                raise ExecutionErr(
+                    "Can't start training - the parent revision has no variants (it may have failed). "
+                    "Review the previous revision and retry."
+                )
             parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
             weights_path = self.__build_model_weights_path(
                 self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
