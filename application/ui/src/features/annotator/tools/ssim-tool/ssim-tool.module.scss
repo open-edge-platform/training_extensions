@@ -1,0 +1,15 @@
+@keyframes dash {
+    to {
+        stroke-dashoffset: 1000;
+    }
+}
+
+.sourceArea {
+    stroke-dasharray: 10;
+    stroke-dashoffset: 10;
+    animation: dash 40s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
