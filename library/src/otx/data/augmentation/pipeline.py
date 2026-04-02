@@ -455,8 +455,7 @@ class GPUAugmentationPipeline(nn.Module):
             Defaults to ["input"] for image-only augmentation.
         sanitize_annotations: Whether to clip and filter bboxes/keypoints after
             geometric transforms.  Set to ``False`` for validation/test pipelines
-            where ground-truth coordinates may be in original image space
-            (i.e. when ``resize_targets=False`` was used on CPU) to prevent
+            where ground-truth coordinates may be in original image space to prevent
             clipping them to the smaller network input dimensions.
 
     Example:
@@ -714,9 +713,6 @@ class GPUAugmentationPipeline(nn.Module):
                     output["keypoints"] = kp_result
 
         # Sanitize geometric annotations after Kornia transforms.
-        # Skip when sanitize_annotations=False (val/test pipelines) or when no
-        # geometric augmentations are present — in both cases bboxes may still be
-        # in original image coordinates and must not be clipped to network input size.
         if self._sanitize_annotations_enabled and self._has_geometric_augs and output["images"] is not None:
             s_bboxes, s_labels, s_masks, s_keypoints = self._sanitize_annotations(
                 output["images"],
