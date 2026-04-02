@@ -56,7 +56,7 @@ describe('DeleteMediaItem', () => {
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
         expect(await screen.findByText(`1 item(s) deleted successfully`)).toBeVisible();
-        expect(await screen.findByText(`Failed to delete, ${errorMessage}`)).toBeVisible();
+        expect(await screen.findByText(errorMessage)).toBeVisible();
         expect(mockedOnDeleted).toHaveBeenCalledWith([itemToDelete]);
     });
 });
