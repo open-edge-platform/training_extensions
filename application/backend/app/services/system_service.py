@@ -230,7 +230,11 @@ class SystemService:
             capabilities = core.get_property(device_name=ov_device, property="OPTIMIZATION_CAPABILITIES")
             return "INT8" in capabilities
         except Exception:
-            logger.warning("Failed to query INT8 support for device '{}'. Assuming not supported.", device_info.type)
+            logger.exception(
+                "Failed to query INT8 support for device '{}' (OpenVINO device '{}'). Assuming not supported.",
+                device_info,
+                device_info.as_openvino,
+            )
             return False
 
     @staticmethod
