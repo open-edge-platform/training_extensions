@@ -1004,11 +1004,22 @@ class OTXModel(LightningModule):
             data_input_params.input_size[0] % self.input_size_multiplier != 0
             or data_input_params.input_size[1] % self.input_size_multiplier != 0
         ):
-            msg = (
-                f"Input size should be a multiple of {self.input_size_multiplier}, "
-                f"but got {data_input_params.input_size} instead."
+            m = self.input_size_multiplier
+            rounded = (
+                round(data_input_params.input_size[0] / m) * m,
+                round(data_input_params.input_size[1] / m) * m,
             )
-            raise ValueError(msg)
+            logger.warning(
+                "Input size %s is not a multiple of %d. Rounding to %s.",
+                data_input_params.input_size,
+                m,
+                rounded,
+            )
+            data_input_params = DataInputParams(
+                input_size=rounded,
+                mean=data_input_params.mean,
+                std=data_input_params.std,
+            )
 
         return data_input_params
 

@@ -32,10 +32,20 @@ class MockNNModule(torch.nn.Module):
 
 
 class TestOTXModel:
-    def test_init(self, monkeypatch):
+    def test_init(self, monkeypatch, mocker):
         monkeypatch.setattr(OTXModel, "input_size_multiplier", 10, raising=False)
-        with pytest.raises(ValueError, match="Input size should be a multiple"):
-            OTXModel(label_info=2, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(2)):
+            model = OTXModel(label_info=2, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        # Input size (224, 224) rounded to nearest multiple of 10 -> (220, 220)
+        assert model.data_input_params.input_size == (220, 220)
+
+    def test_init_non_multiple_input_size_is_rounded(self, monkeypatch, mocker):
+        """Non-multiple-of-32 input sizes (e.g. from arbitrary user images) are rounded, not rejected."""
+        monkeypatch.setattr(OTXModel, "input_size_multiplier", 32, raising=False)
+        with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(1)):
+            model = OTXModel(label_info=1, data_input_params=DataInputParams((2297, 2297), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        # 2297 / 32 = 71.78... -> round to 72 -> 72 * 32 = 2304
+        assert model.data_input_params.input_size == (2304, 2304)
 
     def test_training_step_none_loss(self, mocker: MockerFixture) -> None:
         mock_trainer = mocker.create_autospec(spec=Trainer)
