@@ -352,7 +352,7 @@ class TestOTXQuantizerInitializeEngine:
         mock_engine_cls.assert_called_once_with(
             model=expected_xml,
             data=mock_datamodule,
-            work_dir=f"./otx-quantize-workspace-{fxt_quantization_params.model_id}",
+            work_dir=quantizer._data_dir / f"otx-quantize-workspace-{fxt_quantization_params.model_id}",
         )
         assert engine is not None
 
