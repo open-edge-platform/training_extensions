@@ -1,26 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import { expect } from '@playwright/test';
-import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
 import { Polygon } from '../../../src/shared/types';
 import { http, test } from '../../fixtures';
 import { withRelative } from '../../utils/mouse';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-const candyPngPath = path.resolve(dirname, '../../assets/candy.png');
-const candyPngBuffer = fs.readFileSync(candyPngPath);
-
-const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
-const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
+import { blueLabel, candyBinaryHandler, redLabel } from '../annotator-fixtures';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -48,11 +36,7 @@ test.describe('Polygon', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
             }),
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                    headers: { 'Content-Type': 'image/png' },
-                });
-            })
+            candyBinaryHandler
         );
     });
 

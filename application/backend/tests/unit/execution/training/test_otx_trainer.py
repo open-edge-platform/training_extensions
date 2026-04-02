@@ -1,8 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import re
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch
 from uuid import uuid4
 
@@ -28,6 +29,7 @@ from app.datumaro_converter.domain.samples.training import (
     MulticlassClassificationTrainingSample,
     MultilabelClassificationTrainingSample,
 )
+from app.execution.base import ExecutionErr
 from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -191,6 +193,35 @@ class TestOTXTrainerPrepareWeights:
 
         # Assert
         assert weights_path == expected_weights_path
+
+    def test_prepare_weights_with_parent_model_no_variants(
+        self,
+        tmp_path: Path,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test preparing weights when no parent model revision variants are available."""
+        # Arrange
+        project_id = uuid4()
+        parent_model_revision_id = uuid4()
+        training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+            project_id=project_id,
+            model_architecture_id="object-detection-yolox-s",
+            task=Task(task_type=TaskType.DETECTION),
+            parent_model_revision_id=parent_model_revision_id,
+            job_id=uuid4(),
+        )
+        otx_trainer = fxt_otx_trainer()
+
+        otx_trainer._model_service.get_model_variants.return_value = []
+
+        # Act
+        msg = (
+            "Can't start training - the parent revision has no variants (it may have failed). "
+            "Review the previous revision and retry."
+        )
+        with pytest.raises(ExecutionErr, match=re.escape(msg)):
+            otx_trainer.prepare_weights(training_params)
 
     def test_prepare_weights_with_parent_model_no_file_raises_error(
         self,
@@ -652,12 +683,14 @@ class TestOTXTrainerTrainModel:
         ],
         ids=["CPU", "XPU (Intel GPU)", "CUDA (NVIDIA GPU)"],
     )
+    @pytest.mark.parametrize("add_precision", [True, False])
     def test_train_model(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
         geti_device: DeviceInfo,
         otx_device: str,
+        add_precision: bool,
     ):
         """Test successful model training."""
         # Arrange
@@ -685,7 +718,7 @@ class TestOTXTrainerTrainModel:
         weights_path.touch()
 
         # Create training configuration
-        training_config = {
+        training_config: dict[str, Any] = {
             "model": {
                 "class_path": "otx.backend.native.models.detection.yolox.YOLOXModel",
                 "init_args": {
@@ -693,7 +726,6 @@ class TestOTXTrainerTrainModel:
                 },
             },
             "max_epochs": 10,
-            "precision": "32",
             "callbacks": [
                 {
                     "class_path": "lightning.pytorch.callbacks.ModelCheckpoint",
@@ -704,6 +736,8 @@ class TestOTXTrainerTrainModel:
                 }
             ],
         }
+        if add_precision:
+            training_config["precision"] = "32"
 
         # Mock OTXDataModule
         mock_datamodule = Mock()
@@ -774,7 +808,10 @@ class TestOTXTrainerTrainModel:
         mock_otx_engine.train.assert_called_once()
         train_call_kwargs = mock_otx_engine.train.call_args.kwargs
         assert train_call_kwargs["max_epochs"] == 10
-        assert train_call_kwargs["precision"] == "32"
+        if add_precision:
+            assert train_call_kwargs["precision"] == "32"
+        else:
+            assert "precision" not in train_call_kwargs
         if geti_device.type == DeviceType.CPU or not geti_device.index:
             assert "devices" not in train_call_kwargs
         else:

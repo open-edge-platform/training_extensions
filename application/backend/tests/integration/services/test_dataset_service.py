@@ -908,24 +908,39 @@ class TestDatasetServiceIntegration:
         fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
+        db_session: Session,
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
         _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
         annotations = fxt_annotations(project.task.labels[0].id)
+
+        # Create a media record with no corresponding dataset item so the media
+        # lookup succeeds but the dataset item update fails.
+        orphan_media = MediaDB(
+            type="image",
+            name="orphan",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+        )
+        db_session.add(orphan_media)
+        db_session.flush()
+        orphan_media_id = UUID(orphan_media.id)
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.set_dataset_item_annotations(
                 project=project,
-                dataset_item_id=non_existent_id,
+                dataset_item_id=orphan_media_id,
                 annotations=annotations,
                 user_reviewed=True,
                 prediction_model_id=pipeline.model_id,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
+        assert excinfo.value.resource_id == str(orphan_media_id)
 
     def test_delete_dataset_item_annotations(
         self,
