@@ -213,7 +213,7 @@ class TestGetiConfigConverterConvert:
             MockAutoConfigurator.return_value.config = otx_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
-        assert result["gradient_clip_val"] == 1.0
+        assert result["engine"]["gradient_clip_val"] == 1.0
 
     def test_convert_disables_gradient_clip(self) -> None:
         otx_cfg = _make_otx_config()
@@ -226,7 +226,7 @@ class TestGetiConfigConverterConvert:
             MockAutoConfigurator.return_value.config = otx_cfg
             result = GetiConfigConverter.convert(geti_cfg)
 
-        assert result["gradient_clip_val"] is None
+        assert result["engine"]["gradient_clip_val"] is None
 
     def test_convert_applies_gradient_accumulation(self) -> None:
         otx_cfg = _make_otx_config()
@@ -277,29 +277,6 @@ class TestGetiConfigConverterConvert:
         assert "ReduceLROnPlateau" in main_sched["class_path"]
         assert main_sched["init_args"]["factor"] == 0.5
         assert main_sched["init_args"]["patience"] == 3
-
-    def test_convert_applies_scheduler_cosine_annealing(self) -> None:
-        otx_cfg = _make_otx_config()
-        geti_cfg = _make_geti_config(
-            hyper_parameters={
-                "training": {
-                    "scheduler": {
-                        "type": "cosine_annealing",
-                        "min_lr": 1e-6,
-                        "warmup": {"enable": False},
-                    }
-                }
-            }
-        )
-
-        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
-            MockAutoConfigurator.return_value.config = otx_cfg
-            result = GetiConfigConverter.convert(geti_cfg)
-
-        scheduler = result["model"]["init_args"]["scheduler"]
-        main_sched = scheduler["init_args"]["main_scheduler_callable"]
-        assert "CosineAnnealing" in main_sched["class_path"]
-        assert main_sched["init_args"]["eta_min"] == 1e-6
 
     def test_convert_enables_warmup(self) -> None:
         otx_cfg = _make_otx_config()
@@ -405,13 +382,13 @@ class TestHyperparametersUpdater:
     def test_update_gradient_clip_enable(self) -> None:
         config = _make_otx_config()
         HyperparametersUpdater._update_gradient_clip({"enable": True, "max_grad_norm": 5.0}, config)
-        assert config["gradient_clip_val"] == 5.0
+        assert config["engine"]["gradient_clip_val"] == 5.0
 
     def test_update_gradient_clip_disable(self) -> None:
         config = _make_otx_config()
         config["gradient_clip_val"] = 35.0
         HyperparametersUpdater._update_gradient_clip({"enable": False}, config)
-        assert config["gradient_clip_val"] is None
+        assert config["engine"]["gradient_clip_val"] is None
 
     def test_update_gradient_accumulation_enable(self) -> None:
         config = _make_otx_config()
@@ -429,16 +406,6 @@ class TestHyperparametersUpdater:
         config = _make_otx_config()
         HyperparametersUpdater._update_gradient_accumulation({"enable": True, "batches": 1}, config)
         assert "accumulate_grad_batches" not in config.get("engine", {})
-
-    def test_update_scheduler_switch_to_cosine(self) -> None:
-        config = _make_otx_config()
-        HyperparametersUpdater._update_scheduler(
-            {"type": "cosine_annealing", "min_lr": 0.0001, "warmup": {"enable": False}},
-            config,
-        )
-        sched = config["model"]["init_args"]["scheduler"]["init_args"]["main_scheduler_callable"]
-        assert "CosineAnnealing" in sched["class_path"]
-        assert sched["init_args"]["eta_min"] == 0.0001
 
     def test_update_scheduler_factor_patience(self) -> None:
         config = _make_otx_config()
@@ -643,7 +610,7 @@ class TestFullConfigRoundTrip:
         assert result["data"]["val_subset"]["batch_size"] == 16
         assert result["max_epochs"] == 100
         assert result["data"]["input_size"] == (640, 640)
-        assert result["gradient_clip_val"] == 10.0
+        assert result["engine"]["gradient_clip_val"] == 10.0
         assert result["engine"]["accumulate_grad_batches"] == 2
 
         # Scheduler

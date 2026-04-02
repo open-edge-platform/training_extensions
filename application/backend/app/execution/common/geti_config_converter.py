@@ -563,16 +563,8 @@ class HyperparametersUpdater:
             warn("Warning: weight_decay is not updated", stacklevel=1)
 
     @staticmethod
-    def _update_scheduler(scheduler_cfg: dict | None, config: dict) -> None:  # noqa: C901, PLR0912, PLR0915
-        """Update scheduler parameters in the config.
-
-        Handles:
-        - scheduler.type: 'reduce_lr_on_plateau' or 'cosine_annealing'
-        - scheduler.warmup.enable / warmup.epochs
-        - scheduler.factor (ReduceLROnPlateau only)
-        - scheduler.patience (ReduceLROnPlateau only)
-        - scheduler.min_lr (CosineAnnealing only)
-        """
+    def _update_scheduler(scheduler_cfg: dict | None, config: dict) -> None:
+        """Update scheduler parameters in the config."""
         if scheduler_cfg is None:
             logger.info("Scheduler parameters are not provided, skipping update.")
             return
@@ -600,46 +592,19 @@ class HyperparametersUpdater:
         if not isinstance(main_scheduler, dict) or "init_args" not in main_scheduler:
             return
 
-        scheduler_type = scheduler_cfg.get("type")
+        scheduler_cfg.get("type")
         main_init_args = main_scheduler["init_args"]
 
         # Update type-specific params regardless of whether type was changed
         factor = scheduler_cfg.get("factor")
         patience = scheduler_cfg.get("patience")
-        min_lr = scheduler_cfg.get("min_lr")
+        scheduler_cfg.get("min_lr")
 
-        if scheduler_type == "cosine_annealing":
-            # Switch to CosineAnnealingLR if currently ReduceLROnPlateau
-            if "ReduceLROnPlateau" in main_scheduler.get("class_path", ""):
-                main_scheduler["class_path"] = "torch.optim.lr_scheduler.CosineAnnealingLR"
-                monitor = main_init_args.pop("monitor", None)
-                main_scheduler["init_args"] = {"T_max": 100000}
-                if monitor:
-                    # Preserve monitor in the parent scheduler callable
-                    scheduler_init_args["monitor"] = monitor
-            if min_lr is not None:
-                main_scheduler["init_args"]["eta_min"] = min_lr
-        elif scheduler_type == "reduce_lr_on_plateau":
-            # Switch to ReduceLROnPlateau if currently CosineAnnealing
-            if "CosineAnnealing" in main_scheduler.get("class_path", ""):
-                monitor = scheduler_init_args.pop("monitor", None)
-                main_scheduler["class_path"] = "lightning.pytorch.cli.ReduceLROnPlateau"
-                main_scheduler["init_args"] = {"mode": "max"}
-                if monitor:
-                    main_scheduler["init_args"]["monitor"] = monitor
+        if "ReduceLROnPlateau" in main_scheduler.get("class_path", ""):
             if factor is not None:
                 main_init_args["factor"] = factor
             if patience is not None:
                 main_init_args["patience"] = patience
-        # Type not changed - still apply factor/patience/min_lr if relevant
-        elif "ReduceLROnPlateau" in main_scheduler.get("class_path", ""):
-            if factor is not None:
-                main_init_args["factor"] = factor
-            if patience is not None:
-                main_init_args["patience"] = patience
-        elif "CosineAnnealing" in main_scheduler.get("class_path", ""):
-            if min_lr is not None:
-                main_init_args["eta_min"] = min_lr
 
     @staticmethod
     def _update_gradient_clip(gradient_clip_cfg: dict | None, config: dict) -> None:
@@ -655,10 +620,10 @@ class HyperparametersUpdater:
         if enable:
             max_grad_norm = gradient_clip_cfg.get("max_grad_norm")
             if max_grad_norm is not None:
-                config["gradient_clip_val"] = max_grad_norm
+                config["engine"]["gradient_clip_val"] = max_grad_norm
         else:
             # Explicitly disable gradient clipping
-            config["gradient_clip_val"] = None
+            config["engine"]["gradient_clip_val"] = None
 
     @staticmethod
     def _update_gradient_accumulation(gradient_accum_cfg: dict | None, config: dict) -> None:

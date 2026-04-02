@@ -418,8 +418,6 @@ class OTXTrainer(Execution[TrainingJobParams]):
             train_kwargs["devices"] = [device.index]
         if "precision" in training_config:
             train_kwargs["precision"] = training_config["precision"]
-        if "gradient_clip_val" in training_config:
-            train_kwargs["gradient_clip_val"] = training_config["radient_clip_val"]
         otx_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
