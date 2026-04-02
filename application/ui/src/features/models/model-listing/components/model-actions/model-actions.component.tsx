@@ -77,13 +77,18 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
         );
     };
 
-    const handleDeleteModel = (deleteFiles: boolean = false) => {
-        deleteModelMutation.mutate({
-            params: {
-                path: { project_id: projectId, model_id: model.id },
-                query: { files_only: deleteFiles },
+    const handleDeleteModel = (filesOnly: boolean) => {
+        deleteModelMutation.mutate(
+            {
+                params: {
+                    path: { project_id: projectId, model_id: model.id },
+                    query: { files_only: filesOnly },
+                },
             },
-        });
+            {
+                onSuccess: () => setIsDialogOpen(null),
+            }
+        );
     };
 
     const modelName = model.name ?? 'Unnamed Model';
@@ -119,11 +124,8 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                         title='Delete weights'
                         variant='destructive'
                         primaryActionLabel='Delete weights'
-                        onPrimaryAction={() => {
-                            const deleteFiles = true;
-
-                            handleDeleteModel(deleteFiles);
-                        }}
+                        onPrimaryAction={() => handleDeleteModel(true)}
+                        isPrimaryActionDisabled={deleteModelMutation.isPending}
                         cancelLabel='Cancel'
                     >
                         {`Are you sure you want to delete the weights for model "${modelName}"?`}
@@ -137,6 +139,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                         variant='destructive'
                         primaryActionLabel='Delete model'
                         onPrimaryAction={() => handleDeleteModel(false)}
+                        isPrimaryActionDisabled={deleteModelMutation.isPending}
                         cancelLabel='Cancel'
                     >
                         {`Are you sure you want to delete model "${modelName}"? This action cannot be undone.`}
