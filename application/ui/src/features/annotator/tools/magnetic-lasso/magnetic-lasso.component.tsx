@@ -57,6 +57,7 @@ export const MagneticLasso = () => {
         optimizePolygonOrSegments,
         onPointerMoveRemove,
         setPointFromEvent,
+        isWorkerError,
     } = usePolygonConfig({ image, zoom, canvasRef });
 
     const toolIcon = getToolIcon(mode);
@@ -64,6 +65,15 @@ export const MagneticLasso = () => {
     const STARTING_POINT_RADIUS = Math.ceil(
         (isCloseMode(mode) ? START_POINT_FIELD_FOCUS_RADIUS : START_POINT_FIELD_DEFAULT_RADIUS) / zoom
     );
+
+    useEffect(() => {
+        if (isWorkerError) {
+            toast({
+                message: 'Intelligent scissors is not available.',
+                type: 'error',
+            });
+        }
+    }, [isWorkerError]);
 
     useEffect(() => {
         updateBuildMapAfterUndoRedo();
@@ -93,12 +103,20 @@ export const MagneticLasso = () => {
     const complete = async () => {
         if (isPolygonReadyToClose(polygon)) {
             startTransition(async () => {
-                const optimizedPolygon = await optimizePolygonOrSegments(polygon);
+                try {
+                    const optimizedPolygon = await optimizePolygonOrSegments(polygon);
 
-                addAndSelectAnnotations(
-                    [{ type: 'polygon', points: optimizedPolygon.points }],
-                    selectedLabel ? [selectedLabel] : []
-                );
+                    addAndSelectAnnotations(
+                        [{ type: 'polygon', points: optimizedPolygon.points }],
+                        selectedLabel ? [selectedLabel] : []
+                    );
+                } catch (error) {
+                    toast({
+                        message:
+                            error instanceof Error ? error.message : 'Failed to optimize polygon. Please try again.',
+                        type: 'error',
+                    });
+                }
             });
         }
     };
@@ -135,10 +153,6 @@ export const MagneticLasso = () => {
 
     const getSegmentMutation = useMutation({
         mutationFn: async (point: Point) => worker?.calcPoints(point),
-
-        onError: (): void => {
-            toast({ message: 'Failed to select the shape boundaries, could you please try again?', type: 'error' });
-        },
 
         onSuccess: (newPoints?: Point[]) => {
             if (isMounted && isNonEmptyArray(newPoints)) {

@@ -23,9 +23,11 @@ export const ImportJobProcessButtons = ({
 
     const isPending = cancelJobMutation.isPending || deleteFileMutation.isPending;
 
-    const handleCancelJob = async (jobId: string) => {
-        await cancelJobMutation.mutateAsync({ params: { path: { job_id: jobId } } });
-        deleteFileMutation.mutate();
+    const handleCancelJob = (jobId: string) => {
+        cancelJobMutation.mutate(
+            { params: { path: { job_id: jobId } } },
+            { onSuccess: () => deleteFileMutation.mutate() }
+        );
     };
 
     return (

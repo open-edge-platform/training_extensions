@@ -25,15 +25,6 @@ const useDeleteMediaItemMutation = (projectId: string) => {
                 ],
             ],
         },
-        onError: (error, { params: { path } }) => {
-            const { media_id: itemId } = path;
-
-            toast({
-                id: String(itemId),
-                type: 'error',
-                message: `Failed to delete, ${error?.detail}`,
-            });
-        },
     });
 };
 
@@ -61,12 +52,20 @@ export const useDeleteMediaItem = () => {
 
         isFunction(onDeleted) && onDeleted(deletedIds);
 
-        toast({
-            id: 'deleting-notification',
-            type: 'success',
-            message: `${deletedIds.length} item(s) deleted successfully`,
-            duration: 3000,
-        });
+        if (deletedIds.length === 0) {
+            toast({
+                id: 'deleting-notification',
+                type: 'error',
+                message: 'Failed to delete the selected item(s). Please try again.',
+            });
+        } else {
+            toast({
+                id: 'deleting-notification',
+                type: 'success',
+                message: `${deletedIds.length} item(s) deleted successfully`,
+                duration: 3000,
+            });
+        }
     };
 
     return {

@@ -41,23 +41,25 @@ export const useExportDatasetJobAction = ({ datasetId, onSuccess }: useExportDat
             dataset_id: datasetId,
         };
 
-        const { job_id } = await exportJobMutation.mutateAsync({
-            body: {
-                project_id: projectId,
-                dataset_id: options.dataset_id,
-                job_type: 'export_dataset',
-                parameters: {
-                    export_format: options.export_format,
-                    filters: {
-                        labels: options.labels,
-                        include_unannotated: options.include_unannotated,
+        try {
+            const { job_id } = await exportJobMutation.mutateAsync({
+                body: {
+                    project_id: projectId,
+                    dataset_id: options.dataset_id,
+                    job_type: 'export_dataset',
+                    parameters: {
+                        export_format: options.export_format,
+                        filters: {
+                            labels: options.labels,
+                            include_unannotated: options.include_unannotated,
+                        },
                     },
                 },
-            },
-        });
+            });
 
-        addLsExportId(job_id, datasetId);
-        onSuccess();
+            addLsExportId(job_id, datasetId);
+            onSuccess();
+        } catch (_error) {}
 
         return options;
     }, initialState);

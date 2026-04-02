@@ -22,7 +22,7 @@ export const usePolygonConfig = ({
     canvasRef: RefObject<SVGRectElement>;
 }) => {
     const isMounted = useRef(true);
-    const { worker } = useIntelligentScissorsWorker();
+    const { worker, isError: isWorkerError } = useIntelligentScissorsWorker();
 
     const [pointerLine, setPointerLine] = useState<Point[]>([]);
     const [lassoSegment, setLassoSegment] = useState<Point[]>([]);
@@ -103,5 +103,6 @@ export const usePolygonConfig = ({
         resetTool,
         onPointerMoveRemove,
         setPointFromEvent,
+        isWorkerError,
     };
 };

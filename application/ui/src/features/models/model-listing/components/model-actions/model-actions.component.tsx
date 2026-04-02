@@ -87,6 +87,9 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
             },
             {
                 onSuccess: () => setIsDialogOpen(null),
+                onError: () => {
+                    setIsDialogOpen(null);
+                },
             }
         );
     };

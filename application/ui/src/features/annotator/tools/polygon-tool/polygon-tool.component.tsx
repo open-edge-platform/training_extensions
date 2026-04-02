@@ -4,6 +4,7 @@
 import { PointerEvent, useRef, useState, useTransition } from 'react';
 
 import { isPointOverPoint, isPolygonValid } from '@geti/smart-tools/utils';
+import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
@@ -120,12 +121,22 @@ export const PolygonTool = () => {
 
             if (canPathBeClosed(point) && isPolygonReadyToClose(polygon)) {
                 startTransition(async () => {
-                    const optimizedPolygon = await optimizePolygonOrSegments(polygon);
+                    try {
+                        const optimizedPolygon = await optimizePolygonOrSegments(polygon);
 
-                    addAndSelectAnnotations(
-                        [{ type: 'polygon', points: optimizedPolygon.points }],
-                        selectedLabel ? [selectedLabel] : []
-                    );
+                        addAndSelectAnnotations(
+                            [{ type: 'polygon', points: optimizedPolygon.points }],
+                            selectedLabel ? [selectedLabel] : []
+                        );
+                    } catch (error) {
+                        toast({
+                            message:
+                                error instanceof Error
+                                    ? error.message
+                                    : 'Failed to optimize polygon. Please try again.',
+                            type: 'error',
+                        });
+                    }
                 });
 
                 resetTool();

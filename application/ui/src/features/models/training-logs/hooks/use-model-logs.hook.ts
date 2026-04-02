@@ -76,9 +76,6 @@ export const useDownloadModelLogs = (modelId: string) => {
         onSuccess: () => {
             toast({ type: 'success', message: 'Training logs downloaded successfully' });
         },
-        onError: () => {
-            toast({ type: 'error', message: 'Failed to download training logs' });
-        },
     });
 
     return {
