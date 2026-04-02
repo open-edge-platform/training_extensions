@@ -46,3 +46,14 @@
     word-break: break-word;
     min-width: 0;
 }
+
+.path {
+    color: var(--spectrum-global-color-blue-700);
+    background-color: var(--spectrum-global-color-blue-100);
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-blue-200);
+    }
+}

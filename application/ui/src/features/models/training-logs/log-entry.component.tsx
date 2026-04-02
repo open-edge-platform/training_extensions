@@ -11,6 +11,9 @@ type LogEntryProps = {
     entry: LogEntryType;
 };
 
+// Matches URLs (https?://...), absolute paths (/foo, C:\foo), and relative multi-segment paths (foo/bar/baz)
+const PATH_REGEX = /(https?:\/\/[^\s'"<>]+|(?:\/|[A-Za-z]:\\)[^\s'"<>]+|[\w][\w.-]*(?:\/[\w.-]+)+)/g;
+
 const formatTimestamp = (timestamp: number): string => {
     if (!timestamp) {
         return '';
@@ -33,6 +36,29 @@ const formatSource = (name: string, func: string, line: number): string => {
     return parts.filter(Boolean).join(':');
 };
 
+const renderMessageWithPaths = (message: string) => {
+    const parts = message.split(PATH_REGEX);
+
+    return parts.map((part, index) => {
+        if (index % 2 === 1) {
+            return (
+                <span
+                    key={index}
+                    className={classes.path}
+                    title={'Click to copy path'}
+                    onClick={() => navigator.clipboard.writeText(part)}
+                    role={'button'}
+                    tabIndex={0}
+                >
+                    {part}
+                </span>
+            );
+        }
+
+        return part;
+    });
+};
+
 export const LogEntry = ({ entry }: LogEntryProps) => {
     const { record } = entry;
     const levelColor = LOG_LEVEL_COLORS[record.level.name] ?? LOG_LEVEL_COLORS.INFO;
@@ -46,7 +72,7 @@ export const LogEntry = ({ entry }: LogEntryProps) => {
                 {record.level.name}
             </span>
             {source ? <span className={classes.source}>{source}</span> : null}
-            <span className={classes.message}>{record.message.trim()}</span>
+            <span className={classes.message}>{renderMessageWithPaths(record.message.trim())}</span>
         </div>
     );
 };
