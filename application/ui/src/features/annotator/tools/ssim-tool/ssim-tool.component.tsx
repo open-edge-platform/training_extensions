@@ -22,7 +22,7 @@ export const SSIMTool = () => {
     const { annotations } = useAnnotationActions();
     const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
-    const { runSSIM, reset, toolState, isProcessing } = useSSIM();
+    const { runSSIM, reset, toolState, isProcessing, isLoading } = useSSIM();
 
     useEffect(() => {
         if (isProcessing || toolState.shapes.length === 0) {
@@ -37,6 +37,7 @@ export const SSIMTool = () => {
         <>
             <svg
                 aria-label='ssim preview'
+                data-loading={isLoading}
                 viewBox={`0 0 ${image.width} ${image.height}`}
                 style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}
             >
