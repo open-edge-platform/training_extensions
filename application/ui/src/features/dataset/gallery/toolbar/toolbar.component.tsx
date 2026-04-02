@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, Suspense, useMemo } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 
 import {
     Button,
@@ -11,7 +11,6 @@ import {
     Divider,
     Flex,
     Heading,
-    Loading,
     MediaViewModes,
     Text,
     ViewModes,
@@ -138,9 +137,7 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
                     <FilterByStatus onChange={onFilter} />
                     <Text>{message}</Text>
 
-                    <Suspense fallback={<Loading size='S' mode='inline' />}>
-                        <DatasetStatistics />
-                    </Suspense>
+                    <DatasetStatistics />
 
                     <MediaViewModes
                         viewMode={viewMode}

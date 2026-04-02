@@ -3,6 +3,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch
 from uuid import uuid4
 
@@ -652,12 +653,14 @@ class TestOTXTrainerTrainModel:
         ],
         ids=["CPU", "XPU (Intel GPU)", "CUDA (NVIDIA GPU)"],
     )
+    @pytest.mark.parametrize("add_precision", [True, False])
     def test_train_model(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
         geti_device: DeviceInfo,
         otx_device: str,
+        add_precision: bool,
     ):
         """Test successful model training."""
         # Arrange
@@ -685,7 +688,7 @@ class TestOTXTrainerTrainModel:
         weights_path.touch()
 
         # Create training configuration
-        training_config = {
+        training_config: dict[str, Any] = {
             "model": {
                 "class_path": "otx.backend.native.models.detection.yolox.YOLOXModel",
                 "init_args": {
@@ -693,7 +696,6 @@ class TestOTXTrainerTrainModel:
                 },
             },
             "max_epochs": 10,
-            "precision": "32",
             "callbacks": [
                 {
                     "class_path": "lightning.pytorch.callbacks.ModelCheckpoint",
@@ -704,6 +706,8 @@ class TestOTXTrainerTrainModel:
                 }
             ],
         }
+        if add_precision:
+            training_config["precision"] = "32"
 
         # Mock OTXDataModule
         mock_datamodule = Mock()
@@ -774,7 +778,10 @@ class TestOTXTrainerTrainModel:
         mock_otx_engine.train.assert_called_once()
         train_call_kwargs = mock_otx_engine.train.call_args.kwargs
         assert train_call_kwargs["max_epochs"] == 10
-        assert train_call_kwargs["precision"] == "32"
+        if add_precision:
+            assert train_call_kwargs["precision"] == "32"
+        else:
+            assert "precision" not in train_call_kwargs
         if geti_device.type == DeviceType.CPU or not geti_device.index:
             assert "devices" not in train_call_kwargs
         else:

@@ -128,9 +128,8 @@ describe('Toolbar', () => {
 
         await waitFor(() => {
             expect(screen.getByText('Dataset Statistics')).toBeVisible();
+            expect(screen.getByText('Number of media')).toBeVisible();
+            expect(screen.getByText('Annotated images')).toBeVisible();
         });
-
-        expect(screen.getByText('Number of media')).toBeVisible();
-        expect(screen.getByText('Annotated images')).toBeVisible();
     });
 });

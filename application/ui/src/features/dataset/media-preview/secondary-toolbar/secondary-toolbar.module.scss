@@ -2,8 +2,6 @@
     padding-top: var(--spectrum-global-dimension-size-125);
 }
 
-.closeButton {
-    padding-left: var(--spectrum-global-dimension-size-200);
-    padding-right: var(--spectrum-global-dimension-size-50);
-    gap: var(--spectrum-global-dimension-size-50);
+.buttonsGroup {
+    gap: var(--spectrum-global-dimension-size-100);
 }

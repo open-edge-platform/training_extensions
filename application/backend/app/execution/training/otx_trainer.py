@@ -410,16 +410,17 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
-        train_kwargs = {"devices": [device.index]} if device.type is not DeviceType.CPU and device.index else {}
-        gradient_clip_val = training_config.get("gradient_clip_val")
-        if gradient_clip_val is not None:
-            train_kwargs["gradient_clip_val"] = gradient_clip_val
-        otx_engine.train(
-            max_epochs=training_config["max_epochs"],
-            precision=training_config["precision"],
-            callbacks=callbacks_list,
-            **train_kwargs,  # pyrefly: ignore[bad-argument-type]
-        )
+        train_kwargs = {
+            "max_epochs": training_config["max_epochs"],
+            "callbacks": callbacks_list,
+        }
+        if device.type is not DeviceType.CPU and device.index:
+            train_kwargs["devices"] = [device.index]
+        if "precision" in training_config:
+            train_kwargs["precision"] = training_config["precision"]
+        if "gradient_clip_val" in training_config:
+            train_kwargs["gradient_clip_val"] = training_config["radient_clip_val"]
+        otx_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, otx_engine
