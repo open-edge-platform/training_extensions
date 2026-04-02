@@ -173,7 +173,7 @@ class PipelineService(BaseSessionManagedService):
         if pipeline_db.model_variant_id is not None:
             # Explicit variant specified: validate it
             variant_db = model_variant_repo.get_by_id(pipeline_db.model_variant_id)
-            if variant_db is None:
+            if variant_db is None or variant_db.files_deleted:
                 raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=pipeline_db.model_variant_id)
             if variant_db.model_revision_id != model_revision_id:
                 raise IncompatibleModelVariantError(
@@ -194,7 +194,7 @@ class PipelineService(BaseSessionManagedService):
                 format=ModelFormat.OPENVINO,
                 precision=ModelPrecision.FP16,
             )
-            if default_variant is None:
+            if default_variant is None or default_variant.files_deleted:
                 raise IncompatibleModelVariantError(
                     f"No FP16 OpenVINO variant found for model revision '{model_revision_id}'. "
                     f"Please specify a model_variant_id explicitly."
