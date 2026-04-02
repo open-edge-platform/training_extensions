@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import re
 from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, call, patch
@@ -191,6 +191,48 @@ class TestOTXTrainerPrepareWeights:
 
         # Assert
         assert weights_path == expected_weights_path
+
+    def test_prepare_weights_with_parent_model_no_variants(
+        self,
+        tmp_path: Path,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test preparing weights when no parent model revision variants are available."""
+        # Arrange
+        project_id = uuid4()
+        parent_model_revision_id = uuid4()
+        parent_model_variant_id = uuid4()
+        training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+            project_id=project_id,
+            model_architecture_id="object-detection-yolox-s",
+            task=Task(task_type=TaskType.DETECTION),
+            parent_model_revision_id=parent_model_revision_id,
+            job_id=uuid4(),
+        )
+        expected_weights_path = (
+            tmp_path
+            / "projects"
+            / str(project_id)
+            / "models"
+            / str(parent_model_revision_id)
+            / "variants"
+            / str(parent_model_variant_id)
+            / "model.ckpt"
+        )
+        expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
+        expected_weights_path.touch()
+        otx_trainer = fxt_otx_trainer()
+
+        otx_trainer._model_service.get_model_variants.return_value = []
+
+        # Act
+        msg = (
+            "Can't start training - the parent revision has no variants (it may have failed). "
+            "Review the previous revision and retry."
+        )
+        with pytest.raises(ValueError, match=re.escape(msg)):
+            otx_trainer.prepare_weights(training_params)
 
     def test_prepare_weights_with_parent_model_no_file_raises_error(
         self,
