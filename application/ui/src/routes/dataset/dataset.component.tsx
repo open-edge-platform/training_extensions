@@ -39,7 +39,7 @@ export const Dataset = () => {
         }
     };
 
-    const handleUserReviewedChange = (mediaItemId: string) => {
+    const isUserReviewed = (mediaItemId: string) => {
         return responseDatasetItems.reviewStatus.get(mediaItemId) ?? false;
     };
 
@@ -70,7 +70,7 @@ export const Dataset = () => {
                     viewMode={viewMode}
                     isPending={mediaItemsResponse.isPending || responseDatasetItems.isPending}
                     fetchNextPage={handleNextPageFetch}
-                    isUserReviewed={handleUserReviewedChange}
+                    isUserReviewed={isUserReviewed}
                     hasActiveFilter={filterStatus !== null}
                     isFetchingNextPage={
                         mediaItemsResponse.isFetchingNextPage || responseDatasetItems.isFetchingNextPage

@@ -158,7 +158,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
         }
     };
 
-    const handleUserReviewedChange = (mediaItemId: string) => {
+    const isUserReviewed = (mediaItemId: string) => {
         return responseDatasetItems.reviewStatus.get(mediaItemId) ?? false;
     };
 
@@ -194,7 +194,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                     mediaItemsResponse.isFetchingNextPage || responseDatasetItems.isFetchingNextPage
                                 }
                                 fetchNextPage={handleNextPageFetch}
-                                isUserReviewed={handleUserReviewedChange}
+                                isUserReviewed={isUserReviewed}
                             />
                         </PredictionsSetupProvider>
                     </SelectedMediaItemProvider>
