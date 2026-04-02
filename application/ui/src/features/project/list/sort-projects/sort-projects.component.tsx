@@ -42,7 +42,7 @@ export const SortProjects = ({ sortBy, onSort }: SortProjectsProps) => {
             onSelectionChange={(key) => onSort(key as SortBy)}
             labelAlign={'start'}
             labelPosition={'side'}
-            label={'Sort projects by:'}
+            label={'Sort:'}
             UNSAFE_className={classes.sortProjects}
         >
             {(item) => {
