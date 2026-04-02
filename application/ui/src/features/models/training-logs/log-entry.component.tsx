@@ -1,7 +1,10 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Fragment } from 'react';
+
 import dayjs from 'dayjs';
+import { useClipboard } from 'hooks/use-clipboard/use-clipboard.hook';
 
 import { LOG_LEVEL_COLORS, type LogEntry as LogEntryType } from './log-types';
 
@@ -36,17 +39,17 @@ const formatSource = (name: string, func: string, line: number): string => {
     return parts.filter(Boolean).join(':');
 };
 
-const renderMessageWithPaths = (message: string) => {
-    const parts = message.split(PATH_REGEX);
+const MessageWithPaths = ({ message }: { message: string }) => {
+    const { copy } = useClipboard();
 
-    return parts.map((part, index) => {
+    return message.split(PATH_REGEX).map((part, index) => {
         if (index % 2 === 1) {
             return (
                 <span
                     key={index}
                     className={classes.path}
                     title={'Click to copy path'}
-                    onClick={() => navigator.clipboard.writeText(part)}
+                    onClick={() => copy(part)}
                     role={'button'}
                     tabIndex={0}
                 >
@@ -55,7 +58,7 @@ const renderMessageWithPaths = (message: string) => {
             );
         }
 
-        return part;
+        return <Fragment key={index}>{part}</Fragment>;
     });
 };
 
@@ -72,7 +75,9 @@ export const LogEntry = ({ entry }: LogEntryProps) => {
                 {record.level.name}
             </span>
             {source ? <span className={classes.source}>{source}</span> : null}
-            <span className={classes.message}>{renderMessageWithPaths(record.message.trim())}</span>
+            <span className={classes.message}>
+                <MessageWithPaths message={record.message.trim()} />
+            </span>
         </div>
     );
 };
