@@ -43,10 +43,13 @@ test.describe('SSIM tool', () => {
             await ssimTool.drawTemplate({ x: 100, y: 100, width: 150, height: 150 });
         });
 
-        await test.step('Expect at least one polygon annotation to be added', async () => {
+        await test.step('Expect at least one prediction polygon annotation beyond the template', async () => {
             await expect(async () => {
                 const items = await annotatorPage.getAnnotationsListItems('annotation polygon');
-                expect(items.length).toBeGreaterThan(0);
+
+                // The SSIM implementation always includes the drawn template as a polygon,
+                // so require more than one polygon to ensure at least one prediction exists.
+                expect(items.length).toBeGreaterThan(1);
             }).toPass({ timeout: 15000 });
         });
     });

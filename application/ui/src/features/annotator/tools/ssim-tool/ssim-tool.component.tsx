@@ -29,7 +29,14 @@ export const SSIMTool = () => {
             return;
         }
 
-        addAndSelectAnnotations(toolState.shapes, selectedLabel ? [selectedLabel] : []);
+        const predictedShapes = toolState.shapes.slice(1);
+
+        if (predictedShapes.length === 0) {
+            reset();
+            return;
+        }
+
+        addAndSelectAnnotations(predictedShapes, selectedLabel ? [selectedLabel] : []);
         reset();
     }, [toolState.shapes, isProcessing, addAndSelectAnnotations, selectedLabel, reset]);
 
