@@ -68,6 +68,7 @@ class ActiveModelService:
                     for v in model_variants
                     if v.format == ModelFormat.OPENVINO and v.precision == ModelPrecision.FP16
                 )
+                logger.warning("No active model variant ID found, loaded fallback model %s", active_variant_id)
             pipeline_device = active_model_repo.get_active_pipeline_device()
             if pipeline_device is None:
                 raise RuntimeError("Active pipeline must have a device configured")
