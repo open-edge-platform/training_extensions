@@ -4,7 +4,6 @@
 import { useEffect } from 'react';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useProjectTask } from '../../../../hooks/use-project-task.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { getFormattedPoints } from '../../annotations/utils';
 import { useAnnotatorLabels } from '../../annotator-labels-provider.component';
@@ -20,13 +19,10 @@ import classes from './ssim-tool.module.scss';
 export const SSIMTool = () => {
     const { scale: zoom } = useZoom();
     const { roi, image } = useSelectedMediaItem();
-    const taskType = useProjectTask();
     const { annotations } = useAnnotationActions();
     const { selectedLabel } = useAnnotatorLabels();
     const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { runSSIM, reset, toolState, isProcessing } = useSSIM();
-
-    const ssimShapeType = taskType === 'instance_segmentation' ? 'polygon' : 'rectangle';
 
     useEffect(() => {
         if (isProcessing || toolState.shapes.length === 0) {
@@ -100,7 +96,7 @@ export const SSIMTool = () => {
                         template,
                         existingAnnotations: annotations.map((annotation) => annotation.shape),
                         autoMergeDuplicates: true,
-                        shapeType: ssimShapeType,
+                        shapeType: 'polygon',
                     });
 
                     return [];
