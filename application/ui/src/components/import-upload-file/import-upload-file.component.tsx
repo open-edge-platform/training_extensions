@@ -59,24 +59,21 @@ export const ImportUploadFile = ({ formatOptions, onFileUploaded }: ImportUpload
         const formData = new FormData();
         formData.append('file', file);
 
-        try {
-            // @ts-expect-error There is an incorrect type in OpenAPI
-            const stagedDataset = await stagedDatasetMutation.mutateAsync({ body: formData });
+        // @ts-expect-error There is an incorrect type in OpenAPI
+        const stagedDataset = await stagedDatasetMutation.mutateAsync({ body: formData }).catch(() => null);
+        if (!stagedDataset) return;
 
-            const prepareImportJob = await prepareImportJobMutation.mutateAsync({
-                body: {
-                    job_type: 'prepare_dataset_for_import',
-                    staged_dataset_id: stagedDataset.id,
-                },
-            });
+        const prepareImportJob = await prepareImportJobMutation
+            .mutateAsync({ body: { job_type: 'prepare_dataset_for_import', staged_dataset_id: stagedDataset.id } })
+            .catch(() => null);
+        if (!prepareImportJob) return;
 
-            onFileUploaded({
-                size: file.size,
-                fileName: file.name,
-                prepareJobId: prepareImportJob.job_id,
-                stagedDatasetId: stagedDataset.id,
-            });
-        } catch (_error) {}
+        onFileUploaded({
+            size: file.size,
+            fileName: file.name,
+            prepareJobId: prepareImportJob.job_id,
+            stagedDatasetId: stagedDataset.id,
+        });
     };
 
     const isPending = stagedDatasetMutation.isPending || prepareImportJobMutation.isPending;

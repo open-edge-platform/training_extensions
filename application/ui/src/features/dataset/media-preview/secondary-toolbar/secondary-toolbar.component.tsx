@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text, toast } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@geti/ui';
 import { CloseSemiBold } from '@geti/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
 
@@ -65,9 +65,7 @@ export const SecondaryToolbar = ({
         try {
             await submitAnnotations();
             onSelectNextMediaItem();
-        } catch (_error) {
-            toast({ message: 'Failed to save annotations. Please try again.', type: 'error' });
-        }
+        } catch (_error) {}
     };
 
     const isClassification = isClassificationTask(selectedProject.task.task_type);
