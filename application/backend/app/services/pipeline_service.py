@@ -224,7 +224,7 @@ class PipelineService(BaseSessionManagedService):
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
                 self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
-            if pipeline.model_id != updated.model_revision.id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
+            if pipeline.model_id != updated.model_revision.id or pipeline.model_variant_id != updated.model_variant_id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
                 self._event_bus.emit_event(EventType.MODEL_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
