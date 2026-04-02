@@ -105,6 +105,13 @@ class PipelineService(BaseSessionManagedService):
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
         base = pipeline.model_dump()
+
+        # When model_id changes without an explicit model_variant_id, any existing model_variant_id should be cleared
+        # before merging dicts so that _validate_model_and_resolve_variant can default to the FP16 OpenVINO variant.
+        new_model_id = partial_config.get("model_id") or partial_config.get("model_revision_id")
+        if new_model_id is not None and "model_variant_id" not in partial_config:
+            base["model_variant_id"] = None
+
         to_update = type(pipeline).model_validate({**base, **partial_config})
         pipeline_repo = PipelineRepository(self.db_session)
         to_update_db = PipelineDB(

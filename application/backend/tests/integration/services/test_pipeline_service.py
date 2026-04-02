@@ -3,17 +3,23 @@
 
 from collections.abc import Callable
 from enum import StrEnum
+from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest
 
-from app.db.schema import PipelineDB, ProjectDB
+from app.db.schema import ModelVariantDB, PipelineDB, ProjectDB
 from app.models import DataCollectionConfig, PipelineStatus
 from app.models.data_collection_policy import FixedRateDataCollectionPolicy
-from app.models.model_revision import TrainingStatus
+from app.models.model_revision import ModelFormat, ModelPrecision, TrainingStatus
+from app.models.system import DeviceInfo, DeviceType
 from app.services import PipelineService, ResourceNotFoundError, ResourceType, SystemService
 from app.services.event.event_bus import EventType
-from app.services.pipeline_service import OtherProjectActiveError
+from app.services.pipeline_service import (
+    DeviceInt8NotSupportedError,
+    IncompatibleModelVariantError,
+    OtherProjectActiveError,
+)
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
@@ -36,9 +42,9 @@ def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> Pipel
 
 @pytest.fixture
 def fxt_project_with_pipeline(
-    fxt_db_projects, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session
+    fxt_db_projects, fxt_db_sinks, fxt_db_sources, fxt_db_models, fxt_db_model_variants, db_session
 ) -> Callable[[bool, int, list[dict] | None, str], tuple[ProjectDB, PipelineDB]]:
-    """Fixture to create a ProjectDB with an associated PipelineDB."""
+    """Fixture to create a ProjectDB with an associated PipelineDB, including model variants."""
 
     def _create_project_with_pipeline(
         is_running: bool, project_index: int = 0, data_policies: list[dict] | None = None, device: str = "cpu"
@@ -46,6 +52,7 @@ def fxt_project_with_pipeline(
         db_session.add_all(fxt_db_sources)
         db_session.add_all(fxt_db_sinks)
         db_session.flush()
+        # Build project with pipeline (without model_variant_id, since variants need models to exist first)
         project_db = (
             ProjectTestDataFactory(db_session)
             .with_project(fxt_db_projects[project_index])
@@ -60,6 +67,13 @@ def fxt_project_with_pipeline(
             .with_data_policies(data_policies if data_policies else [])
             .build()
         )
+        # Persist model variants (requires model revisions to already exist)
+        db_session.add_all(fxt_db_model_variants)
+        db_session.flush()
+        # Now set the model_variant_id FK on the pipeline
+        pipeline_db = db_session.get(PipelineDB, project_db.id)
+        pipeline_db.model_variant_id = fxt_db_model_variants[project_index].id
+        db_session.flush()
         return project_db, db_session.get(PipelineDB, project_db.id)
 
     return _create_project_with_pipeline
@@ -185,11 +199,12 @@ class TestPipelineServiceIntegration:
         model_attr,
         fxt_project_with_pipeline,
         fxt_db_models,
+        fxt_db_model_variants,
         fxt_pipeline_service,
         fxt_event_bus,
         db_session,
     ):
-        """Test updating a pipeline by ID."""
+        """Test switching the model on a pipeline defaults to the FP16 OpenVINO variant."""
         _, db_pipeline = fxt_project_with_pipeline(is_running=True)
 
         model_id = fxt_db_models[1].id
@@ -200,6 +215,215 @@ class TestPipelineServiceIntegration:
         db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         assert str(updated.model_id) == model_id
         assert str(updated.model_id) == db_updated.model_revision_id
+        # Default FP16 OpenVINO variant should have been resolved
+        assert db_updated.model_variant_id == fxt_db_model_variants[1].id
+
+    def test_switch_model_with_explicit_variant(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_db_model_variants,
+        fxt_pipeline_service,
+        fxt_event_bus,
+        db_session,
+    ):
+        """Test switching model with an explicit model_variant_id selects that variant."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[1]
+        target_variant = fxt_db_model_variants[1]
+
+        updated = fxt_pipeline_service.update_pipeline(
+            db_pipeline.project_id,
+            {"model_id": target_model.id, "model_variant_id": target_variant.id},
+        )
+
+        fxt_event_bus.emit_event.assert_called_once_with(EventType.MODEL_CHANGED)
+        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
+        assert str(updated.model_id) == target_model.id
+        assert db_updated.model_variant_id == target_variant.id
+
+    def test_switch_model_defaults_to_fp16_openvino_variant(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_db_model_variants,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """Test that switching model without specifying a variant defaults to the FP16 OpenVINO variant."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[1]
+
+        fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"model_id": target_model.id})
+
+        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
+        assert db_updated.model_variant_id == fxt_db_model_variants[1].id
+
+    def test_switch_model_rejects_non_openvino_variant(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """Test that specifying a non-OpenVINO variant raises IncompatibleModelVariantError."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[1]
+        # Create a PyTorch variant for the target model
+        pytorch_variant = ModelVariantDB(
+            id=str(uuid4()),
+            model_revision_id=target_model.id,
+            format=ModelFormat.PYTORCH,
+            precision=ModelPrecision.FP32,
+        )
+        db_session.add(pytorch_variant)
+        db_session.flush()
+
+        with pytest.raises(IncompatibleModelVariantError, match="Only OpenVINO model variants"):
+            fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_id": target_model.id, "model_variant_id": pytorch_variant.id},
+            )
+
+    def test_switch_model_rejects_variant_from_wrong_revision(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_db_model_variants,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """
+        Test that specifying a variant belonging to a different model revision raises IncompatibleModelVariantError.
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[1]
+        # Use a variant from the first model (index 0), which doesn't belong to target_model
+        wrong_variant = fxt_db_model_variants[0]
+
+        with pytest.raises(IncompatibleModelVariantError, match="does not belong to"):
+            fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_id": target_model.id, "model_variant_id": wrong_variant.id},
+            )
+
+    def test_switch_model_raises_when_no_fp16_variant_exists(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_db_model_variants,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """Test that switching to a model with no FP16 OpenVINO variant raises IncompatibleModelVariantError."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[1]
+        # Delete the FP16 variant by marking its files as deleted
+        target_variant = fxt_db_model_variants[1]
+        target_variant.files_deleted = True
+        db_session.flush()
+
+        with pytest.raises(IncompatibleModelVariantError, match="No FP16 OpenVINO variant found"):
+            fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"model_id": target_model.id})
+
+    def test_switch_model_rejects_variant_not_found(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_pipeline_service,
+        db_session,
+    ):
+        """Test that specifying a non-existent variant ID raises ResourceNotFoundError."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[1]
+        non_existent_variant_id = str(uuid4())
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_id": target_model.id, "model_variant_id": non_existent_variant_id},
+            )
+        assert exc_info.value.resource_type == ResourceType.MODEL
+        assert exc_info.value.resource_id == non_existent_variant_id
+
+    def test_switch_model_int8_variant_raises_on_unsupported_device(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_pipeline_service,
+        fxt_system_service,
+        db_session,
+    ):
+        """
+        Test that selecting an INT8 variant on a device that doesn't support INT8 raises DeviceInt8NotSupportedError.
+        """
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[0]
+        # Create an INT8 OpenVINO variant
+        int8_variant = ModelVariantDB(
+            id=str(uuid4()),
+            model_revision_id=target_model.id,
+            format=ModelFormat.OPENVINO,
+            precision=ModelPrecision.INT8,
+        )
+        db_session.add(int8_variant)
+        db_session.flush()
+
+        # Mock the system service to report no INT8 support
+        fxt_system_service.get_device_info = MagicMock(
+            return_value=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+        )
+        fxt_system_service.supports_int8 = MagicMock(return_value=False)
+
+        with pytest.raises(DeviceInt8NotSupportedError):
+            fxt_pipeline_service.update_pipeline(
+                db_pipeline.project_id,
+                {"model_id": target_model.id, "model_variant_id": int8_variant.id},
+            )
+
+    def test_switch_model_int8_variant_succeeds_on_supported_device(
+        self,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_pipeline_service,
+        fxt_system_service,
+        fxt_event_bus,
+        db_session,
+    ):
+        """Test that selecting an INT8 variant on a device that supports INT8 succeeds."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        target_model = fxt_db_models[0]
+        # Create an INT8 OpenVINO variant
+        int8_variant = ModelVariantDB(
+            id=str(uuid4()),
+            model_revision_id=target_model.id,
+            format=ModelFormat.OPENVINO,
+            precision=ModelPrecision.INT8,
+        )
+        db_session.add(int8_variant)
+        db_session.flush()
+
+        # Mock the system service to report INT8 support
+        fxt_system_service.get_device_info = MagicMock(
+            return_value=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+        )
+        fxt_system_service.supports_int8 = MagicMock(return_value=True)
+
+        fxt_pipeline_service.update_pipeline(
+            db_pipeline.project_id,
+            {"model_id": target_model.id, "model_variant_id": int8_variant.id},
+        )
+
+        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
+        assert db_updated.model_variant_id == int8_variant.id
 
     @pytest.mark.parametrize(
         "training_status",
@@ -293,18 +517,28 @@ class TestPipelineServiceIntegration:
         fxt_db_sinks,
         fxt_db_sources,
         fxt_db_models,
+        fxt_db_model_variants,
         db_session,
     ):
         """Test setting pipeline data collection config."""
         db_session.add_all([fxt_db_sinks[0], fxt_db_sources[0]])
         db_session.flush()
-        (
+        project_db = (
             ProjectTestDataFactory(db_session)
             .with_project(fxt_db_projects[0])
-            .with_pipeline(sink_id=fxt_db_sinks[0].id, source_id=fxt_db_sources[0].id, model_id=fxt_db_models[0].id)
+            .with_pipeline(
+                sink_id=fxt_db_sinks[0].id,
+                source_id=fxt_db_sources[0].id,
+                model_id=fxt_db_models[0].id,
+            )
             .with_models([fxt_db_models[0]])
             .build()
         )
+        db_session.add(fxt_db_model_variants[0])
+        db_session.flush()
+        pipeline_db = db_session.get(PipelineDB, project_db.id)
+        pipeline_db.model_variant_id = fxt_db_model_variants[0].id
+        db_session.flush()
 
         pipeline = fxt_pipeline_service.update_pipeline(
             project_id=fxt_project_id,
@@ -328,19 +562,29 @@ class TestPipelineServiceIntegration:
         fxt_db_sinks,
         fxt_db_sources,
         fxt_db_models,
+        fxt_db_model_variants,
         db_session,
     ):
         """Test resetting pipeline data collection config."""
         db_session.add_all([fxt_db_sinks[0], fxt_db_sources[0]])
         db_session.flush()
-        (
+        project_db = (
             ProjectTestDataFactory(db_session)
             .with_project(fxt_db_projects[0])
-            .with_pipeline(sink_id=fxt_db_sinks[0].id, source_id=fxt_db_sources[0].id, model_id=fxt_db_models[0].id)
+            .with_pipeline(
+                sink_id=fxt_db_sinks[0].id,
+                source_id=fxt_db_sources[0].id,
+                model_id=fxt_db_models[0].id,
+            )
             .with_models([fxt_db_models[0]])
             .with_data_policies([{"type": "fixed_rate", "enabled": True, "rate": 0.1}])
             .build()
         )
+        db_session.add(fxt_db_model_variants[0])
+        db_session.flush()
+        pipeline_db = db_session.get(PipelineDB, project_db.id)
+        pipeline_db.model_variant_id = fxt_db_model_variants[0].id
+        db_session.flush()
 
         pipeline = fxt_pipeline_service.update_pipeline(
             project_id=fxt_project_id, partial_config={"data_collection": DataCollectionConfig()}
