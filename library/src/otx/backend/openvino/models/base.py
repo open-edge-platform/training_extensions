@@ -179,9 +179,12 @@ class OVModel:
             h, w = int(base.h), int(base.w)  # pyrefly: ignore[missing-attribute]
         except (AttributeError, TypeError, ValueError):
             return None
+        if h < 0 or w < 0:
+            msg = f"OV model reported invalid input dimensions: h={h}, w={w}. Values must be non-negative."
+            raise ValueError(msg)
         if h > 0 and w > 0:
             return (h, w)
-        return None
+        return None  # h == 0 or w == 0 means dynamic shape
 
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.
