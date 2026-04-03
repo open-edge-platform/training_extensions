@@ -4,6 +4,7 @@
 * @samet-akcay @leoll2 @Radwan-Ibrahim
 
 # CI and security
+.github/actions/ @open-edge-platform/geti-ci-maintain
 .github/workflows/ @open-edge-platform/geti-ci-maintain
 .github/renovate.json5 @open-edge-platform/geti-ci-maintain
 security.md @open-edge-platform/geti-ci-maintain
