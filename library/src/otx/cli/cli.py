@@ -45,7 +45,7 @@ class OTXCLI:
 
     def __init__(self, args: list[str] | None = None, run: bool = True) -> None:
         """Initialize OTX CLI."""
-        self.console = Console()
+        self.console = Console(legacy_windows=False)
         self._subcommand_method_arguments: dict[str, list[str]] = {}
         with patch_update_configs():
             self.parser = self.init_parser()
