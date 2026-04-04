@@ -2,3 +2,12 @@
     filter: brightness(var(--image-brightness)) saturate(var(--image-saturation)) contrast(var(--image-contrast));
     image-rendering: var(--pixel-view);
 }
+
+.readOnlyCanvas {
+    /* Disable interactions on annotation shapes only */
+    & [aria-label*='annotation'] *,
+    & [aria-label*='prediction'] *,
+    & [aria-label*='Annotation labels'] * {
+        pointer-events: none !important;
+    }
+}

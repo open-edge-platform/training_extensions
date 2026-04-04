@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models import BatchInferenceInput, BatchInferencePrediction, BatchInferenceResult, Image, Project, VideoFrame
 from app.models.media import Media, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, Video, VideoRange
+from app.models.system import DeviceInfo
 
 from .base import BaseSessionManagedService, ResourceError, ResourceNotFoundError, ResourceType
 from .dataset_service import DatasetService
@@ -202,6 +203,7 @@ class MediaPredictionService(BaseSessionManagedService):
         self,
         project: Project,
         request: MediaListPredictionRequest,
+        device: DeviceInfo,
     ) -> BatchInferenceResult:
         """
         Perform batch inference for a number of media. Media can be an image, annotated frame or video frame range.
@@ -213,6 +215,7 @@ class MediaPredictionService(BaseSessionManagedService):
         Args:
             project: Project object containing project information.
             request: Batch inference request object.
+            device: DeviceInfo object containing information about device to run inference on.
 
         Returns:
             BatchInferenceResult object with list of media prediction results.
@@ -229,7 +232,7 @@ class MediaPredictionService(BaseSessionManagedService):
         labels = self._label_service.list_all(project_id=project.id)
 
         self._inference_server.set_inference_model(
-            project_id=project.id, model_id=request.model_id, device=request.device, ttl=self._inference_model_ttl
+            project_id=project.id, model_id=request.model_id, device=device, ttl=self._inference_model_ttl
         )
         batch_inference_result = self._inference_server.infer_batch(labels=labels, inputs=inputs)
 

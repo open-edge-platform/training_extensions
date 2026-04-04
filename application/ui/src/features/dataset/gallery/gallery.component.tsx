@@ -9,27 +9,26 @@ import { GridLayoutOptions } from 'react-aria-components';
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItemAnnotationStatus, Media } from '../../../constants/shared-types';
-import { useGetDatasetItemsById } from '../../../hooks/use-get-dataset-items-by-id.hook';
+import type { Media } from '../../../constants/shared-types';
 import { getMediaBinaryUrl, getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../providers/selected-data-provider.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
+import { BulkLabelsAssignmentDialog } from './bulk-labels-assignment/bulk-labels-assignment-dialog.component';
 import { DatasetDropZone } from './drop-zone.component';
 import { EmptyDataset } from './empty-dataset.component';
 import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 import { MediaItemActions } from './media-item-actions/media-item-actions.component';
+import { useUploadFiles } from './use-upload-files';
 
 type GalleryProps = {
     items: Media[];
-    annotationStatus?: DatasetItemAnnotationStatus;
     viewMode: ViewModes;
     isPending: boolean;
     hasActiveFilter: boolean;
-    hasNextPage: boolean;
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
-    onFilesDropped?: (files: File[]) => void | Promise<void>;
+    isUserReviewed: (mediaItemId: string) => boolean;
 };
 
 // DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
@@ -39,100 +38,132 @@ const VIEW_MODE_SETTINGS = {
     [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
 } as Record<ViewModes, GridLayoutOptions>;
 
+type GalleryListProps = {
+    items: Media[];
+    viewMode: ViewModes;
+    isFetchingNextPage: boolean;
+    fetchNextPage: () => void;
+    isUserReviewed: (mediaItemId: string) => boolean;
+    onSelectedMediaItemChange: (item: Media) => void;
+};
+
+const GalleryList = ({
+    items,
+    viewMode,
+    isFetchingNextPage,
+    fetchNextPage,
+    onSelectedMediaItemChange,
+    isUserReviewed,
+}: GalleryListProps) => {
+    const projectId = useProjectIdentifier();
+    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
+
+    const isSetSelectedKeys = selectedKeys instanceof Set;
+
+    return (
+        <VirtualizerGridLayout
+            items={items}
+            ariaLabel='data-collection-grid'
+            selectionMode='multiple'
+            selectedKeys={selectedKeys}
+            layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
+            isLoadingMore={isFetchingNextPage}
+            onLoadMore={fetchNextPage}
+            onSelectionChange={setSelectedKeys}
+            contentItem={(item) => {
+                const mediaUrl = getThumbnailUrl(projectId, item.id);
+                const fullMediaUrl = getMediaBinaryUrl(projectId, item.id);
+                const mediaFileName = `${item.name}.${item.format}`;
+
+                return (
+                    <MediaItem
+                        contentElement={() => (
+                            <MediaThumbnail
+                                item={item}
+                                alt={item.name}
+                                url={mediaUrl}
+                                onDoubleClick={() => onSelectedMediaItemChange(item)}
+                            />
+                        )}
+                        topLeftElement={() => (
+                            <Flex
+                                width={'size-200'}
+                                height={'size-200'}
+                                alignItems={'center'}
+                                justifyContent={'center'}
+                            >
+                                <Checkbox
+                                    aria-label={`Select media item ${item.name}`}
+                                    onChange={() => toggleSelectedKeys([String(item.id)])}
+                                    isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
+                                />
+                            </Flex>
+                        )}
+                        topRightElement={() => (
+                            <MediaItemActions
+                                id={item.id}
+                                onDeleted={toggleSelectedKeys}
+                                mediaUrl={fullMediaUrl}
+                                mediaFileName={mediaFileName}
+                                onAnnotate={() => onSelectedMediaItemChange(item)}
+                            />
+                        )}
+                        bottomRightElement={() => (
+                            <AnnotationStatusIcon state={isUserReviewed(item.id) ? 'accepted' : undefined} />
+                        )}
+                    />
+                );
+            }}
+        />
+    );
+};
+
 export const Gallery = ({
     items,
-    annotationStatus,
     viewMode,
     isPending,
     hasActiveFilter,
-    hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-    onFilesDropped,
+    isUserReviewed,
 }: GalleryProps) => {
-    const projectId = useProjectIdentifier();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
-    const { selectedKeys, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
-    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length, annotationStatus });
 
-    const isSetSelectedKeys = selectedKeys instanceof Set;
+    const { isClassification, uploadFiles, clearFilesForLabelAssignment, filesForLabelAssignment } = useUploadFiles();
 
     const content =
         !isPending && isEmpty(items) ? (
             <EmptyDataset hasActiveFilter={hasActiveFilter} />
         ) : (
-            <VirtualizerGridLayout
+            <GalleryList
                 items={items}
-                ariaLabel='data-collection-grid'
-                selectionMode='multiple'
-                selectedKeys={selectedKeys}
-                layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
-                isLoadingMore={isFetchingNextPage}
-                onLoadMore={() => hasNextPage && fetchNextPage()}
-                onSelectionChange={setSelectedKeys}
-                contentItem={(item) => {
-                    const mediaUrl = getThumbnailUrl(projectId, item.id);
-                    const fullMediaUrl = getMediaBinaryUrl(projectId, item.id);
-                    const mediaFileName = `${item.name}.${item.format}`;
-
-                    return (
-                        <MediaItem
-                            contentElement={() => (
-                                <MediaThumbnail
-                                    item={item}
-                                    alt={item.name}
-                                    url={mediaUrl}
-                                    onDoubleClick={() => onSelectedMediaItemChange(item)}
-                                />
-                            )}
-                            topLeftElement={() => (
-                                <Flex
-                                    width={'size-200'}
-                                    height={'size-200'}
-                                    alignItems={'center'}
-                                    justifyContent={'center'}
-                                >
-                                    <Checkbox
-                                        aria-label={`Select media item ${item.name}`}
-                                        onChange={() => toggleSelectedKeys([String(item.id)])}
-                                        isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
-                                    />
-                                </Flex>
-                            )}
-                            topRightElement={() => (
-                                <MediaItemActions
-                                    id={item.id}
-                                    onDeleted={toggleSelectedKeys}
-                                    mediaUrl={fullMediaUrl}
-                                    mediaFileName={mediaFileName}
-                                    onAnnotate={() => onSelectedMediaItemChange(item)}
-                                />
-                            )}
-                            bottomRightElement={() => {
-                                const mediaItemId = String(item.id);
-                                const isUserReviewed = datasetItemsById.get(mediaItemId) ?? false;
-
-                                return <AnnotationStatusIcon state={isUserReviewed ? 'accepted' : undefined} />;
-                            }}
-                        />
-                    );
-                }}
+                viewMode={viewMode}
+                fetchNextPage={fetchNextPage}
+                isUserReviewed={isUserReviewed}
+                onSelectedMediaItemChange={onSelectedMediaItemChange}
+                isFetchingNextPage={isFetchingNextPage}
             />
         );
 
     return (
-        <DatasetDropZone onFilesDropped={onFilesDropped}>
-            {content}
+        <>
+            <DatasetDropZone onFilesDropped={uploadFiles}>
+                {content}
 
-            <DialogContainer type={'fullscreenTakeover'} onDismiss={() => onSelectedMediaItemChange(null)}>
-                {selectedMediaItem !== null && (
-                    <MediaPreview
-                        mediaItem={selectedMediaItem}
-                        close={() => onSelectedMediaItemChange(null)}
-                        onSelectedMediaItem={onSelectedMediaItemChange}
-                    />
-                )}
-            </DialogContainer>
-        </DatasetDropZone>
+                <DialogContainer type={'fullscreenTakeover'} onDismiss={() => onSelectedMediaItemChange(null)}>
+                    {selectedMediaItem !== null && (
+                        <MediaPreview
+                            mediaItem={selectedMediaItem}
+                            close={() => onSelectedMediaItemChange(null)}
+                            onSelectedMediaItem={onSelectedMediaItemChange}
+                        />
+                    )}
+                </DialogContainer>
+            </DatasetDropZone>
+
+            {isClassification && (
+                <BulkLabelsAssignmentDialog files={filesForLabelAssignment} onClose={clearFilesForLabelAssignment} />
+            )}
+        </>
     );
 };

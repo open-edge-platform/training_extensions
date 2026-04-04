@@ -29,7 +29,7 @@ engine:
 
 callback_monitor: val/map_50
 
-data: ../_base_/data/torchvision_base.yaml
+data: ../_base_/data/detection.yaml
 
 callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
@@ -63,7 +63,6 @@ overrides:
     task: DETECTION
     train_subset:
       batch_size: 8
-      num_workers: 4
       augmentations_cpu:
         - class_path: torchvision.transforms.v2.RandomZoomOut
           init_args:

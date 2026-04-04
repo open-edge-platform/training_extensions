@@ -20,6 +20,8 @@
     border-radius: var(--spectrum-alias-border-radius-regular);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: var(--spectrum-global-color-gray-100);
+    width: 100%;
+    max-width: var(--spectrum-global-dimension-size-3600);
 
     &:has(:checked) {
         border-color: var(--energy-blue);

@@ -27,6 +27,7 @@ from app.models.media import (
     VideoFrame,
     VideoRange,
 )
+from app.models.system import DeviceInfo, DeviceType
 from app.services import (
     DatasetService,
     LabelService,
@@ -357,6 +358,7 @@ class TestMediaPredictionServiceUnit:
         request = MediaListPredictionRequest(
             model_id=model_id, media=[], save_predictions=save_predictions, device="AUTO"
         )
+        device = DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
 
         with (
             patch.object(fxt_media_prediction_service, "_load_media", return_value=loaded_media) as mock_load_media,
@@ -365,13 +367,13 @@ class TestMediaPredictionServiceUnit:
             ) as mock_convert_to_inference_input,
             patch.object(fxt_media_prediction_service, "_create_dataset_items") as mock_create_dataset_items,
         ):
-            result = fxt_media_prediction_service.predict_media(project=project, request=request)
+            result = fxt_media_prediction_service.predict_media(project=project, request=request, device=device)
 
         mock_load_media.assert_called_once_with(project=project, request=request)
         mock_convert_to_inference_input.assert_called_once_with(project=project, loaded_media=loaded_media)
         fxt_label_service.list_all.assert_called_once_with(project_id=project.id)
         fxt_inference_server.set_inference_model.assert_called_once_with(
-            project_id=project.id, model_id=model_id, device="AUTO", ttl=10
+            project_id=project.id, model_id=model_id, device=device, ttl=10
         )
         fxt_inference_server.infer_batch.assert_called_once_with(labels=labels, inputs=inputs)
         if save_predictions:

@@ -2,15 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Item, Key, Picker } from '@geti/ui';
+import { usePatchPipeline } from 'hooks/api/pipeline.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { usePatchPipeline } from '../../../hooks/api/pipeline.hook';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
-import { useGetModels } from '../../models/hooks/api/use-get-models.hook';
-import { isSuccessfulModel } from '../../models/model-listing/utils/utils';
+import { useGetSuccessfulModels } from '../../models/hooks/api/use-get-models.hook';
 
 export const ActiveModel = () => {
-    const { data: models } = useGetModels();
+    const { data: models } = useGetSuccessfulModels();
     const activeModel = useGetActiveModel();
     const projectId = useProjectIdentifier();
     const updatePipeline = usePatchPipeline();
@@ -26,14 +25,12 @@ export const ActiveModel = () => {
         });
     };
 
-    const successfulModels = models.filter((model) => isSuccessfulModel(model) && !model.files_deleted);
-
     return (
         <Picker
             aria-label={'active model'}
             label={'Model'}
             labelPosition={'side'}
-            items={successfulModels}
+            items={models}
             onSelectionChange={handleChange}
             selectedKey={activeModel?.id ?? null}
         >

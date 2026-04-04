@@ -30,7 +30,7 @@ from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
 from app.datumaro_converter import SampleMode
-from app.execution.base import Execution, step
+from app.execution.base import Execution, ExecutionErr, step
 from app.execution.common.otx_converters import (
     convert_metrics,
     get_metric_by_task,
@@ -143,6 +143,11 @@ class OTXTrainer(Execution[TrainingJobParams]):
             parent_variants = self._model_service.get_model_variants(
                 project_id=project_id, model_id=parent_model_revision_id
             )
+            if not parent_variants:
+                raise ExecutionErr(
+                    "Can't start training - the parent revision has no variants (it may have failed). "
+                    "Review the previous revision and retry."
+                )
             parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
             weights_path = self.__build_model_weights_path(
                 self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
@@ -410,13 +415,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
-        train_kwargs = {"devices": [device.index]} if device.type is not DeviceType.CPU and device.index else {}
-        otx_engine.train(
-            max_epochs=training_config["max_epochs"],
-            precision=training_config["precision"],
-            callbacks=callbacks_list,
-            **train_kwargs,  # pyrefly: ignore[bad-argument-type]
-        )
+        train_kwargs = {
+            "max_epochs": training_config["max_epochs"],
+            "callbacks": callbacks_list,
+        }
+        if device.type is not DeviceType.CPU and device.index:
+            train_kwargs["devices"] = [device.index]
+        if "precision" in training_config:
+            train_kwargs["precision"] = training_config["precision"]
+        otx_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, otx_engine

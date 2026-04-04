@@ -519,12 +519,27 @@ class AugmentationParameters(BaseModel):
     Each augmentation technique can be enabled or disabled using the 'enable' field within its respective configuration.
     """
 
+    deim_framework: bool | None = Field(
+        default=None,
+        title="DEIM framework",
+        description=(
+            "Controls the DEIM multi-stage augmentation scheduling framework. "
+            "When enabled, training uses complex multi-stage augmentations that "
+            "automatically transition between strong and light augmentation phases "
+            "during training. This may lead to better accuracy but increases "
+            "training time. When disabled, a simpler static augmentation pipeline "
+            "is used instead, allowing direct control over individual augmentations. "
+            "WARNING: when the DEIM framework is enabled, all other augmentation "
+            "parameters below are ignored and will have no effect on training."
+        ),
+    )
     random_zoom_out: RandomZoomOut | None = Field(
         default=None,
         title="Random zoom out",
         description=(
             "Randomly zoom out the image by placing it on a larger canvas with padding. Applied before resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     iou_random_crop: RandomIOUCrop | None = Field(
         default=None,
@@ -534,11 +549,13 @@ class AugmentationParameters(BaseModel):
             "Applied before resize. "
             "Note: this augmentation is not supported when Tiling algorithm is enabled."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     mosaic: Mosaic | None = Field(
         default=None,
         title="Mosaic",
         description="Combines 4 images into one mosaic for augmentation. Applied before resize.",
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_resize_crop: RandomResizeCrop | None = Field(
         default=None,
@@ -548,6 +565,7 @@ class AugmentationParameters(BaseModel):
             "When disabled, a standard resize to the target input size is used instead. "
             "Note: this augmentation is not supported when Tiling algorithm is enabled."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_affine: RandomAffine | None = Field(
         default=None,
@@ -556,11 +574,13 @@ class AugmentationParameters(BaseModel):
             "Apply random affine transformations (rotation, translation, scaling, shear) to the image. "
             "Applied after resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     mixup: Mixup | None = Field(
         default=None,
         title="Mixup",
         description="Blends two images and their labels for augmentation. Applied before resize.",
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_horizontal_flip: RandomHorizontalFlip | None = Field(
         default=None,
@@ -568,6 +588,7 @@ class AugmentationParameters(BaseModel):
         description=(
             "Randomly flip images horizontally along the vertical axis (swap left and right). Applied after resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_vertical_flip: RandomVerticalFlip | None = Field(
         default=None,
@@ -575,21 +596,25 @@ class AugmentationParameters(BaseModel):
         description=(
             "Randomly flip images vertically along the horizontal axis (swap top and bottom). Applied after resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     color_jitter: ColorJitter | None = Field(
         default=None,
         title="Color jitter",
         description="Randomly adjust brightness, contrast, saturation, and hue of the image. Applied after resize.",
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     gaussian_blur: GaussianBlur | None = Field(
         default=None,
         title="Gaussian blur",
         description="Apply Gaussian blur to the image. Applied after resize.",
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     gaussian_noise: GaussianNoise | None = Field(
         default=None,
         title="Gaussian noise",
         description="Add Gaussian noise to the image. Applied after resize.",
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_erasing: RandomErasing | None = Field(
         default=None,
@@ -599,6 +624,7 @@ class AugmentationParameters(BaseModel):
             "Also known as Cutout. Helps the model learn to rely on broader context rather than "
             "specific local features. Applied after resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_grayscale: RandomGrayscale | None = Field(
         default=None,
@@ -607,6 +633,7 @@ class AugmentationParameters(BaseModel):
             "Randomly convert the image to grayscale. Forces the model to learn shape and texture "
             "features rather than relying solely on color information. Applied after resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     random_sharpness: RandomSharpness | None = Field(
         default=None,
@@ -616,6 +643,7 @@ class AugmentationParameters(BaseModel):
             "allowing images to become sharper, improving robustness to varying image quality. "
             "Applied after resize."
         ),
+        json_schema_extra={"depends_on": {"deim_framework": [False, None]}},
     )
     tiling: Tiling | None = Field(
         default=None,
