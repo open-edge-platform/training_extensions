@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### Bug fixes
+
+- Fix `otx find` and `OTXEngine.from_model_name()` crashing on Windows due to hardcoded forward-slash path splitting; also fix `UnicodeEncodeError` when rendering the OTX logo on Windows terminals with cp1252 encoding
+  (<https://github.com/open-edge-platform/training_extensions/pull/6044>)
+
 ## \[2.6.0\]
 
 ### New features

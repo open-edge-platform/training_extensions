@@ -3,6 +3,7 @@
 
 """CLI entrypoints."""
 
+import sys
 from datetime import timedelta
 from time import time
 
@@ -14,6 +15,8 @@ def main() -> None:
 
     This function is a single entry point for all OTX CLI related operations:
     """
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     start = time()
     OTXCLI()
     dt = timedelta(seconds=time() - start)

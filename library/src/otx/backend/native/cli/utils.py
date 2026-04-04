@@ -88,12 +88,13 @@ def list_models(
         table.add_column("Model Name")
         table.add_column("Recipe Path")
         for recipe in recipe_list:
+            recipe_as_path = Path(recipe)
             recipe_path = (
                 textwrap.fill(recipe, width=int(console.width / 2)) if len(recipe) > console.width / 2 else recipe
             )
             table.add_row(
-                recipe.split("/")[-2].upper(),
-                Path(recipe).stem,
+                recipe_as_path.parts[-2].upper(),
+                recipe_as_path.stem,
                 recipe_path,
             )
         console.print(table, width=console.width, justify="center")

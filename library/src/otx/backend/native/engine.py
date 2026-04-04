@@ -804,9 +804,11 @@ class OTXEngine(Engine):
                 ... )
         """
         default_config = DEFAULT_CONFIG_PER_TASK.get(task)
-        model_path = str(default_config).split("/")
-        model_path[-1] = f"{model_name}.yaml"
-        config = Path("/".join(model_path))
+        if default_config is None:
+            supported_tasks = list(DEFAULT_CONFIG_PER_TASK)
+            msg = f"Unsupported task: {task}. Available tasks are {supported_tasks}"
+            raise ValueError(msg)
+        config = Path(default_config).parent / f"{model_name}.yaml"
         if not config.exists():
             candidate_list = [model.stem for model in config.parent.glob("*")]
             msg = (
