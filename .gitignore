@@ -47,3 +47,5 @@ docs/source/guide/reference/_autosummary/*
 
 # Docker buildx local cache
 .buildx-cache/
+library/data/
+.claude
