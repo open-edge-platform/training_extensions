@@ -28,8 +28,9 @@ from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from sqlalchemy.orm import Session
 
+from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
-from app.execution.base import Execution, step
+from app.execution.base import Execution, ExecutionErr, step
 from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.otx_converters import (
     convert_metrics,
@@ -143,6 +144,11 @@ class OTXTrainer(Execution[TrainingJobParams]):
             parent_variants = self._model_service.get_model_variants(
                 project_id=project_id, model_id=parent_model_revision_id
             )
+            if not parent_variants:
+                raise ExecutionErr(
+                    "Can't start training - the parent revision has no variants (it may have failed). "
+                    "Review the previous revision and retry."
+                )
             parent_pytorch_variant = next(v for v in parent_variants if v.format == ModelFormat.PYTORCH)
             weights_path = self.__build_model_weights_path(
                 self._data_dir, project_id, parent_model_revision_id, parent_pytorch_variant.id
@@ -627,6 +633,17 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 status=TrainingStatus.SUCCESSFUL,
                 training_finished_at=training_finish_time,
             )
+        except CancelledExc:
+            try:
+                self.__delete_model_revision(project_id=project_id, model_id=params.model_id)
+            except Exception as cleanup_exc:
+                logger.error(
+                    "Failed to delete model revision during cancellation (project_id={}, model_id={}): {}",
+                    project_id,
+                    params.model_id,
+                    cleanup_exc,
+                )
+            raise
         except Exception:
             training_finish_time = datetime.now(UTC)
             self.__update_model_revision_training_status(
@@ -758,3 +775,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 training_started_at=training_started_at,
                 training_finished_at=training_finished_at,
             )
+
+    def __delete_model_revision(self, project_id: UUID, model_id: UUID):
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            self._model_service.delete_model(project_id=project_id, model_id=model_id)

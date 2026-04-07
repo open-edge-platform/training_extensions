@@ -8,19 +8,12 @@ import { useProject } from 'hooks/api/project.hook';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
-import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
-import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
-import { ReactComponent as Webhook } from './assets/icons/webhook.svg';
+import getiLogo from './assets/icons/geti-logo.webp';
 import { ProjectsListPanel } from './components/project-panel/projects-list-panel.component';
 import { paths } from './constants/paths';
 import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 
 import classes from './layout.module.scss';
-
-const iconStyles = {
-    width: 'var(--spectrum-global-dimension-size-200)',
-    height: 'var(--spectrum-global-dimension-size-200)',
-};
 
 const Header = () => {
     const projectId = useProjectIdentifier();
@@ -36,7 +29,12 @@ const Header = () => {
                 alignItems={'center'}
             >
                 <View paddingEnd={'size-200'}>
-                    <Link to={paths.project.index({})}>Geti</Link>
+                    <Link to={paths.project.index({})}>
+                        <Flex alignItems='center' gap='size-50'>
+                            <img src={getiLogo} alt={'Geti logo'} className={classes.logo} />
+                            Geti™
+                        </Flex>
+                    </Link>
                 </View>
 
                 <TabList height={'100%'} UNSAFE_className={classes.tabList}>
@@ -45,30 +43,21 @@ const Header = () => {
                         key={'dataset'}
                         href={paths.project.dataset.index({ projectId })}
                     >
-                        <Flex alignItems='center' gap='size-100'>
-                            <BuildIcon style={iconStyles} />
-                            Dataset
-                        </Flex>
+                        Dataset
                     </Item>
                     <Item
                         textValue='Models page to visualise your models'
                         key={'models'}
                         href={paths.project.models({ projectId })}
                     >
-                        <Flex alignItems='center' gap='size-100'>
-                            <Webhook style={iconStyles} />
-                            Models
-                        </Flex>
+                        Models
                     </Item>
                     <Item
                         textValue='Inference page showing live inference on your project'
                         key={'inference'}
                         href={paths.project.inference({ projectId })}
                     >
-                        <Flex alignItems='center' gap='size-100'>
-                            <LiveFeedIcon style={iconStyles} />
-                            Inference
-                        </Flex>
+                        Inference
                     </Item>
                 </TabList>
 
