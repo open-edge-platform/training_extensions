@@ -11,15 +11,21 @@ import { $api } from '../../api/client';
 import { paths } from '../../constants/paths';
 import { redirectTo } from '../utils';
 
+const REFETCH_INTERVAL = 5000;
+
 const HealthCheck = ({ children }: { children: ReactNode }) => {
-    const { data, error } = $api.useQuery('get', '/health', undefined, {
+    const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
         retry: 2,
         refetchInterval: (query) => {
-            return query.state.data?.status === 'ok' ? false : 2000;
+            return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
         },
     });
 
-    if (error) {
+    if (isPending) {
+        return <IntelBrandedLoading />;
+    }
+
+    if (isError) {
         return (
             <View height={'100vh'}>
                 <IllustratedMessage>

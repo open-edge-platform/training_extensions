@@ -1,12 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import { expect } from '@playwright/test';
-import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedMediaImage } from 'mocks/mock-media';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
@@ -15,14 +10,7 @@ import { HttpResponse } from 'msw';
 import { AnnotationDTO, PredictionDTO } from '../../src/constants/shared-types';
 import { Polygon } from '../../src/shared/types';
 import { http, test } from '../fixtures';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-const candyPngPath = path.resolve(dirname, '../assets/candy.png');
-const candyPngBuffer = fs.readFileSync(candyPngPath);
-
-const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
-const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
+import { blueLabel, candyBinaryHandler, redLabel } from './annotator-fixtures';
 
 const mockedDetectionProject = getMockedProject({
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -39,11 +27,7 @@ test.describe('Annotator', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
             }),
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                    headers: { 'Content-Type': 'image/png' },
-                });
-            }),
+            candyBinaryHandler,
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
                 return HttpResponse.json({
                     annotations: [],
@@ -528,8 +512,7 @@ test.describe('Annotator', () => {
                 })
             );
 
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await test.step('Draws an annotation in annotation mode', async () => {
                 await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
@@ -554,7 +537,7 @@ test.describe('Annotator', () => {
                 await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
 
                 await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
-                await expect(page.getByLabel('Labels')).toBeHidden();
+                await expect(page.getByLabel('Labels', { exact: true })).toBeHidden();
 
                 await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
                 expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);
@@ -584,7 +567,6 @@ test.describe('Annotator', () => {
 
         test('Automatically switches to annotation mode when there are annotations, no matter predictions', async ({
             annotatorPage,
-            page,
             network,
         }) => {
             network.use(
@@ -622,7 +604,7 @@ test.describe('Annotator', () => {
                 })
             );
 
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'true');
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
@@ -630,7 +612,6 @@ test.describe('Annotator', () => {
 
         test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
             annotatorPage,
-            page,
             network,
         }) => {
             network.use(
@@ -660,7 +641,7 @@ test.describe('Annotator', () => {
                 })
             );
 
-            await page.goto(`/projects/${mockedDetectionProject.id}/dataset/item-1`);
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
 
             await expect(annotatorPage.getAnnotatorMode('annotation')).toHaveAttribute('aria-pressed', 'false');
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');

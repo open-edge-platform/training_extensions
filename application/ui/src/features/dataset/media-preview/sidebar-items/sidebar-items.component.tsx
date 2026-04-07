@@ -7,7 +7,6 @@ import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { Media } from '../../../../constants/shared-types';
-import { useGetDatasetItemsById } from '../../../../hooks/use-get-dataset-items-by-id.hook';
 import { SIDEBAR_MEDIA_SIZE } from '../constants';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { SidebarMediaItem } from './sidebar-media-item.component';
@@ -23,24 +22,23 @@ const layoutOptions = {
 
 type SidebarItemsProps = {
     items: Media[];
-    hasNextPage: boolean;
     isFetchingNextPage: boolean;
     mediaItem: Media;
     fetchNextPage: () => void;
+    isUserReviewed: (mediaItemId: string) => boolean;
     onSelectedMediaItem: (item: Media) => void;
 };
 
 export const SidebarItems = ({
     mediaItem,
     items,
-    hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    isUserReviewed,
     onSelectedMediaItem,
 }: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const { datasetItemsById } = useGetDatasetItemsById({ limit: items.length });
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -63,19 +61,14 @@ export const SidebarItems = ({
                         layoutOptions={layoutOptions}
                         isLoadingMore={isFetchingNextPage}
                         scrollToIndex={selectedIndex}
-                        onLoadMore={() => hasNextPage && fetchNextPage()}
-                        contentItem={(item) => {
-                            const itemId = String(item.id);
-                            const isUserReviewed = datasetItemsById.get(itemId) ?? false;
-
-                            return (
-                                <SidebarMediaItem
-                                    item={item}
-                                    onSelectedMediaItem={onSelectedMediaItem}
-                                    isUserReviewed={isUserReviewed}
-                                />
-                            );
-                        }}
+                        onLoadMore={fetchNextPage}
+                        contentItem={(item) => (
+                            <SidebarMediaItem
+                                item={item}
+                                isUserReviewed={isUserReviewed(item.id)}
+                                onSelectedMediaItem={onSelectedMediaItem}
+                            />
+                        )}
                     />
                 </View>
             </Toolbar.Section>

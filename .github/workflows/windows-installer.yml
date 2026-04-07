@@ -97,12 +97,12 @@ jobs:
           uv-version-file: application/backend/pyproject.toml
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
 
       - name: Cache Rust dependencies & target
-        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           save-if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'develop' }}
           workspaces: application\ui\src-tauri -> target

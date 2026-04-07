@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/zizmor@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: ${{ github.event_name == 'pull_request' && 'MEDIUM' || 'LOW' }}
@@ -62,7 +62,7 @@ jobs:
       - *checkout
 
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/bandit@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: "LOW"
@@ -81,7 +81,7 @@ jobs:
 
       - name: Run Trivy scan
         id: trivy
-        uses: open-edge-platform/geti-ci/actions/trivy@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/trivy@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           scan_type: "fs"
           scan-scope: all
@@ -101,7 +101,7 @@ jobs:
         ai-device: [cpu]
     steps:
       - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           type: "initial"
 
@@ -131,15 +131,6 @@ jobs:
             --name "$CONTAINER_NAME" \
             -p 7860:7860 \
             "$IMAGE_NAME"
-
-          # Cleanup container on exit
-          cleanup() {
-              echo "--- Container logs ---"
-              docker logs "$CONTAINER_NAME" || true
-              echo "--- Stopping container ---"
-              docker stop "$CONTAINER_NAME" || true
-          }
-          trap cleanup EXIT
 
           TEST_URL="localhost:7860"
           # Wait for container to be ready (max 60 seconds)
@@ -182,7 +173,7 @@ jobs:
           artifact_name: zapfull
 
       - name: Run Schemathesis Scan
-        uses: schemathesis/action@1f15936316e0742005bf69657b5909ac68f04cb3 # v2
+        uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160 # v3
         continue-on-error: true
         with:
           schema: "http://localhost:7860/api/openapi.json"
@@ -250,7 +241,7 @@ jobs:
         ai-device: [cpu, cuda, xpu]
     steps:
       - name: Run container image scan (${{ matrix.ai-device }})
-        uses: open-edge-platform/geti-ci/actions/trivy@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
+        uses: open-edge-platform/geti-ci/actions/trivy@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
           scan_type: "image"
