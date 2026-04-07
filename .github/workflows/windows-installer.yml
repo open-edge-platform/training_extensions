@@ -16,6 +16,11 @@ on:
         type: boolean
         required: false
         default: false
+      checkout_branch:
+        description: "Branch to checkout for building the application source code"
+        type: string
+        required: false
+        default: "develop"
 
   # allow to manually trigger this workflow
   workflow_dispatch:
@@ -37,6 +42,11 @@ on:
         required: false
         type: boolean
         default: false
+      checkout_branch:
+        description: "Branch to checkout for building the application source code"
+        type: string
+        required: false
+        default: "develop"
 
 env:
   GIT_SH_PATH: C:\Program Files\Git\bin\sh.exe
@@ -87,6 +97,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: ${{ inputs.checkout_branch || 'develop' }}
           persist-credentials: false
 
       # Install and setup build tools
