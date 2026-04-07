@@ -72,8 +72,6 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
-      # The id-token permission is required by Codecov to use OIDC
-      id-token: write
     needs:
       - check-paths
     if: needs.check-paths.outputs.run_workflow == 'true'
@@ -112,14 +110,14 @@ jobs:
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: just test-unit --cov --cov-report=xml --cov-append
+        run: just test-unit --cov --cov-branch --cov-report=xml --cov-append
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           directory: library
           flags: coverage_unit-tests_Python-${{ matrix.python-version }}
-          use_oidc: true
 
   integration-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]
