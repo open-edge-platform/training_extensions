@@ -837,6 +837,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -857,6 +858,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
@@ -934,6 +936,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -954,6 +957,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
@@ -994,6 +998,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -1014,6 +1019,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
@@ -1130,9 +1136,17 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
-        fxt_dataset_service.assign_dataset_item_subset.return_value = MagicMock(spec=DatasetItem)
+        updated_dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+            subset=DatasetItemSubset.TRAINING,
+        )
+        fxt_dataset_service.assign_dataset_item_subset.return_value = updated_dataset_item
 
         response = fxt_client.post(
             f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/annotations",
@@ -1142,6 +1156,7 @@ class TestMediaEndpoints:
         )
 
         assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["subset"] == "training"
         fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
             project=fxt_get_project,
             dataset_item_id=media.id,
@@ -1178,6 +1193,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.TRAINING,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
         fxt_dataset_service.assign_dataset_item_subset.side_effect = SubsetAlreadyAssignedError
@@ -1219,6 +1235,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -1250,6 +1267,7 @@ class TestMediaEndpoints:
             ],
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
@@ -1266,6 +1284,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
@@ -1319,6 +1338,7 @@ class TestMediaEndpoints:
             ],
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
@@ -1337,6 +1357,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
@@ -1564,6 +1585,7 @@ class TestMediaEndpoints:
                     shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
                 )
             ],
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         video_frame = MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, id=video_frame_id, frame_index=5)
 
@@ -1588,6 +1610,7 @@ class TestMediaEndpoints:
                     ],
                     "prediction_model_id": None,
                     "user_reviewed": True,
+                    "subset": "unassigned",
                 },
             }
         ]

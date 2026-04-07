@@ -168,6 +168,7 @@ class MediaAnnotations(BaseModel):
     user_reviewed: bool
     prediction_model_id: UUID | None = None
     media_id: UUID | None = Field(None, exclude_if=lambda v: v is None)
+    subset: DatasetItemSubset = DatasetItemSubset.UNASSIGNED
 
     model_config = {
         "json_schema_extra": {
@@ -181,6 +182,7 @@ class MediaAnnotations(BaseModel):
                 ],
                 "user_reviewed": False,
                 "prediction_model_id": None,
+                "subset": "unassigned",
             }
         }
     }

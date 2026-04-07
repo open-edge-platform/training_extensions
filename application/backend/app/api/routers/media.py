@@ -307,6 +307,7 @@ def list_video_frames(
                 annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
                 prediction_model_id=dataset_item.prediction_model_id,
                 user_reviewed=dataset_item.user_reviewed,
+                subset=dataset_item.subset,
             ),
         )
         for (dataset_item, video_frame) in annotated_video_frames
@@ -461,7 +462,7 @@ def set_media_annotations(
 
     if media_annotations.subset is not None:
         try:
-            dataset_service.assign_dataset_item_subset(
+            dataset_item = dataset_service.assign_dataset_item_subset(
                 project_id=project.id, dataset_item_id=dataset_item_id, subset=media_annotations.subset
             )
         except SubsetAlreadyAssignedError as e:
@@ -472,6 +473,7 @@ def set_media_annotations(
         annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
         prediction_model_id=dataset_item.prediction_model_id,
         user_reviewed=dataset_item.user_reviewed,
+        subset=dataset_item.subset,
     )
 
 
@@ -506,6 +508,7 @@ def get_media_annotations(
         annotations=dataset_item.annotation_data,
         prediction_model_id=dataset_item.prediction_model_id,
         user_reviewed=dataset_item.user_reviewed,
+        subset=dataset_item.subset,
     )
 
 
