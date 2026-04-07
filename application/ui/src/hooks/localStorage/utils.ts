@@ -26,3 +26,18 @@ export const getParsedLocalStorage = <T>(key: string): T | null => {
         return null;
     }
 };
+
+export const getParsedSessionStorage = <T>(key: string): T | null => {
+    const item = sessionStorage.getItem(key);
+
+    if (isNil(item)) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(item) as T;
+    } catch {
+        sessionStorage.removeItem(key);
+        return null;
+    }
+};

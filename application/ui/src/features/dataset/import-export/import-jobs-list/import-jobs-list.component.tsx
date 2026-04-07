@@ -36,6 +36,13 @@ export const ImportJobsList = () => {
                 { params: { path: { project_id: projectId } } },
             ]),
         });
+        queryClient.invalidateQueries({
+            queryKey: getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/items',
+                { params: { path: { project_id: projectId } } },
+            ]),
+        });
     };
 
     const handleOpen = (stagedDatasetId: string) => {
