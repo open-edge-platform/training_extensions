@@ -235,6 +235,14 @@ class TestEngine:
                 **overriding,
             )
 
+        with pytest.raises(ValueError, match="Unsupported task"):
+            OTXEngine.from_model_name(
+                model_name=model_name,
+                task="UNSUPPORTED_TASK_XYZ",
+                data_root=data_root,
+                work_dir=tmp_path,
+            )
+
     def test_from_config(self, tmp_path, mocker) -> None:
         recipe_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         data_root = "tests/assets/classification_cifar10"
