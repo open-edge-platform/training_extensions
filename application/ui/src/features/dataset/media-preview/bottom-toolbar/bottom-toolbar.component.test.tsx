@@ -26,22 +26,25 @@ type RenderProps = {
     mediaItem?: MediaImage;
     isUserReviewed?: boolean;
     subset?: DatasetSubset;
+    isReadOnlySubset?: boolean;
 };
 
 const renderBottomToolbar = ({
     mediaItem = mockMediaItem,
     isUserReviewed = false,
     subset = 'unassigned',
+    isReadOnlySubset = false,
 }: RenderProps = {}) => {
     return render(
         <ZoomProvider>
             <AnnotationVisibilityProvider>
                 <CanvasSettingsProvider>
                     <BottomToolbar
+                        isReadOnlySubset={isReadOnlySubset}
                         mediaItem={mediaItem}
                         isUserReviewed={isUserReviewed}
                         subset={subset}
-                        handleSubsetChange={vi.fn()}
+                        onSubsetChange={vi.fn()}
                     />
                 </CanvasSettingsProvider>
             </AnnotationVisibilityProvider>
@@ -74,8 +77,8 @@ describe('BottomToolbar', () => {
         expect(screen.getByLabelText('Select subset')).toBeInTheDocument();
     });
 
-    it('renders the subset instead of picker when subset is assigned', () => {
-        renderBottomToolbar({ subset: 'validation' });
+    it('renders the subset instead of picker when is read only mode', () => {
+        renderBottomToolbar({ subset: 'validation', isReadOnlySubset: true });
 
         expect(screen.getByLabelText('Validation')).toBeInTheDocument();
     });
@@ -92,9 +95,10 @@ describe('BottomToolbar', () => {
 
             return (
                 <BottomToolbar
+                    isReadOnlySubset={false}
                     mediaItem={mockMediaItem}
                     subset={pendingSubset}
-                    handleSubsetChange={handleSubsetChange}
+                    onSubsetChange={handleSubsetChange}
                     hideHotkeys
                 />
             );

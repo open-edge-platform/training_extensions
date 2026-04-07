@@ -65,7 +65,7 @@ export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose, subset }: R
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} hideHotkeys subset={subset} />
+                <BottomToolbar mediaItem={mediaItem} hideHotkeys subset={subset} isReadOnlySubset />
             </View>
         </>
     );

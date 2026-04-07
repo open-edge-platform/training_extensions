@@ -20,8 +20,9 @@ type BottomToolbarProps = {
     mediaItem: Media;
     isUserReviewed?: boolean;
     subset: DatasetSubset;
-    handleSubsetChange?: (key: Key | null) => void;
+    onSubsetChange?: (key: Key | null) => void;
     hideHotkeys?: boolean;
+    isReadOnlySubset: boolean;
 };
 
 export const BottomToolbar = ({
@@ -29,9 +30,9 @@ export const BottomToolbar = ({
     mediaItem,
     isUserReviewed,
     subset,
-    handleSubsetChange,
+    onSubsetChange,
+    isReadOnlySubset,
 }: BottomToolbarProps) => {
-    const isUnassigned = subset === 'unassigned';
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
     return (
@@ -56,19 +57,19 @@ export const BottomToolbar = ({
                                 text={isUserReviewed ? 'Accepted' : 'For Review'}
                             />
 
-                            {isUnassigned ? (
+                            {isReadOnlySubset ? (
+                                <Tag withDot={false} text={capitalize(subset)} />
+                            ) : (
                                 <Picker
-                                    selectedKey={null}
+                                    selectedKey={subset}
                                     placeholder={'Select subset'}
                                     aria-label={'Select subset'}
-                                    onSelectionChange={handleSubsetChange}
+                                    onSelectionChange={onSubsetChange}
                                 >
                                     <Item key={'validation'}>Validation</Item>
                                     <Item key={'testing'}>Testing</Item>
                                     <Item key={'training'}>Training</Item>
                                 </Picker>
-                            ) : (
-                                <Tag withDot={false} text={capitalize(subset)} />
                             )}
                         </Flex>
                     </Toolbar.Section>

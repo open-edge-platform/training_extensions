@@ -81,7 +81,7 @@ export const SecondaryToolbar = ({
     const isPredictionMode = mode === 'prediction';
     const isAnnotationMode = mode === 'annotation';
 
-    const isSubmitDisabled = !canSubmit || isSaving;
+    const isSubmitDisabled = !((canSubmit || subset !== 'unassigned') && !isSaving);
 
     return (
         <Flex
