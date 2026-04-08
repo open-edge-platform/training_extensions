@@ -72,6 +72,7 @@ def fxt_video_media():
         size=2048,
         fps=25,
         frame_count=1000,
+        annotated_frame_count=100,
         source_id=uuid4(),
     )
 
@@ -148,6 +149,7 @@ def test_convert_video_to_view(fxt_video_media) -> None:
         size=fxt_video_media.size,
         fps=fxt_video_media.fps,
         frame_count=fxt_video_media.frame_count,
+        annotated_frame_count=fxt_video_media.annotated_frame_count,
         source_id=fxt_video_media.source_id,
         duration=fxt_video_media.duration,
     )
@@ -260,6 +262,7 @@ class TestMediaEndpoints:
             "width": 1024,
             "fps": 25.0,
             "frame_count": 1000,
+            "annotated_frame_count": 100,
             "duration": 40,
         }
         fxt_media_service.create_video.assert_called_once_with(
@@ -510,6 +513,7 @@ class TestMediaEndpoints:
             "width": fxt_video_media.width,
             "fps": fxt_video_media.fps,
             "frame_count": fxt_video_media.frame_count,
+            "annotated_frame_count": fxt_video_media.annotated_frame_count,
             "duration": fxt_video_media.duration,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(

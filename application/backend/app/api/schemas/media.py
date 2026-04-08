@@ -81,6 +81,7 @@ class VideoView(BaseRequiredIDNameModel):
     size: int
     fps: float
     frame_count: int
+    annotated_frame_count: int
     source_id: UUID | None = None
     duration: float
 
@@ -95,6 +96,7 @@ class VideoView(BaseRequiredIDNameModel):
                 "height": 720,
                 "fps": 25.0,
                 "frame_count": 100,
+                "annotated_frame_count": 25,
                 "duration": 4.0,
                 "size": 2211840,
                 "source_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
