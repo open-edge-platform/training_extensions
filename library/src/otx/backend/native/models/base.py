@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from torch.optim.optimizer import Optimizer, params_t
 
     from otx.backend.native.exporter.base import OTXModelExporter
+    from otx.config.data import IntensityConfig
     from otx.data.module import OTXDataModule
     from otx.metrics import MetricCallable
 
@@ -63,15 +64,30 @@ logger = logging.getLogger()
 
 @dataclass
 class DataInputParams:
-    """Parameters of the input data such as input size, mean, and std."""
+    """Parameters of the input data such as input size, mean, and std.
+
+    Attributes:
+        input_size: Spatial dimensions (H, W) expected by the model.
+        mean: Per-channel mean for normalization.
+        std: Per-channel standard deviation for normalization.
+        intensity_config: Optional intensity mapping configuration for
+            high-bit-depth inputs (uint16, thermal, medical, etc.).
+            When present, the exporter embeds these parameters into the
+            exported model's ``rt_info`` / ONNX metadata so that ModelAPI
+            can reconstruct the correct preprocessing at inference time.
+    """
 
     input_size: tuple[int, int]
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
+    intensity_config: IntensityConfig | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return {"input_size": self.input_size, "mean": self.mean, "std": self.std}
+        result: dict[str, Any] = {"input_size": self.input_size, "mean": self.mean, "std": self.std}
+        if self.intensity_config is not None:
+            result["intensity_config"] = asdict(self.intensity_config)
+        return result
 
     def as_ncwh(self, batch_size: int = 1) -> tuple[int, int, int, int]:
         """Convert input_size to NCWH format."""
@@ -962,10 +978,16 @@ class OTXModel(LightningModule):
         if isinstance(preprocessing_params, dict):
             # Merge with model defaults for any missing keys so callers can pass
             # a partial dict (e.g. only input_size) without knowing mean/std upfront.
+            intensity_cfg = preprocessing_params.get("intensity_config")
+            if isinstance(intensity_cfg, dict):
+                from otx.config.data import IntensityConfig
+
+                intensity_cfg = IntensityConfig(**intensity_cfg)
             data_input_params = DataInputParams(
                 input_size=preprocessing_params.get("input_size") or default.input_size,
                 mean=preprocessing_params.get("mean") or default.mean,
                 std=preprocessing_params.get("std") or default.std,
+                intensity_config=intensity_cfg,
             )
         elif isinstance(preprocessing_params, DataInputParams):
             data_input_params = preprocessing_params

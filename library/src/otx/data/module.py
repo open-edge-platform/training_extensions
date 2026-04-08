@@ -130,6 +130,11 @@ class OTXDataModule(LightningDataModule):
             self.input_std = None
         self.input_size = input_size
 
+        # Forward the training subset's intensity config so that Engine / CLI
+        # can pass it to OTXModel.data_input_params → exporter rt_info.
+        # None means no subset or no intensity attr (old configs / no data pipeline).
+        self.input_intensity_config = getattr(self.train_subset, "intensity", None)
+
         self._setup_otx_dataset(dataset)
 
     def _setup_otx_dataset(self, dataset: Dataset) -> None:
