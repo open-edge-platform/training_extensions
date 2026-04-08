@@ -8,7 +8,6 @@ import pytest
 
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.data.module import OTXDataModule
-from otx.tools import auto_configurator as target_file
 from otx.tools.auto_configurator import (
     DEFAULT_CONFIG_PER_TASK,
     AutoConfigurator,

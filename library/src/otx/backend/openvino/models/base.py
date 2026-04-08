@@ -184,7 +184,24 @@ class OVModel:
             raise ValueError(msg)
         if h > 0 and w > 0:
             return (h, w)
-        return None  # h == 0 or w == 0 means dynamic shape
+        return None
+
+    @property
+    def keep_aspect_ratio(self) -> bool:
+        """Return True when the model was exported with aspect-ratio-preserving resize.
+
+        Reads ``resize_type`` from the underlying ModelAPI model parameters,
+        which is embedded into the IR metadata at export time by
+        ``OTXModelExporter._extend_model_metadata``.  Returns ``False`` when
+        the attribute is not accessible (e.g. for custom / wrapped models).
+        """
+        _aspect_ratio_resize_types = ("fit_to_window", "fit_to_window_letterbox")
+
+        try:
+            base = self.model.model if isinstance(self.model, Tiler) else self.model
+            return base.params.resize_type in _aspect_ratio_resize_types
+        except AttributeError:
+            return False
 
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.
