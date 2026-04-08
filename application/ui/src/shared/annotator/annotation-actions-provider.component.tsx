@@ -24,7 +24,7 @@ type AnnotationsContextValue = {
     addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
-    submitAnnotations: (subset?: DatasetSubset) => Promise<void>;
+    submitAnnotations: (subset: DatasetSubset) => Promise<void>;
     resetAnnotations: () => void;
     replaceAnnotations: (annotations: Annotation[]) => void;
     isUserReviewed: boolean;
@@ -171,17 +171,17 @@ export const AnnotationActionsProvider = ({
         undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
 
-    const submitPredictions = async () => {
+    const submitPredictions = async (subset: DatasetSubset) => {
         const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
             predictions
         ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
 
-        await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
+        await saveAnnotations(serverFormattedAnnotationsWithoutConfidences, subset);
     };
 
-    const submitAnnotations = async (subset?: DatasetSubset) => {
+    const submitAnnotations = async (subset: DatasetSubset) => {
         if (mode === 'prediction') {
-            await submitPredictions();
+            await submitPredictions(subset);
         } else {
             const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
             const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);

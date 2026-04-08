@@ -1,12 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Key, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { $api } from '../../../api/client';
 import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
@@ -28,33 +26,21 @@ const constructMediaItemId = (mediaItem: Media): string => {
     return isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
 };
 
-const useSubsets = (mediaItem: Media) => {
-    const projectId = useProjectIdentifier();
-    const [pendingSubset, setPendingSubset] = useState<DatasetSubset | null>(null);
-
+const useSubset = (subset: DatasetSubset, mediaItem: Media) => {
+    const [pendingSubset, setPendingSubset] = useState<DatasetSubset>(subset);
     const prevMediaItemIdRef = useRef<string>(constructMediaItemId(mediaItem));
     const currentMediaItemId = constructMediaItemId(mediaItem);
+    const prevSubsetRef = useRef(subset);
 
     if (prevMediaItemIdRef.current !== currentMediaItemId) {
         prevMediaItemIdRef.current = currentMediaItemId;
-        setPendingSubset(null);
+        setPendingSubset(subset);
     }
 
-    const datasetItemParams = { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } };
-
-    const { data } = $api.useQuery(
-        'get',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}',
-        datasetItemParams
-    );
-
-    useEffect(() => {
-        if (data === undefined) {
-            return;
-        }
-
-        setPendingSubset(data.subset);
-    }, [data]);
+    if (prevSubsetRef.current !== subset) {
+        prevSubsetRef.current = subset;
+        setPendingSubset(subset);
+    }
 
     const changeSubset = (key: Key | null) => {
         if (isDatasetSubset(key)) {
@@ -62,14 +48,10 @@ const useSubsets = (mediaItem: Media) => {
         }
     };
 
-    const currentSubset: DatasetSubset = data?.subset ?? 'unassigned';
-    const subset: DatasetSubset = pendingSubset ?? currentSubset;
-
     return {
-        isUserReviewed: data?.user_reviewed ?? false,
-        subset,
-        changeSubset,
-        isReadOnlySubset: currentSubset === subset && subset !== 'unassigned',
+        currentSubset: pendingSubset,
+        changeCurrentSubset: changeSubset,
+        isReadOnlySubset: pendingSubset === subset && subset !== 'unassigned',
     };
 };
 
@@ -81,19 +63,23 @@ type AnnotatorProps = {
     onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+    subset: DatasetSubset;
+    isUserReviewed: boolean;
 };
 
 const Annotator = ({
     mediaItem,
     image,
     mode,
-    onChangeAnnotatorMode,
-    onSelectedMediaItem,
     items,
     onClose,
+    subset,
+    isUserReviewed,
+    onSelectedMediaItem,
+    onChangeAnnotatorMode,
 }: AnnotatorProps) => {
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
-    const { isUserReviewed, subset, changeSubset, isReadOnlySubset } = useSubsets(mediaItem);
+    const { currentSubset, changeCurrentSubset, isReadOnlySubset } = useSubset(subset, mediaItem);
 
     const selectNextMediaItem = async () => {
         if (nextMediaItem === undefined) {
@@ -117,7 +103,7 @@ const Annotator = ({
                     onSelectedMediaItem={onSelectedMediaItem}
                     onModeChange={onChangeAnnotatorMode}
                     onSelectNextMediaItem={selectNextMediaItem}
-                    subset={subset}
+                    subset={currentSubset}
                 />
             </View>
 
@@ -136,8 +122,8 @@ const Annotator = ({
             <View gridArea={'bottom'}>
                 <BottomToolbar
                     isUserReviewed={isUserReviewed}
-                    subset={subset}
-                    onSubsetChange={changeSubset}
+                    subset={currentSubset}
+                    onSubsetChange={changeCurrentSubset}
                     mediaItem={mediaItem}
                     isReadOnlySubset={isReadOnlySubset}
                 />
@@ -158,6 +144,8 @@ type AnnotatorContainerProps = {
     onClose: () => void;
     items: Media[];
     onSelectedMediaItem: (item: Media) => void;
+    subset: DatasetSubset;
+    isUserReviewed: boolean;
 };
 
 export const AnnotatorContainer = ({
@@ -165,6 +153,8 @@ export const AnnotatorContainer = ({
     changeAnnotatorMode,
     onClose,
     items,
+    subset,
+    isUserReviewed,
     onSelectedMediaItem,
 }: AnnotatorContainerProps) => {
     const { mediaItem, image } = useSelectedMediaItem();
@@ -176,10 +166,12 @@ export const AnnotatorContainer = ({
         >
             <Annotator
                 mode={mode}
+                subset={subset}
                 items={items}
                 image={image}
                 onClose={onClose}
                 mediaItem={mediaItem}
+                isUserReviewed={isUserReviewed}
                 onChangeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={onSelectedMediaItem}
             />

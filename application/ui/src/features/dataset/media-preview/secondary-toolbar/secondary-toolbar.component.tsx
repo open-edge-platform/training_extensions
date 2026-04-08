@@ -81,6 +81,7 @@ export const SecondaryToolbar = ({
     const isPredictionMode = mode === 'prediction';
     const isAnnotationMode = mode === 'annotation';
 
+    // If annotations are not changed but subset has changed we want to allow user to submit
     const isSubmitDisabled = !((canSubmit || subset !== 'unassigned') && !isSaving);
 
     return (

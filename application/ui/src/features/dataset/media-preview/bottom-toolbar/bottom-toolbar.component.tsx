@@ -66,6 +66,7 @@ export const BottomToolbar = ({
                                     aria-label={'Select subset'}
                                     onSelectionChange={onSubsetChange}
                                 >
+                                    <Item key={'unassigned'}>Unassigned</Item>
                                     <Item key={'validation'}>Validation</Item>
                                     <Item key={'testing'}>Testing</Item>
                                     <Item key={'training'}>Training</Item>
