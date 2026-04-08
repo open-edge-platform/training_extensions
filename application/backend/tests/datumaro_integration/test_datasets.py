@@ -23,7 +23,7 @@ ANNOTATION_TYPE_TO_SAMPLE: dict[str, type[Sample]] = {
 def test_import_dataset(archive: Path) -> None:
     """Verify that each regression zip archive can be imported by datumaro."""
     dataset = import_dataset(archive)
-    annotation_type, _ = archive.name.split("-")
+    annotation_type, _ = archive.stem.split("-", 1)
     sample_type = ANNOTATION_TYPE_TO_SAMPLE[annotation_type]
     dataset = dataset.convert_to_schema(sample_type)
     assert len(dataset) > 0

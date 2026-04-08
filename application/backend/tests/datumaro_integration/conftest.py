@@ -34,4 +34,9 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     """Parametrize after datasets are already downloaded."""
     if "archive" in metafunc.fixturenames:
         zip_files = sorted(DATASETS_DIR.glob("*.zip"))
+        if not zip_files:
+            raise pytest.UsageError(
+                f"No regression dataset archives were found in '{DATASETS_DIR}'. The dataset download/extraction may "
+                f"have failed, or the archive structure may have changed."
+            )
         metafunc.parametrize("archive", zip_files, ids=[p.stem for p in zip_files])
