@@ -11,7 +11,7 @@ from app.api.dependencies import get_license_service
 from app.api.schemas.license import LicenseAcceptResponse
 from app.services.license_service import LicenseService
 
-router = APIRouter(prefix="/api/v1/license", tags=["License"])
+router = APIRouter(prefix="/api/license", tags=["License"])
 
 
 @router.post("/accept")

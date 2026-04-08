@@ -115,7 +115,13 @@ async def health_check(
     license_service: Annotated[LicenseService, Depends(get_license_service)],
 ) -> dict[str, str | bool]:
     """Health check endpoint"""
-    return {"status": "ok", "license_accepted": license_service.is_accepted()}
+    try:
+        license_accepted = license_service.is_accepted()
+    except OSError:
+        logger.warning("License acceptance check failed during health check", exc_info=True)
+        return {"status": "degraded", "license_accepted": False}
+
+    return {"status": "ok", "license_accepted": license_accepted}
 
 
 @app.middleware("http")
