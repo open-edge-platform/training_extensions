@@ -14,19 +14,19 @@ const buildAugmentationGroup = (enableValue: boolean) => {
             getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: enableValue }),
             getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
         ],
-    }) as DataAugmentationConfigurationParameters;
+    });
 };
 
 const buildAugmentationGroupWithoutEnable = () => {
     return getMockedConfigurationParameterGroup({
         parameters: [getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 })],
-    }) as DataAugmentationConfigurationParameters;
+    });
 };
 
 const buildDataAugmentationConfigurableParameters = (groups: DataAugmentationConfigurationParameters[]) => {
     return getMockedConfigurationParameterGroup({
         parameters: groups,
-    }) as DataAugmentationConfigurationParameters;
+    });
 };
 
 describe('isDataAugmentationEnabled', () => {
