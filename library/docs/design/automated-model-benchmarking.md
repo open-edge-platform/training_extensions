@@ -137,8 +137,8 @@ from `perf_v2/`) while fixing the structural issues.
 │   ┌────────────────┐    ┌────────────────┐    ┌───────────────────────┐  │
 │   │ Dataset        │    │ Benchmark      │    │ MLflow                │  │
 │   │ Archive        │    │ Runner         │    │ Tracking Server       │  │
-│   │ (GH Release /  │    │ (Python)       │    │ (local or remote)     │  │
-│   │  HuggingFace)  │    │                │    │                       │  │
+│   │ (Intel Geti    │    │ (Python)       │    │ (local or remote)     │  │
+│   │  Storage)      │    │                │    │                       │  │
 │   └────────────────┘    └───────┬────────┘    └───────────┬───────────┘  │
 │                                 │                         │              │
 │                                 ▼                         ▼              │
@@ -172,8 +172,8 @@ can run the benchmark runner locally with `python -m otx.benchmark run ...`).
 - Every dataset used for benchmarking is **declared in a single YAML manifest**
   (`benchmark_catalog.yaml`) rather than scattered across Python files.
 - Datasets are classified by **size tier**: `tiny`, `small`, `medium`, `large`.
-- Each entry includes a **download URL** (public archive: GitHub Release asset,
-  HuggingFace dataset, or a cloud storage presigned URL).
+- Each entry includes a **download URL** (Intel Geti test-data storage at
+  `https://storage.geti.intel.com/test-data/`).
 - Datasets must have **verified, meaningful annotations**. The catalog includes a
   checksum (SHA-256) to guarantee integrity.
 
@@ -200,14 +200,14 @@ version: 1
 datasets:
   detection:
     - name: pothole_tiny
-      url: "https://huggingface.co/datasets/otx-bench/pothole-tiny/resolve/main/pothole_tiny.tar.gz"
+      url: "https://storage.geti.intel.com/test-data/detection/pothole_tiny.tar.gz"
       sha256: "abc123..."
       format: coco
       size_tier: tiny
       num_classes: 1
 
     - name: wgisd_small
-      url: "https://huggingface.co/datasets/otx-bench/wgisd/resolve/main/wgisd_small.tar.gz"
+      url: "https://storage.geti.intel.com/test-data/detection/wgisd_small.tar.gz"
       sha256: "def456..."
       format: coco
       size_tier: small
@@ -1701,7 +1701,7 @@ results/
 
 | #   | Question                                            | Proposed Default                                          | Notes                                                                                                                                                                                                                                                                                                                                   |
 | --- | --------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Where to host benchmark datasets?                   | HuggingFace Hub                                           | Free, public, supports large files, good CLI. GitHub Release assets are an alternative.                                                                                                                                                                                                                                                 |
+| 1   | Where to host benchmark datasets?                   | Intel Geti Storage (`storage.geti.intel.com/test-data/`)  | Internal storage, accessible from CI runners. No external dependency on third-party hosting.                                                                                                                                                                                                                                            |
 | 2   | Remote MLflow server or local-only?                 | Start local (`mlruns/`), move to remote server in Phase 5 | Avoids infra dependency in early phases.                                                                                                                                                                                                                                                                                                |
 | 3   | How many seeds per experiment?                      | 3                                                         | Balances statistical confidence vs. CI cost. 5 seeds would be better but almost doubles runtime.                                                                                                                                                                                                                                        |
 | 4   | Should the benchmark block PR merges on regression? | No (advisory only)                                        | Flaky GPU tests + margin of error make hard-gating risky initially. Revisit after baseline stability is established.                                                                                                                                                                                                                    |
