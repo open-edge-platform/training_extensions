@@ -197,11 +197,9 @@ class OVModel:
         """
         _aspect_ratio_resize_types = ("fit_to_window", "fit_to_window_letterbox")
 
-        try:
-            base = self.model.model if isinstance(self.model, Tiler) else self.model
-            return base.params.resize_type in _aspect_ratio_resize_types
-        except AttributeError:
-            return False
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        resize_type = getattr(getattr(base, "params", None), "resize_type", None)
+        return resize_type in _aspect_ratio_resize_types
 
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.

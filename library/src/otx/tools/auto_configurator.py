@@ -408,11 +408,6 @@ class AutoConfigurator:
         resize was used during training, this method patches the configs so that
         OV inference preprocessing matches training preprocessing exactly.
 
-        ``resize_targets`` is also forced to ``True`` so that ground-truth targets
-        (segmentation masks, bboxes, keypoints) undergo the same letterbox
-        transformation as the image, keeping predictions and targets at the same
-        resolution for metric computation.
-
         Args:
             augmentations: List of augmentation config dicts, each with
                 ``class_path`` and optionally ``init_args`` keys.
@@ -421,4 +416,3 @@ class AutoConfigurator:
             if "Resize" in aug.get("class_path", ""):
                 init_args = aug.setdefault("init_args", {})
                 init_args["keep_aspect_ratio"] = True
-                init_args["resize_targets"] = True
