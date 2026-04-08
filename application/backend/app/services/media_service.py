@@ -252,7 +252,13 @@ class MediaService(BaseSessionManagedService):
         db_media = repo.get_by_id(str(media_id))
         if not db_media:
             raise ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
-        return MediaAdapter.validate_python(db_media)
+        return (
+            Video.model_validate(db_media).model_copy(
+                update={"annotated_frame_count": repo.count_annotated_video_frames_by_video_id(db_media.id)}
+            )
+            if db_media.type == MediaType.VIDEO
+            else MediaAdapter.validate_python(db_media)
+        )
 
     def get_media_by_ids(self, project_id: UUID, media_ids: list[UUID]) -> list[Media]:
         """Get a media list by its IDs"""

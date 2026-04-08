@@ -862,7 +862,7 @@ class TestMediaServiceIntegration:
         fxt_project_with_media: tuple[Project, list[MediaDB]],
         db_session: Session,
     ) -> None:
-        """Test listing media."""
+        """Test listing media with video that have annotated frame."""
         project, db_media_list = fxt_project_with_media
 
         db_video_frame = next(db_media for db_media in db_media_list if db_media.type == MediaType.VIDEO_FRAME)
@@ -912,6 +912,32 @@ class TestMediaServiceIntegration:
         fetched_media = fxt_media_service.get_media_by_id(project_id=project.id, media_id=UUID(db_media_list[0].id))
 
         assert str(fetched_media.id) == db_media_list[0].id and fetched_media.name == db_media_list[0].name
+
+    def test_get_media_by_id_with_annotated_frame(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+        db_session: Session,
+    ) -> None:
+        """Test get video with annotated frame."""
+        project, db_media_list = fxt_project_with_media
+
+        db_video_frame = next(db_media for db_media in db_media_list if db_media.type == MediaType.VIDEO_FRAME)
+        db_dataset_item = DatasetItemDB(
+            id=db_video_frame.id,
+            project_id=str(project.id),
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(uuid4())}], "shape": {"type": "full_image"}}],
+        )
+        db_session.add(db_dataset_item)
+        db_session.flush()
+
+        db_video = next(db_media for db_media in db_media_list if db_media.type == MediaType.VIDEO)
+
+        media = fxt_media_service.get_media_by_id(project_id=project.id, media_id=UUID(db_video.id))
+
+        assert isinstance(media, Video)
+        assert media.annotated_frame_count == 1
 
     def test_get_media_by_id_not_found(
         self,
