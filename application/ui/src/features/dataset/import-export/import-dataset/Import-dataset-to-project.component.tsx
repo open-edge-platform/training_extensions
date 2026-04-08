@@ -3,7 +3,7 @@
 
 import { Content, Dialog, DialogContainer, Divider, Heading } from '@geti/ui';
 import { useProject } from 'hooks/api/project.hook';
-import { useImportDatasetToProject } from 'hooks/localStorage/use-import-dataset-to-project.hook';
+import { useImportDatasetToProject } from 'hooks/storage/use-import-dataset-to-project.hook';
 
 import {
     FileUploadedResponse,

@@ -9,7 +9,7 @@ import { render } from 'test-utils/render';
 
 import { getMockedPrepareImportDatasetJob } from '../../../../../mocks/mock-job';
 import { http } from '../../../../api/utils';
-import { useImportDatasetToProject } from '../../../../hooks/localStorage/use-import-dataset-to-project.hook';
+import { useImportDatasetToProject } from '../../../../hooks/storage/use-import-dataset-to-project.hook';
 import { server } from '../../../../msw-node-setup';
 import {
     ImportDatasetDialogStateProvider,
@@ -17,7 +17,7 @@ import {
 } from '../../providers/export-import-dataset-dialog-provider.component';
 import { ImportDatasetToProject } from './Import-dataset-to-project.component';
 
-vi.mock('../../../../hooks/localStorage/use-import-dataset-to-project.hook');
+vi.mock('../../../../hooks/storage/use-import-dataset-to-project.hook');
 
 describe('ImportDatasetToProject', () => {
     const mockedStagedDatasetId = 'staged-dataset-123';

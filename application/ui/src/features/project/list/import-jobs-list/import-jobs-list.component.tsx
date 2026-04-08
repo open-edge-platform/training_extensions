@@ -3,7 +3,7 @@
 
 import { Flex } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useImportDatasetAsNewProject } from 'hooks/localStorage/use-import-dataset-as-new-project.hook';
+import { useImportDatasetAsNewProject } from 'hooks/storage/use-import-dataset-as-new-project.hook';
 import { partition } from 'lodash-es';
 
 import { StagedImportDataset } from '../../../../components/import-card-status/staged-import-dataset/staged-import-dataset.component';
