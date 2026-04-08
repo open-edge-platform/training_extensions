@@ -71,7 +71,7 @@ export const NumberParameterField = ({
     const formatOptions = type === 'float' ? { maximumFractionDigits: Math.abs(Math.log10(fieldStep)) } : undefined;
 
     const handleValueChange = (inputValue: number): void => {
-        setDraftValue(null);
+        setDraftValue(inputValue);
         onChange(inputValue);
     };
 
