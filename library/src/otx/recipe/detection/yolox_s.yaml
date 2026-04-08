@@ -60,6 +60,10 @@ overrides:
       batch_size: 8
       num_workers: 0
       augmentations_cpu:
+        - class_path: otx.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: true
         - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
             random_pop: false

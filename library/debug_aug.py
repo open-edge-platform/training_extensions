@@ -49,6 +49,10 @@ def _build_pipeline(data_root: Path, input_size: tuple[int, int]) -> CPUAugmenta
     """Build the YOLOX-S train CPU pipeline for quick inspection."""
     aug_configs = [
         {
+            "class_path": "otx.data.augmentation.transforms.Resize",
+            "init_args": {"size": list(input_size), "keep_aspect_ratio": True},
+        },
+        {
             "class_path": "otx.data.augmentation.transforms.CachedMosaic",
             "init_args": {
                 "random_pop": False,

@@ -298,9 +298,9 @@ class CachedMosaic(tvt_v2.Transform):
     # ── Tile helpers ────────────────────────────────────────────────────
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> torch.Tensor:
-        """Resize image keeping aspect ratio (FILL mode)."""
+        """Resize image keeping aspect ratio (FIT mode — preserves all content)."""
         _, h, w = img.shape
-        scale = max(target_h / h, target_w / w)
+        scale = min(target_h / h, target_w / w)
         new_h = round(h * scale)
         new_w = round(w * scale)
         return F.resize(img, size=[new_h, new_w], interpolation=F.InterpolationMode.BILINEAR, antialias=True)
@@ -308,8 +308,8 @@ class CachedMosaic(tvt_v2.Transform):
     def _resize_masks_keep_ratio(
         self, masks: torch.Tensor, target_h: int, target_w: int, orig_h: int, orig_w: int,
     ) -> torch.Tensor:
-        """Resize masks keeping aspect ratio (FILL mode)."""
-        scale = max(target_h / orig_h, target_w / orig_w)
+        """Resize masks keeping aspect ratio (FIT mode)."""
+        scale = min(target_h / orig_h, target_w / orig_w)
         new_h = round(orig_h * scale)
         new_w = round(orig_w * scale)
         return F.resize(masks, size=[new_h, new_w], interpolation=F.InterpolationMode.NEAREST, antialias=False)
@@ -564,27 +564,47 @@ class CachedMosaic(tvt_v2.Transform):
         return inputs
 
     def _resize_to_target(self, inputs: OTXSample) -> OTXSample:
-        """Simple resize to img_scale (used when mosaic is skipped)."""
+        """Resize to img_scale keeping aspect ratio with letterbox padding (used when mosaic is skipped)."""
         _, in_h, in_w = inputs.image.shape
         out_h, out_w = self.img_scale
         if in_h == out_h and in_w == out_w:
             return inputs
 
-        inputs.image = F.resize(
-            inputs.image, [out_h, out_w], interpolation=F.InterpolationMode.BILINEAR, antialias=True,
+        # FIT mode: scale to fit within target, pad the gap
+        scale = min(out_h / in_h, out_w / in_w)
+        new_h = round(in_h * scale)
+        new_w = round(in_w * scale)
+
+        fill = self.pad_val if isinstance(self.pad_val, (int, float)) else self.pad_val[0]
+        if fill > 1.0 + 1e-5:
+            fill = fill / 255.0
+
+        resized = F.resize(
+            inputs.image, [new_h, new_w], interpolation=F.InterpolationMode.BILINEAR, antialias=True,
         ).clamp(0, 1)
 
+        # Pad to target size (center the image)
+        pad_top = (out_h - new_h) // 2
+        pad_left = (out_w - new_w) // 2
+        canvas = torch.full((3, out_h, out_w), fill, dtype=resized.dtype, device=resized.device)
+        canvas[:, pad_top:pad_top + new_h, pad_left:pad_left + new_w] = resized
+        inputs.image = canvas
+
         if hasattr(inputs, "bboxes") and inputs.bboxes is not None and len(inputs.bboxes) > 0:
-            sx, sy = out_w / max(in_w, 1), out_h / max(in_h, 1)
             b = inputs.bboxes.float()
-            b[:, 0::2] *= sx
-            b[:, 1::2] *= sy
+            b[:, 0::2] = b[:, 0::2] * scale + pad_left
+            b[:, 1::2] = b[:, 1::2] * scale + pad_top
             inputs.bboxes = tv_tensors.BoundingBoxes(b, format="XYXY", canvas_size=(out_h, out_w))
 
         if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
-            inputs.masks = tv_tensors.Mask(
-                F.resize(inputs.masks, [out_h, out_w], interpolation=F.InterpolationMode.NEAREST, antialias=False),
+            resized_masks = F.resize(
+                inputs.masks, [new_h, new_w], interpolation=F.InterpolationMode.NEAREST, antialias=False,
             )
+            mask_canvas = torch.zeros(
+                (resized_masks.shape[0], out_h, out_w), dtype=resized_masks.dtype, device=resized_masks.device,
+            )
+            mask_canvas[:, pad_top:pad_top + new_h, pad_left:pad_left + new_w] = resized_masks
+            inputs.masks = tv_tensors.Mask(mask_canvas)
 
         inputs.img_info = _resized_crop_image_info(inputs.img_info, (out_h, out_w))
         return inputs
