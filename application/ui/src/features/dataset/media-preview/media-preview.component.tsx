@@ -72,7 +72,7 @@ const MediaPreviewPanels = ({
                 items={items}
                 subset={subset}
                 onClose={onClose}
-                isUserReviewed={isUserReviewed}
+                isUserReviewed={isUserReviewed(mediaItem.id)}
                 changeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={handleMediaTransition}
             />
