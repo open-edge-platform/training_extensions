@@ -226,9 +226,12 @@ describe('useVideoControls', () => {
             const selectVideoFrame = vi.fn();
             const changeCurrentFrameIndex = vi.fn();
             const videoRef = makeVideoRef();
+            const step = 1;
+            const frameNumber = 5;
+
             const { result } = renderControls({
-                frameNumber: 5,
-                step: 1,
+                frameNumber,
+                step,
                 videoRef,
                 selectVideoFrame,
                 changeCurrentFrameIndex,
@@ -238,17 +241,23 @@ describe('useVideoControls', () => {
                 result.current.previousFrame();
             });
 
-            expect(selectVideoFrame).toHaveBeenCalledWith(expect.objectContaining({ frame_number: 4 }));
-            expect(changeCurrentFrameIndex).toHaveBeenCalledWith(4);
+            expect(selectVideoFrame).toHaveBeenCalledWith(
+                expect.objectContaining({ frame_number: frameNumber - step })
+            );
+            expect(changeCurrentFrameIndex).toHaveBeenCalledWith(frameNumber - step);
         });
 
         it('rewinds videoRef.currentTime when playing instead of selecting a frame', async () => {
             const selectVideoFrame = vi.fn();
             const changeCurrentFrameIndex = vi.fn();
-            const videoRef = makeVideoRef({ currentTime: 10 });
+            const ONE_SECOND = 1;
+            const currentTime = 10;
+            const step = 1;
+            const frameNumber = 5;
+            const videoRef = makeVideoRef({ currentTime });
             const { result } = renderControls({
-                frameNumber: 5,
-                step: 1,
+                frameNumber,
+                step,
                 videoRef,
                 selectVideoFrame,
                 changeCurrentFrameIndex,
@@ -265,8 +274,8 @@ describe('useVideoControls', () => {
                 result.current.previousFrame();
             });
 
-            expect(videoRef.current.currentTime).toBe(9);
-            expect(changeCurrentFrameIndex).toHaveBeenCalledWith(4);
+            expect(videoRef.current.currentTime).toBe(currentTime - ONE_SECOND);
+            expect(changeCurrentFrameIndex).toHaveBeenCalledWith(frameNumber - step);
             expect(selectVideoFrame).not.toHaveBeenCalled();
         });
 
