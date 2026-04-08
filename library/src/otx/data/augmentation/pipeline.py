@@ -11,10 +11,14 @@ This module provides the core augmentation pipeline classes:
 from __future__ import annotations
 
 import ast
+import logging
 import operator
+import os
+import threading
 import typing
 from copy import copy, deepcopy
 from inspect import isclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 import kornia.augmentation as K  # noqa: N812
@@ -237,10 +241,26 @@ class CPUAugmentationPipeline(nn.Module):
         >>> item = pipeline(item)  # OTXDataItem with fixed-size image
     """
 
-    def __init__(self, augmentations: list[nn.Module] | None = None) -> None:
+    def __init__(self, augmentations: list[nn.Module] | None = None, debug_save_dir: str | Path | None = None) -> None:
         super().__init__()
         self.augmentations = nn.ModuleList(augmentations or [])
         self._mean, self._std = self._extract_normalization_params(list(self.augmentations))
+        self._debug_save_dir: Path | None = Path(debug_save_dir) if debug_save_dir else None
+        self._debug_counter = 0
+        self._debug_lock: threading.Lock | None = None  # created lazily so pickling works
+
+    @property
+    def _lock(self) -> threading.Lock:
+        """Lazily create the debug lock (not picklable, so not stored in __init__)."""
+        if self._debug_lock is None:
+            self._debug_lock = threading.Lock()
+        return self._debug_lock
+
+    def __getstate__(self) -> dict:
+        """Exclude the unpicklable lock when serialising for DataLoader workers."""
+        state = self.__dict__.copy()
+        state["_debug_lock"] = None  # recreated lazily on the other side
+        return state
 
     @staticmethod
     def _extract_normalization_params(
@@ -414,6 +434,48 @@ class CPUAugmentationPipeline(nn.Module):
                 inputs.image = result
         return inputs
 
+    def _debug_save(self, sample: OTXSample, every_n: int = 1) -> None:
+        """Save the augmented sample image to disk for visual inspection.
+
+        Draws bounding boxes (green) over the image and saves as a PNG file.
+        Thread-safe; safe to call from DataLoader worker processes.
+
+        Args:
+            sample: Augmented OTXSample to visualise.
+            every_n: Save only every N-th call to avoid flooding the disk.
+        """
+        if self._debug_save_dir is None:
+            return
+        with self._lock:
+            idx = self._debug_counter
+            self._debug_counter += 1
+        if idx % every_n != 0:
+            return
+
+        try:
+            import torchvision.utils as tv_utils  # noqa: PLC0415
+            from torchvision.utils import draw_bounding_boxes  # noqa: PLC0415
+
+            img = sample.image  # (C, H, W) float [0, 1]
+            # Convert to uint8 for drawing / saving
+            img_u8 = (img.clamp(0, 1) * 255).to(torch.uint8).cpu()
+
+            bboxes = getattr(sample, "bboxes", None)
+            if bboxes is not None and len(bboxes) > 0:
+                boxes_t = bboxes.float().cpu()
+                # clamp to image boundaries
+                h, w = img_u8.shape[-2], img_u8.shape[-1]
+                boxes_t[:, 0::2] = boxes_t[:, 0::2].clamp(0, w - 1)
+                boxes_t[:, 1::2] = boxes_t[:, 1::2].clamp(0, h - 1)
+                img_u8 = draw_bounding_boxes(img_u8, boxes_t, colors="green", width=2)
+
+            self._debug_save_dir.mkdir(parents=True, exist_ok=True)
+            save_path = self._debug_save_dir / f"aug_{idx:06d}.png"
+            tv_utils.save_image(img_u8.float() / 255.0, str(save_path))
+            logging.getLogger(__name__).debug("Saved debug image: %s", save_path)
+        except Exception:  # noqa: BLE001
+            logging.getLogger(__name__).warning("CPUAugmentationPipeline debug save failed", exc_info=True)
+
     def forward(self, *inputs: OTXSample) -> OTXSample | None:
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
@@ -427,6 +489,8 @@ class CPUAugmentationPipeline(nn.Module):
             if outputs is None:
                 return outputs
             inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
+        if outputs is not None and self._debug_save_dir is not None:
+            self._debug_save(outputs)
         return outputs
 
     def __repr__(self) -> str:
