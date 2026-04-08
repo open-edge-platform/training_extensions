@@ -32,6 +32,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -213,6 +214,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -307,6 +309,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: mediaAnnotations[params.media_id] ?? [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -374,6 +377,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: mediaAnnotations[params.media_id] ?? [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -426,6 +430,7 @@ test.describe('Annotator', () => {
                 return HttpResponse.json({
                     annotations: [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             })
         );
@@ -496,6 +501,7 @@ test.describe('Annotator', () => {
                     return HttpResponse.json({
                         annotations: [],
                         user_reviewed: true,
+                        subset: 'training',
                     });
                 }),
                 http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
@@ -588,6 +594,7 @@ test.describe('Annotator', () => {
                             },
                         ],
                         user_reviewed: true,
+                        subset: 'training',
                     });
                 }),
                 http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
