@@ -171,17 +171,17 @@ class OVModel:
     def input_size(self) -> tuple[int, int] | None:
         """Return ``(H, W)`` input size from the underlying ModelAPI model.
 
-        Returns ``None`` when the model uses dynamic shapes (h or w <= 0)
-        or when the underlying model attributes are not accessible.
+        Returns ``None`` when the model uses dynamic shapes (h or w is
+        non-positive, which ModelAPI encodes as 0 or -1) or when the
+        underlying model attributes are not accessible.
         """
         try:
             base = self.model.model if isinstance(self.model, Tiler) else self.model
             h, w = int(base.h), int(base.w)  # pyrefly: ignore[missing-attribute]
         except (AttributeError, TypeError, ValueError):
             return None
-        if h < 0 or w < 0:
-            msg = f"OV model reported invalid input dimensions: h={h}, w={w}. Values must be non-negative."
-            raise ValueError(msg)
+        # ModelAPI uses 0 or -1 for dynamic dimensions; treat any
+        # non-positive value as "dynamic" and return None.
         if h > 0 and w > 0:
             return (h, w)
         return None

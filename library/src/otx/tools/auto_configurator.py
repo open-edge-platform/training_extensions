@@ -352,6 +352,8 @@ class AutoConfigurator:
         # Resolve input size: prefer model IR metadata, fall back to
         # the training recipe's default, raise if neither is available.
         actual_input_size = input_size or datamodule.input_size
+        subset_config.input_size = actual_input_size
+
         if actual_input_size is None:
             msg = (
                 "Cannot determine input_size for the OpenVINO pipeline. "
