@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, useDeferredValue } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 
 import { ConfigurableParameter, type TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Parameters } from '../../components/parameters.component';
@@ -41,10 +41,9 @@ export const DataAugmentationParametersList = ({
         });
     };
 
-    const augmentationParameters = useDeferredValue(
-        filterDependentParameters(dataAugmentationParameters.parameters),
-        dataAugmentationParameters.parameters
-    );
+    const augmentationParameters = useMemo(() => {
+        return filterDependentParameters(dataAugmentationParameters.parameters);
+    }, [dataAugmentationParameters.parameters]);
 
     return <Parameters parameters={augmentationParameters} onChange={handleAugmentationParameterChange} />;
 };
