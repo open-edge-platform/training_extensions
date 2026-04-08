@@ -58,7 +58,7 @@ export const BottomToolbar = ({
                             />
 
                             {isReadOnlySubset ? (
-                                <Tag withDot={false} text={capitalize(subset)} />
+                                <Tag withDot={false} text={capitalize(subset)} id={'selected-subset-badge'} />
                             ) : (
                                 <Picker
                                     selectedKey={subset}
