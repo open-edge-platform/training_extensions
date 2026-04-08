@@ -7,18 +7,6 @@ import { renderHook } from 'test-utils/render';
 
 import { useVideoControls } from './use-video-controls';
 
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
 const makeVideoRef = (overrides: Partial<HTMLVideoElement> = {}) => {
     return {
         current: {
@@ -345,7 +333,6 @@ describe('useVideoControls', () => {
         it('snaps to the nearest step-aligned frame', () => {
             const selectVideoFrame = vi.fn();
             const videoRef = makeVideoRef();
-            // step=10, goto(13) → nearest = round(13/10)*10 = 10
             const { result } = renderControls({ frameNumber: 0, step: 60, videoRef, selectVideoFrame });
 
             act(() => {
