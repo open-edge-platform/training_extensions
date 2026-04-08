@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Flex, NumberField, Slider } from '@geti/ui';
 
@@ -47,8 +47,12 @@ export const getStep = ({
         return step;
     }
 
+    if (type === 'int') {
+        return DEFAULT_INT_STEP;
+    }
+
     if (maxValue === null || minValue === null) {
-        return type === 'int' ? DEFAULT_INT_STEP : DEFAULT_FLOAT_STEP;
+        return DEFAULT_FLOAT_STEP;
     }
 
     return getFloatingPointStep(minValue, maxValue);
@@ -64,14 +68,19 @@ export const NumberParameterField = ({
     name,
     step,
 }: NumberGroupParamsProps) => {
-    const [draftValue, setDraftValue] = useState<number | null>(null);
-    const parameterValue = draftValue ?? value;
+    const [parameterValue, setParameterValue] = useState<number>(value);
+    const previousValueRef = useRef<number>(value);
+
+    if (previousValueRef.current !== value) {
+        previousValueRef.current = value;
+        setParameterValue(value);
+    }
 
     const fieldStep = getStep({ step, type, maxValue, minValue });
     const formatOptions = type === 'float' ? { maximumFractionDigits: Math.abs(Math.log10(fieldStep)) } : undefined;
 
     const handleValueChange = (inputValue: number): void => {
-        setDraftValue(inputValue);
+        setParameterValue(inputValue);
         onChange(inputValue);
     };
 
@@ -96,8 +105,8 @@ export const NumberParameterField = ({
                 value={parameterValue}
                 minValue={minValue}
                 maxValue={maxValue}
-                onChange={setDraftValue}
-                onChangeEnd={handleValueChange}
+                onChange={setParameterValue}
+                onChangeEnd={onChange}
                 step={fieldStep}
                 isFilled
                 flex={1}
