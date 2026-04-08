@@ -53,14 +53,6 @@ callbacks:
 
 overrides:
   gradient_clip_val: 35.0
-  reset:
-    - data.train_subset.augmentations_cpu
-    - data.train_subset.augmentations_gpu
-    - data.val_subset.augmentations_cpu
-    - data.val_subset.augmentations_gpu
-    - data.test_subset.augmentations_cpu
-    - data.test_subset.augmentations_gpu
-
   data:
     input_size:
       - 640
@@ -76,9 +68,7 @@ overrides:
         - class_path: otx.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
-            ratio_range:
-              - 1.0
-              - 1.0
+            mix_ratio: 0.5
             p: 0.5
             random_pop: false
             max_cached_images: 10

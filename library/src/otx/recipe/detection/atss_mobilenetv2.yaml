@@ -63,3 +63,11 @@ overrides:
       batch_size: 8
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
+      augmentations_gpu: []
+
+    val_subset:
+      augmentations_gpu: []
+    
+    test_subset:
+      augmentations_gpu: []
+      

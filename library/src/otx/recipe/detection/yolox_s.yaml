@@ -64,15 +64,16 @@ overrides:
             random_pop: false
             max_cached_images: 20
             img_scale: $(input_size)
-        - class_path: otx.data.augmentation.transforms.CachedMixUp
+        # - class_path: otx.data.augmentation.transforms.CachedMixUp
+        #   init_args:
+        #     img_scale: $(input_size)
+        #     mix_ratio: 0.5
+        #     p: 0.5
+        #     random_pop: false
+        #     max_cached_images: 10
+        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
-            img_scale: $(input_size)
-            ratio_range:
-              - 1.0
-              - 1.0
-            p: 0.5
-            random_pop: false
-            max_cached_images: 10
+            min_size: 1
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
