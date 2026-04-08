@@ -112,4 +112,16 @@ describe('isDataAugmentationEnabled', () => {
 
         expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(true);
     });
+
+    it('returns false when deim_framework parameter is set to false and at least one enable parameter is false', () => {
+        const groupWithDeimFramework = getMockedConfigurationParameterGroup({
+            parameters: [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'deim_framework', value: false }),
+                getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
+                buildAugmentationGroup(false),
+            ],
+        });
+
+        expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(false);
+    });
 });

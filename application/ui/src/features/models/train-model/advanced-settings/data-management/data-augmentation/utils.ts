@@ -47,5 +47,5 @@ export const isDataAugmentationEnabled = (dataAugmentationParameters: DataAugmen
             return undefined;
         })
         .filter(Boolean)
-        .some((parameter) => isParameter(parameter));
+        .some((parameter) => isParameter(parameter) && parameter.value === true);
 };
