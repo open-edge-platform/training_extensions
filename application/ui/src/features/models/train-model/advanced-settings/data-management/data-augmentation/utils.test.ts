@@ -6,11 +6,7 @@ import {
     getMockedConfigurationParameterGroup,
 } from 'mocks/mock-training-configuration';
 
-import {
-    DataAugmentationConfigurableParameters,
-    DataAugmentationConfigurationParameters,
-    isDataAugmentationEnabled,
-} from './utils';
+import { DataAugmentationConfigurationParameters, isDataAugmentationEnabled } from './utils';
 
 const buildAugmentationGroup = (enableValue: boolean) => {
     return getMockedConfigurationParameterGroup({
@@ -30,7 +26,7 @@ const buildAugmentationGroupWithoutEnable = () => {
 const buildDataAugmentationConfigurableParameters = (groups: DataAugmentationConfigurationParameters[]) => {
     return getMockedConfigurationParameterGroup({
         parameters: groups,
-    }) as DataAugmentationConfigurableParameters;
+    }) as DataAugmentationConfigurationParameters;
 };
 
 describe('isDataAugmentationEnabled', () => {
@@ -91,5 +87,29 @@ describe('isDataAugmentationEnabled', () => {
 
         const params = buildDataAugmentationConfigurableParameters([groupWithNonEnableBool]);
         expect(isDataAugmentationEnabled(params)).toBe(false);
+    });
+
+    it('returns true when deim_framework parameter is set to true', () => {
+        const groupWithDeimFramework = getMockedConfigurationParameterGroup({
+            parameters: [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'deim_framework', value: true }),
+                getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
+                buildAugmentationGroup(true),
+            ],
+        });
+
+        expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(true);
+    });
+
+    it('returns true when deim_framework parameter is set to false and at least one enable parameter is true', () => {
+        const groupWithDeimFramework = getMockedConfigurationParameterGroup({
+            parameters: [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'deim_framework', value: false }),
+                getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
+                buildAugmentationGroup(true),
+            ],
+        });
+
+        expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(true);
     });
 });

@@ -13,8 +13,10 @@ export const isParameterGroup = (
     return parameter.type === 'parameter_group';
 };
 
-export const isParameter = (parameter: TrainingConfigurationParameter): parameter is ConfigurableParameter => {
-    return parameter.type === 'parameter';
+export const isParameter = (
+    parameter: TrainingConfigurationParameter | undefined
+): parameter is ConfigurableParameter => {
+    return parameter?.type === 'parameter';
 };
 
 export const findGroupByKey = (
