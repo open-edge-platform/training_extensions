@@ -202,7 +202,7 @@ describe('DataAugmentation', () => {
         for (const parametersGroup of dataAugmentationParameters.parameters) {
             if (isParameterGroup(parametersGroup)) {
                 for (const parameter of parametersGroup.parameters) {
-                    if (!isParameter(parameter)) return;
+                    if (!isParameter(parameter)) continue;
 
                     if (isBoolEnableParameter(parameter)) {
                         expect(getToggleEnableParameter(parameter.name)).toBeChecked();
