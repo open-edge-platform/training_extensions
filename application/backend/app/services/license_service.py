@@ -23,6 +23,5 @@ class LicenseService:
 
     def accept(self) -> None:
         """Record that the user accepted the license terms."""
-        self.data_dir.mkdir(parents=True, exist_ok=True)
         self._consent_file.touch()
         logger.info("License accepted — consent recorded at {}", self._consent_file)

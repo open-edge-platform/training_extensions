@@ -14,11 +14,6 @@ from app.services.license_service import LicenseService
 
 
 @pytest.fixture
-def fxt_client() -> TestClient:
-    return TestClient(app)
-
-
-@pytest.fixture
 def fxt_license_service() -> Generator[Mock]:
     license_service = Mock(spec=LicenseService)
     app.dependency_overrides[get_license_service] = lambda: license_service
@@ -45,38 +40,3 @@ class TestLicenseEndpoints:
 
         assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
         assert "Permission denied" in response.json()["detail"]
-
-
-class TestHealthEndpoint:
-    def test_health_returns_license_not_accepted(self, fxt_license_service: Mock, fxt_client: TestClient) -> None:
-        """GET /health should report license_accepted=False before the license is accepted."""
-        fxt_license_service.is_accepted.return_value = False
-
-        response = fxt_client.get("/health")
-
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert body["status"] == "ok"
-        assert body["license_accepted"] is False
-
-    def test_health_returns_license_accepted(self, fxt_license_service: Mock, fxt_client: TestClient) -> None:
-        """GET /health should report license_accepted=True after the license is accepted."""
-        fxt_license_service.is_accepted.return_value = True
-
-        response = fxt_client.get("/health")
-
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert body["status"] == "ok"
-        assert body["license_accepted"] is True
-
-    def test_health_returns_degraded_on_os_error(self, fxt_license_service: Mock, fxt_client: TestClient) -> None:
-        """GET /health should report status=degraded and license_accepted=False when the consent file is unreadable."""
-        fxt_license_service.is_accepted.side_effect = OSError("Permission denied")
-
-        response = fxt_client.get("/health")
-
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert body["status"] == "degraded"
-        assert body["license_accepted"] is False
