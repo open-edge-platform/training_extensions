@@ -421,6 +421,7 @@ def bulk_delete_media(
         status.HTTP_201_CREATED: {"description": "Annotation created or updated", "model": MediaAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+        status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
     },
 )
 def set_media_annotations(
