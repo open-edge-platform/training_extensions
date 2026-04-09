@@ -17,7 +17,7 @@ class TestLicenseService:
 
     def test_is_accepted_returns_false_initially(self, fxt_license_service: LicenseService) -> None:
         """License should not be accepted when no consent file exists."""
-        assert fxt_license_service.is_accepted() is False
+        assert not fxt_license_service.is_accepted()
 
     def test_accept_creates_consent_file(self, fxt_license_service: LicenseService, tmp_path: Path) -> None:
         """Accepting the license should create the consent marker file."""
