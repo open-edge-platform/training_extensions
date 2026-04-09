@@ -189,7 +189,12 @@ class OTXModelExporter:
         intensity_cfg = self.data_input_params.intensity_config
         if intensity_cfg is not None:
             # Map storage_dtype to the ModelAPI input_dtype convention
-            _dtype_map = {"uint8": "u8", "uint16": "u16", "float32": "f32"}
+            _dtype_map = {
+                "uint8": "u8",
+                "uint16": "u16",
+                "int16": "i16",
+                "float32": "f32",
+            }
             input_dtype = _dtype_map.get(intensity_cfg.storage_dtype, intensity_cfg.storage_dtype)
             extra_data[("model_info", "input_dtype")] = input_dtype
             extra_data[("model_info", "intensity_mode")] = intensity_cfg.mode
