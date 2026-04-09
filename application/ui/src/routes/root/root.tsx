@@ -18,7 +18,9 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
         retry: 2,
         refetchInterval: (query) => {
-            return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
+            const healthData = query.state.data;
+
+            return healthData?.status === 'ok' && healthData.license_accepted ? false : REFETCH_INTERVAL;
         },
     });
 

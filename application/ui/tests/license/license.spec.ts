@@ -3,8 +3,8 @@
 
 import { expect, http, test } from '../fixtures';
 
-test.describe('License Agreement', () => {
-    test('shows license dialog and proceeds after acceptance', async ({ page, network }) => {
+test.describe('License agreement', () => {
+    test('shows the license screen and accepts the license', async ({ page, network }) => {
         let licenseAccepted = false;
 
         network.use(
@@ -21,23 +21,21 @@ test.describe('License Agreement', () => {
             })
         );
 
-        await page.goto('/');
+        await test.step('license screen is shown when license is not accepted', async () => {
+            await page.goto('/');
 
-        await test.step('license dialog is shown when license is not accepted', async () => {
-            await expect(page.getByRole('heading', { name: 'License Agreement' })).toBeVisible();
-            await expect(page.getByRole('button', { name: 'Accept' })).toBeDisabled();
+            await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeVisible();
+            await expect(page.getByRole('link', { name: /DINOv3 License/i })).toBeVisible();
         });
 
-        await test.step('accepts license and app loads', async () => {
-            await page.getByRole('checkbox').check();
-            await expect(page.getByRole('button', { name: 'Accept' })).toBeEnabled();
-            await page.getByRole('button', { name: 'Accept' }).click();
+        await test.step('accepting the license hides the license screen', async () => {
+            await page.getByRole('button', { name: /Accept and continue/i }).click();
 
-            await expect(page.getByRole('heading', { name: 'License Agreement' })).toBeHidden();
+            await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeHidden();
         });
     });
 
-    test('skips license dialog when license is already accepted', async ({ page, network }) => {
+    test('skips license screen when license is already accepted', async ({ page, network }) => {
         network.use(
             http.get('/health', ({ response }) => {
                 return response(200).json({
@@ -49,6 +47,6 @@ test.describe('License Agreement', () => {
 
         await page.goto('/');
 
-        await expect(page.getByRole('heading', { name: 'License Agreement' })).toBeHidden();
+        await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeHidden();
     });
 });
