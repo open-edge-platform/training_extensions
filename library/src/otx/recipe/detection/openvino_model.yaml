@@ -6,18 +6,22 @@ overrides:
   reset:
     - data.train_subset.augmentations_cpu
     - data.train_subset.augmentations_gpu
-    - data.val_subset.augmentations_cpu
     - data.test_subset.augmentations_cpu
 
   data:
-    stack_images: false
     train_subset:
       augmentations_cpu:
-        - class_path: torchvision.transforms.v2.ToImage
-    val_subset:
-      augmentations_cpu:
-        - class_path: torchvision.transforms.v2.ToImage
+        - class_path: otx.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu: []
     test_subset:
       batch_size: 64
       augmentations_cpu:
-        - class_path: torchvision.transforms.v2.ToImage
+        - class_path: otx.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: false
+            resize_targets: false
+      augmentations_gpu: []

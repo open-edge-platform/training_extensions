@@ -7,9 +7,9 @@ import { isInvalidStagedFile } from './util';
 
 type useDeleteStagedDatasetProps = {
     stagedDatasetId: string | null | undefined;
-    deleteEntry: () => void;
-    onSuccess?: () => void;
     onError?: (error: unknown) => void;
+    onSuccess?: () => void;
+    deleteEntry?: () => void;
 };
 
 export const useStagedDataset = (stagedDatasetId: string | null | undefined) => {
@@ -39,11 +39,11 @@ export const useDeleteStagedDataset = ({
 
     const deleteMutation = $api.useMutation('delete', '/api/staged_datasets/{staged_dataset_id}', {
         onSuccess: () => {
-            deleteEntry();
+            deleteEntry?.();
             onSuccess?.();
         },
         onError: (error) => {
-            isInvalidStagedFile(error) && deleteEntry();
+            isInvalidStagedFile(error) && deleteEntry?.();
             onError?.(error);
         },
     });
