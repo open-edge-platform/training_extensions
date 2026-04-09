@@ -29,7 +29,7 @@ class TestLicenseService:
     def test_is_accepted_returns_true_after_accept(self, fxt_license_service: LicenseService) -> None:
         """License should be accepted after calling accept()."""
         fxt_license_service.accept()
-        assert fxt_license_service.is_accepted() is True
+        assert fxt_license_service.is_accepted()
 
     def test_accept_is_idempotent(self, fxt_license_service: LicenseService) -> None:
         """Calling accept() multiple times should not raise an error."""
