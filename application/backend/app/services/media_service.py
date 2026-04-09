@@ -227,18 +227,23 @@ class MediaService(BaseSessionManagedService):
             filters = MediaFilters()
         repo = MediaRepository(project_id=str(project_id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
+        media_dbs = repo.list_items(
+            limit=filters.limit,
+            offset=filters.offset,
+            start_date=filters.start_date,
+            end_date=filters.end_date,
+            annotation_status=filters.annotation_status,
+            label_ids=label_ids_str,
+            subset=filters.subset,
+            exclude_types=exclude_types,
+        )
         return [
-            MediaAdapter.validate_python(db)
-            for db in repo.list_items(
-                limit=filters.limit,
-                offset=filters.offset,
-                start_date=filters.start_date,
-                end_date=filters.end_date,
-                annotation_status=filters.annotation_status,
-                label_ids=label_ids_str,
-                subset=filters.subset,
-                exclude_types=exclude_types,
+            Video.model_validate(media_db).model_copy(
+                update={"annotated_frame_count": repo.count_annotated_video_frames_by_video_id(media_db.id)}
             )
+            if media_db.type == MediaType.VIDEO
+            else MediaAdapter.validate_python(media_db)
+            for media_db in media_dbs
         ]
 
     def get_media_by_id(self, project_id: UUID, media_id: UUID) -> Media:
@@ -247,7 +252,13 @@ class MediaService(BaseSessionManagedService):
         db_media = repo.get_by_id(str(media_id))
         if not db_media:
             raise ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
-        return MediaAdapter.validate_python(db_media)
+        return (
+            Video.model_validate(db_media).model_copy(
+                update={"annotated_frame_count": repo.count_annotated_video_frames_by_video_id(db_media.id)}
+            )
+            if db_media.type == MediaType.VIDEO
+            else MediaAdapter.validate_python(db_media)
+        )
 
     def get_media_by_ids(self, project_id: UUID, media_ids: list[UUID]) -> list[Media]:
         """Get a media list by its IDs"""
