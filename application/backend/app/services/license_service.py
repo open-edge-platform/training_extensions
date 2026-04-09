@@ -14,7 +14,6 @@ class LicenseService:
     CONSENT_FILENAME = ".license_accepted"
 
     def __init__(self, data_dir: Path) -> None:
-        self.data_dir = data_dir
         self._consent_file = data_dir / self.CONSENT_FILENAME
 
     def is_accepted(self) -> bool:
