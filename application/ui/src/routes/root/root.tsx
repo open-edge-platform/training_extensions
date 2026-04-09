@@ -9,6 +9,7 @@ import { Outlet } from 'react-router';
 
 import { $api } from '../../api/client';
 import { paths } from '../../constants/paths';
+import { License } from '../../features/license/license.component';
 import { redirectTo } from '../utils';
 
 const REFETCH_INTERVAL = 5000;
@@ -44,6 +45,10 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
                 </IllustratedMessage>
             </View>
         );
+    }
+
+    if (data?.status === 'ok' && data?.license_accepted === false) {
+        return <License />;
     }
 
     if (data?.status === 'ok') {
