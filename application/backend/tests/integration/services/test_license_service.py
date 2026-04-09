@@ -35,7 +35,7 @@ class TestLicenseService:
         """Calling accept() multiple times should not raise an error."""
         fxt_license_service.accept()
         fxt_license_service.accept()
-        assert fxt_license_service.is_accepted() is True
+        assert fxt_license_service.is_accepted()
 
     def test_is_accepted_returns_true_when_file_pre_exists(self, tmp_path: Path) -> None:
         """License should be accepted when the consent file already exists on disk."""
