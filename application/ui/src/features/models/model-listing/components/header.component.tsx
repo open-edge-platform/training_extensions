@@ -85,7 +85,11 @@ export const Header = () => {
                 >
                     <Item key='name'>Sort: Name</Item>
                     <Item key='trained'>Sort: Trained</Item>
-                    <Item key='architecture'>Sort: Architecture</Item>
+                    {groupBy === 'dataset' ? (
+                        <Item key='architecture'>Sort: Architecture</Item>
+                    ) : (
+                        <Item key='dataset'>Sort: Dataset</Item>
+                    )}
                     <Item key='size'>Sort: Size</Item>
                     <Item key='score'>Sort: Score</Item>
                 </Picker>

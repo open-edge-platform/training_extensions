@@ -5,7 +5,7 @@ import type { Model } from '../../../constants/shared-types';
 
 export type GroupByMode = 'dataset' | 'architecture';
 
-export type SortBy = 'name' | 'trained' | 'architecture' | 'size' | 'score';
+export type SortBy = 'name' | 'trained' | 'architecture' | 'dataset' | 'size' | 'score';
 
 export type DatasetGroup = {
     id: string;
