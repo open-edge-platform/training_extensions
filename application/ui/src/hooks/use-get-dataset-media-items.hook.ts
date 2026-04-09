@@ -23,6 +23,7 @@ const getMediaEntities = (items: MediaDTO[]): Media[] => {
             return {
                 duration: 0,
                 frame_count: 0,
+                annotated_frame_count: 0,
                 fps: 0,
                 frame_number: 0,
                 frame_stride: 0,
