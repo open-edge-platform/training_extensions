@@ -4,8 +4,7 @@
 import { createContext, ReactNode, useContext, useState } from 'react';
 
 import { useGetActiveModel } from '../models/hooks/api/use-get-active-model.hook';
-import { useGetModels } from '../models/hooks/api/use-get-models.hook';
-import { isSuccessfulModel } from '../models/model-listing/utils/utils';
+import { useGetSuccessfulModels } from '../models/hooks/api/use-get-models.hook';
 
 type PredictionsSetupContextProps = {
     models: { name: string; id: string }[];
@@ -16,8 +15,7 @@ type PredictionsSetupContextProps = {
 const PredictionSetupContext = createContext<PredictionsSetupContextProps | null>(null);
 
 export const PredictionsSetupProvider = ({ children }: { children: ReactNode }) => {
-    const { data } = useGetModels();
-    const models = data.filter((model) => isSuccessfulModel(model) && !model.files_deleted);
+    const { data: models } = useGetSuccessfulModels();
 
     const activeModel = useGetActiveModel();
     const [selectedModelId, setSelectedModelId] = useState<string | undefined>(activeModel?.id ?? models.at(0)?.id);

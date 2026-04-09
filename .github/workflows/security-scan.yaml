@@ -23,7 +23,7 @@ on:
       - develop
       - "release/**"
   schedule:
-    - cron: "0 2 * * *" # Run security checks every day at 2 AM UTC
+    - cron: "0 4 * * *" # Run security checks every day at 4 AM UTC (after daily build)
   workflow_dispatch:
 
 permissions: {} # No permissions by default
@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   zizmor-scan:
-    runs-on: ubuntu-latest
+    runs-on: overflow
     permissions:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/zizmor@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: ${{ github.event_name == 'pull_request' && 'MEDIUM' || 'LOW' }}
@@ -54,7 +54,7 @@ jobs:
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
   bandit-scan:
-    runs-on: ubuntu-latest
+    runs-on: overflow
     permissions:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
@@ -62,7 +62,7 @@ jobs:
       - *checkout
 
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/bandit@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: "LOW"
@@ -71,7 +71,7 @@ jobs:
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
   trivy-scan:
-    runs-on: ubuntu-latest
+    runs-on: overflow
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
@@ -81,7 +81,7 @@ jobs:
 
       - name: Run Trivy scan
         id: trivy
-        uses: open-edge-platform/geti-ci/actions/trivy@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/trivy@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           scan_type: "fs"
           scan-scope: all
@@ -93,15 +93,15 @@ jobs:
 
   dast-scan:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: overflow
     permissions:
       contents: read
     strategy:
       matrix:
-        ai-device: [xpu]
+        ai-device: [cpu]
     steps:
       - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
         with:
           type: "initial"
 
@@ -110,36 +110,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install common dependencies
-        uses: ./.github/actions/install-common-deps
-        with:
-          uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
-
-      - name: Build image for ${{ matrix.ai-device }}
-        working-directory: application
-        run: just build-image --accelerator $DEVICE
+      - name: Pull container image for ${{ matrix.ai-device }}
         env:
           DEVICE: ${{ matrix.ai-device }}
+        run: |
+          IMAGE_NAME="ghcr.io/open-edge-platform/geti-${DEVICE}:develop"
+          echo "Pulling image: $IMAGE_NAME"
+          docker pull "$IMAGE_NAME"
 
       - name: Run the docker image
-        working-directory: application
         id: run-image
         env:
           DEVICE: ${{ matrix.ai-device }}
         run: |
           CONTAINER_NAME="geti-${DEVICE}"
+          IMAGE_NAME="ghcr.io/open-edge-platform/geti-${DEVICE}:develop"
 
           # Start the container in detached mode
-          just run-image --accelerator $DEVICE --name $CONTAINER_NAME --detach
-
-          # Cleanup container on exit
-          cleanup() {
-              echo "--- Container logs ---"
-              docker logs "$CONTAINER_NAME" || true
-              echo "--- Stopping container ---"
-              docker stop "$CONTAINER_NAME" || true
-          }
-          trap cleanup EXIT
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            -p 7860:7860 \
+            "$IMAGE_NAME"
 
           TEST_URL="localhost:7860"
           # Wait for container to be ready (max 60 seconds)
@@ -182,7 +173,7 @@ jobs:
           artifact_name: zapfull
 
       - name: Run Schemathesis Scan
-        uses: schemathesis/action@1f15936316e0742005bf69657b5909ac68f04cb3 # v2
+        uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160 # v3
         continue-on-error: true
         with:
           schema: "http://localhost:7860/api/openapi.json"
@@ -239,3 +230,25 @@ jobs:
             echo "Stopping container ${CONTAINER_NAME}..."
             docker stop "${CONTAINER_NAME}" || true
           fi
+
+  trivy-image-scan:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: overflow
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        ai-device: [cpu, cuda, xpu]
+    steps:
+      - name: Run container image scan (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        with:
+          artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
+          scan_type: "image"
+          scan_target: "ghcr.io/open-edge-platform/geti-${{ matrix.ai-device }}:develop"
+          scan-scope: all
+          severity: "LOW"
+          scanners: "vuln,secret,config"
+          format: "table"
+          timeout: "15m"
+          ignore_unfixed: "true"

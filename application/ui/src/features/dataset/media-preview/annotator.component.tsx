@@ -2,13 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../constants/shared-types';
-import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
-import { convertPredictionToAnnotation } from '../../annotator/annotations/utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
@@ -16,47 +13,8 @@ import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-t
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
-import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { useNextMediaPrefetch } from './utils';
-
-type PredictionAnnotatorProps = {
-    image: ImageData;
-    mediaItem: Media;
-    mode: AnnotatorMode;
-    onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
-    onClose: () => void;
-    onSuccessfulAcceptPrediction: () => void;
-};
-
-const PredictionAnnotator = ({
-    mode,
-    onChangeAnnotatorMode,
-    mediaItem,
-    image,
-    onClose,
-    onSuccessfulAcceptPrediction,
-}: PredictionAnnotatorProps) => {
-    const { replaceAnnotations, annotations } = useAnnotationActions();
-
-    const handleEditPrediction = () => {
-        onChangeAnnotatorMode('annotation');
-        replaceAnnotations(annotations.map(convertPredictionToAnnotation));
-    };
-
-    return (
-        <ReadOnlyAnnotator
-            mode={mode}
-            image={image}
-            mediaItem={mediaItem}
-            onModeChange={onChangeAnnotatorMode}
-            onClose={onClose}
-            onSuccessfulAcceptPrediction={onSuccessfulAcceptPrediction}
-            onEditPrediction={handleEditPrediction}
-            isEditPredictionDisabled={isEmpty(annotations)}
-        />
-    );
-};
 
 type AnnotatorProps = {
     image: ImageData;
@@ -79,7 +37,7 @@ const Annotator = ({
 }: AnnotatorProps) => {
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
 
-    const handleSubmitAnnotations = async () => {
+    const selectNextMediaItem = async () => {
         if (nextMediaItem === undefined) {
             return;
         }
@@ -87,18 +45,8 @@ const Annotator = ({
         onSelectedMediaItem(nextMediaItem);
     };
 
-    if (mode === 'prediction') {
-        return (
-            <PredictionAnnotator
-                image={image}
-                mediaItem={mediaItem}
-                mode={mode}
-                onChangeAnnotatorMode={onChangeAnnotatorMode}
-                onClose={onClose}
-                onSuccessfulAcceptPrediction={handleSubmitAnnotations}
-            />
-        );
-    }
+    const isAnnotationMode = mode === 'annotation';
+    const isPredictionMode = mode === 'prediction';
 
     return (
         <>
@@ -110,13 +58,15 @@ const Annotator = ({
                     mediaItem={mediaItem}
                     onSelectedMediaItem={onSelectedMediaItem}
                     onModeChange={onChangeAnnotatorMode}
-                    onAcceptPrediction={handleSubmitAnnotations}
+                    onSelectNextMediaItem={selectNextMediaItem}
                 />
             </View>
 
-            <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
-                <PrimaryToolbar />
-            </View>
+            {isAnnotationMode && (
+                <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
+                    <PrimaryToolbar />
+                </View>
+            )}
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>
@@ -125,12 +75,12 @@ const Annotator = ({
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} />
+                <BottomToolbar mediaItem={mediaItem} hideHotkeys={isPredictionMode} />
             </View>
 
             <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} />
+                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} isReadOnly={isPredictionMode} />
                 </AnnotatorCanvasSettings>
             </View>
         </>

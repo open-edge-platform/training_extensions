@@ -1,14 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { Flex, View } from '@geti/ui';
 
-import type { ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
+import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
+import { PerformanceCategoryBadge } from '../../model-listing/components/model-row/performance-category-badge.component';
 import { ModelArchitectureCard } from './model-architecture-card/model-architecture-card.component';
 
 type ModelArchitectureProps = {
     activeModelArchitectureId: string | undefined;
-    modelArchitecture: ModelArchitectureType;
+    modelArchitecture: ModelArchitectureWithPerformanceCategory;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 };
@@ -30,10 +31,21 @@ export const ModelArchitecture = ({
         >
             <ModelArchitectureCard.Name />
             <ModelArchitectureCard.Parameters />
-            {isActive && (
-                <View justifySelf={'start'}>
-                    <ModelArchitectureCard.Active />
-                </View>
+
+            {(isActive || modelArchitecture.performanceCategory !== undefined) && (
+                <Flex gap={'size-100'} alignItems={'center'}>
+                    {isActive && (
+                        <View justifySelf={'start'}>
+                            <ModelArchitectureCard.Active />
+                        </View>
+                    )}
+                    {modelArchitecture.performanceCategory !== undefined && (
+                        <PerformanceCategoryBadge
+                            performanceCategory={modelArchitecture.performanceCategory}
+                            color={'var(--spectrum-global-color-gray-100)'}
+                        />
+                    )}
+                </Flex>
             )}
         </ModelArchitectureCard>
     );

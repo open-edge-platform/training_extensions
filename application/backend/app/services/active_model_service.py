@@ -17,6 +17,8 @@ from app.repositories import ModelRevisionRepository, ModelVariantRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 from app.utils.ir_format import FP32OpenvinoAdapter
 
+from .system_service import SystemService
+
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
@@ -26,38 +28,6 @@ class LoadedModel:
     model_variant_id: UUID
     model: Model
     device: str
-
-
-@dataclass(frozen=True)
-class DeviceType:
-    """Value object representing a device type with optional index."""
-
-    name: str
-    index: int | None = None
-
-    def __str__(self) -> str:
-        """Convert to OpenVINO device string format (e.g., 'GPU.1')."""
-        return f"{self.name.upper()}.{self.index}" if self.index is not None else self.name.upper()
-
-    @classmethod
-    def from_raw(cls, raw_device_name: str) -> "DeviceType":
-        """
-        Parse raw device name into DeviceType.
-        Examples:
-            "cpu" -> DeviceType(name="CPU", index=None)
-            "xpu" -> DeviceType(name="GPU", index=None)
-            "xpu-1" -> DeviceType(name="GPU", index=1)
-        """
-        if raw_device_name.lower() == "cpu":
-            return cls(name="CPU")
-
-        if raw_device_name.lower().startswith("xpu"):
-            parts = raw_device_name.split("-")
-            if len(parts) == 1:
-                return DeviceType(name="GPU")
-            if len(parts) == 2 and parts[1].isdigit():
-                return DeviceType(name="GPU", index=int(parts[1]))
-        raise ValueError(f"Unsupported device name: {raw_device_name}")
 
 
 class ActiveModelService:
@@ -96,13 +66,13 @@ class ActiveModelService:
             pipeline_device = active_model_repo.get_active_pipeline_device()
             if pipeline_device is None:
                 raise RuntimeError("Active pipeline must have a device configured")
-            ov_device = DeviceType.from_raw(pipeline_device)
+            geti_device = SystemService().get_device_info(pipeline_device)
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
                 active_model_variant_id=UUID(active_variant_id),
                 available_models=[UUID(m.id) for m in available_models],
-                device=str(ov_device),
+                device=geti_device.as_openvino,
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, variant_id: UUID, extension: str = "xml") -> Path:

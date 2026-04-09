@@ -18,7 +18,7 @@ export const useWithCancel = (fn: (points: InteractiveAnnotationPoint[]) => Prom
 
             const result = await fn(...args);
 
-            if (abortController.current.signal.aborted) {
+            if (abortController.current?.signal.aborted) {
                 throw new DOMException('Request aborted', 'AbortError');
             }
 
