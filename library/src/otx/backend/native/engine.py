@@ -307,7 +307,7 @@ class OTXEngine(Engine):
             raise TypeError(msg)
 
         best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.ckpt"
-        if best_checkpoint_symlink.is_symlink() or best_checkpoint_symlink.exists():
+        if best_checkpoint_symlink.is_symlink() and best_checkpoint_symlink.exists():
             best_checkpoint_symlink.unlink()
         try:
             best_checkpoint_symlink.symlink_to(self.checkpoint)
