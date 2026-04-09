@@ -16,25 +16,34 @@ from app.stream.video_stream import VideoStream
 class BaseOpenCVStream(VideoStream, ABC):
     """Base class for OpenCV-based video streams with common functionality."""
 
-    def __init__(self, source: str | int, source_type: SourceType, codec: str | None = None, **metadata) -> None:
+    def __init__(
+        self,
+        source: str | int,
+        source_type: SourceType,
+        codec: str | None = None,
+        api_preference: int = cv2.CAP_ANY,
+        **metadata,
+    ) -> None:
         """Initialize OpenCV stream.
 
         Args:
             source: Video source (device ID, file path, or URL)
             source_type: Type of the video source
             codec: Video codec
+            api_preference: OpenCV backend to use (e.g. cv2.CAP_V4L2). Defaults to cv2.CAP_ANY.
             **metadata: Additional metadata for the stream
         """
         self.source = source
         self.source_type = source_type
         self.codec = codec
+        self.api_preference = api_preference
         self.metadata = metadata
         self.cap: cv2.VideoCapture
         self._initialize_capture()
 
     def _initialize_capture(self) -> None:
         """Initialize the OpenCV VideoCapture."""
-        self.cap = cv2.VideoCapture(self.source)
+        self.cap = cv2.VideoCapture(self.source, self.api_preference)  # type: ignore[call-overload]
         if not self.cap.isOpened():
             raise RuntimeError(f"Could not open video source: {self.source}")
         if self.codec:
