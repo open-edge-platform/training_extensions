@@ -34,14 +34,28 @@ export const sortModels = (models: Model[], sortBy: SortBy, datasetRevisions: Da
             );
             return orderBy(
                 models,
-                (model) => {
-                    if (model.training_info?.dataset_revision_id != null) {
-                        return datasetRevisionsMap.get(model.training_info.dataset_revision_id) ?? '';
-                    }
+                [
+                    // First we sort by models that have dataset revision so they are on the top.
+                    (model) => {
+                        const name =
+                            model.training_info?.dataset_revision_id != null
+                                ? datasetRevisionsMap.get(model.training_info.dataset_revision_id)
+                                : undefined;
 
-                    return '';
-                },
-                'asc'
+                        return name != null ? 0 : 1;
+                    },
+                    // Then we sort alphabetically by dataset name
+                    (model) => {
+                        if (model.training_info?.dataset_revision_id != null) {
+                            return (
+                                datasetRevisionsMap.get(model.training_info.dataset_revision_id)?.toLowerCase() ?? ''
+                            );
+                        }
+
+                        return '';
+                    },
+                ],
+                ['asc', 'asc']
             );
         default:
             console.error(`Unknown sort option: ${sortBy satisfies never}`);
