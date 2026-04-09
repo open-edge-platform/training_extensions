@@ -42,4 +42,4 @@ class TestLicenseService:
         (tmp_path / LicenseService.CONSENT_FILENAME).touch()
 
         service = LicenseService(data_dir=tmp_path)
-        assert service.is_accepted() is True
+        assert service.is_accepted()
