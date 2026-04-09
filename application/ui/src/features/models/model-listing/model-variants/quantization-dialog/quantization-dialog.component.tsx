@@ -47,6 +47,7 @@ type QuantizationDialogProps = {
     modelId: string;
     onClose: () => void;
 };
+
 export const QuantizationDialog = ({ modelId, onClose }: QuantizationDialogProps) => {
     const [accuracyDrop, setAccuracyDrop] = useState(DEFAULT_QUANTIZATION_PARAMETERS.accuracyDrop);
     const [hasNoMaxAccuracyDrop, setHasNoMaxAccuracyDrop] = useState(
