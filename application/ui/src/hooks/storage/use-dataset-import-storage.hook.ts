@@ -1,14 +1,14 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSessionStorage } from 'usehooks-ts';
+import { useLocalStorage } from 'usehooks-ts';
 
-import { DatasetImportState, getParsedSessionStorage } from './utils';
+import { DatasetImportState, getParsedLocalStorage } from './utils';
 
 export const useDatasetImportStorage = <TStep, TEntry extends DatasetImportState<TStep>>(storageKey: string) => {
-    const [importEntries, setImportEntries] = useSessionStorage<TEntry[] | null>(
+    const [importEntries, setImportEntries] = useLocalStorage<TEntry[] | null>(
         storageKey,
-        () => getParsedSessionStorage<TEntry[]>(storageKey) ?? null
+        () => getParsedLocalStorage<TEntry[]>(storageKey) ?? null
     );
 
     const getAllImportEntries = (): TEntry[] => {

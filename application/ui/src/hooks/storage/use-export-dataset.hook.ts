@@ -1,12 +1,14 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSessionStorage } from 'usehooks-ts';
+import { useLocalStorage } from 'usehooks-ts';
 
 import { useProjectIdentifier } from '../use-project-identifier.hook';
-import { getParsedSessionStorage } from './utils';
+import { getParsedLocalStorage } from './utils';
 
-const EXPORT_DATASET_KEY = (projectId: string) => `export-dataset-${projectId}`;
+export const EXPORT_DATASET_PREFIX = 'export-dataset-';
+
+const EXPORT_DATASET_KEY = (projectId: string) => `${EXPORT_DATASET_PREFIX}${projectId}`;
 
 type ExportDatasetData = {
     jobId: string;
@@ -16,13 +18,13 @@ type ExportDatasetData = {
 export const useExportDataset = () => {
     const projectId = useProjectIdentifier();
 
-    const [_lsExportProject, setLsExportId] = useSessionStorage<ExportDatasetData[]>(
+    const [_lsExportProject, setLsExportId] = useLocalStorage<ExportDatasetData[]>(
         EXPORT_DATASET_KEY(projectId),
-        () => getParsedSessionStorage(EXPORT_DATASET_KEY(projectId)) ?? []
+        () => getParsedLocalStorage(EXPORT_DATASET_KEY(projectId)) ?? []
     );
 
     const getLsExportIds = (): ExportDatasetData[] => {
-        return getParsedSessionStorage<ExportDatasetData[]>(EXPORT_DATASET_KEY(projectId)) ?? [];
+        return getParsedLocalStorage<ExportDatasetData[]>(EXPORT_DATASET_KEY(projectId)) ?? [];
     };
 
     const addLsExportId = (jobId: string, datasetId: string | null) => {
