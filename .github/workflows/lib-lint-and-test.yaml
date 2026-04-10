@@ -24,7 +24,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check-paths:
     name: Check if workflow should run
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -44,7 +44,7 @@ jobs:
               - .github/**
 
   code-quality-checks:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs: check-paths
     if: needs.check-paths.outputs.run_workflow == 'true'
     permissions:
@@ -185,7 +185,7 @@ jobs:
       - code-quality-checks
       - unit-tests
       - integration-tests
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

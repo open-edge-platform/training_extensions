@@ -24,7 +24,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -46,7 +46,7 @@ jobs:
 
   generate-openapi-spec:
     name: Generate OpenAPI Spec
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
@@ -76,7 +76,7 @@ jobs:
 
   build:
     name: Build UI
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
@@ -111,7 +111,7 @@ jobs:
 
   lint:
     name: Eslint checks
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs:
       - check_paths
       - generate-openapi-spec
@@ -155,7 +155,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs:
       - check_paths
       - generate-openapi-spec
@@ -255,7 +255,7 @@ jobs:
     permissions:
       contents: read # to checkout code
     timeout-minutes: 60
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
     steps:
@@ -299,7 +299,7 @@ jobs:
       - lint
       - unit-tests
       - playwright-tests
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

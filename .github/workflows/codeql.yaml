@@ -17,7 +17,7 @@ concurrency:
 jobs:
   check_paths:
     name: Check which language should be analyzed by CodeQL
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     if: github.event_name == 'pull_request'
     outputs:
       run_python: "${{ steps.prepare_outputs.outputs.run_python }}"
@@ -84,7 +84,7 @@ jobs:
 
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       security-events: write # required to publish sarif
     needs: check_paths

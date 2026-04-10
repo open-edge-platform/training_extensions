@@ -10,7 +10,7 @@ permissions: {} # No permissions by default
 jobs:
   build:
     name: Build & publish package
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     environment: pypi
     permissions:
       contents: write # required by svenstaro/upload-release-action

@@ -14,7 +14,7 @@ permissions: {} # No permissions by default on workflow level
 
 jobs:
   npm-audit-fix:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read # to checkout code
 

@@ -23,7 +23,7 @@ jobs:
   # If PR or merge_group -> run only if files in specified paths changed
   check_paths:
     name: Check if workflow should run
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     outputs:
       run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
@@ -46,11 +46,11 @@ jobs:
   python-checks:
     strategy:
       matrix:
-        os: ["overflow", "windows-latest"]
+        os: ["ubuntu", "windows"]
     # Use more descriptive job name for better visibility in CI results
     # Overflow labeled runner is equivalent to ubuntu-latest in terms of resources
-    name: python-${{ matrix.os == 'overflow' && 'ubuntu-latest' || matrix.os }}-checks
-    runs-on: ${{ matrix.os }}
+    name: python-${{ matrix.os }}-checks
+    runs-on: ${{ matrix.os == 'ubuntu' && (github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest') || 'windows-latest' }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
@@ -64,7 +64,7 @@ jobs:
           uv-version-file: application/backend/pyproject.toml # Install the uv version specified in pyproject.toml
 
       - name: Install OpenCV dependencies
-        if: matrix.os == 'overflow'
+        if: matrix.os == 'ubuntu'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -78,7 +78,7 @@ jobs:
         run: just venv
 
       - name: Run linters and type-checkers
-        if: matrix.os == 'overflow'
+        if: matrix.os == 'ubuntu'
         working-directory: application/backend
         run: just lint
 
@@ -92,7 +92,7 @@ jobs:
 
   # Temporarily skipping BDD tests on CI due to instability and flakiness. Will be re-enabled once the underlying issues are resolved.
   #      - name: Run bdd tests
-  #        if: matrix.os == 'overflow'
+  #        if: matrix.os == 'ubuntu'
   #        working-directory: application/backend
   #        run: just test-bdd
 
@@ -101,7 +101,7 @@ jobs:
     needs:
       - check_paths
       - python-checks
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()

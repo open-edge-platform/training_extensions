@@ -6,7 +6,7 @@ permissions: {} # No permissions by default
 
 jobs:
   dependency-review:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       contents: read
     steps:
