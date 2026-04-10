@@ -102,8 +102,8 @@ class RandomAffine(BaseAugmentationParameter):
     def validate_scaling_ratio_range(self) -> "RandomAffine":
         if len(self.scaling_ratio_range) != 2:
             raise ValueError("scaling_ratio_range must be a list of exactly two float values")
-        if self.scaling_ratio_range[0] >= self.scaling_ratio_range[1]:
-            raise ValueError("The first value in scaling_ratio_range must be less than the second value")
+        if self.scaling_ratio_range[0] > self.scaling_ratio_range[1]:
+            raise ValueError("The first value in scaling_ratio_range must be less than or equal to the second value")
         if self.scaling_ratio_range[0] <= 0 or self.scaling_ratio_range[1] <= 0:
             raise ValueError("Values in scaling_ratio_range must be greater than 0")
         return self
@@ -366,15 +366,16 @@ class Mixup(BaseAugmentationParameter):
         title="Probability",
         description="Probability of applying mixup augmentation",
     )
-    mix_ratio: float = Field(
-        ge=0.0,
-        le=1.0,
-        default=0.5,
-        title="Mix ratio",
+    alpha: float = Field(
+        ge=0.1,
+        le=10.0,
+        default=1.5,
+        title="Alpha",
         description=(
-            "Blending ratio between the two images. "
-            "A value of 0.5 means equal blending of both images. "
-            "Lower values give more weight to the original image."
+            "Controls how two images are blended together. "
+            "Low values (e.g. 0.5) produce uneven blending where one image dominates. "
+            "A value of 1.0 gives any blend ratio equal chance. "
+            "Higher values (e.g. 1.5-3.0) favour an equal 50/50 mix of both images."
         ),
     )
 

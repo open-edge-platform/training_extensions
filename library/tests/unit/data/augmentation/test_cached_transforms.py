@@ -88,7 +88,7 @@ class TestCachedMosaicForward:
         # After 4 calls, cache is full enough; 5th call should produce mosaic
         sample = _make_det_sample(h=32, w=32, n_boxes=2)
         result = mosaic(sample)
-        # Mosaic output canvas is 2×img_scale; a RandomCrop step follows in the pipeline
+        # Mosaic output should be 2x the img_scale
         assert result.image.shape[-2:] == (64, 64)
         # Image values should be in [0, 1]
         assert result.image.min() >= 0.0
@@ -102,7 +102,6 @@ class TestCachedMosaicForward:
             result = mosaic(sample)
         # After enough samples, mosaic should produce masks
         assert result.masks is not None
-        # Canvas is 2×img_scale; crop to img_scale is done by a downstream RandomCrop
         assert result.masks.shape[-2:] == (64, 64)
 
     def test_probability_zero_returns_input(self):
@@ -252,11 +251,11 @@ class TestCachedMixUpForward:
         assert result.image.max() <= 1.0
 
     def test_repr(self):
-        m = CachedMixUp(img_scale=(640, 640), mix_ratio=0.4)
+        m = CachedMixUp(img_scale=(640, 640), alpha=2.0)
         r = repr(m)
         assert "CachedMixUp" in r
         assert "640" in r
-        assert "0.4" in r
+        assert "2.0" in r
 
 
 # =====================================================================
