@@ -141,3 +141,5 @@ export type TrainingRequestPayload = components['schemas']['TrainingRequest'];
 export type TrainingConfigurationRequestPayload = {
     [key: string]: unknown;
 };
+
+export type Pagination = components['schemas']['Pagination'];

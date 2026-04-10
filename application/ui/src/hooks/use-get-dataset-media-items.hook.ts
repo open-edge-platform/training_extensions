@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../api/client';
-import { DatasetItemAnnotationStatus, DatasetSubset, Media, MediaDTO } from '../constants/shared-types';
+import { DatasetItemAnnotationStatus, DatasetSubset, Media, MediaDTO, Pagination } from '../constants/shared-types';
 
 const DATASET_ITEMS_LIMIT = 20;
 
@@ -62,11 +62,7 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
         { params: { query, path: { project_id } } },
         {
             pageParamName: 'offset',
-            getNextPageParam: ({
-                pagination,
-            }: {
-                pagination: { offset: number; limit: number; count: number; total: number };
-            }) => {
+            getNextPageParam: ({ pagination }: { pagination: Pagination }) => {
                 const total = pagination.offset + pagination.count;
 
                 if (total >= pagination.total) {

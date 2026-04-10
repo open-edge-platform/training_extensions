@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 
 import { $api } from '../api/client';
-import type { DatasetItemAnnotationStatus, DatasetSubset } from '../constants/shared-types';
+import type { DatasetItemAnnotationStatus, DatasetSubset, Pagination } from '../constants/shared-types';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
 const DATASET_ITEMS_LIMIT = 20;
@@ -46,11 +46,7 @@ export const useGetDatasetItems = ({ subset, annotationStatus }: UseGetDatasetIt
         },
         {
             pageParamName: 'offset',
-            getNextPageParam: ({
-                pagination,
-            }: {
-                pagination: { offset: number; limit: number; count: number; total: number };
-            }) => {
+            getNextPageParam: ({ pagination }: { pagination: Pagination }) => {
                 const total = pagination.offset + pagination.count;
 
                 if (total >= pagination.total) {
