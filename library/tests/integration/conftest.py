@@ -8,7 +8,6 @@ import inspect
 from pathlib import Path
 
 import pytest
-from app.execution.common.geti_config_converter import TEMPLATE_ID_MAPPING, ModelStatus
 
 from otx.types.task import OTXTaskType
 
@@ -59,46 +58,6 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
-def get_model_category_list(task: str) -> list[str]:
-    """
-    Retrieve the list of model categories from `otx/tools/templates`.
-
-    This function extracts `model_category` values from `template.yaml`, which may include
-    categories such as "balance" or "accuracy." It then maps each category to its corresponding
-    recipe in `otx/recipe`.
-
-    Args:
-        task (str): The task for which to retrieve model categories.
-        default_model_only (bool): If True, only include default models. Defaults to False.
-    Raises:
-    Returns:
-        list[str]: A list of recipe paths.
-    """
-
-    # Locate the OTX module and relevant directories
-    task_list = get_task_list(task.lower())
-    recipes = []
-
-    for meta_info in TEMPLATE_ID_MAPPING.values():
-        if meta_info["status"] not in [ModelStatus.BALANCE, ModelStatus.SPEED, ModelStatus.ACCURACY]:
-            continue
-
-        recipe_path = meta_info["recipe_path"]
-
-        task = OTXTaskType(str(recipe_path).split("/")[-2].upper())  # Extract task from the path
-        if task in task_list:
-            recipes.append(str(recipe_path))
-
-        if task == OTXTaskType.MULTI_CLASS_CLS:
-            # Add multi_label_cls and h_label_cls configs as well if they are in the list
-            if OTXTaskType.MULTI_LABEL_CLS in task_list:
-                recipes.append(str(recipe_path).replace("multi_class_cls", "multi_label_cls"))
-            if OTXTaskType.H_LABEL_CLS in task_list:
-                recipes.append(str(recipe_path).replace("multi_class_cls", "h_label_cls"))
-
-    return recipes
-
-
 def pytest_configure(config):
     """Configure pytest options and set task, recipe, and recipe_ov lists.
 
@@ -109,8 +68,6 @@ def pytest_configure(config):
         None
     """
     task = config.getoption("--task")
-    run_category_only = config.getoption("--run-category-only")
-
     # This assumes have OTX installed in environment.
     otx_module = importlib.import_module("otx")
     # Modify RECIPE_PATH based on the task
@@ -129,10 +86,6 @@ def pytest_configure(config):
         target_recipe_list.extend(recipe_list)
         target_ov_recipe_list.extend(recipe_ov_list)
     tile_recipe_list = [recipe for recipe in target_recipe_list if "tile" in recipe]
-
-    # Run Model Category Recipes Only (i.e. model balance, accuracy, etc.)
-    if run_category_only:
-        target_recipe_list = get_model_category_list(task)
 
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list
