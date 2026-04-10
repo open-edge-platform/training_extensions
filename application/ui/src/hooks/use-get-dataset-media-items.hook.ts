@@ -59,12 +59,7 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
         '/api/projects/{project_id}/dataset/media',
-        {
-            params: {
-                query,
-                path: { project_id },
-            },
-        },
+        { params: { query, path: { project_id } } },
         {
             pageParamName: 'offset',
             getNextPageParam: ({

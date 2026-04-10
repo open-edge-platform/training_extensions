@@ -18,12 +18,13 @@ type MediaThumbnailProps = {
 
 type VideoIndicatorProps = {
     frameCount: number;
+    annotatedFrameCount: number;
 };
 
-const VideoIndicator = ({ frameCount }: VideoIndicatorProps) => {
+const VideoIndicator = ({ frameCount, annotatedFrameCount }: VideoIndicatorProps) => {
     return (
         <View position={'absolute'} bottom={'size-50'} left={'size-50'} UNSAFE_className={classes.videoIndicator}>
-            {frameCount} {frameCount !== 1 ? 'frames' : 'frame'}
+            {`${annotatedFrameCount} / ${frameCount} ${frameCount !== 1 ? 'frames' : 'frame'}`}
         </View>
     );
 };
@@ -32,7 +33,9 @@ export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt, item }: Media
     return (
         <div onDoubleClick={onDoubleClick} onClick={onClick} className={classes.imgContainer}>
             <img src={url} alt={alt} className={classes.img} />
-            {isVideo(item) && <VideoIndicator frameCount={item.frame_count} />}
+            {isVideo(item) && (
+                <VideoIndicator frameCount={item.frame_count} annotatedFrameCount={item.annotated_frame_count} />
+            )}
         </div>
     );
 };
