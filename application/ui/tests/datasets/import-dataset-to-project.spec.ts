@@ -115,15 +115,10 @@ test.describe('Import dataset to project', () => {
         await test.step('Verify import job progress', async () => {
             await expect(importDatasetPage.getImportStatusText(DATASET_FILENAME, 'processing')).toBeVisible();
             await expect(page.getByText(String(importingJob.message))).toBeVisible();
-
-            await expect(importDatasetPage.getImportStatusText(DATASET_FILENAME, 'success')).toBeVisible();
-            await expect(page.getByText('Ready')).toBeVisible();
         });
 
-        await test.step('Close removes the staged dataset', async () => {
-            await importDatasetPage.closeImportStatus();
-
-            await expect(importDatasetPage.getImportStatusText(DATASET_FILENAME, 'success')).toBeHidden();
+        await test.step('Show success toast and removes the staged dataset', async () => {
+            await expect(page.getByText(`Dataset ${DATASET_FILENAME} 16 B`)).toBeVisible();
             await expect.poll(() => getDeletedId()).toBe(STAGED_DATASET_ID);
         });
     });

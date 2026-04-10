@@ -197,7 +197,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         return OVEngine(
             model=ov_model_xml_path,
             data=datamodule,
-            work_dir=f"./otx-quantize-workspace-{params.model_id}",
+            work_dir=self._data_dir / f"otx-quantize-workspace-{params.model_id}",
         )
 
     @step("Run Quantization", 80)

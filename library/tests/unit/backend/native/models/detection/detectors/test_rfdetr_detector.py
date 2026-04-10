@@ -224,3 +224,7 @@ class TestRFDETRDetector:
         assert labels.shape[0] == 2
         assert scores.shape[0] == 2
         assert masks.shape[0] == 2
+        # Boxes must be xyxy, not cxcywh
+        # In valid xyxy format: x1 <= x2 and y1 <= y2 for all boxes
+        assert (boxes[:, :, 0] <= boxes[:, :, 2]).all()
+        assert (boxes[:, :, 1] <= boxes[:, :, 3]).all()

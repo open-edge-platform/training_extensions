@@ -8,9 +8,9 @@ import { partition } from 'lodash-es';
 
 import { ConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Parameters } from '../../components/parameters.component';
-import { deepReplaceParameters } from '../../utils';
+import { deepReplaceParameters, filterDependentParameters } from '../../utils';
 import { InputSizeParameters } from './input-size-parameters.component';
-import { filterDependentParameters, isInputSizeParameter, LearningConfigurationGroup } from './utils';
+import { isInputSizeParameter, LearningConfigurationGroup } from './utils';
 
 const changeLearningParameters = (
     trainingConfiguration: TrainingConfiguration,

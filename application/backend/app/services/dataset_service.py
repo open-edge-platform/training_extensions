@@ -334,9 +334,12 @@ class DatasetService(BaseSessionManagedService):
         db_subset = repo.get_subset(str(dataset_item_id))
         if db_subset is None:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        if db_subset != DatasetItemSubset.UNASSIGNED:
+        if db_subset == DatasetItemSubset.UNASSIGNED:
+            repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
+        elif db_subset != subset:
             raise SubsetAlreadyAssignedError
-        repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
+        # If db_subset == subset, it's a no-op (same subset already assigned)
+
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(

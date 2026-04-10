@@ -8,7 +8,7 @@ import { render } from 'test-utils/render';
 import { describe } from 'vitest';
 
 import { NumberConfigurableParameter, TrainingConfiguration } from '../../../../../../constants/shared-types';
-import { getStep } from '../../components/number-parameter-field.component';
+import { getStep } from '../../components/utils';
 import { isBoolEnableParameterGroup, isNumberParameter } from '../../utils';
 import { LearningParameters } from './learning-parameters.component';
 import { learningParameters } from './mocks';

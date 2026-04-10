@@ -1,9 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { useRef, useState } from 'react';
 
-import type { Media } from '../../../constants/shared-types';
+import { Key, View } from '@geti/ui';
+
+import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
@@ -16,6 +18,43 @@ import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-ca
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { useNextMediaPrefetch } from './utils';
 
+const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
+
+const isDatasetSubset = (key: Key | null): key is DatasetSubset => DATASET_SUBSETS.includes(key as DatasetSubset);
+
+const constructMediaItemId = (mediaItem: Media): string => {
+    return isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
+};
+
+const useSubset = (subset: DatasetSubset, mediaItem: Media) => {
+    const [pendingSubset, setPendingSubset] = useState<DatasetSubset>(subset);
+    const prevMediaItemIdRef = useRef<string>(constructMediaItemId(mediaItem));
+    const currentMediaItemId = constructMediaItemId(mediaItem);
+    const prevSubsetRef = useRef(subset);
+
+    if (prevMediaItemIdRef.current !== currentMediaItemId) {
+        prevMediaItemIdRef.current = currentMediaItemId;
+        setPendingSubset(subset);
+    }
+
+    if (prevSubsetRef.current !== subset) {
+        prevSubsetRef.current = subset;
+        setPendingSubset(subset);
+    }
+
+    const changeSubset = (key: Key | null) => {
+        if (isDatasetSubset(key)) {
+            setPendingSubset(key);
+        }
+    };
+
+    return {
+        currentSubset: pendingSubset,
+        changeCurrentSubset: changeSubset,
+        isReadOnlySubset: pendingSubset === subset && subset !== 'unassigned',
+    };
+};
+
 type AnnotatorProps = {
     image: ImageData;
     mediaItem: Media;
@@ -24,18 +63,23 @@ type AnnotatorProps = {
     onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+    subset: DatasetSubset;
+    isUserReviewed: boolean;
 };
 
 const Annotator = ({
     mediaItem,
     image,
     mode,
-    onChangeAnnotatorMode,
-    onSelectedMediaItem,
     items,
     onClose,
+    subset,
+    isUserReviewed,
+    onSelectedMediaItem,
+    onChangeAnnotatorMode,
 }: AnnotatorProps) => {
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
+    const { currentSubset, changeCurrentSubset, isReadOnlySubset } = useSubset(subset, mediaItem);
 
     const selectNextMediaItem = async () => {
         if (nextMediaItem === undefined) {
@@ -59,6 +103,7 @@ const Annotator = ({
                     onSelectedMediaItem={onSelectedMediaItem}
                     onModeChange={onChangeAnnotatorMode}
                     onSelectNextMediaItem={selectNextMediaItem}
+                    subset={currentSubset}
                 />
             </View>
 
@@ -75,7 +120,13 @@ const Annotator = ({
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} hideHotkeys={isPredictionMode} />
+                <BottomToolbar
+                    isUserReviewed={isUserReviewed}
+                    subset={currentSubset}
+                    onSubsetChange={changeCurrentSubset}
+                    mediaItem={mediaItem}
+                    isReadOnlySubset={isReadOnlySubset}
+                />
             </View>
 
             <View gridArea={'canvas'} overflow={'hidden'}>
@@ -93,6 +144,8 @@ type AnnotatorContainerProps = {
     onClose: () => void;
     items: Media[];
     onSelectedMediaItem: (item: Media) => void;
+    subset: DatasetSubset;
+    isUserReviewed: boolean;
 };
 
 export const AnnotatorContainer = ({
@@ -100,6 +153,8 @@ export const AnnotatorContainer = ({
     changeAnnotatorMode,
     onClose,
     items,
+    subset,
+    isUserReviewed,
     onSelectedMediaItem,
 }: AnnotatorContainerProps) => {
     const { mediaItem, image } = useSelectedMediaItem();
@@ -111,10 +166,12 @@ export const AnnotatorContainer = ({
         >
             <Annotator
                 mode={mode}
+                subset={subset}
                 items={items}
                 image={image}
                 onClose={onClose}
                 mediaItem={mediaItem}
+                isUserReviewed={isUserReviewed}
                 onChangeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={onSelectedMediaItem}
             />

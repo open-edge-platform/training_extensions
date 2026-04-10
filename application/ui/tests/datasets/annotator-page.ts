@@ -4,6 +4,7 @@
 import { expect, type Page } from '@playwright/test';
 
 import { paths } from '../../src/constants/paths';
+import { DatasetSubset } from '../../src/constants/shared-types';
 
 export class AnnotatorPage {
     constructor(private readonly page: Page) {}
@@ -123,5 +124,23 @@ export class AnnotatorPage {
 
     async goto(projectId: string, datasetItemId: string) {
         await this.page.goto(paths.project.dataset.item.index({ projectId, datasetItemId }));
+    }
+
+    async selectSubset(subset: DatasetSubset) {
+        await this.page.getByRole('button', { name: /Select subset/ }).click();
+        await this.page.getByRole('option', { name: new RegExp(subset, 'i') }).click();
+    }
+
+    getSelectedSubset() {
+        return this.page.getByTestId('selected-subset-badge');
+    }
+
+    async submit() {
+        await this.page.getByRole('button', { name: 'Submit' }).click();
+    }
+
+    async selectMediaItem(name: string) {
+        const sidebarItems = this.page.getByRole('listbox', { name: 'sidebar-items' });
+        await sidebarItems.getByRole('img', { name }).click();
     }
 }
