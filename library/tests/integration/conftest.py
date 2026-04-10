@@ -9,8 +9,31 @@ from pathlib import Path
 
 import pytest
 
-from otx.tools.converter import TEMPLATE_ID_MAPPING, ModelStatus
+from otx.backend.native.cli.utils import get_otx_root_path
 from otx.types.task import OTXTaskType
+
+RECIPE_PATH = get_otx_root_path() / "recipe"
+
+# Recipes selected for category-only integration runs (speed / balance / accuracy).
+# This mirrors the TEMPLATE_ID_MAPPING kept in the application backend
+# (app.execution.common.geti_config_converter) — only the non-ACTIVE entries.
+CATEGORY_RECIPES_PER_TASK: dict[str, list[Path]] = {
+    "multi_class_cls": [
+        RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",  # speed
+        RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",  # balance
+        RECIPE_PATH / "classification" / "multi_class_cls" / "dino_v2.yaml",  # accuracy
+    ],
+    "detection": [
+        RECIPE_PATH / "detection" / "yolox_s.yaml",  # speed
+        RECIPE_PATH / "detection" / "deim_dfine_m.yaml",  # balance
+        RECIPE_PATH / "detection" / "deim_dfine_l.yaml",  # accuracy
+    ],
+    "instance_segmentation": [
+        RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_small.yaml",  # speed
+        RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_medium.yaml",  # balance
+        RECIPE_PATH / "instance_segmentation" / "rfdetr_seg_xlarge.yaml",  # accuracy
+    ],
+}
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -60,41 +83,32 @@ def get_task_list(task: str) -> list[OTXTaskType]:
 
 
 def get_model_category_list(task: str) -> list[str]:
-    """
-    Retrieve the list of model categories from `otx/tools/templates`.
+    """Return recipe paths for the speed / balance / accuracy models of the requested tasks.
 
-    This function extracts `model_category` values from `template.yaml`, which may include
-    categories such as "balance" or "accuracy." It then maps each category to its corresponding
-    recipe in `otx/recipe`.
+    The canonical mapping lives in the application backend
+    (``app.execution.common.geti_config_converter.TEMPLATE_ID_MAPPING``).
+    Here we keep only the short list of category recipes so that library
+    integration tests stay independent of the application package.
 
     Args:
-        task (str): The task for which to retrieve model categories.
-        default_model_only (bool): If True, only include default models. Defaults to False.
-    Raises:
+        task: The task (or ``"all"``) for which to retrieve category recipes.
+
     Returns:
-        list[str]: A list of recipe paths.
+        A list of recipe path strings.
     """
-
-    # Locate the OTX module and relevant directories
     task_list = get_task_list(task.lower())
-    recipes = []
+    recipes: list[str] = []
 
-    for meta_info in TEMPLATE_ID_MAPPING.values():
-        if meta_info["status"] not in [ModelStatus.BALANCE, ModelStatus.SPEED, ModelStatus.ACCURACY]:
-            continue
-
-        recipe_path = meta_info["recipe_path"]
-
-        task = OTXTaskType(str(recipe_path).split("/")[-2].upper())  # Extract task from the path
-        if task in task_list:
+    for task_type in task_list:
+        task_key = task_type.value.lower()
+        for recipe_path in CATEGORY_RECIPES_PER_TASK.get(task_key, []):
             recipes.append(str(recipe_path))
 
-        if task == OTXTaskType.MULTI_CLASS_CLS:
-            # Add multi_label_cls and h_label_cls configs as well if they are in the list
-            if OTXTaskType.MULTI_LABEL_CLS in task_list:
-                recipes.append(str(recipe_path).replace("multi_class_cls", "multi_label_cls"))
-            if OTXTaskType.H_LABEL_CLS in task_list:
-                recipes.append(str(recipe_path).replace("multi_class_cls", "h_label_cls"))
+        # Classification category recipes are stored under multi_class_cls;
+        # derive multi_label_cls / h_label_cls variants when requested.
+        if task_key in ("multi_label_cls", "h_label_cls"):
+            for recipe_path in CATEGORY_RECIPES_PER_TASK.get("multi_class_cls", []):
+                recipes.append(str(recipe_path).replace("multi_class_cls", task_key))
 
     return recipes
 

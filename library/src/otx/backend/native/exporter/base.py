@@ -185,7 +185,7 @@ class OTXModelExporter:
             ("model_info", "reverse_input_channels"): str(self.swap_rgb),
         }
 
-        # ---- Intensity config metadata ----
+        # Intensity config metadata
         intensity_cfg = self.data_input_params.intensity_config
         if intensity_cfg is not None:
             # Map storage_dtype to the ModelAPI input_dtype convention
