@@ -12,7 +12,7 @@ import { isInvalidJob, isJobDone, isJobFailed } from '../util';
 
 type UseImportJobStatusProps = {
     jobId: string | null | undefined;
-    onError?: () => void;
+    onError?: (error: unknown) => void;
     onSuccess?: () => void;
 };
 
@@ -31,17 +31,17 @@ export const useImportJobStatus = ({ jobId, onError, onSuccess }: UseImportJobSt
 
     useEffect(() => {
         if (response.isError && isInvalidJob(response.error)) {
-            isFunction(onError) && onError();
+            isFunction(onError) && onError(response.error);
             toast({ type: 'error', message: `An error occurred during import. ${response.error?.detail}` });
         }
     }, [onError, response.error, response.isError]);
 
     useEffect(() => {
         if (isJobFailed(response.data)) {
-            isFunction(onError) && onError();
+            isFunction(onError) && onError(response.error);
             toast({ type: 'error', message: `An error occurred during import. ${response.data?.message}` });
         }
-    }, [onError, response.data]);
+    }, [onError, response.data, response.error]);
 
     useEffect(() => {
         if (isJobDone(response.data)) {
