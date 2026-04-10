@@ -105,7 +105,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+                (224, 224),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -136,7 +138,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (512, 512), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+                (512, 512),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -161,7 +165,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+                (640, 640),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -185,7 +191,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+                (224, 224),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -202,7 +210,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (224, 224), (0.485, 0.456, 0.406), (0.229, 0.224, 0.225),
+                (224, 224),
+                (0.485, 0.456, 0.406),
+                (0.229, 0.224, 0.225),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -219,7 +229,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+                (224, 224),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -238,7 +250,9 @@ class TestOTXModelExporter:
         exporter = MockModelExporter(
             task_level_export_parameters=MagicMock(TaskLevelExportParameters),
             data_input_params=DataInputParams(
-                (224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+                (224, 224),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
                 intensity_config=intensity_cfg,
             ),
         )
@@ -268,7 +282,9 @@ class TestDataInputParams:
             repeat_channels=3,
         )
         params = DataInputParams(
-            (512, 512), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0),
+            (512, 512),
+            (0.0, 0.0, 0.0),
+            (1.0, 1.0, 1.0),
             intensity_config=intensity_cfg,
         )
         result = params.as_dict()
