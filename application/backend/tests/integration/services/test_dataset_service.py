@@ -1000,16 +1000,14 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    @pytest.mark.parametrize(
-        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
-    )
+    @pytest.mark.parametrize("subset", [DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION])
     def test_assign_dataset_item_subset_already_assigned(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         subset,
     ):
-        """Test assigning a subset to a dataset item."""
+        """Test assigning a different subset to a dataset item that already has one raises an error."""
         project, db_dataset_items = fxt_project_with_dataset_items
 
         with pytest.raises(SubsetAlreadyAssignedError):
@@ -1018,6 +1016,24 @@ class TestDatasetServiceIntegration:
                 dataset_item_id=UUID(db_dataset_items[2].id),
                 subset=subset,
             )
+
+    def test_assign_dataset_item_subset_same_subset_is_noop(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+    ):
+        """Test assigning the same subset that is already assigned does not raise an error."""
+        project, db_dataset_items = fxt_project_with_dataset_items
+
+        # db_dataset_items[2] already has "training" subset
+        returned_dataset_item = fxt_dataset_service.assign_dataset_item_subset(
+            project_id=project.id,
+            dataset_item_id=UUID(db_dataset_items[2].id),
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+        assert str(returned_dataset_item.id) == db_dataset_items[2].id
+        assert returned_dataset_item.subset == DatasetItemSubset.TRAINING
 
     @pytest.mark.parametrize(
         "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]

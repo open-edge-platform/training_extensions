@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, TypeAdapter
 
 from app.core.models import BaseRequiredIDNameModel, Pagination
-from app.models import DatasetItemAnnotation, MediaFormat, MediaType
+from app.models import DatasetItemAnnotation, DatasetItemSubset, MediaFormat, MediaType
 
 
 class ImageView(BaseRequiredIDNameModel):
@@ -123,6 +123,14 @@ class SetMediaAnnotations(BaseModel):
     """Schema for setting media annotations"""
 
     annotations: list[DatasetItemAnnotation]
+    subset: DatasetItemSubset | None = Field(
+        None,
+        description=(
+            "Subset to assign to the dataset item. "
+            "Ignored if the item already has the same subset assigned. "
+            "Returns a conflict error if a different subset is already assigned."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -132,7 +140,8 @@ class SetMediaAnnotations(BaseModel):
                         "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
                         "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
                     }
-                ]
+                ],
+                "subset": "training",
             }
         }
     }
@@ -159,6 +168,7 @@ class MediaAnnotations(BaseModel):
     user_reviewed: bool
     prediction_model_id: UUID | None = None
     media_id: UUID | None = Field(None, exclude_if=lambda v: v is None)
+    subset: DatasetItemSubset = DatasetItemSubset.UNASSIGNED
 
     model_config = {
         "json_schema_extra": {
@@ -172,6 +182,7 @@ class MediaAnnotations(BaseModel):
                 ],
                 "user_reviewed": False,
                 "prediction_model_id": None,
+                "subset": "unassigned",
             }
         }
     }

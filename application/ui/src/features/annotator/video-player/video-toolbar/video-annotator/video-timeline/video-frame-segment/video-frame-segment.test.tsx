@@ -124,6 +124,7 @@ describe('VideoFrameSegment', () => {
                                     user_reviewed: false,
                                     prediction_model_id: null,
                                     media_id: 'video-1',
+                                    subset: 'training',
                                 },
                             },
                         ]);
@@ -172,6 +173,7 @@ describe('VideoFrameSegment', () => {
                                     user_reviewed: true,
                                     prediction_model_id: null,
                                     media_id: 'video-1',
+                                    subset: 'training',
                                 },
                             },
                         ]);

@@ -4,7 +4,7 @@
 import { ActionButton, Flex, Icon, Text, View } from '@geti/ui';
 import { CloseSemiBold } from '@geti/ui/icons';
 
-import type { Media } from '../../../constants/shared-types';
+import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
@@ -20,6 +20,7 @@ type ReadOnlyAnnotatorProps = {
     mediaItem: Media;
     image: ImageData;
     onClose: () => void;
+    subset: DatasetSubset;
 };
 
 /**
@@ -33,7 +34,7 @@ type ReadOnlyAnnotatorProps = {
  * Note: This component renders into the parent grid layout from MediaPreview.
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
-export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose }: ReadOnlyAnnotatorProps) => {
+export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose, subset }: ReadOnlyAnnotatorProps) => {
     return (
         <>
             <View gridArea={'header'} UNSAFE_className={classes.toolbarContainer}>
@@ -64,7 +65,7 @@ export const ReadOnlyAnnotator = ({ mode, image, mediaItem, onClose }: ReadOnlyA
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} hideHotkeys />
+                <BottomToolbar mediaItem={mediaItem} hideHotkeys subset={subset} isReadOnlySubset />
             </View>
         </>
     );
