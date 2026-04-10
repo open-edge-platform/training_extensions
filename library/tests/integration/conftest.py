@@ -8,8 +8,8 @@ import inspect
 from pathlib import Path
 
 import pytest
+from app.execution.common.geti_config_converter import TEMPLATE_ID_MAPPING, ModelStatus
 
-from otx.tools.converter import TEMPLATE_ID_MAPPING, ModelStatus
 from otx.types.task import OTXTaskType
 
 
