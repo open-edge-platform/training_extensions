@@ -17,6 +17,7 @@ import torch
 from rfdetr.datasets.coco import compute_multi_scale_scales
 from rfdetr.util.misc import nested_tensor_from_tensor_list
 from torch import Tensor, nn
+from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
 
 from otx.backend.native.models.modules.base_module import BaseModule
@@ -180,6 +181,7 @@ class RFDETRDetector(BaseModule):
             dim=1,
             index=box_index.unsqueeze(-1).repeat(1, 1, pred_boxes.shape[-1]),
         )
+        boxes = box_convert(boxes, in_fmt="cxcywh", out_fmt="xyxy")
 
         # Handle masks
         if pred_masks is not None:

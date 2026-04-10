@@ -190,6 +190,7 @@ test.describe('Dataset', () => {
                         return HttpResponse.json({
                             annotations: payload.annotations,
                             user_reviewed: true,
+                            subset: 'training',
                         });
                     }
                 )
@@ -382,6 +383,7 @@ test.describe('Dataset', () => {
                         return HttpResponse.json({
                             annotations: payload.annotations,
                             user_reviewed: true,
+                            subset: 'training',
                         });
                     }
                 )

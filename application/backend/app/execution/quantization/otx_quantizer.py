@@ -13,10 +13,10 @@ from otx.backend.openvino.engine import OVEngine
 from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.tools.converter import GetiConfigConverter
 from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step
+from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.otx_converters import (
     convert_metrics,
     get_metric_by_task,
@@ -197,7 +197,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         return OVEngine(
             model=ov_model_xml_path,
             data=datamodule,
-            work_dir=f"./otx-quantize-workspace-{params.model_id}",
+            work_dir=self._data_dir / f"otx-quantize-workspace-{params.model_id}",
         )
 
     @step("Run Quantization", 80)

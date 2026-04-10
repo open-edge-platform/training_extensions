@@ -1,6 +1,7 @@
 #  Copyright (C) 2026 Intel Corporation
 #  SPDX-License-Identifier: Apache-2.0
 
+import types
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Union, cast, get_args, get_origin
 
@@ -176,14 +177,14 @@ class TrainingConfigurationView(BaseModel):
         annotation = field_info.annotation
 
         # Handle Optional/Union types by extracting the non-None type
-        if hasattr(annotation, "__origin__"):
-            origin = get_origin(annotation)
-            if origin is Union:
-                args = [arg for arg in get_args(annotation) if arg is not type(None)]
-                if args:
-                    annotation = args[0]
-                    origin = get_origin(annotation)
+        origin = get_origin(annotation)
+        if origin is Union or origin is types.UnionType:
+            args = [arg for arg in get_args(annotation) if arg is not type(None)]
+            if args:
+                annotation = args[0]
+                origin = get_origin(annotation)
 
+        if hasattr(annotation, "__origin__") or origin is not None:
             # Detect Literal[StrEnum member] -> treat as str
             if cls._get_literal_strenum_class(annotation) is not None:  # pyrefly: ignore[bad-argument-type]
                 return "str"

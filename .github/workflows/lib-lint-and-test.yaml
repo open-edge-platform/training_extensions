@@ -92,7 +92,7 @@ jobs:
 
       # TODO remove after switching to an official Datumaro release with pre-built wheels
       - name: Installing Rust toolchain
-        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
 
@@ -115,7 +115,7 @@ jobs:
         run: just test-unit --cov --cov-report=xml --cov-append
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           directory: library
           flags: coverage_unit-tests_Python-${{ matrix.python-version }}
@@ -150,7 +150,7 @@ jobs:
 
       # TODO remove after switching to an official Datumaro release with pre-built wheels
       - name: Installing Rust toolchain
-        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
 

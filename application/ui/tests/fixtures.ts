@@ -15,6 +15,7 @@ import { HttpResponse } from 'msw';
 import { handlers, http } from '../src/api/utils';
 import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { PolygonToolPage } from './annotator/polygon-tool-page';
+import { SSIMToolPage } from './annotator/ssim-tool-page';
 import { VideoPage } from './annotator/video-page';
 import { AnnotatorPage } from './datasets/annotator-page';
 import { DatasetPage } from './datasets/dataset-page';
@@ -50,6 +51,7 @@ interface Fixtures {
     jobsPage: JobsPage;
     polygonTool: PolygonToolPage;
     boundingBoxTool: BoundingBoxToolPage;
+    ssimTool: SSIMToolPage;
     videoPage: VideoPage;
     annotatorPage: AnnotatorPage;
     importDatasetPage: ImportDatasetPage;
@@ -171,7 +173,7 @@ const test = testBase.extend<Fixtures>({
                         ]);
                     }),
                     http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ response }) => {
-                        return response(200).json({ annotations: [], user_reviewed: false });
+                        return response(200).json({ annotations: [], user_reviewed: false, subset: 'training' });
                     }),
                     http.get('/api/projects/{project_id}/dataset/media', () => {
                         return HttpResponse.json({
@@ -219,6 +221,10 @@ const test = testBase.extend<Fixtures>({
     boundingBoxTool: async ({ page }, use) => {
         const boundingBoxTool = new BoundingBoxToolPage(page);
         await use(boundingBoxTool);
+    },
+    ssimTool: async ({ page }, use) => {
+        const ssimTool = new SSIMToolPage(page);
+        await use(ssimTool);
     },
     polygonTool: async ({ page }, use) => {
         const polygonTool = new PolygonToolPage(page);

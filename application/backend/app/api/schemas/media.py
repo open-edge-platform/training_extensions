@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, TypeAdapter
 
 from app.core.models import BaseRequiredIDNameModel, Pagination
-from app.models import DatasetItemAnnotation, MediaFormat, MediaType
+from app.models import DatasetItemAnnotation, DatasetItemSubset, MediaFormat, MediaType
 
 
 class ImageView(BaseRequiredIDNameModel):
@@ -81,6 +81,7 @@ class VideoView(BaseRequiredIDNameModel):
     size: int
     fps: float
     frame_count: int
+    annotated_frame_count: int
     source_id: UUID | None = None
     duration: float
 
@@ -95,6 +96,7 @@ class VideoView(BaseRequiredIDNameModel):
                 "height": 720,
                 "fps": 25.0,
                 "frame_count": 100,
+                "annotated_frame_count": 25,
                 "duration": 4.0,
                 "size": 2211840,
                 "source_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
@@ -121,6 +123,14 @@ class SetMediaAnnotations(BaseModel):
     """Schema for setting media annotations"""
 
     annotations: list[DatasetItemAnnotation]
+    subset: DatasetItemSubset | None = Field(
+        None,
+        description=(
+            "Subset to assign to the dataset item. "
+            "Ignored if the item already has the same subset assigned. "
+            "Returns a conflict error if a different subset is already assigned."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -130,7 +140,8 @@ class SetMediaAnnotations(BaseModel):
                         "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
                         "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
                     }
-                ]
+                ],
+                "subset": "training",
             }
         }
     }
@@ -157,6 +168,7 @@ class MediaAnnotations(BaseModel):
     user_reviewed: bool
     prediction_model_id: UUID | None = None
     media_id: UUID | None = Field(None, exclude_if=lambda v: v is None)
+    subset: DatasetItemSubset = DatasetItemSubset.UNASSIGNED
 
     model_config = {
         "json_schema_extra": {
@@ -170,6 +182,7 @@ class MediaAnnotations(BaseModel):
                 ],
                 "user_reviewed": False,
                 "prediction_model_id": None,
+                "subset": "unassigned",
             }
         }
     }

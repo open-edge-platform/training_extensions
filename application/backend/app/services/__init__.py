@@ -15,6 +15,7 @@ from .dataset_revision_service import DatasetRevisionService
 from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
 from .label_service import LabelService
+from .license_service import LicenseService
 from .media_prediction_service import MediaPredictionService
 from .media_service import MediaService
 from .metrics_service import MetricsService
@@ -39,6 +40,7 @@ __all__ = [
     "DatasetService",
     "DispatchService",
     "LabelService",
+    "LicenseService",
     "MediaPredictionService",
     "MediaService",
     "MetricsService",

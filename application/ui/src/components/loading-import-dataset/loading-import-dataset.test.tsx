@@ -9,6 +9,7 @@ import { render } from 'test-utils/render';
 import { http } from '../../api/utils';
 import { Job } from '../../constants/shared-types';
 import { server } from '../../msw-node-setup';
+import { formatBytes } from '../../shared/util';
 import { LoadingImportDataset } from './loading-import-dataset.component';
 
 const stagedDatasetId = 'staged-dataset-123';
@@ -27,7 +28,12 @@ describe('LoadingImportDataset', () => {
         onSuccess: () => void;
         deleteEntry: () => void;
     }) => {
-        server.use(http.get('/api/jobs/{job_id}', () => HttpResponse.json(job, { status })));
+        server.use(
+            http.get('/api/jobs/{job_id}', () => HttpResponse.json(job, { status })),
+            http.delete('/api/staged_datasets/{staged_dataset_id}', () => {
+                return HttpResponse.json(null, { status: 204 });
+            })
+        );
 
         return render(
             <LoadingImportDataset
@@ -70,7 +76,7 @@ describe('LoadingImportDataset', () => {
         expect(await screen.findByText('56%')).toBeVisible();
     });
 
-    it('renders completed import state and calls onSuccess when job is done', async () => {
+    it('renders confirmation toast when job is done', async () => {
         const fileName = 'dataset.zip';
         const job = getMockedPrepareImportDatasetJob({ status: 'DONE' });
 
@@ -78,11 +84,11 @@ describe('LoadingImportDataset', () => {
         const mockedDeleteImportEntry = vi.fn();
         renderApp({ job, fileName, onSuccess: mockedOnSuccess, deleteEntry: mockedDeleteImportEntry });
 
-        expect(await screen.findByText(`${fileName} file has been imported successfully`)).toBeVisible();
-
         await waitFor(() => {
             expect(mockedOnSuccess).toHaveBeenCalled();
-            expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
+            expect(mockedDeleteImportEntry).toHaveBeenCalled();
+
+            expect(screen.getByText(`Dataset ${fileName} ${formatBytes(0)} imported successfully.`)).toBeVisible();
         });
     });
 

@@ -16,7 +16,7 @@ type MaskAnnotationsProps = {
 
 export const MaskAnnotations = ({ annotations, children, width, height, isEnabled }: MaskAnnotationsProps) => {
     const id = useId();
-    const maskOpacity = isEnabled ? 0.8 : 0.0;
+    const maskOpacity = isEnabled ? 0.3 : 0.0;
 
     return (
         <>

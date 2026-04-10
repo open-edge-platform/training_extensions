@@ -23,7 +23,7 @@ describe('executeWithTimeout', () => {
     it('rejects when operation exceeds timeout', async () => {
         const neverResolvingPromise = new Promise<string>(() => undefined);
         const promise = executeWithTimeout(neverResolvingPromise, 'SAM encoder', 10);
-        const rejectionExpectation = expect(promise).rejects.toThrow('SAM encoder timed out after 10ms');
+        const rejectionExpectation = expect(promise).rejects.toThrow(/SAM encoder timed out after 10ms/i);
 
         await vi.advanceTimersByTimeAsync(11);
 

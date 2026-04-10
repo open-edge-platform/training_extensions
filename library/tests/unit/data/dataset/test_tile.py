@@ -40,7 +40,6 @@ class TestOTXTileDatasetFactory:
         mock_ds.dm_subset = self._make_mock_dm_subset(subset)
         mock_ds.transforms = None
         mock_ds.max_refetch = 10
-        mock_ds.stack_images = True
         mock_ds.to_tv_image = True
         # collate_fn used by OTXTileDataset for base case
         mock_ds.collate_fn = lambda x: x

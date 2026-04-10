@@ -27,7 +27,7 @@ class OTXInstanceSegDataset(OTXDataset):
         transforms (Transforms, optional): Data transformations to be applied.
         task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
         max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
-        stack_images (bool, optional): Whether to stack images. Defaults to True.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
     """
 
@@ -37,7 +37,6 @@ class OTXInstanceSegDataset(OTXDataset):
         transforms: Transforms | None = None,
         task_type: OTXTaskType = OTXTaskType.INSTANCE_SEGMENTATION,
         max_refetch: int = 1000,
-        stack_images: bool = True,
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(InstanceSegmentationSample, storage_dtype)
@@ -46,7 +45,6 @@ class OTXInstanceSegDataset(OTXDataset):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            stack_images=stack_images,
         )
 
         labels = list(dm_subset.schema.attributes["label"].categories.labels)
