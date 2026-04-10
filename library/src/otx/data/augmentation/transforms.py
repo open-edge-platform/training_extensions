@@ -513,6 +513,9 @@ class CachedMixUp(tvt_v2.Transform):
         if not 0 <= p <= 1.0:
             msg = f"Probability must be in [0,1], got {p}"
             raise ValueError(msg)
+        if alpha <= 0:
+            msg = f"alpha must be > 0 for Beta(alpha, alpha) sampling, got {alpha}"
+            raise ValueError(msg)
 
         self.img_scale = tuple(img_scale)  # (H, W)
         self.alpha = alpha
@@ -654,7 +657,6 @@ class CachedMixUp(tvt_v2.Transform):
         inputs.image = mixup_img
         inputs.bboxes = tv_tensors.BoundingBoxes(mixup_bboxes, format="XYXY", canvas_size=(target_h, target_w))
         inputs.label = mixup_labels
-        inputs.img_info = _resized_crop_image_info(inputs.img_info, (target_h, target_w))
 
         return inputs
 

@@ -178,6 +178,14 @@ class TestCachedMixUpInit:
         with pytest.raises(ValueError, match="Probability must be in"):
             CachedMixUp(p=-0.1)
 
+    def test_invalid_alpha_zero_raises(self):
+        with pytest.raises(ValueError, match="alpha must be > 0"):
+            CachedMixUp(alpha=0.0)
+
+    def test_invalid_alpha_negative_raises(self):
+        with pytest.raises(ValueError, match="alpha must be > 0"):
+            CachedMixUp(alpha=-1.0)
+
     def test_valid_construction(self):
         m = CachedMixUp(img_scale=(320, 320), p=0.5, max_cached_images=10)
         assert m.img_scale == (320, 320)
