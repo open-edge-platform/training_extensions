@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { Content, Dialog, Grid, View } from '@geti/ui';
 import { useDatasetMediaWithReviewStatus } from 'hooks/use-dataset-media-with-review-status.hook';
 
-import type { Media } from '../../../constants/shared-types';
+import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { ToolProvider } from '../../../shared/annotator/tool-provider.component';
 import { isVideoFrame } from '../../../shared/media-item-utils';
@@ -48,10 +48,12 @@ type MediaPreviewPanelsProps = {
     isFetchingNextPage: boolean;
     fetchNextPage: () => void;
     isUserReviewed: (mediaItemId: string) => boolean;
+    subset: DatasetSubset;
 };
 
 const MediaPreviewPanels = ({
     mode,
+    subset,
     changeAnnotatorMode,
     items,
     onClose,
@@ -68,7 +70,9 @@ const MediaPreviewPanels = ({
             <AnnotatorContainer
                 mode={mode}
                 items={items}
+                subset={subset}
                 onClose={onClose}
+                isUserReviewed={isUserReviewed(mediaItem.id)}
                 changeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={handleMediaTransition}
             />
@@ -108,6 +112,7 @@ const MediaPreviewContent = ({
     });
 
     const isCurrentMediaReviewed = annotationsData?.user_reviewed ?? false;
+    const subset: DatasetSubset = annotationsData?.subset ?? 'unassigned';
 
     const initialAnnotations = useMemo(() => {
         return getInitialAnnotations(isCurrentMediaReviewed, annotationsData?.annotations ?? []);
@@ -137,6 +142,7 @@ const MediaPreviewContent = ({
                     isFetchingNextPage={isFetchingNextPage}
                     fetchNextPage={fetchNextPage}
                     isUserReviewed={isUserReviewed}
+                    subset={subset}
                 />
             </AnnotatorProviders>
         </ToolProvider>
