@@ -1,0 +1,638 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Unit tests for GetiConfigConverter.convert (Geti backend version)."""
+
+from __future__ import annotations
+
+import copy
+from typing import Any
+from unittest.mock import patch
+
+from app.execution.common.geti_config_converter import GetiConfigConverter, HyperparametersUpdater, TransformsUpdater
+
+EARLY_STOPPING_CLASS_PATH = "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+
+EARLY_STOPPING_CALLBACK = {
+    "class_path": EARLY_STOPPING_CLASS_PATH,
+    "init_args": {"patience": 10, "monitor": "val/map_50"},
+}
+
+CHECKPOINT_CALLBACK = {
+    "class_path": "lightning.pytorch.callbacks.ModelCheckpoint",
+    "init_args": {"dirpath": "", "monitor": "val/map_50"},
+}
+
+
+def _make_otx_config(**overrides: Any) -> dict:
+    """Build a minimal OTX recipe config dict with sane defaults.
+
+    Override any key via keyword arguments.
+    """
+    cfg: dict[str, Any] = {
+        "config": ["some_path"],
+        "max_epochs": 200,
+        "precision": "16-mixed",
+        "model": {
+            "class_path": "otx.backend.native.models.detection.atss.ATSS",
+            "init_args": {
+                "model_name": "atss_mobilenetv2",
+                "label_info": 80,
+                "optimizer": {
+                    "class_path": "torch.optim.SGD",
+                    "init_args": {"lr": 0.004, "momentum": 0.9, "weight_decay": 0.0001},
+                },
+                "scheduler": {
+                    "class_path": "otx.backend.native.schedulers.LinearWarmupSchedulerCallable",
+                    "init_args": {
+                        "num_warmup_steps": 0,
+                        "main_scheduler_callable": {
+                            "class_path": "lightning.pytorch.cli.ReduceLROnPlateau",
+                            "init_args": {
+                                "mode": "max",
+                                "factor": 0.1,
+                                "patience": 4,
+                                "monitor": "val/map_50",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "engine": {"device": "auto"},
+        "callbacks": [
+            copy.deepcopy(EARLY_STOPPING_CALLBACK),
+            copy.deepcopy(CHECKPOINT_CALLBACK),
+        ],
+        "data": {
+            "__path__": "some/path.yaml",
+            "input_size": [800, 992],
+            "tile_config": {"enable_tiler": False, "enable_adaptive_tiling": False},
+            "train_subset": {
+                "batch_size": 8,
+                "augmentations_cpu": [
+                    {"class_path": "otx.data.augmentation.transforms.RandomIoUCrop"},
+                    {
+                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "init_args": {"size": "$(input_size)"},
+                    },
+                ],
+                "augmentations_gpu": [
+                    {"class_path": "kornia.augmentation.RandomHorizontalFlip", "init_args": {"p": 0.5}},
+                    {
+                        "class_path": "kornia.augmentation.Normalize",
+                        "init_args": {
+                            "mean": [0.485, 0.456, 0.406],
+                            "std": [0.229, 0.224, 0.225],
+                        },
+                    },
+                ],
+            },
+            "val_subset": {"batch_size": 8},
+            "test_subset": {"batch_size": 8},
+        },
+    }
+    for k, v in overrides.items():
+        cfg[k] = v
+    return cfg
+
+
+def _make_geti_config(
+    model_manifest_id: str = "object-detection-atss-mobilenet-v2",
+    sub_task_type: str | None = None,
+    hyper_parameters: dict | None = None,
+) -> dict:
+    """Build a Geti training configuration dict (the input to convert())."""
+    return {
+        "model_manifest_id": model_manifest_id,
+        "sub_task_type": sub_task_type,
+        "hyper_parameters": hyper_parameters or {},
+    }
+
+
+class TestGetiConfigConverterConvert:
+    """Tests for GetiConfigConverter.convert."""
+
+    def test_convert_returns_config_without_cli_keys(self) -> None:
+        """convert() should strip the 'config' and '__path__' keys."""
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config()
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert "config" not in result
+        assert "__path__" not in result["data"]
+
+    def test_convert_applies_learning_rate(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(hyper_parameters={"training": {"learning_rate": 0.01}})
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.01
+
+    def test_convert_applies_batch_size(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(hyper_parameters={"training": {"batch_size": 16}})
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["data"]["train_subset"]["batch_size"] == 16
+        assert result["data"]["val_subset"]["batch_size"] == 16
+
+    def test_convert_applies_max_epochs(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(hyper_parameters={"training": {"max_epochs": 50}})
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["max_epochs"] == 50
+
+    def test_convert_applies_early_stopping_patience(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={"training": {"early_stopping": {"enable": True, "patience": 20}}}
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        idx = GetiConfigConverter.get_callback_idx(result["callbacks"], EARLY_STOPPING_CLASS_PATH)
+        assert idx >= 0
+        assert result["callbacks"][idx]["init_args"]["patience"] == 20
+
+    def test_convert_removes_early_stopping_when_disabled(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={"training": {"early_stopping": {"enable": False, "patience": 10}}}
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        idx = GetiConfigConverter.get_callback_idx(result["callbacks"], EARLY_STOPPING_CLASS_PATH)
+        assert idx == -1
+
+    def test_convert_applies_input_size(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(hyper_parameters={"training": {"input_size_height": 640, "input_size_width": 640}})
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["data"]["input_size"] == (640, 640)
+
+    def test_convert_applies_weight_decay(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(hyper_parameters={"training": {"weight_decay": 0.001}})
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == 0.001
+
+    def test_convert_applies_gradient_clip(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={"training": {"gradient_clip": {"enable": True, "max_grad_norm": 1.0}}}
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["engine"]["gradient_clip_val"] == 1.0
+
+    def test_convert_disables_gradient_clip(self) -> None:
+        otx_cfg = _make_otx_config()
+        otx_cfg["gradient_clip_val"] = 35.0  # pre-existing value
+        geti_cfg = _make_geti_config(
+            hyper_parameters={"training": {"gradient_clip": {"enable": False, "max_grad_norm": 35.0}}}
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["engine"]["gradient_clip_val"] is None
+
+    def test_convert_applies_gradient_accumulation(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={"training": {"gradient_accumulation": {"enable": True, "batches": 4}}}
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["engine"]["accumulate_grad_batches"] == 4
+
+    def test_convert_disables_gradient_accumulation(self) -> None:
+        otx_cfg = _make_otx_config()
+        otx_cfg["engine"]["accumulate_grad_batches"] = 4
+        geti_cfg = _make_geti_config(
+            hyper_parameters={"training": {"gradient_accumulation": {"enable": False, "batches": 4}}}
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["engine"]["accumulate_grad_batches"] == 1
+
+    def test_convert_applies_scheduler_reduce_lr_params(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={
+                "training": {
+                    "scheduler": {
+                        "type": "reduce_lr_on_plateau",
+                        "factor": 0.5,
+                        "patience": 3,
+                        "warmup": {"enable": False},
+                    }
+                }
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        scheduler = result["model"]["init_args"]["scheduler"]
+        main_sched = scheduler["init_args"]["main_scheduler_callable"]
+        assert "ReduceLROnPlateau" in main_sched["class_path"]
+        assert main_sched["init_args"]["factor"] == 0.5
+        assert main_sched["init_args"]["patience"] == 3
+
+    def test_convert_enables_warmup(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={
+                "training": {
+                    "scheduler": {
+                        "type": "reduce_lr_on_plateau",
+                        "warmup": {"enable": True, "epochs": 5},
+                    }
+                }
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        scheduler = result["model"]["init_args"]["scheduler"]
+        assert scheduler["init_args"]["num_warmup_steps"] == 5
+        assert scheduler["init_args"]["warmup_interval"] == "epoch"
+
+    def test_convert_disables_warmup(self) -> None:
+        otx_cfg = _make_otx_config()
+        otx_cfg["model"]["init_args"]["scheduler"]["init_args"]["num_warmup_steps"] = 10
+        geti_cfg = _make_geti_config(
+            hyper_parameters={
+                "training": {
+                    "scheduler": {
+                        "warmup": {"enable": False},
+                    }
+                }
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        scheduler = result["model"]["init_args"]["scheduler"]
+        assert scheduler["init_args"]["num_warmup_steps"] == 0
+
+    def test_convert_classification_routes_sub_task_type(self) -> None:
+        """Verify that classification models use the sub_task_type for recipe path."""
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            model_manifest_id="image-classification-efficientnet-b0",
+            sub_task_type="MULTI_CLASS_CLS",
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            GetiConfigConverter.convert(geti_cfg)
+
+            # Verify AutoConfigurator was called with a path containing multi_class_cls
+            call_args = MockAutoConfigurator.call_args
+            model_path = call_args.kwargs.get("model") or call_args.args[0] if call_args.args else None
+            if model_path is None:
+                model_path = call_args[1].get("model")
+            assert "multi_class_cls" in str(model_path)
+
+    def test_convert_applies_tiling(self) -> None:
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            hyper_parameters={
+                "dataset_preparation": {
+                    "augmentation": {
+                        "tiling": {
+                            "enable": True,
+                            "enable_adaptive_tiling": True,
+                            "tile_size": 512,
+                            "tile_overlap": 0.3,
+                        }
+                    }
+                }
+            }
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        assert result["data"]["tile_config"]["enable_tiler"] is True
+        assert result["data"]["tile_config"]["enable_adaptive_tiling"] is True
+        assert result["data"]["tile_config"]["tile_size"] == (512, 512)
+        assert result["data"]["tile_config"]["overlap"] == 0.3
+
+
+class TestHyperparametersUpdater:
+    """Direct tests for HyperparametersUpdater methods."""
+
+    def test_update_weight_decay(self) -> None:
+        config = _make_otx_config()
+        HyperparametersUpdater._update_weight_decay(0.005, config)
+        assert config["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == 0.005
+
+    def test_update_weight_decay_none(self) -> None:
+        config = _make_otx_config()
+        original = config["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"]
+        HyperparametersUpdater._update_weight_decay(None, config)
+        assert config["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == original
+
+    def test_update_gradient_clip_enable(self) -> None:
+        config = _make_otx_config()
+        HyperparametersUpdater._update_gradient_clip({"enable": True, "max_grad_norm": 5.0}, config)
+        assert config["engine"]["gradient_clip_val"] == 5.0
+
+    def test_update_gradient_clip_disable(self) -> None:
+        config = _make_otx_config()
+        config["gradient_clip_val"] = 35.0
+        HyperparametersUpdater._update_gradient_clip({"enable": False}, config)
+        assert config["engine"]["gradient_clip_val"] is None
+
+    def test_update_gradient_accumulation_enable(self) -> None:
+        config = _make_otx_config()
+        HyperparametersUpdater._update_gradient_accumulation({"enable": True, "batches": 8}, config)
+        assert config["engine"]["accumulate_grad_batches"] == 8
+
+    def test_update_gradient_accumulation_disable(self) -> None:
+        config = _make_otx_config()
+        config["engine"]["accumulate_grad_batches"] = 4
+        HyperparametersUpdater._update_gradient_accumulation({"enable": False}, config)
+        assert config["engine"]["accumulate_grad_batches"] == 1
+
+    def test_update_gradient_accumulation_single_batch_noop(self) -> None:
+        """When enable=True but batches=1, no key should be set."""
+        config = _make_otx_config()
+        HyperparametersUpdater._update_gradient_accumulation({"enable": True, "batches": 1}, config)
+        assert "accumulate_grad_batches" not in config.get("engine", {})
+
+    def test_update_scheduler_factor_patience(self) -> None:
+        config = _make_otx_config()
+        HyperparametersUpdater._update_scheduler(
+            {"type": "reduce_lr_on_plateau", "factor": 0.2, "patience": 7, "warmup": {"enable": False}},
+            config,
+        )
+        main = config["model"]["init_args"]["scheduler"]["init_args"]["main_scheduler_callable"]
+        assert main["init_args"]["factor"] == 0.2
+        assert main["init_args"]["patience"] == 7
+
+    def test_update_scheduler_warmup_enable(self) -> None:
+        config = _make_otx_config()
+        HyperparametersUpdater._update_scheduler(
+            {"warmup": {"enable": True, "epochs": 3}},
+            config,
+        )
+        sched = config["model"]["init_args"]["scheduler"]["init_args"]
+        assert sched["num_warmup_steps"] == 3
+        assert sched["warmup_interval"] == "epoch"
+
+    def test_update_scheduler_warmup_disable(self) -> None:
+        config = _make_otx_config()
+        config["model"]["init_args"]["scheduler"]["init_args"]["num_warmup_steps"] = 10
+        HyperparametersUpdater._update_scheduler(
+            {"warmup": {"enable": False}},
+            config,
+        )
+        sched = config["model"]["init_args"]["scheduler"]["init_args"]
+        assert sched["num_warmup_steps"] == 0
+
+
+class TestTransformsUpdater:
+    """Tests for _TransformsUpdater."""
+
+    def test_update_adds_new_augmentation(self) -> None:
+        config = _make_otx_config()
+        TransformsUpdater.update(
+            {"random_vertical_flip": {"enable": True, "probability": 0.3}},
+            config,
+        )
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        vflip = [a for a in gpu_augs if "VerticalFlip" in a["class_path"]]
+        assert len(vflip) == 1
+        assert vflip[0]["init_args"]["p"] == 0.3
+
+    def test_update_removes_augmentation(self) -> None:
+        config = _make_otx_config()
+        TransformsUpdater.update(
+            {"random_horizontal_flip": {"enable": False, "probability": 0.5}},
+            config,
+        )
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        hflip = [a for a in gpu_augs if "HorizontalFlip" in a["class_path"]]
+        assert len(hflip) == 0
+
+    def test_update_modifies_existing_augmentation(self) -> None:
+        config = _make_otx_config()
+        TransformsUpdater.update(
+            {"random_horizontal_flip": {"enable": True, "probability": 0.9}},
+            config,
+        )
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        hflip = [a for a in gpu_augs if "HorizontalFlip" in a["class_path"]]
+        assert len(hflip) == 1
+        assert hflip[0]["init_args"]["p"] == 0.9
+
+    def test_update_disable_random_resize_crop_replaces_with_resize(self) -> None:
+        """Disabling random_resize_crop should replace it with a plain Resize."""
+        config = _make_otx_config()
+        # Add a RandomResizedCrop first
+        config["data"]["train_subset"]["augmentations_cpu"].insert(
+            0,
+            {
+                "class_path": "torchvision.transforms.v2.RandomResizedCrop",
+                "init_args": {"size": "$(input_size)"},
+            },
+        )
+        TransformsUpdater.update(
+            {"random_resize_crop": {"enable": False}},
+            config,
+        )
+        cpu_augs = config["data"]["train_subset"]["augmentations_cpu"]
+        # The first item should now be a plain Resize
+        assert cpu_augs[0]["class_path"] == "otx.data.augmentation.transforms.Resize"
+
+    def test_tiling_update(self) -> None:
+        config = _make_otx_config()
+        TransformsUpdater.update_tiling(
+            {
+                "enable": True,
+                "enable_adaptive_tiling": True,
+                "tile_size": 256,
+                "tile_overlap": 0.5,
+            },
+            config,
+        )
+        tc = config["data"]["tile_config"]
+        assert tc["enable_tiler"] is True
+        assert tc["enable_adaptive_tiling"] is True
+        assert tc["tile_size"] == (256, 256)
+        assert tc["overlap"] == 0.5
+
+    def test_tiling_update_disabled(self) -> None:
+        config = _make_otx_config()
+        TransformsUpdater.update_tiling(
+            {
+                "enable": False,
+                "enable_adaptive_tiling": False,
+                "tile_size": 256,
+                "tile_overlap": 0.5,
+            },
+            config,
+        )
+        tc = config["data"]["tile_config"]
+        assert tc["enable_tiler"] is False
+
+    def test_gaussian_noise_sigma_renamed_to_std(self) -> None:
+        config = _make_otx_config()
+        TransformsUpdater.update(
+            {
+                "gaussian_noise": {
+                    "enable": True,
+                    "mean": 0.0,
+                    "sigma": 0.1,
+                    "probability": 0.5,
+                }
+            },
+            config,
+        )
+        gpu_augs = config["data"]["train_subset"]["augmentations_gpu"]
+        noise = [a for a in gpu_augs if "GaussianNoise" in a["class_path"]]
+        assert len(noise) == 1
+        assert "std" in noise[0]["init_args"]
+        assert noise[0]["init_args"]["std"] == 0.1
+
+
+class TestGetCallbackIdx:
+    def test_found(self) -> None:
+        callbacks = [
+            {"class_path": "a.B"},
+            {"class_path": EARLY_STOPPING_CLASS_PATH},
+        ]
+        assert GetiConfigConverter.get_callback_idx(callbacks, EARLY_STOPPING_CLASS_PATH) == 1
+
+    def test_not_found(self) -> None:
+        callbacks = [{"class_path": "a.B"}]
+        assert GetiConfigConverter.get_callback_idx(callbacks, "missing.Class") == -1
+
+
+class TestFullConfigRoundTrip:
+    """Test with a config dict resembling a real Geti model_dump output."""
+
+    def test_detection_full_config(self) -> None:
+        """Simulate a full detection training configuration from Geti."""
+        otx_cfg = _make_otx_config()
+        geti_cfg = _make_geti_config(
+            model_manifest_id="object-detection-atss-mobilenet-v2",
+            hyper_parameters={
+                "dataset_preparation": {
+                    "augmentation": {
+                        "random_horizontal_flip": {"enable": True, "probability": 0.7},
+                        "random_vertical_flip": {"enable": False, "probability": 0.5},
+                        "random_affine": {
+                            "enable": True,
+                            "max_rotate_degree": 15.0,
+                            "max_translate_ratio": 0.2,
+                            "scaling_ratio_range": [0.5, 1.5],
+                            "max_shear_degree": 5.0,
+                            "probability": 0.5,
+                        },
+                    }
+                },
+                "training": {
+                    "learning_rate": 0.002,
+                    "batch_size": 16,
+                    "max_epochs": 100,
+                    "weight_decay": 0.0005,
+                    "early_stopping": {"enable": True, "patience": 15},
+                    "input_size_height": 640,
+                    "input_size_width": 640,
+                    "scheduler": {
+                        "type": "reduce_lr_on_plateau",
+                        "factor": 0.5,
+                        "patience": 5,
+                        "warmup": {"enable": True, "epochs": 3},
+                    },
+                    "gradient_clip": {"enable": True, "max_grad_norm": 10.0},
+                    "gradient_accumulation": {"enable": True, "batches": 2},
+                },
+            },
+        )
+
+        with patch("app.execution.common.geti_config_converter.AutoConfigurator") as MockAutoConfigurator:
+            MockAutoConfigurator.return_value.config = otx_cfg
+            result = GetiConfigConverter.convert(geti_cfg)
+
+        # Verify all hyperparameters were applied
+        assert result["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.002
+        assert result["model"]["init_args"]["optimizer"]["init_args"]["weight_decay"] == 0.0005
+        assert result["data"]["train_subset"]["batch_size"] == 16
+        assert result["data"]["val_subset"]["batch_size"] == 16
+        assert result["max_epochs"] == 100
+        assert result["data"]["input_size"] == (640, 640)
+        assert result["engine"]["gradient_clip_val"] == 10.0
+        assert result["engine"]["accumulate_grad_batches"] == 2
+
+        # Scheduler
+        sched = result["model"]["init_args"]["scheduler"]["init_args"]
+        assert sched["num_warmup_steps"] == 3
+        assert sched["warmup_interval"] == "epoch"
+        main = sched["main_scheduler_callable"]
+        assert main["init_args"]["factor"] == 0.5
+        assert main["init_args"]["patience"] == 5
+
+        # Early stopping
+        es_idx = GetiConfigConverter.get_callback_idx(result["callbacks"], EARLY_STOPPING_CLASS_PATH)
+        assert result["callbacks"][es_idx]["init_args"]["patience"] == 15
+
+        # Augmentations
+        gpu_augs = result["data"]["train_subset"]["augmentations_gpu"]
+        hflip = [a for a in gpu_augs if "HorizontalFlip" in a["class_path"]]
+        assert hflip[0]["init_args"]["p"] == 0.7
+
+        vflip = [a for a in gpu_augs if "VerticalFlip" in a["class_path"]]
+        assert len(vflip) == 0  # disabled
+
+        affine = [a for a in gpu_augs if "RandomAffine" in a["class_path"]]
+        assert len(affine) == 1
+        assert affine[0]["init_args"]["degrees"] == 15.0
