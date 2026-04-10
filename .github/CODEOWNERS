@@ -4,21 +4,26 @@
 * @samet-akcay @leoll2 @Radwan-Ibrahim
 
 # CI and security
+.github/actions/ @open-edge-platform/geti-ci-maintain
 .github/workflows/ @open-edge-platform/geti-ci-maintain
 .github/renovate.json5 @open-edge-platform/geti-ci-maintain
 security.md @open-edge-platform/geti-ci-maintain
 
 # Library (OTX)
 library/ @open-edge-platform/training_extensions-lib-write
+library/uv.lock @sys-geti @open-edge-platform/training_extensions-lib-write
 
 # Application backend
 application/backend/ @open-edge-platform/training_extensions-backend-write
+application/backend/uv.lock @sys-geti @open-edge-platform/training_extensions-backend-write
 
 # Application frontend
 application/ui/ @open-edge-platform/training_extensions-ui-write
+application/ui/src-tauri/Cargo.lock @sys-geti @open-edge-platform/training_extensions-ui-write
 
 # Application build and deployment
 application/docker/ @open-edge-platform/training_extensions-backend-write
+application/docker/Dockerfile @sys-geti @open-edge-platform/training_extensions-backend-write
 
 # Application documentation
 application/docs/ @leoll2 @jpggvilaca
