@@ -49,7 +49,7 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
         );
     }
 
-    if (data?.status === 'ok' && data?.license_accepted === false) {
+    if (data?.status === 'ok' && data?.license_accepted !== true) {
         return <License />;
     }
 
