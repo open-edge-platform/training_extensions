@@ -37,7 +37,13 @@ const renderApp = async ({
     server.use(
         http.post('/api/sources', newResource),
         http.patch('/api/sources/{source_id}', updateResource),
-        http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}))
+        http.patch('/api/projects/{project_id}/pipeline', () =>
+            HttpResponse.json({
+                project_id: '',
+                status: 'idle',
+                device: 'images_folder',
+            })
+        )
     );
 
     const { result } = renderHook(() => useSourceAction({ config: mockedConfig, isNewSource, bodyFormatter }));

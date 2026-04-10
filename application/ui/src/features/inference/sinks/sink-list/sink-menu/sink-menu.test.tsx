@@ -39,7 +39,14 @@ describe('SinkMenu', () => {
             server.use(
                 http.patch('/api/projects/{project_id}/pipeline', () => {
                     pipelinePatchSpy();
-                    return HttpResponse.json({}, { status: 200 });
+                    return HttpResponse.json(
+                        {
+                            project_id: '',
+                            status: 'idle',
+                            device: 'images_folder',
+                        },
+                        { status: 200 }
+                    );
                 }),
                 http.delete('/api/sinks/{sink_id}', () => HttpResponse.json(null, { status }))
             );
@@ -71,7 +78,18 @@ describe('SinkMenu', () => {
     describe('connect', () => {
         const name = 'test-name';
         const configRequests = (status = 200) => {
-            server.use(http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}, { status })));
+            server.use(
+                http.patch('/api/projects/{project_id}/pipeline', () =>
+                    HttpResponse.json(
+                        {
+                            project_id: '',
+                            status: 'idle',
+                            device: 'images_folder',
+                        },
+                        { status }
+                    )
+                )
+            );
         };
 
         it('success', async () => {

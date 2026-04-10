@@ -29,7 +29,14 @@ describe('InferenceDevices', () => {
             http.get('/api/projects/{project_id}/pipeline', () => HttpResponse.json(pipelineResponse)),
             http.patch('/api/projects/{project_id}/pipeline', () => {
                 pipelinePatchSpy();
-                return HttpResponse.json({}, { status });
+                return HttpResponse.json(
+                    {
+                        project_id: '',
+                        status: 'idle',
+                        device: 'images_folder',
+                    },
+                    { status }
+                );
             })
         );
 

@@ -41,7 +41,11 @@ describe('DataCollection capture rate fields', () => {
             http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
                 pipelinePatchSpy(await request.json());
 
-                return HttpResponse.json({});
+                return HttpResponse.json({
+                    project_id: '',
+                    status: 'idle',
+                    device: 'images_folder',
+                });
             })
         );
 

@@ -110,7 +110,11 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         network.use(
             http.patch('/api/projects/{project_id}/pipeline', () => {
-                return HttpResponse.json({});
+                return HttpResponse.json({
+                    project_id: '',
+                    status: 'idle',
+                    device: 'images_folder',
+                });
             }),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json(
