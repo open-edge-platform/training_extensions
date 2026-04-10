@@ -36,6 +36,7 @@ class OTXMulticlassClsDataset(OTXDataset):
         dm_subset (Dataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Raises:
@@ -111,6 +112,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Attributes:
@@ -214,6 +216,7 @@ class OTXHlabelClsDataset(OTXDataset):
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Attributes:

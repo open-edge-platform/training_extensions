@@ -16,6 +16,7 @@ from app.api.dependencies import (
     get_media_prediction_service,
     get_media_service,
     get_project,
+    get_system_service,
 )
 from app.api.io_utils import write_file_to_response, write_image_to_response
 from app.api.schemas.media import (
@@ -31,9 +32,9 @@ from app.api.validators import MediaID
 from app.core.models import Pagination
 from app.models import BatchInferenceResult, DatasetItemAnnotationStatus, DatasetItemSubset, Media, Project, Video
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaType, NotAnnotatedVideoFrame, VideoFormat
-from app.services import DatasetService, MediaPredictionService, MediaService
+from app.services import DatasetService, MediaPredictionService, MediaService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError
+from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 from app.services.media_prediction_service import BinaryNotFoundError, VideoRangeError
 from app.services.media_service import ImageMetadata, InvalidImageError, MediaFilters
 
@@ -306,6 +307,7 @@ def list_video_frames(
                 annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
                 prediction_model_id=dataset_item.prediction_model_id,
                 user_reviewed=dataset_item.user_reviewed,
+                subset=dataset_item.subset,
             ),
         )
         for (dataset_item, video_frame) in annotated_video_frames
@@ -419,6 +421,7 @@ def bulk_delete_media(
         status.HTTP_201_CREATED: {"description": "Annotation created or updated", "model": MediaAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID or invalid annotation content"},
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+        status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
     },
 )
 def set_media_annotations(
@@ -455,14 +458,24 @@ def set_media_annotations(
             user_reviewed=True,
             prediction_model_id=None,
         )
-        return MediaAnnotations(
-            media_id=media.id,
-            annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
-            prediction_model_id=dataset_item.prediction_model_id,
-            user_reviewed=dataset_item.user_reviewed,
-        )
     except AnnotationValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    if media_annotations.subset is not None:
+        try:
+            dataset_item = dataset_service.assign_dataset_item_subset(
+                project_id=project.id, dataset_item_id=dataset_item_id, subset=media_annotations.subset
+            )
+        except SubsetAlreadyAssignedError as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    return MediaAnnotations(
+        media_id=media.id,
+        annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
+        prediction_model_id=dataset_item.prediction_model_id,
+        user_reviewed=dataset_item.user_reviewed,
+        subset=dataset_item.subset,
+    )
 
 
 @router.get(
@@ -496,6 +509,7 @@ def get_media_annotations(
         annotations=dataset_item.annotation_data,
         prediction_model_id=dataset_item.prediction_model_id,
         user_reviewed=dataset_item.user_reviewed,
+        subset=dataset_item.subset,
     )
 
 
@@ -541,6 +555,7 @@ def media_predict(
     project: Annotated[Project, Depends(get_project)],
     request: Annotated[MediaListPredictionRequest, Body()],
     media_prediction_service: Annotated[MediaPredictionService, Depends(get_media_prediction_service)],
+    system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> BatchInferenceResult:
     """Get predictions for media"""
     items_count = sum(
@@ -563,8 +578,11 @@ def media_predict(
         )
 
     try:
-        return media_prediction_service.predict_media(project=project, request=request)
+        device = system_service.get_inference_device_info(request.device)
+        return media_prediction_service.predict_media(project=project, request=request, device=device)
     except VideoRangeError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BinaryNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

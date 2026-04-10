@@ -80,31 +80,22 @@ const updateSubsetSplitValues = (
 });
 
 const useSubsetDatasetSizes = () => {
-    const { data: trainingDatasetItems } = useGetDatasetItems({
-        limit: 1,
+    const { totalCount: trainingSubsetSize } = useGetDatasetItems({
         annotationStatus: 'reviewed',
         subset: 'training',
     });
-    const { data: testingDatasetItems } = useGetDatasetItems({
-        limit: 1,
+    const { totalCount: testingSubsetSize } = useGetDatasetItems({
         annotationStatus: 'reviewed',
         subset: 'testing',
     });
-    const { data: validationDatasetItems } = useGetDatasetItems({
-        limit: 1,
+    const { totalCount: validationSubsetSize } = useGetDatasetItems({
         annotationStatus: 'reviewed',
         subset: 'validation',
     });
-    const { data: unassignedDatasetItems } = useGetDatasetItems({
-        limit: 1,
+    const { totalCount: unassignedSubsetSize } = useGetDatasetItems({
         annotationStatus: 'reviewed',
         subset: 'unassigned',
     });
-
-    const trainingSubsetSize = trainingDatasetItems?.pagination?.total ?? 0;
-    const testingSubsetSize = testingDatasetItems?.pagination?.total ?? 0;
-    const validationSubsetSize = validationDatasetItems?.pagination?.total ?? 0;
-    const unassignedSubsetSize = unassignedDatasetItems?.pagination?.total ?? 0;
 
     const assignedDatasetItemsSize = trainingSubsetSize + testingSubsetSize + validationSubsetSize;
     const totalDatasetItemsSize = assignedDatasetItemsSize + unassignedSubsetSize;

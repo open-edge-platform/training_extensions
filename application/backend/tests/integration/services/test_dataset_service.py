@@ -908,24 +908,39 @@ class TestDatasetServiceIntegration:
         fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
+        db_session: Session,
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
         _, pipeline = fxt_project_with_pipeline
         project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
         annotations = fxt_annotations(project.task.labels[0].id)
+
+        # Create a media record with no corresponding dataset item so the media
+        # lookup succeeds but the dataset item update fails.
+        orphan_media = MediaDB(
+            type="image",
+            name="orphan",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+        )
+        db_session.add(orphan_media)
+        db_session.flush()
+        orphan_media_id = UUID(orphan_media.id)
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.set_dataset_item_annotations(
                 project=project,
-                dataset_item_id=non_existent_id,
+                dataset_item_id=orphan_media_id,
                 annotations=annotations,
                 user_reviewed=True,
                 prediction_model_id=pipeline.model_id,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
+        assert excinfo.value.resource_id == str(orphan_media_id)
 
     def test_delete_dataset_item_annotations(
         self,
@@ -985,16 +1000,14 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    @pytest.mark.parametrize(
-        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
-    )
+    @pytest.mark.parametrize("subset", [DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION])
     def test_assign_dataset_item_subset_already_assigned(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         subset,
     ):
-        """Test assigning a subset to a dataset item."""
+        """Test assigning a different subset to a dataset item that already has one raises an error."""
         project, db_dataset_items = fxt_project_with_dataset_items
 
         with pytest.raises(SubsetAlreadyAssignedError):
@@ -1003,6 +1016,24 @@ class TestDatasetServiceIntegration:
                 dataset_item_id=UUID(db_dataset_items[2].id),
                 subset=subset,
             )
+
+    def test_assign_dataset_item_subset_same_subset_is_noop(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+    ):
+        """Test assigning the same subset that is already assigned does not raise an error."""
+        project, db_dataset_items = fxt_project_with_dataset_items
+
+        # db_dataset_items[2] already has "training" subset
+        returned_dataset_item = fxt_dataset_service.assign_dataset_item_subset(
+            project_id=project.id,
+            dataset_item_id=UUID(db_dataset_items[2].id),
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+        assert str(returned_dataset_item.id) == db_dataset_items[2].id
+        assert returned_dataset_item.subset == DatasetItemSubset.TRAINING
 
     @pytest.mark.parametrize(
         "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
@@ -1494,3 +1525,127 @@ class TestDatasetServiceIntegration:
         label_counts = {str(lbl.label_id): lbl.instances for lbl in statistics.annotations_counts.instances_per_label}
         assert label_counts[str(project.task.labels[0].id)] == 3
         assert label_counts[str(project.task.labels[1].id)] == 2
+
+    def test_get_dataset_statistics_no_annotations(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+    ):
+        """Test retrieving dataset statistics when no media have annotations (annotation_data is None).
+
+        This is a regression test for a bug where get_statistics() would raise
+        TypeError: 'NoneType' object is not iterable when iterating over items
+        with None annotation_data.
+        """
+        project, _ = fxt_project_with_pipeline
+
+        # Add images with no annotations
+        for i in range(3):
+            db_media = MediaDB(
+                type="image",
+                name=f"unannotated_{i}",
+                format="jpg",
+                size=1024,
+                width=1024,
+                height=768,
+                project_id=str(project.id),
+            )
+            db_session.add(db_media)
+            db_session.flush()
+            db_session.add(
+                DatasetItemDB(
+                    id=str(db_media.id),
+                    project_id=str(project.id),
+                    subset="training",
+                    user_reviewed=False,
+                )
+            )
+        db_session.flush()
+
+        # This should not raise TypeError
+        statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
+
+        assert statistics.media_counts.images == 3
+        assert statistics.media_counts.videos == 0
+        assert statistics.media_counts.video_frames == 0
+        assert statistics.annotations_counts.annotated_images == 0
+        assert statistics.annotations_counts.instances == 0
+        assert statistics.annotations_counts.instances_per_label == []
+
+    def test_get_dataset_statistics_mixed_annotated_and_unannotated(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+    ):
+        """Test dataset statistics with a mix of annotated and unannotated items.
+
+        Ensures items with None annotation_data are safely skipped while annotated items
+        are correctly counted.
+        """
+        project, _ = fxt_project_with_pipeline
+        label_id = str(project.task.labels[0].id)
+
+        annotation_data = [
+            {
+                "labels": [{"id": label_id}],
+                "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+            }
+        ]
+
+        # Add an unannotated image
+        unannotated_media = MediaDB(
+            type="image",
+            name="unannotated",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+        )
+        db_session.add(unannotated_media)
+        db_session.flush()
+        db_session.add(
+            DatasetItemDB(
+                id=str(unannotated_media.id),
+                project_id=str(project.id),
+                subset="training",
+                user_reviewed=False,
+            )
+        )
+
+        # Add an annotated image
+        annotated_media = MediaDB(
+            type="image",
+            name="annotated",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            project_id=str(project.id),
+        )
+        db_session.add(annotated_media)
+        db_session.flush()
+        db_session.add(
+            DatasetItemDB(
+                id=str(annotated_media.id),
+                project_id=str(project.id),
+                subset="training",
+                annotation_data=annotation_data,
+                user_reviewed=True,
+            )
+        )
+        db_session.flush()
+
+        db_session.add(DatasetItemLabelDB(dataset_item_id=str(annotated_media.id), label_id=label_id))
+        db_session.flush()
+
+        statistics = fxt_dataset_service.get_dataset_statistics(project_id=project.id)
+
+        assert statistics.media_counts.images == 2
+        assert statistics.annotations_counts.annotated_images == 1
+        assert statistics.annotations_counts.instances == 1
+        assert len(statistics.annotations_counts.instances_per_label) == 1
+        assert str(statistics.annotations_counts.instances_per_label[0].label_id) == label_id
+        assert statistics.annotations_counts.instances_per_label[0].instances == 1

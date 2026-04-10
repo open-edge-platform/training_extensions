@@ -313,6 +313,7 @@ class AutoConfigurator:
         subset: str = "test",
         task: OTXTaskType | None = None,
         input_size: tuple[int, int] | None = None,
+        keep_aspect_ratio: bool = False,
     ) -> OTXDataModule:
         """Returns an OTXDataModule object with OpenVINO subset transforms applied.
 
@@ -323,6 +324,11 @@ class AutoConfigurator:
                 from the OV model metadata.  When provided this overrides
                 ``datamodule.input_size`` so that ``$(input_size)`` placeholders
                 in the OV recipe augmentations resolve to the correct value.
+            keep_aspect_ratio (bool, optional): When ``True``, patches every
+                ``otx.data.augmentation.transforms.Resize`` step in the OV
+                augmentation lists so that aspect ratio is preserved (matching
+                the ``resize_type`` embedded in the IR metadata at export time).
+                Defaults to ``False``.
 
         Returns:
             OTXDataModule: The modified OTXDataModule object with OpenVINO subset transforms applied.
@@ -338,11 +344,16 @@ class AutoConfigurator:
         subset_config.batch_size = ov_subset["batch_size"]
         subset_config.augmentations_cpu = ov_subset["augmentations_cpu"]
         subset_config.augmentations_gpu = ov_subset.get("augmentations_gpu", [])
+        if keep_aspect_ratio:
+            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_cpu)
+            self._patch_resize_keep_aspect_ratio(subset_config.augmentations_gpu)
         datamodule.tile_config.enable_tiler = False
 
         # Resolve input size: prefer model IR metadata, fall back to
         # the training recipe's default, raise if neither is available.
         actual_input_size = input_size or datamodule.input_size
+        subset_config.input_size = actual_input_size
+
         if actual_input_size is None:
             msg = (
                 "Cannot determine input_size for the OpenVINO pipeline. "
@@ -389,3 +400,21 @@ class AutoConfigurator:
             auto_num_workers=datamodule.auto_num_workers,
             device=datamodule.device,
         )
+
+    @staticmethod
+    def _patch_resize_keep_aspect_ratio(augmentations: list[dict]) -> None:
+        """Set ``keep_aspect_ratio=True`` on every Resize step in an augmentation list.
+
+        The OV recipe templates default to ``keep_aspect_ratio: false``.  When the
+        exported model's ``resize_type`` metadata indicates aspect-ratio-preserving
+        resize was used during training, this method patches the configs so that
+        OV inference preprocessing matches training preprocessing exactly.
+
+        Args:
+            augmentations: List of augmentation config dicts, each with
+                ``class_path`` and optionally ``init_args`` keys.
+        """
+        for aug in augmentations:
+            if "Resize" in aug.get("class_path", ""):
+                init_args = aug.setdefault("init_args", {})
+                init_args["keep_aspect_ratio"] = True

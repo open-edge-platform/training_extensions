@@ -23,5 +23,5 @@ overrides:
           init_args:
             size: $(input_size)
             keep_aspect_ratio: false
-            resize_targets: false
+            resize_targets: true
       augmentations_gpu: []

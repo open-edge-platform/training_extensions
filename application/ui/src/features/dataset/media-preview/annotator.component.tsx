@@ -1,14 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { useRef, useState } from 'react';
 
-import type { Media } from '../../../constants/shared-types';
-import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
+import { Key, View } from '@geti/ui';
+
+import type { DatasetSubset, Media } from '../../../constants/shared-types';
 import type { AnnotatorMode } from '../../../shared/annotator/annotator-mode';
 import { isVideo, isVideoFrame } from '../../../shared/media-item-utils';
-import { convertPredictionToAnnotation } from '../../annotator/annotations/utils';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { useSelectedMediaItem } from '../../annotator/selected-media-item-provider.component';
 import { VideoPlayerProvider } from '../../annotator/video-player/video-player-provider.component';
@@ -16,46 +15,44 @@ import { VideoToolbar } from '../../annotator/video-player/video-toolbar/video-t
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
-import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { useNextMediaPrefetch } from './utils';
 
-type PredictionAnnotatorProps = {
-    image: ImageData;
-    mediaItem: Media;
-    mode: AnnotatorMode;
-    onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
-    onClose: () => void;
-    onSuccessfulAcceptPrediction: () => void;
+const DATASET_SUBSETS: DatasetSubset[] = ['unassigned', 'training', 'validation', 'testing'];
+
+const isDatasetSubset = (key: Key | null): key is DatasetSubset => DATASET_SUBSETS.includes(key as DatasetSubset);
+
+const constructMediaItemId = (mediaItem: Media): string => {
+    return isVideoFrame(mediaItem) ? `${mediaItem.id}-${mediaItem.frame_number}` : mediaItem.id;
 };
 
-const PredictionAnnotator = ({
-    mode,
-    onChangeAnnotatorMode,
-    mediaItem,
-    image,
-    onClose,
-    onSuccessfulAcceptPrediction,
-}: PredictionAnnotatorProps) => {
-    const { replaceAnnotations, annotations } = useAnnotationActions();
+const useSubset = (subset: DatasetSubset, mediaItem: Media) => {
+    const [pendingSubset, setPendingSubset] = useState<DatasetSubset>(subset);
+    const prevMediaItemIdRef = useRef<string>(constructMediaItemId(mediaItem));
+    const currentMediaItemId = constructMediaItemId(mediaItem);
+    const prevSubsetRef = useRef(subset);
 
-    const handleEditPrediction = () => {
-        onChangeAnnotatorMode('annotation');
-        replaceAnnotations(annotations.map(convertPredictionToAnnotation));
+    if (prevMediaItemIdRef.current !== currentMediaItemId) {
+        prevMediaItemIdRef.current = currentMediaItemId;
+        setPendingSubset(subset);
+    }
+
+    if (prevSubsetRef.current !== subset) {
+        prevSubsetRef.current = subset;
+        setPendingSubset(subset);
+    }
+
+    const changeSubset = (key: Key | null) => {
+        if (isDatasetSubset(key)) {
+            setPendingSubset(key);
+        }
     };
 
-    return (
-        <ReadOnlyAnnotator
-            mode={mode}
-            image={image}
-            mediaItem={mediaItem}
-            onModeChange={onChangeAnnotatorMode}
-            onClose={onClose}
-            onSuccessfulAcceptPrediction={onSuccessfulAcceptPrediction}
-            onEditPrediction={handleEditPrediction}
-            isEditPredictionDisabled={isEmpty(annotations)}
-        />
-    );
+    return {
+        currentSubset: pendingSubset,
+        changeCurrentSubset: changeSubset,
+        isReadOnlySubset: pendingSubset === subset && subset !== 'unassigned',
+    };
 };
 
 type AnnotatorProps = {
@@ -66,20 +63,25 @@ type AnnotatorProps = {
     onChangeAnnotatorMode: (mode: AnnotatorMode) => void;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+    subset: DatasetSubset;
+    isUserReviewed: boolean;
 };
 
 const Annotator = ({
     mediaItem,
     image,
     mode,
-    onChangeAnnotatorMode,
-    onSelectedMediaItem,
     items,
     onClose,
+    subset,
+    isUserReviewed,
+    onSelectedMediaItem,
+    onChangeAnnotatorMode,
 }: AnnotatorProps) => {
     const { nextMediaItem } = useNextMediaPrefetch(mediaItem, items);
+    const { currentSubset, changeCurrentSubset, isReadOnlySubset } = useSubset(subset, mediaItem);
 
-    const handleSubmitAnnotations = async () => {
+    const selectNextMediaItem = async () => {
         if (nextMediaItem === undefined) {
             return;
         }
@@ -87,18 +89,8 @@ const Annotator = ({
         onSelectedMediaItem(nextMediaItem);
     };
 
-    if (mode === 'prediction') {
-        return (
-            <PredictionAnnotator
-                image={image}
-                mediaItem={mediaItem}
-                mode={mode}
-                onChangeAnnotatorMode={onChangeAnnotatorMode}
-                onClose={onClose}
-                onSuccessfulAcceptPrediction={handleSubmitAnnotations}
-            />
-        );
-    }
+    const isAnnotationMode = mode === 'annotation';
+    const isPredictionMode = mode === 'prediction';
 
     return (
         <>
@@ -110,13 +102,16 @@ const Annotator = ({
                     mediaItem={mediaItem}
                     onSelectedMediaItem={onSelectedMediaItem}
                     onModeChange={onChangeAnnotatorMode}
-                    onAcceptPrediction={handleSubmitAnnotations}
+                    onSelectNextMediaItem={selectNextMediaItem}
+                    subset={currentSubset}
                 />
             </View>
 
-            <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
-                <PrimaryToolbar />
-            </View>
+            {isAnnotationMode && (
+                <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
+                    <PrimaryToolbar />
+                </View>
+            )}
 
             {(isVideo(mediaItem) || isVideoFrame(mediaItem)) && (
                 <View gridArea={'video-toolbar'}>
@@ -125,12 +120,18 @@ const Annotator = ({
             )}
 
             <View gridArea={'bottom'}>
-                <BottomToolbar mediaItem={mediaItem} />
+                <BottomToolbar
+                    isUserReviewed={isUserReviewed}
+                    subset={currentSubset}
+                    onSubsetChange={changeCurrentSubset}
+                    mediaItem={mediaItem}
+                    isReadOnlySubset={isReadOnlySubset}
+                />
             </View>
 
             <View gridArea={'canvas'} overflow={'hidden'}>
                 <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} />
+                    <AnnotatorCanvas mediaItem={mediaItem} image={image} mode={mode} isReadOnly={isPredictionMode} />
                 </AnnotatorCanvasSettings>
             </View>
         </>
@@ -143,6 +144,8 @@ type AnnotatorContainerProps = {
     onClose: () => void;
     items: Media[];
     onSelectedMediaItem: (item: Media) => void;
+    subset: DatasetSubset;
+    isUserReviewed: boolean;
 };
 
 export const AnnotatorContainer = ({
@@ -150,6 +153,8 @@ export const AnnotatorContainer = ({
     changeAnnotatorMode,
     onClose,
     items,
+    subset,
+    isUserReviewed,
     onSelectedMediaItem,
 }: AnnotatorContainerProps) => {
     const { mediaItem, image } = useSelectedMediaItem();
@@ -161,10 +166,12 @@ export const AnnotatorContainer = ({
         >
             <Annotator
                 mode={mode}
+                subset={subset}
                 items={items}
                 image={image}
                 onClose={onClose}
                 mediaItem={mediaItem}
+                isUserReviewed={isUserReviewed}
                 onChangeAnnotatorMode={changeAnnotatorMode}
                 onSelectedMediaItem={onSelectedMediaItem}
             />

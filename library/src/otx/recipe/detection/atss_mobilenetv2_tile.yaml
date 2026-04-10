@@ -62,6 +62,6 @@ overrides:
 
     val_subset:
       augmentations_gpu: []
-    
+
     test_subset:
       augmentations_gpu: []

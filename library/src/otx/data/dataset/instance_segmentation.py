@@ -27,6 +27,7 @@ class OTXInstanceSegDataset(OTXDataset):
         transforms (Transforms, optional): Data transformations to be applied.
         task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
         max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
     """
 

@@ -29,6 +29,8 @@ class OTXSegmentationDataset(OTXDataset):
         transforms: Transform operations to apply to the data items.
         max_refetch: Maximum number of retries when fetching a data item fails.
         ignore_index: Index value for pixels to be ignored during training.
+        data_format: Source data format (e.g. "coco", "voc"). Defaults to "".
+        storage_dtype: Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
     Attributes:
         ignore_index: Index value for pixels to be ignored during training.

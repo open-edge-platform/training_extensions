@@ -13,11 +13,13 @@ export const isNonEmptyArray = <T>(value: T): value is IsValidArrayType<T> => Ar
 
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
 
-export const downloadFile = (url: string, name: string) => {
+export const downloadFile = (url: string, name?: string) => {
     const link = document.createElement('a');
 
     link.href = url;
-    link.download = name;
+    if (name !== undefined) {
+        link.download = name;
+    }
     link.hidden = true;
     link.click();
 

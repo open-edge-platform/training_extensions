@@ -36,7 +36,7 @@ export const VideoToolbar = ({ mode }: VideoToolbarProps) => {
                             {isExpanded && <Text>Frames</Text>}
 
                             <VideoControls />
-                            <VideoDuration />
+                            <VideoDuration videoFrame={videoFrame} />
 
                             {isExpanded && (
                                 <Flex alignItems={'center'} gap={'size-100'}>

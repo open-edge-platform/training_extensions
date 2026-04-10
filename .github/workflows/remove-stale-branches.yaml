@@ -1,0 +1,36 @@
+name: Remove Stale Branches
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run in dry-run mode (no actual deletions)"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions: {}
+
+jobs:
+  remove-stale-branches:
+    name: Remove Stale Branches
+    if: github.repository == 'open-edge-platform/training_extensions'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to comment on stale branches and delete branches
+      actions: read # Required to read branch activity
+      pull-requests: read # Required to check if a branch has an open PR
+    steps:
+      - uses: fpicalausa/remove-stale-branches@7c4f2afe88a36c0f9114cd958380979b9d7323fb # v2.4.0
+        with:
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
+          days-before-branch-stale: 90
+          days-before-branch-delete: 7
+          operations-per-run: 10
+          exempt-branches-regex: "^(develop|release/.*)$"
+          exempt-protected-branches: true

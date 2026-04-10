@@ -1,24 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import { expect, Page } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
 import { http, test } from '../fixtures';
+import { blueLabel, candyBinaryHandler, redLabel } from './annotator-fixtures';
 
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-const candyPngPath = path.resolve(dirname, '../assets/candy.png');
-const candyPngBuffer = fs.readFileSync(candyPngPath);
-
-const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
-const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
 const greenLabel = getMockedLabel({ id: 'green-label', name: 'green-label', color: '#33b74bff' });
 const yellowLabel = getMockedLabel({ id: 'yellow-label', name: 'yellow-label', color: '#ffff00' });
 
@@ -37,11 +27,7 @@ test.describe('Annotator Classification', () => {
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedClassificationProject);
             }),
-            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                    headers: { 'Content-Type': 'image/png' },
-                });
-            })
+            candyBinaryHandler
         );
     });
 
@@ -269,6 +255,7 @@ test.describe('Annotator Classification', () => {
                         return HttpResponse.json({
                             annotations: [],
                             user_reviewed: true,
+                            subset: 'training',
                         });
                     })
                 );

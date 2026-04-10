@@ -6,12 +6,12 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
 import { fetchClient } from '../../../../api/client';
-import type { AnnotationDTO, Media } from '../../../../constants/shared-types';
+import type { AnnotationDTO, DatasetSubset, Media } from '../../../../constants/shared-types';
 import { getQueryKey } from '../../../../query-client/query-client';
 import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 import { isVideoFrame } from '../../../../shared/media-item-utils';
 
-const isUnannotatedError = (error: unknown): boolean => {
+export const isUnannotatedError = (error: unknown): boolean => {
     return isObject(error) && 'detail' in error && /Media has not been annotated yet/i.test(String(error.detail));
 };
 
@@ -42,7 +42,10 @@ export const annotationsQueryOptions = (projectId: string, media: Media) =>
         queryFn: () => annotationsQueryFn(projectId, media),
     });
 
-export const annotationsQueryFn = async (projectId: string, media: Media) => {
+export const annotationsQueryFn = async (
+    projectId: string,
+    media: Media
+): Promise<{ annotations: AnnotationDTO[]; user_reviewed: boolean; subset: DatasetSubset } | undefined> => {
     const queryParams = getAnnotationsQueryParams(media);
 
     const { data, error, response } = await fetchClient.GET(
@@ -59,7 +62,7 @@ export const annotationsQueryFn = async (projectId: string, media: Media) => {
     );
 
     if (isUnannotatedError(error) || response.status === 404) {
-        return { annotations: [], user_reviewed: false };
+        return { annotations: [], user_reviewed: false, subset: 'unassigned' };
     }
 
     if (error) {
@@ -77,6 +80,7 @@ export const annotationsQueryFn = async (projectId: string, media: Media) => {
         return {
             annotations: [annotationDTO],
             user_reviewed: true,
+            subset: data.subset,
         };
     }
 

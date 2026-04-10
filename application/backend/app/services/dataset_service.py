@@ -97,9 +97,9 @@ class DatasetService(BaseSessionManagedService):
 
         if annotations is not None:
             labels = self._label_service.list_all(project_id=project_id)
-            DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
-            DatasetService._validate_annotations(annotations=annotations, task=task)
-            DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
+            annotations = DatasetService._cleanup_and_validate_annotations(
+                annotations=annotations, task=task, labels=labels, media=media, user_reviewed=user_reviewed
+            )
 
             dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
 
@@ -199,6 +199,25 @@ class DatasetService(BaseSessionManagedService):
         return DatasetItem.model_validate(db_dataset_item)
 
     @staticmethod
+    def _cleanup_and_validate_annotations(
+        annotations: list[DatasetItemAnnotation],
+        task: Task,
+        labels: list[Label],
+        media: Media,
+        user_reviewed: bool,
+    ) -> list[DatasetItemAnnotation]:
+        if user_reviewed:
+            # if user reviewed, user has accepted all predictions and/or added new annotations,
+            # so confidence scores are no longer meaningful
+            annotations = [annotation.model_copy(update={"confidences": None}) for annotation in annotations]
+
+        DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
+        DatasetService._validate_annotation_shapes(annotations=annotations, task=task)
+        DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
+
+        return annotations
+
+    @staticmethod
     def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[Label]) -> None:
         for annotation in annotations:
             for annotation_label in annotation.labels:
@@ -207,7 +226,7 @@ class DatasetService(BaseSessionManagedService):
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], task: Task) -> None:  # noqa: C901, PLR0912
+    def _validate_annotation_shapes(annotations: list[DatasetItemAnnotation], task: Task) -> None:  # noqa: C901, PLR0912
         match task.task_type:
             case TaskType.CLASSIFICATION:
                 if len(annotations) == 0:
@@ -279,22 +298,18 @@ class DatasetService(BaseSessionManagedService):
             The updated dataset item.
         """
         labels = self._label_service.list_all(project_id=project.id)
-        DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
-        DatasetService._validate_annotations(annotations=annotations, task=project.task)
+        media = self._media_service.get_media_by_id(project_id=project.id, media_id=dataset_item_id)
+        annotations = DatasetService._cleanup_and_validate_annotations(
+            annotations=annotations, task=project.task, labels=labels, media=media, user_reviewed=user_reviewed
+        )
 
         repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
-        self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
-        media = self._media_service.get_media_by_id(project_id=project.id, media_id=dataset_item_id)
-
-        DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
-
-        result = repo.set_annotation_data(
+        if not repo.set_annotation_data(
             obj_id=str(dataset_item_id),
             annotation_data=[annotation.model_dump(mode="json") for annotation in annotations],
             user_reviewed=user_reviewed,
             prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
-        )
-        if not result:
+        ):
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
 
         repo.set_labels(
@@ -319,9 +334,12 @@ class DatasetService(BaseSessionManagedService):
         db_subset = repo.get_subset(str(dataset_item_id))
         if db_subset is None:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        if db_subset != DatasetItemSubset.UNASSIGNED:
+        if db_subset == DatasetItemSubset.UNASSIGNED:
+            repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
+        elif db_subset != subset:
             raise SubsetAlreadyAssignedError
-        repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
+        # If db_subset == subset, it's a no-op (same subset already assigned)
+
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(

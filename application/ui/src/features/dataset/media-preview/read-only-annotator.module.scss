@@ -1,15 +1,3 @@
 .toolbarContainer {
     padding-top: var(--spectrum-global-dimension-size-125);
 }
-
-.closeButton {
-    gap: var(--spectrum-global-dimension-size-50);
-}
-
-.readOnlyCanvas {
-    /* Disable interactions on annotation shapes only */
-    & [aria-label*='annotation'],
-    & [aria-label*='prediction'] {
-        pointer-events: none !important;
-    }
-}

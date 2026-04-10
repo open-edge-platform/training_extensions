@@ -14,7 +14,7 @@ import {
 import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
 import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
-import { useGetModels } from '../hooks/api/use-get-models.hook';
+import { useGetSuccessfulModels } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingDevices } from './api/use-get-training-devices';
 import { useTrainingConfiguration } from './hooks/use-training-configuration';
 
@@ -68,7 +68,7 @@ const useDatasetRevisions = () => {
 
 const TRAIN_FROM_SCRATCH = 'train-from-scratch';
 const useModelRevisions = () => {
-    const { data: models } = useGetModels();
+    const { data: models } = useGetSuccessfulModels();
 
     return {
         modelRevisions: [

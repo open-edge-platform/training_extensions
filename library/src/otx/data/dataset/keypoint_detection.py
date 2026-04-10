@@ -31,6 +31,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms | None, optional): Transform operations to apply to the data items.
         max_refetch (int, optional): Maximum number of retries when fetching a data item fails.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Example:

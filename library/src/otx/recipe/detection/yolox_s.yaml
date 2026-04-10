@@ -109,7 +109,7 @@ overrides:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-            keep_aspect_ratio: true
+            keep_aspect_ratio: false
             resize_targets: false
       augmentations_gpu: []
     test_subset:
@@ -119,6 +119,6 @@ overrides:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
-            keep_aspect_ratio: true
+            keep_aspect_ratio: false
             resize_targets: false
       augmentations_gpu: []
