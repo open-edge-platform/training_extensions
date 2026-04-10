@@ -181,7 +181,7 @@ class RFDETR(RFDETRMixin, OTXDetectionModel):  # pyrefly: ignore[inconsistent-in
                 std=imagenet_std,
             ),
             "rfdetr_large": DataInputParams(
-                input_size=(560, 560),
+                input_size=(704, 704),
                 mean=imagenet_mean,
                 std=imagenet_std,
             ),

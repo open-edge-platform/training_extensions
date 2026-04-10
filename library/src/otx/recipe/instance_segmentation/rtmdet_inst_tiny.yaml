@@ -83,7 +83,7 @@ overrides:
         - class_path: otx.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
-            mix_ratio: 0.5
+            alpha: 1.5
             max_cached_images: 10
             random_pop: false
             p: 0.5

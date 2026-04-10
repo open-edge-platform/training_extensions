@@ -69,10 +69,6 @@ overrides:
         - class_path: torchvision.transforms.v2.RandomHorizontalFlip
           init_args:
             p: 0.5
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
       augmentations_gpu: []
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
