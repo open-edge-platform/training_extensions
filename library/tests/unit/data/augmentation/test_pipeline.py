@@ -769,7 +769,7 @@ class TestGPUAugmentationPipelineForward:
             sanitize_annotations=False,
         )
         images = _make_batched_images(1, h=32, w=32)
-        # Bboxes in original (large) image space — all beyond 32×32 bounds
+        # Bboxes in original (large) image space -- all beyond 32x32 bounds
         bboxes = [torch.tensor([[100.0, 100.0, 200.0, 200.0], [10.0, 10.0, 20.0, 20.0]])]
         labels = [torch.tensor([0, 1])]
 
@@ -785,9 +785,7 @@ class TestGPUAugmentationPipelineForward:
 
     def test_sanitize_annotations_false_stored(self):
         """sanitize_annotations=False is stored correctly."""
-        pipeline = GPUAugmentationPipeline(
-            [kornia_aug.RandomHorizontalFlip(p=0.5)], sanitize_annotations=False
-        )
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)], sanitize_annotations=False)
         assert pipeline._sanitize_annotations_enabled is False
 
     def test_from_config_sanitize_annotations_false(self):

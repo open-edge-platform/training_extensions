@@ -80,7 +80,7 @@ class TestCachedMosaicForward:
         assert result.image.shape == sample.image.shape
 
     def test_mosaic_applied_after_cache_fills(self):
-        """After 4+ samples cached, mosaic produces 2×img_scale canvas output."""
+        """After 4+ samples cached, mosaic produces 2x img_scale canvas output."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(4):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)

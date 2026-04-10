@@ -218,8 +218,8 @@ class Resize(tvt_v2.Transform):
 class CachedMosaic(tvt_v2.Transform):
     """Cached Mosaic augmentation for detection / instance segmentation.
 
-    Combines four images into a 2× mosaic canvas.  The output is
-    the raw 2× canvas.
+    Combines four images into a 2x mosaic canvas.  The output is
+    the raw 2x canvas.
 
     When mosaic is **skipped** (probability gate or cold cache) the sample
     is returned unchanged (pass-through).
@@ -228,10 +228,10 @@ class CachedMosaic(tvt_v2.Transform):
     pasting.
 
     Args:
-        img_scale: Per-tile target size ``(H, W)``.  The canvas is 2× this.
+        img_scale: Per-tile target size ``(H, W)``.  The canvas is 2x this.
         center_ratio_range: Range for the random mosaic centre.
-        bbox_clip_border: Clip bboxes to the 2× canvas boundary.
-        pad_val: Fill value for the canvas (0–255 scale, auto-normalised).
+        bbox_clip_border: Clip bboxes to the 2x canvas boundary.
+        pad_val: Fill value for the canvas (0-255 scale, auto-normalised).
         p: Probability of applying mosaic.
         max_cached_images: Maximum cache size (>= 4).
         random_pop: Random eviction vs FIFO.
@@ -268,8 +268,6 @@ class CachedMosaic(tvt_v2.Transform):
         self.random_pop = random_pop
         self.results_cache: list[OTXSample] = []
 
-
-
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
         """Resize CHW image keeping aspect ratio (FIT mode). Returns (resized, scale)."""
         _, h, w = img.shape
@@ -280,7 +278,12 @@ class CachedMosaic(tvt_v2.Transform):
         return resized, scale
 
     def _compute_mosaic_params(
-        self, loc: str, center_x: int, center_y: int, img_h: int, img_w: int,
+        self,
+        loc: str,
+        center_x: int,
+        center_y: int,
+        img_h: int,
+        img_w: int,
     ) -> tuple[tuple[int, int, int, int], tuple[int, int, int, int], int, int]:
         """Compute paste and crop coordinates for mosaic placement."""
         mosaic_h = self.img_scale[0] * 2
@@ -335,10 +338,9 @@ class CachedMosaic(tvt_v2.Transform):
         """Get 3 random indexes from cache."""
         return [int(torch.randint(0, len(cache), (1,)).item()) for _ in range(3)]
 
-
     @typing.no_type_check
     def forward(self, *_inputs: OTXSample) -> OTXSample:
-        """Apply CachedMosaic. Output is the raw 2× canvas."""
+        """Apply CachedMosaic. Output is the raw 2x canvas."""
         assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
         inputs = _inputs[0]
 
@@ -384,7 +386,11 @@ class CachedMosaic(tvt_v2.Transform):
             _, new_h, new_w = img_i.shape
 
             paste_coord, crop_coord, pad_w, pad_h = self._compute_mosaic_params(
-                loc, center_x, center_y, new_h, new_w,
+                loc,
+                center_x,
+                center_y,
+                new_h,
+                new_w,
             )
             x1_p, y1_p, x2_p, y2_p = paste_coord
             x1_c, y1_c, x2_c, y2_c = crop_coord
@@ -403,7 +409,12 @@ class CachedMosaic(tvt_v2.Transform):
                 if masks_i is not None and len(masks_i) > 0:
                     s = min(target_h / orig_h, target_w / orig_w)
                     new_mh, new_mw = round(orig_h * s), round(orig_w * s)
-                    masks_i = F.resize(masks_i, [new_mh, new_mw], interpolation=F.InterpolationMode.NEAREST, antialias=False)
+                    masks_i = F.resize(
+                        masks_i,
+                        [new_mh, new_mw],
+                        interpolation=F.InterpolationMode.NEAREST,
+                        antialias=False,
+                    )
                     n_masks = masks_i.shape[0]
                     mask_canvas = torch.zeros((n_masks, mosaic_h, mosaic_w), dtype=torch.uint8, device=device)
                     mask_canvas[:, y1_p:y2_p, x1_p:x2_p] = masks_i[:, y1_c:y2_c, x1_c:x2_c]
@@ -464,9 +475,9 @@ class CachedMixUp(tvt_v2.Transform):
     Args:
         img_scale (tuple[int, int]): Reference image size ``(H, W)`` used when
             the cached image needs to be rescaled.  Defaults to (640, 640).
-        alpha (float): Alpha parameter for the ``Beta(α, α)`` distribution
-            used to sample the blend ratio ``β``.  The mixed image is
-            ``β * current + (1-β) * cached``.  Higher values concentrate
+        alpha (float): Alpha parameter for the ``Beta(alpha, alpha)`` distribution
+            used to sample the blend ratio.  The mixed image is
+            ``ratio * current + (1-ratio) * cached``.  Higher values concentrate
             samples around 0.5; lower values spread toward 0 and 1.
             Defaults to 1.5 (standard YOLOX).
         pad_val (float): Padding fill value ([0, 255] or [0, 1]).
@@ -537,7 +548,12 @@ class CachedMixUp(tvt_v2.Transform):
         return canvas
 
     def _match_masks_size(
-        self, masks: torch.Tensor, src_h: int, src_w: int, target_h: int, target_w: int,
+        self,
+        masks: torch.Tensor,
+        src_h: int,
+        src_w: int,
+        target_h: int,
+        target_w: int,
     ) -> torch.Tensor:
         """Resize masks to ``(target_h, target_w)`` with keep-ratio + zero-pad."""
         if masks.numel() == 0:
@@ -557,7 +573,6 @@ class CachedMixUp(tvt_v2.Transform):
             return bboxes
         scale = min(dst_h / src_h, dst_w / src_w)
         return bboxes * scale
-
 
     @typing.no_type_check
     def forward(self, *_inputs: OTXSample) -> OTXSample:
@@ -585,8 +600,7 @@ class CachedMixUp(tvt_v2.Transform):
         if cached.bboxes.shape[0] == 0:
             return inputs
 
-
-        ori_img = inputs.image                       # (C, H, W)  float [0,1]
+        ori_img = inputs.image  # (C, H, W)  float [0,1]
         _, target_h, target_w = ori_img.shape
         cached_img = cached.image
         _, cached_h, cached_w = cached_img.shape
@@ -630,8 +644,9 @@ class CachedMixUp(tvt_v2.Transform):
                 all_masks = torch.cat([ori_masks, cached_masks], dim=0)
                 all_masks = all_masks[valid] if valid.numel() > 0 else all_masks
             else:
-                n_cached_labels = len(cached.label)
-                all_valid = valid[:len(ori_masks)] if valid.numel() > 0 else torch.ones(len(ori_masks), dtype=torch.bool)
+                all_valid = (
+                    valid[: len(ori_masks)] if valid.numel() > 0 else torch.ones(len(ori_masks), dtype=torch.bool)
+                )
                 all_masks = ori_masks[all_valid]
             inputs.masks = tv_tensors.Mask(all_masks)
 

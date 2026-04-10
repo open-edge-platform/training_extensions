@@ -58,7 +58,6 @@ overrides:
       - 640
     train_subset:
       batch_size: 8
-      num_workers: 0
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
@@ -104,7 +103,6 @@ overrides:
 
     val_subset:
       batch_size: 8
-      num_workers: 0
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
@@ -114,7 +112,6 @@ overrides:
       augmentations_gpu: []
     test_subset:
       batch_size: 8
-      num_workers: 0
       augmentations_cpu:
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
