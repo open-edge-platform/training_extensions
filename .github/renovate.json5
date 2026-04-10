@@ -204,7 +204,7 @@
       fileMatch: ["^\\.github/workflows/[^/]+\\.ya?ml$"],
       matchStrings: [
         "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+version: (?<currentValue>.*)",
-        "# renovate: datasource=(?<datasource>.*?)\\s+export RENOVATE_IMAGE=(?<depName>[^:]+):(?<currentValue>[^@]+)",
+        "# renovate: datasource=(?<datasource>.*?)\\s+export RENOVATE_IMAGE=(?<depName>[^:]+):(?<currentValue>[^@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?",
       ],
     },
   ],
