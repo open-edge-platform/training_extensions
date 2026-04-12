@@ -58,11 +58,17 @@ class ActiveModelService:
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all(training_status=TrainingStatus.SUCCESSFUL)
-            model_variants_repo = ModelVariantRepository(db=db)
-            model_variants = model_variants_repo.list_by_model_revision(str(active_model.id))
-            active_variant_id = next(
-                v.id for v in model_variants if v.format == ModelFormat.OPENVINO and v.precision == ModelPrecision.FP16
-            )
+            # Use the variant configured in the pipeline, fall back to FP16 OpenVINO
+            active_variant_id = active_model_repo.get_active_model_variant_id()
+            if active_variant_id is None:
+                model_variants_repo = ModelVariantRepository(db=db)
+                model_variants = model_variants_repo.list_by_model_revision(str(active_model.id))
+                active_variant_id = next(
+                    v.id
+                    for v in model_variants
+                    if v.format == ModelFormat.OPENVINO and v.precision == ModelPrecision.FP16
+                )
+                logger.warning("No active model variant ID found, loaded fallback model %s", active_variant_id)
             pipeline_device = active_model_repo.get_active_pipeline_device()
             if pipeline_device is None:
                 raise RuntimeError("Active pipeline must have a device configured")
