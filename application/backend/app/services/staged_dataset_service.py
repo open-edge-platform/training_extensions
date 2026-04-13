@@ -30,11 +30,11 @@ def _count_annotations(sample: Sample) -> tuple[AnnotationType, int]:
         return sample.annotation_type(), sample.annotations
 
     # collect non-empty values from the sample for all annotation attributes and their corresponding types
-    ann_type_with_value: list[tuple[AnnotationType, Any]] = [
-        (ann_type, getattr(sample, attr, None))
-        for attr, ann_type in _ANNOTATION_ATTRS
-        if getattr(sample, attr, None) is not None
-    ]
+    ann_type_with_value: list[tuple[AnnotationType, Any]] = []
+    for attr, ann_type in _ANNOTATION_ATTRS:
+        value = getattr(sample, attr, None)
+        if value is not None:
+            ann_type_with_value.append((ann_type, value))
     if len(ann_type_with_value) > 1:
         return AnnotationType.UNKNOWN, len(ann_type_with_value[0][1])
     if len(ann_type_with_value) == 1:

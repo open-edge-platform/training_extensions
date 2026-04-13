@@ -263,8 +263,8 @@ class TestStagedDatasetServiceIntegration:
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
         """
-        Tests that annotation_type cannot be recommended for datasets with samples which has multiple values filled in
-        the annotation fields (e.g. both polygons and bboxes).
+        Tests that annotation_type cannot be recommended for datasets with samples that have multiple annotation field
+        values set (e.g. both polygons and bboxes).
         """
         dataset_id, dataset_path = _make_coco_dataset(tmp_path)
 
