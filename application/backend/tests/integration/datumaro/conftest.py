@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import shutil
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -40,3 +41,12 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
                 f"have failed, or the archive structure may have changed."
             )
         metafunc.parametrize("archive", zip_files, ids=[p.stem for p in zip_files])
+
+
+def pytest_unconfigure() -> None:
+    """Session-wide hook - remove downloaded archive and unpacked files after tests complete."""
+    archive = PARENT_DIR / OBJECT_NAME
+    if archive.exists():
+        archive.unlink()
+    if DATASETS_DIR.exists():
+        shutil.rmtree(DATASETS_DIR)

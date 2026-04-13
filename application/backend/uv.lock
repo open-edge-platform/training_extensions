@@ -496,7 +496,7 @@ wheels = [
 [[package]]
 name = "datumaro"
 version = "2.0.0"
-source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#7ae3a58dd1a4d4a17e66561aa21302a04acecc51" }
+source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#30f979322d5a10d030a212a91b7d1364b9022058" }
 dependencies = [
     { name = "attrs" },
     { name = "cachetools" },

@@ -61,9 +61,6 @@ test-integration *ARGS: install-uv
 test-bdd *ARGS: install-uv
     uv run behave ./tests/bdd -v {{ ARGS }}
 
-test-datumaro-integration *ARGS: install-uv
-    uv run pytest ./tests/datumaro_integration -v {{ ARGS }}
-
 # -------------------------------------------------------------------------------------------------
 # Documentation
 # -------------------------------------------------------------------------------------------------

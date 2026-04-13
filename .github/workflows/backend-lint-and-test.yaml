@@ -90,10 +90,6 @@ jobs:
         working-directory: application/backend
         run: just test-integration
 
-      - name: Run datumaro integration tests
-        working-directory: application/backend
-        run: just test-datumaro-integration
-
   # Temporarily skipping BDD tests on CI due to instability and flakiness. Will be re-enabled once the underlying issues are resolved.
   #      - name: Run bdd tests
   #        if: matrix.os == 'overflow'
