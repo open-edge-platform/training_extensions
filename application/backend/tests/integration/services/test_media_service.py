@@ -583,7 +583,7 @@ class TestMediaServiceIntegration:
         # Create a 16-bit grayscale image that uses the full 0-65535 range
         rng = np.random.default_rng(seed=0)
         data_16bit = rng.integers(0, 65535, (512, 512), dtype=np.uint16)
-        image = PILImage.fromarray(data_16bit, mode="I;16")
+        image = PILImage.fromarray(data_16bit)
 
         # Ensure the image is recognised as 16-bit by PIL
         assert image.mode == "I;16"
