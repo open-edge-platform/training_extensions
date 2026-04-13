@@ -479,7 +479,7 @@ class CachedMixUp(tvt_v2.Transform):
             used to sample the blend ratio.  The mixed image is
             ``ratio * current + (1-ratio) * cached``.  Higher values concentrate
             samples around 0.5; lower values spread toward 0 and 1.
-            Defaults to 1.5 (standard YOLOX).
+            Defaults to 1.5.
         pad_val (float): Padding fill value ([0, 255] or [0, 1]).
             Defaults to 114.0.
         max_iters (int): Max attempts to find a non-empty cached sample.
