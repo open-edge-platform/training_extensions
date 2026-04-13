@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from importlib_resources import files
 from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
 from torchvision.transforms.v2 import Normalize
@@ -147,7 +147,7 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def fxt_real_tv_cls_config(self) -> DictConfig:
-        cfg_path = Path("otx") / "recipe" / "_base_" / "data" / "classification.yaml"
+        cfg_path = files("otx") / "recipe" / "_base_" / "data" / "classification.yaml"
         cfg = OmegaConf.load(cfg_path)
         assert isinstance(cfg, DictConfig)
         OmegaConf.set_struct(cfg, False)
@@ -210,7 +210,7 @@ class TestOTXDataModule:
         }
 
     @pytest.fixture
-    def fxt_mock_dataset(self) -> Callable:
+    def fxt_mock_dataset(self) -> callable:
         """Factory fixture to create mock datasets with specified parameters."""
 
         def _create_mock_dataset(
