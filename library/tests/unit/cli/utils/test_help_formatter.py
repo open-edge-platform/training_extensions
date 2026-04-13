@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 from jsonargparse import ArgumentParser
 
-from otx.cli.utils.help_formatter import (
+from getitune.cli.utils.help_formatter import (
     CustomHelpFormatter,
     get_cli_usage_docstring,
     get_verbosity_subcommand,
@@ -19,25 +19,25 @@ from otx.cli.utils.help_formatter import (
 
 def test_get_verbosity_subcommand() -> None:
     """Test if the verbosity level and subcommand are correctly parsed."""
-    argv = ["otx", "train", "-h"]
+    argv = ["getitune", "train", "-h"]
     with patch.object(sys, "argv", argv):
         result = get_verbosity_subcommand()
         assert result["subcommand"] == "train"
         assert result["verbosity"] == 0
 
-    argv = ["otx", "train", "-h", "-v"]
+    argv = ["getitune", "train", "-h", "-v"]
     with patch.object(sys, "argv", argv):
         result = get_verbosity_subcommand()
         assert result["subcommand"] == "train"
         assert result["verbosity"] == 1
 
-    argv = ["otx", "train", "-h", "-vv"]
+    argv = ["getitune", "train", "-h", "-vv"]
     with patch.object(sys, "argv", argv):
         result = get_verbosity_subcommand()
         assert result["subcommand"] == "train"
         assert result["verbosity"] == 2
 
-    argv = ["otx", "-h"]
+    argv = ["getitune", "-h"]
     with patch.object(sys, "argv", argv):
         result = get_verbosity_subcommand()
         assert result["subcommand"] is None
@@ -90,7 +90,7 @@ class TestCustomHelpFormatter:
     @pytest.fixture
     def fxt_parser(self) -> ArgumentParser:
         """Mock ArgumentParser."""
-        parser = ArgumentParser(env_prefix="otx", formatter_class=CustomHelpFormatter)
+        parser = ArgumentParser(env_prefix="getitune", formatter_class=CustomHelpFormatter)
         parser.formatter_class.subcommand = "train"
         parser.add_argument(
             "-t",
@@ -107,7 +107,7 @@ class TestCustomHelpFormatter:
 
     def test_verbose_0(self, capfd: "pytest.CaptureFixture", fxt_parser: ArgumentParser) -> None:
         """Test verbose level 0."""
-        argv = ["otx", "train", "-h"]
+        argv = ["getitune", "train", "-h"]
         assert fxt_parser.formatter_class == CustomHelpFormatter
         fxt_parser.formatter_class.verbosity_level = 0
         with pytest.raises(SystemExit, match="0"):
@@ -118,7 +118,7 @@ class TestCustomHelpFormatter:
 
     def test_verbose_1(self, capfd: "pytest.CaptureFixture", fxt_parser: ArgumentParser) -> None:
         """Test verbose level 1."""
-        argv = ["otx", "train", "-h", "-v"]
+        argv = ["getitune", "train", "-h", "-v"]
         assert fxt_parser.formatter_class == CustomHelpFormatter
         fxt_parser.formatter_class.verbosity_level = 1
         with pytest.raises(SystemExit, match="0"):
@@ -129,7 +129,7 @@ class TestCustomHelpFormatter:
 
     def test_verbose_2(self, capfd: "pytest.CaptureFixture", fxt_parser: ArgumentParser) -> None:
         """Test verbose level 2."""
-        argv = ["otx", "train", "-h", "-vv"]
+        argv = ["getitune", "train", "-h", "-vv"]
         assert fxt_parser.formatter_class == CustomHelpFormatter
         fxt_parser.formatter_class.verbosity_level = 2
         with pytest.raises(SystemExit, match="0"):

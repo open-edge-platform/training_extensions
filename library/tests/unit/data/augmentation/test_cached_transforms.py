@@ -9,8 +9,8 @@ import torch
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torchvision import tv_tensors
 
-from otx.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop
-from otx.data.entity.sample import InstanceSegmentationSample
+from getitune.data.augmentation.transforms import CachedMixUp, CachedMosaic, RandomIoUCrop
+from getitune.data.entity.sample import InstanceSegmentationSample
 
 
 # ---------------------------------------------------------------------------

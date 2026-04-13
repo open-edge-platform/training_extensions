@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.data.module import OTXDataModule
-from otx.tools.auto_configurator import (
+from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune.data.module import OTXDataModule
+from getitune.tools.auto_configurator import (
     DEFAULT_CONFIG_PER_TASK,
     AutoConfigurator,
 )
-from otx.types.label import LabelInfo, SegLabelInfo
-from otx.types.task import OTXTaskType
-from otx.utils.utils import should_pass_label_info
+from getitune.types.label import LabelInfo, SegLabelInfo
+from getitune.types.task import OTXTaskType
+from getitune.utils.utils import should_pass_label_info
 
 
 @pytest.fixture

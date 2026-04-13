@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.instance_segmentation.rfdetr_inst import RFDETRInst
-from otx.data.entity import OTXPredictionBatch as OTXPredBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.instance_segmentation.rfdetr_inst import RFDETRInst
+from getitune.data.entity import OTXPredictionBatch as OTXPredBatch
 
 
 class TestRFDETRInst:

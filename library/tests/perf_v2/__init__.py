@@ -3,7 +3,7 @@
 
 """OTX performance benchmark tests."""
 
-from otx.types.task import OTXTaskType
+from getitune.types.task import OTXTaskType
 
 from .tasks import (
     classification,

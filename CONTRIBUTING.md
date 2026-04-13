@@ -43,8 +43,8 @@ Set up your development environment to start contributing. This involves install
 
    ```bash
    cd lib
-   python -m venv .otx
-   source .otx/bin/activate
+   python -m venv .getitune
+   source .getitune/bin/activate
    ```
 
 2. Install the development requirements:

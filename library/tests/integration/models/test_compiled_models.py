@@ -14,13 +14,13 @@ import pytest
 import torch
 from torch._dynamo.testing import CompileCounter
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.atss import ATSS
-from otx.backend.native.models.detection.rtdetr import RTDETR
-from otx.backend.native.models.detection.yolox import YOLOX
-from otx.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
-from otx.backend.native.models.segmentation.segnext import SegNext
-from otx.config import register_configs
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.atss import ATSS
+from getitune.backend.native.models.detection.rtdetr import RTDETR
+from getitune.backend.native.models.detection.yolox import YOLOX
+from getitune.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
+from getitune.backend.native.models.segmentation.segnext import SegNext
+from getitune.config import register_configs
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -80,7 +80,7 @@ class TestCompiledModelsDetection:
         _run_compile_test(model, model.data_input_params.input_size)
 
     def test_ssd_compiled(self) -> None:
-        from otx.backend.native.models.detection import SSD
+        from getitune.backend.native.models.detection import SSD
 
         model = SSD(
             model_name="ssd_mobilenetv2",

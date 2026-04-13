@@ -33,7 +33,7 @@ from datumaro.experimental.fields import Subset
 from torchvision import tv_tensors
 from torchvision.datasets import CIFAR100
 
-from otx.data.entity.sample import ClassificationHierarchicalSample
+from getitune.data.entity.sample import ClassificationHierarchicalSample
 
 # CIFAR-100 superclass (coarse) names
 CIFAR100_COARSE_LABELS: tuple[str, ...] = (

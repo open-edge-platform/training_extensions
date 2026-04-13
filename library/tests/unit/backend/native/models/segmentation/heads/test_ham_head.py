@@ -10,8 +10,8 @@ import pytest
 import torch
 from torch import nn
 
-from otx.backend.native.models.modules.norm import build_norm_layer
-from otx.backend.native.models.segmentation.heads.ham_head import LightHamHeadModule
+from getitune.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.native.models.segmentation.heads.ham_head import LightHamHeadModule
 
 
 class TestLightHamHeadModule:

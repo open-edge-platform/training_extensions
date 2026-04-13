@@ -68,7 +68,7 @@ class BaseTest:
             )
             with mlflow.start_run(tags=tags, run_name=run_name):
                 command_cfg = [
-                    "otx",
+                    "getitune",
                     "train",
                     "--config",
                     f"src/otx/recipe/{test_case.model.task}/{test_case.model.name}.yaml",
@@ -141,7 +141,7 @@ class TestMultiClassCls(BaseTest):
             num_classes=2,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.MulticlassAccuracywithLabelGroup",
+                "metric": "getitune.metrics.accuracy.MulticlassAccuracywithLabelGroup",
             },
         )
         for idx in range(1, 4)
@@ -152,7 +152,7 @@ class TestMultiClassCls(BaseTest):
             num_classes=67,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.MulticlassAccuracywithLabelGroup",
+                "metric": "getitune.metrics.accuracy.MulticlassAccuracywithLabelGroup",
             },
         ),
         DatasetTestCase(
@@ -161,7 +161,7 @@ class TestMultiClassCls(BaseTest):
             num_classes=20,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.MulticlassAccuracywithLabelGroup",
+                "metric": "getitune.metrics.accuracy.MulticlassAccuracywithLabelGroup",
             },
         ),
     ]
@@ -213,7 +213,7 @@ class TestMultilabelCls(BaseTest):
             num_classes=3,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.MultilabelAccuracywithLabelGroup",
+                "metric": "getitune.metrics.accuracy.MultilabelAccuracywithLabelGroup",
             },
         )
         for idx in range(1, 4)
@@ -224,7 +224,7 @@ class TestMultilabelCls(BaseTest):
             num_classes=68,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.MultilabelAccuracywithLabelGroup",
+                "metric": "getitune.metrics.accuracy.MultilabelAccuracywithLabelGroup",
             },
         ),
         DatasetTestCase(
@@ -233,7 +233,7 @@ class TestMultilabelCls(BaseTest):
             num_classes=21,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.MultilabelAccuracywithLabelGroup",
+                "metric": "getitune.metrics.accuracy.MultilabelAccuracywithLabelGroup",
             },
         ),
     ]
@@ -285,7 +285,7 @@ class TestHlabelCls(BaseTest):
             num_classes=6,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.HlabelAccuracy",
+                "metric": "getitune.metrics.accuracy.HlabelAccuracy",
             },
         )
         for idx in range(1, 4)
@@ -296,7 +296,7 @@ class TestHlabelCls(BaseTest):
             num_classes=102,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.accuracy.HlabelAccuracy",
+                "metric": "getitune.metrics.accuracy.HlabelAccuracy",
             },
         )
     ]
@@ -350,7 +350,7 @@ class TestObjectDetection(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -363,7 +363,7 @@ class TestObjectDetection(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -374,7 +374,7 @@ class TestObjectDetection(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -493,7 +493,7 @@ class TestInstanceSegmentation(BaseTest):
             num_classes=5,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -506,7 +506,7 @@ class TestInstanceSegmentation(BaseTest):
             num_classes=2,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -517,7 +517,7 @@ class TestInstanceSegmentation(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -573,7 +573,7 @@ class TestTileObjectDetection(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -584,7 +584,7 @@ class TestTileObjectDetection(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -637,7 +637,7 @@ class TestTileInstanceSegmentation(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },
@@ -648,7 +648,7 @@ class TestTileInstanceSegmentation(BaseTest):
             num_classes=1,
             extra_overrides={
                 "deterministic": "True",
-                "metric": "otx.metrics.fmeasure.FMeasureCallable",
+                "metric": "getitune.metrics.fmeasure.FMeasureCallable",
                 "callback_monitor": "val/f1-score",
                 "scheduler.monitor": "val/f1-score",
             },

@@ -6,9 +6,9 @@
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.d_fine import DFine
-from otx.data.entity.sample import OTXPredictionBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.d_fine import DFine
+from getitune.data.entity.sample import OTXPredictionBatch
 
 
 class TestDFine:

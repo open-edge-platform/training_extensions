@@ -7,8 +7,8 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXSampleBatch
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXSampleBatch
 
 
 @pytest.fixture

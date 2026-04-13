@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.deimv2 import DEIMV2
-from otx.data.entity.sample import OTXPredictionBatch
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.deimv2 import DEIMV2
+from getitune.data.entity.sample import OTXPredictionBatch
 
 
 class TestDEIMV2:
@@ -38,7 +38,7 @@ class TestDEIMV2:
         assert model.input_size_multiplier == 32
         assert model_name in model._pretrained_weights
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_create_model(self, mock_load_checkpoint: MagicMock) -> None:
         """Test DEIMV2 model creation."""
         mock_load_checkpoint.return_value = None
@@ -62,7 +62,7 @@ class TestDEIMV2:
         # Verify load_checkpoint was called (may be called multiple times for backbone and model)
         assert mock_load_checkpoint.call_count >= 1
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_backbone_lr_mapping(self, mock_load_checkpoint: MagicMock) -> None:
         """Test that backbone learning rate mapping works correctly."""
         mock_load_checkpoint.return_value = None
@@ -85,7 +85,7 @@ class TestDEIMV2:
             ("deimv2_s", 0.000025),
         ],
     )
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_backbone_lr_values(self, mock_load_checkpoint: MagicMock, model_name: str, expected_lr: float) -> None:
         """Test that backbone learning rates are correctly set for each model variant."""
         mock_load_checkpoint.return_value = None
@@ -100,7 +100,7 @@ class TestDEIMV2:
         # Check that the first optimizer config has the expected backbone lr
         assert created_model.optimizer_configuration[0]["lr"] == expected_lr
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_loss_computation(self, mock_load_checkpoint: MagicMock, fxt_detection_batch) -> None:
         """Test DEIMV2 loss computation in training mode."""
         mock_load_checkpoint.return_value = None
@@ -124,7 +124,7 @@ class TestDEIMV2:
             assert loss_name in output
             assert isinstance(output[loss_name], torch.Tensor)
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     @pytest.mark.parametrize(
         "model_name",
         [
@@ -151,7 +151,7 @@ class TestDEIMV2:
         assert isinstance(output, OTXPredictionBatch)
         assert output.batch_size == 2
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     @pytest.mark.parametrize(
         "model_name",
         [
@@ -179,7 +179,7 @@ class TestDEIMV2:
         output = model.forward_for_tracing(torch.randn(1, 3, 640, 640))
         assert len(output) == 5  # Should return boxes, scores, labels, saliency_map, feature_vector
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_dinov3_backbone(self, mock_load_checkpoint: MagicMock) -> None:
         """Test that DEIMV2 uses DINOv3STA backbone."""
         mock_load_checkpoint.return_value = None
@@ -193,11 +193,11 @@ class TestDEIMV2:
         created_model = model._create_model()
 
         # Check that backbone is DINOv3STAsModule
-        from otx.backend.native.models.detection.backbones.dinov3sta import DINOv3STAsModule
+        from getitune.backend.native.models.detection.backbones.dinov3sta import DINOv3STAsModule
 
         assert isinstance(created_model.backbone, DINOv3STAsModule)
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_hybrid_encoder(self, mock_load_checkpoint: MagicMock) -> None:
         """Test that DEIMV2 uses HybridEncoder."""
         mock_load_checkpoint.return_value = None
@@ -211,11 +211,11 @@ class TestDEIMV2:
         created_model = model._create_model()
 
         # Check that encoder is HybridEncoderModule
-        from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoderModule
+        from getitune.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoderModule
 
         assert isinstance(created_model.encoder, HybridEncoderModule)
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_deim_transformer_decoder(self, mock_load_checkpoint: MagicMock) -> None:
         """Test that DEIMV2 uses DEIMTransformer decoder."""
         mock_load_checkpoint.return_value = None
@@ -229,11 +229,11 @@ class TestDEIMV2:
         created_model = model._create_model()
 
         # Check that decoder is DEIMTransformerModule
-        from otx.backend.native.models.detection.heads.deim_decoder import DEIMTransformerModule
+        from getitune.backend.native.models.detection.heads.deim_decoder import DEIMTransformerModule
 
         assert isinstance(created_model.decoder, DEIMTransformerModule)
 
-    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    @patch("getitune.backend.native.models.detection.deimv2.load_checkpoint")
     def test_optimizer_configuration_structure(self, mock_load_checkpoint: MagicMock) -> None:
         """Test optimizer configuration has proper structure."""
         mock_load_checkpoint.return_value = None

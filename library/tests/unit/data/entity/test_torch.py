@@ -8,9 +8,9 @@ import torch
 from torch import LongTensor
 from torchvision import tv_tensors
 
-from otx.data.dataset.base import _default_collate_fn
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.sample import OTXSample, OTXSampleBatch
+from getitune.data.dataset.base import _default_collate_fn
+from getitune.data.entity.base import ImageInfo
+from getitune.data.entity.sample import OTXSample, OTXSampleBatch
 
 
 class TestCollateFn:

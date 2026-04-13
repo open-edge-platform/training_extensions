@@ -4,7 +4,7 @@
 
 import torch
 
-from otx.backend.native.models.detection.layers.elan_layer import ELAN, SPPELAN, RepConv, RepNCSPBottleneck, RepNCSPELAN
+from getitune.backend.native.models.detection.layers.elan_layer import ELAN, SPPELAN, RepConv, RepNCSPBottleneck, RepNCSPELAN
 
 
 class TestELAN:

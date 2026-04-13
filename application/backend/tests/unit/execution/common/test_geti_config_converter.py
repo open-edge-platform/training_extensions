@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from app.execution.common.geti_config_converter import GetiConfigConverter, HyperparametersUpdater, TransformsUpdater
 
-EARLY_STOPPING_CLASS_PATH = "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+EARLY_STOPPING_CLASS_PATH = "getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
 
 EARLY_STOPPING_CALLBACK = {
     "class_path": EARLY_STOPPING_CLASS_PATH,
@@ -34,7 +34,7 @@ def _make_otx_config(**overrides: Any) -> dict:
         "max_epochs": 200,
         "precision": "16-mixed",
         "model": {
-            "class_path": "otx.backend.native.models.detection.atss.ATSS",
+            "class_path": "getitune.backend.native.models.detection.atss.ATSS",
             "init_args": {
                 "model_name": "atss_mobilenetv2",
                 "label_info": 80,
@@ -43,7 +43,7 @@ def _make_otx_config(**overrides: Any) -> dict:
                     "init_args": {"lr": 0.004, "momentum": 0.9, "weight_decay": 0.0001},
                 },
                 "scheduler": {
-                    "class_path": "otx.backend.native.schedulers.LinearWarmupSchedulerCallable",
+                    "class_path": "getitune.backend.native.schedulers.LinearWarmupSchedulerCallable",
                     "init_args": {
                         "num_warmup_steps": 0,
                         "main_scheduler_callable": {
@@ -71,9 +71,9 @@ def _make_otx_config(**overrides: Any) -> dict:
             "train_subset": {
                 "batch_size": 8,
                 "augmentations_cpu": [
-                    {"class_path": "otx.data.augmentation.transforms.RandomIoUCrop"},
+                    {"class_path": "getitune.data.augmentation.transforms.RandomIoUCrop"},
                     {
-                        "class_path": "otx.data.augmentation.transforms.Resize",
+                        "class_path": "getitune.data.augmentation.transforms.Resize",
                         "init_args": {"size": "$(input_size)"},
                     },
                 ],
@@ -490,7 +490,7 @@ class TestTransformsUpdater:
         )
         cpu_augs = config["data"]["train_subset"]["augmentations_cpu"]
         # The first item should now be a plain Resize
-        assert cpu_augs[0]["class_path"] == "otx.data.augmentation.transforms.Resize"
+        assert cpu_augs[0]["class_path"] == "getitune.data.augmentation.transforms.Resize"
 
     def test_tiling_update(self) -> None:
         config = _make_otx_config()

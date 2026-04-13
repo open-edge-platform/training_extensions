@@ -4,8 +4,8 @@
 
 import torch
 
-from otx.data.entity import ImageInfo
-from otx.data.entity.utils import stack_batch
+from getitune.data.entity import ImageInfo
+from getitune.data.entity.utils import stack_batch
 
 
 def test_stack_batch():

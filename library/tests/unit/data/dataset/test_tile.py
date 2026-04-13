@@ -6,13 +6,13 @@ from unittest.mock import Mock
 
 from datumaro.experimental.fields import Subset
 
-from otx.data.dataset.tile import (
+from getitune.data.dataset.tile import (
     OTXTileDatasetFactory,
     OTXTileDetTestDataset,
     OTXTileInstSegTestDataset,
     OTXTileSemanticSegTestDataset,
 )
-from otx.types import OTXTaskType
+from getitune.types import OTXTaskType
 
 
 class DummyTileConfig:

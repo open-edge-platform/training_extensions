@@ -4,16 +4,16 @@
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.classification.classifier import ImageClassifier
-from otx.backend.native.models.classification.heads import LinearClsHead
-from otx.backend.native.models.classification.hlabel_models.torchvision_model import TVModelHLabelCls
-from otx.backend.native.models.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
-from otx.backend.native.models.classification.multilabel_models.torchvision_model import TVModelMultilabelCls
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.sample import OTXPredictionBatch
-from otx.types.export import TaskLevelExportParameters
-from otx.types.task import OTXTaskType
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.classification.classifier import ImageClassifier
+from getitune.backend.native.models.classification.heads import LinearClsHead
+from getitune.backend.native.models.classification.hlabel_models.torchvision_model import TVModelHLabelCls
+from getitune.backend.native.models.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
+from getitune.backend.native.models.classification.multilabel_models.torchvision_model import TVModelMultilabelCls
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.types.export import TaskLevelExportParameters
+from getitune.types.task import OTXTaskType
 
 
 @pytest.fixture

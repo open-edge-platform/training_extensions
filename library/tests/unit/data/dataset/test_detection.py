@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.detection import OTXDetectionDataset
+from getitune.data.dataset.detection import OTXDetectionDataset
 
 
 class TestOTXDetectionDataset:

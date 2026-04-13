@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 from openvino import Core
 
-from otx.backend.native.engine import OTXEngine
-from otx.data.entity.sample import OTXPredictionBatch
-from otx.engine import create_engine
+from getitune.backend.native.engine import OTXEngine
+from getitune.data.entity.sample import OTXPredictionBatch
+from getitune.engine import create_engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
 MULTI_CLASS_CLS = [recipe for recipe in RECIPE_LIST_ALL if "multi_class_cls" in recipe]

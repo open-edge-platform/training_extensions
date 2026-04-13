@@ -6,7 +6,7 @@ from functools import partial
 import pytest
 from torch import nn
 
-from otx.backend.native.models.modules.norm import build_norm_layer
+from getitune.backend.native.models.modules.norm import build_norm_layer
 
 
 @pytest.mark.parametrize(

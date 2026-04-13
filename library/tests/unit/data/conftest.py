@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.classification import (
+from getitune.data.dataset.classification import (
     HLabelInfo,
 )
 

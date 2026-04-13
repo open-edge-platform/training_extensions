@@ -9,8 +9,8 @@ from typing import Any
 import pytest
 import torch
 
-from otx.backend.native.models.common.losses import GIoULoss, QualityFocalLoss
-from otx.backend.native.models.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
+from getitune.backend.native.models.common.losses import GIoULoss, QualityFocalLoss
+from getitune.backend.native.models.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
 
 
 class TestRTMDetInstCriterion:
@@ -23,7 +23,7 @@ class TestRTMDetInstCriterion:
     )
     def test_forward(self, mocker, kwargs: dict[str, Any]) -> None:
         mocker.patch(
-            "otx.backend.native.models.instance_segmentation.losses.rtmdet_inst_loss.RTMDetCriterion.forward",
+            "getitune.backend.native.models.instance_segmentation.losses.rtmdet_inst_loss.RTMDetCriterion.forward",
             return_value={"loss_cls": 0, "loss_bbox": 0},
         )
 

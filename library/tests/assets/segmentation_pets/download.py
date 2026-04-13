@@ -29,7 +29,7 @@ from PIL import Image as PILImage
 from torchvision import tv_tensors
 from torchvision.datasets import OxfordIIITPet
 
-from otx.data.entity.sample import SegmentationSample
+from getitune.data.entity.sample import SegmentationSample
 
 # Oxford-IIIT Pet trimap classes
 # Original trimap: 1 = foreground, 2 = background, 3 = boundary

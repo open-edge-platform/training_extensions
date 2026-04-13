@@ -11,10 +11,10 @@ from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import Subset
 from torchvision import tv_tensors
 
-from otx.data.dataset import OTXMulticlassClsDataset
-from otx.data.dataset.base import OTXDataset
-from otx.data.entity.sample import ClassificationSample
-from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
+from getitune.data.dataset import OTXMulticlassClsDataset
+from getitune.data.dataset.base import OTXDataset
+from getitune.data.entity.sample import ClassificationSample
+from getitune.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
 
 @pytest.fixture

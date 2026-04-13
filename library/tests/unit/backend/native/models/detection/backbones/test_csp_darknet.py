@@ -12,7 +12,7 @@ from torch import nn
 from torch.nn.modules import GroupNorm
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from otx.backend.native.models.detection.backbones.csp_darknet import CSPDarknetModule, Focus
+from getitune.backend.native.models.detection.backbones.csp_darknet import CSPDarknetModule, Focus
 
 
 def check_norm_state(modules, train_state):

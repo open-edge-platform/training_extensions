@@ -4,9 +4,9 @@
 
 import torch
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.segmentation.litehrnet import LiteHRNet
-from otx.data.entity.base import ImageInfo
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.segmentation.litehrnet import LiteHRNet
+from getitune.data.entity.base import ImageInfo
 
 
 class MockGT:

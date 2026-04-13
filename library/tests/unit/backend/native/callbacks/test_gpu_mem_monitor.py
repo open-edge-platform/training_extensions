@@ -8,7 +8,7 @@ from lightning.pytorch import Trainer
 from lightning.pytorch.demos.boring_classes import BoringModel
 from lightning.pytorch.loggers import CSVLogger
 
-from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
+from getitune.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 
 
 class TestGPUMemMonitor:

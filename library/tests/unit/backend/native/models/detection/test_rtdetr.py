@@ -6,17 +6,17 @@
 import torch
 from torch import nn
 
-from otx.backend.native.models.base import DataInputParams
-from otx.backend.native.models.detection.rtdetr import RTDETR
-from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.types import LabelInfo
+from getitune.backend.native.models.base import DataInputParams
+from getitune.backend.native.models.detection.rtdetr import RTDETR
+from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.types import LabelInfo
 
 
 class TestRTDETR:
     def test_customize_outputs(self, mocker):
         label_info = LabelInfo(["a", "b", "c"], ["0", "1", "2"], [["a", "b", "c"]])
-        mocker.patch("otx.backend.native.models.detection.rtdetr.RTDETR._create_model", return_value=mocker.MagicMock())
+        mocker.patch("getitune.backend.native.models.detection.rtdetr.RTDETR._create_model", return_value=mocker.MagicMock())
         model = RTDETR(
             model_name="rtdetr_18",
             label_info=label_info,
