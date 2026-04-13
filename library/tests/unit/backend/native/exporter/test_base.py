@@ -259,6 +259,21 @@ class TestOTXModelExporter:
         metadata = exporter._extend_model_metadata({})
         assert metadata[("model_info", "input_dtype")] == "f32"
 
+    def test_extend_model_metadata_unsupported_dtype_raises(self):
+        """Unsupported storage_dtype must raise ValueError rather than silently embedding a raw value."""
+        intensity_cfg = IntensityConfig(storage_dtype="bfloat16", mode="scale_to_unit", max_value=1.0)
+        exporter = MockModelExporter(
+            task_level_export_parameters=MagicMock(TaskLevelExportParameters),
+            data_input_params=DataInputParams(
+                (224, 224),
+                (0.0, 0.0, 0.0),
+                (1.0, 1.0, 1.0),
+                intensity_config=intensity_cfg,
+            ),
+        )
+        with pytest.raises(ValueError, match="Unsupported intensity storage_dtype 'bfloat16'"):
+            exporter._extend_model_metadata({})
+
 
 class TestDataInputParams:
     def test_as_dict_without_intensity(self):

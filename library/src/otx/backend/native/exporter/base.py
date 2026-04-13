@@ -195,7 +195,11 @@ class OTXModelExporter:
                 "int16": "i16",
                 "float32": "f32",
             }
-            input_dtype = _dtype_map.get(intensity_cfg.storage_dtype, intensity_cfg.storage_dtype)
+            try:
+                input_dtype = _dtype_map[intensity_cfg.storage_dtype]
+            except KeyError as exc:
+                msg = f"Unsupported intensity storage_dtype '{intensity_cfg.storage_dtype}'"
+                raise ValueError(msg) from exc
             extra_data[("model_info", "input_dtype")] = input_dtype
             extra_data[("model_info", "intensity_mode")] = intensity_cfg.mode
 
