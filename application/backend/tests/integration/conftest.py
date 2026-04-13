@@ -11,8 +11,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, LabelDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import Base, LabelDB, ModelRevisionDB, ModelVariantDB, ProjectDB, SinkDB, SourceDB
 from app.models import OutputFormat, SinkType, SourceType, TaskType, TrainingStatus
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.services import MetricsService, ResourceType
 from app.services.event.event_bus import EventBus
 
@@ -62,6 +63,20 @@ def fxt_db_models() -> list[ModelRevisionDB]:
             training_configuration={},
             label_schema_revision={},
         ),
+    ]
+
+
+@pytest.fixture
+def fxt_db_model_variants(fxt_db_models) -> list[ModelVariantDB]:
+    """Fixture to create FP16 OpenVINO model variants for each model revision."""
+    return [
+        ModelVariantDB(
+            id=str(uuid4()),
+            model_revision_id=model.id,
+            format=ModelFormat.OPENVINO,
+            precision=ModelPrecision.FP16,
+        )
+        for model in fxt_db_models
     ]
 
 

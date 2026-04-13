@@ -27,8 +27,11 @@ export const groupModels = (
 ): GroupedModels[] =>
     mode === 'dataset' ? groupModelsByDataset(models, { datasetRevisions }) : groupModelsByArchitecture(models);
 
-export const sortGroupedModels = (groups: GroupedModels[], sortBy: SortBy): GroupedModels[] =>
-    groups.map((group) => ({ ...group, models: sortModels(group.models, sortBy) }));
+export const sortGroupedModels = (
+    groups: GroupedModels[],
+    sortBy: SortBy,
+    datasetRevisions: DatasetRevision[]
+): GroupedModels[] => groups.map((group) => ({ ...group, models: sortModels(group.models, sortBy, datasetRevisions) }));
 
 export const pinModel = (groups: GroupedModels[], modelId: string | undefined): GroupedModels[] => {
     if (!modelId) return groups;
