@@ -7,7 +7,7 @@ permissions: {} # No permissions by default
 
 jobs:
   stale:
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     permissions:
       issues: write
       pull-requests: write
