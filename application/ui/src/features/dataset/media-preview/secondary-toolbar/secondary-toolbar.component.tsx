@@ -5,7 +5,7 @@ import { ActionButton, Button, ButtonGroup, Divider, Flex, Icon, Text } from '@g
 import { CloseSemiBold } from '@geti/ui/icons';
 import { useProject } from 'hooks/api/project.hook';
 
-import type { Media } from '../../../../constants/shared-types';
+import type { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import type { AnnotatorMode } from '../../../../shared/annotator/annotator-mode';
 import { Labels } from '../../../annotator/labels/labels.component';
@@ -46,6 +46,7 @@ type SecondaryToolbarProps = {
     onSelectedMediaItem: (item: Media) => void;
     onModeChange: (mode: AnnotatorMode) => void;
     onSelectNextMediaItem: () => void;
+    subset: DatasetSubset;
 };
 
 export const SecondaryToolbar = ({
@@ -56,13 +57,14 @@ export const SecondaryToolbar = ({
     onSelectedMediaItem,
     onModeChange,
     onSelectNextMediaItem,
+    subset,
 }: SecondaryToolbarProps) => {
     const { data: selectedProject } = useProject();
 
     const { canSubmit, isSaving, submitAnnotations } = useAnnotationActions();
 
     const handleSubmit = async () => {
-        await submitAnnotations();
+        await submitAnnotations(subset);
         onSelectNextMediaItem();
     };
 
@@ -79,7 +81,8 @@ export const SecondaryToolbar = ({
     const isPredictionMode = mode === 'prediction';
     const isAnnotationMode = mode === 'annotation';
 
-    const isSubmitDisabled = !canSubmit || isSaving;
+    // If annotations are not changed but subset has changed we want to allow user to submit
+    const isSubmitDisabled = !((canSubmit || subset !== 'unassigned') && !isSaving);
 
     return (
         <Flex

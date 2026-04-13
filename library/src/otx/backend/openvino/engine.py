@@ -188,6 +188,8 @@ class OVEngine(Engine):
             datamodule=datamodule,
             subset="test",
             task=model.task,
+            input_size=model.input_size,
+            keep_aspect_ratio=model.keep_aspect_ratio,
         )
 
         if metric is None:
@@ -292,6 +294,8 @@ class OVEngine(Engine):
                     datamodule=datamodule,
                     subset="test",
                     task=model.task,
+                    input_size=model.input_size,
+                    keep_aspect_ratio=model.keep_aspect_ratio,
                 )
                 dataloader = datamodule.test_dataloader()
                 task = progress.add_task("Predicting", total=len(dataloader))
@@ -354,6 +358,8 @@ class OVEngine(Engine):
         optimize_datamodule = self._auto_configurator.update_ov_subset_pipeline(
             datamodule=optimize_datamodule,
             subset="train",
+            input_size=model.input_size,
+            keep_aspect_ratio=model.keep_aspect_ratio,
         )
 
         ptq_config: dict[str, int | float] = {}

@@ -11,14 +11,18 @@ overrides:
 
   data:
     task: MULTI_CLASS_CLS
-    stack_images: false
     train_subset:
       augmentations_cpu:
-        - class_path: torchvision.transforms.v2.ToImage
-    val_subset:
-      augmentations_cpu:
-        - class_path: torchvision.transforms.v2.ToImage
+        - class_path: otx.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu: []
     test_subset:
       batch_size: 128
       augmentations_cpu:
-        - class_path: torchvision.transforms.v2.ToImage
+        - class_path: otx.data.augmentation.transforms.Resize
+          init_args:
+            size: $(input_size)
+            keep_aspect_ratio: false
+      augmentations_gpu: []

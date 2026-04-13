@@ -99,6 +99,7 @@ test.describe('Annotator video player', () => {
                 return HttpResponse.json({
                     annotations: frameAnnotations[frameIndex] ?? [],
                     user_reviewed: true,
+                    subset: 'training',
                 });
             }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/frames', () => {
@@ -108,6 +109,7 @@ test.describe('Annotator video player', () => {
                         frame_index: Number(frameIndex),
                         annotation_data: {
                             annotations,
+                            subset: 'training' as const,
                             user_reviewed: true,
                         },
                     }))
@@ -121,7 +123,10 @@ test.describe('Annotator video player', () => {
                 frameAnnotations[frameIndex] = body.annotations;
                 submittedFrameRequests.push({ frameIndex, annotations: body.annotations });
 
-                return HttpResponse.json({ annotations: body.annotations, user_reviewed: true }, { status: 201 });
+                return HttpResponse.json(
+                    { annotations: body.annotations, user_reviewed: true, subset: 'training' },
+                    { status: 201 }
+                );
             })
         );
     });

@@ -16,7 +16,6 @@ from datumaro.experimental.fields import ImageInfo, Subset
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.metrics.types import MetricCallable
-from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
@@ -31,6 +30,7 @@ from app.datumaro_converter.domain.samples.training import (
     MultilabelClassificationTrainingSample,
 )
 from app.execution.base import ExecutionErr
+from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.training.otx_trainer import DatasetInfo, ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import (
     DatasetItemAnnotationStatus,

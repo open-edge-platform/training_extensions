@@ -15,20 +15,36 @@ from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, PipelineStatus
 from app.services import PipelineMetricsService, PipelineService, SystemService
-from app.services.pipeline_service import OtherProjectActiveError
+from app.services.pipeline_service import (
+    DeviceInt8NotSupportedError,
+    IncompatibleModelVariantError,
+    OtherProjectActiveError,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
 UPDATE_PIPELINE_BODY_DESCRIPTION = """
 Partial pipeline configuration update. May contain any subset of fields including 'device', 'data_collection', 
-'source_id', 'sink_id', or 'model_id'. Fields not included in the request will remain unchanged.
+'source_id', 'sink_id', 'model_id', or 'model_variant_id'. Fields not included in the request will remain unchanged.
+
+When 'model_id' is provided without 'model_variant_id', the default FP16 OpenVINO variant is selected automatically.
+Only OpenVINO model variants can be used for inference. If an INT8 variant is selected, the server validates that the 
+inference device supports INT8.
 """
 UPDATE_PIPELINE_BODY_EXAMPLES = {
     "switch_model": Example(
         summary="Switch active model",
-        description="Change the active model of the pipeline",
+        description="Change the active model of the pipeline (defaults to FP16 OpenVINO variant)",
         value={
             "model_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
+        },
+    ),
+    "switch_model_variant": Example(
+        summary="Switch active model with specific variant",
+        description="Change the active model and select a specific model variant (must be OpenVINO format)",
+        value={
+            "model_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
+            "model_variant_id": "a2d3e4f5-1234-5678-9abc-def012345678",
         },
     ),
     "reconfigure": Example(
@@ -94,6 +110,9 @@ def get_pipeline(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid request body or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Invalid model variant (e.g., non-OpenVINO format or INT8 not supported on device)"
+        },
     },
 )
 def update_pipeline(
@@ -131,6 +150,10 @@ def update_pipeline(
         return PipelineView.model_validate(updated, from_attributes=True)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except IncompatibleModelVariantError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    except DeviceInt8NotSupportedError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except OtherProjectActiveError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 

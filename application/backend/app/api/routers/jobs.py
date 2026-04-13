@@ -287,7 +287,7 @@ async def __gen_job_updates(job_id: UUID, job_queue: JobQueue) -> AsyncGenerator
 async def __gen_log_stream(job_id: UUID, log_path: Path, job_queue: JobQueue) -> AsyncGenerator[ServerSentEvent]:
     """Asynchronously follow a log file and yield new lines as SSE events."""
     try:
-        async with aiofiles.open(log_path) as f:
+        async with aiofiles.open(log_path, encoding="utf-8", errors="replace") as f:
             async for line in f:
                 yield ServerSentEvent(data=line.rstrip("\n"))
 

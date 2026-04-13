@@ -117,3 +117,44 @@ export const isBoolEnableParameterGroup = (
         isBoolEnableParameter(parameter.parameters[0])
     );
 };
+
+export const filterDependentParameters = (
+    parameters: TrainingConfigurationParameter[]
+): TrainingConfigurationParameter[] => {
+    return parameters
+        .reduce<TrainingConfigurationParameter[][]>((acc, curr) => {
+            if (isParameter(curr) && curr.depends_on == null) {
+                const parametersDependingOnCurr = parameters.filter((parameter) => {
+                    if (parameter.depends_on == null) return false;
+
+                    const dependsOnValue = parameter.depends_on[curr.key];
+
+                    if (Array.isArray(dependsOnValue)) {
+                        return dependsOnValue.includes(curr.value);
+                    }
+
+                    return dependsOnValue === curr.value;
+                });
+
+                acc.push([curr, ...parametersDependingOnCurr]);
+                return acc;
+            }
+
+            if (curr.depends_on != null) {
+                return acc;
+            }
+
+            if (isParameterGroup(curr)) {
+                const groupedParameters = filterDependentParameters(curr.parameters);
+
+                acc.push([{ ...curr, parameters: groupedParameters }]);
+
+                return acc;
+            }
+
+            acc.push([curr]);
+
+            return acc;
+        }, [])
+        .flatMap((group) => group);
+};

@@ -34,6 +34,7 @@ from app.services import (
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
+from app.services.license_service import LicenseService
 from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
 
@@ -261,6 +262,11 @@ def get_source(
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
     """Provides a BaseWeightsService instance for managing base weights."""
     return BaseWeightsService(data_dir)
+
+
+def get_license_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> LicenseService:
+    """Provides a LicenseService instance for tracking license consent."""
+    return LicenseService(data_dir=data_dir)
 
 
 def get_staged_dataset_service(

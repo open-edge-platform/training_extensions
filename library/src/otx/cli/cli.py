@@ -302,13 +302,6 @@ class OTXCLI:
             # For num_classes update, Model and Metric are instantiated separately.
 
             model_config = self.config[self.subcommand].pop("model")
-            # if input_size == "auto" will be executed adaptive input size
-            # input_size_multiplier is needed when we have constraints on the input size to the model
-            if self.config[self.subcommand].data.get("input_size") == "auto":
-                from otx.utils.utils import get_model_cls_from_config
-
-                model_cls = get_model_cls_from_config(model_config)
-                self.config[self.subcommand].data.input_size_multiplier = model_cls.input_size_multiplier
 
             # Instantiate the things that don't need to special handling
             self.config_init = self.parser.instantiate_classes(self.config)
@@ -481,9 +474,17 @@ class OTXCLI:
         latest_dir = work_dir.parent / ".latest"
         latest_dir.mkdir(exist_ok=True)
         cache_dir = latest_dir / self.subcommand
-        if cache_dir.exists():
+        if cache_dir.is_symlink() or cache_dir.exists():
             cache_dir.unlink()
-        cache_dir.symlink_to(Path("..") / work_dir.relative_to(work_dir.parent))
+        target = Path("..") / work_dir.relative_to(work_dir.parent)
+        try:
+            cache_dir.symlink_to(target)
+        except OSError:
+            # Symlink creation may fail on Windows without admin rights.
+            # Fall back to copying the target directory.
+            import shutil
+
+            shutil.copytree(work_dir, cache_dir)
 
     def set_seed(self) -> None:
         """Set the random seed for reproducibility.

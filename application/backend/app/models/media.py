@@ -97,6 +97,7 @@ class Video(BaseMedia):
     type: Literal[MediaType.VIDEO]
     fps: float
     frame_count: int
+    annotated_frame_count: int = 0
 
     @computed_field
     @property

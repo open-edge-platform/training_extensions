@@ -1,12 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { useImportJobStatus } from 'hooks/api/jobs/use-import-job-status.hook';
-import { isJobDone, isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
+import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
+import { isJobFailed, isJobPending, isJobRunning } from 'hooks/api/util';
 
+import { formatBytes } from '../../shared/util';
 import { ImportActiveJob } from '../import-card-status/import-active-job/import-active-job.component';
 import { ImportFailedJob } from '../import-card-status/import-failed-job/import-failed-job.component';
-import { ImportJobDone } from '../import-card-status/import-job-done/import-job-done.component';
 
 type LoadingImportDatasetProps = {
     jobId: string;
@@ -25,7 +27,25 @@ export const LoadingImportDataset = ({
     onSuccess,
     deleteEntry,
 }: LoadingImportDatasetProps) => {
-    const { error, isError, data: job } = useImportJobStatus({ jobId, onSuccess });
+    const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId });
+
+    const {
+        error,
+        isError,
+        data: job,
+    } = useImportJobStatus({
+        jobId,
+        onSuccess: () => {
+            deleteEntry();
+            deleteFileMutation.mutate();
+            onSuccess();
+
+            toast({
+                message: `Dataset ${fileName} ${formatBytes(size)} imported successfully.`,
+                type: 'success',
+            });
+        },
+    });
 
     const isRunningOrPending = isJobRunning(job) || isJobPending(job);
 
@@ -56,15 +76,6 @@ export const LoadingImportDataset = ({
             {isRunningOrPending && (
                 <ImportActiveJob
                     job={job}
-                    size={size}
-                    fileName={fileName}
-                    stagedDatasetId={stagedDatasetId}
-                    deleteEntry={deleteEntry}
-                />
-            )}
-
-            {isJobDone(job) && (
-                <ImportJobDone
                     size={size}
                     fileName={fileName}
                     stagedDatasetId={stagedDatasetId}

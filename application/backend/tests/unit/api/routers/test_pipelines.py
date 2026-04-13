@@ -14,7 +14,11 @@ from app.main import app
 from app.models import DataCollectionConfig, FixedRateDataCollectionPolicy, PipelineStatus
 from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
-from app.services.pipeline_service import OtherProjectActiveError
+from app.services.pipeline_service import (
+    DeviceInt8NotSupportedError,
+    IncompatibleModelVariantError,
+    OtherProjectActiveError,
+)
 
 
 @pytest.fixture
@@ -186,6 +190,51 @@ class TestPipelineEndpoints:
         fxt_pipeline_service.update_pipeline.assert_called_once_with(
             fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
         )
+
+    def test_update_pipeline_with_model_variant_id(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test updating pipeline with an explicit model_variant_id."""
+        project_id = fxt_pipeline.project_id
+        model_id = str(uuid4())
+        variant_id = str(uuid4())
+        fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={"model_id": model_id, "model_variant_id": variant_id},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_pipeline_service.update_pipeline.assert_called_once_with(
+            project_id, {"model_id": model_id, "model_variant_id": variant_id}
+        )
+
+    def test_update_pipeline_incompatible_model_variant(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test that IncompatibleModelVariantError returns 422."""
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.side_effect = IncompatibleModelVariantError(
+            "Only OpenVINO model variants can be used for inference."
+        )
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={"model_id": str(uuid4()), "model_variant_id": str(uuid4())},
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "OpenVINO" in response.json()["detail"]
+
+    def test_update_pipeline_int8_not_supported(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test that DeviceInt8NotSupportedError returns 422."""
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.side_effect = DeviceInt8NotSupportedError("gpu")
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={"model_id": str(uuid4()), "model_variant_id": str(uuid4())},
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "INT8" in response.json()["detail"]
 
     def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test successful retrieval of pipeline metrics with default time window."""

@@ -387,7 +387,7 @@ export const ParametersEnableGroup = ({
     return (
         <ParametersContainer
             key={parameters.key}
-            rowGap={configurableParameters.length > 0 ? 'size-150' : 'size-0'}
+            rowGap={configurableParameters.length > 0 ? 'size-100' : 'size-0'}
             isReadOnly={isReadOnly}
             id={createTestId(parentGroupKeys, parameters.key)}
         >

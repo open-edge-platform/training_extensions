@@ -59,6 +59,11 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     });
 
     const onGroupByChange = (mode: GroupByMode) => {
+        if (mode === 'dataset' && sortBy === 'dataset') {
+            setSortBy('architecture');
+        } else if (mode === 'architecture' && sortBy === 'architecture') {
+            setSortBy('dataset');
+        }
         setGroupBy(mode);
     };
 

@@ -167,6 +167,40 @@ class OVModel:
         """Set up the tiler for tile-based tasks."""
         raise NotImplementedError
 
+    @property
+    def input_size(self) -> tuple[int, int] | None:
+        """Return ``(H, W)`` input size from the underlying ModelAPI model.
+
+        Returns ``None`` when the model uses dynamic shapes (h or w is
+        non-positive, which ModelAPI encodes as 0 or -1) or when the
+        underlying model attributes are not accessible.
+        """
+        try:
+            base = self.model.model if isinstance(self.model, Tiler) else self.model
+            h, w = int(base.h), int(base.w)  # pyrefly: ignore[missing-attribute]
+        except (AttributeError, TypeError, ValueError):
+            return None
+        # ModelAPI uses 0 or -1 for dynamic dimensions; treat any
+        # non-positive value as "dynamic" and return None.
+        if h > 0 and w > 0:
+            return (h, w)
+        return None
+
+    @property
+    def keep_aspect_ratio(self) -> bool:
+        """Return True when the model was exported with aspect-ratio-preserving resize.
+
+        Reads ``resize_type`` from the underlying ModelAPI model parameters,
+        which is embedded into the IR metadata at export time by
+        ``OTXModelExporter._extend_model_metadata``.  Returns ``False`` when
+        the attribute is not accessible (e.g. for custom / wrapped models).
+        """
+        _aspect_ratio_resize_types = ("fit_to_window", "fit_to_window_letterbox")
+
+        base = self.model.model if isinstance(self.model, Tiler) else self.model
+        resize_type = getattr(getattr(base, "params", None), "resize_type", None)
+        return resize_type in _aspect_ratio_resize_types
+
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
         """Read model configuration from the ModelAPI OpenVINO adapter.
 

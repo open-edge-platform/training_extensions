@@ -29,6 +29,7 @@ from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
     DatasetItemAnnotationStatus,
+    DatasetItemSubset,
     Image,
     LabelReference,
     MediaType,
@@ -39,7 +40,7 @@ from app.models import (
 from app.models.media import ImageFormat, MediaListPredictionRequest, MediaPredictionRequest, VideoFormat, VideoRange
 from app.models.system import DeviceInfo, DeviceType
 from app.services import DatasetService, MediaPredictionService, MediaService, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError
+from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 from app.services.media_prediction_service import VideoRangeError
 from app.services.media_service import ImageMetadata, MediaFilters
 
@@ -72,6 +73,7 @@ def fxt_video_media():
         size=2048,
         fps=25,
         frame_count=1000,
+        annotated_frame_count=100,
         source_id=uuid4(),
     )
 
@@ -148,6 +150,7 @@ def test_convert_video_to_view(fxt_video_media) -> None:
         size=fxt_video_media.size,
         fps=fxt_video_media.fps,
         frame_count=fxt_video_media.frame_count,
+        annotated_frame_count=fxt_video_media.annotated_frame_count,
         source_id=fxt_video_media.source_id,
         duration=fxt_video_media.duration,
     )
@@ -260,6 +263,7 @@ class TestMediaEndpoints:
             "width": 1024,
             "fps": 25.0,
             "frame_count": 1000,
+            "annotated_frame_count": 100,
             "duration": 40,
         }
         fxt_media_service.create_video.assert_called_once_with(
@@ -510,6 +514,7 @@ class TestMediaEndpoints:
             "width": fxt_video_media.width,
             "fps": fxt_video_media.fps,
             "frame_count": fxt_video_media.frame_count,
+            "annotated_frame_count": fxt_video_media.annotated_frame_count,
             "duration": fxt_video_media.duration,
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(
@@ -832,6 +837,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -852,6 +858,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
@@ -929,6 +936,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -949,6 +957,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
@@ -989,6 +998,7 @@ class TestMediaEndpoints:
             annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
@@ -1009,6 +1019,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
@@ -1109,6 +1120,140 @@ class TestMediaEndpoints:
             MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, id=uuid4()),
         ],
     )
+    def test_set_media_annotations_with_subset(
+        self, media, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        fxt_media_service.get_media_by_id.return_value = media
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
+        updated_dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+            subset=DatasetItemSubset.TRAINING,
+        )
+        fxt_dataset_service.assign_dataset_item_subset.return_value = updated_dataset_item
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations, subset=DatasetItemSubset.TRAINING).model_dump(
+                mode="json"
+            ),
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["subset"] == "training"
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project=fxt_get_project,
+            dataset_item_id=media.id,
+            annotations=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+        fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_item_id=media.id,
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+    @pytest.mark.parametrize(
+        "media",
+        [
+            MagicMock(spec=Image, type=MediaType.IMAGE, id=uuid4()),
+            MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, id=uuid4()),
+        ],
+    )
+    def test_set_media_annotations_with_subset_already_assigned_different(
+        self, media, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        fxt_media_service.get_media_by_id.return_value = media
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+            subset=DatasetItemSubset.TRAINING,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
+        fxt_dataset_service.assign_dataset_item_subset.side_effect = SubsetAlreadyAssignedError
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations, subset=DatasetItemSubset.VALIDATION).model_dump(
+                mode="json"
+            ),
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_item_id=media.id,
+            subset=DatasetItemSubset.VALIDATION,
+        )
+
+    @pytest.mark.parametrize(
+        "media",
+        [
+            MagicMock(spec=Image, type=MediaType.IMAGE, id=uuid4()),
+            MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, id=uuid4()),
+        ],
+    )
+    def test_set_media_annotations_without_subset(
+        self, media, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        label_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        fxt_media_service.get_media_by_id.return_value = media
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
+        )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}/annotations",
+            json=SetMediaAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        fxt_dataset_service.assign_dataset_item_subset.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "media",
+        [
+            MagicMock(spec=Image, type=MediaType.IMAGE, id=uuid4()),
+            MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, id=uuid4()),
+        ],
+    )
     def test_get_media_annotations(self, media, fxt_get_project, fxt_media_service, fxt_dataset_service, fxt_client):
         label_id = uuid4()
         fxt_media_service.get_media_by_id.return_value = media
@@ -1122,6 +1267,7 @@ class TestMediaEndpoints:
             ],
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
@@ -1138,6 +1284,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
@@ -1191,6 +1338,7 @@ class TestMediaEndpoints:
             ],
             user_reviewed=True,
             prediction_model_id=None,
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
@@ -1209,6 +1357,7 @@ class TestMediaEndpoints:
             ],
             "prediction_model_id": None,
             "user_reviewed": True,
+            "subset": "unassigned",
         }
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
         fxt_media_service.get_video_frame_by_video_id_and_index.assert_called_once_with(
@@ -1436,6 +1585,7 @@ class TestMediaEndpoints:
                     shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
                 )
             ],
+            subset=DatasetItemSubset.UNASSIGNED,
         )
         video_frame = MagicMock(spec=VideoFrame, type=MediaType.VIDEO_FRAME, id=video_frame_id, frame_index=5)
 
@@ -1460,6 +1610,7 @@ class TestMediaEndpoints:
                     ],
                     "prediction_model_id": None,
                     "user_reviewed": True,
+                    "subset": "unassigned",
                 },
             }
         ]

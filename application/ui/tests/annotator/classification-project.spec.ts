@@ -255,6 +255,7 @@ test.describe('Annotator Classification', () => {
                         return HttpResponse.json({
                             annotations: [],
                             user_reviewed: true,
+                            subset: 'training',
                         });
                     })
                 );
