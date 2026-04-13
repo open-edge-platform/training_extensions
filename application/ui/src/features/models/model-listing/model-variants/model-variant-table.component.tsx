@@ -3,10 +3,10 @@
 
 import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, toast } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { API_BASE_URL } from '../../../../api/client';
 import type { Model, ModelFormat } from '../../../../constants/shared-types';
-import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { downloadFile, formatBytes } from '../../../../shared/util';
 import {
     getBaselineVariant,
@@ -21,6 +21,7 @@ type ModelVariantTableProps = {
     model: Model;
     format: ModelFormat;
 };
+
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
     const projectId = useProjectIdentifier();
     const allVariants = model.variants ?? [];
@@ -57,7 +58,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                     const isBaselineVariant = variant.id === baselineVariant?.id;
 
                     return (
-                        <Row key={`${variant.format}-${variant.precision}`}>
+                        <Row key={variant.id}>
                             <Cell>{variant.precision.toUpperCase()}</Cell>
                             <Cell>
                                 <ValueWithDelta

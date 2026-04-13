@@ -42,7 +42,13 @@ const renderApp = async ({
     server.use(
         http.post('/api/sinks', newSink),
         http.patch('/api/sinks/{sink_id}', updateSink),
-        http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}))
+        http.patch('/api/projects/{project_id}/pipeline', () =>
+            HttpResponse.json({
+                project_id: '',
+                status: 'idle',
+                device: 'images_folder',
+            })
+        )
     );
 
     const { result } = renderHook(() => useSinkAction({ config: mockedConfig, isNewSink, bodyFormatter }));

@@ -58,7 +58,11 @@ describe('ActiveModel', () => {
             http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
                 patchSpy(await request.json());
 
-                return HttpResponse.json({});
+                return HttpResponse.json({
+                    project_id: '',
+                    status: 'idle',
+                    device: 'images_folder',
+                });
             })
         );
 
