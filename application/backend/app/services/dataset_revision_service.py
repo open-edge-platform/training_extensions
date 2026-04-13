@@ -414,7 +414,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         df = pl.scan_parquet(parquet_path)
 
-        if "id" in df.collect_schema().names():
+        if "id" in df.columns:
             df = df.filter(pl.col("id") == item_id).collect()
         else:  # Fallback: locate the item through the 'image' column, if it contains the item ID
             logger.warning("Dataset revision parquet does not contain 'id' column, falling back to search via 'image'")

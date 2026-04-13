@@ -62,8 +62,8 @@ def _select_samples(
         mask_np = np.array(mask, dtype=np.uint8)
 
         # Resize image and mask to IMG_SIZE x IMG_SIZE
-        img_pil = PILImage.fromarray(img_np).resize((IMG_SIZE, IMG_SIZE), PILImage.Resampling.BILINEAR)
-        mask_pil = PILImage.fromarray(mask_np).resize((IMG_SIZE, IMG_SIZE), PILImage.Resampling.NEAREST)
+        img_pil = PILImage.fromarray(img_np).resize((IMG_SIZE, IMG_SIZE), PILImage.BILINEAR)  # type: ignore[attr-defined]
+        mask_pil = PILImage.fromarray(mask_np).resize((IMG_SIZE, IMG_SIZE), PILImage.NEAREST)  # type: ignore[attr-defined]
         img_np = np.array(img_pil, dtype=np.uint8)
         mask_np = np.array(mask_pil, dtype=np.uint8)
 

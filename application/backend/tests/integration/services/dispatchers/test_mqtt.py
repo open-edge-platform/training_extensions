@@ -6,7 +6,7 @@ import os
 import re
 import sys
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -115,12 +115,10 @@ def mqtt_test_subscriber(mqtt_broker):
         def _on_message(self, client, userdata, msg):
             try:
                 payload = json.loads(msg.payload.decode())
-                self.received_messages.append(
-                    {"topic": msg.topic, "payload": payload, "timestamp": datetime.now(tz=UTC)}
-                )
+                self.received_messages.append({"topic": msg.topic, "payload": payload, "timestamp": datetime.now()})
             except json.JSONDecodeError:
                 self.received_messages.append(
-                    {"topic": msg.topic, "payload": msg.payload.decode(), "timestamp": datetime.now(tz=UTC)}
+                    {"topic": msg.topic, "payload": msg.payload.decode(), "timestamp": datetime.now()}
                 )
 
         def connect_and_subscribe(self, topic):

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -68,7 +67,7 @@ class WebRTCManager:
         """Set input data for specific WebRTC connection"""
         self._input_data[data.webrtc_id] = {
             "conf_threshold": data.conf_threshold,
-            "updated_at": time.monotonic(),
+            "updated_at": asyncio.get_event_loop().time(),
         }
 
     async def cleanup_connection(self, webrtc_id: str) -> None:

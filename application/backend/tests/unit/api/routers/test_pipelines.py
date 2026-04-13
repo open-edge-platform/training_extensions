@@ -220,7 +220,7 @@ class TestPipelineEndpoints:
             json={"model_id": str(uuid4()), "model_variant_id": str(uuid4())},
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "OpenVINO" in response.json()["detail"]
 
     def test_update_pipeline_int8_not_supported(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -233,7 +233,7 @@ class TestPipelineEndpoints:
             json={"model_id": str(uuid4()), "model_variant_id": str(uuid4())},
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "INT8" in response.json()["detail"]
 
     def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):

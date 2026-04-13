@@ -150,7 +150,7 @@ def _build_dataset(
             img_path = _download_image(filename, images_dir)
             img_pil = PILImage.open(img_path).convert("RGB")
             orig_w, orig_h = img_pil.size
-            img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.Resampling.BILINEAR)
+            img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.BILINEAR)  # type: ignore[attr-defined]
             downloaded_images[filename] = (np.array(img_pil, dtype=np.uint8), orig_w, orig_h)
 
         img_np, orig_w, orig_h = downloaded_images[filename]

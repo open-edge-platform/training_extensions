@@ -15,7 +15,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
 import torch
@@ -47,12 +47,10 @@ from otx.utils.device import get_available_device, is_xpu_available
 from otx.utils.utils import measure_flops
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Iterator
-
     from lightning import Callback
     from lightning.pytorch.loggers import Logger
-    from lightning.pytorch.trainer.connectors.accelerator_connector import _PRECISION_INPUT
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
+    from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
     from otx.data.dataset.base import OTXDataset
     from otx.metrics import MetricCallable
@@ -116,14 +114,14 @@ class OTXEngine(Engine):
         self.work_dir = work_dir
         self.device = device  # type: ignore[assignment]
         self.num_devices = num_devices
-        if not isinstance(data, OTXDataModule | str | os.PathLike):
+        if not isinstance(data, (OTXDataModule, str, os.PathLike)):
             msg = f"data should be OTXDataModule or PathLike, but got {type(data)}"
             raise TypeError(msg)
         if task is not None and isinstance(data, OTXDataModule) and task != data.task:
             msg = f"task and data.task should be the same, but got {task} and {data.task}"
             raise ValueError(msg)
         self._auto_configurator = AutoConfigurator(
-            data_root=data if isinstance(data, str | os.PathLike) else None,
+            data_root=data if isinstance(data, (str, os.PathLike)) else None,
             task=data.task if isinstance(data, OTXDataModule) else task,
             model=None if isinstance(model, OTXModel) else model,
         )
@@ -158,7 +156,7 @@ class OTXEngine(Engine):
         self.task = self._model.task
         self.checkpoint = checkpoint
         if self.checkpoint:
-            if not isinstance(self.checkpoint, Path | str) and not Path(self.checkpoint).exists():
+            if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
             chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
@@ -304,7 +302,7 @@ class OTXEngine(Engine):
             )
         self.checkpoint = self.trainer.checkpoint_callback.best_model_path
 
-        if not isinstance(self.checkpoint, Path | str):
+        if not isinstance(self.checkpoint, (Path, str)):
             msg = "self.checkpoint should be Path or str at this time."
             raise TypeError(msg)
 
