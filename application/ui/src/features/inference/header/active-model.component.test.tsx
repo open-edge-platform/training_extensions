@@ -115,4 +115,12 @@ describe('ActiveModel', () => {
             expect(patchSpy).toHaveBeenCalledWith({ model_id: 'model-b' });
         });
     });
+
+    it('does not render model picker when there are no models', async () => {
+        renderApp({ models: [], pipeline: getMockedPipeline() });
+
+        await waitFor(() => {
+            expect(screen.queryByRole('button', { name: /active model/i })).not.toBeInTheDocument();
+        });
+    });
 });

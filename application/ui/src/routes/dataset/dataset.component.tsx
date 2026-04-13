@@ -28,15 +28,15 @@ export const Dataset = () => {
         <Grid
             height='100%'
             gridArea='content'
-            rows={['auto', 'auto', '1fr']}
-            UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
+            rows={['auto', 'auto', 'minmax(0, 1fr)']}
+            UNSAFE_style={{ padding: dimensionValue('size-350') }}
         >
-            <View gridRow='1'>
+            <View gridRow='1 / 2'>
                 <ExportJobsList predicate={({ datasetId }) => datasetId === null} />
                 <ImportJobsList />
             </View>
 
-            <View gridRow='2'>
+            <View gridRow='2 / 3'>
                 <Toolbar
                     items={items}
                     viewMode={viewMode}
@@ -45,7 +45,7 @@ export const Dataset = () => {
                 />
             </View>
 
-            <View gridRow='3'>
+            <View gridRow='3 / 4'>
                 <Gallery
                     items={items}
                     viewMode={viewMode}
