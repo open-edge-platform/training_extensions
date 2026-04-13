@@ -101,14 +101,15 @@ def get_model_category_list(task: str) -> list[str]:
 
     for task_type in task_list:
         task_key = task_type.value.lower()
-        for recipe_path in CATEGORY_RECIPES_PER_TASK.get(task_key, []):
-            recipes.append(str(recipe_path))
+        recipes.extend(str(p) for p in CATEGORY_RECIPES_PER_TASK.get(task_key, []))
 
         # Classification category recipes are stored under multi_class_cls;
         # derive multi_label_cls / h_label_cls variants when requested.
         if task_key in ("multi_label_cls", "h_label_cls"):
-            for recipe_path in CATEGORY_RECIPES_PER_TASK.get("multi_class_cls", []):
-                recipes.append(str(recipe_path).replace("multi_class_cls", task_key))
+            recipes.extend(
+                str(p).replace("multi_class_cls", task_key)
+                for p in CATEGORY_RECIPES_PER_TASK.get("multi_class_cls", [])
+            )
 
     return recipes
 
