@@ -9,8 +9,9 @@ import numpy as np
 import pytest
 from datumaro.experimental import Dataset, LazyImage, LazyVideoFrame, MediaInfo, export_dataset
 from datumaro.experimental.categories import Categories, LabelCategories
+from datumaro.experimental.data_formats.coco.sample import CocoCategories, CocoSample
 from datumaro.experimental.export_import import ExportMode
-from datumaro.experimental.fields import Subset
+from datumaro.experimental.fields import ImageInfo, Subset
 
 from app.datumaro_converter import MultilabelClassificationImportExportSample
 from app.models import AnnotationType, DatasetFormat
@@ -27,7 +28,7 @@ def _make_dataset_archive(root: Path, file_name: str, content: bytes = b"data") 
     return dataset_id, archive_path
 
 
-def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
+def _make_multilabel_dataset(root: Path) -> tuple[UUID, Path]:
     dataset_id = uuid4()
     parent_dir = root / str(dataset_id)
     parent_dir.mkdir(parents=True)
@@ -82,6 +83,32 @@ def _make_dataset_dir(root: Path) -> tuple[UUID, Path]:
     return dataset_id, ds_dir
 
 
+def _make_coco_dataset(root: Path) -> tuple[UUID, Path]:
+    dataset_id = uuid4()
+    parent_dir = root / str(dataset_id)
+    parent_dir.mkdir(parents=True)
+    ds_dir = parent_dir / "dataset"
+    dataset = Dataset(CocoSample, categories={"labels": CocoCategories(labels=("cat", "dog", "bird"))})
+    dataset.append(
+        CocoSample(
+            image=LazyImage(ds_dir / "images/image1.jpg"),
+            image_info=ImageInfo(width=200, height=200),
+            areas=np.array([1.0], dtype=np.float32),
+            iscrowd=np.array([0], dtype=np.int32),
+            subset=Subset.TRAINING,
+            labels=None,
+            polygons=np.array([[[10, 10], [20, 10], [20, 20], [10, 20]]], dtype=np.float32),
+            bboxes=np.array([[10, 10, 10, 10]], dtype=np.float32),
+            image_id=1,
+            caption_group_ids=None,
+            captions=None,
+            keypoints=None,
+        )
+    )
+    export_dataset(dataset=dataset, output_path=ds_dir, export_media=ExportMode.SKIP)
+    return dataset_id, ds_dir
+
+
 @pytest.fixture()
 def fxt_staged_dataset_service(tmp_path: Path) -> StagedDatasetService:
     return StagedDatasetService(staged_datasets_dir=tmp_path)
@@ -131,7 +158,7 @@ class TestStagedDatasetServiceIntegration:
     ):
         coco_id, coco_path = _make_dataset_archive(tmp_path, "train_coco.zip", b"coco-bytes")
         voc_id, voc_path = _make_dataset_archive(tmp_path, "some_voc.zip", b"voc-bytes")
-        geti_id, geti_path = _make_dataset_dir(tmp_path)
+        geti_id, geti_path = _make_multilabel_dataset(tmp_path)
 
         # non-UUID dir
         bad_dir = tmp_path / "not-a-uuid"
@@ -211,7 +238,7 @@ class TestStagedDatasetServiceIntegration:
     def test_find_by_id_returns_geti_dataset_when_present(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        dataset_id, dataset_path = _make_dataset_dir(tmp_path)
+        dataset_id, dataset_path = _make_multilabel_dataset(tmp_path)
 
         result = fxt_staged_dataset_service.find_by_id(dataset_id)
 
@@ -229,6 +256,33 @@ class TestStagedDatasetServiceIntegration:
             num_annotations=3,
             num_annotated_images=2,
             num_annotated_frames=1,
+            labels=["bird", "cat", "dog"],
+        )
+
+    def test_find_by_id_no_annotation_type_if_multiple_values_in_sample(
+        self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
+    ):
+        """
+        Tests that annotation_type cannot be recommended for datasets with samples which has multiple values filled in
+        the annotation fields (e.g. both polygons and bboxes).
+        """
+        dataset_id, dataset_path = _make_coco_dataset(tmp_path)
+
+        result = fxt_staged_dataset_service.find_by_id(dataset_id)
+
+        assert result is not None
+        assert result.id == dataset_id
+        assert result.filename == str(dataset_path)
+        assert result.compressed is False
+        assert result.format == DatasetFormat.GETI
+        assert result.metadata == DatasetMetadata(
+            num_images=1,
+            num_frames=0,
+            num_videos=0,
+            annotation_type=AnnotationType.UNKNOWN,
+            num_annotations=1,
+            num_annotated_images=1,
+            num_annotated_frames=0,
             labels=["bird", "cat", "dog"],
         )
 
