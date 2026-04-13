@@ -2,25 +2,26 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
-import urllib.request
 import zipfile
 from pathlib import Path
 
 import pytest
+import requests
 
-BUCKET_NAME = "geti-datasets"
+S3_URL = "https://storage.geti.intel.com/test-data/geti/datasets"
 OBJECT_NAME = "regression.zip"
 PARENT_DIR = Path(__file__).parent
 DATASETS_DIR = PARENT_DIR / "regression"
 
 
 def _download_regression_datasets(dest_dir: Path) -> None:
-    """Download and unpack the regression dataset archive from GCS (public bucket)."""
+    """Download and unpack the regression dataset archive from public location."""
     archive = dest_dir / OBJECT_NAME
 
     if not archive.exists():
-        url = f"https://storage.googleapis.com/{BUCKET_NAME}/{OBJECT_NAME}"
-        urllib.request.urlretrieve(url, archive)
+        response = requests.get(f"{S3_URL}/{OBJECT_NAME}", stream=True)
+        with open(archive, "wb") as f:
+            shutil.copyfileobj(response.raw, f)
 
     with zipfile.ZipFile(archive, "r") as zf:
         zf.extractall(dest_dir)
