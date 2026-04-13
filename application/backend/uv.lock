@@ -2127,17 +2127,17 @@ wheels = [
 
 [[package]]
 name = "openvino"
-version = "2026.0.0"
+version = "2026.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
     { name = "openvino-telemetry", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-4-geti-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-4-geti-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-cuda') or (extra == 'extra-4-geti-cpu' and extra == 'extra-4-geti-xpu') or (extra == 'extra-4-geti-cuda' and extra == 'extra-4-geti-xpu')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/76/0b42c62e29b0100425c8cb1577dec8368ccb5def889b136c4bf0d954a89a/openvino-2026.0.0-20965-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:830b42adb5c1ef57c0d7de2e72943f7186783046b0b3b62128f0f6b4bc507fad", size = 30863111, upload-time = "2026-02-23T16:10:42.812Z" },
-    { url = "https://files.pythonhosted.org/packages/71/3f/95b15760d7ae4b7dfefdbadeccae9604985d4335b221350e1bb04701a158/openvino-2026.0.0-20965-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:452902e4b8fba526e8740622cd5638c457d3ae44da7b39e6d4ef7919be0e95d4", size = 53444542, upload-time = "2026-02-23T16:10:46.343Z" },
-    { url = "https://files.pythonhosted.org/packages/9b/ee/73c6866929bfbdb67a0b611358539758aa2970c14a01f3e5fcb2b7caa65b/openvino-2026.0.0-20965-cp313-cp313-manylinux_2_35_aarch64.whl", hash = "sha256:01b963e6eefcfb00e10831a8b5dc14e158e3ed49ae403a64dedd4037c81e9264", size = 28383413, upload-time = "2026-02-23T16:10:49.374Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/26/82d326f3769c9e5c17d34ef10dd0aff4a94a3b550e1d2efe977e5754b84e/openvino-2026.0.0-20965-cp313-cp313-win_amd64.whl", hash = "sha256:14069e5af2ac8a77f6ea55d7020d34cc7d3538d49ebda91a18c00d4da830ab58", size = 69160606, upload-time = "2026-02-23T16:10:52.9Z" },
+    { url = "https://files.pythonhosted.org/packages/36/7b/721bd8e5cd18c31e73ab0ae5143ff222aa7af639fbde9276059e408dcae9/openvino-2026.1.0-21367-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:e19cf36e0d65d2905492d1465af2481315a055fb1224e3ba65c94def943b3ee9", size = 30887829, upload-time = "2026-04-07T14:18:44.628Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/7e/6edb62a43cc206d8227da0b570f15a64d5ea122e002e299b733203f4fdfe/openvino-2026.1.0-21367-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:8c066dcd0f9f901759d8d69fa3a01eb97f3274497ec77341f1802654e6c5e1ad", size = 56819471, upload-time = "2026-04-07T14:18:48.957Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/4d/5d6dea187afba680b9c0ac18e42cd2c9188f4ff1d2bb93e47c81fb404ab8/openvino-2026.1.0-21367-cp313-cp313-manylinux_2_35_aarch64.whl", hash = "sha256:0ba1a760423d6f61d45927df84eb7a5c4bca34c8a0018256bce528d167495914", size = 26852804, upload-time = "2026-04-07T14:18:52.867Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/09/32b2b6a394bb0347b66497eb521ad6cc516b11aecdcb18755b7e886b6efd/openvino-2026.1.0-21367-cp313-cp313-win_amd64.whl", hash = "sha256:b413b92fa9340c4fee586b9272b3a7a7dc06324c0fb4885ea7c24f258348d433", size = 71174470, upload-time = "2026-04-07T14:18:58.292Z" },
 ]
 
 [[package]]
@@ -2294,7 +2294,7 @@ requires-dist = [
     { name = "onnx", specifier = "==1.21.0" },
     { name = "onnxconverter-common", specifier = "==1.16.0" },
     { name = "onnxscript", specifier = "==0.6.2" },
-    { name = "openvino", specifier = "~=2026.0.0" },
+    { name = "openvino", specifier = "~=2026.1.0" },
     { name = "openvino-model-api", git = "https://github.com/open-edge-platform/model_api.git" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },
     { name = "pytorchcv", specifier = "==0.0.74" },
