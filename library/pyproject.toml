@@ -233,7 +233,7 @@ omit = [
 line-length = 120
 
 # minimum target version
-target-version = "py311"
+target-version = "py38"
 
 # Enumerate all fixed violations.
 show-fixes = true
