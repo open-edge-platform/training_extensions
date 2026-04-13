@@ -44,7 +44,7 @@ export const ImportJobsList = () => {
         datasetImportDialogState.open();
     };
 
-    if (isEmpty(preparingImportsQueue) || isEmpty(stagedImportsQueue) || isEmpty(loadingItemsQueue)) {
+    if (isEmpty(preparingImportsQueue) && isEmpty(stagedImportsQueue) && isEmpty(loadingItemsQueue)) {
         return null;
     }
 

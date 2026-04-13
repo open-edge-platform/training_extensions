@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import { getMockedModel } from 'mocks/mock-model';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
@@ -118,6 +118,8 @@ describe('ActiveModel', () => {
 
     it('does not render model picker when there are no models', async () => {
         renderApp({ models: [], pipeline: getMockedPipeline() });
+
+        await waitForElementToBeRemoved(screen.getByRole('progressbar'));
 
         await waitFor(() => {
             expect(screen.queryByRole('button', { name: /active model/i })).not.toBeInTheDocument();
