@@ -190,4 +190,86 @@ describe('ModelVariantTable', () => {
             expect.stringContaining(`/api/projects/project-123/models/${model.id}/variants/ov-1/binary`)
         );
     });
+
+    describe('ModelVariantPrecisionRenderer', () => {
+        it('renders only uppercased precision text when variant has no quantization_info', () => {
+            const model = getMockedModel({
+                variants: [
+                    getMockedVariant({
+                        format: 'openvino',
+                        precision: 'fp16',
+                        quantization_info: null,
+                    }),
+                ],
+            });
+
+            render(<ModelVariantTable model={model} format='openvino' />);
+
+            expect(screen.getByText('FP16')).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Information' })).not.toBeInTheDocument();
+        });
+
+        it('renders precision text and contextual help popover with max_drop and calibration size when quantization_info is present', async () => {
+            const model = getMockedModel({
+                variants: [
+                    getMockedVariant({
+                        format: 'openvino',
+                        precision: 'int8',
+                        quantization_info: { max_drop: 0.02, max_calibration_subset_size: 100 },
+                    }),
+                ],
+            });
+
+            render(<ModelVariantTable model={model} format='openvino' />);
+
+            expect(screen.getByText('INT8')).toBeInTheDocument();
+
+            const infoButton = screen.getByRole('button', { name: 'Information' });
+            expect(infoButton).toBeInTheDocument();
+
+            await userEvent.click(infoButton);
+
+            expect(screen.getByText('Quantized with NNCF PQT')).toBeInTheDocument();
+            expect(screen.getByText('Max accuracy drop: 2%')).toBeInTheDocument();
+            expect(screen.getByText('Calibration dataset size: 100')).toBeInTheDocument();
+        });
+
+        it('does not render max accuracy drop line when max_drop is null', async () => {
+            const model = getMockedModel({
+                variants: [
+                    getMockedVariant({
+                        format: 'openvino',
+                        precision: 'int8',
+                        quantization_info: { max_drop: null, max_calibration_subset_size: 50 },
+                    }),
+                ],
+            });
+
+            render(<ModelVariantTable model={model} format='openvino' />);
+
+            await userEvent.click(screen.getByRole('button', { name: 'Information' }));
+
+            expect(screen.queryByText(/Max accuracy drop/)).not.toBeInTheDocument();
+            expect(screen.getByText('Calibration dataset size: 50')).toBeInTheDocument();
+        });
+
+        it('renders max accuracy drop line when max_drop is zero', async () => {
+            const model = getMockedModel({
+                variants: [
+                    getMockedVariant({
+                        format: 'openvino',
+                        precision: 'int8',
+                        quantization_info: { max_drop: 0, max_calibration_subset_size: 200 },
+                    }),
+                ],
+            });
+
+            render(<ModelVariantTable model={model} format='openvino' />);
+
+            await userEvent.click(screen.getByRole('button', { name: 'Information' }));
+
+            expect(screen.getByText('Max accuracy drop: 0%')).toBeInTheDocument();
+            expect(screen.getByText('Calibration dataset size: 200')).toBeInTheDocument();
+        });
+    });
 });

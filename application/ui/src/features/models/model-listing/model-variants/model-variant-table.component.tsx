@@ -72,7 +72,7 @@ const ModelVariantPrecisionRenderer = ({ variant }: { variant: ModelVariant }) =
                     <Heading>Quantized with NNCF PQT</Heading>
                     <Content>
                         <Flex direction={'column'}>
-                            {maxAccuracyDrop && (
+                            {maxAccuracyDrop !== null && (
                                 <Text>Max accuracy drop: {numberFormatter.format(maxAccuracyDrop)}</Text>
                             )}
                             <Text>Calibration dataset size: {calibrationDatasetSize}</Text>
