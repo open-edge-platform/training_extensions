@@ -180,7 +180,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0t64=2.84.4-3~deb13u2 \
         libglx-mesa0=25.0.7-2 \
-        libv4l-dev=1.30.1-1
+        libv4l-0t64=1.30.1-1
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"
