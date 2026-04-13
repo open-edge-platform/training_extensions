@@ -3,7 +3,7 @@
 import os
 import threading
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -112,7 +112,7 @@ class InferenceServer:
                     id=model_id,
                     model=model,
                     device=device,
-                    load_timestamp=datetime.now(),
+                    load_timestamp=datetime.now(tz=UTC),
                 )
                 return True
         finally:

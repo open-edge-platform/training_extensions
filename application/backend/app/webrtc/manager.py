@@ -67,7 +67,7 @@ class WebRTCManager:
         """Set input data for specific WebRTC connection"""
         self._input_data[data.webrtc_id] = {
             "conf_threshold": data.conf_threshold,
-            "updated_at": asyncio.get_event_loop().time(),
+            "updated_at": asyncio.get_running_loop().time(),
         }
 
     async def cleanup_connection(self, webrtc_id: str) -> None:

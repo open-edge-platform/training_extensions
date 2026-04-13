@@ -5,14 +5,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from unittest.mock import create_autospec
 
 import pytest
 import torch
-from importlib_resources import files
 from lightning.pytorch.cli import ReduceLROnPlateau
-from omegaconf import OmegaConf
 from torch.optim import Optimizer
 
 from otx.backend.native.models.base import DataInputParams
@@ -20,9 +17,6 @@ from otx.backend.native.models.detection.atss import ATSS
 from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
 from otx.metrics.fmeasure import FMeasureCallable
 from otx.types.export import TaskLevelExportParameters
-
-if TYPE_CHECKING:
-    from omegaconf.dictconfig import DictConfig
 
 
 class TestOTXDetectionModel:
@@ -40,11 +34,6 @@ class TestOTXDetectionModel:
             "hyper_parameters": {"best_confidence_threshold": 0.35},
             "state_dict": {},
         }
-
-    @pytest.fixture
-    def config(self) -> DictConfig:
-        cfg_path = files("otx") / "algo" / "detection" / "mmconfigs" / "yolox_tiny.yaml"
-        return OmegaConf.load(cfg_path)
 
     @pytest.fixture
     def otx_model(self) -> ATSS:

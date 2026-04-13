@@ -4,9 +4,9 @@
 """Helper script to download all the model pre-trained weights."""
 
 import logging
+from importlib.resources import files
 from pathlib import Path
 
-from importlib_resources import files
 from omegaconf import OmegaConf
 
 from otx.backend.native.utils.instantiators import partial_instantiate_class

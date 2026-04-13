@@ -109,7 +109,7 @@ def _build_samples(
 
         img_path = _download_image(filename, images_dir)
         img_pil = PILImage.open(img_path).convert("RGB")
-        img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.BILINEAR)  # type: ignore[attr-defined]
+        img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.Resampling.BILINEAR)
         img_np = np.array(img_pil, dtype=np.uint8)
         img_chw = torch.from_numpy(img_np.transpose(2, 0, 1))
         image = tv_tensors.Image(img_chw)

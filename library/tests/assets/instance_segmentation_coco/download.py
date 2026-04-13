@@ -114,7 +114,7 @@ def _build_dataset(
         # Download image
         img_path = _download_image(filename, images_dir)
         img_pil = PILImage.open(img_path).convert("RGB")
-        img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.BILINEAR)  # type: ignore[attr-defined]
+        img_pil = img_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.Resampling.BILINEAR)
         img_np = np.array(img_pil, dtype=np.uint8)
         img_chw = torch.from_numpy(img_np.transpose(2, 0, 1))
         image = tv_tensors.Image(img_chw)
@@ -142,7 +142,7 @@ def _build_dataset(
             rle = mask_utils.merge(rle)
             binary_mask = mask_utils.decode(rle)
             mask_pil = PILImage.fromarray(binary_mask)
-            mask_pil = mask_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.NEAREST)  # type: ignore[attr-defined]
+            mask_pil = mask_pil.resize((IMG_SIZE, IMG_SIZE), PILImage.Resampling.NEAREST)
             masks_list.append(np.array(mask_pil, dtype=np.uint8))  # type: ignore[arg-type]
 
         if not bboxes_list:

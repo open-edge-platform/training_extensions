@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -110,7 +110,7 @@ class TestDataCollectorUnit:
         frame_data = np.random.rand(100, 100, 3)
         inference_data = MagicMock()
 
-        now = datetime.timestamp(datetime.now())
+        now = datetime.timestamp(datetime.now(tz=UTC))
 
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = False
@@ -143,7 +143,7 @@ class TestDataCollectorUnit:
 
         media = MagicMock()
 
-        now = datetime.timestamp(datetime.now())
+        now = datetime.timestamp(datetime.now(tz=UTC))
 
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = False
@@ -193,7 +193,7 @@ class TestDataCollectorUnit:
 
         media = MagicMock()
 
-        now = datetime.timestamp(datetime.now())
+        now = datetime.timestamp(datetime.now(tz=UTC))
 
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = True
@@ -241,7 +241,7 @@ class TestDataCollectorUnit:
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
-        now = datetime.timestamp(datetime.now())
+        now = datetime.timestamp(datetime.now(tz=UTC))
 
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = True
@@ -278,7 +278,7 @@ class TestDataCollectorUnit:
 
         media = MagicMock()
 
-        now = datetime.timestamp(datetime.now())
+        now = datetime.timestamp(datetime.now(tz=UTC))
 
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = True

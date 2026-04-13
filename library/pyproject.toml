@@ -233,7 +233,7 @@ omit = [
 line-length = 120
 
 # minimum target version
-target-version = "py38"
+target-version = "py311"
 
 # Enumerate all fixed violations.
 show-fixes = true
@@ -281,7 +281,7 @@ select = [
     "SLF",  # flake8-self (`SLF`)
     "SIM",  # flake8-simplify (`SIM`)
     "TID",  # flake8-tidy-imports (`TID`)
-    "TCH",  # flake8-type-checking (`TCH`)
+    "TC",   # flake8-type-checking (`TC`)
     "INT",  # flake8-gettext (`INT`)
     "ARG",  # flake8-unsused-arguments (`ARG`)
     "PTH",  # flake8-use-pathlib (`PTH`)
@@ -409,8 +409,7 @@ notice-rgx = """
     "S101",     # pytest-style allows `assert` statements in tests.
     "S603",     # Allow for untrusted input in tests.
     "SLF001",   # We sometimes need to inspect private functions for testing.
-    "TCH003",   # It doesn't seem necessary to use TYPE_CHECKING in tests.
-    "PT004",    # fixture ignore type returning.
+    "TC003",    # It doesn't seem necessary to use TYPE_CHECKING in tests.
     "E501",     # Test skips lines that are too long.
     "ANN001",   # Skip annotation type hint in test codes
     "ANN201",   # Skip return type hint in test codes
