@@ -148,6 +148,9 @@ class OTXEngine(Engine):
                 params["mean"] = self._datamodule.input_mean
             if self._datamodule.input_std is not None:
                 params["std"] = self._datamodule.input_std
+            _intensity_cfg = getattr(self._datamodule, "input_intensity_config", None)
+            if _intensity_cfg is not None:
+                params["intensity_config"] = _intensity_cfg
             get_model_args["data_input_params"] = params
 
             model = self._auto_configurator.get_model(**get_model_args)
