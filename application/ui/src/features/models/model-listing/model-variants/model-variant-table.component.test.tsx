@@ -1,4 +1,4 @@
-// Copyright (C) 2026 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react';
@@ -229,7 +229,7 @@ describe('ModelVariantTable', () => {
 
             await userEvent.click(infoButton);
 
-            expect(screen.getByText('Quantized with NNCF PQT')).toBeInTheDocument();
+            expect(screen.getByText('Quantized with NNCF PTQ')).toBeInTheDocument();
             expect(screen.getByText('Max accuracy drop: 2%')).toBeInTheDocument();
             expect(screen.getByText('Calibration dataset size: 100')).toBeInTheDocument();
         });
@@ -253,7 +253,7 @@ describe('ModelVariantTable', () => {
             expect(screen.getByText('Calibration dataset size: 50')).toBeInTheDocument();
         });
 
-        it('renders max accuracy drop line when max_drop is zero', async () => {
+        it('renders max accuracy drop as 0% when max_drop is zero', async () => {
             const model = getMockedModel({
                 variants: [
                     getMockedVariant({
@@ -270,6 +270,23 @@ describe('ModelVariantTable', () => {
 
             expect(screen.getByText('Max accuracy drop: 0%')).toBeInTheDocument();
             expect(screen.getByText('Calibration dataset size: 200')).toBeInTheDocument();
+        });
+
+        it('does not render contextual help when both max_drop and calibration_subset_size are null', () => {
+            const model = getMockedModel({
+                variants: [
+                    getMockedVariant({
+                        format: 'openvino',
+                        precision: 'int8',
+                        quantization_info: { max_drop: null, max_calibration_subset_size: null },
+                    }),
+                ],
+            });
+
+            render(<ModelVariantTable model={model} format='openvino' />);
+
+            expect(screen.getByText('INT8')).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Information' })).not.toBeInTheDocument();
         });
     });
 });

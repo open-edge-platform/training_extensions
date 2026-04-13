@@ -55,6 +55,7 @@ const getQuantizationParameter = (
 const ModelVariantPrecisionRenderer = ({ variant }: { variant: ModelVariant }) => {
     const numberFormatter = useNumberFormatter({
         style: 'percent',
+        maximumFractionDigits: 1,
     });
 
     if (variant.quantization_info == null) {
@@ -67,19 +68,21 @@ const ModelVariantPrecisionRenderer = ({ variant }: { variant: ModelVariant }) =
     return (
         <Flex direction={'row'} gap={'size-100'}>
             <Text>{variant.precision.toUpperCase()}</Text>
-            <Text>
+            {(calibrationDatasetSize || maxAccuracyDrop) && (
                 <ContextualHelp variant={'info'} placement={'top'}>
-                    <Heading>Quantized with NNCF PQT</Heading>
+                    <Heading>Quantized with NNCF PTQ</Heading>
                     <Content>
                         <Flex direction={'column'}>
                             {maxAccuracyDrop !== null && (
                                 <Text>Max accuracy drop: {numberFormatter.format(maxAccuracyDrop)}</Text>
                             )}
-                            <Text>Calibration dataset size: {calibrationDatasetSize}</Text>
+                            {calibrationDatasetSize != null && (
+                                <Text>Calibration dataset size: {calibrationDatasetSize}</Text>
+                            )}
                         </Flex>
                     </Content>
                 </ContextualHelp>
-            </Text>
+            )}
         </Flex>
     );
 };
