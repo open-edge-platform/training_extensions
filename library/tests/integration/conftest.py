@@ -5,12 +5,39 @@ from __future__ import annotations
 
 import importlib
 import inspect
+from enum import Enum
 from pathlib import Path
 
 import pytest
 
-from otx.tools.converter import TEMPLATE_ID_MAPPING, ModelStatus
 from otx.types.task import OTXTaskType
+
+
+class ModelStatus(str, Enum):
+    """Enum for model status used to categorize models for integration testing."""
+
+    SPEED = "speed"
+    BALANCE = "balance"
+    ACCURACY = "accuracy"
+
+
+# Mapping of model category recipes. This mirrors the BALANCE/SPEED/ACCURACY entries
+# from the application's TEMPLATE_ID_MAPPING so that --run-category-only selects the
+# same subset of models for integration testing.
+_CATEGORY_RECIPES: dict[str, ModelStatus] = {
+    # MULTI_CLASS_CLS
+    "classification/multi_class_cls/deit_tiny.yaml": ModelStatus.BALANCE,
+    "classification/multi_class_cls/dino_v2.yaml": ModelStatus.ACCURACY,
+    "classification/multi_class_cls/mobilenet_v3_large.yaml": ModelStatus.SPEED,
+    # DETECTION
+    "detection/yolox_s.yaml": ModelStatus.SPEED,
+    "detection/deim_dfine_m.yaml": ModelStatus.BALANCE,
+    "detection/deim_dfine_l.yaml": ModelStatus.ACCURACY,
+    # INSTANCE_SEGMENTATION
+    "instance_segmentation/rfdetr_seg_small.yaml": ModelStatus.SPEED,
+    "instance_segmentation/rfdetr_seg_medium.yaml": ModelStatus.BALANCE,
+    "instance_segmentation/rfdetr_seg_xlarge.yaml": ModelStatus.ACCURACY,
+}
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -59,42 +86,40 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
-def get_model_category_list(task: str) -> list[str]:
+def get_model_category_list(task: str, recipe_path: Path) -> list[str]:
     """
-    Retrieve the list of model categories from `otx/tools/templates`.
+    Retrieve the list of category model recipes (BALANCE, SPEED, ACCURACY).
 
-    This function extracts `model_category` values from `template.yaml`, which may include
-    categories such as "balance" or "accuracy." It then maps each category to its corresponding
-    recipe in `otx/recipe`.
+    Uses the local _CATEGORY_RECIPES mapping to select only the representative
+    models for each category, matching the application's TEMPLATE_ID_MAPPING.
+
+    For classification tasks, multi_class_cls recipes are also mapped to
+    multi_label_cls and h_label_cls variants when those tasks are requested.
 
     Args:
         task (str): The task for which to retrieve model categories.
-        default_model_only (bool): If True, only include default models. Defaults to False.
-    Raises:
+        recipe_path (Path): The root recipe directory.
+
     Returns:
         list[str]: A list of recipe paths.
     """
-
-    # Locate the OTX module and relevant directories
     task_list = get_task_list(task.lower())
     recipes = []
 
-    for meta_info in TEMPLATE_ID_MAPPING.values():
-        if meta_info["status"] not in [ModelStatus.BALANCE, ModelStatus.SPEED, ModelStatus.ACCURACY]:
-            continue
+    for relative_path in _CATEGORY_RECIPES:
+        full_path = recipe_path / relative_path
 
-        recipe_path = meta_info["recipe_path"]
+        # Extract task from the path (e.g. "multi_class_cls" from ".../multi_class_cls/deit_tiny.yaml")
+        task_from_path = OTXTaskType(str(full_path).split("/")[-2].upper())
+        if task_from_path in task_list:
+            recipes.append(str(full_path))
 
-        task = OTXTaskType(str(recipe_path).split("/")[-2].upper())  # Extract task from the path
-        if task in task_list:
-            recipes.append(str(recipe_path))
-
-        if task == OTXTaskType.MULTI_CLASS_CLS:
+        if task_from_path == OTXTaskType.MULTI_CLASS_CLS:
             # Add multi_label_cls and h_label_cls configs as well if they are in the list
             if OTXTaskType.MULTI_LABEL_CLS in task_list:
-                recipes.append(str(recipe_path).replace("multi_class_cls", "multi_label_cls"))
+                recipes.append(str(full_path).replace("multi_class_cls", "multi_label_cls"))
             if OTXTaskType.H_LABEL_CLS in task_list:
-                recipes.append(str(recipe_path).replace("multi_class_cls", "h_label_cls"))
+                recipes.append(str(full_path).replace("multi_class_cls", "h_label_cls"))
 
     return recipes
 
@@ -132,7 +157,7 @@ def pytest_configure(config):
 
     # Run Model Category Recipes Only (i.e. model balance, accuracy, etc.)
     if run_category_only:
-        target_recipe_list = get_model_category_list(task)
+        target_recipe_list = get_model_category_list(task, recipe_path)
 
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list

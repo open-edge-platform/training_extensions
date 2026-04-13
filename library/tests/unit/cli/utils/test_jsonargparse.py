@@ -23,7 +23,6 @@ from otx.cli.utils.jsonargparse import (
 def fxt_configs() -> Namespace:
     return Namespace(
         data=Namespace(
-            stack_images=True,
             train_subset=Namespace(
                 batch_size=32,
                 num_workers=4,
@@ -144,7 +143,6 @@ def test_namespace_override(fxt_configs) -> None:
 
         namespace_override(configs=cfg, key="data", overrides=overrides, convert_dict_to_namespace=False)
 
-        assert cfg.data.stack_images == fxt_configs.data.stack_images
         assert cfg.data.train_subset.batch_size == fxt_configs.data.train_subset.batch_size
         assert cfg.data.train_subset.num_workers == fxt_configs.data.train_subset.num_workers
         assert cfg.data.train_subset.transforms == fxt_configs.data.train_subset.transforms
@@ -155,14 +153,12 @@ def test_namespace_override(fxt_configs) -> None:
         # test for single key override
         overrides = Namespace(
             mem_cache_img_max_size=[100, 100],
-            stack_images=False,
             train_subset=Namespace(batch_size=64, num_workers=8),
         )
 
         namespace_override(configs=cfg, key="data", overrides=overrides, convert_dict_to_namespace=False)
 
         assert cfg.data.mem_cache_img_max_size == overrides.mem_cache_img_max_size
-        assert cfg.data.stack_images == overrides.stack_images
         assert cfg.data.train_subset.batch_size == overrides.train_subset.batch_size
         assert cfg.data.train_subset.num_workers == overrides.train_subset.num_workers
 

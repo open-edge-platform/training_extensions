@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import abc
-from functools import partial
 from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
 import torch
@@ -66,12 +65,11 @@ def _collect_optional_attr(items: list[OTXSample], attr_name: str) -> list | Non
     return values if any(value is not None for value in values) else None
 
 
-def _default_collate_fn(items: list[OTXSample], stack_images: bool = True) -> OTXSampleBatch:
+def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
     """Collate OTXSample items into an OTXSampleBatch.
 
     Args:
         items: List of OTXSample items to batch
-        stack_images: Whether to stack images into a single tensor or keep as a list of tensors. Defaults to True.
 
     Returns:
         Batched OTXSample items with stacked tensors
@@ -107,7 +105,7 @@ def _default_collate_fn(items: list[OTXSample], stack_images: bool = True) -> OT
     if len(image_tensors) == 0:
         msg = "No images found in batch. Ensure that the dataset and pipeline are configured correctly."
         raise ValueError(msg)
-    images = torch.stack(image_tensors) if stack_images else image_tensors
+    images = torch.stack(image_tensors)
 
     return OTXSampleBatch(
         images=images,
@@ -129,8 +127,6 @@ class OTXDataset(TorchDataset):
         dm_subset (Dataset): Datumaro subset of a dataset.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int, optional): Maximum number of times to attempt fetching a valid image. Defaults to 1000.
-        stack_images (bool, optional): Whether to stack images in the collate function in OTXBatchData entity.
-            Defaults to True.
 
     """
 
@@ -139,10 +135,8 @@ class OTXDataset(TorchDataset):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        stack_images: bool = True,
     ) -> None:
         self.transforms = transforms
-        self.stack_images = stack_images
         self.max_refetch = max_refetch
         self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset
@@ -222,7 +216,7 @@ class OTXDataset(TorchDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect samples into a batch in data loader."""
-        return partial(_default_collate_fn, stack_images=self.stack_images)
+        return _default_collate_fn
 
     @abc.abstractmethod
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:

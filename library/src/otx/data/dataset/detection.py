@@ -29,7 +29,7 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms | None, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
-        stack_images (bool): Whether to stack images in batch processing.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Example:
@@ -46,7 +46,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        stack_images: bool = True,
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(DetectionSample, storage_dtype)
@@ -55,7 +54,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            stack_images=stack_images,
         )
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(

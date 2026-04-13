@@ -39,7 +39,14 @@ describe('SourceMenu', () => {
             server.use(
                 http.patch('/api/projects/{project_id}/pipeline', () => {
                     pipelinePatchSpy();
-                    return HttpResponse.json({}, { status });
+                    return HttpResponse.json(
+                        {
+                            project_id: '',
+                            status: 'idle',
+                            device: 'images_folder',
+                        },
+                        { status }
+                    );
                 }),
                 http.delete('/api/sources/{source_id}', () => HttpResponse.json(null, { status: 204 }))
             );
@@ -73,7 +80,18 @@ describe('SourceMenu', () => {
     describe('connect', () => {
         const name = 'test-name';
         const configRequests = (status = 200) => {
-            server.use(http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}, { status })));
+            server.use(
+                http.patch('/api/projects/{project_id}/pipeline', () =>
+                    HttpResponse.json(
+                        {
+                            project_id: '',
+                            status: 'idle',
+                            device: 'images_folder',
+                        },
+                        { status }
+                    )
+                )
+            );
         };
 
         it('success', async () => {

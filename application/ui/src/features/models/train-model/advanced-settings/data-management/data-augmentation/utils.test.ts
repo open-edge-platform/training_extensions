@@ -6,11 +6,7 @@ import {
     getMockedConfigurationParameterGroup,
 } from 'mocks/mock-training-configuration';
 
-import {
-    DataAugmentationConfigurableParameters,
-    DataAugmentationConfigurationParameters,
-    isDataAugmentationEnabled,
-} from './utils';
+import { DataAugmentationConfigurationParameters, isDataAugmentationEnabled } from './utils';
 
 const buildAugmentationGroup = (enableValue: boolean) => {
     return getMockedConfigurationParameterGroup({
@@ -18,19 +14,19 @@ const buildAugmentationGroup = (enableValue: boolean) => {
             getMockedConfigurationParameter({ value_type: 'bool', key: 'enable', value: enableValue }),
             getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
         ],
-    }) as DataAugmentationConfigurationParameters;
+    });
 };
 
 const buildAugmentationGroupWithoutEnable = () => {
     return getMockedConfigurationParameterGroup({
         parameters: [getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 })],
-    }) as DataAugmentationConfigurationParameters;
+    });
 };
 
 const buildDataAugmentationConfigurableParameters = (groups: DataAugmentationConfigurationParameters[]) => {
     return getMockedConfigurationParameterGroup({
         parameters: groups,
-    }) as DataAugmentationConfigurableParameters;
+    });
 };
 
 describe('isDataAugmentationEnabled', () => {
@@ -91,5 +87,41 @@ describe('isDataAugmentationEnabled', () => {
 
         const params = buildDataAugmentationConfigurableParameters([groupWithNonEnableBool]);
         expect(isDataAugmentationEnabled(params)).toBe(false);
+    });
+
+    it('returns true when deim_framework parameter is set to true', () => {
+        const groupWithDeimFramework = getMockedConfigurationParameterGroup({
+            parameters: [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'deim_framework', value: true }),
+                getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
+                buildAugmentationGroup(true),
+            ],
+        });
+
+        expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(true);
+    });
+
+    it('returns true when deim_framework parameter is set to false and at least one enable parameter is true', () => {
+        const groupWithDeimFramework = getMockedConfigurationParameterGroup({
+            parameters: [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'deim_framework', value: false }),
+                getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
+                buildAugmentationGroup(true),
+            ],
+        });
+
+        expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(true);
+    });
+
+    it('returns false when deim_framework parameter is set to false and at least one enable parameter is false', () => {
+        const groupWithDeimFramework = getMockedConfigurationParameterGroup({
+            parameters: [
+                getMockedConfigurationParameter({ value_type: 'bool', key: 'deim_framework', value: false }),
+                getMockedConfigurationParameter({ value_type: 'float', key: 'probability', value: 0.5 }),
+                buildAugmentationGroup(false),
+            ],
+        });
+
+        expect(isDataAugmentationEnabled(groupWithDeimFramework)).toBe(false);
     });
 });

@@ -193,7 +193,7 @@ const AnnotationsLabelsSegments = ({ labels, colIndex, frameNumber }: Annotation
     );
 };
 
-type VideoFrameSegmentProps = {
+export type VideoFrameSegmentProps = {
     isFirstFrame: boolean;
     isLastFrame: boolean;
     isSelectedFrame: boolean;

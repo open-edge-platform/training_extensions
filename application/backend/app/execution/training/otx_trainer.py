@@ -23,7 +23,6 @@ from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.dataset.base import OTXDataset
 from otx.data.factory import TransformLibFactory
 from otx.data.module import OTXDataModule
-from otx.tools.converter import GetiConfigConverter
 from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -32,6 +31,7 @@ from sqlalchemy.orm import Session
 from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, ExecutionErr, step
+from app.execution.common.geti_config_converter import GetiConfigConverter
 from app.execution.common.otx_converters import (
     convert_metrics,
     get_metric_by_task,
@@ -399,7 +399,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             model=otx_model,
             data=otx_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
-            work_dir=f"./otx-workspace-{model_id}",
+            work_dir=self._data_dir / f"otx-workspace-{model_id}",
             device=otx_device_type,
         )
 

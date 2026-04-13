@@ -28,7 +28,7 @@ import { AssignLabel } from './assign-label.component';
 import { DatasetStatistics } from './dataset-statistics/dataset-statistics.component';
 import { FilterByStatus, type FilterByStatusKey } from './filter-by-status/filter-by-status.component';
 import { MediaUpload } from './media-upload.component';
-import { toggleMultipleSelection } from './util';
+import { getNumberOfImagesAndVideosMessage, toggleMultipleSelection } from './util';
 
 type ToolbarProps = {
     items: Media[];
@@ -58,7 +58,9 @@ export const Toolbar = ({ items, viewMode, setViewMode, onFilter }: ToolbarProps
 
     const totalSelectedElements = selectedMediaItems?.size ?? 0;
     const hasSelectedElements = totalSelectedElements > 0;
-    const message = hasSelectedElements ? `${totalSelectedElements} selected` : `${items.length} images`;
+    const message = hasSelectedElements
+        ? `${totalSelectedElements} selected`
+        : getNumberOfImagesAndVideosMessage(items);
 
     const handleToggleManyItemSelection = () => {
         const images = items.map((item) => String(item.id));

@@ -1,30 +1,51 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { getMockedDatasetItem } from 'mocks/mock-dataset-item';
+import { useState } from 'react';
+
+import { type Key } from '@geti/ui';
+import { fireEvent, screen } from '@testing-library/react';
 import { getMockedMediaImage } from 'mocks/mock-media';
-import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
-import { http } from '../../../../api/utils';
 import { ZoomProvider } from '../../../../components/zoom/zoom.provider';
-import type { MediaImage } from '../../../../constants/shared-types';
-import { server } from '../../../../msw-node-setup';
+import type { DatasetSubset, MediaImage } from '../../../../constants/shared-types';
 import { AnnotationVisibilityProvider } from '../../../../shared/annotator/annotation-visibility-provider.component';
 import { CanvasSettingsProvider } from '../primary-toolbar/settings/canvas-settings-provider.component';
 import { BottomToolbar } from './bottom-toolbar.component';
 
-type BottomToolbarProps = {
-    mediaItem: MediaImage;
+const mockMediaItem = getMockedMediaImage({
+    id: 'media-123',
+    name: 'test-image',
+    format: 'jpg',
+    width: 1920,
+    height: 1080,
+});
+
+type RenderProps = {
+    mediaItem?: MediaImage;
+    isUserReviewed?: boolean;
+    subset?: DatasetSubset;
+    isReadOnlySubset?: boolean;
 };
 
-const renderBottomToolbar = ({ mediaItem }: BottomToolbarProps) => {
+const renderBottomToolbar = ({
+    mediaItem = mockMediaItem,
+    isUserReviewed = false,
+    subset = 'unassigned',
+    isReadOnlySubset = false,
+}: RenderProps = {}) => {
     return render(
         <ZoomProvider>
             <AnnotationVisibilityProvider>
                 <CanvasSettingsProvider>
-                    <BottomToolbar mediaItem={mediaItem} />
+                    <BottomToolbar
+                        isReadOnlySubset={isReadOnlySubset}
+                        mediaItem={mediaItem}
+                        isUserReviewed={isUserReviewed}
+                        subset={subset}
+                        onSubsetChange={vi.fn()}
+                    />
                 </CanvasSettingsProvider>
             </AnnotationVisibilityProvider>
         </ZoomProvider>
@@ -32,123 +53,73 @@ const renderBottomToolbar = ({ mediaItem }: BottomToolbarProps) => {
 };
 
 describe('BottomToolbar', () => {
-    const mockMediaItem = getMockedMediaImage({
-        id: 'media-123',
-        name: 'test-image',
-        format: 'jpg',
-        width: 1920,
-        height: 1080,
-    });
-
     it('displays the filename with correct format and dimensions', () => {
-        renderBottomToolbar({ mediaItem: mockMediaItem });
+        renderBottomToolbar();
 
         expect(screen.getByText('test-image.jpg (1920 x 1080 px)')).toBeInTheDocument();
     });
 
-    it('displays "Accepted" tag when user has reviewed the media', async () => {
-        server.use(
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', user_reviewed: true }), {
-                    status: 200,
-                });
-            })
-        );
+    it('displays "Accepted" tag when user has reviewed the media', () => {
+        renderBottomToolbar({ isUserReviewed: true });
 
-        renderBottomToolbar({ mediaItem: mockMediaItem });
-
-        expect(await screen.findByLabelText('Accepted')).toBeInTheDocument();
+        expect(screen.getByLabelText('Accepted')).toBeInTheDocument();
     });
 
     it('displays "For Review" tag when user has not reviewed the media', () => {
-        server.use(
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', user_reviewed: false }), {
-                    status: 200,
-                });
-            })
-        );
-
-        renderBottomToolbar({ mediaItem: mockMediaItem });
+        renderBottomToolbar({ isUserReviewed: false });
 
         expect(screen.getByLabelText('For Review')).toBeInTheDocument();
     });
 
-    it('renders the subset picker with default placeholder', async () => {
-        server.use(
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                return HttpResponse.json(
-                    getMockedDatasetItem({ id: 'media-123', user_reviewed: false, subset: 'unassigned' }),
-                    {
-                        status: 200,
-                    }
-                );
-            })
-        );
+    it('renders the subset picker with default placeholder', () => {
+        renderBottomToolbar();
 
-        renderBottomToolbar({ mediaItem: mockMediaItem });
-
-        expect(await screen.findByLabelText('Select subset')).toBeInTheDocument();
+        expect(screen.getByLabelText('Select subset')).toBeInTheDocument();
     });
 
-    it('renders the subset instead of picker when subset is assigned', async () => {
-        server.use(
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                return HttpResponse.json(
-                    getMockedDatasetItem({ id: 'media-123', user_reviewed: false, subset: 'validation' }),
-                    {
-                        status: 200,
-                    }
-                );
-            })
-        );
+    it('renders the subset instead of picker when is read only mode', () => {
+        renderBottomToolbar({ subset: 'validation', isReadOnlySubset: true });
 
-        renderBottomToolbar({ mediaItem: mockMediaItem });
-
-        expect(await screen.findByLabelText('Validation')).toBeInTheDocument();
+        expect(screen.getByLabelText('Validation')).toBeInTheDocument();
     });
 
-    it('calls patch mutation when subset is changed', async () => {
-        const patchSpy = vi.fn();
+    it('shows pending subset tag after selection', () => {
+        const PendingSubsetWrapper = () => {
+            const [pendingSubset, setPendingSubset] = useState<DatasetSubset>('unassigned');
 
-        server.use(
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', subset: 'unassigned' }), {
-                    status: 200,
-                });
-            }),
-            http.patch(
-                '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset',
-                async ({ request, params }) => {
-                    const body = await request.json();
-
-                    patchSpy(params, body);
-
-                    return HttpResponse.json(getMockedDatasetItem({ id: 'media-123', subset: 'validation' }), {
-                        status: 200,
-                    });
+            const handleSubsetChange = (key: Key | null) => {
+                if (key === 'validation' || key === 'testing' || key === 'training') {
+                    setPendingSubset(key);
                 }
-            )
+            };
+
+            return (
+                <BottomToolbar
+                    isReadOnlySubset={false}
+                    mediaItem={mockMediaItem}
+                    subset={pendingSubset}
+                    onSubsetChange={handleSubsetChange}
+                    hideHotkeys
+                />
+            );
+        };
+
+        render(
+            <ZoomProvider>
+                <AnnotationVisibilityProvider>
+                    <CanvasSettingsProvider>
+                        <PendingSubsetWrapper />
+                    </CanvasSettingsProvider>
+                </AnnotationVisibilityProvider>
+            </ZoomProvider>
         );
 
-        renderBottomToolbar({ mediaItem: mockMediaItem });
-
-        const pickerButton = await screen.findByRole('button', { name: /select subset/i });
+        const pickerButton = screen.getByRole('button', { name: /select subset/i });
         fireEvent.click(pickerButton);
 
-        const validationOption = await screen.findByRole('option', { name: /Validation/i });
+        const validationOption = screen.getByRole('option', { name: /Validation/i });
         fireEvent.click(validationOption);
 
-        await waitFor(() => {
-            expect(patchSpy).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    project_id: expect.any(String),
-                    dataset_item_id: 'media-123',
-                }),
-                expect.objectContaining({
-                    subset: 'validation',
-                })
-            );
-        });
+        expect(screen.getByLabelText('Validation')).toBeInTheDocument();
     });
 });

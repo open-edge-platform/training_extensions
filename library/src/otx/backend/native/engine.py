@@ -307,9 +307,17 @@ class OTXEngine(Engine):
             raise TypeError(msg)
 
         best_checkpoint_symlink = Path(self.work_dir) / "best_checkpoint.ckpt"
-        if best_checkpoint_symlink.is_symlink():
+        if best_checkpoint_symlink.is_symlink() and best_checkpoint_symlink.exists():
             best_checkpoint_symlink.unlink()
-        best_checkpoint_symlink.symlink_to(self.checkpoint)
+        try:
+            best_checkpoint_symlink.symlink_to(self.checkpoint)
+        except OSError:
+            # Symlink creation may fail on Windows when the process lacks
+            # SeCreateSymbolicLinkPrivilege (e.g. frozen PyInstaller apps
+            # running without admin rights).  Fall back to a regular copy.
+            import shutil
+
+            shutil.copy2(self.checkpoint, best_checkpoint_symlink)
 
         return self._build_train_metrics()
 

@@ -12,13 +12,10 @@ import {
 import { render } from 'test-utils/render';
 
 import { TrainingConfiguration } from '../../../../../../constants/shared-types';
+import { isParameter, isParameterGroup } from '../../../../model-listing/model-training-parameters/utils';
 import { isBoolEnableParameter, isBoolParameter } from '../../utils';
 import { DataAugmentation } from './data-augmentation.component';
-import {
-    DataAugmentationConfigurableParameters,
-    DataAugmentationConfigurationParameters,
-    getDataAugmentationParameters,
-} from './utils';
+import { DataAugmentationConfigurationParameters, getDataAugmentationParameters } from './utils';
 
 const getToggleEnableParameter = (name: string) => {
     return screen.getByRole('switch', { name: `Toggle ${name}` });
@@ -37,9 +34,19 @@ describe('DataAugmentation', () => {
         key: 'augmentation',
         name: 'Augmentation',
         parameters: [
+            getMockedConfigurationParameter({
+                key: 'deim_framework',
+                value_type: 'bool',
+                name: 'DEIM framework',
+                depends_on: null,
+                value: false,
+            }),
             getMockedConfigurationParameterGroup({
                 key: 'center_crop',
                 name: 'Center crop',
+                depends_on: {
+                    deim_framework: [false, null],
+                },
                 parameters: [
                     getMockedConfigurationParameter({
                         key: 'enable',
@@ -64,6 +71,9 @@ describe('DataAugmentation', () => {
             getMockedConfigurationParameterGroup({
                 key: 'random_affine',
                 name: 'Random affine',
+                depends_on: {
+                    deim_framework: [false, null],
+                },
                 parameters: [
                     getMockedConfigurationParameter({
                         key: 'enable',
@@ -116,9 +126,9 @@ describe('DataAugmentation', () => {
                 ],
             }),
         ],
-    }) as DataAugmentationConfigurableParameters;
+    });
 
-    const App = (props: { dataAugmentationParameters: DataAugmentationConfigurableParameters }) => {
+    const App = (props: { dataAugmentationParameters: DataAugmentationConfigurationParameters }) => {
         const [trainingConfiguration, setTrainingConfiguration] = useState<TrainingConfiguration | undefined>({
             parameters: [
                 getMockedConfigurationParameterGroup({
@@ -166,21 +176,23 @@ describe('DataAugmentation', () => {
         render(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         dataAugmentationParameters.parameters.forEach((parametersGroup) => {
-            const enableParameter = parametersGroup.parameters[0];
-            expect(getToggleEnableParameter(enableParameter.name)).toBeChecked();
+            if (isParameterGroup(parametersGroup)) {
+                const enableParameter = parametersGroup.parameters[0];
+                expect(getToggleEnableParameter(enableParameter.name)).toBeChecked();
 
-            const restOfParameters = parametersGroup.parameters.slice(1);
+                const restOfParameters = parametersGroup.parameters.slice(1);
 
-            restOfParameters.forEach((parameter) => {
-                expect(getParameter(parameter.name)).toBeEnabled();
-            });
+                restOfParameters.forEach((parameter) => {
+                    expect(getParameter(parameter.name)).toBeEnabled();
+                });
 
-            toggleParameter(enableParameter.name);
-            expect(getToggleEnableParameter(enableParameter.name)).not.toBeChecked();
+                toggleParameter(enableParameter.name);
+                expect(getToggleEnableParameter(enableParameter.name)).not.toBeChecked();
 
-            restOfParameters.forEach((parameter) => {
-                expect(getParameter(parameter.name)).toBeDisabled();
-            });
+                restOfParameters.forEach((parameter) => {
+                    expect(getParameter(parameter.name)).toBeDisabled();
+                });
+            }
         });
     });
 
@@ -188,37 +200,57 @@ describe('DataAugmentation', () => {
         render(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         for (const parametersGroup of dataAugmentationParameters.parameters) {
-            for (const parameter of parametersGroup.parameters) {
-                if (isBoolEnableParameter(parameter)) {
-                    expect(getToggleEnableParameter(parameter.name)).toBeChecked();
+            if (isParameterGroup(parametersGroup)) {
+                for (const parameter of parametersGroup.parameters) {
+                    if (!isParameter(parameter)) continue;
 
-                    toggleParameter(parameter.name);
+                    if (isBoolEnableParameter(parameter)) {
+                        expect(getToggleEnableParameter(parameter.name)).toBeChecked();
 
-                    expect(getToggleEnableParameter(parameter.name)).not.toBeChecked();
+                        toggleParameter(parameter.name);
 
-                    await userEvent.click(screen.getByRole('button', { name: `Reset ${parametersGroup.name}` }));
-                    expect(getToggleEnableParameter(parameter.name)).toBeChecked();
-                } else if (isBoolParameter(parameter)) {
-                    expect(getToggleEnableParameter(parameter.name)).toBeChecked();
+                        expect(getToggleEnableParameter(parameter.name)).not.toBeChecked();
 
-                    toggleParameter(parameter.name);
+                        await userEvent.click(screen.getByRole('button', { name: `Reset ${parametersGroup.name}` }));
+                        expect(getToggleEnableParameter(parameter.name)).toBeChecked();
+                    } else if (isBoolParameter(parameter)) {
+                        expect(getToggleEnableParameter(parameter.name)).toBeChecked();
 
-                    expect(getToggleEnableParameter(parameter.name)).not.toBeChecked();
+                        toggleParameter(parameter.name);
 
-                    await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
-                    expect(getToggleEnableParameter(parameter.name)).toBeChecked();
-                } else {
-                    expect(getParameter(parameter.name)).toHaveValue(parameter.value.toString());
+                        expect(getToggleEnableParameter(parameter.name)).not.toBeChecked();
 
-                    await userEvent.click(screen.getByRole('button', { name: `Increase Change ${parameter.name}` }));
+                        await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+                        expect(getToggleEnableParameter(parameter.name)).toBeChecked();
+                    } else {
+                        expect(getParameter(parameter.name)).toHaveValue(parameter.value.toString());
 
-                    expect(getParameter(parameter.name)).toHaveValue((Number(parameter.value) + 0.1).toString());
+                        await userEvent.click(
+                            screen.getByRole('button', { name: `Increase Change ${parameter.name}` })
+                        );
 
-                    await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+                        expect(getParameter(parameter.name)).toHaveValue((Number(parameter.value) + 0.1).toString());
 
-                    expect(getParameter(parameter.name)).toHaveValue(parameter.default_value.toString());
+                        await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+
+                        expect(getParameter(parameter.name)).toHaveValue(parameter.default_value.toString());
+                    }
                 }
             }
         }
+    });
+
+    it('hides all dependent parameters when "DEIM framework" parameter is enabled', () => {
+        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
+
+        expect(getToggleEnableParameter('DEIM framework')).not.toBeChecked();
+        expect(screen.getByTestId('center_crop')).toBeVisible();
+        expect(screen.getByTestId('random_affine')).toBeVisible();
+
+        toggleParameter('DEIM framework');
+
+        expect(getToggleEnableParameter('DEIM framework')).toBeChecked();
+        expect(screen.queryByTestId('center_crop')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('random_affine')).not.toBeInTheDocument();
     });
 });

@@ -1,15 +1,15 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 
 import { ConfigurableParameter, type TrainingConfiguration } from '../../../../../../constants/shared-types';
-import { ParametersGroup } from '../../components/parameters.component';
-import { deepReplaceParameters } from '../../utils';
-import { DataAugmentationConfigurableParameters } from './utils';
+import { Parameters } from '../../components/parameters.component';
+import { deepReplaceParameters, filterDependentParameters } from '../../utils';
+import { DataAugmentationConfigurationParameters } from './utils';
 
 type DataAugmentationParametersListProps = {
-    dataAugmentationParameters: DataAugmentationConfigurableParameters;
+    dataAugmentationParameters: DataAugmentationConfigurationParameters;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 
@@ -21,7 +21,7 @@ const changeDataAugmentationParameters = (
     const parameters: TrainingConfiguration['parameters'] = deepReplaceParameters(
         trainingConfiguration.parameters,
         [newParameter],
-        ['dataset_preparation', ...parameterGroupKeys]
+        ['dataset_preparation', 'augmentation', ...parameterGroupKeys]
     );
 
     return {
@@ -41,7 +41,9 @@ export const DataAugmentationParametersList = ({
         });
     };
 
-    return (
-        <ParametersGroup parametersGroup={dataAugmentationParameters} onChange={handleAugmentationParameterChange} />
-    );
+    const augmentationParameters = useMemo(() => {
+        return filterDependentParameters(dataAugmentationParameters.parameters);
+    }, [dataAugmentationParameters.parameters]);
+
+    return <Parameters parameters={augmentationParameters} onChange={handleAugmentationParameterChange} />;
 };

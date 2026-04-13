@@ -6,10 +6,10 @@ import { Dispatch, SetStateAction } from 'react';
 import { type TrainingConfiguration } from '../../../../../../constants/shared-types';
 import { Accordion } from '../../components/accordion/accordion.component';
 import { DataAugmentationParametersList } from './data-augmentation-parameters-list.component';
-import { DataAugmentationConfigurableParameters, isDataAugmentationEnabled } from './utils';
+import { DataAugmentationConfigurationParameters, isDataAugmentationEnabled } from './utils';
 
 type DataAugmentationProps = {
-    dataAugmentationParameters: DataAugmentationConfigurableParameters;
+    dataAugmentationParameters: DataAugmentationConfigurationParameters;
     onTrainingConfigurationChange: Dispatch<SetStateAction<TrainingConfiguration | undefined>>;
 };
 

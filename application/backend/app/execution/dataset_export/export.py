@@ -92,6 +92,7 @@ class ExportDataset(Execution[ExportDatasetJobParams]):
                     data_format=get_dm_format(export_format),
                     output_path=str(target_dir / f"dataset-{export_format}.zip"),
                     as_zip=True,
+                    direct_only=True,
                 )
             case DatasetFormat.GETI:
                 export_dataset(

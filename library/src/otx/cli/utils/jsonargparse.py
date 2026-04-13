@@ -157,8 +157,16 @@ def namespace_override(
         overrides (Namespace): The configuration object to override the existing ones.
         convert_dict_to_namespace (bool): Whether to convert the dictionary to Namespace. Defaults to True.
     """
+    # Augmentation lists must be replaced entirely
+    replace_keys = {"augmentations_cpu", "augmentations_gpu"}
+
     for sub_key, sub_value in overrides.items():
-        if isinstance(sub_value, list) and all(isinstance(sv, dict) for sv in sub_value):
+        # Check if the leaf key (after any dot-separated prefix) is an augmentation list
+        leaf_key = sub_key.rsplit(".", 1)[-1] if "." in sub_key else sub_key
+        if leaf_key in replace_keys and isinstance(sub_value, list):
+            # overwrite the base augmentation list entirely
+            configs[key][sub_key] = sub_value
+        elif isinstance(sub_value, list) and all(isinstance(sv, dict) for sv in sub_value):
             # only enable list of dictionary items
             list_override(
                 configs=configs[key],

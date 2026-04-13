@@ -36,7 +36,7 @@ class OTXMulticlassClsDataset(OTXDataset):
         dm_subset (Dataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
-        stack_images (bool): Whether to stack images in batch processing.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Raises:
@@ -56,7 +56,6 @@ class OTXMulticlassClsDataset(OTXDataset):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        stack_images: bool = True,
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(ClassificationSample, storage_dtype)
@@ -65,7 +64,6 @@ class OTXMulticlassClsDataset(OTXDataset):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            stack_images=stack_images,
         )
 
         labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
@@ -114,7 +112,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
-        stack_images (bool): Whether to stack images in batch processing.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Attributes:
@@ -134,7 +132,6 @@ class OTXMultilabelClsDataset(OTXDataset):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        stack_images: bool = True,
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(ClassificationMultiLabelSample, storage_dtype)
@@ -143,7 +140,6 @@ class OTXMultilabelClsDataset(OTXDataset):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            stack_images=stack_images,
         )
 
         labels = list(dm_subset.schema.attributes["label"].categories.labels)  # type: ignore[missing-attribute]
@@ -220,7 +216,7 @@ class OTXHlabelClsDataset(OTXDataset):
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
-        stack_images (bool): Whether to stack images in batch processing.
+        storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
 
     Attributes:
@@ -245,7 +241,6 @@ class OTXHlabelClsDataset(OTXDataset):
         dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        stack_images: bool = True,
         storage_dtype: str = "uint8",
     ) -> None:
         sample_type = with_image_dtype(ClassificationHierarchicalSample, storage_dtype)
@@ -257,7 +252,6 @@ class OTXHlabelClsDataset(OTXDataset):
             dm_subset=dm_subset,
             transforms=transforms,
             max_refetch=max_refetch,
-            stack_images=stack_images,
         )
         self.dm_categories: HierarchicalLabelCategories = dm_subset.schema.attributes["label"].categories  # type: ignore[assignment]
         self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)

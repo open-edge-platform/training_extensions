@@ -173,7 +173,7 @@ const test = testBase.extend<Fixtures>({
                         ]);
                     }),
                     http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', ({ response }) => {
-                        return response(200).json({ annotations: [], user_reviewed: false });
+                        return response(200).json({ annotations: [], user_reviewed: false, subset: 'training' });
                     }),
                     http.get('/api/projects/{project_id}/dataset/media', () => {
                         return HttpResponse.json({

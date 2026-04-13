@@ -1,27 +1,18 @@
-# Copyright (C) 2024-2026 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Converter for v1 config."""
 
 from __future__ import annotations
 
-import argparse
-import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
-import yaml
-from jsonargparse import ArgumentParser, Namespace
-
+from loguru import logger
 from otx.backend.native.cli.utils import get_otx_root_path
-from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
-from otx.data.module import OTXDataModule
-from otx.engine import Engine, create_engine
 from otx.tools.auto_configurator import AutoConfigurator
-from otx.types import PathLike
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 
@@ -242,7 +233,7 @@ class TransformsUpdater:
         "gaussian_noise": {
             "class_paths": ["kornia.augmentation.RandomGaussianNoise"],
             "stage": "gpu",
-            # kornia.augmentation.RandomGaussianNoise uses `std`; manifests use `sigma`
+            # kornia.augmentation.RandomGaussianNoise uses ``std``; manifests use ``sigma``
             "param_rename": {"sigma": "std"},
         },
         "color_jitter": {
@@ -250,9 +241,7 @@ class TransformsUpdater:
             "stage": "gpu",
         },
         "iou_random_crop": {
-            "class_paths": [
-                "otx.data.augmentation.transforms.RandomIoUCrop",
-            ],
+            "class_paths": ["otx.data.augmentation.transforms.RandomIoUCrop"],
             "stage": "cpu",
         },
         "random_zoom_out": {
@@ -293,7 +282,7 @@ class TransformsUpdater:
     }
 
     @classmethod
-    def update(cls, augmentation_params: dict, config: dict) -> None:
+    def update(cls, augmentation_params: dict, config: dict) -> None:  # noqa: C901, PLR0912
         """Update augmentations in the config based on Geti model template.
 
         For each augmentation in augmentation_params:
@@ -317,7 +306,7 @@ class TransformsUpdater:
         for aug_name, aug_value in augmentation_params.items():
             if aug_name not in cls.AUGMENTATION_REGISTRY:
                 if tiling:
-                    logging.info("Augmentation '%s' is not applicable in Tiling pipeline", aug_name)
+                    logger.info("Augmentation '%s' is not applicable in Tiling pipeline", aug_name)
                     continue
                 msg = f"Unknown augmentation: '{aug_name}'. Available: {list(cls.AUGMENTATION_REGISTRY.keys())}"
                 raise ValueError(msg)
@@ -428,16 +417,16 @@ class TransformsUpdater:
         """Update tiling parameters in the config.
 
         Args:
-            tiling_dict: Dict with keys: enable, adaptive_tiling, tile_size, tile_overlap.
+            tiling_dict: Dict with keys: enable, enable_adaptive_tiling, tile_size, tile_overlap.
             config: The full OTX config dictionary.
         """
         if tiling_dict is None:
-            logging.info("Tiling parameters are not provided, skipping update.")
+            logger.info("Tiling parameters are not provided, skipping update.")
             return
 
         config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
         if tiling_dict["enable"]:
-            config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
+            config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["enable_adaptive_tiling"]
             config["data"]["tile_config"]["tile_size"] = (
                 tiling_dict["tile_size"],
                 tiling_dict["tile_size"],
@@ -449,7 +438,7 @@ class HyperparametersUpdater:
     """Handles training hyperparameter updates (learning rate, batch size, etc.)."""
 
     @staticmethod
-    def update(hyperparameters: dict, config: dict) -> None:
+    def update(hyperparameters: dict, config: dict) -> None:  # noqa: C901
         """Update hyperparameters in the config.
 
         Supported keys:
@@ -474,12 +463,22 @@ class HyperparametersUpdater:
                 HyperparametersUpdater._update_early_stopping(value, config)
             elif key == "input_size":
                 HyperparametersUpdater._update_input_size(value, config)
+            elif key == "weight_decay":
+                HyperparametersUpdater._update_weight_decay(value, config)
+            elif key == "scheduler":
+                HyperparametersUpdater._update_scheduler(value, config)
+            elif key == "gradient_accumulation":
+                HyperparametersUpdater._update_gradient_accumulation(value, config)
+            elif key == "gradient_clip":
+                HyperparametersUpdater._update_gradient_clip(value, config)
+            else:
+                logger.warning("Unknown hyperparameter '%s' - skipping update", key)
 
     @staticmethod
     def _update_learning_rate(param_value: float | None, config: dict) -> None:
         """Update learning rate in the optimizer config."""
         if param_value is None:
-            logging.info("Learning rate is not provided, skipping update.")
+            logger.info("Learning rate is not provided, skipping update.")
             return
         optimizer = config["model"]["init_args"]["optimizer"]
         if isinstance(optimizer, dict) and "init_args" in optimizer:
@@ -491,7 +490,7 @@ class HyperparametersUpdater:
     def _update_batch_size(param_value: int | None, config: dict) -> None:
         """Update batch size for train and val subsets."""
         if param_value is None:
-            logging.info("Batch size is not provided, skipping update.")
+            logger.info("Batch size is not provided, skipping update.")
             return
         config["data"]["train_subset"]["batch_size"] = param_value
         config["data"]["val_subset"]["batch_size"] = param_value
@@ -500,7 +499,7 @@ class HyperparametersUpdater:
     def _update_max_epochs(param_value: int | None, config: dict) -> None:
         """Update max_epochs in the config."""
         if param_value is None:
-            logging.info("Max epochs is not provided, skipping update.")
+            logger.info("Max epochs is not provided, skipping update.")
             return
         config["max_epochs"] = param_value
 
@@ -508,7 +507,7 @@ class HyperparametersUpdater:
     def _update_early_stopping(early_stopping_cfg: dict | None, config: dict) -> None:
         """Update early stopping parameters in the config."""
         if early_stopping_cfg is None:
-            logging.info("Early stopping parameters are not provided, skipping update.")
+            logger.info("Early stopping parameters are not provided, skipping update.")
             return
 
         enable = early_stopping_cfg["enable"]
@@ -529,7 +528,7 @@ class HyperparametersUpdater:
     def update_tiling(tiling_dict: dict | None, config: dict) -> None:
         """Update tiling parameters in the config."""
         if tiling_dict is None:
-            logging.info("Tiling parameters are not provided, skipping update.")
+            logger.info("Tiling parameters are not provided, skipping update.")
             return
 
         config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
@@ -547,17 +546,104 @@ class HyperparametersUpdater:
             config: The full OTX config dictionary.
         """
         if size_value is None or any(v is None for v in size_value):
-            logging.info("Input size is not provided, skipping update.")
+            logger.info("Input size is not provided, skipping update.")
             return
         config["data"]["input_size"] = size_value
 
+    @staticmethod
+    def _update_weight_decay(param_value: float | None, config: dict) -> None:
+        """Update weight_decay in the optimizer config."""
+        if param_value is None:
+            logger.info("Weight decay is not provided, skipping update.")
+            return
+        optimizer = config["model"]["init_args"]["optimizer"]
+        if isinstance(optimizer, dict) and "init_args" in optimizer:
+            optimizer["init_args"]["weight_decay"] = param_value
+        else:
+            warn("Warning: weight_decay is not updated", stacklevel=1)
 
-def update_augmentations(augmentation_params: dict, config: dict) -> None:
-    """Update augmentations in the config.
+    @staticmethod
+    def _update_scheduler(scheduler_cfg: dict | None, config: dict) -> None:
+        """Update scheduler parameters in the config."""
+        if scheduler_cfg is None:
+            logger.info("Scheduler parameters are not provided, skipping update.")
+            return
 
-    Delegates to TransformsUpdater which handles the new CPU/GPU augmentation pipeline.
-    """
-    TransformsUpdater.update(augmentation_params, config)
+        scheduler = config["model"]["init_args"].get("scheduler")
+        if not isinstance(scheduler, dict) or "init_args" not in scheduler:
+            warn("Warning: scheduler config not found in recipe, skipping update.", stacklevel=1)
+            return
+
+        scheduler_init_args = scheduler["init_args"]
+
+        # Update warmup
+        warmup_cfg = scheduler_cfg.get("warmup")
+        if warmup_cfg is not None:
+            enable_warmup = warmup_cfg.get("enable", False)
+            warmup_epochs = warmup_cfg.get("epochs", 0)
+            if enable_warmup and warmup_epochs > 0:
+                scheduler_init_args["num_warmup_steps"] = warmup_epochs
+                scheduler_init_args["warmup_interval"] = "epoch"
+            else:
+                scheduler_init_args["num_warmup_steps"] = 0
+
+        # Update the main scheduler parameters
+        main_scheduler = scheduler_init_args.get("main_scheduler_callable")
+        if not isinstance(main_scheduler, dict) or "init_args" not in main_scheduler:
+            return
+
+        scheduler_cfg.get("type")
+        main_init_args = main_scheduler["init_args"]
+
+        # Update type-specific params regardless of whether type was changed
+        factor = scheduler_cfg.get("factor")
+        patience = scheduler_cfg.get("patience")
+        scheduler_cfg.get("min_lr")
+
+        if "ReduceLROnPlateau" in main_scheduler.get("class_path", ""):
+            if factor is not None:
+                main_init_args["factor"] = factor
+            if patience is not None:
+                main_init_args["patience"] = patience
+
+    @staticmethod
+    def _update_gradient_clip(gradient_clip_cfg: dict | None, config: dict) -> None:
+        """Update gradient clipping in the config.
+
+        The value is stored at ``config["gradient_clip_val"]`` and passed to ``pl.Trainer``.
+        """
+        if gradient_clip_cfg is None:
+            logger.info("Gradient clip parameters are not provided, skipping update.")
+            return
+
+        enable = gradient_clip_cfg.get("enable", False)
+        if enable:
+            max_grad_norm = gradient_clip_cfg.get("max_grad_norm")
+            if max_grad_norm is not None:
+                config["engine"]["gradient_clip_val"] = max_grad_norm
+        else:
+            # Explicitly disable gradient clipping
+            config["engine"]["gradient_clip_val"] = None
+
+    @staticmethod
+    def _update_gradient_accumulation(gradient_accum_cfg: dict | None, config: dict) -> None:
+        """Update gradient accumulation in the config.
+
+        The value is stored at ``config["engine"]["accumulate_grad_batches"]``.
+        """
+        if gradient_accum_cfg is None:
+            logger.info("Gradient accumulation parameters are not provided, skipping update.")
+            return
+
+        enable = gradient_accum_cfg.get("enable", False)
+        if enable:
+            batches = gradient_accum_cfg.get("batches", 1)
+            if batches > 1:
+                config.setdefault("engine", {})
+                config["engine"]["accumulate_grad_batches"] = batches
+        # Disable accumulation (set to 1 or remove)
+        elif "engine" in config and "accumulate_grad_batches" in config.get("engine", {}):
+            config["engine"]["accumulate_grad_batches"] = 1
 
 
 class GetiConfigConverter:
@@ -591,7 +677,6 @@ class GetiConfigConverter:
 
         Args:
             config (dict): The path to the Geti yaml configuration file.
-            task (OTXTaskType | None): Value to override the task.
 
         Returns:
             dict: The default configuration dictionary.
@@ -657,7 +742,7 @@ class GetiConfigConverter:
                 GetiConfigConverter._disable_deim_framework(config)
 
         # Update training hyperparameters
-        hyperparams = {
+        hyperparams: dict[str, Any] = {
             "learning_rate": training_parameters.get("learning_rate"),
             "batch_size": training_parameters.get("batch_size"),
             "max_epochs": training_parameters.get("max_epochs"),
@@ -666,6 +751,10 @@ class GetiConfigConverter:
                 training_parameters.get("input_size_height"),
                 training_parameters.get("input_size_width"),
             ),
+            "weight_decay": training_parameters.get("weight_decay"),
+            "scheduler": training_parameters.get("scheduler"),
+            "gradient_clip": training_parameters.get("gradient_clip"),
+            "gradient_accumulation": training_parameters.get("gradient_accumulation"),
         }
         HyperparametersUpdater.update(hyperparams, config)
 
@@ -692,7 +781,7 @@ class GetiConfigConverter:
         )
         if idx > -1:
             callbacks.pop(idx)
-            logging.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
+            logger.info("DEIM framework disabled: removed AugmentationSchedulerCallback")
 
     @staticmethod
     def _remove_unused_key(config: dict) -> None:
@@ -703,114 +792,3 @@ class GetiConfigConverter:
         """
         config.pop("config")  # Remove config key that for CLI
         config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
-
-    @staticmethod
-    def instantiate_datamodule(config: dict, data_root: PathLike | None = None, **kwargs) -> OTXDataModule:
-        """Instantiate an OTXDataModule with arrow data format."""
-        config.update(kwargs)
-
-        # Instantiate datamodule
-        data_config = config.pop("data")
-        if data_root is not None:
-            data_config["data_root"] = data_root
-
-        train_config = data_config.pop("train_subset")
-        val_config = data_config.pop("val_subset")
-        test_config = data_config.pop("test_subset")
-        return OTXDataModule(
-            train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
-            val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
-            test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
-            tile_config=TileConfig(**data_config.pop("tile_config", {})),
-            **data_config,
-        )
-
-    @staticmethod
-    def instantiate(
-        config: dict,
-        work_dir: PathLike | None = None,
-        data_root: PathLike | None = None,
-        **kwargs,
-    ) -> tuple[Engine, dict[str, Any]]:
-        """Instantiate an object from the configuration dictionary.
-
-        Args:
-            config (dict): The configuration dictionary.
-            work_dir (PathLike): Path to the working directory.
-            data_root (PathLike): The root directory for data.
-
-        Returns:
-            tuple: A tuple containing the engine and the train kwargs dictionary.
-        """
-        datamodule = GetiConfigConverter.instantiate_datamodule(
-            config=config,
-            data_root=data_root,
-            **kwargs,
-        )
-
-        # Update num_classes & Instantiate Model
-        model_config = config.pop("model")
-        model_config["init_args"]["label_info"] = datamodule.label_info
-        if datamodule.input_size is None:
-            msg = "Input size is not defined in the datamodule."
-            raise ValueError(msg)
-        model_config["init_args"]["data_input_params"] = DataInputParams(
-            input_size=datamodule.input_size,
-            mean=datamodule.input_mean if datamodule.input_mean is not None else (0.0, 0.0, 0.0),
-            std=datamodule.input_std if datamodule.input_std is not None else (1.0, 1.0, 1.0),
-        ).as_dict()
-        model_parser = ArgumentParser()
-        model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False, skip={"label_info"})
-        model = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
-
-        if hasattr(model, "tile_config"):
-            model.tile_config = datamodule.tile_config
-
-        # Instantiate Engine
-        config_work_dir = config.pop("work_dir", config["engine"].pop("work_dir", None))
-        config["engine"]["work_dir"] = work_dir if work_dir is not None else config_work_dir
-        engine = create_engine(model=model, data=datamodule, **config["engine"])
-
-        # Instantiate Engine.train Arguments
-        engine_parser = ArgumentParser()
-        train_arguments = engine_parser.add_method_arguments(
-            engine.__class__,
-            "train",
-            skip={"accelerator", "devices"},
-            fail_untyped=False,
-        )
-        # Update callbacks & logger dir as engine.work_dir
-        if "callbacks" in config and config["callbacks"] is not None:
-            for callback in config["callbacks"]:
-                if "init_args" in callback and "dirpath" in callback["init_args"]:
-                    callback["init_args"]["dirpath"] = engine.work_dir
-        if "logger" in config and config["logger"] is not None:
-            for logger in config["logger"]:
-                if "save_dir" in logger["init_args"]:
-                    logger["init_args"]["save_dir"] = engine.work_dir
-                if "log_dir" in logger["init_args"]:
-                    logger["init_args"]["log_dir"] = engine.work_dir
-        instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
-
-        train_kwargs = {k: v for k, v in instantiated_kwargs.items() if k in train_arguments}
-        # enable auto batch size for training
-        train_kwargs["adaptive_bs"] = "Safe"
-
-        return engine, train_kwargs
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", help="Input ModelTemplate config")
-    parser.add_argument("-i", "--data_root", help="Input dataset root path")
-    parser.add_argument("-o", "--work_dir", help="Input work directory path")
-    args = parser.parse_args()
-    with Path(args.config).open() as f:
-        config = yaml.safe_load(f)
-    otx_config = GetiConfigConverter.convert(config=config)
-    engine, train_kwargs = GetiConfigConverter.instantiate(
-        config=otx_config,
-        data_root=args.data_root,
-        work_dir=args.work_dir,
-    )
-    engine.train(**train_kwargs)
