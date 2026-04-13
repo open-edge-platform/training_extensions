@@ -1,9 +1,24 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, toast } from '@geti/ui';
+import {
+    ActionButton,
+    Cell,
+    Column,
+    Content,
+    ContextualHelp,
+    Flex,
+    Heading,
+    Row,
+    TableBody,
+    TableHeader,
+    TableView,
+    Text,
+    toast,
+} from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useNumberFormatter } from 'react-aria';
 
 import { API_BASE_URL } from '../../../../api/client';
 import type { Model, ModelFormat } from '../../../../constants/shared-types';
@@ -22,8 +37,56 @@ type ModelVariantTableProps = {
     format: ModelFormat;
 };
 
+type ModelVariant = Model['variants'][number];
+
+const getQuantizationParameter = (
+    parameter: 'max_drop' | 'max_calibration_subset_size',
+    quantizationParameters: ModelVariant['quantization_info']
+) => {
+    if (quantizationParameters == null) {
+        return null;
+    }
+
+    const quantizedParameter = quantizationParameters[parameter];
+
+    return quantizedParameter == null ? null : Number(quantizedParameter);
+};
+
+const ModelVariantPrecisionRenderer = ({ variant }: { variant: ModelVariant }) => {
+    const numberFormatter = useNumberFormatter({
+        style: 'percent',
+    });
+
+    if (variant.quantization_info == null) {
+        return <Text>{variant.precision.toUpperCase()}</Text>;
+    }
+
+    const maxAccuracyDrop = getQuantizationParameter('max_drop', variant.quantization_info);
+    const calibrationDatasetSize = getQuantizationParameter('max_calibration_subset_size', variant.quantization_info);
+
+    return (
+        <Flex direction={'row'} gap={'size-100'}>
+            <Text>{variant.precision.toUpperCase()}</Text>
+            <Text>
+                <ContextualHelp variant={'info'} placement={'top'}>
+                    <Heading>Quantized with NNCF PQT</Heading>
+                    <Content>
+                        <Flex direction={'column'}>
+                            {maxAccuracyDrop && (
+                                <Text>Max accuracy drop: {numberFormatter.format(maxAccuracyDrop)}</Text>
+                            )}
+                            <Text>Calibration dataset size: {calibrationDatasetSize}</Text>
+                        </Flex>
+                    </Content>
+                </ContextualHelp>
+            </Text>
+        </Flex>
+    );
+};
+
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
     const projectId = useProjectIdentifier();
+
     const allVariants = model.variants ?? [];
     const variants = allVariants.filter((variant) => variant.format === format);
     const baselineVariant = getBaselineVariant(variants);
@@ -59,7 +122,9 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
 
                     return (
                         <Row key={variant.id}>
-                            <Cell>{variant.precision.toUpperCase()}</Cell>
+                            <Cell>
+                                <ModelVariantPrecisionRenderer variant={variant} />
+                            </Cell>
                             <Cell>
                                 <ValueWithDelta
                                     value={variant.weights_size}
