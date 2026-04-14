@@ -28,13 +28,13 @@ class TestSystemInfoEndpoint:
     ) -> None:
         """GET /api/system/info returns license_accepted and the current platform."""
         fxt_license_service.is_accepted.return_value = False
-        monkeypatch.setattr(system_router, "_get_platform", lambda: "test_platform")
+        monkeypatch.setattr(system_router, "_get_platform", lambda: "linux")
 
         response = fxt_client.get("/api/system/info")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data == {"license_accepted": False, "platform": "test_platform"}
+        assert data == {"license_accepted": False, "platform": "linux"}
 
         fxt_license_service.is_accepted.return_value = True
         response = fxt_client.get("/api/system/info")
