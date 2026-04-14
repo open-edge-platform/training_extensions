@@ -22,11 +22,11 @@ def fxt_license_service() -> Generator[Mock, None, None]:
     app.dependency_overrides.pop(get_license_service, None)
 
 
-@pytest.mark.parametrize(
-    ("is_accepted", "expected_license_accepted"),
-    [(False, False), (True, True)],
-)
 class TestSystemInfoEndpoint:
+    @pytest.mark.parametrize(
+        ("is_accepted", "expected_license_accepted"),
+        [(False, False), (True, True)],
+    )
     def test_returns_license_status_and_platform(
         self,
         fxt_license_service: Mock,
