@@ -15,7 +15,7 @@ from app.services.license_service import LicenseService
 
 
 @pytest.fixture
-def fxt_license_service() -> Generator[Mock, None, None]:
+def fxt_license_service() -> Generator[Mock]:
     license_service = Mock(spec=LicenseService)
     app.dependency_overrides[get_license_service] = lambda: license_service
     yield license_service
