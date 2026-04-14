@@ -193,66 +193,51 @@ can run the benchmark runner locally with `python -m otx.benchmark run ...`).
 
 ### 5.2 Schema
 
+Datasets are declared as a **flat list** — each dataset is listed once and
+referenced by name from the benchmark manifest. Since the same dataset can be
+used by multiple tasks (e.g. a multi-annotation dataset used for detection,
+segmentation, and classification), the catalog is **task-independent**. The
+manifest (§6) declares which datasets each task uses.
+
 ```yaml
 # benchmark_catalog.yaml
 version: 1
 
 datasets:
-  detection:
-    - name: pothole_tiny
-      url: "https://storage.geti.intel.com/test-data/detection/pothole_tiny.tar.gz"
-      sha256: "abc123..."
-      format: coco
-      size_tier: tiny
-      num_classes: 1
+  - name: pothole_tiny
+    url: "https://storage.geti.intel.com/test-data/pothole_tiny.tar.gz"
+    sha256: "abc123..."
+    size_tier: tiny
 
-    - name: wgisd_small
-      url: "https://storage.geti.intel.com/test-data/detection/wgisd_small.tar.gz"
-      sha256: "def456..."
-      format: coco
-      size_tier: small
-      num_classes: 5
+  - name: wgisd_small
+    url: "https://storage.geti.intel.com/test-data/wgisd_small.tar.gz"
+    sha256: "def456..."
+    size_tier: small
 
-    - name: diopsis_medium
-      url: "..."
-      sha256: "..."
-      format: coco
-      size_tier: medium
+  - name: diopsis_medium
+    url: "..."
+    sha256: "..."
+    size_tier: medium
 
-    - name: visdrone_large
-      url: "..."
-      sha256: "..."
-      format: coco
-      size_tier: large
+  - name: visdrone_large
+    url: "..."
+    sha256: "..."
+    size_tier: large
 
-  classification/multi_class_cls:
-    - name: pneumonia_tiny
-      url: "..."
-      sha256: "..."
-      format: imagenet
-      size_tier: tiny
-    # ...
-
-  semantic_segmentation:
-    # ...
-
-  instance_segmentation:
-    # ...
-
-  keypoint_detection:
-    # ...
-
-  rotated_detection:
-    # ...
+  - name: pneumonia_tiny
+    url: "..."
+    sha256: "..."
+    size_tier: tiny
+  # ...
 ```
 
 ### 5.3 Download & Cache
 
-A utility (`otx.benchmark.data`) will:
+A utility (`otx.benchmark.catalog`) will:
 
 1. Read the catalog.
 2. For each required dataset, check if it already exists in
-   `<data_root>/<task>/<name>` by looking for a `.sha256` sentinel file that
+   `<data_root>/<name>` by looking for a `.sha256` sentinel file that
    was written after the last successful extraction. The sentinel contains the
    SHA-256 of the **downloaded archive**.
 3. If the sentinel is missing, has a mismatched checksum, or the extracted
@@ -262,15 +247,22 @@ A utility (`otx.benchmark.data`) will:
 4. On CI runners, use the GitHub Actions cache (`actions/cache`) keyed on the
    catalog checksum to avoid re-downloading on every run.
 
+Because datasets are stored in a flat `<data_root>/<name>/` layout (no task
+prefix), datasets shared across multiple tasks are only downloaded and stored
+once.
+
 ```python
-# otx/benchmark/data.py  (simplified)
+# otx/benchmark/catalog.py  (simplified)
 def provision_datasets(
-    catalog_path: Path,
+    catalog: DatasetCatalog,
     data_root: Path,
-    tasks: list[str] | None = None,
-    size_tiers: list[str] | None = None,
-) -> dict[str, list[DatasetEntry]]:
-    """Download and verify all datasets matching the given filters."""
+    *,
+    entries: list[DatasetEntry] | None = None,
+) -> dict[str, Path]:
+    """Download and verify all datasets (or a filtered subset).
+
+    Returns a mapping {dataset_name: extracted_path}.
+    """
     ...
 ```
 
@@ -302,27 +294,21 @@ experiments:
   detection:
     models:
       - name: atss_mobilenetv2
-        category: default
         priority: core
         recipe: detection/atss_mobilenetv2.yaml
       - name: yolox_s
-        category: speed
         priority: core
         recipe: detection/yolox_s.yaml
       - name: dfine_x
-        category: accuracy
         priority: core
         recipe: detection/dfine_x.yaml
       - name: yolox_tiny
-        category: speed
         priority: extended
         recipe: detection/yolox_tiny.yaml
       - name: ssd_mobilenetv2
-        category: default
         priority: extended
         recipe: detection/ssd_mobilenetv2.yaml
       - name: deformable_detr
-        category: accuracy
         priority: exploratory
         recipe: detection/deformable_detr.yaml
       # ...full list auto-discoverable from recipe directory
@@ -397,11 +383,11 @@ experiments:
     criteria:
       # The primary accuracy metric for this task. The `{metric}` placeholder
       # in threshold keys below is replaced with this value at manifest load
-      # time. For detection this produces "training:val/f1-score", etc.
+      # time. For detection this produces "training:val/mAP", etc.
       # Each task section declares its own accuracy_metric (e.g. "accuracy"
       # for classification, "Dice" for segmentation, "PCK" for keypoints).
       # This mirrors the existing TASK_METRIC_MAP in tests/perf_v2/summary.py.
-      accuracy_metric: f1-score
+      accuracy_metric: mAP
       thresholds:
         "training:val/{metric}": { compare: ">=", margin: 0.10 }
         "torch:test/{metric}": { compare: ">=", margin: 0.10 }
@@ -666,11 +652,11 @@ budgets remain bounded while still guaranteeing coverage over time.
 
 Every model in the manifest declares a `priority` field:
 
-| Priority          | Description                                                                                                                      | Expected Count                | Benchmark Cadence                    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------ |
-| **`core`**        | Flagship models, the most-used or strategically important model per task/category. These are the models that _must not_ regress. | ~1–3 per task (~15–25 total)  | Every nightly + Weekly               |
-| **`extended`**    | Fully supported models that are not flagged as core. Important to validate but can tolerate slightly less frequent testing.      | ~3–10 per task (~30–80 total) | Weekly (rotated — see §6.4.2)        |
-| **`exploratory`** | Experimental, deprecated, or niche models. Included in the manifest for completeness but never benchmarked automatically.        | Unbounded                     | On-demand only (`workflow_dispatch`) |
+| Priority          | Description                                                                                                                 | Expected Count                | Benchmark Cadence                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------ |
+| **`core`**        | Flagship models, the most-used or strategically important models per task. These are the models that _must not_ regress.    | ~1–3 per task (~15–25 total)  | Every nightly + Weekly               |
+| **`extended`**    | Fully supported models that are not flagged as core. Important to validate but can tolerate slightly less frequent testing. | ~3–10 per task (~30–80 total) | Weekly (rotated — see §6.4.2)        |
+| **`exploratory`** | Experimental, deprecated, or niche models. Included in the manifest for completeness but never benchmarked automatically.   | Unbounded                     | On-demand only (`workflow_dispatch`) |
 
 Assigning priorities is a **human decision** made when adding a model to the
 manifest. The guideline is:
@@ -823,8 +809,11 @@ class BenchmarkRunner:
 
     def run(self) -> BenchmarkReport:
         manifest = load_manifest(self.config.manifest_path, filters=self.config.filters)
-        provision_datasets(self.config.catalog_path, self.config.data_root,
-                           datasets=manifest.required_datasets)
+        catalog = load_catalog(self.config.catalog_path)
+        required_names = {exp.dataset_name for exp in manifest.iter_experiments()}
+        required_entries = catalog.filter(names=required_names)
+        dataset_paths = provision_datasets(catalog, self.config.data_root,
+                                           entries=required_entries)
 
         for experiment in manifest.iter_experiments():
             # experiment = (task, model, dataset, scenario, seed)
@@ -921,7 +910,7 @@ class ExperimentExecutor:
         # 2. Build engine with resolved overrides applied on top of recipe
         engine = OTXEngine.from_config(
             config_path=self.experiment.recipe_path,
-            data_root=self.config.data_root / self.experiment.dataset.path,
+            data_root=self.data_path,
             work_dir=self.work_dir / "train",
             device=self.config.accelerator,
             **recipe_overrides,        # <-- scenario parameter overrides
@@ -987,24 +976,24 @@ add more runs to the same experiment, which is the intended MLflow workflow.
 
 Each `(model, dataset, scenario, seed)` run maps to one **MLflow Run**, with:
 
-| Field                | MLflow Concept                 | Example                 |
-| -------------------- | ------------------------------ | ----------------------- |
-| Task                 | Tag `task`                     | `DETECTION`             |
-| Model                | Tag `model`                    | `yolox_s`               |
-| Dataset              | Tag `dataset`                  | `pothole_tiny_1`        |
-| Scenario             | Tag `scenario`                 | `default`               |
-| Seed                 | Tag `seed`                     | `0`                     |
-| Size tier            | Tag `size_tier`                | `tiny`                  |
-| OTX version          | Tag `otx_version`              | `2.5.0`                 |
-| Git ref              | Tag `git_sha`                  | `a1b2c3d`               |
-| Branch               | Tag `branch`                   | `develop`               |
-| Accelerator          | Tag `accelerator`              | `NVIDIA A100`           |
-| Val accuracy         | Metric `training:val/f1-score` | `0.87`                  |
-| Train wall time      | Metric `training:e2e_time`     | `342.5`                 |
-| Peak GPU memory (MB) | Metric `training:gpu_mem`      | `4821`                  |
-| Export latency       | Metric `export:test/latency`   | `0.012`                 |
-| Recipe YAML          | Artifact                       | `atss_mobilenetv2.yaml` |
-| Raw metrics CSV      | Artifact                       | `metrics.csv`           |
+| Field                | MLflow Concept               | Example                 |
+| -------------------- | ---------------------------- | ----------------------- |
+| Task                 | Tag `task`                   | `DETECTION`             |
+| Model                | Tag `model`                  | `yolox_s`               |
+| Dataset              | Tag `dataset`                | `pothole_tiny_1`        |
+| Scenario             | Tag `scenario`               | `default`               |
+| Seed                 | Tag `seed`                   | `0`                     |
+| Size tier            | Tag `size_tier`              | `tiny`                  |
+| OTX version          | Tag `otx_version`            | `2.5.0`                 |
+| Git ref              | Tag `git_sha`                | `a1b2c3d`               |
+| Branch               | Tag `branch`                 | `develop`               |
+| Accelerator          | Tag `accelerator`            | `NVIDIA A100`           |
+| Val accuracy         | Metric `training:val/mAP`    | `0.87`                  |
+| Train wall time      | Metric `training:e2e_time`   | `342.5`                 |
+| Peak GPU memory (MB) | Metric `training:gpu_mem`    | `4821`                  |
+| Export latency       | Metric `export:test/latency` | `0.012`                 |
+| Recipe YAML          | Artifact                     | `atss_mobilenetv2.yaml` |
+| Raw metrics CSV      | Artifact                     | `metrics.csv`           |
 
 ### 8.3 Deployment Options
 
@@ -1156,10 +1145,10 @@ Example summary (Markdown):
 
 ### Detection
 
-| Model            | Dataset        | Val F1 ↑     | Test F1 ↑ | Export F1 ↑ | Train Time ↓ | GPU Mem ↓ | Test Latency ↓ | Status                     |
-| ---------------- | -------------- | ------------ | --------- | ----------- | ------------ | --------- | -------------- | -------------------------- |
-| yolox_s          | pothole_tiny   | 0.87 (±0.01) | 0.85      | 0.84        | 5m 12s       | 4.8 GB    | 12ms           | ✅                         |
-| atss_mobilenetv2 | diopsis_medium | 0.72 (±0.02) | 0.70      | 0.68        | 12m 05s      | 3.2 GB    | 8ms            | ⚠️ val F1 -13% vs baseline |
+| Model            | Dataset        | Val mAP ↑    | Test mAP ↑ | Export mAP ↑ | Train Time ↓ | GPU Mem ↓ | Test Latency ↓ | Status                      |
+| ---------------- | -------------- | ------------ | ---------- | ------------ | ------------ | --------- | -------------- | --------------------------- |
+| yolox_s          | pothole_tiny   | 0.87 (±0.01) | 0.85       | 0.84         | 5m 12s       | 4.8 GB    | 12ms           | ✅                          |
+| atss_mobilenetv2 | diopsis_medium | 0.72 (±0.02) | 0.70       | 0.68         | 12m 05s      | 3.2 GB    | 8ms            | ⚠️ val mAP -13% vs baseline |
 
 ### Failures (1)
 

@@ -1,0 +1,23 @@
+# OTX Benchmark Dataset Catalog
+#
+# Each entry declares a dataset used for benchmarking.  The runner will
+# download, verify, and extract archives automatically.
+#
+# Datasets are shared across tasks — each dataset is declared once and
+# referenced by name from the benchmark manifest.
+#
+# All datasets are stored in the experimental Datumaro format.
+#
+# Fields:
+#   name        – unique identifier (referenced from benchmark_manifest.yaml)
+#   url         – download URL on Intel Geti storage (tar.gz or zip)
+#   sha256      – SHA-256 of the archive file
+#   size_tier   – tiny | small | medium | large
+
+version: 1
+
+datasets:
+  - name: allround
+    url: "https://storage.geti.intel.com/test-data/integration-iai/datasets/allround.zip"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    size_tier: small
