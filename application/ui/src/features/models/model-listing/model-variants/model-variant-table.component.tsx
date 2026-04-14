@@ -18,10 +18,11 @@ import {
 } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { pick } from 'lodash-es';
 import { useNumberFormatter } from 'react-aria';
 
 import { API_BASE_URL } from '../../../../api/client';
-import type { Model, ModelFormat } from '../../../../constants/shared-types';
+import type { Model, ModelFormat, ModelVariant } from '../../../../constants/shared-types';
 import { downloadFile, formatBytes } from '../../../../shared/util';
 import {
     getBaselineVariant,
@@ -32,27 +33,18 @@ import {
 } from '../utils/variant-metrics';
 import { ValueWithDelta } from './model-variant-delta.component';
 
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 type ModelVariantTableProps = {
     model: Model;
     format: ModelFormat;
 };
 
-type ModelVariant = Model['variants'][number];
-
-const getQuantizationParameter = (
-    parameter: 'max_drop' | 'max_calibration_subset_size',
-    quantizationParameters: ModelVariant['quantization_info']
-) => {
-    if (quantizationParameters == null) {
-        return null;
-    }
-
-    const quantizedParameter = quantizationParameters[parameter];
-
-    return quantizedParameter == null ? null : Number(quantizedParameter);
+type ModelVariantPrecisionRendererProps = {
+    variant: ModelVariant;
 };
 
-const ModelVariantPrecisionRenderer = ({ variant }: { variant: ModelVariant }) => {
+const ModelVariantPrecisionRenderer = ({ variant }: ModelVariantPrecisionRendererProps) => {
     const numberFormatter = useNumberFormatter({
         style: 'percent',
         maximumFractionDigits: 1,
@@ -62,8 +54,13 @@ const ModelVariantPrecisionRenderer = ({ variant }: { variant: ModelVariant }) =
         return <Text>{variant.precision.toUpperCase()}</Text>;
     }
 
-    const maxAccuracyDrop = getQuantizationParameter('max_drop', variant.quantization_info);
-    const calibrationDatasetSize = getQuantizationParameter('max_calibration_subset_size', variant.quantization_info);
+    const { max_calibration_subset_size, max_drop } = pick(variant.quantization_info, [
+        'max_drop',
+        'max_calibration_subset_size',
+    ]);
+
+    const maxAccuracyDrop = max_drop == null ? null : Number(max_drop);
+    const calibrationDatasetSize = max_calibration_subset_size == null ? null : Number(max_calibration_subset_size);
 
     return (
         <Flex direction={'row'} gap={'size-100'}>
