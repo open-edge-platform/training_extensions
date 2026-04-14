@@ -15,7 +15,7 @@ from app.services.license_service import LicenseService
 
 
 @pytest.fixture
-def fxt_license_service() -> Generator[Mock]:
+def fxt_license_service() -> Generator[Mock, None, None]:
     license_service = Mock(spec=LicenseService)
     app.dependency_overrides[get_license_service] = lambda: license_service
     yield license_service
@@ -39,15 +39,6 @@ class TestSystemInfoEndpoint:
         fxt_license_service.is_accepted.return_value = True
         response = fxt_client.get("/api/system/info")
         assert response.json()["license_accepted"] is True
-
-    def test_returns_false_on_os_error(self, fxt_license_service: Mock, fxt_client: TestClient) -> None:
-        """GET /api/system/info should return license_accepted=False when the consent file is unreadable."""
-        fxt_license_service.is_accepted.side_effect = OSError("Permission denied")
-
-        response = fxt_client.get("/api/system/info")
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["license_accepted"] is False
 
 
 @pytest.mark.parametrize(

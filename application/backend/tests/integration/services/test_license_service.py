@@ -40,12 +40,12 @@ class TestLicenseService:
         old_service = LicenseService(data_dir=tmp_path, app_version="0.9.0")
         old_service.accept()
 
-        new_service = LicenseService(data_dir=tmp_path, app_version="1.0.0")
+        new_service = LicenseService(data_dir=tmp_path, app_version=APP_VERSION)
         assert not new_service.is_accepted()
 
         new_service.accept()
         consent_file = tmp_path / LicenseService.CONSENT_FILENAME
-        assert consent_file.read_text() == "1.0.0"
+        assert consent_file.read_text() == APP_VERSION
         assert new_service.is_accepted()
 
     def test_empty_marker_file_is_not_accepted(self, tmp_path: Path) -> None:

@@ -23,9 +23,17 @@ class LicenseService:
 
     def is_accepted(self) -> bool:
         """Check whether the license has been accepted for the current app version."""
-        if not self._consent_file.exists():
+        try:
+            if not self._consent_file.exists():
+                return False
+            accepted_version = self._consent_file.read_text().strip()
+        except OSError as exc:
+            logger.warning(
+                "Failed to read license consent file {}: {}",
+                self._consent_file,
+                exc,
+            )
             return False
-        accepted_version = self._consent_file.read_text().strip()
         return accepted_version == self._app_version
 
     def accept(self) -> None:

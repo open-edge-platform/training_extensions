@@ -7,7 +7,6 @@ import sys
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from loguru import logger
 
 from app.api.dependencies import get_license_service, get_system_service
 from app.api.schemas.system import CameraInfoView, DeviceInfoView, PlatformType, SystemInfoView
@@ -23,7 +22,9 @@ def _get_platform() -> PlatformType:
         return "windows"
     if sys.platform == "darwin":
         return "macos"
-    return "linux"
+    if sys.platform.startswith("linux"):
+        return "linux"
+    raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
 
 @router.get("/info")
@@ -31,13 +32,7 @@ async def get_system_info(
     license_service: Annotated[LicenseService, Depends(get_license_service)],
 ) -> SystemInfoView:
     """Returns system information including license status and platform."""
-    try:
-        license_accepted = license_service.is_accepted()
-    except OSError:
-        logger.warning("License acceptance check failed", exc_info=True)
-        license_accepted = False
-
-    return SystemInfoView(license_accepted=license_accepted, platform=_get_platform())
+    return SystemInfoView(license_accepted=license_service.is_accepted(), platform=_get_platform())
 
 
 @router.get("/devices/inference")
