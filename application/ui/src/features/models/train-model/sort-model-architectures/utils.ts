@@ -20,7 +20,7 @@ type SortingHandler = (
     modelArchitectures: ModelArchitectureWithPerformanceCategory[]
 ) => ModelArchitectureWithPerformanceCategory[];
 
-const getAccuracyMetricBasedOnTask = ({
+export const getAccuracyMetricBasedOnTask = ({
     stats: { benchmark_metrics: benchmarkMetrics },
 }: ModelArchitectureWithPerformanceCategory) => {
     return benchmarkMetrics.imagenet_top1_accuracy ?? benchmarkMetrics.coco_map_50_95 ?? benchmarkMetrics.coco_map_50;

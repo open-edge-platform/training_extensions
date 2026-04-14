@@ -7,12 +7,13 @@ import { Badge, Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } f
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
+import { getAccuracyMetric } from '../utils';
 
-import styles from './model-architecture-card.module.scss';
+import classes from './model-architecture-card.module.scss';
 
 const ActiveModelArchitecture = () => {
     return (
-        <Badge variant={'info'} UNSAFE_className={styles.activeModelArchitecture}>
+        <Badge variant={'info'} UNSAFE_className={classes.activeModelArchitecture}>
             Active model
         </Badge>
     );
@@ -22,7 +23,7 @@ const ModelArchitectureDescription = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <ContextualHelp variant='info' UNSAFE_className={clsx({ [styles.description]: isSelected })}>
+        <ContextualHelp variant='info' UNSAFE_className={clsx({ [classes.description]: isSelected })}>
             <Heading>{modelArchitecture.name}</Heading>
             <Content>
                 <Text>{modelArchitecture.description}</Text>
@@ -36,12 +37,19 @@ const ModelArchitectureDivider = () => {
 };
 
 const ModelArchitectureParameters = () => {
-    const { modelArchitecture } = useModelArchitecture();
+    const { modelArchitecture, showBenchmarkStats } = useModelArchitecture();
+    const accuracyMetric = showBenchmarkStats ? getAccuracyMetric(modelArchitecture) : undefined;
 
     return (
-        <ul className={styles.modelArchitectureParameters}>
+        <ul className={classes.modelArchitectureParameters}>
             <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
             <li>License: Apache 2.0</li>
+            {showBenchmarkStats && <li>Gigaflops: {modelArchitecture.stats.gigaflops}</li>}
+            {accuracyMetric !== undefined && (
+                <li>
+                    {accuracyMetric.label}: {accuracyMetric.value}%
+                </li>
+            )}
         </ul>
     );
 };
@@ -55,8 +63,8 @@ const ModelArchitectureName = () => {
                 flex={1}
                 minWidth={0}
                 value={modelArchitecture.id}
-                UNSAFE_className={clsx(styles.modelArchitectureName, {
-                    [styles.modelArchitectureNameSelected]: isSelected,
+                UNSAFE_className={clsx(classes.modelArchitectureName, {
+                    [classes.modelArchitectureNameSelected]: isSelected,
                 })}
             >
                 {modelArchitecture.name}
@@ -69,6 +77,7 @@ const ModelArchitectureName = () => {
 type ModelArchitectureContextProps = {
     isSelected: boolean;
     modelArchitecture: ModelArchitectureType;
+    showBenchmarkStats: boolean;
 };
 
 const ModelArchitectureContext = createContext<ModelArchitectureContextProps | null>(null);
@@ -88,6 +97,7 @@ type ModelArchitectureProps = {
     children: ReactNode;
     onSelect: () => void;
     modelArchitecture: ModelArchitectureType;
+    showBenchmarkStats?: boolean;
 };
 
 export const ModelArchitectureCard = ({
@@ -95,12 +105,13 @@ export const ModelArchitectureCard = ({
     children,
     onSelect,
     modelArchitecture,
+    showBenchmarkStats = false,
 }: ModelArchitectureProps) => {
     return (
-        <ModelArchitectureContext value={{ isSelected, modelArchitecture }}>
+        <ModelArchitectureContext value={{ isSelected, modelArchitecture, showBenchmarkStats }}>
             <div
-                className={clsx(styles.modelArchitectureContainer, {
-                    [styles.modelArchitectureSelected]: isSelected,
+                className={clsx(classes.modelArchitectureContainer, {
+                    [classes.modelArchitectureSelected]: isSelected,
                 })}
                 onClick={onSelect}
             >

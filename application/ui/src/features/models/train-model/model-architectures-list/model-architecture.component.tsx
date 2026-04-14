@@ -12,6 +12,7 @@ type ModelArchitectureProps = {
     modelArchitecture: ModelArchitectureWithPerformanceCategory;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
+    showBenchmarkStats?: boolean;
 };
 
 export const ModelArchitecture = ({
@@ -19,6 +20,7 @@ export const ModelArchitecture = ({
     modelArchitecture,
     selectedModelArchitectureId,
     onSelectedModelArchitectureIdChange,
+    showBenchmarkStats = false,
 }: ModelArchitectureProps) => {
     const isSelected = modelArchitecture.id === selectedModelArchitectureId;
     const isActive = activeModelArchitectureId === modelArchitecture.id;
@@ -28,6 +30,7 @@ export const ModelArchitecture = ({
             modelArchitecture={modelArchitecture}
             isSelected={isSelected}
             onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
+            showBenchmarkStats={showBenchmarkStats}
         >
             <ModelArchitectureCard.Name />
             <ModelArchitectureCard.Parameters />
@@ -39,7 +42,7 @@ export const ModelArchitecture = ({
                             <ModelArchitectureCard.Active />
                         </View>
                     )}
-                    {modelArchitecture.performanceCategory !== undefined && (
+                    {!showBenchmarkStats && modelArchitecture.performanceCategory !== undefined && (
                         <PerformanceCategoryBadge
                             performanceCategory={modelArchitecture.performanceCategory}
                             color={'var(--spectrum-global-color-gray-100)'}

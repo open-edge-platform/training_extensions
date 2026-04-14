@@ -2,6 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
+import { getAccuracyMetricBasedOnTask } from '../sort-model-architectures/utils';
+
+export type AccuracyMetric = { label: string; value: number };
+
+export const getAccuracyMetric = (
+    modelArchitecture: ModelArchitectureWithPerformanceCategory
+): AccuracyMetric | undefined => {
+    const value = getAccuracyMetricBasedOnTask(modelArchitecture);
+
+    if (value === null || value === undefined) {
+        return undefined;
+    }
+
+    const label = modelArchitecture.task === 'classification' ? 'Top-1 Acc' : 'mAP';
+
+    return { label, value };
+};
 
 const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPerformanceCategory[]) => {
     const recommended = modelArchitectures.filter(

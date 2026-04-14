@@ -42,6 +42,7 @@ export const AllModelArchitectures = ({
                         modelArchitecture={modelArchitecture}
                         selectedModelArchitectureId={selectedModelArchitectureId}
                         onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                        showBenchmarkStats
                     />
                 ))}
             </ModelArchitecturesListLayout>
