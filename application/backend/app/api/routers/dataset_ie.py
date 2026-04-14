@@ -30,7 +30,7 @@ async def upload_archive(
     try:
         if not file.filename or not file.filename.endswith(".zip"):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Only zip files are allowed.",
             )
         staged_dataset = await staged_datasets_service.upload(
@@ -105,7 +105,7 @@ def download_archive(
 
     if not staged_dataset.compressed:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Staged dataset is not in zip format ready for download.",
         )
 
