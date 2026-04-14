@@ -15,19 +15,18 @@ install-uv:
     #!/usr/bin/env bash
     set -euo pipefail
     REPO_ROOT=$(git rev-parse --show-toplevel)
-    UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed 's/.*= "[~=<>]*\(.*\)"/\1/')
+    # Extract the version from required-version, stripping any PEP 440 specifier prefix and CR/LF
+    UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed -E 's/.*=\s*"[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/' | tr -d '\r')
+    if [ -z "$UV_VERSION" ]; then
+        echo "Error: could not parse uv version from pyproject.toml" >&2
+        exit 1
+    fi
     if command -v uv > /dev/null; then
-        INSTALLED_VERSION=$(uv --version | awk '{print $2}')
-        REQ_MAJOR=$(echo "$UV_VERSION" | cut -d. -f1)
-        REQ_MINOR=$(echo "$UV_VERSION" | cut -d. -f2)
-        REQ_PATCH=$(echo "$UV_VERSION" | cut -d. -f3)
-        INST_MAJOR=$(echo "$INSTALLED_VERSION" | cut -d. -f1)
-        INST_MINOR=$(echo "$INSTALLED_VERSION" | cut -d. -f2)
-        INST_PATCH=$(echo "$INSTALLED_VERSION" | cut -d. -f3)
-        if [[ "$INST_MAJOR" == "$REQ_MAJOR" && "$INST_MINOR" == "$REQ_MINOR" && "$INST_PATCH" -ge "$REQ_PATCH" ]]; then
+        INSTALLED_VERSION=$(uv --version | awk '{print $2}' | tr -d '\r')
+        if [ "$INSTALLED_VERSION" = "$UV_VERSION" ] || [ "$(printf '%s\n%s\n' "$UV_VERSION" "$INSTALLED_VERSION" | sort -V | head -n1)" = "$UV_VERSION" ]; then
             exit 0
         else
-            echo "uv version mismatch: installed=${INSTALLED_VERSION}, required=${UV_VERSION}. Reinstalling..."
+            echo "uv version mismatch: installed=${INSTALLED_VERSION}, required~=${UV_VERSION}. Reinstalling..."
         fi
     fi
     curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh" | sh
