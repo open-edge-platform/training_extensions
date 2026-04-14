@@ -30,10 +30,9 @@ export const ModelArchitecture = ({
             modelArchitecture={modelArchitecture}
             isSelected={isSelected}
             onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
-            showBenchmarkStats={showBenchmarkStats}
         >
             <ModelArchitectureCard.Name />
-            <ModelArchitectureCard.Parameters />
+            {showBenchmarkStats ? <ModelArchitectureCard.DetailedParameters /> : <ModelArchitectureCard.Parameters />}
 
             {(isActive || (!showBenchmarkStats && modelArchitecture.performanceCategory !== undefined)) && (
                 <Flex gap={'size-100'} alignItems={'center'}>

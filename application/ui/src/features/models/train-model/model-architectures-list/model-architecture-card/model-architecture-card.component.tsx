@@ -37,14 +37,23 @@ const ModelArchitectureDivider = () => {
 };
 
 const ModelArchitectureParameters = () => {
-    const { modelArchitecture, showBenchmarkStats } = useModelArchitecture();
-    const accuracyMetric = showBenchmarkStats ? getAccuracyMetric(modelArchitecture) : undefined;
+    const { modelArchitecture } = useModelArchitecture();
 
     return (
         <ul className={classes.modelArchitectureParameters}>
             <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} million</li>
             <li>License: Apache 2.0</li>
-            {showBenchmarkStats && <li>Gigaflops: {modelArchitecture.stats.gigaflops}</li>}
+        </ul>
+    );
+};
+
+const ModelArchitectureBenchmark = () => {
+    const { modelArchitecture } = useModelArchitecture();
+    const accuracyMetric = getAccuracyMetric(modelArchitecture);
+
+    return (
+        <ul className={classes.modelArchitectureParameters}>
+            <li>Gigaflops: {modelArchitecture.stats.gigaflops}</li>
             {accuracyMetric !== undefined && (
                 <li>
                     {accuracyMetric.label}: {accuracyMetric.value}%
@@ -53,6 +62,13 @@ const ModelArchitectureParameters = () => {
         </ul>
     );
 };
+
+const ModelArchitectureDetailedParameters = () => (
+    <>
+        <ModelArchitectureParameters />
+        <ModelArchitectureBenchmark />
+    </>
+);
 
 const ModelArchitectureName = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
@@ -77,7 +93,6 @@ const ModelArchitectureName = () => {
 type ModelArchitectureContextProps = {
     isSelected: boolean;
     modelArchitecture: ModelArchitectureType;
-    showBenchmarkStats: boolean;
 };
 
 const ModelArchitectureContext = createContext<ModelArchitectureContextProps | null>(null);
@@ -97,7 +112,6 @@ type ModelArchitectureProps = {
     children: ReactNode;
     onSelect: () => void;
     modelArchitecture: ModelArchitectureType;
-    showBenchmarkStats?: boolean;
 };
 
 export const ModelArchitectureCard = ({
@@ -105,10 +119,9 @@ export const ModelArchitectureCard = ({
     children,
     onSelect,
     modelArchitecture,
-    showBenchmarkStats = false,
 }: ModelArchitectureProps) => {
     return (
-        <ModelArchitectureContext value={{ isSelected, modelArchitecture, showBenchmarkStats }}>
+        <ModelArchitectureContext value={{ isSelected, modelArchitecture }}>
             <div
                 className={clsx(classes.modelArchitectureContainer, {
                     [classes.modelArchitectureSelected]: isSelected,
@@ -123,6 +136,8 @@ export const ModelArchitectureCard = ({
 
 ModelArchitectureCard.Name = ModelArchitectureName;
 ModelArchitectureCard.Parameters = ModelArchitectureParameters;
+ModelArchitectureCard.Benchmark = ModelArchitectureBenchmark;
+ModelArchitectureCard.DetailedParameters = ModelArchitectureDetailedParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
 ModelArchitectureCard.Active = ActiveModelArchitecture;

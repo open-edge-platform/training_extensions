@@ -131,7 +131,7 @@ describe('ModelArchitecture', () => {
         expect(screen.getByRole('radio', { name: 'Deim-DFine-L' })).not.toBeChecked();
     });
 
-    describe('showBenchmarkStats', () => {
+    describe('benchmark stats (DetailedParameters)', () => {
         const detectionArchitecture = getMockedModelArchitecture({
             task: 'detection',
             stats: {
@@ -147,33 +147,33 @@ describe('ModelArchitecture', () => {
             performanceCategory: 'speed',
         });
 
-        it('does not show gigaflops or accuracy by default', () => {
+        it('does not show gigaflops or accuracy when using Parameters (default)', () => {
             renderModelArchitecture({ modelArchitecture: detectionArchitecture });
 
             expect(screen.queryByText(/gigaflops/i)).not.toBeInTheDocument();
             expect(screen.queryByText(/mAP/i)).not.toBeInTheDocument();
         });
 
-        it('shows gigaflops and mAP when showBenchmarkStats is true', () => {
+        it('shows gigaflops and mAP when using DetailedParameters', () => {
             renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: true });
 
             expect(screen.getByText(`Gigaflops: ${detectionArchitecture.stats.gigaflops}`)).toBeVisible();
             expect(screen.getByText('mAP: 55.3%')).toBeVisible();
         });
 
-        it('hides the performance category badge when showBenchmarkStats is true', () => {
+        it('hides the performance category badge when using DetailedParameters', () => {
             renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: true });
 
             expect(screen.queryByText('Speed')).not.toBeInTheDocument();
         });
 
-        it('still shows the performance category badge when showBenchmarkStats is false', () => {
+        it('still shows the performance category badge when using Parameters only', () => {
             renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: false });
 
             expect(screen.getByText('Speed')).toBeVisible();
         });
 
-        it('shows Top-1 Acc for classification tasks', () => {
+        it('shows Top-1 Acc for classification tasks when using DetailedParameters', () => {
             const classificationArchitecture = getMockedModelArchitecture({
                 task: 'classification',
                 stats: {
