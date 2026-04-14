@@ -134,7 +134,7 @@ def _download(url: str, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
 
     # Use urllib so we have no extra dependency beyond stdlib.
-    with urllib.request.urlopen(url) as response, dest.open("wb") as out:  # noqa: S310
+    with urllib.request.urlopen(url) as response, dest.open("wb") as out:  # nosec B310  # noqa: S310
         total = int(response.headers.get("Content-Length", 0))
         downloaded = 0
         while chunk := response.read(_DOWNLOAD_CHUNK_SIZE):

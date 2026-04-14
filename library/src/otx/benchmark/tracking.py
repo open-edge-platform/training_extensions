@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import platform
-import subprocess
+import subprocess  # nosec B404
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
