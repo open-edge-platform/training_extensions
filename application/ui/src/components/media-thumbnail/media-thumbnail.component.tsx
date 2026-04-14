@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { Content, ContextualHelp, Flex, Text } from '@geti/ui';
 
 import type { Media, MediaVideo } from '../../constants/shared-types';
 import { isVideo } from '../../shared/media-item-utils';
@@ -23,9 +23,24 @@ type VideoIndicatorProps = {
 
 const VideoIndicator = ({ frameCount, annotatedFrameCount }: VideoIndicatorProps) => {
     return (
-        <View position={'absolute'} bottom={'size-50'} left={'size-50'} UNSAFE_className={classes.videoIndicator}>
+        <Flex
+            gap={'size-50'}
+            left={'size-50'}
+            bottom={'size-50'}
+            position={'absolute'}
+            alignItems={'center'}
+            UNSAFE_className={classes.videoIndicator}
+        >
             {`${annotatedFrameCount} / ${frameCount} ${frameCount !== 1 ? 'frames' : 'frame'}`}
-        </View>
+
+            <ContextualHelp variant='info' UNSAFE_className={classes.videoIndicatorDetails}>
+                <Content>
+                    <Text>Total frames: {frameCount}</Text>
+                    <br />
+                    <Text>Number of annotated frames: {annotatedFrameCount}</Text>
+                </Content>
+            </ContextualHelp>
+        </Flex>
     );
 };
 

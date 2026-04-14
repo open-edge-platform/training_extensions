@@ -17,9 +17,20 @@
 }
 
 .videoIndicator {
-    font-size: var(--spectrum-global-dimension-font-size-50);
     color: var(--spectrum-global-color-gray-900);
-    background-color: var(--spectrum-global-color-gray-50);
     padding: var(--spectrum-global-dimension-size-50);
+    font-size: var(--spectrum-global-dimension-font-size-50);
     border-radius: var(--spectrum-alias-border-radius-regular);
+    background-color: var(--spectrum-global-color-gray-50);
+}
+
+.videoIndicatorDetails {
+    [class*='spectrum-Dialog-content'] {
+        margin: 0px !important;
+    }
+
+    [class*='spectrum-Dialog-grid'] {
+        --spectrum-dialog-padding-x: var(--spectrum-global-dimension-size-200) !important;
+        --spectrum-dialog-padding-y: var(--spectrum-global-dimension-size-200) !important;
+    }
 }
