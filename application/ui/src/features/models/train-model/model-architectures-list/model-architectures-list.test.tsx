@@ -7,7 +7,7 @@ import { render } from 'test-utils/render';
 
 import { ModelArchitecturesList } from './model-architectures-list.component';
 
-const mockOnSelectModelArchitectureId = vi.fn();
+const mockOnSelectModelArchitectureId = vi.hoisted(() => vi.fn());
 
 const mockModelArchitectures = [
     getMockedModelArchitecture({ id: 'arch-1', name: 'Alpha Model' }),
@@ -28,7 +28,7 @@ vi.mock('../train-model-provider.component', () => ({
 
 describe('ModelArchitecturesList', () => {
     beforeEach(() => {
-        mockOnSelectModelArchitectureId.mockClear();
+        mockOnSelectModelArchitectureId.mockReset();
     });
 
     it('does not render the sort control in the default (recommended) view', () => {
