@@ -8,10 +8,10 @@ test.describe('License agreement', () => {
         let licenseAccepted = false;
 
         network.use(
-            http.get('/health', ({ response }) => {
+            http.get('/api/system/info', ({ response }) => {
                 return response(200).json({
-                    status: 'ok',
                     license_accepted: licenseAccepted,
+                    platform: 'linux',
                 });
             }),
             http.post('/api/license/accept', ({ response }) => {
@@ -25,7 +25,8 @@ test.describe('License agreement', () => {
             await page.goto('/');
 
             await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeVisible();
-            await expect(page.getByRole('link', { name: /DINOv3 License/i })).toBeVisible();
+            await expect(page.getByRole('link', { name: /DINOv2 License/i })).toBeVisible();
+            await expect(page.getByRole('link', { name: /Apache License 2\.0/i })).toBeVisible();
         });
 
         await test.step('accepting the license hides the license screen', async () => {
@@ -35,12 +36,27 @@ test.describe('License agreement', () => {
         });
     });
 
+    test('shows Intel license on Windows platform', async ({ page, network }) => {
+        network.use(
+            http.get('/api/system/info', ({ response }) => {
+                return response(200).json({
+                    license_accepted: false,
+                    platform: 'windows',
+                });
+            })
+        );
+
+        await page.goto('/');
+
+        await expect(page.getByRole('link', { name: /Intel Simplified Software License/i })).toBeVisible();
+    });
+
     test('skips license screen when license is already accepted', async ({ page, network }) => {
         network.use(
-            http.get('/health', ({ response }) => {
+            http.get('/api/system/info', ({ response }) => {
                 return response(200).json({
-                    status: 'ok',
                     license_accepted: true,
+                    platform: 'linux',
                 });
             })
         );

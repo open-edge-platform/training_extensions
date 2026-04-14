@@ -5,8 +5,32 @@ import { Button, Content, Divider, Flex, Heading, Link, Text, View } from '@geti
 
 import { useAcceptLicense } from './api/use-accept-license.hook';
 
-export const License = () => {
+const LICENSE_LINKS = {
+    intelSimplified: {
+        label: 'Intel Simplified Software License',
+        // eslint-disable-next-line max-len
+        href: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
+    },
+    apache2: {
+        label: 'Apache License 2.0',
+        href: 'https://www.apache.org/licenses/LICENSE-2.0',
+    },
+    dinov2: {
+        label: 'DINOv2 License (Apache 2.0)',
+        href: 'https://github.com/facebookresearch/dinov2/blob/main/LICENSE',
+    },
+};
+
+type Platform = 'linux' | 'windows' | 'macos';
+
+interface LicenseProps {
+    platform: Platform;
+}
+
+export const License = ({ platform }: LicenseProps) => {
     const { mutate: acceptLicense, isPending: isAccepting } = useAcceptLicense();
+
+    const appLicense = platform === 'windows' ? LICENSE_LINKS.intelSimplified : LICENSE_LINKS.apache2;
 
     return (
         <Flex justifyContent={'center'} alignItems={'center'} height={'100vh'}>
@@ -29,12 +53,13 @@ export const License = () => {
                     <Text>License links</Text>
                     <ul>
                         <li>
-                            <Link
-                                href={'https://github.com/facebookresearch/dinov3/blob/main/LICENSE.md'}
-                                target={'_blank'}
-                                rel={'noopener noreferrer'}
-                            >
-                                DINOv3 License
+                            <Link href={appLicense.href} target={'_blank'} rel={'noopener noreferrer'}>
+                                {appLicense.label}
+                            </Link>
+                        </li>
+                        <li>
+                            <Link href={LICENSE_LINKS.dinov2.href} target={'_blank'} rel={'noopener noreferrer'}>
+                                {LICENSE_LINKS.dinov2.label}
                             </Link>
                         </li>
                     </ul>

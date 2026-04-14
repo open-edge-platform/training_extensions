@@ -17,7 +17,7 @@ test.describe('Health Check', () => {
                     return response(500).json({});
                 }
 
-                return response(200).json({ status: 'ok', license_accepted: true });
+                return response(200).json({ status: 'ok' });
             })
         );
 

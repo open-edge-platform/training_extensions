@@ -18,9 +18,7 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/health', undefined, {
         retry: 2,
         refetchInterval: (query) => {
-            const healthData = query.state.data;
-
-            return healthData?.status === 'ok' && healthData.license_accepted ? false : REFETCH_INTERVAL;
+            return query.state.data?.status === 'ok' ? false : REFETCH_INTERVAL;
         },
     });
 
@@ -49,10 +47,6 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
         );
     }
 
-    if (data?.status === 'ok' && data?.license_accepted !== true) {
-        return <License />;
-    }
-
     if (data?.status === 'ok') {
         return children;
     }
@@ -60,11 +54,31 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     return <IntelBrandedLoading />;
 };
 
+const LicenseGate = ({ children }: { children: ReactNode }) => {
+    const { data, isPending } = $api.useQuery('get', '/api/system/info', undefined, {
+        refetchInterval: (query) => {
+            return query.state.data?.license_accepted ? false : REFETCH_INTERVAL;
+        },
+    });
+
+    if (isPending) {
+        return <IntelBrandedLoading />;
+    }
+
+    if (data && !data.license_accepted) {
+        return <License platform={data.platform} />;
+    }
+
+    return children;
+};
+
 export const RootLayout = () => {
     return (
         <Suspense fallback={<IntelBrandedLoading />}>
             <HealthCheck>
-                <Outlet />
+                <LicenseGate>
+                    <Outlet />
+                </LicenseGate>
             </HealthCheck>
         </Suspense>
     );
