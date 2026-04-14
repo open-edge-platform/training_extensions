@@ -509,6 +509,9 @@ class Benchmark:
         # Load raw metrics
         csv_files = work_dir.glob("**/metrics.csv")
         raw_data = [pd.read_csv(csv_file) for csv_file in csv_files]
+        if not raw_data:
+            logger.warning("No metrics.csv found under %s – skipping metric logging.", work_dir)
+            return
         raw_data = pd.concat(raw_data, ignore_index=True)
         if extra_metrics:
             for k, v in extra_metrics.items():
@@ -653,7 +656,7 @@ if __name__ == "__main__":
         dataset_info=dataset_info,
         seed=args.seed,
         criteria=criteria,
-        num_devices=args.num_devices,
+        num_devices=int(args.num_devices),
     )
     benchmark.check(
         result=result,

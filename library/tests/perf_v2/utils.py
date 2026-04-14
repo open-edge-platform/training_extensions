@@ -354,8 +354,8 @@ def get_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--num-devices",
-        type=str,
-        default="1",
+        type=int,
+        default=1,
         help="How much devices to use during training.",
     )
     return parser

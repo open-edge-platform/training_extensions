@@ -124,7 +124,7 @@ if __name__ == "__main__":
                         "--device",
                         args.device,
                         "--num-devices",
-                        args.num_devices,
+                        str(args.num_devices),
                         "--user-name",
                         args.user_name,
                     ]

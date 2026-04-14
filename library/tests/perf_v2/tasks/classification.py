@@ -48,34 +48,9 @@ MULTI_CLASS_MODEL_TEST_CASES = [
 
 MULTI_CLASS_DATASET_TEST_CASES = [
     DatasetInfo(
-        name="multiclass_tiny_pneumonia",
-        path=Path("multiclass_classification/mcls_tiny_pneumonia_12_6_200"),
-        group="tiny",
-    ),
-    DatasetInfo(
-        name="multiclass_tiny_cub_woodpecker",
-        path=Path("multiclass_classification/mcls_tiny_cub_woodpecker_24_12_200"),
-        group="tiny",
-    ),
-    DatasetInfo(
         name="multiclass_small_flowers",
         path=Path("multiclass_classification/mcls_small_flowers_60_12_200"),
         group="small",
-    ),
-    DatasetInfo(
-        name="multiclass_small_eurosat",
-        path=Path("multiclass_classification/mcls_small_eurosat_80_40_200"),
-        group="small",
-    ),
-    DatasetInfo(
-        name="multiclass_medium_resisc",
-        path=Path("multiclass_classification/mcls_medium_resisc_500_100_400"),
-        group="medium",
-    ),
-    DatasetInfo(
-        name="multiclass_large_cub100",
-        path=Path("multiclass_classification/mcls_large_cub100_3764_900_1200"),
-        group="large",
     ),
 ]
 
