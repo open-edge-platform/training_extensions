@@ -1,7 +1,35 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
+import { isNil } from 'lodash-es';
+
+import type { BenchmarkMetrics, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
+
+export type AccuracyMetric = { label: string; value: number };
+
+type BenchmarkMetricKey = keyof BenchmarkMetrics;
+
+const ACCURACY_METRIC_LABELS: Partial<Record<BenchmarkMetricKey, string>> = {
+    imagenet_top1_accuracy: 'Top-1 Acc',
+    coco_map_50_95: 'mAP',
+    coco_map_50: 'mAP50',
+};
+
+export const getAccuracyMetric = (
+    modelArchitecture: ModelArchitectureWithPerformanceCategory
+): AccuracyMetric | undefined => {
+    const benchmarkMetrics = modelArchitecture.stats.benchmark_metrics;
+
+    for (const [key, label] of Object.entries(ACCURACY_METRIC_LABELS)) {
+        const value = benchmarkMetrics[key as BenchmarkMetricKey];
+
+        if (!isNil(value)) {
+            return { label, value };
+        }
+    }
+
+    return undefined;
+};
 
 const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPerformanceCategory[]) => {
     const recommended = modelArchitectures.filter(

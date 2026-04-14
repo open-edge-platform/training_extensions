@@ -75,10 +75,6 @@ overrides:
             contrast: 0.5
             saturation: 0.5
             hue: 0.05
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
       augmentations_gpu: []
     val_subset:
       num_workers: 4
@@ -89,10 +85,6 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
       augmentations_gpu: []
     test_subset:
       num_workers: 4
@@ -103,8 +95,4 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
       augmentations_gpu: []

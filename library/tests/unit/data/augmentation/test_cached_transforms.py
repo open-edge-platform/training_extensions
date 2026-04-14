@@ -80,7 +80,7 @@ class TestCachedMosaicForward:
         assert result.image.shape == sample.image.shape
 
     def test_mosaic_applied_after_cache_fills(self):
-        """After 4+ samples cached, mosaic produces doubled-size output."""
+        """After 4+ samples cached, mosaic produces 2x img_scale canvas output."""
         mosaic = CachedMosaic(img_scale=(32, 32), p=1.0, max_cached_images=40)
         for _ in range(4):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
@@ -178,6 +178,14 @@ class TestCachedMixUpInit:
         with pytest.raises(ValueError, match="Probability must be in"):
             CachedMixUp(p=-0.1)
 
+    def test_invalid_alpha_zero_raises(self):
+        with pytest.raises(ValueError, match="alpha must be > 0"):
+            CachedMixUp(alpha=0.0)
+
+    def test_invalid_alpha_negative_raises(self):
+        with pytest.raises(ValueError, match="alpha must be > 0"):
+            CachedMixUp(alpha=-1.0)
+
     def test_valid_construction(self):
         m = CachedMixUp(img_scale=(320, 320), p=0.5, max_cached_images=10)
         assert m.img_scale == (320, 320)
@@ -201,7 +209,6 @@ class TestCachedMixUpForward:
             img_scale=(32, 32),
             p=1.0,
             max_cached_images=20,
-            mix_ratio=0.5,
         )
         for _ in range(3):
             sample = _make_det_sample(h=32, w=32, n_boxes=2)
@@ -252,11 +259,11 @@ class TestCachedMixUpForward:
         assert result.image.max() <= 1.0
 
     def test_repr(self):
-        m = CachedMixUp(img_scale=(640, 640), mix_ratio=0.3)
+        m = CachedMixUp(img_scale=(640, 640), alpha=2.0)
         r = repr(m)
         assert "CachedMixUp" in r
         assert "640" in r
-        assert "0.3" in r
+        assert "2.0" in r
 
 
 # =====================================================================

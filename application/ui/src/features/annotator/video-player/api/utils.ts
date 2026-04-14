@@ -16,7 +16,7 @@ export const getVideoFrameRangeIndexes = ({
 }) => {
     const annotationChunkSize = chunkSize * frameSkip;
 
-    const startFrameIndex = Math.floor(frameNumber / annotationChunkSize) * annotationChunkSize;
+    const startFrameIndex = Math.min(Math.floor(frameNumber / annotationChunkSize) * annotationChunkSize, frames);
     const endFrameIndex = Math.min(startFrameIndex + annotationChunkSize - 1, frames);
 
     return { startFrameIndex, endFrameIndex };

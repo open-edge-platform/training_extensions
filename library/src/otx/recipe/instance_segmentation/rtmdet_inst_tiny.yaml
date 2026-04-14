@@ -52,13 +52,6 @@ callbacks:
       filename: "checkpoints/epoch_{epoch:03d}"
 
 overrides:
-  reset:
-    - data.train_subset.augmentations_cpu
-    - data.train_subset.augmentations_gpu
-    - data.val_subset.augmentations_cpu
-    - data.val_subset.augmentations_gpu
-    - data.test_subset.augmentations_cpu
-    - data.test_subset.augmentations_gpu
   precision: 16
   max_epochs: 100
   gradient_clip_val: 35.0
@@ -71,16 +64,12 @@ overrides:
     train_subset:
       batch_size: 4
       num_workers: 8
-      # ============ CPU Augmentations (before batching, in Dataset workers) ============
-      # Size-dependent ops that need to run before collate for stacking
       augmentations_cpu:
-        # Mosaic: combines 4 images (pure torch, no numpy)
         - class_path: otx.data.augmentation.transforms.CachedMosaic
           init_args:
             img_scale: $(input_size)
             max_cached_images: 20
             random_pop: false
-        # Random resized crop using torchvision
         - class_path: torchvision.transforms.v2.RandomResizedCrop
           init_args:
             size: $(input_size)
@@ -91,24 +80,17 @@ overrides:
               - 0.5
               - 2.0
             antialias: true
-        # MixUp: blends two images (pure torch)
         - class_path: otx.data.augmentation.transforms.CachedMixUp
           init_args:
             img_scale: $(input_size)
-            ratio_range:
-              - 1.0
-              - 1.0
+            alpha: 1.5
             max_cached_images: 10
             random_pop: false
             p: 0.5
-      # ============ GPU Augmentations (after batching, in Lightning Callback) ============
-      # Batch-level ops that run on GPU via Kornia
       augmentations_gpu:
-        # Random horizontal flip (Kornia, GPU)
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
-        # Color jitter (Kornia, GPU)
         - class_path: kornia.augmentation.ColorJiggle
           init_args:
             brightness: 0.125
@@ -116,7 +98,6 @@ overrides:
             saturation: 0.5
             hue: 0.05
             p: 0.5
-        # Normalize (Kornia, GPU) - RTMDet uses BGR order
         - class_path: kornia.augmentation.Normalize
           init_args:
             mean:
@@ -131,7 +112,6 @@ overrides:
     val_subset:
       num_workers: 4
       augmentations_cpu:
-        # Resize with aspect ratio preservation (pure torch)
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
@@ -139,7 +119,6 @@ overrides:
             pad_value: 114
             resize_targets: false
       augmentations_gpu:
-        # Normalize only (Kornia, GPU)
         - class_path: kornia.augmentation.Normalize
           init_args:
             mean:
@@ -154,7 +133,6 @@ overrides:
     test_subset:
       num_workers: 4
       augmentations_cpu:
-        # Resize with aspect ratio preservation (pure torch)
         - class_path: otx.data.augmentation.transforms.Resize
           init_args:
             size: $(input_size)
@@ -162,7 +140,6 @@ overrides:
             pad_value: 114
             resize_targets: false
       augmentations_gpu:
-        # Normalize only (Kornia, GPU)
         - class_path: kornia.augmentation.Normalize
           init_args:
             mean:

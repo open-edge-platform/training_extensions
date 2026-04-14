@@ -159,6 +159,7 @@ class TestDatasetExporter:
                 data_format=data_format,
                 output_path=str(fxt_staged_datasets_dir / str(dataset_id) / f"dataset-{export_format}.zip"),
                 as_zip=True,
+                direct_only=True,
             )
 
     def test_export_dataset_geti(self, fxt_export: ExportDataset, fxt_staged_datasets_dir: Path):

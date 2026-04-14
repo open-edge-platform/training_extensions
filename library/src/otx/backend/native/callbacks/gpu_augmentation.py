@@ -86,11 +86,15 @@ class GPUAugmentationCallback(Callback):
             log.info(f"GPU train augmentation pipeline:\n{self._train_pipeline}")
 
         if self.val_config is not None:
-            self._val_pipeline = GPUAugmentationPipeline.from_config(self.val_config, data_keys=data_keys)
+            self._val_pipeline = GPUAugmentationPipeline.from_config(
+                self.val_config, data_keys=data_keys, sanitize_annotations=False
+            )
             log.info(f"GPU val augmentation pipeline:\n{self._val_pipeline}")
 
         if self.test_config is not None:
-            self._test_pipeline = GPUAugmentationPipeline.from_config(self.test_config, data_keys=data_keys)
+            self._test_pipeline = GPUAugmentationPipeline.from_config(
+                self.test_config, data_keys=data_keys, sanitize_annotations=False
+            )
             log.info(f"GPU test augmentation pipeline:\n{self._test_pipeline}")
 
         # Update model's normalization params from GPU pipeline

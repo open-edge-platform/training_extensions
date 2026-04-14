@@ -485,6 +485,38 @@ class TestGPUAugmentationPipelineInit:
         pipeline = GPUAugmentationPipeline([], data_keys=["input", "bbox_xyxy", "mask"])
         assert pipeline.data_keys == ["input", "bbox_xyxy", "mask"]
 
+    def test_has_geometric_augs_with_flip(self):
+        """Pipeline with RandomHorizontalFlip should flag geometric augs."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)])
+        assert pipeline._has_geometric_augs is True
+
+    def test_has_geometric_augs_with_affine(self):
+        """Pipeline with RandomAffine should flag geometric augs."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomAffine(degrees=10)])
+        assert pipeline._has_geometric_augs is True
+
+    def test_no_geometric_augs_with_normalize_only(self):
+        """Pipeline with only Normalize should NOT flag geometric augs."""
+        pipeline = GPUAugmentationPipeline(
+            [kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5]))]
+        )
+        assert pipeline._has_geometric_augs is False
+
+    def test_no_geometric_augs_empty(self):
+        """Empty pipeline should NOT flag geometric augs."""
+        pipeline = GPUAugmentationPipeline([])
+        assert pipeline._has_geometric_augs is False
+
+    def test_has_geometric_augs_mixed(self):
+        """Pipeline with geometric + intensity should flag geometric augs."""
+        pipeline = GPUAugmentationPipeline(
+            [
+                kornia_aug.RandomHorizontalFlip(p=0.5),
+                kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5])),
+            ]
+        )
+        assert pipeline._has_geometric_augs is True
+
 
 class TestGPUAugmentationPipelineNormalization:
     """Tests for normalization parameter extraction."""
@@ -668,6 +700,110 @@ class TestGPUAugmentationPipelineForward:
         r = repr(pipeline)
         assert "mean=" in r
         assert "std=" in r
+
+    def test_normalize_only_preserves_out_of_bounds_bboxes(self):
+        """Critical regression test: Normalize-only pipeline must not clip/filter bboxes.
+
+        When resize_targets=False is used during validation, bboxes stay in original
+        image coordinates (e.g., 2048x1365) while images are resized (e.g., 800x992).
+        A Normalize-only GPU pipeline must preserve these bboxes untouched.
+        """
+        pipeline = GPUAugmentationPipeline(
+            [kornia_aug.Normalize(mean=torch.tensor([0.485, 0.456, 0.406]), std=torch.tensor([0.229, 0.224, 0.225]))],
+            data_keys=["input", "bbox_xyxy", "label"],
+        )
+        # Small resized images (800x992) but bboxes in original space (2048x1365)
+        images = _make_batched_images(2, h=800, w=992)
+        bboxes = [
+            torch.tensor([[1000.0, 500.0, 1500.0, 800.0], [100.0, 100.0, 300.0, 300.0]]),  # x>992 for first box
+            torch.tensor([[500.0, 1000.0, 900.0, 1365.0]]),  # y>800 for this box
+        ]
+        labels = [torch.tensor([0, 1]), torch.tensor([2])]
+
+        result = pipeline(images, bboxes=bboxes, labels=labels)
+
+        # ALL bboxes must survive (no clipping or filtering)
+        assert result["bboxes"] is not None
+        assert len(result["bboxes"][0]) == 2, "First sample lost bboxes during normalize-only pipeline"
+        assert len(result["bboxes"][1]) == 1, "Second sample lost bboxes during normalize-only pipeline"
+        # Bbox coordinates must be unchanged
+        assert torch.allclose(result["bboxes"][0], bboxes[0])
+        assert torch.allclose(result["bboxes"][1], bboxes[1])
+        # Labels must also survive
+        assert result["labels"] is not None
+        assert len(result["labels"][0]) == 2
+        assert len(result["labels"][1]) == 1
+
+    def test_geometric_pipeline_does_sanitize_bboxes(self):
+        """Geometric augmentations (flip) should still sanitize bboxes."""
+        pipeline = GPUAugmentationPipeline(
+            [
+                kornia_aug.RandomHorizontalFlip(p=0.0),  # no actual flip, but it IS geometric
+                kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5])),
+            ],
+            data_keys=["input", "bbox_xyxy", "label"],
+        )
+        images = _make_batched_images(1, h=32, w=32)
+        # Box fully outside image bounds → should be sanitized away
+        bboxes = [torch.tensor([[100.0, 100.0, 200.0, 200.0]])]
+        labels = [torch.tensor([0])]
+
+        result = pipeline(images, bboxes=bboxes, labels=labels)
+        # The degenerate box (after clipping to 32x32) should be filtered
+        assert result["bboxes"] is not None
+        assert len(result["bboxes"][0]) == 0
+
+    def test_sanitize_annotations_false_preserves_out_of_bounds_bboxes(self):
+        """sanitize_annotations=False must preserve bboxes even with geometric augmentations.
+
+        This models the val/test pipeline case: the callback passes
+        sanitize_annotations=False so that GT bboxes in original image coordinates
+        are never clipped to the smaller network input dimensions.
+        """
+        pipeline = GPUAugmentationPipeline(
+            [
+                kornia_aug.RandomHorizontalFlip(p=0.0),  # geometric, but sanitize disabled
+                kornia_aug.Normalize(mean=torch.tensor([0.5, 0.5, 0.5]), std=torch.tensor([0.5, 0.5, 0.5])),
+            ],
+            data_keys=["input", "bbox_xyxy", "label"],
+            sanitize_annotations=False,
+        )
+        images = _make_batched_images(1, h=32, w=32)
+        # Bboxes in original (large) image space -- all beyond 32x32 bounds
+        bboxes = [torch.tensor([[100.0, 100.0, 200.0, 200.0], [10.0, 10.0, 20.0, 20.0]])]
+        labels = [torch.tensor([0, 1])]
+
+        result = pipeline(images, bboxes=bboxes, labels=labels)
+        # Both bboxes must survive unchanged
+        assert result["bboxes"] is not None
+        assert len(result["bboxes"][0]) == 2, "sanitize_annotations=False must not filter bboxes"
+
+    def test_sanitize_annotations_default_is_true(self):
+        """Default value of sanitize_annotations should be True."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)])
+        assert pipeline._sanitize_annotations_enabled is True
+
+    def test_sanitize_annotations_false_stored(self):
+        """sanitize_annotations=False is stored correctly."""
+        pipeline = GPUAugmentationPipeline([kornia_aug.RandomHorizontalFlip(p=0.5)], sanitize_annotations=False)
+        assert pipeline._sanitize_annotations_enabled is False
+
+    def test_from_config_sanitize_annotations_false(self):
+        """from_config forwards sanitize_annotations=False to the instance."""
+        config = SubsetConfig(
+            augmentations_gpu=[
+                {"class_path": "kornia.augmentation.RandomHorizontalFlip", "init_args": {"p": 0.5}},
+            ],
+            input_size=None,
+        )
+        pipeline = GPUAugmentationPipeline.from_config(config, sanitize_annotations=False)
+        assert pipeline._sanitize_annotations_enabled is False
+
+    def test_from_config_empty_sanitize_annotations_false(self):
+        """from_config with empty augmentations also respects sanitize_annotations=False."""
+        config = SubsetConfig(augmentations_gpu=[], input_size=None)
+        pipeline = GPUAugmentationPipeline.from_config(config, sanitize_annotations=False)
+        assert pipeline._sanitize_annotations_enabled is False
 
 
 # ===================================================================

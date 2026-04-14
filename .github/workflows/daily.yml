@@ -39,7 +39,7 @@ jobs:
 
   check-existing-issue:
     name: Check for existing failure issue
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs:
       - build
       - backend-lint-and-test
@@ -84,7 +84,7 @@ jobs:
 
   create-issue-on-failure:
     name: Create issue on scheduled workflow failure
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
     needs:
       - build
       - backend-lint-and-test

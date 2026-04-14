@@ -611,6 +611,42 @@ test.describe('Annotator', () => {
             await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'false');
         });
 
+        test('Displays "No object" when media:predict returns empty predictions', async ({
+            page,
+            annotatorPage,
+            network,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/models', async () => {
+                    return HttpResponse.json([getMockedModel()]);
+                }),
+                http.get('/api/projects/{project_id}/dataset/media/{media_id}/annotations', async () => {
+                    return HttpResponse.json(
+                        {
+                            // @ts-expect-error We care only about mocking detail
+                            detail: 'Media has not been annotated yet',
+                        },
+                        { status: 404 }
+                    );
+                }),
+                http.post('/api/projects/{project_id}/dataset/media/media:predict', async () => {
+                    return HttpResponse.json({
+                        predictions: [
+                            {
+                                media: { id: '123' },
+                                prediction: [],
+                            },
+                        ],
+                    });
+                })
+            );
+
+            await annotatorPage.goto(mockedDetectionProject.id, 'item-1');
+
+            await expect(annotatorPage.getAnnotatorMode('prediction')).toHaveAttribute('aria-pressed', 'true');
+            await expect(page.getByLabel('label No object background')).toHaveCount(1);
+        });
+
         test('Automatically switches to prediction mode only when there are no annotations and there are predictions', async ({
             annotatorPage,
             network,

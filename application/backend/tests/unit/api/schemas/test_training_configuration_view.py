@@ -108,7 +108,7 @@ def fxt_training_configuration() -> TrainingConfiguration:
                     mixup=Mixup(
                         enable=True,
                         probability=0.6,
-                        mix_ratio=0.4,
+                        alpha=2.0,
                     ),
                 )
             ),
@@ -194,7 +194,7 @@ def fxt_default_training_configuration() -> TrainingConfiguration:
                     mixup=Mixup(
                         enable=False,
                         probability=1.0,
-                        mix_ratio=0.5,
+                        alpha=1.5,
                     ),
                 )
             ),
@@ -729,18 +729,19 @@ def fxt_training_configuration_view_json() -> dict:
                                     },
                                     {
                                         "type": "parameter",
-                                        "key": "mix_ratio",
-                                        "name": "Mix ratio",
+                                        "key": "alpha",
+                                        "name": "Alpha",
                                         "description": (
-                                            "Blending ratio between the two images. "
-                                            "A value of 0.5 means equal blending of both images. "
-                                            "Lower values give more weight to the original image."
+                                            "Controls how two images are blended together. "
+                                            "Low values (e.g. 0.5) produce uneven blending where one image dominates. "
+                                            "A value of 1.0 gives any blend ratio equal chance. "
+                                            "Higher values (e.g. 1.5-3.0) favour an equal 50/50 mix of both images."
                                         ),
-                                        "value": 0.4,
-                                        "default_value": 0.5,
+                                        "value": 2.0,
+                                        "default_value": 1.5,
                                         "value_type": "float",
-                                        "min_value": 0.0,
-                                        "max_value": 1.0,
+                                        "min_value": 0.1,
+                                        "max_value": 10.0,
                                         "allowed_values": None,
                                         "depends_on": None,
                                     },

@@ -51,6 +51,7 @@ class TestEngine:
         mock_datamodule.input_size = (1234, 1234)
         mock_datamodule.input_mean = (0.0, 0.0, 0.0)
         mock_datamodule.input_std = (1.0, 1.0, 1.0)
+        mock_datamodule.input_intensity_config = None
         mock_datamodule.task = "MULTI_CLASS_CLS"
 
         mocker.patch(

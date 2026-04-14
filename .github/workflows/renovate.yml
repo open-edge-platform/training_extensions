@@ -56,7 +56,7 @@ jobs:
   renovate:
     permissions:
       contents: read
-    runs-on: overflow
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
 
     steps:
       - name: Checkout
@@ -74,6 +74,8 @@ jobs:
       - name: Self-hosted Renovate
         uses: renovatebot/github-action@3633cede7d4d4598438e654eac4a695e46004420 # v46.1.7
         with:
+          # renovate: datasource=github-releases depName=renovatebot/renovate
+          renovate-version: 43.86.0
           configurationFile: .github/renovate.json5
           token: "${{ steps.get-github-app-token.outputs.token }}"
         env:

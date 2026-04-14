@@ -69,10 +69,6 @@ callbacks:
                 - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:
                     p: 0.5
-                - class_path: kornia.augmentation.Normalize
-                  init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [1.0, 1.0, 1.0]
             light_aug:
               augmentations_cpu:
                 - class_path: torchvision.transforms.v2.RandomZoomOut
@@ -98,10 +94,6 @@ callbacks:
                 - class_path: kornia.augmentation.RandomHorizontalFlip
                   init_args:
                     p: 0.5
-                - class_path: kornia.augmentation.Normalize
-                  init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [1.0, 1.0, 1.0]
             strong_aug_1:
               augmentations_cpu:
                 - class_path: otx.data.augmentation.transforms.CachedMosaic
@@ -112,7 +104,7 @@ callbacks:
                 - class_path: otx.data.augmentation.transforms.CachedMixUp
                   init_args:
                     img_scale: [640, 640]
-                    ratio_range: [1.0, 1.0]
+                    alpha: 1.5
                     p: 0.5
                     random_pop: false
                     max_cached_images: 10
@@ -134,10 +126,6 @@ callbacks:
                     saturation: 0.5
                     hue: 0.05
                     p: 0.5
-                - class_path: kornia.augmentation.Normalize
-                  init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [1.0, 1.0, 1.0]
             strong_aug_2:
               augmentations_cpu:
                 - class_path: torchvision.transforms.v2.RandomZoomOut
@@ -152,7 +140,7 @@ callbacks:
                 - class_path: otx.data.augmentation.transforms.CachedMixUp
                   init_args:
                     img_scale: [640, 640]
-                    ratio_range: [1.0, 1.0]
+                    alpha: 1.5
                     p: 0.5
                     random_pop: false
                     max_cached_images: 10
@@ -174,10 +162,6 @@ callbacks:
                     saturation: 0.5
                     hue: 0.05
                     p: 0.5
-                - class_path: kornia.augmentation.Normalize
-                  init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [1.0, 1.0, 1.0]
 data: ../_base_/data/detection.yaml
 overrides:
   callbacks:
@@ -214,10 +198,6 @@ overrides:
         - class_path: kornia.augmentation.RandomHorizontalFlip
           init_args:
             p: 0.5
-        - class_path: kornia.augmentation.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
@@ -229,11 +209,7 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-      augmentations_gpu:
-        - class_path: kornia.augmentation.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
+      augmentations_gpu: []
     test_subset:
       batch_size: 8
       augmentations_cpu:
@@ -242,8 +218,4 @@ overrides:
             size: $(input_size)
             keep_aspect_ratio: false
             resize_targets: false
-      augmentations_gpu:
-        - class_path: kornia.augmentation.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
+      augmentations_gpu: []

@@ -23,14 +23,8 @@ train_subset:
         p: 0.5
     - class_path: kornia.augmentation.Normalize
       init_args:
-        mean:
-          - 0.485
-          - 0.456
-          - 0.406
-        std:
-          - 0.229
-          - 0.224
-          - 0.225
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -48,14 +42,8 @@ val_subset:
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:
-        mean:
-          - 0.485
-          - 0.456
-          - 0.406
-        std:
-          - 0.229
-          - 0.224
-          - 0.225
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -73,14 +61,8 @@ test_subset:
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:
-        mean:
-          - 0.485
-          - 0.456
-          - 0.406
-        std:
-          - 0.229
-          - 0.224
-          - 0.225
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
