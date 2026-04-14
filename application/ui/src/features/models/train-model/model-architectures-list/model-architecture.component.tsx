@@ -35,7 +35,7 @@ export const ModelArchitecture = ({
             <ModelArchitectureCard.Name />
             <ModelArchitectureCard.Parameters />
 
-            {(isActive || modelArchitecture.performanceCategory !== undefined) && (
+            {(isActive || (!showBenchmarkStats && modelArchitecture.performanceCategory !== undefined)) && (
                 <Flex gap={'size-100'} alignItems={'center'}>
                     {isActive && (
                         <View justifySelf={'start'}>

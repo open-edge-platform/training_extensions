@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { isNil } from 'lodash-es';
+
 import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { getAccuracyMetricBasedOnTask } from '../sort-model-architectures/utils';
 
@@ -11,7 +13,7 @@ export const getAccuracyMetric = (
 ): AccuracyMetric | undefined => {
     const value = getAccuracyMetricBasedOnTask(modelArchitecture);
 
-    if (value === null || value === undefined) {
+    if (isNil(value)) {
         return undefined;
     }
 
