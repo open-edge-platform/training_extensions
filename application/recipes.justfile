@@ -16,14 +16,14 @@ install-uv:
     set -euo pipefail
     REPO_ROOT=$(git rev-parse --show-toplevel)
     # Extract the version from required-version, stripping any PEP 440 specifier prefix and CR/LF
-    UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed -E 's/.*=\s*"[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/' | tr -d '\r')
+    UV_VERSION=$(grep -A 3 '\[tool\.uv\]' "${REPO_ROOT}/application/backend/pyproject.toml" | grep 'required-version' | sed -E 's/.*=[[:space:]]*"[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/' | tr -d '\r')
     if [ -z "$UV_VERSION" ]; then
         echo "Error: could not parse uv version from pyproject.toml" >&2
         exit 1
     fi
     if command -v uv > /dev/null; then
         INSTALLED_VERSION=$(uv --version | awk '{print $2}' | tr -d '\r')
-        if [ "$INSTALLED_VERSION" = "$UV_VERSION" ] || [ "$(printf '%s\n%s\n' "$UV_VERSION" "$INSTALLED_VERSION" | sort -V | head -n1)" = "$UV_VERSION" ]; then
+        if [ "$INSTALLED_VERSION" = "$UV_VERSION" ]; then
             exit 0
         else
             echo "uv version mismatch: installed=${INSTALLED_VERSION}, required~=${UV_VERSION}. Reinstalling..."

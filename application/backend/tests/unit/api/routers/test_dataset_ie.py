@@ -60,7 +60,7 @@ class TestDatasetIEEndpoints:
 
         response = fxt_client.post("/api/staged_datasets", files=files)
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_staged_dataset_service.upload.assert_not_called()
 
     def test_list_datasets_success(
@@ -147,7 +147,7 @@ class TestDatasetIEEndpoints:
 
         response = fxt_client.get(f"/api/staged_datasets/{fxt_staged_dataset.id}/zip")
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         assert response.json()["detail"] == "Staged dataset is not in zip format ready for download."
 
     def test_delete_dataset_success(
