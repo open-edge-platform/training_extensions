@@ -50,3 +50,30 @@ export const ModelArchitecture = ({
         </ModelArchitectureCard>
     );
 };
+
+export const DetailedModelArchitecture = ({
+    activeModelArchitectureId,
+    modelArchitecture,
+    selectedModelArchitectureId,
+    onSelectedModelArchitectureIdChange,
+}: ModelArchitectureProps) => {
+    const isSelected = modelArchitecture.id === selectedModelArchitectureId;
+    const isActive = activeModelArchitectureId === modelArchitecture.id;
+
+    return (
+        <ModelArchitectureCard
+            modelArchitecture={modelArchitecture}
+            isSelected={isSelected}
+            onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
+        >
+            <ModelArchitectureCard.Name />
+            <ModelArchitectureCard.DetailedParameters />
+
+            {isActive && (
+                <View justifySelf={'start'}>
+                    <ModelArchitectureCard.Active />
+                </View>
+            )}
+        </ModelArchitectureCard>
+    );
+};

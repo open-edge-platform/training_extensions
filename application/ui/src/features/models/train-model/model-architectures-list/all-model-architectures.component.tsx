@@ -8,7 +8,7 @@ import { Flex } from '@geti/ui';
 import type { ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
 import { SortModelArchitectures } from '../sort-model-architectures/sort-model-architectures.component';
 import { SORT_OPTIONS, SORTING_HANDLERS, SortingOptions } from '../sort-model-architectures/utils';
-import { ModelArchitecture } from './model-architecture.component';
+import { DetailedModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
 type AllModelArchitecturesProps = {
@@ -36,7 +36,7 @@ export const AllModelArchitectures = ({
                 ariaLabel={'ALL model architectures'}
             >
                 {sortedModelArchitectures.map((modelArchitecture) => (
-                    <ModelArchitecture
+                    <DetailedModelArchitecture
                         key={modelArchitecture.id}
                         activeModelArchitectureId={activeModelArchitectureId}
                         modelArchitecture={modelArchitecture}
