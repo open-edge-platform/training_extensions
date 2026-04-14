@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogContainer, Flex, Size, ViewModes } from '@geti/ui';
+import { Checkbox, DialogContainer, dimensionValue, Flex, Size, ViewModes } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 import { GridLayoutOptions } from 'react-aria-components';
@@ -91,6 +91,7 @@ const GalleryList = ({
                                 height={'size-200'}
                                 alignItems={'center'}
                                 justifyContent={'center'}
+                                UNSAFE_style={{ margin: dimensionValue('size-150') }}
                             >
                                 <Checkbox
                                     aria-label={`Select media item ${item.name}`}

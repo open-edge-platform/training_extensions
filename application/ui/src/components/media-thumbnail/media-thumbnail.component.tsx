@@ -33,7 +33,11 @@ const VideoIndicator = ({ frameCount, annotatedFrameCount }: VideoIndicatorProps
         >
             {`${annotatedFrameCount} / ${frameCount} ${frameCount !== 1 ? 'frames' : 'frame'}`}
 
-            <ContextualHelp variant='info' UNSAFE_className={classes.videoIndicatorDetails}>
+            <ContextualHelp
+                variant='info'
+                UNSAFE_className={classes.videoIndicatorDetails}
+                aria-label='annotated frames'
+            >
                 <Content>
                     <Text>Total frames: {frameCount}</Text>
                     <br />
