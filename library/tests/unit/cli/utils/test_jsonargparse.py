@@ -195,7 +195,9 @@ def test_namespace_override(fxt_configs) -> None:
 
         # Find transforms by class_path since order may change
         resize_transform = next(
-            t for t in cfg.data.train_subset.transforms if t["class_path"] == "getitune.data.augmentation.transforms.Resize"
+            t
+            for t in cfg.data.train_subset.transforms
+            if t["class_path"] == "getitune.data.augmentation.transforms.Resize"
         )
         pad_transform = next(
             t for t in cfg.data.train_subset.transforms if t["class_path"] == "torchvision.transforms.v2.Pad"
