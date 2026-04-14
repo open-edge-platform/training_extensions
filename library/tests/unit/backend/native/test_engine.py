@@ -18,7 +18,7 @@ from getitune.types.precision import OTXPrecisionType
 def fxt_engine(tmp_path) -> OTXEngine:
     return OTXEngine(
         data="tests/assets/classification_cifar10",
-        model="src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
+        model="src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
         work_dir=tmp_path,
         max_epochs=9,
     )
@@ -31,7 +31,7 @@ class TestEngine:
         engine = OTXEngine(
             work_dir=tmp_path,
             data=data_root,
-            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+            model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
         )
         assert engine.task == "MULTI_CLASS_CLS"
         assert engine.datamodule.task == "MULTI_CLASS_CLS"
@@ -61,7 +61,7 @@ class TestEngine:
         engine = OTXEngine(
             work_dir=tmp_path,
             data=data_root,
-            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+            model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
         )
 
         assert engine._model.data_input_params == DataInputParams((1234, 1234), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -237,7 +237,7 @@ class TestEngine:
             )
 
     def test_from_config(self, tmp_path, mocker) -> None:
-        recipe_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
+        recipe_path = "src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         data_root = "tests/assets/classification_cifar10"
         mocker.patch("pathlib.Path.symlink_to")
         mocker.patch("getitune.backend.native.engine.Trainer.fit")
@@ -293,7 +293,7 @@ class TestEngine:
             work_dir=tmp_path,
             data=data_root,
             num_devices=3,
-            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+            model="src/getitune/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
         )
         assert engine.num_devices == 3
         assert engine._cache.args.get("devices") == 3

@@ -11,7 +11,12 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
+from getitune.backend.native.models.base import (
+    DataInputParams,
+    DefaultOptimizerCallable,
+    DefaultSchedulerCallable,
+    OTXModel,
+)
 from getitune.backend.native.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
 from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch

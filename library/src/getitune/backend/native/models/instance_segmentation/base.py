@@ -19,7 +19,12 @@ from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 from torchvision.models.detection.image_list import ImageList
 
-from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
+from getitune.backend.native.models.base import (
+    DataInputParams,
+    DefaultOptimizerCallable,
+    DefaultSchedulerCallable,
+    OTXModel,
+)
 from getitune.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
 from getitune.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from getitune.backend.native.models.utils.utils import InstanceData, load_checkpoint

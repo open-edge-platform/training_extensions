@@ -19,5 +19,5 @@ warnings.warn(
     stacklevel=2,
 )
 
-from getitune import *  # noqa: E402, F401, F403
+from getitune import *  # noqa: E402, F403
 from getitune import __version__  # noqa: E402, F401

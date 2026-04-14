@@ -41,7 +41,7 @@ class TestAutoConfigurator:
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
         # instantiate with model_config_path
-        model_config_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
+        model_config_path = "src/getitune/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
         auto_configurator = AutoConfigurator(data_root=None, task=None, model=model_config_path)
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
@@ -79,7 +79,7 @@ class TestAutoConfigurator:
         # new_config
         model_name = "deit_tiny"
         new_config = auto_configurator._load_default_config(
-            config_path="src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
+            config_path="src/getitune/recipe/classification/multi_class_cls/deit_tiny.yaml",
         )
         new_path = str(target_config).split("/")
         new_path[-1] = f"{model_name}.yaml"

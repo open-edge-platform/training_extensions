@@ -71,7 +71,7 @@ class BaseTest:
                     "getitune",
                     "train",
                     "--config",
-                    f"src/otx/recipe/{test_case.model.task}/{test_case.model.name}.yaml",
+                    f"src/getitune/recipe/{test_case.model.task}/{test_case.model.name}.yaml",
                     "--model.num_classes",
                     str(test_case.dataset.num_classes),
                     "--data_root",
