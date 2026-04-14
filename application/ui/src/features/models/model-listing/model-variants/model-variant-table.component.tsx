@@ -18,7 +18,7 @@ import {
 } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { pick } from 'lodash-es';
+import { get } from 'lodash-es';
 import { useNumberFormatter } from 'react-aria';
 
 import { API_BASE_URL } from '../../../../api/client';
@@ -33,8 +33,6 @@ import {
 } from '../utils/variant-metrics';
 import { ValueWithDelta } from './model-variant-delta.component';
 
-// Copyright (C) 2025-2026 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
 type ModelVariantTableProps = {
     model: Model;
     format: ModelFormat;
@@ -54,13 +52,16 @@ const ModelVariantPrecisionRenderer = ({ variant }: ModelVariantPrecisionRendere
         return <Text>{variant.precision.toUpperCase()}</Text>;
     }
 
-    const { max_calibration_subset_size, max_drop } = pick(variant.quantization_info, [
-        'max_drop',
-        'max_calibration_subset_size',
-    ]);
+    const quantizationParameters = {
+        maxDrop: get(variant.quantization_info, 'max_drop'),
+        maxCalibrationSubsetSize: get(variant.quantization_info, 'max_calibration_subset_size'),
+    };
 
-    const maxAccuracyDrop = max_drop == null ? null : Number(max_drop);
-    const calibrationDatasetSize = max_calibration_subset_size == null ? null : Number(max_calibration_subset_size);
+    const maxAccuracyDrop = quantizationParameters.maxDrop == null ? null : Number(quantizationParameters.maxDrop);
+    const calibrationDatasetSize =
+        quantizationParameters.maxCalibrationSubsetSize == null
+            ? null
+            : Number(quantizationParameters.maxCalibrationSubsetSize);
 
     return (
         <Flex direction={'row'} gap={'size-100'}>
