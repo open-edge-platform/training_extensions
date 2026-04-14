@@ -21,6 +21,8 @@ const CHILD_TEST_ID = 'child-content';
 const Child = () => <g data-testid={CHILD_TEST_ID} />;
 
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
+let mockSelectedAnnotations = new Set<string>();
+let mockIsVisible = true;
 
 vi.mock('../selected-media-item-provider.component', () => ({
     useSelectedMediaItem: () => ({ roi: mockROI, image: { width: mockROI.width, height: mockROI.height } }),
@@ -40,16 +42,12 @@ vi.mock('../../../shared/annotator/annotation-actions-provider.component', async
     };
 });
 
-let mockSelectedAnnotations = new Set<string>();
-
 vi.mock('../../../shared/annotator/select-annotation-provider.component', () => ({
     useSelectedAnnotations: () => ({
         selectedAnnotations: mockSelectedAnnotations,
         setSelectedAnnotations: vi.fn(),
     }),
 }));
-
-let mockIsVisible = true;
 
 vi.mock('../../../shared/annotator/annotation-visibility-provider.component', async (importActual) => {
     const actual =
@@ -65,7 +63,18 @@ vi.mock('../../../shared/annotator/annotation-visibility-provider.component', as
     };
 });
 
-const renderWithAnnotation = async (annotation: Annotation) => {
+type AnnotationOptions = {
+    isVisible?: boolean;
+    selectedAnnotations?: Set<string>;
+};
+
+const renderWithAnnotation = async (
+    annotation: Annotation,
+    { isVisible = true, selectedAnnotations = new Set<string>() }: AnnotationOptions = {}
+) => {
+    mockIsVisible = isVisible;
+    mockSelectedAnnotations = selectedAnnotations;
+
     render(
         <svg>
             <ZoomProvider>
@@ -106,8 +115,6 @@ describe('EditableAnnotation', () => {
 
     beforeEach(() => {
         server.use(http.get('/api/projects/{project_id}', () => HttpResponse.json(getMockedProject({}))));
-        mockIsVisible = true;
-        mockSelectedAnnotations = new Set();
     });
 
     it('renders children when the annotation is not selected', async () => {
@@ -118,18 +125,14 @@ describe('EditableAnnotation', () => {
     });
 
     it('renders EditBoundingBox anchors when a rectangle annotation is selected and visible', async () => {
-        mockSelectedAnnotations = new Set([rectangleAnnotation.id]);
-
-        await renderWithAnnotation(rectangleAnnotation);
+        await renderWithAnnotation(rectangleAnnotation, { selectedAnnotations: new Set([rectangleAnnotation.id]) });
 
         expect(screen.getByLabelText(`Edit bounding box points ${rectangleAnnotation.id}`)).toBeInTheDocument();
         expect(screen.queryByTestId(CHILD_TEST_ID)).not.toBeInTheDocument();
     });
 
     it('renders EditPolygon when a polygon annotation is selected and visible', async () => {
-        mockSelectedAnnotations = new Set([polygonAnnotation.id]);
-
-        await renderWithAnnotation(polygonAnnotation);
+        await renderWithAnnotation(polygonAnnotation, { selectedAnnotations: new Set([polygonAnnotation.id]) });
 
         // EditPolygon renders an svg with this id
         expect(document.getElementById(`translate-polygon-${polygonAnnotation.id}`)).toBeInTheDocument();
@@ -137,19 +140,19 @@ describe('EditableAnnotation', () => {
     });
 
     it('renders children instead of edit anchors when annotations are hidden, even if selected', async () => {
-        mockIsVisible = false;
-        mockSelectedAnnotations = new Set([rectangleAnnotation.id]);
-
-        await renderWithAnnotation(rectangleAnnotation);
+        await renderWithAnnotation(rectangleAnnotation, {
+            isVisible: false,
+            selectedAnnotations: new Set([rectangleAnnotation.id]),
+        });
 
         expect(screen.getByTestId(CHILD_TEST_ID)).toBeInTheDocument();
         expect(screen.queryByLabelText(`Edit bounding box points ${rectangleAnnotation.id}`)).not.toBeInTheDocument();
     });
 
     it('renders children when multiple annotations are selected', async () => {
-        mockSelectedAnnotations = new Set([rectangleAnnotation.id, 'other-annotation']);
-
-        await renderWithAnnotation(rectangleAnnotation);
+        await renderWithAnnotation(rectangleAnnotation, {
+            selectedAnnotations: new Set([rectangleAnnotation.id, 'other-annotation']),
+        });
 
         expect(screen.getByTestId(CHILD_TEST_ID)).toBeInTheDocument();
         expect(screen.queryByLabelText(`Edit bounding box points ${rectangleAnnotation.id}`)).not.toBeInTheDocument();
