@@ -18,11 +18,13 @@ const renderModelArchitecture = ({
     selectedModelArchitectureId = null,
     onSelectedModelArchitectureIdChange = vi.fn(),
     modelArchitecture = getMockedModelArchitecture(),
+    showBenchmarkStats = false,
 }: {
     activeModelArchitectureId?: string;
     selectedModelArchitectureId?: string | null;
     onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
     modelArchitecture?: ModelArchitectureWithPerformanceCategory;
+    showBenchmarkStats?: boolean;
 } = {}) => {
     render(
         <ModelArchitecturesListLayout
@@ -35,6 +37,7 @@ const renderModelArchitecture = ({
                 modelArchitecture={modelArchitecture}
                 selectedModelArchitectureId={selectedModelArchitectureId}
                 onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                showBenchmarkStats={showBenchmarkStats}
             />
         </ModelArchitecturesListLayout>
     );
@@ -126,5 +129,68 @@ describe('ModelArchitecture', () => {
         renderModelArchitecture({ selectedModelArchitectureId: null });
 
         expect(screen.getByRole('radio', { name: 'Deim-DFine-L' })).not.toBeChecked();
+    });
+
+    describe('showBenchmarkStats', () => {
+        const detectionArchitecture = getMockedModelArchitecture({
+            task: 'detection',
+            stats: {
+                gigaflops: 91,
+                trainable_parameters: 31,
+                benchmark_metrics: {
+                    imagenet_top1_accuracy: null,
+                    imagenet_top5_accuracy: null,
+                    coco_map_50_95: 55.3,
+                    coco_map_50: null,
+                },
+            },
+            performanceCategory: 'speed',
+        });
+
+        it('does not show gigaflops or accuracy by default', () => {
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture });
+
+            expect(screen.queryByText(/gigaflops/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/mAP/i)).not.toBeInTheDocument();
+        });
+
+        it('shows gigaflops and mAP when showBenchmarkStats is true', () => {
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: true });
+
+            expect(screen.getByText(`Gigaflops: ${detectionArchitecture.stats.gigaflops}`)).toBeVisible();
+            expect(screen.getByText('mAP: 55.3%')).toBeVisible();
+        });
+
+        it('hides the performance category badge when showBenchmarkStats is true', () => {
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: true });
+
+            expect(screen.queryByText('Speed')).not.toBeInTheDocument();
+        });
+
+        it('still shows the performance category badge when showBenchmarkStats is false', () => {
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: false });
+
+            expect(screen.getByText('Speed')).toBeVisible();
+        });
+
+        it('shows Top-1 Acc for classification tasks', () => {
+            const classificationArchitecture = getMockedModelArchitecture({
+                task: 'classification',
+                stats: {
+                    gigaflops: 2,
+                    trainable_parameters: 5,
+                    benchmark_metrics: {
+                        imagenet_top1_accuracy: 76.2,
+                        imagenet_top5_accuracy: 95.3,
+                        coco_map_50_95: null,
+                        coco_map_50: null,
+                    },
+                },
+            });
+
+            renderModelArchitecture({ modelArchitecture: classificationArchitecture, showBenchmarkStats: true });
+
+            expect(screen.getByText('Top-1 Acc: 76.2%')).toBeVisible();
+        });
     });
 });
