@@ -53,13 +53,13 @@ const ModelVariantPrecisionRenderer = ({ variant }: ModelVariantPrecisionRendere
     }
 
     const quantizationParameters = {
-        maxDrop: get(variant.quantization_info, 'max_drop'),
-        maxCalibrationSubsetSize: get(variant.quantization_info, 'max_calibration_subset_size'),
+        maxDrop: get(variant.quantization_info, 'max_drop', null),
+        maxCalibrationSubsetSize: get(variant.quantization_info, 'max_calibration_subset_size', null),
     };
 
-    const maxAccuracyDrop = quantizationParameters.maxDrop == null ? null : Number(quantizationParameters.maxDrop);
+    const maxAccuracyDrop = quantizationParameters.maxDrop === null ? null : Number(quantizationParameters.maxDrop);
     const calibrationDatasetSize =
-        quantizationParameters.maxCalibrationSubsetSize == null
+        quantizationParameters.maxCalibrationSubsetSize === null
             ? null
             : Number(quantizationParameters.maxCalibrationSubsetSize);
 
