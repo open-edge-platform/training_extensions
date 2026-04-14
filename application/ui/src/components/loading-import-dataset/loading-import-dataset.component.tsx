@@ -15,7 +15,7 @@ type LoadingImportDatasetProps = {
     size: number;
     fileName: string;
     stagedDatasetId: string;
-    onSuccess: () => void;
+    onSuccess: () => Promise<void> | void;
     deleteEntry: () => void;
 };
 
@@ -31,9 +31,9 @@ export const LoadingImportDataset = ({
 
     const { data: job, ...response } = useImportJobStatus({
         jobId,
-        onSuccess: () => {
-            onSuccess();
+        onSuccess: async () => {
             deleteEntry();
+            await onSuccess();
             deleteStagedFileMutation.mutate();
 
             toast({

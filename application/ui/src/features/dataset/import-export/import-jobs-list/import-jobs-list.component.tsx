@@ -28,8 +28,8 @@ export const ImportJobsList = () => {
     const stagedImportsQueue = stagedImports.reverse();
     const preparingImportsQueue = preparingImports.reverse();
 
-    const handleImportSuccess = () => {
-        queryClient.invalidateQueries({
+    const handleImportSuccess = async () => {
+        await queryClient.invalidateQueries({
             queryKey: getQueryKey([
                 'get',
                 '/api/projects/{project_id}/dataset/media',
@@ -37,7 +37,7 @@ export const ImportJobsList = () => {
             ]),
         });
 
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
             queryKey: getQueryKey([
                 'get',
                 '/api/projects/{project_id}/dataset/items',
