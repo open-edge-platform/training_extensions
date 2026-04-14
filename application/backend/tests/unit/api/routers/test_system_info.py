@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Generator
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from fastapi import status
@@ -22,32 +22,34 @@ def fxt_license_service() -> Generator[Mock, None, None]:
     app.dependency_overrides.pop(get_license_service, None)
 
 
+@pytest.mark.parametrize(
+    ("is_accepted", "expected_license_accepted"),
+    [(False, False), (True, True)],
+)
 class TestSystemInfoEndpoint:
     def test_returns_license_status_and_platform(
-        self, fxt_license_service: Mock, fxt_client: TestClient, monkeypatch: pytest.MonkeyPatch
+        self,
+        fxt_license_service: Mock,
+        fxt_client: TestClient,
+        is_accepted: bool,
+        expected_license_accepted: bool,
     ) -> None:
         """GET /api/system/info returns license_accepted and the current platform."""
-        fxt_license_service.is_accepted.return_value = False
-        monkeypatch.setattr(system_router, "_get_platform", lambda: "linux")
+        fxt_license_service.is_accepted.return_value = is_accepted
 
-        response = fxt_client.get("/api/system/info")
+        with patch.object(system_router, "_get_platform", return_value="linux"):
+            response = fxt_client.get("/api/system/info")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data == {"license_accepted": False, "platform": "linux"}
-
-        fxt_license_service.is_accepted.return_value = True
-        response = fxt_client.get("/api/system/info")
-        assert response.json()["license_accepted"] is True
+        assert data["license_accepted"] == expected_license_accepted
+        assert data["platform"] == "linux"
 
 
 @pytest.mark.parametrize(
     ("platform_name", "expected"),
     [("win32", "windows"), ("darwin", "macos"), ("linux", "linux")],
 )
-def test_get_platform_maps_supported_platforms(
-    monkeypatch: pytest.MonkeyPatch, platform_name: str, expected: str
-) -> None:
-    monkeypatch.setattr(system_router.sys, "platform", platform_name)
-
-    assert system_router._get_platform() == expected
+def test_get_platform_maps_supported_platforms(platform_name: str, expected: str) -> None:
+    with patch.object(system_router.sys, "platform", new=platform_name):
+        assert system_router._get_platform() == expected

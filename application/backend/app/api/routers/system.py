@@ -22,9 +22,7 @@ def _get_platform() -> PlatformType:
         return "windows"
     if sys.platform == "darwin":
         return "macos"
-    if sys.platform.startswith("linux"):
-        return "linux"
-    raise RuntimeError(f"Unsupported platform: {sys.platform}")
+    return "linux"
 
 
 @router.get("/info")
