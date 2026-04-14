@@ -7,12 +7,6 @@ import { SchemaMediaWithPagination } from '../../api/openapi-spec';
 import { Media } from '../../constants/shared-types';
 import { isVideo } from '../media-item-utils';
 
-/* const updateAnnotatedFrameCount = (mediaItem: Media) => (item: MediaDTO) => {
-    return isVideo(item) && item.id === mediaItem.id
-        ? { ...item, annotated_frame_count: item.annotated_frame_count + 1 }
-        : item;
-}; */
-
 export const incrementCachedAnnotatedFrameCount = (queryClient: QueryClient, mediaItem: Media) => {
     queryClient.setQueriesData<InfiniteData<SchemaMediaWithPagination>>(
         { queryKey: ['get', '/api/projects/{project_id}/dataset/media'] },

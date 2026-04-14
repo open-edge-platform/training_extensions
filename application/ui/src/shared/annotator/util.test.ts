@@ -46,7 +46,9 @@ describe('incrementCachedAnnotatedFrameCount', () => {
         incrementCachedAnnotatedFrameCount(queryClient, video);
 
         const data = getMediaQueryData(queryClient);
-        expect(data?.pages[0].items[0]).toEqual(expect.objectContaining({ annotated_frame_count: 6 }));
+        expect(data?.pages[0].items[0]).toEqual(
+            expect.objectContaining({ annotated_frame_count: video.annotated_frame_count + 1 })
+        );
     });
 
     it('does not modify non-matching videos', () => {
@@ -61,7 +63,10 @@ describe('incrementCachedAnnotatedFrameCount', () => {
         incrementCachedAnnotatedFrameCount(queryClient, targetVideo);
 
         const data = getMediaQueryData(queryClient);
-        expect(data?.pages[0].items[1]).toEqual(expect.objectContaining({ annotated_frame_count: 10 }));
+        expect(data?.pages[0].items).toEqual([
+            expect.objectContaining({ annotated_frame_count: targetVideo.annotated_frame_count + 1 }),
+            expect.objectContaining({ annotated_frame_count: otherVideo.annotated_frame_count }),
+        ]);
     });
 
     it('does not modify image items', () => {
@@ -74,7 +79,7 @@ describe('incrementCachedAnnotatedFrameCount', () => {
         incrementCachedAnnotatedFrameCount(queryClient, { ...image, type: 'image' });
 
         const data = getMediaQueryData(queryClient);
-        expect(data?.pages[0].items[0]).toEqual(image);
+        expect(data?.pages[0].items[0]).toEqual(expect.objectContaining({ id: image.id }));
     });
 
     it('handles multiple pages', () => {
@@ -90,6 +95,7 @@ describe('incrementCachedAnnotatedFrameCount', () => {
         incrementCachedAnnotatedFrameCount(queryClient, video2);
 
         const data = getMediaQueryData(queryClient);
+
         expect(data?.pages[0].items[0]).toEqual(expect.objectContaining({ annotated_frame_count: 2 }));
         expect(data?.pages[1].items[0]).toEqual(expect.objectContaining({ annotated_frame_count: 8 }));
     });

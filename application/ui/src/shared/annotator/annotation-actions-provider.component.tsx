@@ -164,14 +164,16 @@ export const AnnotationActionsProvider = ({
               }
             : undefined;
 
-        await saveMutation.mutateAsync({
-            params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
-            body: { annotations: annotationsDTO, subset: subset ?? undefined },
-        });
-
-        if (isVideoFrame(mediaItem)) {
-            incrementCachedAnnotatedFrameCount(queryClient, mediaItem);
-        }
+        await saveMutation
+            .mutateAsync({
+                params: { path: { media_id: mediaItem.id, project_id: projectId }, query },
+                body: { annotations: annotationsDTO, subset: subset ?? undefined },
+            })
+            .then(() => {
+                if (isVideoFrame(mediaItem)) {
+                    incrementCachedAnnotatedFrameCount(queryClient, mediaItem);
+                }
+            });
 
         undoRedoActions.reset(mapServerAnnotationsToLocal(annotationsDTO, projectLabels));
     };
