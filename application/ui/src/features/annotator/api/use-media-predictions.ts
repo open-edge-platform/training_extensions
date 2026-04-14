@@ -5,7 +5,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { fetchClient } from '../../../api/client';
-import { PredictionVideoRangePayload } from '../../../constants/shared-types';
+import { PredictionDTO, PredictionVideoRangePayload } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 
 export const mediaPredictionsQueryOptions = ({
@@ -39,15 +39,15 @@ export const mediaPredictionsQueryOptions = ({
             const predictions = response.data?.predictions ?? [];
 
             return predictions.map((predictionItem) => {
-                if (predictionItem.prediction.length === 0) {
+                if ((predictionItem.prediction ?? []).length === 0) {
                     return {
                         ...predictionItem,
                         prediction: [
                             {
                                 shape: { type: 'full_image' },
                                 labels: [{ id: EMPTY_LABEL_ID }],
-                                confidences: null,
-                            },
+                                confidences: [1],
+                            } satisfies PredictionDTO,
                         ],
                     };
                 }
