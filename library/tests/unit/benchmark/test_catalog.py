@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx_benchmark.catalog."""
+"""Tests for otx.benchmark.catalog."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ import textwrap
 from pathlib import Path
 
 import pytest
-from otx_benchmark.catalog import (
+
+from otx.benchmark.catalog import (
     DatasetCatalog,
     DatasetEntry,
     _extract,
@@ -174,7 +175,7 @@ class TestProvisionDataset:
 
             shutil.copy(archive_path, dest)
 
-        monkeypatch.setattr("otx_benchmark.catalog._download", fake_download)
+        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
 
         entry = DatasetEntry(
             name="test_ds",
@@ -201,7 +202,7 @@ class TestProvisionDataset:
 
             shutil.copy(archive_path, dest)
 
-        monkeypatch.setattr("otx_benchmark.catalog._download", fake_download)
+        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
 
         entry = DatasetEntry(
             name="bad_ds",
@@ -331,7 +332,7 @@ class TestProvisionDatasetAdvanced:
 
             shutil.copy(archive_path, dest)
 
-        monkeypatch.setattr("otx_benchmark.catalog._download", fake_download)
+        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
 
         entry = DatasetEntry(
             name="evolving_ds",
@@ -361,7 +362,7 @@ class TestProvisionDatasetAdvanced:
 
             shutil.copy(archive_path, dest)
 
-        monkeypatch.setattr("otx_benchmark.catalog._download", fake_download)
+        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
 
         entry = DatasetEntry(
             name="zip_ds",
@@ -388,7 +389,7 @@ class TestProvisionDatasets:
             name = Path(url).name
             shutil.copy(archive_dir / name, dest)
 
-        monkeypatch.setattr("otx_benchmark.catalog._download", fake_download)
+        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
 
         entry_a = DatasetEntry(name="a", url="https://x.com/a.tar.gz", sha256=sha_a, size_tier="tiny")
         entry_b = DatasetEntry(name="b", url="https://x.com/b.tar.gz", sha256=sha_b, size_tier="tiny")
@@ -411,7 +412,7 @@ class TestProvisionDatasets:
 
             shutil.copy(archive, dest)
 
-        monkeypatch.setattr("otx_benchmark.catalog._download", fake_download)
+        monkeypatch.setattr("otx.benchmark.catalog._download", fake_download)
 
         entry_a = DatasetEntry(name="a", url="https://x.com/only.tar.gz", sha256=sha, size_tier="tiny")
         entry_b = DatasetEntry(name="b", url="https://unreachable.com/b.tar.gz", sha256="nope", size_tier="tiny")

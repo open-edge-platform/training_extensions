@@ -1,15 +1,15 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx_benchmark.tracking (MLflow integration)."""
+"""Tests for otx.benchmark.tracking (MLflow integration)."""
 
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from otx_benchmark.experiment import ExperimentResult, PhaseResult
-from otx_benchmark.manifest import CriteriaConfig, Experiment, ModelEntry, Scenario
-from otx_benchmark.tracking import (
+from otx.benchmark.experiment import ExperimentResult, PhaseResult
+from otx.benchmark.manifest import CriteriaConfig, Experiment, ModelEntry, Scenario
+from otx.benchmark.tracking import (
     BenchmarkTracker,
     RunTags,
     TrackingConfig,
@@ -35,7 +35,7 @@ class TestTrackingConfig:
         cfg = TrackingConfig(branch="develop", trigger="weekly")
         assert cfg.experiment_name == "otx-benchmark/develop/weekly"
 
-    @patch("otx_benchmark.tracking.get_git_branch", return_value="feature/xyz")
+    @patch("otx.benchmark.tracking.get_git_branch", return_value="feature/xyz")
     def test_experiment_name_auto_branch(self, mock_branch: MagicMock) -> None:
         cfg = TrackingConfig(branch="", trigger="nightly")
         assert cfg.experiment_name == "otx-benchmark/feature/xyz/nightly"
@@ -119,7 +119,7 @@ class TestGitHelpers:
 
 
 class TestBenchmarkTrackerSetup:
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_setup_creates_experiment(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(
             tracking_uri="/tmp/test_mlruns",  # noqa: S108
@@ -137,7 +137,7 @@ class TestBenchmarkTrackerSetup:
         mock_mlflow.create_experiment.assert_called_once_with("otx-benchmark/develop/manual")
         assert tracker._experiment_id == "1"
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_setup_reuses_existing_experiment(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="weekly")
 
@@ -189,7 +189,7 @@ class TestBenchmarkTrackerLogRun:
             criteria=CriteriaConfig(accuracy_metric="mAP", thresholds={}),
         )
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_log_successful_run(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="manual")
         tracker = BenchmarkTracker(config)
@@ -215,7 +215,7 @@ class TestBenchmarkTrackerLogRun:
         # log_metrics should have been called for numeric metrics and per-phase wall times
         assert mock_mlflow.log_metrics.call_count >= 1
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_log_failed_run_sets_error_tag(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="manual")
         tracker = BenchmarkTracker(config)
@@ -243,7 +243,7 @@ class TestBenchmarkTrackerLogRun:
 
 
 class TestResolveBaseline:
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_no_experiment_returns_none(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="manual")
         tracker = BenchmarkTracker(config)
@@ -256,7 +256,7 @@ class TestResolveBaseline:
         result = tracker.resolve_baseline(model="m", dataset="d")
         assert result is None
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_no_runs_returns_none(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="weekly")
         tracker = BenchmarkTracker(config)
@@ -272,7 +272,7 @@ class TestResolveBaseline:
         result = tracker.resolve_baseline(model="m", dataset="d")
         assert result is None
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_returns_metrics_from_latest_run(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(branch="develop", trigger="weekly")
         tracker = BenchmarkTracker(config)
@@ -346,7 +346,7 @@ class TestResolveBaselinesForResults:
 
 
 class TestPurgeOldRuns:
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_no_experiments_returns_zero(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -358,7 +358,7 @@ class TestPurgeOldRuns:
         deleted = tracker.purge_old_runs(max_age_days=30)
         assert deleted == 0
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_deletes_old_feature_branch_runs(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -393,7 +393,7 @@ class TestPurgeOldRuns:
         assert deleted == 1
         mock_client.delete_run.assert_called_once_with("old_run")
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_protects_develop_branch_runs(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)
@@ -422,7 +422,7 @@ class TestPurgeOldRuns:
         assert deleted == 0
         mock_client.delete_run.assert_not_called()
 
-    @patch("otx_benchmark.tracking.mlflow")
+    @patch("otx.benchmark.tracking.mlflow")
     def test_dry_run_does_not_delete(self, mock_mlflow: MagicMock) -> None:
         config = TrackingConfig(tracking_uri="/tmp/mlruns")  # noqa: S108
         tracker = BenchmarkTracker(config)

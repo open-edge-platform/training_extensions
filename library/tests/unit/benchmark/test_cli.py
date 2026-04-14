@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx_benchmark.cli."""
+"""Tests for otx.benchmark.cli."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from otx_benchmark.cli import _build_parser, _cmd_provision, _cmd_run, _parse_key_value_pairs, main
+
+from otx.benchmark.cli import _build_parser, _cmd_provision, _cmd_run, _parse_key_value_pairs, main
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -152,14 +153,14 @@ class TestCmdProvision:
         catalog_file: Path,
         tmp_path: Path,
     ) -> None:
-        from otx_benchmark.catalog import load_catalog
+        from otx.benchmark.catalog import load_catalog
 
         load_catalog(catalog_file)
 
         parser = _build_parser()
         args = parser.parse_args(["provision", "--catalog", str(catalog_file), "--data-root", str(tmp_path / "data")])
 
-        with patch("otx_benchmark.catalog.provision_datasets", return_value={}) as mock_provision:
+        with patch("otx.benchmark.catalog.provision_datasets", return_value={}) as mock_provision:
             rc = _cmd_provision(args)
 
         assert rc == 0
@@ -195,7 +196,7 @@ class TestCmdProvision:
 
 
 class TestCmdRun:
-    @patch("otx_benchmark.runner.BenchmarkRunner")
+    @patch("otx.benchmark.runner.BenchmarkRunner")
     def test_dry_run_returns_zero(
         self,
         mock_runner_cls: MagicMock,
@@ -225,7 +226,7 @@ class TestCmdRun:
         assert rc == 0
         mock_runner.run.assert_called_once()
 
-    @patch("otx_benchmark.runner.BenchmarkRunner")
+    @patch("otx.benchmark.runner.BenchmarkRunner")
     def test_run_with_failures_returns_nonzero(
         self,
         mock_runner_cls: MagicMock,
@@ -233,7 +234,7 @@ class TestCmdRun:
         manifest_file: Path,
         tmp_path: Path,
     ) -> None:
-        from otx_benchmark.experiment import ExperimentResult
+        from otx.benchmark.experiment import ExperimentResult
 
         failure = ExperimentResult(
             task="det",
@@ -270,8 +271,8 @@ class TestCmdRun:
 
 
 class TestMain:
-    @patch("otx_benchmark.cli.sys.exit")
-    @patch("otx_benchmark.cli._cmd_provision", return_value=0)
+    @patch("otx.benchmark.cli.sys.exit")
+    @patch("otx.benchmark.cli._cmd_provision", return_value=0)
     def test_main_dispatches_provision(
         self,
         mock_cmd: MagicMock,
@@ -287,8 +288,8 @@ class TestMain:
         mock_cmd.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
-    @patch("otx_benchmark.cli.sys.exit")
-    @patch("otx_benchmark.cli._cmd_run", return_value=0)
+    @patch("otx.benchmark.cli.sys.exit")
+    @patch("otx.benchmark.cli._cmd_run", return_value=0)
     def test_main_dispatches_run(
         self,
         mock_cmd: MagicMock,
@@ -314,8 +315,8 @@ class TestMain:
         mock_cmd.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
-    @patch("otx_benchmark.cli.sys.exit")
-    @patch("otx_benchmark.cli._cmd_run", return_value=1)
+    @patch("otx.benchmark.cli.sys.exit")
+    @patch("otx.benchmark.cli._cmd_run", return_value=1)
     def test_main_propagates_nonzero_exit(
         self,
         mock_cmd: MagicMock,
@@ -338,7 +339,7 @@ class TestMain:
 
 
 class TestCmdRunFilters:
-    @patch("otx_benchmark.runner.BenchmarkRunner")
+    @patch("otx.benchmark.runner.BenchmarkRunner")
     def test_all_filters_passed_through(
         self,
         mock_runner_cls: MagicMock,
@@ -398,7 +399,7 @@ class TestCmdRunFilters:
         assert config.num_seeds == 3
         assert config.eval_upto == "export"
 
-    @patch("otx_benchmark.runner.BenchmarkRunner")
+    @patch("otx.benchmark.runner.BenchmarkRunner")
     def test_provision_with_dataset_filter(
         self,
         mock_runner_cls: MagicMock,
@@ -418,12 +419,12 @@ class TestCmdRunFilters:
                 "ds_a",
             ]
         )
-        with patch("otx_benchmark.catalog.provision_datasets", return_value={}) as mock_prov:
+        with patch("otx.benchmark.catalog.provision_datasets", return_value={}) as mock_prov:
             rc = _cmd_provision(args)
         assert rc == 0
         mock_prov.assert_called_once()
 
-    @patch("otx_benchmark.runner.BenchmarkRunner")
+    @patch("otx.benchmark.runner.BenchmarkRunner")
     def test_provision_with_size_tier_filter(
         self,
         mock_runner_cls: MagicMock,
@@ -442,7 +443,7 @@ class TestCmdRunFilters:
                 "tiny",
             ]
         )
-        with patch("otx_benchmark.catalog.provision_datasets", return_value={}) as mock_prov:
+        with patch("otx.benchmark.catalog.provision_datasets", return_value={}) as mock_prov:
             rc = _cmd_provision(args)
         assert rc == 0
         mock_prov.assert_called_once()

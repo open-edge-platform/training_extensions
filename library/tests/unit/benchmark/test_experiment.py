@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx_benchmark.experiment (result types, resume, metric scraping)."""
+"""Tests for otx.benchmark.experiment (result types, resume, metric scraping)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,8 @@ import json
 from pathlib import Path
 
 import pytest
-from otx_benchmark.experiment import (
+
+from otx.benchmark.experiment import (
     ExperimentExecutor,
     ExperimentResult,
     PhaseResult,

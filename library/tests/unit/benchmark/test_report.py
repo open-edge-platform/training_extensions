@@ -1,15 +1,15 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for otx_benchmark.report (regression detection and Markdown generation)."""
+"""Tests for otx.benchmark.report (regression detection and Markdown generation)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from otx_benchmark.experiment import ExperimentResult, PhaseResult
-from otx_benchmark.manifest import CriteriaConfig, Threshold
-from otx_benchmark.report import (
+from otx.benchmark.experiment import ExperimentResult, PhaseResult
+from otx.benchmark.manifest import CriteriaConfig, Threshold
+from otx.benchmark.report import (
     BenchmarkReport,
     ExperimentComparison,
     FailureRecord,
