@@ -98,7 +98,7 @@ const PrefetchPredictions = () => {
         chunkSize: PREDICTION_CHUNK_SIZE,
     });
 
-    return <></>;
+    return null;
 };
 
 type MediaAnnotationsProps = {
