@@ -136,7 +136,6 @@ export const ModelArchitectureCard = ({
 
 ModelArchitectureCard.Name = ModelArchitectureName;
 ModelArchitectureCard.Parameters = ModelArchitectureParameters;
-ModelArchitectureCard.Benchmark = ModelArchitectureBenchmark;
 ModelArchitectureCard.DetailedParameters = ModelArchitectureDetailedParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
