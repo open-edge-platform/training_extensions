@@ -10,7 +10,7 @@ import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { render } from 'test-utils/render';
 
 import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
-import { ModelArchitecture } from './model-architecture.component';
+import { DetailedModelArchitecture, ModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
 const renderModelArchitecture = ({
@@ -18,13 +18,11 @@ const renderModelArchitecture = ({
     selectedModelArchitectureId = null,
     onSelectedModelArchitectureIdChange = vi.fn(),
     modelArchitecture = getMockedModelArchitecture(),
-    showBenchmarkStats = false,
 }: {
     activeModelArchitectureId?: string;
     selectedModelArchitectureId?: string | null;
     onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
     modelArchitecture?: ModelArchitectureWithPerformanceCategory;
-    showBenchmarkStats?: boolean;
 } = {}) => {
     render(
         <ModelArchitecturesListLayout
@@ -37,7 +35,35 @@ const renderModelArchitecture = ({
                 modelArchitecture={modelArchitecture}
                 selectedModelArchitectureId={selectedModelArchitectureId}
                 onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
-                showBenchmarkStats={showBenchmarkStats}
+            />
+        </ModelArchitecturesListLayout>
+    );
+
+    return { modelArchitecture };
+};
+
+const renderDetailedModelArchitecture = ({
+    activeModelArchitectureId = undefined,
+    selectedModelArchitectureId = null,
+    onSelectedModelArchitectureIdChange = vi.fn(),
+    modelArchitecture = getMockedModelArchitecture(),
+}: {
+    activeModelArchitectureId?: string;
+    selectedModelArchitectureId?: string | null;
+    onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
+    modelArchitecture?: ModelArchitectureWithPerformanceCategory;
+} = {}) => {
+    render(
+        <ModelArchitecturesListLayout
+            selectedModelArchitectureId={selectedModelArchitectureId}
+            onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+            ariaLabel={'Model architectures'}
+        >
+            <DetailedModelArchitecture
+                activeModelArchitectureId={activeModelArchitectureId}
+                modelArchitecture={modelArchitecture}
+                selectedModelArchitectureId={selectedModelArchitectureId}
+                onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
             />
         </ModelArchitecturesListLayout>
     );
@@ -155,20 +181,20 @@ describe('ModelArchitecture', () => {
         });
 
         it('shows gigaflops and mAP when using DetailedParameters', () => {
-            renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: true });
+            renderDetailedModelArchitecture({ modelArchitecture: detectionArchitecture });
 
             expect(screen.getByText(`Gigaflops: ${detectionArchitecture.stats.gigaflops}`)).toBeVisible();
             expect(screen.getByText('mAP: 55.3%')).toBeVisible();
         });
 
         it('hides the performance category badge when using DetailedParameters', () => {
-            renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: true });
+            renderDetailedModelArchitecture({ modelArchitecture: detectionArchitecture });
 
             expect(screen.queryByText('Speed')).not.toBeInTheDocument();
         });
 
         it('still shows the performance category badge when using Parameters only', () => {
-            renderModelArchitecture({ modelArchitecture: detectionArchitecture, showBenchmarkStats: false });
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture });
 
             expect(screen.getByText('Speed')).toBeVisible();
         });
@@ -188,7 +214,7 @@ describe('ModelArchitecture', () => {
                 },
             });
 
-            renderModelArchitecture({ modelArchitecture: classificationArchitecture, showBenchmarkStats: true });
+            renderDetailedModelArchitecture({ modelArchitecture: classificationArchitecture });
 
             expect(screen.getByText('Top-1 Acc: 76.2%')).toBeVisible();
         });

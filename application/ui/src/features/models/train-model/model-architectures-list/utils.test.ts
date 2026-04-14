@@ -190,7 +190,7 @@ describe('getAccuracyMetric', () => {
 
         const result = getAccuracyMetric(modelArchitecture);
 
-        expect(result).toEqual({ label: 'mAP', value: 72.1 });
+        expect(result).toEqual({ label: 'mAP50', value: 72.1 });
     });
 
     it('returns undefined when no accuracy metrics are available', () => {

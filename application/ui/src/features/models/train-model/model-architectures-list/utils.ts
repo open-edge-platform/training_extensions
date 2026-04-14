@@ -3,23 +3,32 @@
 
 import { isNil } from 'lodash-es';
 
-import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
-import { getAccuracyMetricBasedOnTask } from '../sort-model-architectures/utils';
+import type { BenchmarkMetrics, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
 export type AccuracyMetric = { label: string; value: number };
+
+type BenchmarkMetricKey = keyof BenchmarkMetrics;
+
+const ACCURACY_METRIC_LABELS: Partial<Record<BenchmarkMetricKey, string>> = {
+    imagenet_top1_accuracy: 'Top-1 Acc',
+    coco_map_50_95: 'mAP',
+    coco_map_50: 'mAP50',
+};
 
 export const getAccuracyMetric = (
     modelArchitecture: ModelArchitectureWithPerformanceCategory
 ): AccuracyMetric | undefined => {
-    const value = getAccuracyMetricBasedOnTask(modelArchitecture);
+    const benchmarkMetrics = modelArchitecture.stats.benchmark_metrics;
 
-    if (isNil(value)) {
-        return undefined;
+    for (const [key, label] of Object.entries(ACCURACY_METRIC_LABELS)) {
+        const value = benchmarkMetrics[key as BenchmarkMetricKey];
+
+        if (!isNil(value)) {
+            return { label, value };
+        }
     }
 
-    const label = modelArchitecture.task === 'classification' ? 'Top-1 Acc' : 'mAP';
-
-    return { label, value };
+    return undefined;
 };
 
 const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPerformanceCategory[]) => {

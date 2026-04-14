@@ -12,7 +12,6 @@ type ModelArchitectureProps = {
     modelArchitecture: ModelArchitectureWithPerformanceCategory;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-    showBenchmarkStats?: boolean;
 };
 
 export const ModelArchitecture = ({
@@ -20,7 +19,6 @@ export const ModelArchitecture = ({
     modelArchitecture,
     selectedModelArchitectureId,
     onSelectedModelArchitectureIdChange,
-    showBenchmarkStats = false,
 }: ModelArchitectureProps) => {
     const isSelected = modelArchitecture.id === selectedModelArchitectureId;
     const isActive = activeModelArchitectureId === modelArchitecture.id;
@@ -32,22 +30,49 @@ export const ModelArchitecture = ({
             onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
         >
             <ModelArchitectureCard.Name />
-            {showBenchmarkStats ? <ModelArchitectureCard.DetailedParameters /> : <ModelArchitectureCard.Parameters />}
+            <ModelArchitectureCard.Parameters />
 
-            {(isActive || (!showBenchmarkStats && modelArchitecture.performanceCategory !== undefined)) && (
+            {(isActive || modelArchitecture.performanceCategory !== undefined) && (
                 <Flex gap={'size-100'} alignItems={'center'}>
                     {isActive && (
                         <View justifySelf={'start'}>
                             <ModelArchitectureCard.Active />
                         </View>
                     )}
-                    {!showBenchmarkStats && modelArchitecture.performanceCategory !== undefined && (
+                    {modelArchitecture.performanceCategory !== undefined && (
                         <PerformanceCategoryBadge
                             performanceCategory={modelArchitecture.performanceCategory}
                             color={'var(--spectrum-global-color-gray-100)'}
                         />
                     )}
                 </Flex>
+            )}
+        </ModelArchitectureCard>
+    );
+};
+
+export const DetailedModelArchitecture = ({
+    activeModelArchitectureId,
+    modelArchitecture,
+    selectedModelArchitectureId,
+    onSelectedModelArchitectureIdChange,
+}: ModelArchitectureProps) => {
+    const isSelected = modelArchitecture.id === selectedModelArchitectureId;
+    const isActive = activeModelArchitectureId === modelArchitecture.id;
+
+    return (
+        <ModelArchitectureCard
+            modelArchitecture={modelArchitecture}
+            isSelected={isSelected}
+            onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
+        >
+            <ModelArchitectureCard.Name />
+            <ModelArchitectureCard.DetailedParameters />
+
+            {isActive && (
+                <View justifySelf={'start'}>
+                    <ModelArchitectureCard.Active />
+                </View>
             )}
         </ModelArchitectureCard>
     );
