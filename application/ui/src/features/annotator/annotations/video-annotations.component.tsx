@@ -6,7 +6,11 @@ import { useProjectLabelsWithEmptyLabel } from '../../../shared/annotator/labels
 import { Annotation } from '../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { useVideoFramesAnnotations } from '../video-player/api/use-video-frames-annotations';
-import { useVideoFramesPredictions } from '../video-player/api/use-video-frames-predictions';
+import {
+    PREDICTION_CHUNK_SIZE,
+    PREDICTION_FRAME_SKIP,
+    useVideoFramesPredictions,
+} from '../video-player/api/use-video-frames-predictions';
 import { useVideoPlayer } from '../video-player/video-player-provider.component';
 import { AnnotationShapeRenderer } from './annotation-shape-renderer.component';
 
@@ -67,12 +71,13 @@ export const VideoAnnotations = () => {
 };
 
 export const VideoPredictions = () => {
-    const { step, videoFrame } = useVideoPlayer();
+    const { videoFrame } = useVideoPlayer();
 
     const labels = useProjectLabelsWithEmptyLabel();
     const { data: predictions = [] } = useVideoFramesPredictions({
         frameNumber: videoFrame.frame_number,
-        frameSkip: step,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        chunkSize: PREDICTION_CHUNK_SIZE,
         selector: (data) => {
             const framePredictions =
                 data.find((prediction) => {
