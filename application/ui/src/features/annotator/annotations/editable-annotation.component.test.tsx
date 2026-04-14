@@ -10,7 +10,11 @@ import { render } from 'test-utils/render';
 import { http } from '../../../api/utils';
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { server } from '../../../msw-node-setup';
-import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
+import {
+    AnnotationVisibilityProvider,
+    useAnnotationVisibility,
+} from '../../../shared/annotator/annotation-visibility-provider.component';
+import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { Annotation } from '../../../shared/types';
 import { CanvasSettingsProvider } from '../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
 import { AnnotatorLabelsProvider } from '../annotator-labels-provider.component';
@@ -21,8 +25,6 @@ const CHILD_TEST_ID = 'child-content';
 const Child = () => <g data-testid={CHILD_TEST_ID} />;
 
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
-let mockSelectedAnnotations = new Set<string>();
-let mockIsVisible = true;
 
 vi.mock('../selected-media-item-provider.component', () => ({
     useSelectedMediaItem: () => ({ roi: mockROI, image: { width: mockROI.width, height: mockROI.height } }),
@@ -42,24 +44,21 @@ vi.mock('../../../shared/annotator/annotation-actions-provider.component', async
     };
 });
 
-vi.mock('../../../shared/annotator/select-annotation-provider.component', () => ({
-    useSelectedAnnotations: () => ({
-        selectedAnnotations: mockSelectedAnnotations,
-        setSelectedAnnotations: vi.fn(),
-    }),
-}));
+vi.mock('../../../shared/annotator/select-annotation-provider.component', async (importActual) => {
+    const actual =
+        await importActual<typeof import('../../../shared/annotator/select-annotation-provider.component')>();
+    return {
+        ...actual,
+        useSelectedAnnotations: vi.fn(),
+    };
+});
 
 vi.mock('../../../shared/annotator/annotation-visibility-provider.component', async (importActual) => {
     const actual =
         await importActual<typeof import('../../../shared/annotator/annotation-visibility-provider.component')>();
     return {
         ...actual,
-        useAnnotationVisibility: () => ({
-            isVisible: mockIsVisible,
-            isFocussed: false,
-            toggleVisibility: vi.fn(),
-            toggleFocus: vi.fn(),
-        }),
+        useAnnotationVisibility: vi.fn(),
     };
 });
 
@@ -72,8 +71,16 @@ const renderWithAnnotation = async (
     annotation: Annotation,
     { isVisible = true, selectedAnnotations = new Set<string>() }: AnnotationOptions = {}
 ) => {
-    mockIsVisible = isVisible;
-    mockSelectedAnnotations = selectedAnnotations;
+    vi.mocked(useAnnotationVisibility).mockReturnValue({
+        isVisible,
+        isFocussed: false,
+        toggleVisibility: vi.fn(),
+        toggleFocus: vi.fn(),
+    });
+    vi.mocked(useSelectedAnnotations).mockReturnValue({
+        selectedAnnotations,
+        setSelectedAnnotations: vi.fn(),
+    });
 
     render(
         <svg>
