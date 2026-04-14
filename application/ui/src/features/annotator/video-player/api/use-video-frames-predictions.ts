@@ -11,7 +11,7 @@ import { useVideoPlayer } from '../video-player-provider.component';
 import { getVideoFrameRangeIndexes } from './utils';
 
 export const PREDICTION_CHUNK_SIZE = 10;
-export const PREDICTION_FRAME_SKIP = 1;
+export const PREDICTION_FRAME_SKIP = 5;
 
 const useVideoFramesPredictionsQueryOptions = ({
     frameNumber,

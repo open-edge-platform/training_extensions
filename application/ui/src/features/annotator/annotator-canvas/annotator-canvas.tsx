@@ -19,6 +19,7 @@ import {
     PREDICTION_FRAME_SKIP,
     usePrefetchVideoFramesPredictions,
 } from '../video-player/api/use-video-frames-predictions';
+import { getVideoFrameRangeIndexes } from '../video-player/api/utils';
 import { VideoFrame } from '../video-player/video-frame.component';
 import { useVideoPlayer, useVideoPlayerContext } from '../video-player/video-player-provider.component';
 
@@ -80,16 +81,23 @@ const ImageAnnotations = ({ mediaItem }: ImageAnnotationsProps) => {
 
 const PrefetchPredictions = () => {
     const { videoFrame } = useVideoPlayer();
+    const nextFrameRangeIndexes = getVideoFrameRangeIndexes({
+        frames: videoFrame.frame_count - 1,
+        frameSkip: PREDICTION_FRAME_SKIP,
+        frameNumber: videoFrame.frame_number,
+        chunkSize: PREDICTION_CHUNK_SIZE,
+    });
     usePrefetchVideoFramesPredictions({
         frameNumber: videoFrame.frame_number,
         frameSkip: PREDICTION_FRAME_SKIP,
         chunkSize: PREDICTION_CHUNK_SIZE,
     });
     usePrefetchVideoFramesPredictions({
-        frameNumber: videoFrame.frame_number + PREDICTION_CHUNK_SIZE,
+        frameNumber: nextFrameRangeIndexes.endFrameIndex + 1,
         frameSkip: PREDICTION_FRAME_SKIP,
         chunkSize: PREDICTION_CHUNK_SIZE,
     });
+
     return <></>;
 };
 
@@ -105,7 +113,12 @@ const MediaAnnotations = ({ mediaItem, mode }: MediaAnnotationsProps) => {
         if (mode === 'annotation') {
             return <VideoAnnotations />;
         } else if (mode === 'prediction') {
-            return <VideoPredictions />;
+            return (
+                <>
+                    <VideoPredictions />
+                    <PrefetchPredictions />
+                </>
+            );
         }
     }
 
