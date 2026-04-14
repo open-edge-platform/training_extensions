@@ -3,15 +3,41 @@
 
 """System API Endpoints"""
 
+import sys
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from loguru import logger
 
-from app.api.dependencies import get_system_service
-from app.api.schemas.system import CameraInfoView, DeviceInfoView
+from app.api.dependencies import get_license_service, get_system_service
+from app.api.schemas.system import CameraInfoView, DeviceInfoView, PlatformType, SystemInfoView
 from app.services import SystemService
+from app.services.license_service import LicenseService
 
 router = APIRouter(prefix="/api/system", tags=["System"])
+
+
+def _get_platform() -> PlatformType:
+    """Return the current operating system platform."""
+    if sys.platform == "win32":
+        return "windows"
+    if sys.platform == "darwin":
+        return "macos"
+    return "linux"
+
+
+@router.get("/info")
+async def get_system_info(
+    license_service: Annotated[LicenseService, Depends(get_license_service)],
+) -> SystemInfoView:
+    """Returns system information including license status and platform."""
+    try:
+        license_accepted = license_service.is_accepted()
+    except OSError:
+        logger.warning("License acceptance check failed", exc_info=True)
+        license_accepted = False
+
+    return SystemInfoView(license_accepted=license_accepted, platform=_get_platform())
 
 
 @router.get("/devices/inference")

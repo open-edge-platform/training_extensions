@@ -36,6 +36,7 @@ from app.services.event.event_bus import EventBus
 from app.services.inference import InferenceServer
 from app.services.license_service import LicenseService
 from app.services.training_configuration_service import TrainingConfigurationService
+from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
 
 
@@ -264,9 +265,11 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
     return BaseWeightsService(data_dir)
 
 
-def get_license_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> LicenseService:
+def get_license_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+) -> LicenseService:
     """Provides a LicenseService instance for tracking license consent."""
-    return LicenseService(data_dir=data_dir)
+    return LicenseService(data_dir=data_dir, app_version=get_settings().version)
 
 
 def get_staged_dataset_service(

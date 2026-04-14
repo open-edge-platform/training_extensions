@@ -7,39 +7,50 @@ import pytest
 
 from app.services.license_service import LicenseService
 
+APP_VERSION = "1.0.0"
+
 
 class TestLicenseService:
     """Tests for LicenseService"""
 
     @pytest.fixture
     def fxt_license_service(self, tmp_path: Path) -> LicenseService:
-        return LicenseService(data_dir=tmp_path)
+        return LicenseService(data_dir=tmp_path, app_version=APP_VERSION)
 
-    def test_is_accepted_returns_false_initially(self, fxt_license_service: LicenseService) -> None:
-        """License should not be accepted when no consent file exists."""
+    def test_accept_creates_file_with_version_and_is_idempotent(
+        self, fxt_license_service: LicenseService, tmp_path: Path
+    ) -> None:
+        """License starts not accepted; accept() creates a versioned marker file and is idempotent."""
         assert not fxt_license_service.is_accepted()
 
-    def test_accept_creates_consent_file(self, fxt_license_service: LicenseService, tmp_path: Path) -> None:
-        """Accepting the license should create the consent marker file."""
         fxt_license_service.accept()
 
         consent_file = tmp_path / LicenseService.CONSENT_FILENAME
         assert consent_file.exists()
+        assert consent_file.read_text() == APP_VERSION
+        assert fxt_license_service.is_accepted()
 
-    def test_is_accepted_returns_true_after_accept(self, fxt_license_service: LicenseService) -> None:
-        """License should be accepted after calling accept()."""
+        assert LicenseService(data_dir=tmp_path, app_version=APP_VERSION).is_accepted()
+
         fxt_license_service.accept()
         assert fxt_license_service.is_accepted()
 
-    def test_accept_is_idempotent(self, fxt_license_service: LicenseService) -> None:
-        """Calling accept() multiple times should not raise an error."""
-        fxt_license_service.accept()
-        fxt_license_service.accept()
-        assert fxt_license_service.is_accepted()
+    def test_version_mismatch_requires_re_acceptance(self, tmp_path: Path) -> None:
+        """License accepted for one version is not accepted for another; re-accepting overwrites."""
+        old_service = LicenseService(data_dir=tmp_path, app_version="0.9.0")
+        old_service.accept()
 
-    def test_is_accepted_returns_true_when_file_pre_exists(self, tmp_path: Path) -> None:
-        """License should be accepted when the consent file already exists on disk."""
+        new_service = LicenseService(data_dir=tmp_path, app_version="1.0.0")
+        assert not new_service.is_accepted()
+
+        new_service.accept()
+        consent_file = tmp_path / LicenseService.CONSENT_FILENAME
+        assert consent_file.read_text() == "1.0.0"
+        assert new_service.is_accepted()
+
+    def test_empty_marker_file_is_not_accepted(self, tmp_path: Path) -> None:
+        """An empty consent file (e.g. legacy pre-version marker) is treated as not accepted."""
         (tmp_path / LicenseService.CONSENT_FILENAME).touch()
 
-        service = LicenseService(data_dir=tmp_path)
-        assert service.is_accepted()
+        service = LicenseService(data_dir=tmp_path, app_version=APP_VERSION)
+        assert not service.is_accepted()
