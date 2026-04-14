@@ -158,8 +158,10 @@ ENV DATA_DIR="/application/data"
 ENV LOG_DIR="/application/logs"
 ENV PYTHONPATH=/application/backend
 
-# Create secure non-root user and remove unused package managers to reduce image size
-RUN useradd -l -u ${UID} ${USER_NAME} && \
+# Create secure non-root user, add it to the 'video' group (for /dev/videoN access),
+# and remove unused package managers to reduce image size
+RUN groupadd -f video && \
+    useradd -l -u ${UID} -G video ${USER_NAME} && \
     pip uninstall -y setuptools pip wheel && \
     rm -rf /root/.cache/pip
 
@@ -169,6 +171,7 @@ RUN mkdir -p ${LOG_DIR} && chown ${UID}:${UID} ${LOG_DIR}
 
 # Common system deps (CPU/GPU/XPU all need these)
 # TODO: remove 'git' once all dependencies are available on PyPI
+# libv4l-dev: V4L2 userspace libraries required by OpenCV to capture from USB cameras (/dev/videoN)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update \
@@ -176,7 +179,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0t64=2.84.4-3~deb13u2 \
-        libglx-mesa0=25.0.7-2
+        libglx-mesa0=25.0.7-2 \
+        libv4l-0t64=1.30.1-1
 
 # Place the venv at the front of PATH so we can call python directly (no uv needed at runtime)
 ENV PATH="/application/backend/.venv/bin:${PATH}"

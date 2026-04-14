@@ -322,6 +322,9 @@ class OTXCLI:
                 _dip["mean"] = self.datamodule.input_mean
             if self.datamodule.input_std is not None:
                 _dip["std"] = self.datamodule.input_std
+            _intensity_cfg = getattr(self.datamodule, "input_intensity_config", None)
+            if _intensity_cfg is not None:
+                _dip["intensity_config"] = _intensity_cfg
             model_config.init_args["data_input_params"] = _dip
 
             # Instantiate the model and needed components

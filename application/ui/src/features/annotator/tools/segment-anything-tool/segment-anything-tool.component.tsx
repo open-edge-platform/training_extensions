@@ -82,9 +82,14 @@ export const SegmentAnythingTool = () => {
             getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
         );
 
-        cancellableThrottledDecodingQueryFn.call([{ ...point, positive: true }]).then((shapes) => {
-            setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
-        });
+        cancellableThrottledDecodingQueryFn
+            .call([{ ...point, positive: true }])
+            .then((shapes) => {
+                setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
+            })
+            .catch(() => {
+                return [];
+            });
     };
 
     const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {

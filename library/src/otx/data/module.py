@@ -129,6 +129,8 @@ class OTXDataModule(LightningDataModule):
             self.input_mean = None
             self.input_std = None
         self.input_size = input_size
+        # propagate intensity config from train subset for use in export
+        self.input_intensity_config = getattr(self.train_subset, "intensity", None)
 
         self._setup_otx_dataset(dataset)
 
@@ -320,6 +322,9 @@ class OTXDataModule(LightningDataModule):
         else:
             instance.input_mean = None
             instance.input_std = None
+
+        # Propagate intensity config from train subset (mirrors __init__).
+        instance.input_intensity_config = getattr(instance.train_subset, "intensity", None)
 
         # Save hyperparameters
         instance.save_hyperparameters(

@@ -143,14 +143,12 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
     # For XPU acceleration, we need to pass through the appropriate render device and group permissions
     extra_render_args=()
     if [[ "{{ accelerator }}" == "xpu" ]]; then
-      RENDER_GID=$($PYTHON -c "import grp; print((grp.getgrnam('render').gr_gid) if any(g.gr_name == 'render' for g in grp.getgrall()) else '')")
-      RENDER_NODE=$($PYTHON -c "from pathlib import Path; print(render_nodes[0]) if (render_nodes := sorted(Path('/dev/dri').glob('renderD*'))) else ''")
-      if [[ -n "$RENDER_NODE" ]]; then
-        extra_render_args+=(--device "$RENDER_NODE")
-      fi
-      if [[ -n "$RENDER_GID" ]]; then
-        extra_render_args+=(--group-add "$RENDER_GID")
-      fi
+      RENDER_GID=$(getent group render | cut -d: -f3)
+      for node in /dev/dri/renderD*; do
+        vendor=$(cat /sys/class/drm/$(basename "$node")/device/vendor 2>/dev/null)
+        [[ "$vendor" == "0x8086" ]] && extra_render_args+=(--device "$node")
+      done
+      [[ -n "$RENDER_GID" ]] && extra_render_args+=(--group-add "$RENDER_GID")
     fi
 
     passthrough_devices_args=()

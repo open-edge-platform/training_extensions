@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, DialogContainer } from '@geti/ui';
+import { ActionButton, DialogContainer, Tooltip, TooltipTrigger } from '@geti/ui';
 import { Delete } from '@geti/ui/icons';
 
 import { useDeleteMediaItem } from '../../api/use-delete-media-item';
@@ -23,15 +23,18 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
 
     return (
         <>
-            <ActionButton
-                isQuiet
-                aria-label='delete media item'
-                isDisabled={isPending}
-                UNSAFE_className={classes.deleteButton}
-                onPress={openDeleteDialog}
-            >
-                <Delete />
-            </ActionButton>
+            <TooltipTrigger>
+                <ActionButton
+                    isQuiet
+                    aria-label='delete media item'
+                    isDisabled={isPending}
+                    UNSAFE_className={classes.deleteButton}
+                    onPress={openDeleteDialog}
+                >
+                    <Delete />
+                </ActionButton>
+                <Tooltip>Delete media item</Tooltip>
+            </TooltipTrigger>
 
             <DialogContainer onDismiss={closeDeleteDialog}>
                 {isDeleteDialogOpen && <AlertDialogContent itemsIds={itemsIds} onPrimaryAction={handleDelete} />}

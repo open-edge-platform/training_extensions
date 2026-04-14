@@ -453,6 +453,10 @@ class GPUAugmentationPipeline(nn.Module):
         augmentations: List of Kornia augmentation modules.
         data_keys: List of data keys to transform (e.g., ["input", "bbox", "mask"]).
             Defaults to ["input"] for image-only augmentation.
+        sanitize_annotations: Whether to clip and filter bboxes/keypoints after
+            geometric transforms.  Set to ``False`` for validation/test pipelines
+            where ground-truth coordinates may be in original image space to prevent
+            clipping them to the smaller network input dimensions.
 
     Example:
         >>> import kornia.augmentation as K
@@ -471,11 +475,21 @@ class GPUAugmentationPipeline(nn.Module):
         self,
         augmentations: list[nn.Module] | None = None,
         data_keys: list[str] | None = None,
+        sanitize_annotations: bool = True,
     ) -> None:
         super().__init__()
         self._augmentations_list = augmentations or []
         self._data_keys = data_keys or ["input"]
         self._mean, self._std = self._extract_normalization_params(self._augmentations_list)
+        self._sanitize_annotations_enabled = sanitize_annotations
+
+        # Check if pipeline contains geometric augmentations that can move/resize objects.
+        # If only intensity transforms (Normalize, ColorJiggle, etc.) are present,
+        # we skip _sanitize_annotations to avoid clipping bboxes that may be in a
+        # different coordinate space (e.g., original image coords with resize_targets=False).
+        self._has_geometric_augs = any(
+            isinstance(aug, K.GeometricAugmentationBase2D) for aug in self._augmentations_list
+        )
 
         # Build Kornia AugmentationSequential for efficient batch processing
         self.aug_sequential: K.AugmentationSequential | None = None
@@ -546,6 +560,7 @@ class GPUAugmentationPipeline(nn.Module):
         cls,
         config: SubsetConfig,
         data_keys: list[str] | None = None,
+        sanitize_annotations: bool = True,
     ) -> GPUAugmentationPipeline:
         """Build GPU augmentation pipeline from SubsetConfig.
 
@@ -559,6 +574,8 @@ class GPUAugmentationPipeline(nn.Module):
             config: SubsetConfig with augmentations_gpu.
             data_keys: List of data keys for AugmentationSequential.
                 Defaults to ["input"] for image-only augmentation.
+            sanitize_annotations: Forwarded to ``GPUAugmentationPipeline.__init__``.
+                Pass ``False`` for val/test pipelines.
 
         Returns:
             GPUAugmentationPipeline ready for use in Callback.
@@ -567,7 +584,7 @@ class GPUAugmentationPipeline(nn.Module):
         aug_configs = config.augmentations_gpu
 
         if not aug_configs:
-            return cls([], data_keys=data_keys)
+            return cls([], data_keys=data_keys, sanitize_annotations=sanitize_annotations)
 
         augmentations = []
 
@@ -587,7 +604,7 @@ class GPUAugmentationPipeline(nn.Module):
 
             augmentations.append(transform)
 
-        return cls(augmentations, data_keys=data_keys)
+        return cls(augmentations, data_keys=data_keys, sanitize_annotations=sanitize_annotations)
 
     @classmethod
     def _dispatch_transform(cls, cfg_transform: DictConfig | dict | nn.Module) -> nn.Module:
@@ -696,7 +713,7 @@ class GPUAugmentationPipeline(nn.Module):
                     output["keypoints"] = kp_result
 
         # Sanitize geometric annotations after Kornia transforms.
-        if output["images"] is not None:
+        if self._sanitize_annotations_enabled and self._has_geometric_augs and output["images"] is not None:
             s_bboxes, s_labels, s_masks, s_keypoints = self._sanitize_annotations(
                 output["images"],
                 output["bboxes"],

@@ -163,7 +163,10 @@ class OTXModelExporter:
     def _extend_model_metadata(self, metadata: dict[tuple[str, str], str]) -> dict[tuple[str, str], str]:
         """Extends metadata coming from model with preprocessing-specific parameters.
 
-        Model's original metadata has priority over exporter's extra metadata
+        Model's original metadata has priority over exporter's extra metadata.
+        When ``data_input_params`` carries an ``intensity_config``, the intensity
+        parameters are written to ``("model_info", …)`` keys so that ModelAPI can
+        reconstruct the correct intensity preprocessing at inference time.
 
         Args:
             metadata (dict[tuple[str, str], str]): existing metadata for export
@@ -174,13 +177,47 @@ class OTXModelExporter:
         mean_str = " ".join(map(str, self.data_input_params.mean)) if self.data_input_params.mean else ""
         std_str = " ".join(map(str, self.data_input_params.std)) if self.data_input_params.std else ""
 
-        extra_data = {
+        extra_data: dict[tuple[str, str], str] = {
             ("model_info", "mean_values"): mean_str.strip(),
             ("model_info", "scale_values"): std_str.strip(),
             ("model_info", "resize_type"): self.resize_mode,
             ("model_info", "pad_value"): str(self.pad_value),
             ("model_info", "reverse_input_channels"): str(self.swap_rgb),
         }
+
+        # Intensity config metadata
+        intensity_cfg = self.data_input_params.intensity_config
+        if intensity_cfg is not None:
+            # Map storage_dtype to the ModelAPI input_dtype convention
+            _dtype_map = {
+                "uint8": "u8",
+                "uint16": "u16",
+                "int16": "i16",
+                "float32": "f32",
+            }
+            try:
+                input_dtype = _dtype_map[intensity_cfg.storage_dtype]
+            except KeyError as exc:
+                msg = f"Unsupported intensity storage_dtype '{intensity_cfg.storage_dtype}'"
+                raise ValueError(msg) from exc
+            extra_data[("model_info", "input_dtype")] = input_dtype
+            extra_data[("model_info", "intensity_mode")] = intensity_cfg.mode
+
+            if intensity_cfg.max_value is not None:
+                extra_data[("model_info", "intensity_max_value")] = str(intensity_cfg.max_value)
+            if intensity_cfg.window_center is not None:
+                extra_data[("model_info", "intensity_window_center")] = str(intensity_cfg.window_center)
+            if intensity_cfg.window_width is not None:
+                extra_data[("model_info", "intensity_window_width")] = str(intensity_cfg.window_width)
+
+            extra_data[("model_info", "intensity_percentile_low")] = str(intensity_cfg.percentile_low)
+            extra_data[("model_info", "intensity_percentile_high")] = str(intensity_cfg.percentile_high)
+            extra_data[("model_info", "intensity_scale_factor")] = str(intensity_cfg.scale_factor)
+            extra_data[("model_info", "intensity_min_value")] = str(intensity_cfg.min_value)
+
+            if intensity_cfg.repeat_channels > 0:
+                extra_data[("model_info", "intensity_repeat_channels")] = str(intensity_cfg.repeat_channels)
+
         extra_data.update(metadata)
 
         return extra_data

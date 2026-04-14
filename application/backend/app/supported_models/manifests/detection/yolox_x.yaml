@@ -21,6 +21,7 @@ hyperparameters:
       mixup:
         enable: true
         probability: 0.5
+        alpha: 1.5
       iou_random_crop:
         enable: false
         probability: 1.0
@@ -52,10 +53,10 @@ hyperparameters:
         max_rotate_degree: 10.0
         max_translate_ratio: 0.1
         scaling_ratio_range:
-          - 0.1
-          - 2.0
+          - 1.0
+          - 1.0
         max_shear_degree: 2.0
-        probability: 0.5
+        probability: 0.7
       gaussian_blur:
         enable: false
         kernel_size: 5
