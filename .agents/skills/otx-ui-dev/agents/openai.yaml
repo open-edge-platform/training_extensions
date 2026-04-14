@@ -1,0 +1,4 @@
+interface:
+  display_name: "OTX UI Dev"
+  short_description: "Work on the React UI in application/ui"
+  default_prompt: "Use $otx-ui-dev to implement or validate a frontend change."
