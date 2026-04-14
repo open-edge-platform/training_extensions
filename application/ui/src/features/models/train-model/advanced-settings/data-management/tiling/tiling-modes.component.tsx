@@ -11,7 +11,7 @@ type TilingModeContextualHelpProps = {
     description: string;
 };
 
-export const TilingModeContextualHelp = ({ description }: TilingModeContextualHelpProps) => {
+const TilingModeContextualHelp = ({ description }: TilingModeContextualHelpProps) => {
     return (
         <ContextualHelp variant='info'>
             <Content>
