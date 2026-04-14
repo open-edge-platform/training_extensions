@@ -155,7 +155,8 @@ class InferenceServer:
         """
         if self._loaded_model is None:
             raise RuntimeError("No model loaded for inference")
-        self._lock.acquire(timeout=10)
+        if not self._lock.acquire(timeout=30):
+            raise RuntimeError("Inference request timed out waiting for the model lock. Another inference is in progress.")
         try:
             if self._loaded_model is None:
                 raise RuntimeError("No model loaded for inference")

@@ -548,6 +548,9 @@ def delete_media_annotation(
             "or media inference limit exceeded"
         },
         status.HTTP_404_NOT_FOUND: {"description": "Media, dataset item or project not found"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "description": "Inference server is busy with another request, try again later"
+        },
     },
 )
 def media_predict(
@@ -584,5 +587,7 @@ def media_predict(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except BinaryNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
