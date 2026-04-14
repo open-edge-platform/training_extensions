@@ -9,18 +9,34 @@ from loguru import logger
 
 
 class LicenseService:
-    """Service to track third-party license consent using a file-based marker."""
+    """Service to track third-party license consent using a version-aware file marker.
+
+    The marker file stores the application version for which the license was accepted.
+    When the app version changes (e.g., after an upgrade), the license must be re-accepted.
+    """
 
     CONSENT_FILENAME = ".license_accepted"
 
-    def __init__(self, data_dir: Path) -> None:
+    def __init__(self, data_dir: Path, app_version: str) -> None:
         self._consent_file = data_dir / self.CONSENT_FILENAME
+        self._app_version = app_version
 
     def is_accepted(self) -> bool:
-        """Check whether the license has been accepted."""
-        return self._consent_file.exists()
+        """Check whether the license has been accepted for the current app version."""
+        try:
+            if not self._consent_file.exists():
+                return False
+            accepted_version = self._consent_file.read_text().strip()
+        except OSError as exc:
+            logger.warning(
+                "Failed to read license consent file {}: {}",
+                self._consent_file,
+                exc,
+            )
+            return False
+        return accepted_version == self._app_version
 
     def accept(self) -> None:
-        """Record that the user accepted the license terms."""
-        self._consent_file.touch()
-        logger.info("License accepted — consent recorded at {}", self._consent_file)
+        """Record that the user accepted the license terms for the current app version."""
+        self._consent_file.write_text(self._app_version)
+        logger.info("License accepted for version {} — recorded at {}", self._app_version, self._consent_file)
