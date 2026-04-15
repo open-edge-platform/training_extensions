@@ -4,8 +4,7 @@
 import { InfiniteData, QueryClient } from '@tanstack/react-query';
 
 import { getMockedMediaImage, getMockedVideo } from '../../../mocks/mock-media';
-import { SchemaMediaWithPagination } from '../../api/openapi-spec';
-import { Pagination } from '../../constants/shared-types';
+import { MediaWithPagination, Pagination } from '../../constants/shared-types';
 import { incrementCachedAnnotatedFrameCount } from './util';
 
 const createQueryClient = () => new QueryClient();
@@ -20,15 +19,15 @@ const getMockedPagination = (overrides: Partial<Pagination>) => ({
 
 const MEDIA_QUERY_KEY = ['get', '/api/projects/{project_id}/dataset/media'] as const;
 
-const setMediaQueryData = (queryClient: QueryClient, pages: SchemaMediaWithPagination[]) => {
-    queryClient.setQueryData<InfiniteData<SchemaMediaWithPagination>>(MEDIA_QUERY_KEY, {
+const setMediaQueryData = (queryClient: QueryClient, pages: MediaWithPagination[]) => {
+    queryClient.setQueryData<InfiniteData<MediaWithPagination>>(MEDIA_QUERY_KEY, {
         pages,
         pageParams: pages.map((_, i) => i),
     });
 };
 
 const getMediaQueryData = (queryClient: QueryClient) => {
-    return queryClient.getQueryData<InfiniteData<SchemaMediaWithPagination>>(MEDIA_QUERY_KEY);
+    return queryClient.getQueryData<InfiniteData<MediaWithPagination>>(MEDIA_QUERY_KEY);
 };
 
 describe('incrementCachedAnnotatedFrameCount', () => {
@@ -96,7 +95,11 @@ describe('incrementCachedAnnotatedFrameCount', () => {
 
         const data = getMediaQueryData(queryClient);
 
-        expect(data?.pages[0].items[0]).toEqual(expect.objectContaining({ annotated_frame_count: 2 }));
-        expect(data?.pages[1].items[0]).toEqual(expect.objectContaining({ annotated_frame_count: 8 }));
+        expect(data?.pages[0].items[0]).toEqual(
+            expect.objectContaining({ annotated_frame_count: video1.annotated_frame_count })
+        );
+        expect(data?.pages[1].items[0]).toEqual(
+            expect.objectContaining({ annotated_frame_count: video2.annotated_frame_count + 1 })
+        );
     });
 });

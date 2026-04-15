@@ -38,10 +38,10 @@ describe('MediaThumbnail', () => {
                 url='test-video.mp4'
                 alt='Test Image'
                 onClick={mockedClick}
-                item={{ type: 'video', frame_count: 3600, annotated_frame_count: 10 }}
+                item={{ type: 'video', frame_count: 3600, annotated_frame_count: 10, duration: 60 }}
             />
         );
 
-        expect(screen.getByText('10 / 3600 frames')).toBeInTheDocument();
+        expect(screen.getByText('00:01:00')).toBeInTheDocument();
     });
 });

@@ -3,12 +3,11 @@
 
 import { InfiniteData, QueryClient } from '@tanstack/react-query';
 
-import { SchemaMediaWithPagination } from '../../api/openapi-spec';
-import { Media } from '../../constants/shared-types';
+import { Media, MediaWithPagination } from '../../constants/shared-types';
 import { isVideo } from '../media-item-utils';
 
 export const incrementCachedAnnotatedFrameCount = (queryClient: QueryClient, mediaItem: Media) => {
-    queryClient.setQueriesData<InfiniteData<SchemaMediaWithPagination>>(
+    queryClient.setQueriesData<InfiniteData<MediaWithPagination>>(
         { queryKey: ['get', '/api/projects/{project_id}/dataset/media'] },
         (oldData) => {
             if (!oldData?.pages) return oldData;
