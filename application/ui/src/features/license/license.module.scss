@@ -3,8 +3,8 @@
 
 .list {
     list-style-type: disc;
-    padding-inline-start: 40px;
-    margin-block: 0.5em;
+    padding-inline-start: var(--spectrum-global-dimension-size-500);
+    margin-block: var(--spectrum-global-dimension-size-100);
 }
 
 .licenseBackground {

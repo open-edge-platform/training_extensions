@@ -35,7 +35,7 @@ const HealthCheck = ({ children }: { children: ReactNode }) => {
     return <IntelBrandedLoading />;
 };
 
-const LicenseGate = ({ children }: { children: ReactNode }) => {
+const LicenseCheck = ({ children }: { children: ReactNode }) => {
     const { data, isPending, isError } = $api.useQuery('get', '/api/system/info', undefined, {
         retry: 2,
         refetchInterval: (query) => {
@@ -62,9 +62,9 @@ export const RootLayout = () => {
     return (
         <Suspense fallback={<IntelBrandedLoading />}>
             <HealthCheck>
-                <LicenseGate>
+                <LicenseCheck>
                     <Outlet />
-                </LicenseGate>
+                </LicenseCheck>
             </HealthCheck>
         </Suspense>
     );

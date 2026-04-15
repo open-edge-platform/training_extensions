@@ -25,9 +25,9 @@ const LICENSE_LINKS = {
 
 type Platform = 'linux' | 'windows' | 'macos';
 
-interface LicenseProps {
+type LicenseProps = {
     platform: Platform;
-}
+};
 
 export const License = ({ platform }: LicenseProps) => {
     const { mutate: acceptLicense, isPending: isAccepting } = useAcceptLicense();
