@@ -49,6 +49,7 @@ def fxt_dummy_model_stats():
 def fxt_dummy_pretrained_weights():
     yield PretrainedWeights(
         url="https://example.com/dummy_model_weights.pth",
+        mirror_url="https://mirror.example.com/dummy_model_weights.pth",
         sha_sum="example_sha256_checksum",
     )
 
