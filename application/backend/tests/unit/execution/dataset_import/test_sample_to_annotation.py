@@ -240,8 +240,8 @@ class TestSegmentationConversion:
         assert len(result) == 1
         assert isinstance(result[0].shape, Polygon)
         assert len(result[0].shape.points) == 3
-        assert result[0].shape.points[0].x == 10.2
-        assert result[0].shape.points[0].y == 20.5
+        assert result[0].shape.points[0].x == pytest.approx(10.2, abs=1e-6)
+        assert result[0].shape.points[0].y == pytest.approx(20.5, abs=1e-6)
         assert result[0].labels[0].id == fxt_project_labels[0].id
         assert result[0].confidences == pytest.approx([0.92], abs=1e-6)
 
