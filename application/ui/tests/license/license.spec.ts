@@ -65,4 +65,18 @@ test.describe('License agreement', () => {
 
         await expect(page.getByRole('heading', { name: /License Agreement/i })).toBeHidden();
     });
+
+    test('shows error state when system info is unavailable', async ({ page, network }) => {
+        network.use(
+            http.get('/api/system/info', ({ response }) => {
+                // @ts-expect-error Simulate server error
+                return response(500).json({});
+            })
+        );
+
+        await page.goto('/');
+
+        await expect(page.getByRole('heading', { name: 'Server Error' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+    });
 });
