@@ -4,11 +4,11 @@
 from unittest.mock import Mock
 
 import pytest
-from getitune.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
+from getitune.data import DetectionDataset, InstanceSegDataset, MulticlassClsDataset, MultilabelClsDataset
 from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 from app.execution.common.getitune_converters import (
     get_metric_by_task,
@@ -22,14 +22,14 @@ class TestGetOtxTaskTypeByTask:
     @pytest.mark.parametrize(
         "task_type,exclusive_labels,expected",
         [
-            (TaskType.CLASSIFICATION, True, OTXTaskType.MULTI_CLASS_CLS),
-            (TaskType.CLASSIFICATION, False, OTXTaskType.MULTI_LABEL_CLS),
-            (TaskType.DETECTION, False, OTXTaskType.DETECTION),
-            (TaskType.INSTANCE_SEGMENTATION, False, OTXTaskType.INSTANCE_SEGMENTATION),
+            (TaskType.CLASSIFICATION, True, TaskType.MULTI_CLASS_CLS),
+            (TaskType.CLASSIFICATION, False, TaskType.MULTI_LABEL_CLS),
+            (TaskType.DETECTION, False, TaskType.DETECTION),
+            (TaskType.INSTANCE_SEGMENTATION, False, TaskType.INSTANCE_SEGMENTATION),
         ],
         ids=["multiclass_cls", "multilabel_cls", "detection", "instance_seg"],
     )
-    def test_supported_task_types(self, task_type: TaskType, exclusive_labels: bool, expected: OTXTaskType):
+    def test_supported_task_types(self, task_type: TaskType, exclusive_labels: bool, expected: TaskType):
         task = Task(task_type=task_type, exclusive_labels=exclusive_labels)
         assert get_getitune_task_type_by_task(task) == expected
 
@@ -68,27 +68,27 @@ class TestGetOtxDatasetClassByTaskType:
     @pytest.mark.parametrize(
         "getitune_task_type,expected_class",
         [
-            (OTXTaskType.MULTI_CLASS_CLS, OTXMulticlassClsDataset),
-            (OTXTaskType.MULTI_LABEL_CLS, OTXMultilabelClsDataset),
-            (OTXTaskType.DETECTION, OTXDetectionDataset),
-            (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset),
+            (TaskType.MULTI_CLASS_CLS, MulticlassClsDataset),
+            (TaskType.MULTI_LABEL_CLS, MultilabelClsDataset),
+            (TaskType.DETECTION, DetectionDataset),
+            (TaskType.INSTANCE_SEGMENTATION, InstanceSegDataset),
         ],
         ids=["multiclass_cls", "multilabel_cls", "detection", "instance_seg"],
     )
-    def test_supported_otx_task_types(self, getitune_task_type: OTXTaskType, expected_class: type):
+    def test_supported_otx_task_types(self, getitune_task_type: TaskType, expected_class: type):
         assert get_getitune_dataset_class_by_task_type(getitune_task_type) is expected_class
 
     @pytest.mark.parametrize(
         "getitune_task_type",
         [
-            OTXTaskType.SEMANTIC_SEGMENTATION,
-            OTXTaskType.H_LABEL_CLS,
-            OTXTaskType.ROTATED_DETECTION,
-            OTXTaskType.KEYPOINT_DETECTION,
+            TaskType.SEMANTIC_SEGMENTATION,
+            TaskType.H_LABEL_CLS,
+            TaskType.ROTATED_DETECTION,
+            TaskType.KEYPOINT_DETECTION,
         ],
         ids=["semantic_seg", "h_label_cls", "rotated_det", "keypoint_det"],
     )
-    def test_unsupported_otx_task_type_raises(self, getitune_task_type: OTXTaskType):
+    def test_unsupported_otx_task_type_raises(self, getitune_task_type: TaskType):
         """A Geti Tune task type without a mapped dataset class must raise ValueError."""
         with pytest.raises(ValueError, match="Unsupported Geti Tune task type"):
             get_getitune_dataset_class_by_task_type(getitune_task_type)

@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Base class for OTXDataset using new Datumaro experimental Dataset."""
+"""Base class for VisionDataset using new Datumaro experimental Dataset."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from torchvision.transforms.v2 import functional as f
 
 from getitune import LabelInfo, NullLabelInfo
 from getitune.data.augmentation.pipeline import CPUAugmentationPipeline
-from getitune.data.entity.sample import OTXSample, OTXSampleBatch
-from getitune.types import OTXTaskType
+from getitune.data.entity.sample import BaseSample, SampleBatch
+from getitune.types import TaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
@@ -58,21 +58,21 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     return img
 
 
-def _collect_optional_attr(items: list[OTXSample], attr_name: str) -> list | None:
+def _collect_optional_attr(items: list[BaseSample], attr_name: str) -> list | None:
     if not items or not all(hasattr(item, attr_name) for item in items):
         return None
     values = [getattr(item, attr_name) for item in items]
     return values if any(value is not None for value in values) else None
 
 
-def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
-    """Collate OTXSample items into an OTXSampleBatch.
+def _default_collate_fn(items: list[BaseSample]) -> SampleBatch:
+    """Collate BaseSample items into an SampleBatch.
 
     Args:
-        items: List of OTXSample items to batch
+        items: List of BaseSample items to batch
 
     Returns:
-        Batched OTXSample items with stacked tensors
+        Batched BaseSample items with stacked tensors
     """
     # Convert images to float32 tensors before stacking
     image_tensors = []
@@ -107,7 +107,7 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         raise ValueError(msg)
     images = torch.stack(image_tensors)
 
-    return OTXSampleBatch(
+    return SampleBatch(
         images=images,
         labels=_collect_optional_attr(items, "label"),
         masks=_collect_optional_attr(items, "masks"),
@@ -117,8 +117,8 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
     )
 
 
-class OTXDataset(TorchDataset):
-    """Base OTXDataset using new Datumaro experimental Dataset.
+class VisionDataset(TorchDataset):
+    """Base VisionDataset using new Datumaro experimental Dataset.
 
     This class defines the basic logic and interface for Geti Tune datasets, providing
     functionality for data transformation, image decoding, and label handling.
@@ -144,7 +144,7 @@ class OTXDataset(TorchDataset):
     def __len__(self) -> int:
         return len(self.dm_subset)
 
-    def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
+    def _apply_transforms(self, entity: BaseSample) -> BaseSample | None:
         # Intensity mapping: convert raw pixels to float32 [0, 1].
         #
         # When a CPUAugmentationPipeline is used the pipeline itself prepends
@@ -176,7 +176,7 @@ class OTXDataset(TorchDataset):
             return self.transforms(entity)
         return None
 
-    def _iterable_transforms(self, item: OTXSample) -> OTXSample | None:
+    def _iterable_transforms(self, item: BaseSample) -> BaseSample | None:
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 
@@ -188,7 +188,7 @@ class OTXDataset(TorchDataset):
 
         return results
 
-    def _read_dm_item(self, index: int) -> OTXSample:
+    def _read_dm_item(self, index: int) -> BaseSample:
         """Read an item from the datumaro subset with guaranteed CHW image format."""
         item = self.dm_subset[index]
         # Workaround for a datumaro bug: ``TensorField.from_polars()`` applies
@@ -198,7 +198,7 @@ class OTXDataset(TorchDataset):
         item.image = _ensure_chw_format(item.image)
         return item
 
-    def __getitem__(self, index: int) -> OTXSample:
+    def __getitem__(self, index: int) -> BaseSample:
         for _ in range(self.max_refetch):
             results = self._get_item_impl(index)
 
@@ -209,7 +209,7 @@ class OTXDataset(TorchDataset):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_item_impl(self, index: int) -> OTXSample | None:
+    def _get_item_impl(self, index: int) -> BaseSample | None:
         dm_item = self._read_dm_item(index)
         return self._apply_transforms(dm_item)
 
@@ -231,6 +231,6 @@ class OTXDataset(TorchDataset):
         """
 
     @property
-    def task_type(self) -> OTXTaskType | None:
+    def task_type(self) -> TaskType | None:
         """Geti Tune Task Type for the dataset. Can be None if no task is defined."""
         return None

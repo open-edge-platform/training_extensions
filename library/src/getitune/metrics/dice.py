@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Literal
 
 from torchmetrics import JaccardIndex
 from torchmetrics.collections import MetricCollection
-from torchmetrics.segmentation.dice import DiceScore
+from torchmetrics.segmentation.dice import DiceScore as _DiceScore
 
 from getitune.types.label import SegLabelInfo
 
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def _segm_callable(label_info: SegLabelInfo) -> MetricCollection:
     return MetricCollection(
         {
-            "Dice": OTXDice(num_classes=label_info.num_classes, ignore_index=label_info.ignore_index, average="macro"),
+            "Dice": DiceMetric(num_classes=label_info.num_classes, ignore_index=label_info.ignore_index, average="macro"),
             "mIoU": JaccardIndex(
                 task="multiclass",
                 num_classes=label_info.num_classes,
@@ -30,7 +30,7 @@ def _segm_callable(label_info: SegLabelInfo) -> MetricCollection:
     )
 
 
-class OTXDice(DiceScore):
+class DiceMetric(_DiceScore):
     """Dice metric used for the Geti Tune semantic segmentation task."""
 
     def __init__(

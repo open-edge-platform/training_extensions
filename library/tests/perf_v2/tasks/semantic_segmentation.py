@@ -13,9 +13,9 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
-TASK_TYPE = OTXTaskType.SEMANTIC_SEGMENTATION
+TASK_TYPE = TaskType.SEMANTIC_SEGMENTATION
 
 MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="litehrnet_18", category="balance"),

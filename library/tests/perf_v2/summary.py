@@ -16,7 +16,7 @@ from zipfile import ZipFile
 
 import pandas as pd
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -26,13 +26,13 @@ pd.set_option("display.width", None)
 logger = logging.getLogger(__name__)
 
 TASK_METRIC_MAP = {
-    OTXTaskType.MULTI_CLASS_CLS: "accuracy",
-    OTXTaskType.MULTI_LABEL_CLS: "accuracy",
-    OTXTaskType.H_LABEL_CLS: "accuracy",
-    OTXTaskType.DETECTION: "f1-score",
-    OTXTaskType.INSTANCE_SEGMENTATION: "f1-score",
-    OTXTaskType.SEMANTIC_SEGMENTATION: "Dice",
-    OTXTaskType.KEYPOINT_DETECTION: "PCK",
+    TaskType.MULTI_CLASS_CLS: "accuracy",
+    TaskType.MULTI_LABEL_CLS: "accuracy",
+    TaskType.H_LABEL_CLS: "accuracy",
+    TaskType.DETECTION: "f1-score",
+    TaskType.INSTANCE_SEGMENTATION: "f1-score",
+    TaskType.SEMANTIC_SEGMENTATION: "Dice",
+    TaskType.KEYPOINT_DETECTION: "PCK",
 }
 
 
@@ -42,7 +42,7 @@ METADATA_ENTRIES = [
     "model",
     "data_group",
     "data",
-    "otx_version",
+    "getitune_version",
     "getitune_ref",
     "test_branch",
     "test_commit",
@@ -76,7 +76,7 @@ def load(root_dir: Path, pattern="*raw*.csv") -> pd.DataFrame:
         return pd.DataFrame()
     history = pd.concat(history, ignore_index=True)
     # Post process
-    version_entry = "otx_version" if "otx_version" in history else "version"
+    version_entry = "getitune_version" if "getitune_version" in history else "version"
     history[version_entry] = history[version_entry].astype(str)
     history["seed"] = history["seed"].fillna(0)
     history = average(
@@ -122,7 +122,7 @@ def aggregate(raw_data: pd.DataFrame, metrics: list[str]) -> list[pd.DataFrame]:
 
     grouped_data = raw_data.groupby(
         [
-            "otx_version",
+            "getitune_version",
             "task",
             "model",
             "data",
@@ -133,8 +133,8 @@ def aggregate(raw_data: pd.DataFrame, metrics: list[str]) -> list[pd.DataFrame]:
     )
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
-    # Flatten the MultiIndex columns, excluding 'otx_version', 'task', 'model', 'data_group'
-    cols_to_exclude = {"otx_version", "task", "model", "data"}
+    # Flatten the MultiIndex columns, excluding 'getitune_version', 'task', 'model', 'data_group'
+    cols_to_exclude = {"getitune_version", "task", "model", "data"}
     aggregated.columns = [
         ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
     ]
@@ -165,7 +165,7 @@ def aggregate(raw_data: pd.DataFrame, metrics: list[str]) -> list[pd.DataFrame]:
     return dataset_dfs
 
 
-def summarize_table(history: pd.DataFrame, task: OTXTaskType) -> list[pd.DataFrame]:
+def summarize_table(history: pd.DataFrame, task: TaskType) -> list[pd.DataFrame]:
     """Summarize benchmark histoy table by task."""
     score_metric = TASK_METRIC_MAP[task]
 
@@ -205,7 +205,7 @@ def summarize_table(history: pd.DataFrame, task: OTXTaskType) -> list[pd.DataFra
 
 def create_raw_dataset_xlsx(
     raw_data: pd.DataFrame,
-    task: OTXTaskType,
+    task: TaskType,
     output_root: Path,
 ):
     """Create raw_values_<dataset>.xlsx file for each dataset.
@@ -233,7 +233,7 @@ def create_raw_dataset_xlsx(
         logger.info(f"    Saved {task.value} raw data to {output_root / f'{task.value}-raw-{dataset}.xlsx'!s}")
 
 
-def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path):
+def summarize_task(raw_data: pd.DataFrame, task: TaskType, output_root: Path):
     """Process and save task-specific data and summaries."""
     # Create raw_values_<dataset>.xlsx file for each dataset
     create_raw_dataset_xlsx(raw_data, task, output_root)
@@ -252,7 +252,7 @@ def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path)
     logger.info(f"    Saved {task.value} summary to {aggregate_xlsx_path.resolve()!s}")
 
 
-def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path):
+def task_high_level_summary(raw_data: pd.DataFrame, task: TaskType, output_root: Path):
     """Summarize high-level task performance over all datasets, with one row per model."""
 
     raw_task_data = raw_data.query(f"task == '{task.value}'")
@@ -270,11 +270,11 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_ro
     metrics = raw_task_data.select_dtypes(include=["number"]).columns.to_list()
 
     # Group by model instead of just otx_version and task
-    grouped_data = raw_task_data.groupby(["otx_version", "task", "model"])
+    grouped_data = raw_task_data.groupby(["getitune_version", "task", "model"])
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
     # Flatten the MultiIndex columns
-    cols_to_exclude = {"otx_version", "task", "model", "data"}
+    cols_to_exclude = {"getitune_version", "task", "model", "data"}
     aggregated.columns = [
         ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
     ]
@@ -282,13 +282,13 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_ro
     number_cols = aggregated.select_dtypes(include=["number"]).columns.to_list()
     meta_cols = aggregated.select_dtypes(include=["object"]).columns.to_list()
     for col in meta_cols:
-        if col in ["model", "task", "otx_version"]:
+        if col in ["model", "task", "getitune_version"]:
             meta_cols.remove(col)
 
     # Rearrange columns to match the order in aggregate function
     aggregated = aggregated.reindex(
         columns=[
-            "otx_version",
+            "getitune_version",
             "task",
             "model",
             *number_cols,
@@ -330,5 +330,5 @@ if __name__ == "__main__":
     # Get task-level performance benchmark
     tasks = sorted(raw_data["task"].unique())
     for task in tasks:
-        summarize_task(raw_data, OTXTaskType[task], output_root)
-        task_high_level_summary(raw_data, OTXTaskType[task], output_root)
+        summarize_task(raw_data, TaskType[task], output_root)
+        task_high_level_summary(raw_data, TaskType[task], output_root)

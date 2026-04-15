@@ -10,7 +10,7 @@ from typing import Union
 from typing_extensions import TypeAlias
 
 from getitune.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 __all__ = [
     "HLabelInfo",
@@ -18,7 +18,7 @@ __all__ = [
     "LabelInfo",
     "NullLabelInfo",
     # task_type
-    "OTXTaskType",
+    "TaskType",
     "SegLabelInfo",
 ]
 

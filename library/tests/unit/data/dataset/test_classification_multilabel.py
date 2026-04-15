@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import torch
 from datumaro.experimental import Dataset
 
-from getitune.data.dataset.classification import OTXMultilabelClsDataset
+from getitune.data.dataset.classification import MultilabelClsDataset
 from getitune.data.entity.sample import ClassificationMultiLabelSample
 
 
@@ -29,7 +29,7 @@ class TestOTXMultilabelClsDataset:
         self.mock_transforms = Mock()
 
     def test_init_converts_schema_and_sets_label_info(self):
-        dataset = OTXMultilabelClsDataset(
+        dataset = MultilabelClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )
@@ -40,7 +40,7 @@ class TestOTXMultilabelClsDataset:
         assert dataset.label_info.label_names == ["class_0", "class_1", "class_2", "class_3"]
 
     def test_convert_to_onehot_and_ignored_labels(self):
-        dataset = OTXMultilabelClsDataset(
+        dataset = MultilabelClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )
@@ -67,7 +67,7 @@ class TestOTXMultilabelClsDataset:
 
         self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
 
-        dataset = OTXMultilabelClsDataset(
+        dataset = MultilabelClsDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )

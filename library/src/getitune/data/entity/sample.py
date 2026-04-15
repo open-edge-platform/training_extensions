@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Sequence, cast
 import polars as pl
 import torch
 from datumaro.experimental import register_sample
-from datumaro.experimental.dataset import Sample
+from datumaro.experimental.dataset import Sample as _DatumSample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import (
     Subset,
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 
 
 @register_pytree_node
-class OTXSample(Sample):
+class BaseSample(_DatumSample):
     """Base class for Geti Tune data samples."""
 
     image: torch.Tensor | tv_tensors.Image
@@ -67,7 +67,7 @@ class OTXSample(Sample):
 
 @register_pytree_node
 @register_sample
-class ClassificationSample(OTXSample):
+class ClassificationSample(BaseSample):
     """ClassificationSample is a base class for Geti Tune classification items."""
 
     subset: Subset = subset_field()
@@ -88,7 +88,7 @@ class ClassificationSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class ClassificationMultiLabelSample(OTXSample):
+class ClassificationMultiLabelSample(BaseSample):
     """ClassificationMultiLabelSample is a base class for Geti Tune multi label classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
@@ -107,7 +107,7 @@ class ClassificationMultiLabelSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class ClassificationHierarchicalSample(OTXSample):
+class ClassificationHierarchicalSample(BaseSample):
     """ClassificationHierarchicalSample is a base class for Geti Tune hierarchical classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
@@ -126,7 +126,7 @@ class ClassificationHierarchicalSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class DetectionSample(OTXSample):
+class DetectionSample(BaseSample):
     """DetectionSample is a base class for Geti Tune detection items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="RGB", channels_first=True)
@@ -157,8 +157,8 @@ class DetectionSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class SegmentationSample(OTXSample):
-    """OTXSample for segmentation tasks."""
+class SegmentationSample(BaseSample):
+    """BaseSample for segmentation tasks."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=False)
@@ -176,8 +176,8 @@ class SegmentationSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class InstanceSegmentationSample(OTXSample):
-    """OTXSample for instance segmentation tasks."""
+class InstanceSegmentationSample(BaseSample):
+    """BaseSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
@@ -210,7 +210,7 @@ class InstanceSegmentationSample(OTXSample):
 
 @register_pytree_node
 @register_sample
-class KeypointSample(OTXSample):
+class KeypointSample(BaseSample):
     """KeypointSample is a base class for Geti Tune keypoint detection items."""
 
     subset: Subset = subset_field()
@@ -230,7 +230,7 @@ class KeypointSample(OTXSample):
 
 
 @dataclass
-class OTXSampleBatch:
+class SampleBatch:
     """Geti Tune sample batch implementation.
 
     Attributes:
@@ -274,7 +274,7 @@ class OTXSampleBatch:
         if self.imgs_info is not None:
             validate_imgs_info(self.imgs_info)
 
-    def pin_memory(self) -> OTXSampleBatch:
+    def pin_memory(self) -> SampleBatch:
         """Pin memory for member tensor variables."""
         # https://github.com/pytorch/pytorch/issues/116403
 
@@ -302,7 +302,7 @@ class OTXSampleBatch:
 
         return self.wrap(**kwargs)
 
-    def wrap(self, **kwargs) -> OTXSampleBatch:
+    def wrap(self, **kwargs) -> SampleBatch:
         """Wrap this dataclass with the given keyword arguments.
 
         Args:
@@ -318,10 +318,10 @@ class OTXSampleBatch:
 
 
 @dataclass
-class OTXPredictionBatch(OTXSampleBatch):
+class PredictionBatch(SampleBatch):
     """Geti Tune prediction batch implementation.
 
-    Extends OTXSampleBatch with prediction-specific fields.
+    Extends SampleBatch with prediction-specific fields.
 
     Attributes:
         scores: List of score tensors, optional.
@@ -343,7 +343,7 @@ class OTXPredictionBatch(OTXSampleBatch):
 
 
 @dataclass
-class OTXPrediction:
+class Prediction:
     """Geti Tune prediction data entity for a single sample.
 
     This is used for storing individual prediction results, e.g., after tile merging.

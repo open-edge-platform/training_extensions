@@ -12,10 +12,10 @@ from model_api.tilers import DetectionTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -60,16 +60,16 @@ class OVDetectionModel(OVModel):
         Customize the outputs of the model to match the expected format.
 
             outputs (list[DetectionResult]): List of detection results from the model.
-            inputs (OTXSampleBatch): Input batch containing image and metadata.
+            inputs (SampleBatch): Input batch containing image and metadata.
 
-            OTXPredictionBatch: A batch of predictions including bounding boxes, scores, labels,
+            PredictionBatch: A batch of predictions including bounding boxes, scores, labels,
             and optionally saliency maps and feature vectors.
         ...
 
         Prepare inputs for metric computation.
 
-            preds (OTXPredictionBatch): Predicted batch containing bounding boxes, scores, and labels.
-            inputs (OTXSampleBatch): Input batch containing ground truth bounding boxes and labels.
+            preds (PredictionBatch): Predicted batch containing bounding boxes, scores, and labels.
+            inputs (SampleBatch): Input batch containing ground truth bounding boxes and labels.
 
             MetricInput: A dictionary with 'preds' and 'target' keys containing
             the predicted and ground truth bounding boxes and labels.
@@ -103,7 +103,7 @@ class OVDetectionModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.DETECTION
+        self._task = TaskType.DETECTION
 
     def _setup_tiler(self) -> None:
         """Setup tiler for tile task."""
@@ -138,17 +138,17 @@ class OVDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectionResult],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
         """Customize the outputs of the detection model.
 
         Args:
             outputs (list[DetectionResult]): A list of detection results containing bounding boxes,
                 scores, labels, saliency maps, and feature vectors.
-            inputs (OTXSampleBatch): A batch of input data containing images and their metadata.
+            inputs (SampleBatch): A batch of input data containing images and their metadata.
 
         Returns:
-            OTXPredictionBatch: A batch of predictions containing processed bounding boxes, scores, labels,
+            PredictionBatch: A batch of predictions containing processed bounding boxes, scores, labels,
             and optionally saliency maps and feature vectors.
 
         Notes:
@@ -190,7 +190,7 @@ class OVDetectionModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredictionBatch(
+            return PredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -200,7 +200,7 @@ class OVDetectionModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -210,14 +210,14 @@ class OVDetectionModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,  # type: ignore[override]
-        inputs: OTXSampleBatch,  # type: ignore[override]
+        preds: PredictionBatch,  # type: ignore[override]
+        inputs: SampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (OTXPredictionBatch): The predicted batch entity containing predicted bboxes.
-            inputs (OTXSampleBatch): The input batch entity containing ground truth bboxes.
+            preds (PredictionBatch): The predicted batch entity containing predicted bboxes.
+            inputs (SampleBatch): The input batch entity containing ground truth bboxes.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys

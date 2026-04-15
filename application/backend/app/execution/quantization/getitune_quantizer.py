@@ -11,7 +11,7 @@ from datumaro.experimental.fields import Subset
 from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.factory import TransformLibFactory
-from getitune.data.module import OTXDataModule
+from getitune.data.module import DataModule
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -40,7 +40,7 @@ class QuantizationDependencies:
     db_session_factory: Callable[[], AbstractContextManager[Session]]
 
 
-class OTXQuantizer(Execution[QuantizationJobParams]):
+class GetiTuneQuantizer(Execution[QuantizationJobParams]):
     """Geti Tune-specific quantization implementation using OVEngine."""
 
     params_type = QuantizationJobParams
@@ -89,7 +89,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         self,
         params: QuantizationJobParams,
         model: ModelRevision,
-    ) -> OTXDataModule:
+    ) -> DataModule:
         """Load and prepare the calibration dataset from the training dataset revision."""
         # Get the dataset revision used for training
         dataset_revision_id = model.training_info.dataset_revision_id if model.training_info else None
@@ -145,7 +145,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         val_subset_config = build_subset_config("val")
         test_subset_config = build_subset_config("test")
 
-        # Wrap into OTXDataset instances
+        # Wrap into VisionDataset instances
         getitune_task_type = get_getitune_task_type_by_task(task)
         getitune_dataset_class = get_getitune_dataset_class_by_task_type(getitune_task_type)
 
@@ -162,8 +162,8 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
             transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
 
-        # Build the OTXDataModule
-        getitune_datamodule = OTXDataModule.from_otx_datasets(
+        # Build the DataModule
+        getitune_datamodule = DataModule.from_vision_datasets(
             train_dataset=getitune_training_dataset,
             val_dataset=otx_validation_dataset,
             test_dataset=otx_testing_dataset,
@@ -185,7 +185,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         self,
         params: QuantizationJobParams,
         model: ModelRevision,
-        datamodule: OTXDataModule,
+        datamodule: DataModule,
     ) -> OVEngine:
         """Create the OVEngine for quantization."""
         openvino_variant = self._get_openvino_fp16_variant(model)

@@ -1,23 +1,23 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTXInstanceSegDataset."""
+"""Module for InstanceSegDataset."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from getitune import LabelInfo
-from getitune.data.dataset.base import OTXDataset, Transforms
+from getitune.data.dataset.base import VisionDataset, Transforms
 from getitune.data.entity.sample import InstanceSegmentationSample
 from getitune.data.entity.utils import with_image_dtype
-from getitune.types import OTXTaskType
+from getitune.types import TaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
 
-class OTXInstanceSegDataset(OTXDataset):
+class InstanceSegDataset(VisionDataset):
     """Dataset class for instance segmentation tasks in Geti Tune.
 
     This class handles loading images and their masks.
@@ -25,7 +25,7 @@ class OTXInstanceSegDataset(OTXDataset):
     Args:
         dm_subset (DmDataset): The subset of the dataset to use.
         transforms (Transforms, optional): Data transformations to be applied.
-        task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
+        task_type (TaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
         max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
         storage_dtype (str): Storage dtype for image data (e.g. "uint8", "float32"). Defaults to "uint8".
 
@@ -35,7 +35,7 @@ class OTXInstanceSegDataset(OTXDataset):
         self,
         dm_subset: Dataset,
         transforms: Transforms | None = None,
-        task_type: OTXTaskType = OTXTaskType.INSTANCE_SEGMENTATION,
+        task_type: TaskType = TaskType.INSTANCE_SEGMENTATION,
         max_refetch: int = 1000,
         storage_dtype: str = "uint8",
     ) -> None:
@@ -75,10 +75,10 @@ class OTXInstanceSegDataset(OTXDataset):
         return idx_list_per_classes
 
     @property
-    def task_type(self) -> OTXTaskType:
+    def task_type(self) -> TaskType:
         """Geti Tune Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The instance segmentation task type.
+            TaskType: The instance segmentation task type.
         """
         return self._task_type

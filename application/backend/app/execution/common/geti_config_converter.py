@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
-from getitune.backend.native.cli.utils import get_getitune_root_path
+from getitune.backend.lightning.cli.utils import get_getitune_root_path
 from getitune.tools.auto_configurator import AutoConfigurator
 from loguru import logger
 
@@ -515,7 +515,7 @@ class HyperparametersUpdater:
 
         idx = GetiConfigConverter.get_callback_idx(
             config["callbacks"],
-            "getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+            "getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
         )
         if not enable and idx > -1:
             config["callbacks"].pop(idx)
@@ -777,7 +777,7 @@ class GetiConfigConverter:
         callbacks = config.get("callbacks", [])
         idx = GetiConfigConverter.get_callback_idx(
             callbacks,
-            "getitune.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback",
+            "getitune.backend.lightning.callbacks.aug_scheduler.AugmentationSchedulerCallback",
         )
         if idx > -1:
             callbacks.pop(idx)

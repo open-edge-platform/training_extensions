@@ -12,28 +12,28 @@ from datumaro.experimental import Dataset
 from getitune.config.data import SubsetConfig
 from getitune.data.dataset.classification import (
     HLabelInfo,
-    OTXHlabelClsDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
+    HlabelClsDataset,
+    MulticlassClsDataset,
+    MultilabelClsDataset,
 )
-from getitune.data.dataset.detection import OTXDetectionDataset
-from getitune.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from getitune.data.dataset.segmentation import OTXSegmentationDataset
-from getitune.data.factory import OTXDatasetFactory, TransformLibFactory
-from getitune.types.task import OTXTaskType
+from getitune.data.dataset.detection import DetectionDataset
+from getitune.data.dataset.instance_segmentation import InstanceSegDataset
+from getitune.data.dataset.segmentation import SegmentationDataset
+from getitune.data.factory import DatasetFactory, TransformLibFactory
+from getitune.types.task import TaskType
 
 
 class TestOTXDatasetFactory:
     @pytest.mark.parametrize(
         ("task_type", "dataset_cls", "dm_subset_fxt_name"),
         [
-            (OTXTaskType.MULTI_CLASS_CLS, OTXMulticlassClsDataset, "fxt_mock_classification_dm_subset"),
-            (OTXTaskType.MULTI_LABEL_CLS, OTXMultilabelClsDataset, "fxt_mock_classification_dm_subset"),
-            (OTXTaskType.H_LABEL_CLS, OTXHlabelClsDataset, "fxt_mock_classification_dm_subset"),
-            (OTXTaskType.DETECTION, OTXDetectionDataset, "fxt_mock_detection_dm_subset"),
-            (OTXTaskType.ROTATED_DETECTION, OTXInstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
-            (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
-            (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset, "fxt_mock_segmentation_dm_subset"),
+            (TaskType.MULTI_CLASS_CLS, MulticlassClsDataset, "fxt_mock_classification_dm_subset"),
+            (TaskType.MULTI_LABEL_CLS, MultilabelClsDataset, "fxt_mock_classification_dm_subset"),
+            (TaskType.H_LABEL_CLS, HlabelClsDataset, "fxt_mock_classification_dm_subset"),
+            (TaskType.DETECTION, DetectionDataset, "fxt_mock_detection_dm_subset"),
+            (TaskType.ROTATED_DETECTION, InstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
+            (TaskType.INSTANCE_SEGMENTATION, InstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
+            (TaskType.SEMANTIC_SEGMENTATION, SegmentationDataset, "fxt_mock_segmentation_dm_subset"),
         ],
     )
     def test_create(
@@ -57,7 +57,7 @@ class TestOTXDatasetFactory:
         mocker.patch.object(Dataset, "convert_to_schema", return_value=dm_subset)
 
         assert isinstance(
-            OTXDatasetFactory.create(
+            DatasetFactory.create(
                 task=task_type,
                 dm_subset=dm_subset,
                 cfg_subset=cfg_subset,
@@ -67,7 +67,7 @@ class TestOTXDatasetFactory:
 
 
 class TestDetectStorageDtype:
-    """Tests for OTXDatasetFactory._detect_storage_dtype."""
+    """Tests for DatasetFactory._detect_storage_dtype."""
 
     def test_schema_uint16(self):
         """Schema-declared UInt16 dtype → 'uint16'."""
@@ -82,7 +82,7 @@ class TestDetectStorageDtype:
         mock_schema.attributes = {"image": mock_img_attr}
         type(mock_subset).schema = PropertyMock(return_value=mock_schema)
 
-        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "uint16"
+        assert DatasetFactory._detect_storage_dtype(mock_subset) == "uint16"
 
     def test_schema_float32(self):
         """Schema-declared Float32 dtype → 'float32'."""
@@ -96,7 +96,7 @@ class TestDetectStorageDtype:
         mock_schema.attributes = {"image": mock_img_attr}
         type(mock_subset).schema = PropertyMock(return_value=mock_schema)
 
-        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "float32"
+        assert DatasetFactory._detect_storage_dtype(mock_subset) == "float32"
 
     def test_schema_unknown_defaults_uint8(self):
         """Unknown/missing schema dtype → default 'uint8'."""
@@ -106,7 +106,7 @@ class TestDetectStorageDtype:
         mock_schema.attributes = {}
         type(mock_subset).schema = PropertyMock(return_value=mock_schema)
 
-        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "uint8"
+        assert DatasetFactory._detect_storage_dtype(mock_subset) == "uint8"
 
     def test_file_based_detection(self, tmp_path):
         """File-header probing detects uint8 from a real PNG."""
@@ -124,4 +124,4 @@ class TestDetectStorageDtype:
         mock_subset = MagicMock(spec=Dataset)
         mock_subset.__iter__ = MagicMock(return_value=iter([mock_item]))
 
-        assert OTXDatasetFactory._detect_storage_dtype(mock_subset) == "uint8"
+        assert DatasetFactory._detect_storage_dtype(mock_subset) == "uint8"

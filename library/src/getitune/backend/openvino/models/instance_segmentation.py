@@ -12,12 +12,12 @@ from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.utils.structures.mask.mask_util import encode_rle
 from getitune.metrics import MetricInput
 from getitune.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 from getitune.types.label import LabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -67,7 +67,7 @@ class OVInstanceSegmentationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.INSTANCE_SEGMENTATION
+        self._task = TaskType.INSTANCE_SEGMENTATION
 
     def _setup_tiler(self) -> None:
         """Set up the tiler for tiled inference.
@@ -108,16 +108,16 @@ class OVInstanceSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
         """Customize the model outputs for Geti Tune compatibility.
 
         Args:
             outputs (list[InstanceSegmentationResult]): Model outputs.
-            inputs (OTXSampleBatch): Input data batch.
+            inputs (SampleBatch): Input data batch.
 
         Returns:
-            OTXPredictionBatch: Customized predictions batch.
+            PredictionBatch: Customized predictions batch.
         """
         bboxes = []
         scores = []
@@ -146,7 +146,7 @@ class OVInstanceSegmentationModel(OVModel):
                 predicted_s_maps.append(image_map)
 
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredictionBatch(
+            return PredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -157,7 +157,7 @@ class OVInstanceSegmentationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -168,8 +168,8 @@ class OVInstanceSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,  # type: ignore[override]
-        inputs: OTXSampleBatch,  # type: ignore[override]
+        preds: PredictionBatch,  # type: ignore[override]
+        inputs: SampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
@@ -177,8 +177,8 @@ class OVInstanceSegmentationModel(OVModel):
         and caches the ground truth for the current batch.
 
         Args:
-            preds (OTXPredictionBatch): Current batch predictions.
-            inputs (OTXSampleBatch): Current batch ground-truth inputs.
+            preds (PredictionBatch): Current batch predictions.
+            inputs (SampleBatch): Current batch ground-truth inputs.
 
         Returns:
             MetricInput: Dictionary containing predictions and ground truth.
@@ -238,7 +238,7 @@ class OVInstanceSegmentationModel(OVModel):
         if ov_model.has_rt_info(["model_info", "label_info"]):
             serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
             ir_label_info = LabelInfo.from_json(serialized)
-            if ir_label_info.label_names[0] == "otx_empty_lbl":
+            if ir_label_info.label_names[0] == "getitune_empty_lbl":
                 ir_label_info.label_names.pop(0)
                 ir_label_info.label_ids.pop(0)
                 ir_label_info.label_groups[0].pop(0)

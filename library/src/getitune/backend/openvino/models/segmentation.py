@@ -14,11 +14,11 @@ from model_api.tilers import SemanticSegmentationTiler
 from torchvision import tv_tensors
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import MetricInput
 from getitune.metrics.dice import SegmCallable
 from getitune.types.label import SegLabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import ImageResultWithSoftPrediction
@@ -66,7 +66,7 @@ class OVSegmentationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.SEMANTIC_SEGMENTATION
+        self._task = TaskType.SEMANTIC_SEGMENTATION
 
     def _setup_tiler(self) -> None:
         """Set up the tiler for tile-based inference.
@@ -86,22 +86,22 @@ class OVSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ImageResultWithSoftPrediction],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
         """Customize the outputs of the model for Geti Tune pipeline.
 
         Args:
             outputs (list[ImageResultWithSoftPrediction]): List of model outputs with soft predictions.
-            inputs (OTXSampleBatch): Input batch containing images and metadata.
+            inputs (SampleBatch): Input batch containing images and metadata.
 
         Returns:
-            OTXPredictionBatch: Customized prediction batch containing masks and feature vectors.
+            PredictionBatch: Customized prediction batch containing masks and feature vectors.
         """
         masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0)) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
@@ -111,16 +111,16 @@ class OVSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,  # type: ignore[override]
-        inputs: OTXSampleBatch,  # type: ignore[override]
+        preds: PredictionBatch,  # type: ignore[override]
+        inputs: SampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts predictions and ground truth inputs into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredictionBatch): Predicted segmentation batch containing masks.
-            inputs (OTXSampleBatch): Input batch containing ground truth masks.
+            preds (PredictionBatch): Predicted segmentation batch containing masks.
+            inputs (SampleBatch): Input batch containing ground truth masks.
 
         Returns:
             MetricInput: A list of dictionaries with 'preds' and 'target' keys for metric evaluation.

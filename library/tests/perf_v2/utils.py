@@ -20,7 +20,7 @@ import pandas as pd
 from cpuinfo import get_cpu_info
 from jsonargparse import ArgumentParser, Namespace
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -96,7 +96,7 @@ class Criterion:
             assert result_entry[self.name] > target_entry[self.name] * (1.0 - self.margin)
 
 
-def parse_task(value: str) -> OTXTaskType:
+def parse_task(value: str) -> TaskType:
     """Parse task type from string.
 
     Args:
@@ -106,13 +106,13 @@ def parse_task(value: str) -> OTXTaskType:
         ValueError: If value is not a valid task type.
 
     Returns:
-        OTXTaskType: Task type enum.
+        TaskType: Task type enum.
     """
     try:
         # Normalize input to uppercase before converting to enum.
-        return OTXTaskType(value.upper())
+        return TaskType(value.upper())
     except ValueError:
-        print(f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}")
+        print(f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in TaskType])}")
         raise
 
 
@@ -125,13 +125,13 @@ def current_date_str() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
-def setup_output_root(config: Namespace, task: OTXTaskType) -> Path:
+def setup_output_root(config: Namespace, task: TaskType) -> Path:
     """Setup output root directory.
 
     Args:
         config (Namespace): Benchmark configuration.
         current_date (str): Current date string.
-        task (OTXTaskType): Task type.
+        task (TaskType): Task type.
 
     Returns:
         Path: Output root directory.
@@ -161,7 +161,7 @@ def get_version_tags(current_date: str) -> dict[str, str]:
     except Exception:
         commit_str = os.environ.get("GH_CTX_SHA", "unknown")
     version_tags = {
-        "otx_version": version_str,
+        "getitune_version": version_str,
         "getitune_ref": commit_str,
         "test_branch": branch_str,
         "test_commit": commit_str,
@@ -256,7 +256,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--task",
         type=parse_task,
-        choices=list(OTXTaskType),
+        choices=list(TaskType),
         help="Task type to benchmark.",
     )
 

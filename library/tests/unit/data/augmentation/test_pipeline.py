@@ -1043,7 +1043,7 @@ class TestGPUAugmentationCallback:
 
     def _make_callback(self, train_augs=None, val_augs=None, test_augs=None):  # noqa: ANN202
         """Create a GPUAugmentationCallback with optional configs."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         train_config = SubsetConfig(augmentations_gpu=train_augs or [])
         val_config = SubsetConfig(augmentations_gpu=val_augs or [])
@@ -1055,7 +1055,7 @@ class TestGPUAugmentationCallback:
         )
 
     def test_init_defaults(self):
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         assert callback.train_config is None
@@ -1067,8 +1067,8 @@ class TestGPUAugmentationCallback:
 
     def test_setup_creates_pipelines(self):
         """setup() should create train and val pipelines."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from getitune.types.task import OTXTaskType
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import TaskType
 
         train_config = SubsetConfig(
             augmentations_gpu=[
@@ -1088,7 +1088,7 @@ class TestGPUAugmentationCallback:
 
         # Create mock module with required attributes
         pl_module = MagicMock()
-        pl_module.task = OTXTaskType.DETECTION
+        pl_module.task = TaskType.DETECTION
         pl_module.data_input_params = MagicMock()
         pl_module.data_input_params.mean = None
         pl_module.data_input_params.std = None
@@ -1101,8 +1101,8 @@ class TestGPUAugmentationCallback:
 
     def test_setup_updates_model_normalization(self):
         """setup() should update model's mean/std from GPU pipeline."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from getitune.types.task import OTXTaskType
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import TaskType
 
         val_config = SubsetConfig(
             augmentations_gpu=[
@@ -1119,7 +1119,7 @@ class TestGPUAugmentationCallback:
         callback = GPUAugmentationCallback(val_config=val_config)
 
         pl_module = MagicMock()
-        pl_module.task = OTXTaskType.MULTI_CLASS_CLS
+        pl_module.task = TaskType.MULTI_CLASS_CLS
         pl_module.data_input_params = MagicMock()
         pl_module.data_input_params.mean = None
         pl_module.data_input_params.std = None
@@ -1133,7 +1133,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_train_batch_start_no_pipeline(self):
         """If no train pipeline, on_train_batch_start should be a no-op."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         batch = MagicMock()
@@ -1142,7 +1142,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_val_batch_start_disabled(self):
         """If no val pipeline, validation batches should not be augmented."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         # _val_pipeline is None by default
@@ -1154,7 +1154,7 @@ class TestGPUAugmentationCallback:
 
     def test_on_test_batch_start_disabled(self):
         """If no test pipeline, test batches should not be augmented."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         callback = GPUAugmentationCallback()
         # _test_pipeline is None by default
@@ -1164,7 +1164,7 @@ class TestGPUAugmentationCallback:
 
     def test_test_config_fallback_to_val(self):
         """If test_config is None, it should fall back to val_config."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
 
         val_config = SubsetConfig(augmentations_gpu=[])
         callback = GPUAugmentationCallback(val_config=val_config, test_config=None)
@@ -1172,14 +1172,14 @@ class TestGPUAugmentationCallback:
 
     def test_data_keys_per_task(self):
         """Verify correct data_keys are used for different task types."""
-        from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
-        from getitune.types.task import OTXTaskType
+        from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
+        from getitune.types.task import TaskType
 
         expected_keys = {
-            OTXTaskType.DETECTION: ["input", "bbox_xyxy", "label"],
-            OTXTaskType.INSTANCE_SEGMENTATION: ["input", "bbox_xyxy", "mask", "label"],
-            OTXTaskType.SEMANTIC_SEGMENTATION: ["input", "mask"],
-            OTXTaskType.MULTI_CLASS_CLS: ["input", "label"],
+            TaskType.DETECTION: ["input", "bbox_xyxy", "label"],
+            TaskType.INSTANCE_SEGMENTATION: ["input", "bbox_xyxy", "mask", "label"],
+            TaskType.SEMANTIC_SEGMENTATION: ["input", "mask"],
+            TaskType.MULTI_CLASS_CLS: ["input", "label"],
         }
 
         for task_type, expected in expected_keys.items():

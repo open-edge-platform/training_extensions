@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.pck import PCKMeasureCallable
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import DetectedKeypoints
@@ -59,21 +59,21 @@ class OVKeypointDetectionModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.KEYPOINT_DETECTION
+        self._task = TaskType.KEYPOINT_DETECTION
 
     def _customize_outputs(
         self,
         outputs: list[DetectedKeypoints],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
         """Customize the outputs of the model for keypoint detection.
 
         Args:
             outputs (list[DetectedKeypoints]): List of detected keypoints from the model.
-            inputs (OTXSampleBatch): Input batch containing images and metadata.
+            inputs (SampleBatch): Input batch containing images and metadata.
 
         Returns:
-            OTXPredictionBatch: A batch containing processed keypoints, scores, and other metadata.
+            PredictionBatch: A batch containing processed keypoints, scores, and other metadata.
         """
         keypoints = []
         scores = []
@@ -86,7 +86,7 @@ class OVKeypointDetectionModel(OVModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             keypoints=keypoints,
@@ -109,16 +109,16 @@ class OVKeypointDetectionModel(OVModel):
 
     def prepare_metric_inputs(  # type: ignore[override]
         self,
-        preds: OTXPredictionBatch,
-        inputs: OTXSampleBatch,
+        preds: PredictionBatch,
+        inputs: SampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts prediction and input entities to a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredictionBatch): The predicted batch entity containing predicted keypoints.
-            inputs (OTXSampleBatch): The input batch entity containing ground truth keypoints.
+            preds (PredictionBatch): The predicted batch entity containing predicted keypoints.
+            inputs (SampleBatch): The input batch entity containing ground truth keypoints.
 
         Returns:
             MetricInput: A dictionary containing 'preds' and 'target' keys

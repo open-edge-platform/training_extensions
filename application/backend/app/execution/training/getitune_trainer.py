@@ -13,16 +13,16 @@ import polars as pl
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
-from getitune import OTXTaskType
-from getitune.backend.native.engine import OTXEngine
-from getitune.backend.native.models.base import DataInputParams, OTXModel
+from getitune import TaskType
+from getitune.backend.lightning.engine import LightningEngine
+from getitune.backend.lightning.models.base import DataInputParams, LightningModel
 from getitune.config.data import SamplerConfig, SubsetConfig
-from getitune.data.dataset.base import OTXDataset
+from getitune.data.dataset.base import VisionDataset
 from getitune.data.factory import TransformLibFactory
-from getitune.data.module import OTXDataModule
+from getitune.data.module import DataModule
 from getitune.types.device import DeviceType as OTXDeviceType
-from getitune.types.export import OTXExportFormatType
-from getitune.types.precision import OTXPrecisionType
+from getitune.types.export import ExportFormat
+from getitune.types.precision import Precision
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Callback
 from loguru import logger
@@ -87,9 +87,9 @@ class TrainingDependencies:
 
 @dataclass(frozen=True)
 class DatasetInfo:
-    getitune_training_dataset: OTXDataset
-    otx_validation_dataset: OTXDataset
-    otx_testing_dataset: OTXDataset
+    getitune_training_dataset: VisionDataset
+    otx_validation_dataset: VisionDataset
+    otx_testing_dataset: VisionDataset
     otx_training_subset_config: SubsetConfig
     otx_validation_subset_config: SubsetConfig
     otx_testing_subset_config: SubsetConfig
@@ -102,7 +102,7 @@ class ExportedModels:
     onnx_model_path: Path
 
 
-class OTXTrainer(Execution[TrainingJobParams]):
+class GetiTuneTrainer(Execution[TrainingJobParams]):
     """Geti Tune-specific trainer implementation."""
 
     params_type = TrainingJobParams
@@ -300,7 +300,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             val_subset_config = build_subset_config("val")
             test_subset_config = build_subset_config("test")
 
-            # Wrap them into OTXDataset instances
+            # Wrap them into VisionDataset instances
             getitune_task_type = get_getitune_task_type_by_task(task)
             getitune_dataset_class = get_getitune_dataset_class_by_task_type(getitune_task_type)
             logger.info("Preparing {} instances for each subset", getitune_dataset_class.__name__)
@@ -356,7 +356,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         model_id: UUID,
         device: DeviceInfo,
         has_parent_revision: bool,
-    ) -> tuple[Path, OTXEngine]:
+    ) -> tuple[Path, LightningEngine]:
         """Execute model training."""
         # TODO use weights path to initialize model from pre-downloaded weights
         #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
@@ -366,9 +366,9 @@ class OTXTrainer(Execution[TrainingJobParams]):
             weights_path,
         )
 
-        # Build the OTXDataModule
-        logger.info("Preparing the OTXDataModule for training (model_id={})", model_id)
-        getitune_datamodule = OTXDataModule.from_otx_datasets(
+        # Build the DataModule
+        logger.info("Preparing the DataModule for training (model_id={})", model_id)
+        getitune_datamodule = DataModule.from_vision_datasets(
             train_dataset=dataset_info.getitune_training_dataset,
             val_dataset=dataset_info.otx_validation_dataset,
             test_dataset=dataset_info.otx_testing_dataset,
@@ -377,8 +377,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
             test_subset=dataset_info.otx_testing_subset_config,
         )
 
-        # Create the OTXModel according to the training configuration
-        logger.info("Instantiating the OTXModel for training (model_id={})", model_id)
+        # Create the LightningModel according to the training configuration
+        logger.info("Instantiating the LightningModel for training (model_id={})", model_id)
         model_cfg = training_config["model"]
         model_cfg["init_args"]["label_info"] = getitune_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
@@ -387,15 +387,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
             std=getitune_datamodule.input_std if getitune_datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
-        model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False)
-        getitune_model: OTXModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
+        model_parser.add_subclass_arguments(LightningModel, "model", required=False, fail_untyped=False)
+        getitune_model: LightningModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
         if hasattr(getitune_model, "tile_config"):
             getitune_model.tile_config = getitune_datamodule.tile_config
 
-        # Set up the OTXEngine
-        logger.info("Initializing the OTXEngine for training (model_id={})", model_id)
+        # Set up the LightningEngine
+        logger.info("Initializing the LightningEngine for training (model_id={})", model_id)
         otx_device_type = OTXDeviceType.gpu if device.type is DeviceType.CUDA else OTXDeviceType(device.type)
-        getitune_engine = OTXEngine(
+        getitune_engine = LightningEngine(
             model=getitune_model,
             data=getitune_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
@@ -432,7 +432,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
     @step("Evaluate Model", 95)
     def evaluate_model(
         self,
-        getitune_engine: OTXEngine,
+        getitune_engine: LightningEngine,
         model_checkpoint_path: Path,
         task: Task,
         model_revision_id: UUID,
@@ -455,21 +455,21 @@ class OTXTrainer(Execution[TrainingJobParams]):
             )
 
     @step("Export Model")
-    def export_model(self, getitune_engine: OTXEngine, model_checkpoint_path: Path) -> ExportedModels:
+    def export_model(self, getitune_engine: LightningEngine, model_checkpoint_path: Path) -> ExportedModels:
         """Export the trained model to desired OpenVINO and ONNX formats"""
         logger.info("Exporting the model to OpenVINO format (FP16 precision)...")
         exported_ov_model_path = getitune_engine.export(
             checkpoint=model_checkpoint_path,
-            export_format=OTXExportFormatType.OPENVINO,
-            export_precision=OTXPrecisionType.FP16,
+            export_format=ExportFormat.OPENVINO,
+            export_precision=Precision.FP16,
         )
         logger.info("Model exported to OpenVINO format: {}", exported_ov_model_path)
 
         logger.info("Exporting the model to ONNX format (FP16 precision)...")
         exported_onnx_model_path = getitune_engine.export(
             checkpoint=model_checkpoint_path,
-            export_format=OTXExportFormatType.ONNX,
-            export_precision=OTXPrecisionType.FP16,
+            export_format=ExportFormat.ONNX,
+            export_precision=Precision.FP16,
         )
         logger.info("Model exported to ONNX format: {}", exported_onnx_model_path)
         return ExportedModels(openvino_model_path=exported_ov_model_path, onnx_model_path=exported_onnx_model_path)
@@ -656,7 +656,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
     def _build_filter_conditions(
         self,
-        getitune_task_type: OTXTaskType,
+        getitune_task_type: TaskType,
         annotation_field: str,
         filtering_config: Filtering,
     ) -> list:
@@ -666,7 +666,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         if filtering_config.min_annotation_objects.enable:
             min_value = filtering_config.min_annotation_objects.value
             logger.info("Filtering samples with a minimum of {} annotation objects", min_value)
-            if getitune_task_type == OTXTaskType.MULTI_CLASS_CLS:
+            if getitune_task_type == TaskType.MULTI_CLASS_CLS:
                 # Multiclass label is a scalar - presence means exactly 1 annotation object
                 filter_conditions.append(pl.col(annotation_field).is_not_null())
             else:
@@ -675,7 +675,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         if filtering_config.max_annotation_objects.enable:
             max_value = filtering_config.max_annotation_objects.value
             logger.info("Filtering samples with a maximum of {} annotation objects", max_value)
-            if getitune_task_type != OTXTaskType.MULTI_CLASS_CLS:
+            if getitune_task_type != TaskType.MULTI_CLASS_CLS:
                 # Max filtering is a no-op for multiclass (always 0 or 1 label)
                 filter_conditions.append(pl.col(annotation_field).list.len() <= max_value)
 
@@ -705,11 +705,11 @@ class OTXTrainer(Execution[TrainingJobParams]):
         # Determine the annotation field name based on task type
         getitune_task_type = get_getitune_task_type_by_task(task)
         match getitune_task_type:
-            case OTXTaskType.DETECTION:
+            case TaskType.DETECTION:
                 annotation_field = "bboxes"
-            case OTXTaskType.INSTANCE_SEGMENTATION:
+            case TaskType.INSTANCE_SEGMENTATION:
                 annotation_field = "polygons"
-            case OTXTaskType.MULTI_CLASS_CLS | OTXTaskType.MULTI_LABEL_CLS:
+            case TaskType.MULTI_CLASS_CLS | TaskType.MULTI_LABEL_CLS:
                 # For classification tasks, count the label field.
                 # For multiclass, label is a single scalar; for multilabel it's a list.
                 annotation_field = "label"

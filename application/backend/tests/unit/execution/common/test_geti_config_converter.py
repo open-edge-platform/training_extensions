@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from app.execution.common.geti_config_converter import GetiConfigConverter, HyperparametersUpdater, TransformsUpdater
 
-EARLY_STOPPING_CLASS_PATH = "getitune.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+EARLY_STOPPING_CLASS_PATH = "getitune.backend.lightning.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
 
 EARLY_STOPPING_CALLBACK = {
     "class_path": EARLY_STOPPING_CLASS_PATH,
@@ -34,7 +34,7 @@ def _make_otx_config(**overrides: Any) -> dict:
         "max_epochs": 200,
         "precision": "16-mixed",
         "model": {
-            "class_path": "getitune.backend.native.models.detection.atss.ATSS",
+            "class_path": "getitune.backend.lightning.models.detection.atss.ATSS",
             "init_args": {
                 "model_name": "atss_mobilenetv2",
                 "label_info": 80,
@@ -43,7 +43,7 @@ def _make_otx_config(**overrides: Any) -> dict:
                     "init_args": {"lr": 0.004, "momentum": 0.9, "weight_decay": 0.0001},
                 },
                 "scheduler": {
-                    "class_path": "getitune.backend.native.schedulers.LinearWarmupSchedulerCallable",
+                    "class_path": "getitune.backend.lightning.schedulers.LinearWarmupSchedulerCallable",
                     "init_args": {
                         "num_warmup_steps": 0,
                         "main_scheduler_callable": {

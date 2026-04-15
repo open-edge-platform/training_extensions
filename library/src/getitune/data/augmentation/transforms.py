@@ -18,7 +18,7 @@ from getitune.data.augmentation.kernels import (
     _resize_image_info,
     _resized_crop_image_info,
 )
-from getitune.data.entity.sample import OTXSample
+from getitune.data.entity.sample import BaseSample
 
 
 class Resize(tvt_v2.Transform):
@@ -90,17 +90,17 @@ class Resize(tvt_v2.Transform):
 
         return new_h, new_w, pad_left, pad_top, pad_right, pad_bottom
 
-    def forward(self, *inputs: OTXSample) -> OTXSample:  # type: ignore[override]
+    def forward(self, *inputs: BaseSample) -> BaseSample:  # type: ignore[override]
         """Resize image and optionally targets, with optional aspect ratio preservation."""
         if len(inputs) > 1:
-            msg = "Resize expects a single OTXSample input"
+            msg = "Resize expects a single BaseSample input"
             raise ValueError(msg)
-        sample: OTXSample = inputs[0]
+        sample: BaseSample = inputs[0]
 
         if not hasattr(sample, "image"):
             # Fallback: just resize the tensor directly
             return cast(
-                "OTXSample",
+                "BaseSample",
                 F.resize(
                     cast("torch.Tensor", sample),
                     size=list(self.size),
@@ -266,7 +266,7 @@ class CachedMosaic(tvt_v2.Transform):
         self.prob = p
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
-        self.results_cache: list[OTXSample] = []
+        self.results_cache: list[BaseSample] = []
 
     def _resize_keep_ratio(self, img: torch.Tensor, target_h: int, target_w: int) -> tuple[torch.Tensor, float]:
         """Resize CHW image keeping aspect ratio (FIT mode). Returns (resized, scale)."""
@@ -339,7 +339,7 @@ class CachedMosaic(tvt_v2.Transform):
         return [int(torch.randint(0, len(cache), (1,)).item()) for _ in range(3)]
 
     @typing.no_type_check
-    def forward(self, *_inputs: OTXSample) -> OTXSample:
+    def forward(self, *_inputs: BaseSample) -> BaseSample:
         """Apply CachedMosaic. Output is the raw 2x canvas."""
         assert len(_inputs) == 1, "Only single sample input is supported"  # noqa: S101
         inputs = _inputs[0]
@@ -526,7 +526,7 @@ class CachedMixUp(tvt_v2.Transform):
         self.random_pop = random_pop
         self.prob = p
 
-        self.results_cache: list[OTXSample] = []
+        self.results_cache: list[BaseSample] = []
 
     def _get_cached_index(self) -> int:
         """Return index of a cached sample with non-empty bboxes."""
@@ -578,7 +578,7 @@ class CachedMixUp(tvt_v2.Transform):
         return bboxes * scale
 
     @typing.no_type_check
-    def forward(self, *_inputs: OTXSample) -> OTXSample:
+    def forward(self, *_inputs: BaseSample) -> BaseSample:
         """Apply MixUp transform using pure torch operations."""
         assert len(_inputs) == 1, "Multiple inputs not supported"  # noqa: S101
         inputs = _inputs[0]

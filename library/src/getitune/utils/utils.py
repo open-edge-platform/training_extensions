@@ -13,7 +13,7 @@ from functools import partial
 from types import LambdaType
 from typing import TYPE_CHECKING, Any, Callable
 
-from getitune.backend.native.models.base import OTXModel
+from getitune.backend.lightning.models.base import LightningModel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -126,24 +126,24 @@ def remove_matched_files(directory: Path, pattern: str, file_to_leave: Path | No
             weight.unlink()
 
 
-def get_model_cls_from_config(model_config: Namespace) -> type[OTXModel]:
+def get_model_cls_from_config(model_config: Namespace) -> type[LightningModel]:
     """Get Python model class from jsonargparse Namespace."""
     splited = model_config.class_path.split(".")
     module_path, class_name = ".".join(splited[:-1]), splited[-1]
     module = importlib.import_module(module_path)
     model_cls = getattr(module, class_name)
 
-    if not issubclass(model_cls, OTXModel):
+    if not issubclass(model_cls, LightningModel):
         raise TypeError(model_cls)
 
     return model_cls
 
 
-def should_pass_label_info(model_cls: type[OTXModel]) -> bool:
+def should_pass_label_info(model_cls: type[LightningModel]) -> bool:
     """Determine if label_info should be passed when instantiating the given model class.
 
     Args:
-        model_cls (Type[OTXModel]): OTX model class to instantiate.
+        model_cls (Type[LightningModel]): OTX model class to instantiate.
 
     Returns:
         bool: True if label_info should be passed, False otherwise.
@@ -152,11 +152,11 @@ def should_pass_label_info(model_cls: type[OTXModel]) -> bool:
     return label_info_param is not None and label_info_param.default == label_info_param.empty
 
 
-def can_pass_tile_config(model_cls: type[OTXModel]) -> bool:
+def can_pass_tile_config(model_cls: type[LightningModel]) -> bool:
     """Determine if tile_config can be passed when instantiating the given model class.
 
     Args:
-        model_cls (Type[OTXModel]): OTX model class to instantiate.
+        model_cls (Type[LightningModel]): OTX model class to instantiate.
 
     Returns:
         bool: True if tile_config can be passed, False otherwise.

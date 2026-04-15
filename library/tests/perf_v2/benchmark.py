@@ -13,10 +13,10 @@ from typing import Any, Literal
 
 import pandas as pd
 
-from getitune.backend.native.cli.utils import RECIPE_PATH
-from getitune.backend.native.engine import OTXEngine
+from getitune.backend.lightning.cli.utils import RECIPE_PATH
+from getitune.backend.lightning.engine import LightningEngine
 from getitune.backend.openvino.engine import OVEngine
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
     Criterion,
@@ -34,23 +34,23 @@ from tests.perf_v2.utils import (
 logger = logging.getLogger(__name__)
 
 FOLDER_MAPPINGS = {
-    OTXTaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls",
-    OTXTaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls",
-    OTXTaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls",
-    OTXTaskType.DETECTION: RECIPE_PATH / "detection",
-    OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection",
-    OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation",
-    OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation",
-    OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection",
+    TaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls",
+    TaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls",
+    TaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls",
+    TaskType.DETECTION: RECIPE_PATH / "detection",
+    TaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection",
+    TaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation",
+    TaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation",
+    TaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection",
 }
 
 
-def task_benchmark_dataset(task: OTXTaskType) -> dict[str, DatasetInfo]:
+def task_benchmark_dataset(task: TaskType) -> dict[str, DatasetInfo]:
     test_cases = DATASET_COLLECTIONS[task]
     return {test_case.name: test_case for test_case in test_cases}
 
 
-def task_benchmark_models(task: OTXTaskType) -> dict[str, ModelInfo]:
+def task_benchmark_models(task: TaskType) -> dict[str, ModelInfo]:
     model_info_list = MODEL_COLLECTIONS[task]
     return {model.name: model for model in model_info_list}
 
@@ -312,7 +312,7 @@ class Benchmark:
         model_info: ModelInfo,
         dataset_info: DatasetInfo,
         work_dir: Path,
-    ) -> OTXEngine:
+    ) -> LightningEngine:
         """Initialise engine with given model and dataset settings.
 
         Args:
@@ -324,8 +324,8 @@ class Benchmark:
             Engine: Initialised engine
         """
 
-        return OTXEngine.from_config(
-            config_path=FOLDER_MAPPINGS[OTXTaskType(model_info.task)] / (model_info.name + ".yaml"),
+        return LightningEngine.from_config(
+            config_path=FOLDER_MAPPINGS[TaskType(model_info.task)] / (model_info.name + ".yaml"),
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,

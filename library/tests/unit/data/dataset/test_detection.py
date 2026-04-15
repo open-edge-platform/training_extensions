@@ -9,11 +9,11 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from getitune.data.dataset.detection import OTXDetectionDataset
+from getitune.data.dataset.detection import DetectionDataset
 
 
 class TestOTXDetectionDataset:
-    """Test OTXDetectionDataset class."""
+    """Test DetectionDataset class."""
 
     def setup_method(self):
         """Set up test fixtures."""
@@ -53,7 +53,7 @@ class TestOTXDetectionDataset:
 
         self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
 
-        dataset = OTXDetectionDataset(
+        dataset = DetectionDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )
@@ -91,7 +91,7 @@ class TestOTXDetectionDataset:
 
         self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
 
-        dataset = OTXDetectionDataset(
+        dataset = DetectionDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
         )

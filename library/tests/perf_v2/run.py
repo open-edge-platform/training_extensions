@@ -10,7 +10,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 from tests.perf_v2 import DATASET_COLLECTIONS, MODEL_COLLECTIONS
 from tests.perf_v2.summary import load, summarize_task, task_high_level_summary
 from tests.perf_v2.utils import (
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument("--resume-failed", action="store_true", help="Resume from failed_jobs.json")
     args = parser.parse_args()
 
-    task_type = OTXTaskType[args.task]
+    task_type = TaskType[args.task]
     models = MODEL_COLLECTIONS[task_type]
     datasets = DATASET_COLLECTIONS[task_type]
 

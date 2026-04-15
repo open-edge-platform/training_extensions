@@ -6,7 +6,7 @@
 from enum import Enum
 
 
-class OTXPrecisionType(str, Enum):
+class Precision(str, Enum):
     """Geti Tune precision type definition."""
 
     FP16 = "FP16"

@@ -19,8 +19,8 @@ from getitune.config.data import (
 from getitune.data import module as target_file
 from getitune.data.module import (
     DeviceType,
-    OTXDataModule,
-    OTXTaskType,
+    DataModule,
+    TaskType,
 )
 
 
@@ -71,17 +71,17 @@ class TestOTXDataModule:
 
     @pytest.fixture
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
-        return mocker.patch("getitune.data.module.OTXDatasetFactory")
+        return mocker.patch("getitune.data.module.DatasetFactory")
 
     @pytest.mark.parametrize(
         "task",
         [
-            OTXTaskType.MULTI_CLASS_CLS,
-            OTXTaskType.MULTI_LABEL_CLS,
-            OTXTaskType.H_LABEL_CLS,
-            OTXTaskType.DETECTION,
-            OTXTaskType.SEMANTIC_SEGMENTATION,
-            OTXTaskType.INSTANCE_SEGMENTATION,
+            TaskType.MULTI_CLASS_CLS,
+            TaskType.MULTI_LABEL_CLS,
+            TaskType.H_LABEL_CLS,
+            TaskType.DETECTION,
+            TaskType.SEMANTIC_SEGMENTATION,
+            TaskType.INSTANCE_SEGMENTATION,
         ],
     )
     def test_init(
@@ -97,7 +97,7 @@ class TestOTXDataModule:
         mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
         mock_dm_dataset.return_value.format = "datumaro"
 
-        module = OTXDataModule(
+        module = DataModule(
             task=task,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
@@ -128,8 +128,8 @@ class TestOTXDataModule:
         fxt_config.val_subset.input_size = None
         fxt_config.test_subset.input_size = (800, 800)
 
-        OTXDataModule(
-            task=OTXTaskType.MULTI_CLASS_CLS,
+        DataModule(
+            task=TaskType.MULTI_CLASS_CLS,
             data_root=fxt_config.data_root,
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
@@ -184,7 +184,7 @@ class TestOTXDataModule:
         mock_subset.__len__ = lambda _: 10
         mock_dm_dataset.return_value.filter_by_subset.return_value = mock_subset
         mock_dm_dataset.return_value.format = "datumaro"
-        module = OTXDataModule(**fxt_real_tv_cls_config, input_size=(240, 240))
+        module = DataModule(**fxt_real_tv_cls_config, input_size=(240, 240))
         logger = CSVLogger(tmpdir)
         logger.log_hyperparams(module.hparams_initial)
         logger.save()
@@ -192,7 +192,7 @@ class TestOTXDataModule:
         hparams_path = Path(logger.log_dir) / "hparams.yaml"
         assert hparams_path.exists()
 
-    # Fixtures for from_otx_datasets tests
+    # Fixtures for from_vision_datasets tests
     @pytest.fixture
     def fxt_mock_subset_configs(self) -> dict[str, MagicMock]:
         """Create mock SubsetConfig instances for testing."""
@@ -214,7 +214,7 @@ class TestOTXDataModule:
         """Factory fixture to create mock datasets with specified parameters."""
 
         def _create_mock_dataset(
-            task: OTXTaskType = OTXTaskType.MULTI_CLASS_CLS,
+            task: TaskType = TaskType.MULTI_CLASS_CLS,
             img_shape: tuple[int, int] = (224, 224),
             transforms: list | None = None,
             label_info: MagicMock | None = None,
@@ -234,7 +234,7 @@ class TestOTXDataModule:
         return _create_mock_dataset
 
     def test_from_otx_datasets_basic(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets with minimal configuration."""
+        """Test from_vision_datasets with minimal configuration."""
         # Create mock datasets with shared label_info
         shared_label_info = MagicMock()
         mock_train = fxt_mock_dataset(label_info=shared_label_info)
@@ -242,16 +242,16 @@ class TestOTXDataModule:
         mock_test = fxt_mock_dataset(label_info=shared_label_info)
 
         mocker.patch.object(
-            OTXDataModule,
+            DataModule,
             "get_default_subset_configs",
             return_value=fxt_mock_subset_configs,
         )
 
-        # from_otx_datasets requires train_subset with input_size
+        # from_vision_datasets requires train_subset with input_size
         train_subset = fxt_mock_subset_configs["train_subset"]
 
         # Create module from datasets
-        module = OTXDataModule.from_otx_datasets(
+        module = DataModule.from_vision_datasets(
             train_dataset=mock_train,
             val_dataset=mock_val,
             test_dataset=mock_test,
@@ -263,20 +263,20 @@ class TestOTXDataModule:
         assert module.subsets["val"] == mock_val
         assert module.subsets["test"] == mock_test
         assert module.label_info == shared_label_info
-        assert module.task == OTXTaskType.MULTI_CLASS_CLS
+        assert module.task == TaskType.MULTI_CLASS_CLS
         assert module.input_size == (224, 224)
 
     def test_from_otx_datasets_with_custom_configs(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets with custom subset configurations."""
+        """Test from_vision_datasets with custom subset configurations."""
         # Create mock datasets
         shared_label_info = MagicMock()
         mock_train = fxt_mock_dataset(
-            task=OTXTaskType.DETECTION,
+            task=TaskType.DETECTION,
             img_shape=(640, 640),
             label_info=shared_label_info,
         )
         mock_val = fxt_mock_dataset(
-            task=OTXTaskType.DETECTION,
+            task=TaskType.DETECTION,
             img_shape=(640, 640),
             label_info=shared_label_info,
         )
@@ -297,13 +297,13 @@ class TestOTXDataModule:
         val_config.input_size = (640, 640)
 
         mocker.patch.object(
-            OTXDataModule,
+            DataModule,
             "get_default_subset_configs",
             return_value=fxt_mock_subset_configs,
         )
 
         # Create module with custom configs
-        module = OTXDataModule.from_otx_datasets(
+        module = DataModule.from_vision_datasets(
             train_dataset=mock_train,
             val_dataset=mock_val,
             train_subset=train_config,
@@ -314,21 +314,21 @@ class TestOTXDataModule:
         assert module.train_subset == train_config
         assert module.val_subset == val_config
         assert module.test_subset == fxt_mock_subset_configs["test_subset"]
-        assert module.task == OTXTaskType.DETECTION
+        assert module.task == TaskType.DETECTION
         # input_size should come from train_config, not inferred from image data
         assert module.input_size == (640, 640)
 
     def test_from_otx_datasets_without_test(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets when test_dataset is None (uses val as test)."""
+        """Test from_vision_datasets when test_dataset is None (uses val as test)."""
         # Create mock datasets
         shared_label_info = MagicMock()
         mock_train = fxt_mock_dataset(
-            task=OTXTaskType.SEMANTIC_SEGMENTATION,
+            task=TaskType.SEMANTIC_SEGMENTATION,
             img_shape=(512, 512),
             label_info=shared_label_info,
         )
         mock_val = fxt_mock_dataset(
-            task=OTXTaskType.SEMANTIC_SEGMENTATION,
+            task=TaskType.SEMANTIC_SEGMENTATION,
             img_shape=(512, 512),
             label_info=shared_label_info,
         )
@@ -337,13 +337,13 @@ class TestOTXDataModule:
         train_subset.input_size = (512, 512)
 
         mocker.patch.object(
-            OTXDataModule,
+            DataModule,
             "get_default_subset_configs",
             return_value=fxt_mock_subset_configs,
         )
 
         # Create module without test dataset
-        module = OTXDataModule.from_otx_datasets(
+        module = DataModule.from_vision_datasets(
             train_dataset=mock_train,
             val_dataset=mock_val,
             test_dataset=None,  # Explicitly None
@@ -354,34 +354,34 @@ class TestOTXDataModule:
         assert module.subsets["train"] == mock_train
         assert module.subsets["val"] == mock_val
         assert module.subsets["test"] == mock_val  # Should be val dataset
-        assert module.task == OTXTaskType.SEMANTIC_SEGMENTATION
+        assert module.task == TaskType.SEMANTIC_SEGMENTATION
         assert module.input_size == (512, 512)
 
     def test_from_otx_datasets_label_info_mismatch(self, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets raises error when label_info doesn't match."""
+        """Test from_vision_datasets raises error when label_info doesn't match."""
         # Create mock datasets with mismatched label_info
         mock_train = fxt_mock_dataset(label_info=MagicMock())
         mock_val = fxt_mock_dataset(label_info=MagicMock())  # Different label_info
 
         # Should raise ValueError due to label_info mismatch
         with pytest.raises(ValueError, match="All data meta infos of provided datasets should be the same"):
-            OTXDataModule.from_otx_datasets(
+            DataModule.from_vision_datasets(
                 train_dataset=mock_train,
                 val_dataset=mock_val,
                 train_subset=fxt_mock_subset_configs["train_subset"],
             )
 
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
-        """Test from_otx_datasets with auto_num_workers enabled."""
+        """Test from_vision_datasets with auto_num_workers enabled."""
         # Create mock datasets
         shared_label_info = MagicMock()
         mock_train = fxt_mock_dataset(
-            task=OTXTaskType.DETECTION,
+            task=TaskType.DETECTION,
             img_shape=(640, 640),
             label_info=shared_label_info,
         )
         mock_val = fxt_mock_dataset(
-            task=OTXTaskType.DETECTION,
+            task=TaskType.DETECTION,
             img_shape=(640, 640),
             label_info=shared_label_info,
         )
@@ -390,13 +390,13 @@ class TestOTXDataModule:
         train_subset.input_size = (640, 640)
 
         mocker.patch.object(
-            OTXDataModule,
+            DataModule,
             "get_default_subset_configs",
             return_value=fxt_mock_subset_configs,
         )
 
         # Create module with auto_num_workers
-        module = OTXDataModule.from_otx_datasets(
+        module = DataModule.from_vision_datasets(
             train_dataset=mock_train,
             val_dataset=mock_val,
             auto_num_workers=True,

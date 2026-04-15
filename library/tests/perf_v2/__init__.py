@@ -3,7 +3,7 @@
 
 """Geti Tune performance benchmark tests."""
 
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 from .tasks import (
     classification,
@@ -14,31 +14,31 @@ from .tasks import (
 )
 
 CRITERIA_COLLECTIONS = {
-    OTXTaskType.DETECTION: detection.BENCHMARK_CRITERIA,
-    OTXTaskType.INSTANCE_SEGMENTATION: instance_segmentation.BENCHMARK_CRITERIA,
-    OTXTaskType.SEMANTIC_SEGMENTATION: semantic_segmentation.BENCHMARK_CRITERIA,
-    OTXTaskType.MULTI_CLASS_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
-    OTXTaskType.MULTI_LABEL_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
-    OTXTaskType.H_LABEL_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
-    OTXTaskType.KEYPOINT_DETECTION: keypoint_detection.BENCHMARK_CRITERIA,
+    TaskType.DETECTION: detection.BENCHMARK_CRITERIA,
+    TaskType.INSTANCE_SEGMENTATION: instance_segmentation.BENCHMARK_CRITERIA,
+    TaskType.SEMANTIC_SEGMENTATION: semantic_segmentation.BENCHMARK_CRITERIA,
+    TaskType.MULTI_CLASS_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
+    TaskType.MULTI_LABEL_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
+    TaskType.H_LABEL_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
+    TaskType.KEYPOINT_DETECTION: keypoint_detection.BENCHMARK_CRITERIA,
 }
 
 MODEL_COLLECTIONS = {
-    OTXTaskType.DETECTION: detection.MODEL_TEST_CASES,
-    OTXTaskType.INSTANCE_SEGMENTATION: instance_segmentation.MODEL_TEST_CASES,
-    OTXTaskType.SEMANTIC_SEGMENTATION: semantic_segmentation.MODEL_TEST_CASES,
-    OTXTaskType.MULTI_CLASS_CLS: classification.MULTI_CLASS_MODEL_TEST_CASES,
-    OTXTaskType.MULTI_LABEL_CLS: classification.MULTI_LABEL_MODEL_TEST_CASES,
-    OTXTaskType.H_LABEL_CLS: classification.H_LABEL_CLS_MODEL_TEST_CASES,
-    OTXTaskType.KEYPOINT_DETECTION: keypoint_detection.MODEL_TEST_CASES,
+    TaskType.DETECTION: detection.MODEL_TEST_CASES,
+    TaskType.INSTANCE_SEGMENTATION: instance_segmentation.MODEL_TEST_CASES,
+    TaskType.SEMANTIC_SEGMENTATION: semantic_segmentation.MODEL_TEST_CASES,
+    TaskType.MULTI_CLASS_CLS: classification.MULTI_CLASS_MODEL_TEST_CASES,
+    TaskType.MULTI_LABEL_CLS: classification.MULTI_LABEL_MODEL_TEST_CASES,
+    TaskType.H_LABEL_CLS: classification.H_LABEL_CLS_MODEL_TEST_CASES,
+    TaskType.KEYPOINT_DETECTION: keypoint_detection.MODEL_TEST_CASES,
 }
 
 DATASET_COLLECTIONS = {
-    OTXTaskType.DETECTION: detection.DATASET_TEST_CASES,
-    OTXTaskType.INSTANCE_SEGMENTATION: instance_segmentation.DATASET_TEST_CASES,
-    OTXTaskType.SEMANTIC_SEGMENTATION: semantic_segmentation.DATASET_TEST_CASES,
-    OTXTaskType.MULTI_CLASS_CLS: classification.MULTI_CLASS_DATASET_TEST_CASES,
-    OTXTaskType.MULTI_LABEL_CLS: classification.MULTI_LABEL_DATASET_TEST_CASES,
-    OTXTaskType.H_LABEL_CLS: classification.H_LABEL_CLS_DATASET_TEST_CASES,
-    OTXTaskType.KEYPOINT_DETECTION: keypoint_detection.DATASET_TEST_CASES,
+    TaskType.DETECTION: detection.DATASET_TEST_CASES,
+    TaskType.INSTANCE_SEGMENTATION: instance_segmentation.DATASET_TEST_CASES,
+    TaskType.SEMANTIC_SEGMENTATION: semantic_segmentation.DATASET_TEST_CASES,
+    TaskType.MULTI_CLASS_CLS: classification.MULTI_CLASS_DATASET_TEST_CASES,
+    TaskType.MULTI_LABEL_CLS: classification.MULTI_LABEL_DATASET_TEST_CASES,
+    TaskType.H_LABEL_CLS: classification.H_LABEL_CLS_DATASET_TEST_CASES,
+    TaskType.KEYPOINT_DETECTION: keypoint_detection.DATASET_TEST_CASES,
 }

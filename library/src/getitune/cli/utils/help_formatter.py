@@ -162,10 +162,10 @@ def render_guide(subcommand: str | None = None) -> list:
     """
     if subcommand is None:
         return []
-    from getitune.backend.native.engine import OTXEngine
+    from getitune.backend.lightning.engine import LightningEngine
 
     contents: list[Panel | Markdown] = [Markdown(INTRO_MARKDOWN)]
-    target_command = getattr(OTXEngine, subcommand)
+    target_command = getattr(LightningEngine, subcommand)
     cli_usage = get_cli_usage_docstring(target_command)
     if cli_usage is not None:
         cli_usage += f"\n{VERBOSE_USAGE.format(subcommand=subcommand)}"

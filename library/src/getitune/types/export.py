@@ -14,7 +14,7 @@ from getitune.config.data import TileConfig
 from getitune.types.label import HLabelInfo, LabelInfo
 
 
-class OTXExportFormatType(str, Enum):
+class ExportFormat(str, Enum):
     """Geti Tune export format type definition."""
 
     ONNX = "ONNX"
@@ -122,7 +122,7 @@ class TaskLevelExportParameters:
             ("model_info", "labels"): all_labels.strip(),
             ("model_info", "label_ids"): all_label_ids.strip(),
             ("model_info", "optimization_config"): json.dumps(self.optimization_config),
-            ("model_info", "otx_version"): getitune.__version__,
+            ("model_info", "getitune_version"): getitune.__version__,
         }
 
         if isinstance(self.label_info, HLabelInfo):

@@ -5,10 +5,10 @@
 
 from .base import ImageInfo, ImageType
 from .sample import (
-    OTXPrediction,
-    OTXPredictionBatch,
-    OTXSample,
-    OTXSampleBatch,
+    Prediction,
+    PredictionBatch,
+    BaseSample,
+    SampleBatch,
 )
 from .tile import (
     TileBatchDetDataEntity,
@@ -21,10 +21,10 @@ from .tile import (
 __all__ = [
     "ImageInfo",
     "ImageType",
-    "OTXPrediction",
-    "OTXPredictionBatch",
-    "OTXSample",
-    "OTXSampleBatch",
+    "Prediction",
+    "PredictionBatch",
+    "BaseSample",
+    "SampleBatch",
     "TileBatchDetDataEntity",
     "TileBatchInstSegDataEntity",
     "TileBatchSegDataEntity",

@@ -10,7 +10,7 @@ from torchmetrics.classification.jaccard import MulticlassJaccardIndex
 from torchmetrics.collections import MetricCollection
 from torchmetrics.segmentation.dice import DiceScore
 
-from getitune.metrics.dice import OTXDice, SegmCallable
+from getitune.metrics.dice import DiceMetric, SegmCallable
 from getitune.types.label import SegLabelInfo
 
 
@@ -20,11 +20,11 @@ class TestOTXDice:
 
         assert isinstance(metric, MetricCollection)
         assert set(metric.keys()) == {"Dice", "mIoU"}
-        assert isinstance(metric["Dice"], OTXDice)
+        assert isinstance(metric["Dice"], DiceMetric)
         assert isinstance(metric["mIoU"], MulticlassJaccardIndex)
 
     def test_perfect_prediction_returns_one(self) -> None:
-        metric = OTXDice(num_classes=3, average="macro", ignore_index=255)
+        metric = DiceMetric(num_classes=3, average="macro", ignore_index=255)
 
         preds = torch.tensor([[[0, 1], [2, 1]]])
         target = torch.tensor([[[0, 1], [2, 1]]])
@@ -38,7 +38,7 @@ class TestOTXDice:
         preds = torch.tensor([[[0, 1], [2, 1]]])
         target = torch.tensor([[[0, 1], [1, 2]]])
 
-        otx_metric = OTXDice(num_classes=3, average="macro", ignore_index=None)
+        otx_metric = DiceMetric(num_classes=3, average="macro", ignore_index=None)
         ref_metric = DiceScore(
             num_classes=3,
             average="macro",
@@ -53,7 +53,7 @@ class TestOTXDice:
         assert torch.allclose(otx_metric.compute(), ref_metric.compute())
 
     def test_ignore_index_excludes_ignored_pixels(self) -> None:
-        metric = OTXDice(num_classes=3, average="macro", ignore_index=255)
+        metric = DiceMetric(num_classes=3, average="macro", ignore_index=255)
 
         # Bottom row is ignore_index; only top row should affect score.
         preds = torch.tensor([[[1, 2], [2, 1]]])
@@ -66,7 +66,7 @@ class TestOTXDice:
         assert torch.isclose(score, torch.tensor(1.0))
 
     def test_update_casts_float_inputs_to_long(self) -> None:
-        metric = OTXDice(num_classes=3, average="macro", ignore_index=255)
+        metric = DiceMetric(num_classes=3, average="macro", ignore_index=255)
 
         preds = torch.tensor([[[0.0, 1.0], [2.0, 1.0]]], dtype=torch.float32)
         target = torch.tensor([[[0.0, 1.0], [2.0, 1.0]]], dtype=torch.float32)

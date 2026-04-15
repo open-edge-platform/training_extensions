@@ -8,7 +8,7 @@ from __future__ import annotations
 from enum import Enum
 
 
-class OTXTaskType(str, Enum):
+class TaskType(str, Enum):
     """Geti Tune task type definition."""
 
     # Classification

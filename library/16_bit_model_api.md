@@ -140,7 +140,7 @@ Add `intensity_mode` and related params. Insert Python-side intensity transform 
 
 ### B1. Embed intensity metadata in Geti Tune exporter rt_info
 
-**File:** `library/src/getitune/backend/native/exporter/base.py` — `_extend_model_metadata`
+**File:** `library/src/getitune/backend/lightning/exporter/base.py` — `_extend_model_metadata`
 
 Write `input_dtype`, `intensity_mode`, `intensity_max_value`, etc. from `IntensityConfig` into the IR. Extend `DataInputParams` to carry intensity config.
 

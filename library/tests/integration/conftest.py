@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from getitune.backend.native.cli.utils import get_getitune_root_path
-from getitune.types.task import OTXTaskType
+from getitune.backend.lightning.cli.utils import get_getitune_root_path
+from getitune.types.task import TaskType
 
 RECIPE_PATH = get_getitune_root_path() / "recipe"
 
@@ -64,21 +64,21 @@ def find_recipe_folder(base_path: Path, folder_name: str) -> Path:
     raise FileNotFoundError(msg)
 
 
-def get_task_list(task: str) -> list[OTXTaskType]:
+def get_task_list(task: str) -> list[TaskType]:
     if task == "all":
-        tasks = list(OTXTaskType)
+        tasks = list(TaskType)
     elif task == "multi_class_cls":
-        tasks = [OTXTaskType.MULTI_CLASS_CLS]
+        tasks = [TaskType.MULTI_CLASS_CLS]
     elif task == "multi_label_cls":
-        tasks = [OTXTaskType.MULTI_LABEL_CLS]
+        tasks = [TaskType.MULTI_LABEL_CLS]
     elif task == "h_label_cls":
-        tasks = [OTXTaskType.H_LABEL_CLS]
+        tasks = [TaskType.H_LABEL_CLS]
     elif task == "classification":
-        tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
+        tasks = [TaskType.MULTI_CLASS_CLS, TaskType.MULTI_LABEL_CLS, TaskType.H_LABEL_CLS]
     elif task == "keypoint_detection":
-        tasks = [OTXTaskType.KEYPOINT_DETECTION]
+        tasks = [TaskType.KEYPOINT_DETECTION]
     else:
-        tasks = [OTXTaskType(task.upper())]
+        tasks = [TaskType(task.upper())]
     return tasks
 
 

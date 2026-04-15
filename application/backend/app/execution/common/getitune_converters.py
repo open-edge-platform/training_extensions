@@ -1,9 +1,9 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import torch
-from getitune import OTXTaskType
-from getitune.data import OTXDetectionDataset, OTXInstanceSegDataset, OTXMulticlassClsDataset, OTXMultilabelClsDataset
-from getitune.data.dataset.base import OTXDataset
+from getitune import TaskType
+from getitune.data import DetectionDataset, InstanceSegDataset, MulticlassClsDataset, MultilabelClsDataset
+from getitune.data.dataset.base import VisionDataset
 from getitune.metrics import MetricCallable
 from getitune.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
@@ -12,17 +12,17 @@ from loguru import logger
 from app.models import Task, TaskType
 
 
-def get_getitune_task_type_by_task(task: Task) -> OTXTaskType:
-    """Map internal Task to OTXTaskType."""
+def get_getitune_task_type_by_task(task: Task) -> TaskType:
+    """Map internal Task to TaskType."""
     match task.task_type:
         case TaskType.CLASSIFICATION:
             if task.exclusive_labels:
-                return OTXTaskType.MULTI_CLASS_CLS
-            return OTXTaskType.MULTI_LABEL_CLS
+                return TaskType.MULTI_CLASS_CLS
+            return TaskType.MULTI_LABEL_CLS
         case TaskType.DETECTION:
-            return OTXTaskType.DETECTION
+            return TaskType.DETECTION
         case TaskType.INSTANCE_SEGMENTATION:
-            return OTXTaskType.INSTANCE_SEGMENTATION
+            return TaskType.INSTANCE_SEGMENTATION
         case _:
             raise ValueError(f"Unsupported task type: {task.task_type}")
 
@@ -42,13 +42,13 @@ def get_metric_by_task(task: Task) -> MetricCallable:
             raise ValueError(f"Unsupported task type: {task.task_type}")
 
 
-def get_getitune_dataset_class_by_task_type(getitune_task_type: OTXTaskType) -> type[OTXDataset]:
-    """Get the OTXDataset class corresponding to the given OTXTaskType."""
-    otx_task_type_to_class: dict[OTXTaskType, type[OTXDataset]] = {
-        OTXTaskType.MULTI_CLASS_CLS: OTXMulticlassClsDataset,
-        OTXTaskType.MULTI_LABEL_CLS: OTXMultilabelClsDataset,
-        OTXTaskType.DETECTION: OTXDetectionDataset,
-        OTXTaskType.INSTANCE_SEGMENTATION: OTXInstanceSegDataset,
+def get_getitune_dataset_class_by_task_type(getitune_task_type: TaskType) -> type[VisionDataset]:
+    """Get the VisionDataset class corresponding to the given TaskType."""
+    otx_task_type_to_class: dict[TaskType, type[VisionDataset]] = {
+        TaskType.MULTI_CLASS_CLS: MulticlassClsDataset,
+        TaskType.MULTI_LABEL_CLS: MultilabelClsDataset,
+        TaskType.DETECTION: DetectionDataset,
+        TaskType.INSTANCE_SEGMENTATION: InstanceSegDataset,
     }
     try:
         return otx_task_type_to_class[getitune_task_type]

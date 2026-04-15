@@ -154,5 +154,5 @@ class ImageInfo(tv_tensors.TVTensor):
         )
 
 
-class OTXBatchLossEntity(Dict[str, Tensor]):
+class BatchLoss(Dict[str, Tensor]):
     """Data entity to represent model output losses."""

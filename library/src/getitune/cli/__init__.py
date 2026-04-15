@@ -6,7 +6,7 @@
 from datetime import timedelta
 from time import time
 
-from getitune.cli.cli import OTXCLI
+from getitune.cli.cli import CLI
 
 
 def main() -> None:
@@ -15,7 +15,7 @@ def main() -> None:
     This function is a single entry point for all Geti Tune CLI related operations:
     """
     start = time()
-    OTXCLI()
+    CLI()
     dt = timedelta(seconds=time() - start)
     print(f"Elapsed time: {dt}")
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from getitune.backend.native.callbacks.aug_scheduler import DataAugSwitch
+    from getitune.backend.lightning.callbacks.aug_scheduler import DataAugSwitch
 
 
 class DataAugSwitchMixin:
@@ -21,7 +21,7 @@ class DataAugSwitchMixin:
 
     Usage::
 
-        class MyDataset(OTXDataset, DataAugSwitchMixin):
+        class MyDataset(VisionDataset, DataAugSwitchMixin):
             def _apply_transforms(self, entity):
                 if self.has_dynamic_augmentation:
                     self._apply_augmentation_switch()

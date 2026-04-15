@@ -10,13 +10,13 @@ import numpy as np
 import torch
 
 from getitune.backend.openvino.models.base import OVModel
-from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.metrics import MetricInput
 from getitune.metrics.accuracy import (
     HLabelClsMetricCallable,
 )
 from getitune.types.label import HLabelInfo
-from getitune.types.task import OTXTaskType
+from getitune.types.task import TaskType
 
 if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult
@@ -66,21 +66,21 @@ class OVHlabelClassificationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        self._task = OTXTaskType.H_LABEL_CLS
+        self._task = TaskType.H_LABEL_CLS
 
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: OTXSampleBatch,
-    ) -> OTXPredictionBatch:
+        inputs: SampleBatch,
+    ) -> PredictionBatch:
         """Customize the outputs of the model for hierarchical classification.
 
         Args:
             outputs (list[ClassificationResult]): List of classification results from the model.
-            inputs (OTXSampleBatch): Input data batch.
+            inputs (SampleBatch): Input data batch.
 
         Returns:
-            OTXPredictionBatch: Customized prediction batch containing labels, scores, and optional saliency maps.
+            PredictionBatch: Customized prediction batch containing labels, scores, and optional saliency maps.
         """
         all_pred_labels = []
         all_pred_scores = []
@@ -116,7 +116,7 @@ class OVHlabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredictionBatch(
+            return PredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=all_pred_scores,
@@ -125,7 +125,7 @@ class OVHlabelClassificationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredictionBatch(
+        return PredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=all_pred_scores,
@@ -134,16 +134,16 @@ class OVHlabelClassificationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredictionBatch,
-        inputs: OTXSampleBatch,
+        preds: PredictionBatch,
+        inputs: SampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts predictions and ground truth inputs into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredictionBatch): Predicted batch containing labels and scores.
-            inputs (OTXSampleBatch): Input batch containing ground truth labels.
+            preds (PredictionBatch): Predicted batch containing labels and scores.
+            inputs (SampleBatch): Input batch containing ground truth labels.
 
         Returns:
             MetricInput: A dictionary with 'preds' and 'target' keys for metric evaluation.

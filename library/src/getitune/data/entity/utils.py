@@ -188,7 +188,7 @@ def register_pytree_node(cls: type[Sample]) -> type[Sample]:
 
             @register_pytree_node
             @dataclass
-            class MulticlassClsDataEntity(OTXDataEntity):
+            class MulticlassClsDataEntity(DataEntity):
                 ...
     """
 
