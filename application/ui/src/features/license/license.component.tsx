@@ -4,6 +4,7 @@
 import { Button, Content, Divider, Flex, Heading, Link, Text, View } from '@geti/ui';
 
 import { useAcceptLicense } from './api/use-accept-license.hook';
+
 import styles from './license.module.scss';
 
 const LICENSE_LINKS = {
