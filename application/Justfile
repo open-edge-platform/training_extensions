@@ -181,9 +181,15 @@ run-image accelerator="cpu" tag="latest" host="0.0.0.0" port="7860" container-na
         volume_args+=(--volume "$vol")
     done
 
+    GPU_FLAG=""
+    if [[ "{{ accelerator }}" == "cuda" ]]; then
+        GPU_FLAG="--gpus all"
+    fi
+
     echo "Running docker container from image: ${IMAGE_NAME}"
     docker run \
         {{ docker-run-args }} \
+        $GPU_FLAG \
         --publish {{ webrtc-ports }}:{{ webrtc-ports }}/udp \
         --publish {{ port }}:{{ port }} \
         --env HOST={{ host }} \
