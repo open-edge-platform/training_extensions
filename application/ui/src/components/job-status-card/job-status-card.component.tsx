@@ -11,7 +11,7 @@ type JobStatusCardProps = {
     title: string;
     message?: string;
     bottomIcon?: ReactNode;
-    bottomLeftMessage: string;
+    bottomLeftMessage: ReactNode;
     bottomRightMessage?: string;
     actionButtons: ReactNode;
 };

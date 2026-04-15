@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { getMockedPrepareImportDatasetJob } from 'mocks/mock-job';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
@@ -58,6 +59,9 @@ describe('LoadingImportDataset', () => {
         renderApp({ job, onSuccess: vi.fn(), deleteEntry: mockedDeleteImportEntry });
 
         expect(await screen.findByText('Import failed due to validation error')).toBeVisible();
+
+        await userEvent.click(screen.getByText('Technical details'));
+
         expect(await screen.findByText('Dataset validation failed: missing required fields')).toBeVisible();
         expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
     });
@@ -104,6 +108,9 @@ describe('LoadingImportDataset', () => {
         });
 
         expect(await screen.findByText('An error occurred during import.')).toBeVisible();
+
+        await userEvent.click(screen.getByText('Technical details'));
+
         expect(await screen.findByText('Job not found')).toBeVisible();
         expect(mockedOnSuccess).not.toHaveBeenCalled();
         expect(mockedDeleteImportEntry).not.toHaveBeenCalled();
