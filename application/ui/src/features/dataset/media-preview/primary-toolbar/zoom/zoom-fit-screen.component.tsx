@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton } from '@geti/ui';
+import { ActionButton, Tooltip, TooltipTrigger } from '@geti/ui';
 import { FitScreen } from '@geti/ui/icons';
 import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -15,10 +15,13 @@ export const ZoomFitScreen = () => {
     useHotkeys(HOTKEYS.fitToScreen, fitToScreen, [fitToScreen]);
 
     return (
-        <ActionButton isQuiet onPress={fitToScreen} aria-label='Fit to screen'>
-            <IconWrapper>
-                <FitScreen />
-            </IconWrapper>
-        </ActionButton>
+        <TooltipTrigger>
+            <ActionButton isQuiet onPress={fitToScreen} aria-label='Fit to screen'>
+                <IconWrapper>
+                    <FitScreen />
+                </IconWrapper>
+            </ActionButton>
+            <Tooltip>Fit to screen</Tooltip>
+        </TooltipTrigger>
     );
 };

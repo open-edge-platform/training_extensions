@@ -5,6 +5,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { getMockedVideoFrame } from 'mocks/mock-media';
+import { getMockedModel } from 'mocks/mock-model';
 import { render } from 'test-utils/render';
 
 import { VideoToolbar } from './video-toolbar.component';
@@ -41,6 +42,15 @@ vi.mock('../video-player-provider.component', () => ({
 
 vi.mock('../../../../hooks/use-project-labels.hook', () => ({
     useProjectLabels: () => [getMockedLabel({ id: 'label-1', name: 'Cat' })],
+}));
+
+vi.mock('../../predictions-setup-provider.component', async (importOriginal) => ({
+    ...(await importOriginal()),
+    usePredictionSetup: () => ({
+        selectedModelId: 'model-1',
+        changeSelectedModelId: vi.fn(),
+        models: [getMockedModel({ id: 'model-1', name: 'Test Model' })],
+    }),
 }));
 
 const toggleToolbar = async () => {

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -78,6 +79,9 @@ describe('StagedImportDataset', () => {
         );
 
         expect(await screen.findByText('An error occurred during staged file reading')).toBeVisible();
+
+        await userEvent.click(screen.getByText('Technical details'));
+
         expect(await screen.findByText(apiError)).toBeVisible();
         expect(await screen.findByRole('button', { name: /close import dataset status/i })).toBeVisible();
         expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();

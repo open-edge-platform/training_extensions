@@ -41,7 +41,7 @@ dependencies = [
     "torchmetrics==1.8.2",
     "pytorchcv==0.0.74",
     "timm==1.0.3",
-    "openvino~=2026.0.0",
+    "openvino~=2026.1.0",
     "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git",
     "onnx==1.21.0",
     "onnxconverter-common==1.16.0",

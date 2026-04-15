@@ -41,6 +41,7 @@ from app.models.media import ImageFormat, MediaListPredictionRequest, MediaPredi
 from app.models.system import DeviceInfo, DeviceType
 from app.services import DatasetService, MediaPredictionService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
+from app.services.inference import InferenceBusyError
 from app.services.media_prediction_service import VideoRangeError
 from app.services.media_service import ImageMetadata, MediaFilters
 
@@ -1750,3 +1751,28 @@ class TestMediaEndpoints:
         }
 
         fxt_media_prediction_service.predict_media.assert_not_called()
+
+    def test_media_predict_inference_busy(
+        self, fxt_get_project, fxt_media_prediction_service, fxt_inference_media_limit, fxt_client
+    ) -> None:
+        request = MediaListPredictionRequest(
+            model_id=uuid4(),
+            media=[MediaPredictionRequest(media_id=uuid4(), range=None)],
+            save_predictions=False,
+            device="AUTO",
+        )
+
+        fxt_inference_media_limit(10)
+
+        fxt_media_prediction_service.predict_media.side_effect = InferenceBusyError()
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media/media:predict",
+            json=request.model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+        assert response.json() == {
+            "detail": "Inference request timed out waiting for the model lock. Another inference is in "
+            + "progress or model is not loaded yet."
+        }

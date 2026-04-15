@@ -7,7 +7,6 @@ import type {
     BoolConfigurableParameter,
     ConfigurableParameter,
     ConfigurableParameterGroup,
-    EnumConfigurableParameter,
     NumberConfigurableParameter,
     NumberEnumConfigurableParameter,
     StringConfigurableParameter,
@@ -53,14 +52,6 @@ export const isEnumNumberParameter = (input: ConfigurableParameter): input is Nu
 
 export const isEnumStringParameter = (input: ConfigurableParameter): input is StringEnumConfigurableParameter => {
     return isStringParameter(input) && input.allowed_values != null;
-};
-
-export const isEnumParameter = (input: ConfigurableParameter): input is EnumConfigurableParameter => {
-    return isEnumNumberParameter(input) || isEnumStringParameter(input);
-};
-
-export const isConfigurationParameter = (input: unknown): input is ConfigurableParameter => {
-    return isObject(input) && 'key' in input && 'name' in input && 'description' in input;
 };
 
 export const deepReplaceParameters = (

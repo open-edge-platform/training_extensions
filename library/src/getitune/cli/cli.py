@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 from copy import deepcopy
+from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 from warnings import warn
@@ -324,7 +325,7 @@ class OTXCLI:
                 _dip["std"] = self.datamodule.input_std
             _intensity_cfg = getattr(self.datamodule, "input_intensity_config", None)
             if _intensity_cfg is not None:
-                _dip["intensity_config"] = _intensity_cfg
+                _dip["intensity_config"] = asdict(_intensity_cfg)
             model_config.init_args["data_input_params"] = _dip
 
             # Instantiate the model and needed components

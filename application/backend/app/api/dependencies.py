@@ -264,9 +264,12 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
     return BaseWeightsService(data_dir)
 
 
-def get_license_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> LicenseService:
+def get_license_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    request: Request,
+) -> LicenseService:
     """Provides a LicenseService instance for tracking license consent."""
-    return LicenseService(data_dir=data_dir)
+    return LicenseService(data_dir=data_dir, app_version=request.app.state.settings.version)
 
 
 def get_staged_dataset_service(

@@ -110,6 +110,7 @@ export const DrawingBox = ({ roi, zoom, image, selectedLabel, onComplete }: Draw
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerDown={onPointerDown}
+            onPointerLeave={crosshair.onPointerLeave}
             style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             {boundingBox ? (

@@ -10,7 +10,7 @@ import { getMockedModelArchitecture } from 'mocks/mock-model';
 import { render } from 'test-utils/render';
 
 import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
-import { ModelArchitecture } from './model-architecture.component';
+import { DetailedModelArchitecture, ModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
 const renderModelArchitecture = ({
@@ -31,6 +31,35 @@ const renderModelArchitecture = ({
             ariaLabel={'Model architectures'}
         >
             <ModelArchitecture
+                activeModelArchitectureId={activeModelArchitectureId}
+                modelArchitecture={modelArchitecture}
+                selectedModelArchitectureId={selectedModelArchitectureId}
+                onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+            />
+        </ModelArchitecturesListLayout>
+    );
+
+    return { modelArchitecture };
+};
+
+const renderDetailedModelArchitecture = ({
+    activeModelArchitectureId = undefined,
+    selectedModelArchitectureId = null,
+    onSelectedModelArchitectureIdChange = vi.fn(),
+    modelArchitecture = getMockedModelArchitecture(),
+}: {
+    activeModelArchitectureId?: string;
+    selectedModelArchitectureId?: string | null;
+    onSelectedModelArchitectureIdChange?: ReturnType<typeof vi.fn>;
+    modelArchitecture?: ModelArchitectureWithPerformanceCategory;
+} = {}) => {
+    render(
+        <ModelArchitecturesListLayout
+            selectedModelArchitectureId={selectedModelArchitectureId}
+            onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+            ariaLabel={'Model architectures'}
+        >
+            <DetailedModelArchitecture
                 activeModelArchitectureId={activeModelArchitectureId}
                 modelArchitecture={modelArchitecture}
                 selectedModelArchitectureId={selectedModelArchitectureId}
@@ -126,5 +155,68 @@ describe('ModelArchitecture', () => {
         renderModelArchitecture({ selectedModelArchitectureId: null });
 
         expect(screen.getByRole('radio', { name: 'Deim-DFine-L' })).not.toBeChecked();
+    });
+
+    describe('benchmark stats (DetailedParameters)', () => {
+        const detectionArchitecture = getMockedModelArchitecture({
+            task: 'detection',
+            stats: {
+                gigaflops: 91,
+                trainable_parameters: 31,
+                benchmark_metrics: {
+                    imagenet_top1_accuracy: null,
+                    imagenet_top5_accuracy: null,
+                    coco_map_50_95: 55.3,
+                    coco_map_50: null,
+                },
+            },
+            performanceCategory: 'speed',
+        });
+
+        it('does not show gigaflops or accuracy when using Parameters (default)', () => {
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture });
+
+            expect(screen.queryByText(/gigaflops/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/mAP/i)).not.toBeInTheDocument();
+        });
+
+        it('shows gigaflops and mAP when using DetailedParameters', () => {
+            renderDetailedModelArchitecture({ modelArchitecture: detectionArchitecture });
+
+            expect(screen.getByText(`Gigaflops: ${detectionArchitecture.stats.gigaflops}`)).toBeVisible();
+            expect(screen.getByText('mAP: 55.3%')).toBeVisible();
+        });
+
+        it('hides the performance category badge when using DetailedParameters', () => {
+            renderDetailedModelArchitecture({ modelArchitecture: detectionArchitecture });
+
+            expect(screen.queryByText('Speed')).not.toBeInTheDocument();
+        });
+
+        it('still shows the performance category badge when using Parameters only', () => {
+            renderModelArchitecture({ modelArchitecture: detectionArchitecture });
+
+            expect(screen.getByText('Speed')).toBeVisible();
+        });
+
+        it('shows Top-1 Acc for classification tasks when using DetailedParameters', () => {
+            const classificationArchitecture = getMockedModelArchitecture({
+                task: 'classification',
+                stats: {
+                    gigaflops: 2,
+                    trainable_parameters: 5,
+                    benchmark_metrics: {
+                        imagenet_top1_accuracy: 76.2,
+                        imagenet_top5_accuracy: 95.3,
+                        coco_map_50_95: null,
+                        coco_map_50: null,
+                    },
+                },
+            });
+
+            renderDetailedModelArchitecture({ modelArchitecture: classificationArchitecture });
+
+            expect(screen.getByText('Top-1 Acc: 76.2%')).toBeVisible();
+        });
     });
 });
