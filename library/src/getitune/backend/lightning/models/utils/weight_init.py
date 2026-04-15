@@ -551,7 +551,11 @@ class PretrainedInit:
         Args:
             module (nn.Module): The module to initialize.
         """
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/utils/weight_init.py
         from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http, load_state_dict
+========
+        from getitune.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http, load_state_dict
+>>>>>>>> develop:library/src/getitune/backend/native/models/utils/weight_init.py
 
         if self.prefix is None:
             if Path(self.checkpoint).exists():

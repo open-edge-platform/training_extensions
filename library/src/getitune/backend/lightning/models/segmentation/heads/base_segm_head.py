@@ -12,8 +12,13 @@ from typing import Callable
 import torch
 from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/heads/base_segm_head.py
 from getitune.backend.lightning.models.segmentation.modules import resize
 from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
+========
+from getitune.backend.native.models.segmentation.modules import resize
+from getitune.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+>>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/heads/base_segm_head.py
 
 
 class BaseSegmentationHead(nn.Module):

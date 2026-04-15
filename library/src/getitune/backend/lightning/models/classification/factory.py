@@ -9,7 +9,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, overload
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/factory.py
 from getitune.backend.lightning.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+========
+from getitune.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/factory.py
 from getitune.metrics.accuracy import MultiClassClsMetricCallable
 
 from .hlabel_models import (
@@ -37,8 +41,13 @@ from .multilabel_models import (
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/factory.py
     from getitune.backend.lightning.models.base import DataInputParams
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+========
+    from getitune.backend.native.models.base import DataInputParams
+    from getitune.backend.native.schedulers import LRSchedulerListCallable
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/factory.py
     from getitune.metrics import MetricCallable
     from getitune.types.label import LabelInfoTypes
 

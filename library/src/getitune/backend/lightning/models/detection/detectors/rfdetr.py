@@ -20,7 +20,11 @@ from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/detectors/rfdetr.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
+========
+from getitune.backend.native.models.modules.base_module import BaseModule
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/detectors/rfdetr.py
 
 if TYPE_CHECKING:
     from jsonargparse import Namespace

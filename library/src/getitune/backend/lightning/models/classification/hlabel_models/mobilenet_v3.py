@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import torch
 from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/hlabel_models/mobilenet_v3.py
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones import MobileNetV3Backbone
 from getitune.backend.lightning.models.classification.classifier import HLabelClassifier
@@ -24,6 +25,20 @@ from getitune.backend.lightning.models.classification.necks.gap import GlobalAve
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
+========
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.classification.backbones import MobileNetV3Backbone
+from getitune.backend.native.models.classification.classifier import HLabelClassifier
+from getitune.backend.native.models.classification.heads import HierarchicalLinearClsHead
+from getitune.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
+from getitune.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
+    AsymmetricAngularLossWithIgnore,
+)
+from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/hlabel_models/mobilenet_v3.py
 from getitune.metrics import MetricInput
 from getitune.metrics.accuracy import HLabelClsMetricCallable
 from getitune.types.label import HLabelInfo

@@ -12,7 +12,11 @@ from __future__ import annotations
 
 import torch
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/assigners/iou2d_calculator.py
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
+========
+from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/assigners/iou2d_calculator.py
 
 
 class BboxOverlaps2D:

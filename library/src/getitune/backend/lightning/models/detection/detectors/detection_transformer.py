@@ -13,9 +13,15 @@ from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxes
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/detectors/detection_transformer.py
 from getitune.backend.lightning.models.detection.losses import DetrCriterion
 from getitune.backend.lightning.models.detection.utils import generate_scales
 from getitune.backend.lightning.models.modules.base_module import BaseModule
+========
+from getitune.backend.native.models.detection.losses import DetrCriterion
+from getitune.backend.native.models.detection.utils import generate_scales
+from getitune.backend.native.models.modules.base_module import BaseModule
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/detectors/detection_transformer.py
 
 
 class DETR(BaseModule):

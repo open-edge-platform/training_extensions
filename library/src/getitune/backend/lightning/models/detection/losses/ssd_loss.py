@@ -9,8 +9,13 @@ from __future__ import annotations
 
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/ssd_loss.py
 from getitune.backend.lightning.models.common.losses import smooth_l1_loss
 from getitune.backend.lightning.models.common.utils.utils import multi_apply
+========
+from getitune.backend.native.models.common.losses import smooth_l1_loss
+from getitune.backend.native.models.common.utils.utils import multi_apply
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/ssd_loss.py
 
 
 class SSDCriterion(nn.Module):

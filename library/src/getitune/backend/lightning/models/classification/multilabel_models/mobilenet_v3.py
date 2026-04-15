@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/multilabel_models/mobilenet_v3.py
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones import MobileNetV3Backbone
 from getitune.backend.lightning.models.classification.classifier import ImageClassifier
@@ -22,6 +23,20 @@ from getitune.backend.lightning.models.classification.necks.gap import GlobalAve
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
+========
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.classification.backbones import MobileNetV3Backbone
+from getitune.backend.native.models.classification.classifier import ImageClassifier
+from getitune.backend.native.models.classification.heads import MultiLabelNonLinearClsHead
+from getitune.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
+    AsymmetricAngularLossWithIgnore,
+)
+from getitune.backend.native.models.classification.multilabel_models.base import OTXMultilabelClsModel
+from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/multilabel_models/mobilenet_v3.py
 from getitune.metrics.accuracy import MultiLabelClsMetricCallable
 from getitune.types.label import LabelInfoTypes
 

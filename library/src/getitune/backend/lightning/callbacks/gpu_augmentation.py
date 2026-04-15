@@ -14,8 +14,13 @@ from lightning import Callback
 from torchvision import tv_tensors
 
 from getitune.data.augmentation import GPUAugmentationPipeline
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/callbacks/gpu_augmentation.py
 from getitune.data.entity.sample import SampleBatch
 from getitune.types.task import TaskType
+========
+from getitune.data.entity.sample import OTXSampleBatch
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/callbacks/gpu_augmentation.py
 
 if TYPE_CHECKING:
     from lightning import LightningModule, Trainer

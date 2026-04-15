@@ -12,9 +12,15 @@ from typing import Callable
 import torch
 from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/utils/swiglu_ffn.py
 from getitune.backend.lightning.models.common.layers.transformer_layers import ListForwardMixin
 from getitune.backend.lightning.models.modules.drop import build_dropout
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
+========
+from getitune.backend.native.models.common.layers.transformer_layers import ListForwardMixin
+from getitune.backend.native.models.modules.drop import build_dropout
+from getitune.backend.native.models.modules.norm import build_norm_layer
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/utils/swiglu_ffn.py
 
 
 class SwiGLUFFN(nn.Module):

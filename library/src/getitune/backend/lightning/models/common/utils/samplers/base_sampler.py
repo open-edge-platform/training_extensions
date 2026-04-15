@@ -16,11 +16,19 @@ from typing import TYPE_CHECKING
 import numpy as np
 import torch
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/samplers/base_sampler.py
 from getitune.backend.lightning.models.common.utils.structures import AssignResult, SamplingResult
 from getitune.utils.device import is_xpu_available
 
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
+========
+from getitune.backend.native.models.common.utils.structures import AssignResult, SamplingResult
+from getitune.utils.device import is_xpu_available
+
+if TYPE_CHECKING:
+    from getitune.backend.native.models.utils.utils import InstanceData
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/samplers/base_sampler.py
 
 
 def ensure_rng(rng: int | np.random.RandomState | None = None) -> np.random.RandomState:

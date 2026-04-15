@@ -28,11 +28,19 @@ from timm.models._manipulate import adapt_input_conv
 from timm.models.vision_transformer import Block
 from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/backbones/vision_transformer.py
 from getitune.backend.lightning.models.classification.utils.peft import (
     AttentionWithDoRA,
     AttentionWithLoRA,
 )
 from getitune.backend.lightning.models.modules.base_module import BaseModule
+========
+from getitune.backend.native.models.classification.utils.peft import (
+    AttentionWithDoRA,
+    AttentionWithLoRA,
+)
+from getitune.backend.native.models.modules.base_module import BaseModule
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/backbones/vision_transformer.py
 
 if TYPE_CHECKING:
     from pathlib import Path

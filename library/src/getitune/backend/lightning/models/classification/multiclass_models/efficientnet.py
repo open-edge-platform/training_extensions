@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Literal
 
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/multiclass_models/efficientnet.py
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones.efficientnet import EfficientNetBackbone
 from getitune.backend.lightning.models.classification.classifier import ImageClassifier
@@ -16,6 +17,15 @@ from getitune.backend.lightning.models.classification.heads import LinearClsHead
 from getitune.backend.lightning.models.classification.multiclass_models.base import LightningMulticlassClsModel
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+========
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.classification.backbones.efficientnet import EfficientNetBackbone
+from getitune.backend.native.models.classification.classifier import ImageClassifier
+from getitune.backend.native.models.classification.heads import LinearClsHead
+from getitune.backend.native.models.classification.multiclass_models.base import OTXMulticlassClsModel
+from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/multiclass_models/efficientnet.py
 from getitune.metrics.accuracy import MultiClassClsMetricCallable
 from getitune.types.label import LabelInfoTypes
 

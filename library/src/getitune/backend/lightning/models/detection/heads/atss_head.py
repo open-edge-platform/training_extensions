@@ -16,6 +16,7 @@ from typing import Any, Callable, ClassVar
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/heads/atss_head.py
 from getitune.backend.lightning.models.common.utils.coders import BaseBBoxCoder
 from getitune.backend.lightning.models.common.utils.prior_generators import BasePriorGenerator
 from getitune.backend.lightning.models.common.utils.utils import multi_apply, reduce_mean
@@ -29,6 +30,21 @@ from getitune.backend.lightning.models.modules import Conv2dModule, PatchedConv2
 from getitune.backend.lightning.models.modules.scale import Scale
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
+========
+from getitune.backend.native.models.common.utils.coders import BaseBBoxCoder
+from getitune.backend.native.models.common.utils.prior_generators import BasePriorGenerator
+from getitune.backend.native.models.common.utils.utils import multi_apply, reduce_mean
+from getitune.backend.native.models.detection.heads.anchor_head import AnchorHead
+from getitune.backend.native.models.detection.heads.class_incremental_mixin import (
+    ClassIncrementalMixin,
+)
+from getitune.backend.native.models.detection.utils.prior_generators.utils import anchor_inside_flags
+from getitune.backend.native.models.detection.utils.utils import unmap
+from getitune.backend.native.models.modules import Conv2dModule, PatchedConv2d, build_norm_layer
+from getitune.backend.native.models.modules.scale import Scale
+from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.data.entity.sample import OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/heads/atss_head.py
 
 EPS = 1e-12
 

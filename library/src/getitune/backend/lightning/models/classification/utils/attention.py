@@ -12,8 +12,13 @@ from functools import partial
 import torch
 from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/utils/attention.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.modules.drop import build_dropout
+========
+from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.native.models.modules.drop import build_dropout
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/utils/attention.py
 
 
 class MultiheadAttention(BaseModule):

@@ -14,8 +14,13 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/segmentors/two_stage.py
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
+========
+from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.data.entity.sample import OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/segmentors/two_stage.py
 
 
 class TwoStageDetector(nn.Module):

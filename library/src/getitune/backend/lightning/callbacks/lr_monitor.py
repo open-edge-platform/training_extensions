@@ -30,7 +30,11 @@ class SimpleLearningRateMonitor(LearningRateMonitor):
     Inherits from LearningRateMonitor to reuse logging interval logic and logger integration.
 
     Example::
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/callbacks/lr_monitor.py
         >>> from getitune.backend.lightning.callbacks.lr_monitor import SimpleLearningRateMonitor
+========
+        >>> from getitune.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
+>>>>>>>> develop:library/src/getitune/backend/native/callbacks/lr_monitor.py
         >>> lr_monitor = SimpleLearningRateMonitor(logging_interval='epoch')
         >>> trainer = Trainer(callbacks=[lr_monitor])
     """

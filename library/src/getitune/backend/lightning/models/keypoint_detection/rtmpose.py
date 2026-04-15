@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/rtmpose.py
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.detection.backbones import CSPNeXt
@@ -15,14 +16,29 @@ from getitune.backend.lightning.models.keypoint_detection.detectors.topdown impo
 from getitune.backend.lightning.models.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from getitune.backend.lightning.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
+========
+from getitune.backend.native.exporter.native import OTXNativeModelExporter
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.detection.backbones import CSPNeXt
+from getitune.backend.native.models.keypoint_detection.base import OTXKeypointDetectionModel
+from getitune.backend.native.models.keypoint_detection.detectors.topdown import TopdownPoseEstimator
+from getitune.backend.native.models.keypoint_detection.heads.rtmcc_head import RTMCCHead
+from getitune.backend.native.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
+from getitune.backend.native.models.utils.utils import load_checkpoint
+>>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/rtmpose.py
 from getitune.metrics.pck import PCKMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/rtmpose.py
     from getitune.backend.lightning.exporter.base import ModelExporter
     from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+========
+    from getitune.backend.native.exporter.base import OTXModelExporter
+    from getitune.backend.native.schedulers import LRSchedulerListCallable
+>>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/rtmpose.py
     from getitune.metrics import MetricCallable
     from getitune.types.export import TaskLevelExportParameters
     from getitune.types.label import LabelInfoTypes

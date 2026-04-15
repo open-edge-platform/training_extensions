@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/base.py
 from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
@@ -20,11 +21,26 @@ from getitune.backend.lightning.models.base import (
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
+========
+from getitune.backend.native.models.base import (
+    DataInputParams,
+    DefaultOptimizerCallable,
+    DefaultSchedulerCallable,
+    OTXModel,
+)
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/base.py
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.pck import PCKMeasureCallable
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfoTypes
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/keypoint_detection/base.py
 from getitune.types.task import TaskType
+========
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/models/keypoint_detection/base.py
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

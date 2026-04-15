@@ -16,12 +16,21 @@ import torchvision
 from torch import Tensor, nn
 from torch.nn import init
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/layers/transformer_layers.py
 from getitune.backend.lightning.models.common.utils.utils import get_clones, inverse_sigmoid
 from getitune.backend.lightning.models.modules.norm import RMSNorm
 from getitune.backend.lightning.models.modules.transformer import (
     deformable_attention_core_func,
 )
 from getitune.backend.lightning.models.utils.weight_init import bias_init_with_prob
+========
+from getitune.backend.native.models.common.utils.utils import get_clones, inverse_sigmoid
+from getitune.backend.native.models.modules.norm import RMSNorm
+from getitune.backend.native.models.modules.transformer import (
+    deformable_attention_core_func,
+)
+from getitune.backend.native.models.utils.weight_init import bias_init_with_prob
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/layers/transformer_layers.py
 
 
 class TransformerEncoderLayer(nn.Module):

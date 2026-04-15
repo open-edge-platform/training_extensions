@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 import torch
 from torch import Tensor
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/hlabel_models/base.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import (
@@ -25,13 +26,31 @@ from getitune.backend.lightning.models.classification.classifier import KLHLabel
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
 from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
+========
+from getitune.backend.native.exporter.base import OTXModelExporter
+from getitune.backend.native.exporter.native import OTXNativeModelExporter
+from getitune.backend.native.models.base import (
+    DataInputParams,
+    DefaultOptimizerCallable,
+    DefaultSchedulerCallable,
+    OTXModel,
+)
+from getitune.backend.native.models.classification.classifier import KLHLabelClassifier
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/hlabel_models/base.py
 from getitune.metrics import MetricInput
 from getitune.metrics.accuracy import (
     HLabelClsMetricCallable,
 )
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/hlabel_models/base.py
 from getitune.types.task import TaskType
+========
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/hlabel_models/base.py
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

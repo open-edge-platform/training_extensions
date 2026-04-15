@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/multilabel_models/efficientnet.py
 from getitune.backend.lightning.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from getitune.backend.lightning.models.classification.backbones.efficientnet import EfficientNetBackbone
 from getitune.backend.lightning.models.classification.classifier import ImageClassifier
@@ -17,6 +18,18 @@ from getitune.backend.lightning.models.classification.losses.asymmetric_angular_
 from getitune.backend.lightning.models.classification.multilabel_models.base import LightningMultilabelClsModel
 from getitune.backend.lightning.models.classification.necks.gap import GlobalAveragePooling
 from getitune.backend.lightning.schedulers import LRSchedulerListCallable
+========
+from getitune.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from getitune.backend.native.models.classification.backbones.efficientnet import EfficientNetBackbone
+from getitune.backend.native.models.classification.classifier import ImageClassifier
+from getitune.backend.native.models.classification.heads import MultiLabelLinearClsHead
+from getitune.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
+    AsymmetricAngularLossWithIgnore,
+)
+from getitune.backend.native.models.classification.multilabel_models.base import OTXMultilabelClsModel
+from getitune.backend.native.models.classification.necks.gap import GlobalAveragePooling
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/multilabel_models/efficientnet.py
 from getitune.metrics.accuracy import MultiLabelClsMetricCallable
 from getitune.types.label import LabelInfoTypes
 

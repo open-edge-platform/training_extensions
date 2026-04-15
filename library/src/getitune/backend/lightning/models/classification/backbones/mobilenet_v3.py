@@ -16,7 +16,11 @@ import torch
 from torch import nn
 from torch.nn import functional
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/backbones/mobilenet_v3.py
 from getitune.backend.lightning.models.utils.utils import load_checkpoint_to_model, load_from_http
+========
+from getitune.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/backbones/mobilenet_v3.py
 
 pretrained_root = "https://github.com/d-li14/mobilenetv3.pytorch/blob/master/pretrained/"
 pretrained_urls = {

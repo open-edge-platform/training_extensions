@@ -14,8 +14,13 @@ import torch
 from torch import nn
 from torch.nn import functional
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/heads/vision_transformer_head.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule, Sequential
 from getitune.backend.lightning.models.utils.weight_init import trunc_normal_
+========
+from getitune.backend.native.models.modules.base_module import BaseModule, Sequential
+from getitune.backend.native.models.utils.weight_init import trunc_normal_
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/heads/vision_transformer_head.py
 
 
 class VisionTransformerClsHead(BaseModule):

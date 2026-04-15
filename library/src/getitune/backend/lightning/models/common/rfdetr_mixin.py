@@ -18,6 +18,7 @@ from rfdetr.util.get_param_dicts import get_param_dict
 from torchvision import tv_tensors
 from torchvision.ops import box_convert
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/rfdetr_mixin.py
 from getitune.backend.lightning.models.detection.detectors.rfdetr import RFDETRDetector
 from getitune.backend.lightning.models.detection.utils import limit_batch_objects
 from getitune.backend.lightning.models.utils.utils import load_checkpoint
@@ -25,6 +26,15 @@ from getitune.data.entity.base import BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
+========
+from getitune.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from getitune.backend.native.models.detection.utils import limit_batch_objects
+from getitune.backend.native.models.utils.utils import load_checkpoint
+from getitune.data.entity.base import OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/rfdetr_mixin.py
 
 if TYPE_CHECKING:
     from pathlib import Path

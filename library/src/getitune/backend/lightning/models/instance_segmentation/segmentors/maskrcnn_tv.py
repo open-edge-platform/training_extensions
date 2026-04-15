@@ -25,7 +25,11 @@ from torchvision.models.detection.roi_heads import paste_masks_in_image
 from torchvision.models.resnet import resnet50
 
 if TYPE_CHECKING:
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/segmentors/maskrcnn_tv.py
     from getitune.data.entity.sample import SampleBatch
+========
+    from getitune.data.entity.sample import OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/segmentors/maskrcnn_tv.py
 
 
 class MaskRCNN(_MaskRCNN):

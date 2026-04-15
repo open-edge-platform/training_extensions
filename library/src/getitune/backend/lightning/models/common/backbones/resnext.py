@@ -15,8 +15,13 @@ from typing import ClassVar
 
 from torch import nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/backbones/resnext.py
 from getitune.backend.lightning.models.common.layers import ResLayer
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
+========
+from getitune.backend.native.models.common.layers import ResLayer
+from getitune.backend.native.models.modules.norm import build_norm_layer
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/backbones/resnext.py
 
 from .resnet import Bottleneck as _Bottleneck
 from .resnet import ResNet

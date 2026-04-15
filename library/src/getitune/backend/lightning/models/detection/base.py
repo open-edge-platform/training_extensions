@@ -16,6 +16,7 @@ import torch
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
 from getitune.backend.lightning.models.base import (
     DataInputParams,
     DefaultOptimizerCallable,
@@ -30,17 +31,41 @@ from getitune.config.data import TileConfig
 from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.entity.tile import TileBatchData
+========
+from getitune.backend.native.models.base import (
+    DataInputParams,
+    DefaultOptimizerCallable,
+    DefaultSchedulerCallable,
+    OTXModel,
+)
+from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+from getitune.backend.native.tools.tile_merge import DetectionTileMerge
+from getitune.config.data import TileConfig
+from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.tile import OTXTileBatchDataEntity
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 from getitune.metrics import MetricCallable, MetricInput
 from getitune.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfoTypes
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
 from getitune.types.task import TaskType
+========
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
     from getitune.backend.lightning.models.detection.detectors import SingleStageDetector
+========
+    from getitune.backend.native.models.detection.detectors import SingleStageDetector
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
 
 class LightningDetectionModel(LightningModel):
@@ -417,7 +442,11 @@ class LightningDetectionModel(LightningModel):
 
     def forward_explain(self, inputs: SampleBatch | TileBatchData) -> PredictionBatch:
         """Model forward function."""
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
         from getitune.backend.lightning.tools.explain.explain_algo import feature_vector_fn
+========
+        from getitune.backend.native.tools.explain.explain_algo import feature_vector_fn
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
         if isinstance(inputs, TileBatchData):
             return self.forward_tiles(inputs)
@@ -468,8 +497,13 @@ class LightningDetectionModel(LightningModel):
 
     def get_explain_fn(self) -> Callable:
         """Returns explain function."""
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/base.py
         from getitune.backend.lightning.models.detection.heads.ssd_head import SSDHeadModule
         from getitune.backend.lightning.tools.explain.explain_algo import DetClassProbabilityMap
+========
+        from getitune.backend.native.models.detection.heads.ssd_head import SSDHeadModule
+        from getitune.backend.native.tools.explain.explain_algo import DetClassProbabilityMap
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/base.py
 
         # SSD-like heads also have background class
         background_class = hasattr(self.model, "bbox_head") and isinstance(

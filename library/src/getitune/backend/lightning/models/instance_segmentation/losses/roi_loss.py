@@ -10,7 +10,11 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/losses/roi_loss.py
 from getitune.backend.lightning.models.common.losses import CrossSigmoidFocalLoss
+========
+from getitune.backend.native.models.common.losses import CrossSigmoidFocalLoss
+>>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/losses/roi_loss.py
 
 
 class ROICriterion(nn.Module):

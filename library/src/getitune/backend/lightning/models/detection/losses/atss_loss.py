@@ -10,9 +10,15 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/atss_loss.py
 from getitune.backend.lightning.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, QualityFocalLoss
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
 from getitune.backend.lightning.models.common.utils.utils import multi_apply, reduce_mean
+========
+from getitune.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, QualityFocalLoss
+from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+from getitune.backend.native.models.common.utils.utils import multi_apply, reduce_mean
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/atss_loss.py
 
 
 class ATSSCriterion(nn.Module):

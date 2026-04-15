@@ -22,20 +22,30 @@ from torch.optim.sgd import SGD
 from torchmetrics import Metric, MetricCollection
 
 from getitune import __version__
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
 from getitune.backend.lightning.optimizers.callable import OptimizerCallableSupportAdaptiveBS
 from getitune.backend.lightning.schedulers import (
+========
+from getitune.backend.native.optimizers.callable import OptimizerCallableSupportAdaptiveBS
+from getitune.backend.native.schedulers import (
+>>>>>>>> develop:library/src/getitune/backend/native/models/base.py
     LinearWarmupScheduler,
     LinearWarmupSchedulerCallable,
     LRSchedulerListCallable,
     SchedulerCallableSupportAdaptiveBS,
 )
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
 from getitune.backend.lightning.utils.utils import (
+========
+from getitune.backend.native.utils.utils import (
+>>>>>>>> develop:library/src/getitune/backend/native/models/base.py
     ensure_callable,
     is_ckpt_for_finetuning,
     remove_state_dict_prefix,
 )
 from getitune.config.data import TileConfig
 from getitune.data.entity.base import (
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
     BatchLoss,
 )
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
@@ -45,6 +55,17 @@ from getitune.types.export import ExportFormat, TaskLevelExportParameters
 from getitune.types.label import LabelInfo, LabelInfoTypes
 from getitune.types.precision import Precision
 from getitune.types.task import TaskType
+========
+    OTXBatchLossEntity,
+)
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.tile import OTXTileBatchDataEntity
+from getitune.metrics import MetricInput, NullMetricCallable
+from getitune.types.export import OTXExportFormatType, TaskLevelExportParameters
+from getitune.types.label import LabelInfo, LabelInfoTypes
+from getitune.types.precision import OTXPrecisionType
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/models/base.py
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -54,9 +75,15 @@ if TYPE_CHECKING:
     from torch.optim.lr_scheduler import LRScheduler
     from torch.optim.optimizer import Optimizer, params_t
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
     from getitune.backend.lightning.exporter.base import ModelExporter
     from getitune.config.data import IntensityConfig
     from getitune.data.module import DataModule
+========
+    from getitune.backend.native.exporter.base import OTXModelExporter
+    from getitune.config.data import IntensityConfig
+    from getitune.data.module import OTXDataModule
+>>>>>>>> develop:library/src/getitune/backend/native/models/base.py
     from getitune.metrics import MetricCallable
 
 logger = logging.getLogger()
@@ -648,7 +675,11 @@ class LightningModel(LightningModule):
         """Model forward function used for the model tracing during model exportation."""
         msg = (
             "Derived model class should implement this class to support the export pipeline. "
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
             "If it wants to use `getitune.core.exporter.native.LightningModelExporter`."
+========
+            "If it wants to use `getitune.core.exporter.native.OTXNativeModelExporter`."
+>>>>>>>> develop:library/src/getitune/backend/native/models/base.py
         )
         raise NotImplementedError(msg)
 
@@ -810,7 +841,11 @@ class LightningModel(LightningModule):
     def _exporter(self) -> ModelExporter:
         """Defines exporter of the model. Should be overridden in subclasses."""
         msg = (
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/base.py
             "To export this LightningModel, you should implement an appropriate exporter for it. "
+========
+            "To export this OTXModel, you should implement an appropriate exporter for it. "
+>>>>>>>> develop:library/src/getitune/backend/native/models/base.py
             "You can try to reuse ones provided in `getitune.core.exporter.*`."
         )
         raise NotImplementedError(msg)

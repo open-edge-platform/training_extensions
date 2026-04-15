@@ -13,7 +13,11 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/instance_segmentation/losses/dice_loss.py
 from getitune.backend.lightning.models.common.losses.utils import weight_reduce_loss
+========
+from getitune.backend.native.models.common.losses.utils import weight_reduce_loss
+>>>>>>>> develop:library/src/getitune/backend/native/models/instance_segmentation/losses/dice_loss.py
 
 
 def dice_loss(

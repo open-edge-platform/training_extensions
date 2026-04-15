@@ -11,9 +11,15 @@ import torch
 from torch import nn
 from torchvision.ops import box_convert
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/losses/rtdetr_loss.py
 from getitune.backend.lightning.models.common.losses import GIoULoss, L1Loss
 from getitune.backend.lightning.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
+========
+from getitune.backend.native.models.common.losses import GIoULoss, L1Loss
+from getitune.backend.native.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
+from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/losses/rtdetr_loss.py
 
 
 class DetrCriterion(nn.Module):

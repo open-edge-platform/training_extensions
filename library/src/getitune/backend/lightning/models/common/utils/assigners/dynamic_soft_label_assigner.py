@@ -19,7 +19,11 @@ import torch
 import torch.nn.functional
 from torch import Tensor
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/assigners/dynamic_soft_label_assigner.py
 from getitune.backend.lightning.models.common.utils.structures import AssignResult
+========
+from getitune.backend.native.models.common.utils.structures import AssignResult
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/assigners/dynamic_soft_label_assigner.py
 
 from .iou2d_calculator import BboxOverlaps2D
 
@@ -29,7 +33,11 @@ BYTES_PER_FLOAT = 4
 GPU_MEM_LIMIT = 1024**3  # 1 GB memory limit
 
 if TYPE_CHECKING:
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/utils/assigners/dynamic_soft_label_assigner.py
     from getitune.backend.lightning.models.utils.utils import InstanceData
+========
+    from getitune.backend.native.models.utils.utils import InstanceData
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/utils/assigners/dynamic_soft_label_assigner.py
 
 
 def center_of_mass(masks: Tensor, eps: float = 1e-7) -> Tensor:

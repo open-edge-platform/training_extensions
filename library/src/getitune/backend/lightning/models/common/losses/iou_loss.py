@@ -16,8 +16,13 @@ from typing import Literal
 import torch
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/common/losses/iou_loss.py
 from getitune.backend.lightning.models.common.losses.utils import weighted_loss
 from getitune.backend.lightning.models.common.utils.bbox_overlaps import bbox_overlaps
+========
+from getitune.backend.native.models.common.losses.utils import weighted_loss
+from getitune.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+>>>>>>>> develop:library/src/getitune/backend/native/models/common/losses/iou_loss.py
 
 
 class GIoULoss(nn.Module):

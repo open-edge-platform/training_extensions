@@ -17,6 +17,7 @@ import torch
 import torch.nn.functional as f
 from torch import Tensor, nn
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/necks/dfine_hybrid_encoder.py
 from getitune.backend.lightning.models.common.layers.transformer_layers import (
     TransformerEncoder,
     TransformerEncoderLayer,
@@ -26,6 +27,17 @@ from getitune.backend.lightning.models.detection.utils.utils import auto_pad
 from getitune.backend.lightning.models.modules.activation import build_activation_layer
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
+========
+from getitune.backend.native.models.common.layers.transformer_layers import (
+    TransformerEncoder,
+    TransformerEncoderLayer,
+)
+from getitune.backend.native.models.detection.layers.csp_layer import CSPRepLayer
+from getitune.backend.native.models.detection.utils.utils import auto_pad
+from getitune.backend.native.models.modules.activation import build_activation_layer
+from getitune.backend.native.models.modules.conv_module import Conv2dModule
+from getitune.backend.native.models.modules.norm import build_norm_layer
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/necks/dfine_hybrid_encoder.py
 
 # =============================================================================
 # Helper Layers

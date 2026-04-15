@@ -15,6 +15,7 @@ import torch
 import torch.nn.functional as f
 from torchvision import tv_tensors
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/base.py
 from getitune.backend.lightning.exporter.base import ModelExporter
 from getitune.backend.lightning.exporter.native import LightningModelExporter
 from getitune.backend.lightning.models.base import (
@@ -29,11 +30,31 @@ from getitune.config.data import TileConfig
 from getitune.data.entity.base import ImageInfo, BatchLoss
 from getitune.data.entity.sample import PredictionBatch, SampleBatch
 from getitune.data.entity.tile import TileBatchData
+========
+from getitune.backend.native.exporter.base import OTXModelExporter
+from getitune.backend.native.exporter.native import OTXNativeModelExporter
+from getitune.backend.native.models.base import (
+    DataInputParams,
+    DefaultOptimizerCallable,
+    DefaultSchedulerCallable,
+    OTXModel,
+)
+from getitune.backend.native.schedulers import LRSchedulerListCallable
+from getitune.backend.native.tools.tile_merge import SegmentationTileMerge
+from getitune.config.data import TileConfig
+from getitune.data.entity.base import ImageInfo, OTXBatchLossEntity
+from getitune.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from getitune.data.entity.tile import OTXTileBatchDataEntity
+>>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/base.py
 from getitune.metrics import MetricInput
 from getitune.metrics.dice import SegmCallable
 from getitune.types.export import TaskLevelExportParameters
 from getitune.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/segmentation/base.py
 from getitune.types.task import TaskType
+========
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/models/segmentation/base.py
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo

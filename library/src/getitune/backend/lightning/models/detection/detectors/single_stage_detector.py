@@ -15,9 +15,15 @@ from typing import TYPE_CHECKING, cast
 
 import torch
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/detectors/single_stage_detector.py
 from getitune.backend.lightning.models.modules.base_module import BaseModule
 from getitune.backend.lightning.models.utils.utils import InstanceData
 from getitune.data.entity.sample import SampleBatch
+========
+from getitune.backend.native.models.modules.base_module import BaseModule
+from getitune.backend.native.models.utils.utils import InstanceData
+from getitune.data.entity.sample import OTXSampleBatch
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/detectors/single_stage_detector.py
 
 if TYPE_CHECKING:
     from torch import Tensor, nn

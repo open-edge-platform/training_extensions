@@ -24,6 +24,7 @@ from lightning.pytorch.callbacks import ModelCheckpoint, RichModelSummary, RichP
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
 from getitune.backend.lightning.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 from getitune.backend.lightning.callbacks.aug_scheduler import AugmentationSchedulerCallback
 from getitune.backend.lightning.callbacks.gpu_augmentation import GPUAugmentationCallback
@@ -36,13 +37,33 @@ from getitune.backend.lightning.utils.cache import TrainerArgumentsCache
 from getitune.config.device import DeviceConfig
 from getitune.config.explain import ExplainConfig
 from getitune.data.module import DataModule
+========
+from getitune.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from getitune.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback
+from getitune.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
+from getitune.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
+from getitune.backend.native.callbacks.iteration_timer import IterationTimer
+from getitune.backend.native.callbacks.lr_monitor import SimpleLearningRateMonitor
+from getitune.backend.native.models.base import OTXModel
+from getitune.backend.native.tools import adapt_batch_size
+from getitune.backend.native.utils.cache import TrainerArgumentsCache
+from getitune.config.device import DeviceConfig
+from getitune.config.explain import ExplainConfig
+from getitune.data.module import OTXDataModule
+>>>>>>>> develop:library/src/getitune/backend/native/engine.py
 from getitune.engine.engine import Engine
 from getitune.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 from getitune.types import PathLike
 from getitune.types.device import DeviceType
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
 from getitune.types.export import ExportFormat
 from getitune.types.precision import Precision
 from getitune.types.task import TaskType
+========
+from getitune.types.export import OTXExportFormatType
+from getitune.types.precision import OTXPrecisionType
+from getitune.types.task import OTXTaskType
+>>>>>>>> develop:library/src/getitune/backend/native/engine.py
 from getitune.utils.device import get_available_device, is_xpu_available
 from getitune.utils.utils import measure_flops
 
@@ -52,7 +73,11 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
     from getitune.data.dataset.base import VisionDataset
+========
+    from getitune.data.dataset.base import OTXDataset
+>>>>>>>> develop:library/src/getitune/backend/native/engine.py
     from getitune.metrics import MetricCallable
     from getitune.types.types import DATA, MODEL
 
@@ -87,8 +112,13 @@ class LightningEngine(Engine):
 
     def __init__(
         self,
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
         model: LightningModel | PathLike | str,
         data: DataModule | PathLike,
+========
+        model: OTXModel | PathLike | str,
+        data: OTXDataModule | PathLike,
+>>>>>>>> develop:library/src/getitune/backend/native/engine.py
         work_dir: PathLike = "./getitune-workspace",
         checkpoint: PathLike | None = None,
         device: DeviceType = DeviceType.auto,
@@ -456,7 +486,11 @@ class LightningEngine(Engine):
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
         """
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
         from getitune.backend.lightning.models.utils.xai_utils import process_saliency_maps_in_pred_entity
+========
+        from getitune.backend.native.models.utils.xai_utils import process_saliency_maps_in_pred_entity
+>>>>>>>> develop:library/src/getitune/backend/native/engine.py
 
         model = self.model
 
@@ -1194,7 +1228,11 @@ class LightningEngine(Engine):
         try:
             ckpt = torch.load(checkpoint, map_location=map_location)
         except UnpicklingError:
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/engine.py
             from getitune.backend.lightning.utils.utils import mock_modules_for_chkpt
+========
+            from getitune.backend.native.utils.utils import mock_modules_for_chkpt
+>>>>>>>> develop:library/src/getitune/backend/native/engine.py
 
             with mock_modules_for_chkpt():
                 ckpt = torch.load(checkpoint, map_location=map_location, weights_only=False)

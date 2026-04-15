@@ -14,9 +14,15 @@ from pytorchcv.models.common.model_store import download_model
 from torch import nn
 from torch.nn import functional, init
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/classification/backbones/efficientnet.py
 from getitune.backend.lightning.models.modules.activation import Swish, build_activation_layer
 from getitune.backend.lightning.models.modules.conv_module import Conv2dModule
 from getitune.backend.lightning.models.modules.norm import build_norm_layer
+========
+from getitune.backend.native.models.modules.activation import Swish, build_activation_layer
+from getitune.backend.native.models.modules.conv_module import Conv2dModule
+from getitune.backend.native.models.modules.norm import build_norm_layer
+>>>>>>>> develop:library/src/getitune/backend/native/models/classification/backbones/efficientnet.py
 
 PRETRAINED_ROOT = "https://github.com/osmr/imgclsmob/releases/download/v0.0.364/"
 pretrained_urls = {

@@ -16,11 +16,19 @@ from typing import TYPE_CHECKING, Callable
 import torch
 from torch import Tensor
 
+<<<<<<<< HEAD:library/src/getitune/backend/lightning/models/detection/utils/assigners/atss_assigner.py
 from getitune.backend.lightning.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
 from getitune.backend.lightning.models.common.utils.structures import AssignResult
 
 if TYPE_CHECKING:
     from getitune.backend.lightning.models.utils.utils import InstanceData
+========
+from getitune.backend.native.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
+from getitune.backend.native.models.common.utils.structures import AssignResult
+
+if TYPE_CHECKING:
+    from getitune.backend.native.models.utils.utils import InstanceData
+>>>>>>>> develop:library/src/getitune/backend/native/models/detection/utils/assigners/atss_assigner.py
 
 
 def bbox_center_distance(bboxes: Tensor, priors: Tensor) -> Tensor:
