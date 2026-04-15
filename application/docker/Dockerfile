@@ -213,25 +213,6 @@ COPY --link --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 ######################
 FROM runtime-base AS geti-cuda
 
-USER root
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    apt-get update  \
-    && apt-get install -y --no-install-recommends wget=1.25.0-2 \
-    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
-    && dpkg -i cuda-keyring_1.1-1_all.deb \
-    && rm -rf cuda-keyring_1.1-1_all.deb \
-    && apt-get remove -y wget
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-      nvidia-open=590.48.01-1
-
-USER ${USER_NAME}
-
 COPY --from=cuda-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 # App code + UI assets last – source-only changes only invalidate this layer

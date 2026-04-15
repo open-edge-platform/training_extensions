@@ -5,7 +5,7 @@ import { isNil } from 'lodash-es';
 
 import type { BenchmarkMetrics, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
-export type AccuracyMetric = { label: string; value: number };
+type AccuracyMetric = { label: string; value: number };
 
 type BenchmarkMetricKey = keyof BenchmarkMetrics;
 

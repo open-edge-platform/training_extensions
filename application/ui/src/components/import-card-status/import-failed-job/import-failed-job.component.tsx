@@ -1,11 +1,13 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@geti/ui';
+import { Button, Text } from '@geti/ui';
 import { useDeleteStagedDataset } from 'hooks/api/staged-dataset.hook';
 
-import { formatBytes } from '../../../shared/util';
+import { formatBytes, isNonEmptyString } from '../../../shared/util';
 import { JobStatusCard } from '../../job-status-card/job-status-card.component';
+
+import classes from './import-failed-job.module.scss';
 
 type ImportFailedJobProps = {
     size: number;
@@ -14,6 +16,22 @@ type ImportFailedJobProps = {
     fileName: string;
     stagedDatasetId: string;
     deleteEntry: () => void;
+};
+
+const TechnicalDetails = ({ error }: { error: string }) => (
+    <details className={classes.details} aria-label={'Technical details of the job failure'}>
+        <summary className={classes.summary}>Technical details</summary>
+        <pre className={classes.traceback}>{error}</pre>
+    </details>
+);
+
+const BottomMessage = ({ error, message }: { error: string; message: string }) => {
+    return (
+        <>
+            <Text>{message}</Text>
+            <TechnicalDetails error={error} />
+        </>
+    );
 };
 
 export const ImportFailedJob = ({
@@ -26,9 +44,8 @@ export const ImportFailedJob = ({
 }: ImportFailedJobProps) => {
     const deleteFileMutation = useDeleteStagedDataset({ stagedDatasetId, deleteEntry });
 
-    const handleClose = () => {
-        deleteFileMutation.mutate();
-    };
+    const errorMessage = isNonEmptyString(message) ? message : 'An unknown error occurred';
+    const errorDetails = isNonEmptyString(error) ? error : undefined;
 
     return (
         <JobStatusCard
@@ -38,15 +55,16 @@ export const ImportFailedJob = ({
                     variant='secondary'
                     style='fill'
                     aria-label='close import dataset status'
-                    onPress={handleClose}
+                    onPress={deleteFileMutation.mutate}
                     isPending={deleteFileMutation.isPending}
                     isDisabled={deleteFileMutation.isPending}
                 >
                     Close
                 </Button>
             }
-            message={message}
-            bottomLeftMessage={error ?? 'An unknown error '}
+            bottomLeftMessage={
+                errorDetails ? <BottomMessage error={errorDetails} message={errorMessage} /> : errorMessage
+            }
         />
     );
 };

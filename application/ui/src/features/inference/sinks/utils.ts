@@ -19,13 +19,6 @@ export type SinkConfig =
     | DisconnectedSinkConfig
     | RosSinkConfig;
 
-export enum SinkType {
-    FOLDER = 'folder',
-    MQTT = 'mqtt',
-    ROS = 'ros',
-    WEBHOOK = 'webhook',
-}
-
 export enum OutputFormat {
     IMAGE_ORIGINAL = 'image_original',
     IMAGE_WITH_PREDICTIONS = 'image_with_predictions',

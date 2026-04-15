@@ -59,7 +59,7 @@ test-integration *ARGS: install-uv
 
 # Run BDD tests with behave
 test-bdd *ARGS: install-uv
-    uv run behave tests/bdd {{ ARGS }}
+    uv run behave ./tests/bdd -v {{ ARGS }}
 
 # -------------------------------------------------------------------------------------------------
 # Documentation
