@@ -51,7 +51,6 @@ export const RangeParameterField = ({
     };
 
     const handleNumberChange = (start: number, end: number): void => {
-        // Prevent start and end from being equal
         setParameterValues({ start, end });
         onChange([start, end]);
     };
