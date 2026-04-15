@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX segmentation models, hooks, utils, etc."""
+"""Module for Geti Tune segmentation models, hooks, utils, etc."""
 
 from .dino_v2_seg import DinoV2Seg
 from .litehrnet import LiteHRNet

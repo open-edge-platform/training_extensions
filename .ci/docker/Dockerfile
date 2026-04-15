@@ -38,7 +38,7 @@ WORKDIR /home/validation
 
 
 #########################################################
-## OTX Development Env
+## Geti Tune Development Env
 #########################################################
 
 FROM python_base_cuda as getitune_development_env

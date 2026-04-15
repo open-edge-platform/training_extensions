@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""RF-DETR model implementations for OTX.
+"""RF-DETR model implementations for Geti Tune.
 
 RF-DETR is a state-of-the-art real-time object detector from Roboflow based on
 DINOv2 backbone with a lightweight DETR decoder.
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 
 class RFDETR(RFDETRMixin, OTXDetectionModel):  # pyrefly: ignore[inconsistent-inheritance]
-    """OTX Detection model class for RF-DETR.
+    """Geti Tune Detection model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
     that combines a DINOv2 backbone with a lightweight DETR decoder for real-time

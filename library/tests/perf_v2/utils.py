@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Various utilities for OTX performance benchmarking."""
+"""Various utilities for Geti Tune performance benchmarking."""
 
 from __future__ import annotations
 
@@ -162,7 +162,7 @@ def get_version_tags(current_date: str) -> dict[str, str]:
         commit_str = os.environ.get("GH_CTX_SHA", "unknown")
     version_tags = {
         "otx_version": version_str,
-        "otx_ref": commit_str,
+        "getitune_ref": commit_str,
         "test_branch": branch_str,
         "test_commit": commit_str,
         "date": current_date,
@@ -245,7 +245,7 @@ def completeness_check(
 
 
 def get_parser() -> ArgumentParser:
-    """Get argument parser for OTX benchmarking.
+    """Get argument parser for Geti Tune benchmarking.
 
     Returns:
         ArgumentParser: JSON Argument parser.
@@ -311,7 +311,7 @@ def get_parser() -> ArgumentParser:
         "--dry-run",
         action="store_true",
         default=False,
-        help="Print OTX commands without execution.",
+        help="Print Geti Tune commands without execution.",
     )
     parser.add_argument(
         "--deterministic",

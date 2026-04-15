@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for detection model entity used in OTX."""
+"""Class definition for detection model entity used in Geti Tune."""
 
 # type: ignore[override]
 
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 
 class OTXSegmentationModel(OTXModel):
-    """Semantic Segmentation model used in OTX.
+    """Semantic Segmentation model used in Geti Tune.
 
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
@@ -128,7 +128,7 @@ class OTXSegmentationModel(OTXModel):
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
         if self.label_info.label_names[0] == "otx_background_lbl":
-            # remove otx background label for export
+            # remove getitune background label for export
             modified_label_info = copy.deepcopy(self.label_info)
             modified_label_info.label_names.pop(0)
             modified_label_info.label_ids.pop(0)

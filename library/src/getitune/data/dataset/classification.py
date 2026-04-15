@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 class OTXMulticlassClsDataset(OTXDataset):
-    """OTX Dataset for multi-class classification tasks.
+    """Geti Tune Dataset for multi-class classification tasks.
 
     This dataset handles single-label classification where each image belongs to exactly one class.
     It processes Datumaro dataset items and converts them into OTXSample format suitable for
@@ -93,7 +93,7 @@ class OTXMulticlassClsDataset(OTXDataset):
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The multi-class classification task type.
@@ -102,7 +102,7 @@ class OTXMulticlassClsDataset(OTXDataset):
 
 
 class OTXMultilabelClsDataset(OTXDataset):
-    """OTX Dataset for multi-label classification tasks.
+    """Geti Tune Dataset for multi-label classification tasks.
 
     This dataset handles multi-label classification where each image can belong to multiple classes
     simultaneously. It processes Datumaro dataset items and converts them into OTXSample format
@@ -194,7 +194,7 @@ class OTXMultilabelClsDataset(OTXDataset):
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The multi-label classification task type.
@@ -203,7 +203,7 @@ class OTXMultilabelClsDataset(OTXDataset):
 
 
 class OTXHlabelClsDataset(OTXDataset):
-    """OTX Dataset for hierarchical label classification tasks.
+    """Geti Tune Dataset for hierarchical label classification tasks.
 
     This dataset handles hierarchical classification where labels are organized in a tree structure
     with multiple classification heads. It supports both multiclass heads (where one class per head
@@ -345,7 +345,7 @@ class OTXHlabelClsDataset(OTXDataset):
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The hierarchical label classification task type.

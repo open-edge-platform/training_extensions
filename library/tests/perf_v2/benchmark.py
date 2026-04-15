@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX benchmark runner."""
+"""Geti Tune benchmark runner."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ class Benchmark:
 
     Args:
         data_root (str): Path to the root of dataset directories. Defaults to './data'.
-        output_root (str): Output root dirctory for logs and results. Defaults to './otx-benchmark'.
+        output_root (str): Output root dirctory for logs and results. Defaults to './getitune-benchmark'.
         num_epoch (int): Overrides the per-model default number of epoch settings.
             Defaults to 0, which means no overriding.
         eval_upto (str): The last serial operation to evaluate. Choose one of ('train', 'export', 'optimize').
@@ -78,7 +78,7 @@ class Benchmark:
             e.x) Eval up to 'optimize': train -> eval -> export -> eval -> optimize -> eval
             Default to 'train'.
         tags (dict, optional): Key-values pair metadata for the experiment.
-        dry_run (bool): Whether to just print the OTX command without execution. Defaults to False.
+        dry_run (bool): Whether to just print the Geti Tune command without execution. Defaults to False.
         deterministic (bool): Whether to turn on deterministic training mode. Defaults to False.
         accelerator (str): Accelerator device on which to run benchmark. Defaults to gpu.
         reference_results (pd.DataFrame): Reference benchmark results for performance checking.
@@ -93,7 +93,7 @@ class Benchmark:
     def __init__(
         self,
         data_root: Path = Path("data"),
-        output_root: Path = Path("otx-benchmark"),
+        output_root: Path = Path("getitune-benchmark"),
         num_epoch: int = 0,
         eval_upto: str = "train",
         tags: dict[str, str] | None = None,
@@ -115,7 +115,7 @@ class Benchmark:
         if (test_only == "export" and eval_upto == "train") or (
             test_only == "optimize" and eval_upto in ["train", "export"]
         ):
-            msg = "test_only should be set to previous otx command than eval_upto."
+            msg = "test_only should be set to previous getitune command than eval_upto."
             raise ValueError(msg)
         self.test_only = test_only
 
@@ -301,7 +301,7 @@ class Benchmark:
         del engine
         total_time = time() - start_time
 
-        # OTX does not create metrics.cvs during optimization,
+        # Geti Tune does not create metrics.cvs during optimization,
         # So we are manually write optimize:e2e_time to csv.
         data_frame = pd.DataFrame({"optimize:e2e_time": [total_time]})
         data_frame.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
@@ -498,7 +498,7 @@ class Benchmark:
 
         Args:
             work_dir (Path): work directory
-            tags (dict[str, str]): OTX metadata (ie. task, model, data_group, data, seed, etc)
+            tags (dict[str, str]): Geti Tune metadata (ie. task, model, data_group, data, seed, etc)
             criteria (list[Criterion]): task criteria
             extra_metrics (dict[str, Any] | None, optional): extra metrics to be logged. Defaults to None.
         """

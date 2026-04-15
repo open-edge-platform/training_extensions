@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom FCNHead modules for OTX segmentation model."""
+"""Custom FCNHead modules for Geti Tune segmentation model."""
 
 from __future__ import annotations
 

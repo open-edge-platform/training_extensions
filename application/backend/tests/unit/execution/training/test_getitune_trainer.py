@@ -31,7 +31,7 @@ from app.datumaro_converter.domain.samples.training import (
 )
 from app.execution.base import ExecutionErr
 from app.execution.common.geti_config_converter import GetiConfigConverter
-from app.execution.training.otx_trainer import DatasetInfo, ExportedModels, OTXTrainer, TrainingDependencies
+from app.execution.training.getitune_trainer import DatasetInfo, ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import (
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
@@ -80,7 +80,7 @@ def fxt_training_configuration_service() -> Mock:
 
 
 @pytest.fixture
-def fxt_otx_trainer(
+def fxt_getitune_trainer(
     tmp_path: Path,
     fxt_weights_service: Mock,
     fxt_subset_service: Mock,
@@ -94,7 +94,7 @@ def fxt_otx_trainer(
     """Create an OTXTrainer instance."""
 
     def create_otx_trainer() -> OTXTrainer:
-        otx_trainer = OTXTrainer(
+        getitune_trainer = OTXTrainer(
             TrainingDependencies(
                 data_dir=tmp_path,
                 base_weights_service=fxt_weights_service,
@@ -110,8 +110,8 @@ def fxt_otx_trainer(
         execution_ctx = Mock(spec=ExecutionContext)
         execution_ctx.report = Mock()
         execution_ctx.heartbeat = Mock()
-        otx_trainer._ctx = execution_ctx
-        return otx_trainer
+        getitune_trainer._ctx = execution_ctx
+        return getitune_trainer
 
     return create_otx_trainer
 
@@ -122,7 +122,7 @@ class TestOTXTrainerPrepareWeights:
     def test_prepare_weights_without_parent_model(
         self,
         fxt_weights_service: Mock,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
     ):
         """Test preparing weights when no parent model revision ID is provided."""
         # Arrange
@@ -134,13 +134,13 @@ class TestOTXTrainerPrepareWeights:
             job_id=uuid4(),
             project_id=uuid4(),
         )
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
 
         expected_weights_path = Path("/path/to/weights.pth")
         fxt_weights_service.get_local_weights_path.return_value = expected_weights_path
 
         # Act
-        weights_path = otx_trainer.prepare_weights(training_params)
+        weights_path = getitune_trainer.prepare_weights(training_params)
 
         # Assert
         assert weights_path == expected_weights_path
@@ -151,7 +151,7 @@ class TestOTXTrainerPrepareWeights:
     def test_prepare_weights_with_parent_model(
         self,
         tmp_path: Path,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
     ):
         """Test preparing weights when parent model revision ID is provided."""
         # Arrange
@@ -178,9 +178,9 @@ class TestOTXTrainerPrepareWeights:
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
 
-        otx_trainer._model_service.get_model_variants.return_value = [
+        getitune_trainer._model_service.get_model_variants.return_value = [
             ModelVariant(
                 id=parent_model_variant_id,
                 model_revision_id=parent_model_revision_id,
@@ -190,7 +190,7 @@ class TestOTXTrainerPrepareWeights:
         ]
 
         # Act
-        weights_path = otx_trainer.prepare_weights(training_params)
+        weights_path = getitune_trainer.prepare_weights(training_params)
 
         # Assert
         assert weights_path == expected_weights_path
@@ -198,7 +198,7 @@ class TestOTXTrainerPrepareWeights:
     def test_prepare_weights_with_parent_model_no_variants(
         self,
         tmp_path: Path,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
     ):
         """Test preparing weights when no parent model revision variants are available."""
         # Arrange
@@ -212,9 +212,9 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
         )
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
 
-        otx_trainer._model_service.get_model_variants.return_value = []
+        getitune_trainer._model_service.get_model_variants.return_value = []
 
         # Act
         msg = (
@@ -222,12 +222,12 @@ class TestOTXTrainerPrepareWeights:
             "Review the previous revision and retry."
         )
         with pytest.raises(ExecutionErr, match=re.escape(msg)):
-            otx_trainer.prepare_weights(training_params)
+            getitune_trainer.prepare_weights(training_params)
 
     def test_prepare_weights_with_parent_model_no_file_raises_error(
         self,
         tmp_path: Path,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
     ):
         """Test that FileNotFoundError is raised when parent model weights file is missing."""
         # Arrange
@@ -252,9 +252,9 @@ class TestOTXTrainerPrepareWeights:
             / str(parent_model_variant_id)
             / "model.ckpt"
         )
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
 
-        otx_trainer._model_service.get_model_variants.return_value = [
+        getitune_trainer._model_service.get_model_variants.return_value = [
             ModelVariant(
                 id=parent_model_variant_id,
                 model_revision_id=parent_model_revision_id,
@@ -265,14 +265,14 @@ class TestOTXTrainerPrepareWeights:
 
         # Act
         with pytest.raises(FileNotFoundError) as excinfo:
-            otx_trainer.prepare_weights(training_params)
+            getitune_trainer.prepare_weights(training_params)
         assert excinfo.value.args[0] == f"Parent model weights not found at {expected_weights_path}"
 
 
 class TestOTXTrainerPrepareTrainingConfiguration:
     """Tests for the OTXTrainer.prepare_training_configuration method."""
 
-    def test_prepare_training_configuration(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_prepare_training_configuration(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         # Arrange
         project_id = uuid4()
         parent_model_revision_id = uuid4()
@@ -284,21 +284,21 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
         )
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         mock_training_config = TrainingConfiguration(
             task_level_parameters=TaskLevelParameters(),
             algo_level_parameters=MagicMock(spec=AlgoLevelParameters),
         )
-        otx_trainer._training_configuration_service.get_by_model_architecture.return_value = mock_training_config  # type: ignore[attr-defined]
+        getitune_trainer._training_configuration_service.get_by_model_architecture.return_value = mock_training_config  # type: ignore[attr-defined]
         mock_otx_training_config = {"key2": "value2"}
         with patch.object(GetiConfigConverter, "convert", return_value=mock_otx_training_config) as mock_convert:
             # Act
-            training_config, otx_training_config = otx_trainer.prepare_training_configuration(
+            training_config, getitune_training_config = getitune_trainer.prepare_training_configuration(
                 training_params=training_params, task=Task(task_type=TaskType.DETECTION)
             )
 
         # Assert
-        otx_trainer._training_configuration_service.get_by_model_architecture.assert_called_once_with(  # type: ignore[attr-defined]
+        getitune_trainer._training_configuration_service.get_by_model_architecture.assert_called_once_with(  # type: ignore[attr-defined]
             project_id=training_params.project_id,
             model_architecture_id=training_params.model_architecture_id,
         )
@@ -308,7 +308,7 @@ class TestOTXTrainerPrepareTrainingConfiguration:
         expected_otx_training_config["sub_task_type"] = OTXTaskType.DETECTION
         mock_convert.assert_called_once_with(expected_otx_training_config)
         assert training_config == mock_training_config
-        assert otx_training_config == mock_otx_training_config
+        assert getitune_training_config == mock_otx_training_config
 
 
 class TestOTXTrainerAssignSubsets:
@@ -316,13 +316,13 @@ class TestOTXTrainerAssignSubsets:
 
     def test_assign_subsets_with_unassigned_items(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
     ):
         """Test assigning subsets when unassigned items exist."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         label_1, label_2, label_3 = uuid4(), uuid4(), uuid4()
 
@@ -350,7 +350,7 @@ class TestOTXTrainerAssignSubsets:
         fxt_assigner.assign.return_value = expected_assignments
 
         # Act
-        otx_trainer.assign_subsets(training_config=training_config, project_id=project_id)
+        getitune_trainer.assign_subsets(training_config=training_config, project_id=project_id)
 
         # Assert
         fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
@@ -359,7 +359,7 @@ class TestOTXTrainerAssignSubsets:
 
     def test_assign_subsets_with_no_unassigned_items(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
     ):
@@ -367,11 +367,11 @@ class TestOTXTrainerAssignSubsets:
         # Arrange
         project_id = uuid4()
         fxt_subset_service.get_unassigned_items_with_labels.return_value = []
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         training_config = Mock(spec=TrainingConfiguration)
 
         # Act
-        otx_trainer.assign_subsets(training_config=training_config, project_id=project_id)
+        getitune_trainer.assign_subsets(training_config=training_config, project_id=project_id)
 
         # Assert
         fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
@@ -381,14 +381,14 @@ class TestOTXTrainerAssignSubsets:
     @pytest.mark.parametrize("has_all_subsets_assigned", [True, False], ids=["all-assigned", "not-all-assigned"])
     def test_assign_subsets_passes_has_all_subsets_assigned_to_assigner(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
         has_all_subsets_assigned: bool,
     ):
         """Test that the result of SubsetService.has_all_subsets_assigned is forwarded to SubsetAssigner.assign."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         label = uuid4()
 
@@ -409,7 +409,7 @@ class TestOTXTrainerAssignSubsets:
         )
 
         # Act
-        otx_trainer.assign_subsets(training_config=training_config, project_id=project_id)
+        getitune_trainer.assign_subsets(training_config=training_config, project_id=project_id)
 
         # Assert - has_all_subsets_assigned is queried from the service ...
         fxt_subset_service.has_all_subsets_assigned.assert_called_once_with(project_id)
@@ -440,7 +440,7 @@ class TestOTXTrainerCreateTrainingDataset:
     )
     def test_prepare_training_dataset_success(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_dataset_service: Mock,
         fxt_dataset_revision_service: Mock,
         dataset_revision_id,
@@ -450,7 +450,7 @@ class TestOTXTrainerCreateTrainingDataset:
         # Arrange
         project_id = uuid4()
         task = Task(task_type=TaskType.DETECTION, exclusive_labels=True)
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
 
         # Mock the Datumaro dataset
         mock_dm_dataset = Mock()
@@ -480,8 +480,8 @@ class TestOTXTrainerCreateTrainingDataset:
         else:
             fxt_dataset_revision_service.get_latest_uptodate_dataset_revision.return_value = None
 
-        # Create an otx training configuration dict matching the expected structure
-        otx_training_config = {
+        # Create a Geti Tune training configuration dict matching the expected structure
+        getitune_training_config = {
             "data": {
                 "input_size": (640, 640),
                 "train_subset": {
@@ -518,10 +518,10 @@ class TestOTXTrainerCreateTrainingDataset:
         mock_val_transforms = [Mock()]
         mock_test_transforms = [Mock()]
 
-        with patch("app.execution.training.otx_trainer.TransformLibFactory.generate") as mock_generate:
+        with patch("app.execution.training.getitune_trainer.TransformLibFactory.generate") as mock_generate:
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 
-            # Mock the get_otx_dataset_class_by_task_type function to return a proper mock class
+            # Mock the get_getitune_dataset_class_by_task_type function to return a proper mock class
             mock_dataset_class = Mock()
             mock_dataset_class.__name__ = "OTXDetectionDataset"
 
@@ -536,14 +536,14 @@ class TestOTXTrainerCreateTrainingDataset:
             ]
 
             with patch(
-                "app.execution.training.otx_trainer.get_otx_dataset_class_by_task_type",
+                "app.execution.training.getitune_trainer.get_getitune_dataset_class_by_task_type",
                 return_value=mock_dataset_class,
             ):
                 # Act
-                dataset_info = otx_trainer.prepare_training_dataset(
+                dataset_info = getitune_trainer.prepare_training_dataset(
                     project_id=project_id,
                     task=task,
-                    otx_training_config=otx_training_config,
+                    getitune_training_config=getitune_training_config,
                     training_config=training_config,
                     dataset_revision_id=dataset_revision_id,
                 )
@@ -607,7 +607,7 @@ class TestOTXTrainerCreateTrainingDataset:
         assert test_call.kwargs["transforms"] == mock_test_transforms
 
         # Verify the returned DatasetInfo
-        assert dataset_info.otx_training_dataset == mock_otx_training_dataset
+        assert dataset_info.getitune_training_dataset == mock_otx_training_dataset
         assert dataset_info.otx_validation_dataset == mock_otx_validation_dataset
         assert dataset_info.otx_testing_dataset == mock_otx_testing_dataset
 
@@ -634,7 +634,7 @@ class TestOTXTrainerPrepareModel:
     def test_prepare_model(
         self,
         tmp_path: Path,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_model_service: Mock,
     ):
         """Test successful preparation of model metadata."""
@@ -652,11 +652,11 @@ class TestOTXTrainerPrepareModel:
             job_id=uuid4(),
         )
         dataset_revision_id = uuid4()
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         training_config = Mock(spec=TrainingConfiguration)
 
         # Act
-        otx_trainer.prepare_model(training_params, dataset_revision_id, training_config)
+        getitune_trainer.prepare_model(training_params, dataset_revision_id, training_config)
 
         # Assert
         fxt_model_service.create_revision.assert_called_once_with(
@@ -687,7 +687,7 @@ class TestOTXTrainerTrainModel:
     @pytest.mark.parametrize("add_precision", [True, False])
     def test_train_model(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
         geti_device: DeviceInfo,
         otx_device: str,
@@ -695,7 +695,7 @@ class TestOTXTrainerTrainModel:
     ):
         """Test successful model training."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         model_id = uuid4()
 
         # Mock DatasetInfo
@@ -707,7 +707,7 @@ class TestOTXTrainerTrainModel:
         mock_validation_subset_config = Mock()
         mock_testing_subset_config = Mock()
 
-        mock_dataset_info.otx_training_dataset = mock_training_dataset
+        mock_dataset_info.getitune_training_dataset = mock_training_dataset
         mock_dataset_info.otx_validation_dataset = mock_validation_dataset
         mock_dataset_info.otx_testing_dataset = mock_testing_dataset
         mock_dataset_info.otx_training_subset_config = mock_training_subset_config
@@ -760,10 +760,10 @@ class TestOTXTrainerTrainModel:
         expected_checkpoint_path = Path(mock_otx_engine.work_dir) / "best_checkpoint.ckpt"
         expected_checkpoint_path.touch()
 
-        with patch("app.execution.training.otx_trainer.OTXDataModule.from_otx_datasets") as mock_datamodule_factory:
+        with patch("app.execution.training.getitune_trainer.OTXDataModule.from_otx_datasets") as mock_datamodule_factory:
             mock_datamodule_factory.return_value = mock_datamodule
 
-            with patch("app.execution.training.otx_trainer.ArgumentParser") as mock_parser_class:
+            with patch("app.execution.training.getitune_trainer.ArgumentParser") as mock_parser_class:
                 mock_parser = Mock()
                 mock_parser_class.return_value = mock_parser
 
@@ -772,11 +772,11 @@ class TestOTXTrainerTrainModel:
                 mock_model_namespace.get.return_value = mock_otx_model
                 mock_parser.instantiate_classes.return_value = mock_model_namespace
 
-                with patch("app.execution.training.otx_trainer.OTXEngine") as mock_engine_class:
+                with patch("app.execution.training.getitune_trainer.OTXEngine") as mock_engine_class:
                     mock_engine_class.return_value = mock_otx_engine
 
                     # Act
-                    trained_model_path, returned_engine = otx_trainer.train_model(
+                    trained_model_path, returned_engine = getitune_trainer.train_model(
                         training_config=training_config,
                         dataset_info=mock_dataset_info,
                         weights_path=weights_path,
@@ -801,7 +801,7 @@ class TestOTXTrainerTrainModel:
         engine_call_kwargs = mock_engine_class.call_args.kwargs
         assert engine_call_kwargs["model"] == mock_otx_model
         assert engine_call_kwargs["data"] == mock_datamodule
-        assert engine_call_kwargs["work_dir"] == otx_trainer._data_dir / f"getitune-workspace-{model_id}"
+        assert engine_call_kwargs["work_dir"] == getitune_trainer._data_dir / f"getitune-workspace-{model_id}"
         assert engine_call_kwargs["device"] == otx_device
         assert engine_call_kwargs["checkpoint"] == weights_path
 
@@ -829,7 +829,7 @@ class TestOTXTrainerExecuteCancellation:
 
     def test_execute_cancellation_during_training_deletes_model_revision(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_model_service: Mock,
     ):
         """
@@ -837,7 +837,7 @@ class TestOTXTrainerExecuteCancellation:
         exception re-raised.
         """
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         model_id = uuid4()
         dataset_revision_id = uuid4()
@@ -860,32 +860,32 @@ class TestOTXTrainerExecuteCancellation:
 
         # Stub all steps that run before the try block
         with (
-            patch.object(otx_trainer, "prepare_weights", return_value=mock_weights_path),
+            patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
             patch.object(
-                otx_trainer,
+                getitune_trainer,
                 "prepare_training_configuration",
                 return_value=(mock_training_config, mock_otx_training_config),
             ),
-            patch.object(otx_trainer, "assign_subsets"),
-            patch.object(otx_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
-            patch.object(otx_trainer, "prepare_model"),
-            patch.object(otx_trainer, "train_model", side_effect=CancelledExc("Job cancelled")),
+            patch.object(getitune_trainer, "assign_subsets"),
+            patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
+            patch.object(getitune_trainer, "prepare_model"),
+            patch.object(getitune_trainer, "train_model", side_effect=CancelledExc("Job cancelled")),
             pytest.raises(CancelledExc),
         ):
             # Act & Assert
-            otx_trainer.execute(params)
+            getitune_trainer.execute(params)
 
         # Assert - model revision was deleted
         fxt_model_service.delete_model.assert_called_once_with(project_id=project_id, model_id=model_id)
 
     def test_execute_cancellation_during_export_deletes_model_revision(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_model_service: Mock,
     ):
         """When CancelledExc is raised during export_model, the model revision should be deleted."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         model_id = uuid4()
         dataset_revision_id = uuid4()
@@ -909,31 +909,31 @@ class TestOTXTrainerExecuteCancellation:
         mock_trained_model_path = Path("/fake/best_checkpoint.ckpt")
 
         with (
-            patch.object(otx_trainer, "prepare_weights", return_value=mock_weights_path),
+            patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
             patch.object(
-                otx_trainer,
+                getitune_trainer,
                 "prepare_training_configuration",
                 return_value=(mock_training_config, mock_otx_training_config),
             ),
-            patch.object(otx_trainer, "assign_subsets"),
-            patch.object(otx_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
-            patch.object(otx_trainer, "prepare_model"),
-            patch.object(otx_trainer, "train_model", return_value=(mock_trained_model_path, mock_otx_engine)),
-            patch.object(otx_trainer, "export_model", side_effect=CancelledExc("Job cancelled")),
+            patch.object(getitune_trainer, "assign_subsets"),
+            patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
+            patch.object(getitune_trainer, "prepare_model"),
+            patch.object(getitune_trainer, "train_model", return_value=(mock_trained_model_path, mock_otx_engine)),
+            patch.object(getitune_trainer, "export_model", side_effect=CancelledExc("Job cancelled")),
             pytest.raises(CancelledExc),
         ):
-            otx_trainer.execute(params)
+            getitune_trainer.execute(params)
 
         fxt_model_service.delete_model.assert_called_once_with(project_id=project_id, model_id=model_id)
 
     def test_execute_failure_during_training_marks_model_as_failed(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_model_service: Mock,
     ):
         """When a non-cancellation exception is raised during train_model, the model should be marked FAILED."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         model_id = uuid4()
         dataset_revision_id = uuid4()
@@ -955,19 +955,19 @@ class TestOTXTrainerExecuteCancellation:
         mock_weights_path = Path("/fake/weights.pth")
 
         with (
-            patch.object(otx_trainer, "prepare_weights", return_value=mock_weights_path),
+            patch.object(getitune_trainer, "prepare_weights", return_value=mock_weights_path),
             patch.object(
-                otx_trainer,
+                getitune_trainer,
                 "prepare_training_configuration",
                 return_value=(mock_training_config, mock_otx_training_config),
             ),
-            patch.object(otx_trainer, "assign_subsets"),
-            patch.object(otx_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
-            patch.object(otx_trainer, "prepare_model"),
-            patch.object(otx_trainer, "train_model", side_effect=RuntimeError("OTX crashed")),
-            pytest.raises(RuntimeError, match="OTX crashed"),
+            patch.object(getitune_trainer, "assign_subsets"),
+            patch.object(getitune_trainer, "prepare_training_dataset", return_value=mock_dataset_info),
+            patch.object(getitune_trainer, "prepare_model"),
+            patch.object(getitune_trainer, "train_model", side_effect=RuntimeError("Geti Tune crashed")),
+            pytest.raises(RuntimeError, match="Geti Tune crashed"),
         ):
-            otx_trainer.execute(params)
+            getitune_trainer.execute(params)
 
         # Assert - model should be marked FAILED, NOT deleted
         fxt_model_service.delete_model.assert_not_called()
@@ -993,13 +993,13 @@ class TestOTXTrainerEvaluateModel:
         task_type: TaskType,
         exclusive_labels: bool,
         metric_callable: MetricCallable,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
         fxt_model_service: Mock,
     ):
         """Test successful model evaluation on the testing set."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         model_id = uuid4()
         model_variant_id = uuid4()
@@ -1023,8 +1023,8 @@ class TestOTXTrainerEvaluateModel:
         )
 
         # Act
-        otx_trainer.evaluate_model(
-            otx_engine=mock_otx_engine,
+        getitune_trainer.evaluate_model(
+            getitune_engine=mock_otx_engine,
             model_checkpoint_path=model_checkpoint_path,
             task=training_params.task,
             model_revision_id=model_id,
@@ -1055,12 +1055,12 @@ class TestOTXTrainerExportModel:
 
     def test_export_model(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
     ):
         """Test successful model export to OpenVINO and ONNX format."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         mock_otx_engine = Mock()
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
@@ -1069,8 +1069,8 @@ class TestOTXTrainerExportModel:
         mock_otx_engine.export.side_effect = [expected_ov_export_path, expected_onnx_export_path]
 
         # Act
-        exported_paths = otx_trainer.export_model(
-            otx_engine=mock_otx_engine,
+        exported_paths = getitune_trainer.export_model(
+            getitune_engine=mock_otx_engine,
             model_checkpoint_path=model_checkpoint_path,
         )
 
@@ -1099,13 +1099,13 @@ class TestOTXTrainerStoreModelArtifacts:
 
     def test_store_model_artifacts(
         self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_getitune_trainer: Callable[[], OTXTrainer],
         fxt_model_service: Mock,
         tmp_path: Path,
     ):
         """Test successful storing of model artifacts and cleanup."""
         # Arrange
-        otx_trainer = fxt_otx_trainer()
+        getitune_trainer = fxt_getitune_trainer()
         project_id = uuid4()
         model_id = uuid4()
 
@@ -1124,16 +1124,16 @@ class TestOTXTrainerStoreModelArtifacts:
         model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
         model_dir.mkdir(parents=True)
 
-        # Create OTX work directory with artifacts
-        otx_work_dir = tmp_path / f"getitune-workspace-{model_id}"
-        otx_work_dir.mkdir(parents=True)
+        # Create Geti Tune work directory with artifacts
+        getitune_work_dir = tmp_path / f"getitune-workspace-{model_id}"
+        getitune_work_dir.mkdir(parents=True)
 
         # Create model checkpoint
-        trained_model_path = otx_work_dir / "best_checkpoint.ckpt"
+        trained_model_path = getitune_work_dir / "best_checkpoint.ckpt"
         trained_model_path.write_text("checkpoint content")
 
         # Create exported model files
-        exported_model_path = otx_work_dir / "exported_model.pth"
+        exported_model_path = getitune_work_dir / "exported_model.pth"
         model_xml_path = exported_model_path.with_suffix(".xml")
         model_bin_path = exported_model_path.with_suffix(".bin")
         model_onnx_path = exported_model_path.with_suffix(".onnx")
@@ -1147,14 +1147,14 @@ class TestOTXTrainerStoreModelArtifacts:
         )
 
         # Create metrics directory
-        metrics_dir = otx_work_dir / "csv"
+        metrics_dir = getitune_work_dir / "csv"
         metrics_dir.mkdir()
         (metrics_dir / "metrics.csv").write_text("epoch,loss\n1,0.5\n")
 
         # Act
-        otx_trainer.store_model_artifacts(
+        getitune_trainer.store_model_artifacts(
             model_dir=model_dir,
-            otx_work_dir=otx_work_dir,
+            getitune_work_dir=getitune_work_dir,
             trained_model_path=trained_model_path,
             exported_model_paths=exported_model_paths,
             created_variants=created_variants,
@@ -1191,8 +1191,8 @@ class TestOTXTrainerStoreModelArtifacts:
         assert (model_dir / "metrics" / "metrics.csv").exists()
         assert (model_dir / "metrics" / "metrics.csv").read_text() == "epoch,loss\n1,0.5\n"
 
-        # Check OTX work directory was cleaned up
-        assert not otx_work_dir.exists()
+        # Check Geti Tune work directory was cleaned up
+        assert not getitune_work_dir.exists()
 
 
 # ---------------------------------------------------------------------------
@@ -1322,13 +1322,13 @@ class TestOTXTrainerFilterDataset:
     # Filtering disabled
     # ------------------------------------------------------------------
 
-    def test_returns_original_dataset_when_filtering_disabled(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_returns_original_dataset_when_filtering_disabled(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """When both min and max are disabled the exact same dataset object is returned."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(1, 3, 5)
         training_config = _make_training_config()  # both disabled
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert result is dataset
 
@@ -1336,56 +1336,56 @@ class TestOTXTrainerFilterDataset:
     # Detection - bboxes field
     # ------------------------------------------------------------------
 
-    def test_detection_min_filter_removes_empty_samples(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_detection_min_filter_removes_empty_samples(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples with 0 bboxes are removed when min=1 is enabled."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(0, 1, 2, 3)
         training_config = _make_training_config(min_enabled=True, min_value=1)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 3
 
-    def test_detection_max_filter_removes_crowded_samples(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_detection_max_filter_removes_crowded_samples(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples exceeding the max bbox count are removed."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(1, 2, 3, 4, 5)
         training_config = _make_training_config(max_enabled=True, max_value=3)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 3  # 1, 2, 3 bboxes pass; 4, 5 are removed
 
-    def test_detection_min_and_max_filter_keeps_only_range(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_detection_min_and_max_filter_keeps_only_range(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Both min and max enabled: only samples within [min, max] survive."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(0, 1, 2, 3, 4, 5)
         training_config = _make_training_config(min_enabled=True, min_value=2, max_enabled=True, max_value=4)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 3  # 2, 3, 4 pass
 
-    def test_detection_filter_preserves_schema(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_detection_filter_preserves_schema(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """The returned dataset has the same dtype and schema as the input."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(1, 3, 5)
         training_config = _make_training_config(min_enabled=True, min_value=2)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert result.dtype == dataset.dtype
         assert result.schema == dataset.schema
 
     def test_detection_filter_all_removed_returns_empty_dataset(
-        self, fxt_otx_trainer: Callable[[], OTXTrainer]
+        self, fxt_getitune_trainer: Callable[[], OTXTrainer]
     ) -> None:
         """When every sample is filtered out the result is an empty (but valid) dataset."""
         task = Task(task_type=TaskType.DETECTION)
         dataset = _make_detection_dataset(1, 2, 3)
         training_config = _make_training_config(min_enabled=True, min_value=10)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 0
 
@@ -1393,23 +1393,23 @@ class TestOTXTrainerFilterDataset:
     # Instance segmentation - polygons field
     # ------------------------------------------------------------------
 
-    def test_instance_seg_min_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_instance_seg_min_filter(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples below the polygon minimum are removed."""
         task = Task(task_type=TaskType.INSTANCE_SEGMENTATION)
         dataset = _make_instance_seg_dataset(0, 1, 2, 3)
         training_config = _make_training_config(min_enabled=True, min_value=2)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 2  # 2, 3 polygons pass
 
-    def test_instance_seg_max_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_instance_seg_max_filter(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples above the polygon maximum are removed."""
         task = Task(task_type=TaskType.INSTANCE_SEGMENTATION)
         dataset = _make_instance_seg_dataset(1, 2, 3, 4)
         training_config = _make_training_config(max_enabled=True, max_value=2)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 2  # 1, 2 polygons pass
 
@@ -1417,23 +1417,23 @@ class TestOTXTrainerFilterDataset:
     # Multiclass classification - scalar label field
     # ------------------------------------------------------------------
 
-    def test_multiclass_min_filter_removes_unlabelled_samples(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_multiclass_min_filter_removes_unlabelled_samples(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples without a label (None) are removed when min is enabled."""
         task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True)
         dataset = _make_multiclass_dataset(None, 0, 1, None, 2)
         training_config = _make_training_config(min_enabled=True, min_value=1)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 3  # the three samples with an actual label survive
 
-    def test_multiclass_max_filter_is_noop(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_multiclass_max_filter_is_noop(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Max filtering is a no-op for multiclass classification (label is always scalar)."""
         task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True)
         dataset = _make_multiclass_dataset(0, 1, 2)
         training_config = _make_training_config(max_enabled=True, max_value=1)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         # No samples removed - max is meaningless for a scalar label
         assert len(result.df) == 3
@@ -1442,32 +1442,32 @@ class TestOTXTrainerFilterDataset:
     # Multilabel classification - label list field
     # ------------------------------------------------------------------
 
-    def test_multilabel_min_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_multilabel_min_filter(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples with fewer labels than the minimum are removed."""
         task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
         dataset = _make_multilabel_dataset([], [0], [0, 1], [0, 1, 2])
         training_config = _make_training_config(min_enabled=True, min_value=2)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 2  # [0, 1] and [0, 1, 2] pass
 
-    def test_multilabel_max_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_multilabel_max_filter(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Samples with more labels than the maximum are removed."""
         task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
         dataset = _make_multilabel_dataset([0], [0, 1], [0, 1, 2])
         training_config = _make_training_config(max_enabled=True, max_value=2)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 2  # [0] and [0, 1] pass
 
-    def test_multilabel_min_and_max_filter(self, fxt_otx_trainer: Callable[[], OTXTrainer]) -> None:
+    def test_multilabel_min_and_max_filter(self, fxt_getitune_trainer: Callable[[], OTXTrainer]) -> None:
         """Both min and max applied simultaneously on multilabel classification."""
         task = Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
         dataset = _make_multilabel_dataset([], [0], [0, 1], [0, 1, 2], [0, 1, 2, 3])
         training_config = _make_training_config(min_enabled=True, min_value=1, max_enabled=True, max_value=2)
 
-        result = fxt_otx_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
+        result = fxt_getitune_trainer().filter_dataset(dm_dataset=dataset, task=task, training_config=training_config)
 
         assert len(result.df) == 2  # [0] and [0, 1] pass

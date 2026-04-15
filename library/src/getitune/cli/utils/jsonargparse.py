@@ -497,13 +497,13 @@ def get_instantiated_classes(
         cli_args.extend(["--data_root", str(data_root)])
     for key, value in kwargs.items():
         cli_args.extend([f"--{key}", str(value)])
-    otx_cli = OTXCLI(
+    getitune_cli = OTXCLI(
         args=cli_args,
         run=False,
     )
 
-    otx_cli.set_seed()
-    otx_cli.instantiate_classes(instantiate_engine=False)
-    instantiated_config = namespace_to_dict(otx_cli.config_init["train"])
+    getitune_cli.set_seed()
+    getitune_cli.instantiate_classes(instantiate_engine=False)
+    instantiated_config = namespace_to_dict(getitune_cli.config_init["train"])
 
-    return instantiated_config, otx_cli.prepare_subcommand_kwargs("train")
+    return instantiated_config, getitune_cli.prepare_subcommand_kwargs("train")

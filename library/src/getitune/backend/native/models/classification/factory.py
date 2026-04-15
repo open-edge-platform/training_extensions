@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX classification factory."""
+"""Module for Geti Tune classification factory."""
 
 from __future__ import annotations
 
@@ -217,7 +217,7 @@ class TimmModel:
 
         Note:
         - If you wish to use Vision Transformer (ViT) models, it is recommended to use the `VisionTransformer`
-            implementation provided by OTX for better integration and support.
+            implementation provided by Geti Tune for better integration and support.
 
         Args:
             label_info (LabelInfoTypes): The label information.

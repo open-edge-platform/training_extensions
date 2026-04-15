@@ -17,11 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step
 from app.execution.common.geti_config_converter import GetiConfigConverter
-from app.execution.common.otx_converters import (
+from app.execution.common.getitune_converters import (
     convert_metrics,
     get_metric_by_task,
-    get_otx_dataset_class_by_task_type,
-    get_otx_task_type_by_task,
+    get_getitune_dataset_class_by_task_type,
+    get_getitune_task_type_by_task,
 )
 from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingStatus
 from app.models.jobs.quantization_job import QuantizationJobParams
@@ -41,7 +41,7 @@ class QuantizationDependencies:
 
 
 class OTXQuantizer(Execution[QuantizationJobParams]):
-    """OTX-specific quantization implementation using OVEngine."""
+    """Geti Tune-specific quantization implementation using OVEngine."""
 
     params_type = QuantizationJobParams
 
@@ -104,7 +104,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
                 model_revision_id=params.model_id,
             )
 
-        # Convert to OTX config format
+        # Convert to Geti Tune config format
         with self._db_session_factory() as db:
             self._project_service.set_db_session(db)
             project = self._project_service.get_project_by_id(params.project_id)
@@ -113,14 +113,14 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         geti_training_config = training_config.model_dump(exclude_none=True)
         geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
         geti_training_config["model_manifest_id"] = model.architecture
-        geti_training_config["sub_task_type"] = get_otx_task_type_by_task(task)
+        geti_training_config["sub_task_type"] = get_getitune_task_type_by_task(task)
 
         converter = GetiConfigConverter()
-        otx_training_config = converter.convert(geti_training_config)
+        getitune_training_config = converter.convert(geti_training_config)
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
-            subset_cfg_data = otx_training_config["data"][f"{subset_name}_subset"]
-            subset_cfg_data["input_size"] = otx_training_config["data"]["input_size"]
+            subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
+            subset_cfg_data["input_size"] = getitune_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
             # pyrefly: ignore[missing-attribute,bad-assignment]
@@ -146,25 +146,25 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         test_subset_config = build_subset_config("test")
 
         # Wrap into OTXDataset instances
-        otx_task_type = get_otx_task_type_by_task(task)
-        otx_dataset_class = get_otx_dataset_class_by_task_type(otx_task_type)
+        getitune_task_type = get_getitune_task_type_by_task(task)
+        getitune_dataset_class = get_getitune_dataset_class_by_task_type(getitune_task_type)
 
-        otx_training_dataset = otx_dataset_class(
+        getitune_training_dataset = getitune_dataset_class(
             dm_subset=dm_training_dataset,
             transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
-        otx_validation_dataset = otx_dataset_class(
+        otx_validation_dataset = getitune_dataset_class(
             dm_subset=dm_validation_dataset,
             transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
-        otx_testing_dataset = otx_dataset_class(
+        otx_testing_dataset = getitune_dataset_class(
             dm_subset=dm_testing_dataset,
             transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
         )
 
         # Build the OTXDataModule
-        otx_datamodule = OTXDataModule.from_otx_datasets(
-            train_dataset=otx_training_dataset,
+        getitune_datamodule = OTXDataModule.from_otx_datasets(
+            train_dataset=getitune_training_dataset,
             val_dataset=otx_validation_dataset,
             test_dataset=otx_testing_dataset,
             train_subset=train_subset_config,
@@ -174,11 +174,11 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
 
         logger.info(
             "Calibration dataset prepared with {} training, {} validation, {} testing samples",
-            len(otx_training_dataset),
+            len(getitune_training_dataset),
             len(otx_validation_dataset),
             len(otx_testing_dataset),
         )
-        return otx_datamodule
+        return getitune_datamodule
 
     @step("Initialize OV Engine", 25)
     def initialize_engine(
@@ -253,7 +253,7 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
         params: QuantizationJobParams,
         quantized_model_path: Path,
         model_variant_id: UUID,
-        otx_work_dir: Path,
+        getitune_work_dir: Path,
     ) -> None:
         """Store quantized model files and clean up temporary files."""
         model_dir = self._base_model_path(params.project_id, params.model_id)
@@ -267,10 +267,10 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
             shutil.copyfile(bin_path, variant_dir / "model.bin")
         logger.info("Stored quantized model variant at {}", variant_dir)
 
-        # Cleanup the OTX work directory
-        if otx_work_dir.exists():
-            shutil.rmtree(otx_work_dir)
-            logger.info("Cleaned up OTX quantization work directory at {}", otx_work_dir)
+        # Cleanup the Geti Tune work directory
+        if getitune_work_dir.exists():
+            shutil.rmtree(getitune_work_dir)
+            logger.info("Cleaned up Geti Tune quantization work directory at {}", getitune_work_dir)
 
     def execute(self, params: QuantizationJobParams) -> None:
         """Execute the full quantization pipeline."""
@@ -320,13 +320,13 @@ class OTXQuantizer(Execution[QuantizationJobParams]):
                 params=params,
                 quantized_model_path=quantized_model_path,
                 model_variant_id=variant.id,
-                otx_work_dir=Path(ov_engine.work_dir),
+                getitune_work_dir=Path(ov_engine.work_dir),
             )
         except Exception:
-            otx_work_dir = Path(ov_engine.work_dir)
-            if otx_work_dir.exists():
-                shutil.rmtree(otx_work_dir)
-                logger.info("Cleaned up OTX work directory after failure at {}", otx_work_dir)
+            getitune_work_dir = Path(ov_engine.work_dir)
+            if getitune_work_dir.exists():
+                shutil.rmtree(getitune_work_dir)
+                logger.info("Cleaned up Geti Tune work directory after failure at {}", getitune_work_dir)
             raise
 
     def _base_model_path(self, project_id: UUID, model_id: UUID) -> Path:

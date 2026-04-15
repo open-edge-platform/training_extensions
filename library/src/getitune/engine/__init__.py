@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""API for OTX Entry-Point User."""
+"""API for Geti Tune Entry-Point User."""
 
 from __future__ import annotations
 

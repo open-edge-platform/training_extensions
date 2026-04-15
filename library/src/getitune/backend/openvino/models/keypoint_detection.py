@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Class definition for keypoint detection model entity used in OTX."""
+"""Class definition for keypoint detection model entity used in Geti Tune."""
 
 from __future__ import annotations
 

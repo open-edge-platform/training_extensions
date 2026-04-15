@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX Engine."""
+"""Geti Tune Engine."""
 
 from __future__ import annotations
 
@@ -78,9 +78,9 @@ def override_metric_callable(model: OTXModel, new_metric_callable: MetricCallabl
 
 
 class OTXEngine(Engine):
-    """OTX Engine.
+    """Geti Tune Engine.
 
-    This class defines the Engine for OTX, which governs each step of the OTX workflow.
+    This class defines the Engine for Geti Tune, which governs each step of the Geti Tune workflow.
     """
 
     _EXPORTED_MODEL_BASE_NAME: ClassVar[str] = "exported_model"
@@ -96,7 +96,7 @@ class OTXEngine(Engine):
         task: OTXTaskType | None = None,
         **kwargs,
     ):
-        """Initializes the OTX Engine.
+        """Initializes the Geti Tune Engine.
 
         Args:
             model (OTXModel | PathLike): The OTX model for the engine or model config path.
@@ -168,7 +168,7 @@ class OTXEngine(Engine):
             self._model.load_state_dict_incrementally(chkpt)
 
     # ------------------------------------------------------------------------ #
-    # General OTX Entry Points
+    # General Geti Tune Entry Points
     # ------------------------------------------------------------------------ #
 
     def train(
@@ -786,7 +786,7 @@ class OTXEngine(Engine):
 
         Args:
             model_name (str): The model name.
-            task (OTXTaskType): The type of OTX task.
+            task (OTXTaskType): The type of Geti Tune task.
             data_root (PathLike | None): Root directory for the data.
                 Defaults to None. If data_root is None, use the data_root from the configuration file.
             work_dir (PathLike | None, optional): Working directory for the engine.
@@ -965,7 +965,7 @@ class OTXEngine(Engine):
         return logger
 
     def configure_callbacks(self) -> None:
-        """Sets up the OTX callbacks for the trainer."""
+        """Sets up the Geti Tune callbacks for the trainer."""
         callbacks: list[Callback] = []
         config_callbacks = self._cache.args.get("callbacks", [])
         if config_callbacks is None:

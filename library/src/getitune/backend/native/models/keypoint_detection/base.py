@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for keypoint detection model entity used in OTX."""
+"""Class definition for keypoint detection model entity used in Geti Tune."""
 
 # type: ignore[override]
 
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 class OTXKeypointDetectionModel(OTXModel):
-    """Base class for the keypoint detection models used in OTX.
+    """Base class for the keypoint detection models used in Geti Tune.
 
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.

@@ -32,11 +32,11 @@ from app.core.jobs.exec.exceptions import CancelledExc
 from app.datumaro_converter import SampleMode
 from app.execution.base import Execution, ExecutionErr, step
 from app.execution.common.geti_config_converter import GetiConfigConverter
-from app.execution.common.otx_converters import (
+from app.execution.common.getitune_converters import (
     convert_metrics,
     get_metric_by_task,
-    get_otx_dataset_class_by_task_type,
-    get_otx_task_type_by_task,
+    get_getitune_dataset_class_by_task_type,
+    get_getitune_task_type_by_task,
 )
 from app.models import (
     DatasetItemAnnotationStatus,
@@ -87,7 +87,7 @@ class TrainingDependencies:
 
 @dataclass(frozen=True)
 class DatasetInfo:
-    otx_training_dataset: OTXDataset
+    getitune_training_dataset: OTXDataset
     otx_validation_dataset: OTXDataset
     otx_testing_dataset: OTXDataset
     otx_training_subset_config: SubsetConfig
@@ -103,7 +103,7 @@ class ExportedModels:
 
 
 class OTXTrainer(Execution[TrainingJobParams]):
-    """OTX-specific trainer implementation."""
+    """Geti Tune-specific trainer implementation."""
 
     params_type = TrainingJobParams
 
@@ -203,30 +203,30 @@ class OTXTrainer(Execution[TrainingJobParams]):
             )
 
             # Serialize and persist the configuration in the same YAML format adopted by Geti
-            # NOTE: this is a temporary solution to minimize changes in OTX; in the future, after refactoring OTX,
-            # we should update this code to build the configuration directly in the format consumed by OTX
+            # NOTE: this is a temporary solution to minimize changes in Geti Tune; in the future, after refactoring Geti Tune,
+            # we should update this code to build the configuration directly in the format consumed by Geti Tune
             geti_training_config = training_config.model_dump(exclude_none=True)
             geti_training_config["hyper_parameters"] = geti_training_config.pop("algo_level_parameters")
             geti_training_config["model_manifest_id"] = training_params.model_architecture_id
-            geti_training_config["sub_task_type"] = get_otx_task_type_by_task(task)
+            geti_training_config["sub_task_type"] = get_getitune_task_type_by_task(task)
             geti_config_path = self.__build_model_config_path(self._data_dir, project_id, training_params.model_id)
             geti_config_path.parent.mkdir(parents=True, exist_ok=True)
             with open(geti_config_path, "w") as f:
                 yaml.dump(geti_training_config, f, default_flow_style=False)
                 logger.info("Persisted training configuration at {}", geti_config_path)
 
-            # Convert the configuration to the format adopted by OTX
+            # Convert the configuration to the format adopted by Geti Tune
             converter = GetiConfigConverter()
-            otx_training_config = converter.convert(geti_training_config)
+            getitune_training_config = converter.convert(geti_training_config)
 
-            return training_config, otx_training_config
+            return training_config, getitune_training_config
 
     @step("Prepare Training Dataset", 10)
     def prepare_training_dataset(
         self,
         project_id: UUID,
         task: Task,
-        otx_training_config: dict,
+        getitune_training_config: dict,
         training_config: TrainingConfiguration,
         dataset_revision_id: UUID | None = None,
     ) -> DatasetInfo:
@@ -238,8 +238,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         """
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
-            subset_cfg_data = otx_training_config["data"][f"{subset_name}_subset"]
-            subset_cfg_data["input_size"] = otx_training_config["data"]["input_size"]
+            subset_cfg_data = getitune_training_config["data"][f"{subset_name}_subset"]
+            subset_cfg_data["input_size"] = getitune_training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
             # pyrefly: ignore[missing-attribute,bad-assignment]
@@ -301,24 +301,24 @@ class OTXTrainer(Execution[TrainingJobParams]):
             test_subset_config = build_subset_config("test")
 
             # Wrap them into OTXDataset instances
-            otx_task_type = get_otx_task_type_by_task(task)
-            otx_dataset_class = get_otx_dataset_class_by_task_type(otx_task_type)
-            logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
-            otx_training_dataset = otx_dataset_class(
+            getitune_task_type = get_getitune_task_type_by_task(task)
+            getitune_dataset_class = get_getitune_dataset_class_by_task_type(getitune_task_type)
+            logger.info("Preparing {} instances for each subset", getitune_dataset_class.__name__)
+            getitune_training_dataset = getitune_dataset_class(
                 dm_subset=dm_training_dataset,
                 transforms=train_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
-            otx_validation_dataset = otx_dataset_class(
+            otx_validation_dataset = getitune_dataset_class(
                 dm_subset=dm_validation_dataset,
                 transforms=val_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
-            otx_testing_dataset = otx_dataset_class(
+            otx_testing_dataset = getitune_dataset_class(
                 dm_subset=dm_testing_dataset,
                 transforms=test_subset_config.transforms,  # pyrefly: ignore[missing-attribute,bad-argument-type]
             )
 
             return DatasetInfo(
-                otx_training_dataset=otx_training_dataset,
+                getitune_training_dataset=getitune_training_dataset,
                 otx_validation_dataset=otx_validation_dataset,
                 otx_testing_dataset=otx_testing_dataset,
                 otx_training_subset_config=train_subset_config,
@@ -362,14 +362,14 @@ class OTXTrainer(Execution[TrainingJobParams]):
         #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
         logger.warning(
             "Argument 'weights_path' (value='{}') is not used in model training yet; "
-            "the weights location will be determined internally by OTX",
+            "the weights location will be determined internally by Geti Tune",
             weights_path,
         )
 
         # Build the OTXDataModule
         logger.info("Preparing the OTXDataModule for training (model_id={})", model_id)
-        otx_datamodule = OTXDataModule.from_otx_datasets(
-            train_dataset=dataset_info.otx_training_dataset,
+        getitune_datamodule = OTXDataModule.from_otx_datasets(
+            train_dataset=dataset_info.getitune_training_dataset,
             val_dataset=dataset_info.otx_validation_dataset,
             test_dataset=dataset_info.otx_testing_dataset,
             train_subset=dataset_info.otx_training_subset_config,
@@ -380,24 +380,24 @@ class OTXTrainer(Execution[TrainingJobParams]):
         # Create the OTXModel according to the training configuration
         logger.info("Instantiating the OTXModel for training (model_id={})", model_id)
         model_cfg = training_config["model"]
-        model_cfg["init_args"]["label_info"] = otx_datamodule.label_info.label_names
+        model_cfg["init_args"]["label_info"] = getitune_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
-            input_size=cast(tuple[int, int], otx_datamodule.input_size),
-            mean=otx_datamodule.input_mean if otx_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
-            std=otx_datamodule.input_std if otx_datamodule.input_std is not None else (1.0, 1.0, 1.0),
+            input_size=cast(tuple[int, int], getitune_datamodule.input_size),
+            mean=getitune_datamodule.input_mean if getitune_datamodule.input_mean is not None else (0.0, 0.0, 0.0),
+            std=getitune_datamodule.input_std if getitune_datamodule.input_std is not None else (1.0, 1.0, 1.0),
         ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False)
-        otx_model: OTXModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
-        if hasattr(otx_model, "tile_config"):
-            otx_model.tile_config = otx_datamodule.tile_config
+        getitune_model: OTXModel = model_parser.instantiate_classes(Namespace(model=model_cfg)).get("model")
+        if hasattr(getitune_model, "tile_config"):
+            getitune_model.tile_config = getitune_datamodule.tile_config
 
         # Set up the OTXEngine
         logger.info("Initializing the OTXEngine for training (model_id={})", model_id)
         otx_device_type = OTXDeviceType.gpu if device.type is DeviceType.CUDA else OTXDeviceType(device.type)
-        otx_engine = OTXEngine(
-            model=otx_model,
-            data=otx_datamodule,
+        getitune_engine = OTXEngine(
+            model=getitune_model,
+            data=getitune_datamodule,
             checkpoint=weights_path if has_parent_revision else None,
             work_dir=self._data_dir / f"getitune-workspace-{model_id}",
             device=otx_device_type,
@@ -407,7 +407,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         callbacks_cfg = training_config.get("callbacks", [])
         for cb_cfg in callbacks_cfg:
             if "init_args" in cb_cfg and "dirpath" in cb_cfg["init_args"]:
-                cb_cfg["init_args"]["dirpath"] = otx_engine.work_dir
+                cb_cfg["init_args"]["dirpath"] = getitune_engine.work_dir
         parser = ArgumentParser()
         parser.add_argument("--callbacks", type=list[Callback])
         parsed_callbacks_cfg = parser.parse_object({"callbacks": callbacks_cfg})
@@ -424,15 +424,15 @@ class OTXTrainer(Execution[TrainingJobParams]):
             train_kwargs["devices"] = [device.index]
         if "precision" in training_config:
             train_kwargs["precision"] = training_config["precision"]
-        otx_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
-        trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
+        getitune_engine.train(**train_kwargs)  # pyrefly: ignore[bad-argument-type]
+        trained_model_path = Path(getitune_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
-        return trained_model_path, otx_engine
+        return trained_model_path, getitune_engine
 
     @step("Evaluate Model", 95)
     def evaluate_model(
         self,
-        otx_engine: OTXEngine,
+        getitune_engine: OTXEngine,
         model_checkpoint_path: Path,
         task: Task,
         model_revision_id: UUID,
@@ -441,7 +441,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
     ) -> None:
         """Evaluate the trained model on the testing set"""
         logger.info("Evaluating the model on the testing set...")
-        metrics = otx_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
+        metrics = getitune_engine.test(checkpoint=model_checkpoint_path, metric=get_metric_by_task(task))
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.save_evaluation_result(
@@ -455,10 +455,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
             )
 
     @step("Export Model")
-    def export_model(self, otx_engine: OTXEngine, model_checkpoint_path: Path) -> ExportedModels:
+    def export_model(self, getitune_engine: OTXEngine, model_checkpoint_path: Path) -> ExportedModels:
         """Export the trained model to desired OpenVINO and ONNX formats"""
         logger.info("Exporting the model to OpenVINO format (FP16 precision)...")
-        exported_ov_model_path = otx_engine.export(
+        exported_ov_model_path = getitune_engine.export(
             checkpoint=model_checkpoint_path,
             export_format=OTXExportFormatType.OPENVINO,
             export_precision=OTXPrecisionType.FP16,
@@ -466,7 +466,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         logger.info("Model exported to OpenVINO format: {}", exported_ov_model_path)
 
         logger.info("Exporting the model to ONNX format (FP16 precision)...")
-        exported_onnx_model_path = otx_engine.export(
+        exported_onnx_model_path = getitune_engine.export(
             checkpoint=model_checkpoint_path,
             export_format=OTXExportFormatType.ONNX,
             export_precision=OTXPrecisionType.FP16,
@@ -478,7 +478,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
     def store_model_artifacts(
         self,
         model_dir: Path,
-        otx_work_dir: Path,
+        getitune_work_dir: Path,
         trained_model_path: Path,
         exported_model_paths: ExportedModels,
         created_variants: dict[ModelFormat, UUID],
@@ -489,7 +489,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
         Args:
             model_dir: The base model directory.
-            otx_work_dir: The OTX workspace directory to clean up.
+            getitune_work_dir: The Geti Tune workspace directory to clean up.
             trained_model_path: Path to the trained checkpoint inside the workspace.
             exported_model_paths: Paths to exported model files inside the workspace.
             created_variants: Mapping of ModelFormat to variant UUID (from create_model_variants).
@@ -526,21 +526,21 @@ class OTXTrainer(Execution[TrainingJobParams]):
         logger.info("Stored ONNX variant at {}", onnx_variant_dir)
 
         # Store the metrics
-        metrics_source_path = otx_work_dir / "csv"
+        metrics_source_path = getitune_work_dir / "csv"
         metrics_dest_path = model_dir / "metrics"
         if metrics_source_path.exists():
             shutil.move(metrics_source_path, metrics_dest_path)
             logger.info("Stored training metrics at {}", metrics_dest_path)
 
-        # Cleanup the OTX work directory
-        shutil.rmtree(otx_work_dir)
-        logger.info("Cleaned up OTX work directory at {}", otx_work_dir)
+        # Cleanup the Geti Tune work directory
+        shutil.rmtree(getitune_work_dir)
+        logger.info("Cleaned up Geti Tune work directory at {}", getitune_work_dir)
 
     def create_model_variants(self, model_revision_id: UUID) -> dict[ModelFormat, UUID]:
         """Create variant records in the database for all exported formats.
 
         This is called before evaluation so that variant IDs are available for
-        associating evaluation results, and before the OTX workspace is cleaned up.
+        associating evaluation results, and before the Geti Tune workspace is cleaned up.
 
         Args:
             model_revision_id: The ID of the model revision for which to create variants for.
@@ -576,12 +576,12 @@ class OTXTrainer(Execution[TrainingJobParams]):
         )
 
         weights_path = self.prepare_weights(training_params=params)
-        training_config, otx_training_config = self.prepare_training_configuration(training_params=params, task=task)
+        training_config, getitune_training_config = self.prepare_training_configuration(training_params=params, task=task)
         self.assign_subsets(training_config=training_config, project_id=project_id)
         dataset_info = self.prepare_training_dataset(
             project_id=project_id,
             task=task,
-            otx_training_config=otx_training_config,
+            getitune_training_config=getitune_training_config,
             training_config=training_config,
             dataset_revision_id=params.dataset_revision_id,
         )
@@ -595,22 +595,22 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 status=TrainingStatus.IN_PROGRESS,
                 training_started_at=training_start_time,
             )
-            trained_model_path, otx_engine = self.train_model(
-                training_config=otx_training_config,
+            trained_model_path, getitune_engine = self.train_model(
+                training_config=getitune_training_config,
                 dataset_info=dataset_info,
                 weights_path=weights_path,
                 model_id=params.model_id,
                 device=params.device,
                 has_parent_revision=params.parent_model_revision_id is not None,
             )
-            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+            exported_model_paths = self.export_model(getitune_engine=getitune_engine, model_checkpoint_path=trained_model_path)
 
             # Create variant DB records first (no file I/O yet)
             created_variants = self.create_model_variants(model_revision_id=params.model_id)
 
             # Evaluate while the workspace and checkpoint still exist
             self.evaluate_model(
-                otx_engine=otx_engine,
+                getitune_engine=getitune_engine,
                 model_checkpoint_path=trained_model_path,
                 task=task,
                 model_revision_id=params.model_id,
@@ -621,7 +621,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
             # Now copy files into variant dirs and clean up the workspace
             self.store_model_artifacts(
                 model_dir=model_dir,
-                otx_work_dir=Path(otx_engine.work_dir),
+                getitune_work_dir=Path(getitune_engine.work_dir),
                 trained_model_path=trained_model_path,
                 exported_model_paths=exported_model_paths,
                 created_variants=created_variants,
@@ -656,7 +656,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
 
     def _build_filter_conditions(
         self,
-        otx_task_type: OTXTaskType,
+        getitune_task_type: OTXTaskType,
         annotation_field: str,
         filtering_config: Filtering,
     ) -> list:
@@ -666,7 +666,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         if filtering_config.min_annotation_objects.enable:
             min_value = filtering_config.min_annotation_objects.value
             logger.info("Filtering samples with a minimum of {} annotation objects", min_value)
-            if otx_task_type == OTXTaskType.MULTI_CLASS_CLS:
+            if getitune_task_type == OTXTaskType.MULTI_CLASS_CLS:
                 # Multiclass label is a scalar - presence means exactly 1 annotation object
                 filter_conditions.append(pl.col(annotation_field).is_not_null())
             else:
@@ -675,7 +675,7 @@ class OTXTrainer(Execution[TrainingJobParams]):
         if filtering_config.max_annotation_objects.enable:
             max_value = filtering_config.max_annotation_objects.value
             logger.info("Filtering samples with a maximum of {} annotation objects", max_value)
-            if otx_task_type != OTXTaskType.MULTI_CLASS_CLS:
+            if getitune_task_type != OTXTaskType.MULTI_CLASS_CLS:
                 # Max filtering is a no-op for multiclass (always 0 or 1 label)
                 filter_conditions.append(pl.col(annotation_field).list.len() <= max_value)
 
@@ -703,8 +703,8 @@ class OTXTrainer(Execution[TrainingJobParams]):
         logger.info("Applying annotation object filtering to the dataset")
 
         # Determine the annotation field name based on task type
-        otx_task_type = get_otx_task_type_by_task(task)
-        match otx_task_type:
+        getitune_task_type = get_getitune_task_type_by_task(task)
+        match getitune_task_type:
             case OTXTaskType.DETECTION:
                 annotation_field = "bboxes"
             case OTXTaskType.INSTANCE_SEGMENTATION:
@@ -714,10 +714,10 @@ class OTXTrainer(Execution[TrainingJobParams]):
                 # For multiclass, label is a single scalar; for multilabel it's a list.
                 annotation_field = "label"
             case _:
-                logger.warning("Unsupported task type for annotation object filtering: {}", otx_task_type)
+                logger.warning("Unsupported task type for annotation object filtering: {}", getitune_task_type)
                 return dm_dataset
 
-        filter_conditions = self._build_filter_conditions(otx_task_type, annotation_field, filtering_config)
+        filter_conditions = self._build_filter_conditions(getitune_task_type, annotation_field, filtering_config)
 
         if not filter_conditions:
             return dm_dataset

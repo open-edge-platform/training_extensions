@@ -78,7 +78,7 @@ def test_render_guide() -> None:
     contents = render_guide(subcommand)
     assert len(contents) == 2
     assert contents[0].__class__.__name__ == "Markdown"
-    assert "# OpenVINO™ Training Extensions CLI Guide" in contents[0].markup
+    assert "# Geti Tune CLI Guide" in contents[0].markup
     assert contents[1].__class__.__name__ == "Panel"
     assert "getitune train" in contents[1].renderable.markup
     assert render_guide(None) == []

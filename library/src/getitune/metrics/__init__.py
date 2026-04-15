@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX custom metrices."""
+"""Module for Geti Tune custom metrices."""
 
 from getitune.metrics.types import MetricCallable, MetricInput, NullMetricCallable
 

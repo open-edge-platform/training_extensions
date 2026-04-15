@@ -40,12 +40,12 @@ except ImportError:
 
 
 class OTXCLI:
-    """OTX CLI entrypoint."""
+    """Geti Tune CLI entrypoint."""
 
     datamodule: OTXDataModule
 
     def __init__(self, args: list[str] | None = None, run: bool = True) -> None:
-        """Initialize OTX CLI."""
+        """Initialize Geti Tune CLI."""
         self.console = Console()
         self._subcommand_method_arguments: dict[str, list[str]] = {}
         with patch_update_configs():
@@ -58,7 +58,7 @@ class OTXCLI:
             self.run()
 
     def init_parser(self) -> ArgumentParser:
-        """Initialize the argument parser for the OTX CLI.
+        """Initialize the argument parser for the Geti Tune CLI.
 
         Returns:
             ArgumentParser: The initialized argument parser.
@@ -74,7 +74,7 @@ class OTXCLI:
             "--version",
             action="version",
             version=f"%(prog)s {__version__}",
-            help="Display OTX version number.",
+            help="Display Geti Tune version number.",
         )
         return parser
 
@@ -134,7 +134,7 @@ class OTXCLI:
         )
         parser.add_argument(
             "--disable-infer-num-classes",
-            help="OTX automatically infers num_classes from the given dataset "
+            help="Geti Tune automatically infers num_classes from the given dataset "
             "and applies it to the model initialization."
             "Consequently, there might be a mismatch with the provided model configuration during runtime. "
             "Setting this option to true will disable this behavior.",
@@ -219,7 +219,7 @@ class OTXCLI:
     def add_subcommands(self) -> None:
         """Adds subcommands to the CLI parser.
 
-        This method initializes and configures subcommands for the OTX CLI parser.
+        This method initializes and configures subcommands for the Geti Tune CLI parser.
         It iterates over the available subcommands, adds arguments specific to each subcommand,
         and registers them with the parser.
 
@@ -288,7 +288,7 @@ class OTXCLI:
                       you can use '--pattern efficient'",
                 type=Optional[str],
             )
-            parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by OTX.")
+            parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by Geti Tune.")
 
     def instantiate_classes(self, instantiate_engine: bool = True) -> None:
         """Instantiate the necessary classes based on the subcommand.
@@ -534,7 +534,7 @@ class OTXCLI:
         if outputs is None:
             return
         if self.subcommand == "train" and isinstance(outputs, dict):
-            # Print Metric like 'otx test'
+            # Print Metric like 'getitune test'
             from rich.table import Column, Table
             from torch import Tensor
 

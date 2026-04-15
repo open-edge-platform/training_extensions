@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 
 class ATSS(OTXDetectionModel):
-    """OTX Detection model class for ATSS.
+    """Geti Tune Detection model class for ATSS.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.

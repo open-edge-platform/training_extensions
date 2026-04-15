@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 class Workspace:
-    """Represents a workspace for the OTX application.
+    """Represents a workspace for the Geti Tune application.
 
     Args:
         work_dir (Path | str | None, optional): The path to the workspace directory. Defaults to None.

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 class DEIMDFine(RTDETR):
-    """OTX Detection model class for DEIMDFine.
+    """Geti Tune Detection model class for DEIMDFine.
 
     DEIM-DFine is an improved version of D-FINE, which halfed the training time and improved the performance on COCO.
 

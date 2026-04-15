@@ -9,10 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from getitune.backend.native.cli.utils import get_otx_root_path
+from getitune.backend.native.cli.utils import get_getitune_root_path
 from getitune.types.task import OTXTaskType
 
-RECIPE_PATH = get_otx_root_path() / "recipe"
+RECIPE_PATH = get_getitune_root_path() / "recipe"
 
 # Recipes selected for category-only integration runs (speed / balance / accuracy).
 # This mirrors the TEMPLATE_ID_MAPPING kept in the application backend
@@ -126,7 +126,7 @@ def pytest_configure(config):
     task = config.getoption("--task")
     run_category_only = config.getoption("--run-category-only")
 
-    # This assumes have OTX installed in environment.
+    # This assumes have Geti Tune installed in environment.
     otx_module = importlib.import_module("getitune")
     # Modify RECIPE_PATH based on the task
     recipe_path = Path(inspect.getfile(otx_module)).parent / "recipe"

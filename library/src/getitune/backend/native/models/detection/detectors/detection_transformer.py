@@ -152,7 +152,7 @@ class DETR(BaseModule):
         """
         logits, boxes = outputs["pred_logits"], outputs["pred_boxes"]
 
-        # convert bbox to xyxy and rescale back to original size (resize in OTX)
+        # convert bbox to xyxy and rescale back to original size (resize in Geti Tune)
         bbox_pred = box_convert(boxes, in_fmt="cxcywh", out_fmt="xyxy")
         if not deploy_mode:
             original_size_tensor = torch.tensor(original_sizes).to(bbox_pred.device)

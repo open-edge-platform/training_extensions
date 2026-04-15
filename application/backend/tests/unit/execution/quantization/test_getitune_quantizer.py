@@ -14,7 +14,7 @@ from getitune.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from getitune.metrics.types import MetricCallable
 
 from app.core.run import ExecutionContext
-from app.execution.quantization.otx_quantizer import OTXQuantizer, QuantizationDependencies
+from app.execution.quantization.getitune_quantizer import OTXQuantizer, QuantizationDependencies
 from app.models import DatasetItemSubset, ModelRevision, Project, Task, TaskType, TrainingStatus
 from app.models.jobs.quantization_job import QuantizationJobParams
 from app.models.model_revision import ModelFormat, ModelPrecision, ModelVariant, TrainingInfo
@@ -100,7 +100,7 @@ def fxt_quantization_params() -> QuantizationJobParams:
 
 
 @pytest.fixture
-def fxt_otx_quantizer(
+def fxt_getitune_quantizer(
     tmp_path: Path,
     fxt_model_service: Mock,
     fxt_dataset_revision_service: Mock,
@@ -136,12 +136,12 @@ class TestOTXQuantizerValidateModel:
     def test_validate_model_success(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_quantization_params: QuantizationJobParams,
     ):
         """A valid, successfully trained model with FP16 variant and no INT8 passes validation."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(fxt_quantization_params.model_id)
 
         # Create the model XML on disk so the file-existence check succeeds
@@ -171,12 +171,12 @@ class TestOTXQuantizerValidateModel:
 
     def test_validate_model_fails_training_not_successful(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Model whose training status is not SUCCESSFUL must be rejected."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(
             fxt_quantization_params.model_id,
             training_status=TrainingStatus.FAILED,
@@ -188,12 +188,12 @@ class TestOTXQuantizerValidateModel:
 
     def test_validate_model_fails_no_training_info(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Model with training_info=None must be rejected."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(fxt_quantization_params.model_id)
         model.training_info = None
         fxt_model_service.get_model.return_value = model
@@ -203,12 +203,12 @@ class TestOTXQuantizerValidateModel:
 
     def test_validate_model_fails_files_deleted(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Model whose files have been deleted must be rejected."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(
             fxt_quantization_params.model_id,
             files_deleted=True,
@@ -220,12 +220,12 @@ class TestOTXQuantizerValidateModel:
 
     def test_validate_model_fails_no_openvino_fp16_variant(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Model without an OpenVINO FP16 variant must be rejected."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(
             fxt_quantization_params.model_id,
             has_openvino_fp16=False,
@@ -237,12 +237,12 @@ class TestOTXQuantizerValidateModel:
 
     def test_validate_model_fails_openvino_xml_missing_on_disk(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Model whose FP16 variant record exists but XML file is missing on disk must be rejected."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(fxt_quantization_params.model_id)
         fxt_model_service.get_model.return_value = model
         # Do NOT create the XML file on disk
@@ -256,10 +256,10 @@ class TestOTXQuantizerRunQuantization:
 
     def test_run_quantization_standard_ptq(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
     ):
         """Standard PTQ (max_drop=None) calls OVEngine.optimize with subset_size only."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         mock_engine = Mock(spec=OVEngine)
         expected_path = Path("/some/quantized_model.xml")
         mock_engine.optimize.return_value = expected_path
@@ -278,10 +278,10 @@ class TestOTXQuantizerRunQuantization:
 
     def test_run_quantization_accuracy_aware(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
     ):
         """Accuracy-aware PTQ (max_drop provided) passes max_drop through to OVEngine.optimize."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         mock_engine = Mock(spec=OVEngine)
         expected_path = Path("/some/quantized_model.xml")
         mock_engine.optimize.return_value = expected_path
@@ -300,10 +300,10 @@ class TestOTXQuantizerRunQuantization:
 
     def test_run_quantization_propagates_engine_error(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
     ):
         """If OVEngine.optimize raises, the error propagates unmodified."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         mock_engine = Mock(spec=OVEngine)
         mock_engine.optimize.side_effect = RuntimeError("NNCF failure")
 
@@ -320,11 +320,11 @@ class TestOTXQuantizerInitializeEngine:
     def test_initialize_engine_success(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Engine is created with the correct XML path and data module."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(fxt_quantization_params.model_id)
         mock_datamodule = Mock()
 
@@ -340,7 +340,7 @@ class TestOTXQuantizerInitializeEngine:
             / "model.xml"
         )
 
-        with patch("app.execution.quantization.otx_quantizer.OVEngine") as mock_engine_cls:
+        with patch("app.execution.quantization.getitune_quantizer.OVEngine") as mock_engine_cls:
             mock_engine_cls.return_value = Mock(spec=OVEngine)
 
             engine = quantizer.initialize_engine(
@@ -358,11 +358,11 @@ class TestOTXQuantizerInitializeEngine:
 
     def test_initialize_engine_no_fp16_variant(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Raises FileNotFoundError when no FP16 variant exists."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         model = _make_model_revision(
             fxt_quantization_params.model_id,
             has_openvino_fp16=False,
@@ -394,11 +394,11 @@ class TestOTXQuantizerEvaluateQuantizedModel:
         task_type: TaskType,
         exclusive_labels: bool,
         metric_callable: MetricCallable,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
     ):
         """Metrics from OVEngine.test are persisted via model_service."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         mock_engine = Mock(spec=OVEngine)
         mock_engine.test.return_value = {
             "test/mAP": torch.tensor(0.75),
@@ -433,11 +433,11 @@ class TestOTXQuantizerEvaluateQuantizedModel:
 
     def test_evaluate_quantized_model_skips_multi_element_tensors(
         self,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
     ):
         """Multi-element tensor metrics are skipped; scalar tensors and plain floats are kept."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         mock_engine = Mock(spec=OVEngine)
         mock_engine.test.return_value = {
             "test/mAP": torch.tensor(0.75),
@@ -468,19 +468,19 @@ class TestOTXQuantizerStoreArtifacts:
     def test_store_artifacts_copies_files_and_cleans_up(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_quantization_params: QuantizationJobParams,
     ):
         """Quantized XML+BIN are copied into the variant directory and the work dir is removed."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
 
         variant_id = uuid4()
 
-        # Create quantized model files in a fake OTX work dir
-        otx_work_dir = tmp_path / "getitune-workspace"
-        otx_work_dir.mkdir()
-        quantized_xml = otx_work_dir / "optimized_model.xml"
-        quantized_bin = otx_work_dir / "optimized_model.bin"
+        # Create quantized model files in a fake Geti Tune work dir
+        getitune_work_dir = tmp_path / "getitune-workspace"
+        getitune_work_dir.mkdir()
+        quantized_xml = getitune_work_dir / "optimized_model.xml"
+        quantized_bin = getitune_work_dir / "optimized_model.bin"
         quantized_xml.write_text("<quantized/>")
         quantized_bin.write_bytes(b"\x00\x01\x02")
 
@@ -488,7 +488,7 @@ class TestOTXQuantizerStoreArtifacts:
             params=fxt_quantization_params,
             quantized_model_path=quantized_xml,
             model_variant_id=variant_id,
-            otx_work_dir=otx_work_dir,
+            getitune_work_dir=getitune_work_dir,
         )
 
         # Verify copies
@@ -505,21 +505,21 @@ class TestOTXQuantizerStoreArtifacts:
         assert (variant_dir / "model.bin").read_bytes() == b"\x00\x01\x02"
 
         # Verify work dir cleaned up
-        assert not otx_work_dir.exists()
+        assert not getitune_work_dir.exists()
 
     def test_store_artifacts_skips_missing_bin(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_quantization_params: QuantizationJobParams,
     ):
         """When the .bin file does not exist, only the .xml is copied."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         variant_id = uuid4()
 
-        otx_work_dir = tmp_path / "getitune-workspace"
-        otx_work_dir.mkdir()
-        quantized_xml = otx_work_dir / "optimized_model.xml"
+        getitune_work_dir = tmp_path / "getitune-workspace"
+        getitune_work_dir.mkdir()
+        quantized_xml = getitune_work_dir / "optimized_model.xml"
         quantized_xml.write_text("<quantized/>")
         # No .bin created
 
@@ -527,7 +527,7 @@ class TestOTXQuantizerStoreArtifacts:
             params=fxt_quantization_params,
             quantized_model_path=quantized_xml,
             model_variant_id=variant_id,
-            otx_work_dir=otx_work_dir,
+            getitune_work_dir=getitune_work_dir,
         )
 
         variant_dir = (
@@ -549,14 +549,14 @@ class TestOTXQuantizerExecute:
     def test_execute_standard_ptq(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_project_service: Mock,
         fxt_training_configuration_service: Mock,
         fxt_dataset_revision_service: Mock,
     ):
         """Happy-path: full pipeline with standard PTQ (max_drop=None)."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         project_id = uuid4()
         model_id = uuid4()
         model_variant_id = uuid4()
@@ -606,10 +606,10 @@ class TestOTXQuantizerExecute:
         fxt_model_service.create_variant.return_value = created_variant
 
         # Create dummy quantized model that OVEngine.optimize would produce
-        otx_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
-        otx_work_dir.mkdir(parents=True)
-        quantized_xml = otx_work_dir / "optimized_model.xml"
-        quantized_bin = otx_work_dir / "optimized_model.bin"
+        getitune_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
+        getitune_work_dir.mkdir(parents=True)
+        quantized_xml = getitune_work_dir / "optimized_model.xml"
+        quantized_bin = getitune_work_dir / "optimized_model.bin"
         quantized_xml.write_text("<q/>")
         quantized_bin.write_bytes(b"\x00")
 
@@ -622,7 +622,7 @@ class TestOTXQuantizerExecute:
             mock_prep_ds.return_value = mock_datamodule
 
             mock_engine = Mock(spec=OVEngine)
-            mock_engine.work_dir = str(otx_work_dir)
+            mock_engine.work_dir = str(getitune_work_dir)
             mock_engine.optimize.return_value = quantized_xml
             mock_engine.test.return_value = {"test/mAP": torch.tensor(0.72)}
             mock_init_engine.return_value = mock_engine
@@ -658,18 +658,18 @@ class TestOTXQuantizerExecute:
         assert (variant_dir / "model.xml").read_text() == "<q/>"
         assert (variant_dir / "model.bin").read_bytes() == b"\x00"
 
-        # OTX workspace cleaned up
-        assert not otx_work_dir.exists()
+        # Geti Tune workspace cleaned up
+        assert not getitune_work_dir.exists()
 
     def test_execute_accuracy_aware_ptq(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_project_service: Mock,
     ):
         """Full pipeline with accuracy-aware PTQ (max_drop=0.02)."""
-        quantizer = fxt_otx_quantizer()
+        quantizer = fxt_getitune_quantizer()
         project_id = uuid4()
         model_id = uuid4()
         model_variant_id = uuid4()
@@ -714,9 +714,9 @@ class TestOTXQuantizerExecute:
         )
         fxt_model_service.create_variant.return_value = created_variant
 
-        otx_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
-        otx_work_dir.mkdir(parents=True)
-        quantized_xml = otx_work_dir / "optimized_model.xml"
+        getitune_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
+        getitune_work_dir.mkdir(parents=True)
+        quantized_xml = getitune_work_dir / "optimized_model.xml"
         quantized_xml.write_text("<q/>")
 
         with (
@@ -724,7 +724,7 @@ class TestOTXQuantizerExecute:
             patch.object(quantizer, "initialize_engine") as mock_init_engine,
         ):
             mock_engine = Mock(spec=OVEngine)
-            mock_engine.work_dir = str(otx_work_dir)
+            mock_engine.work_dir = str(getitune_work_dir)
             mock_engine.optimize.return_value = quantized_xml
             mock_engine.test.return_value = {"test/accuracy": torch.tensor(0.93)}
             mock_init_engine.return_value = mock_engine
@@ -744,12 +744,12 @@ class TestOTXQuantizerExecute:
     def test_execute_cleans_workspace_on_failure(
         self,
         tmp_path: Path,
-        fxt_otx_quantizer: Callable[[], OTXQuantizer],
+        fxt_getitune_quantizer: Callable[[], OTXQuantizer],
         fxt_model_service: Mock,
         fxt_project_service: Mock,
     ):
-        """If quantization fails, the OTX workspace is still cleaned up."""
-        quantizer = fxt_otx_quantizer()
+        """If quantization fails, the Geti Tune workspace is still cleaned up."""
+        quantizer = fxt_getitune_quantizer()
         project_id = uuid4()
         model_id = uuid4()
 
@@ -782,16 +782,16 @@ class TestOTXQuantizerExecute:
         project.task = Task(task_type=TaskType.DETECTION)
         fxt_project_service.get_project_by_id.return_value = project
 
-        otx_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
-        otx_work_dir.mkdir(parents=True)
-        (otx_work_dir / "some_temp_file.txt").write_text("temp")
+        getitune_work_dir = tmp_path / f"getitune-quantize-workspace-{model_id}"
+        getitune_work_dir.mkdir(parents=True)
+        (getitune_work_dir / "some_temp_file.txt").write_text("temp")
 
         with (
             patch.object(quantizer, "prepare_calibration_dataset") as mock_prep_ds,
             patch.object(quantizer, "initialize_engine") as mock_init_engine,
         ):
             mock_engine = Mock(spec=OVEngine)
-            mock_engine.work_dir = str(otx_work_dir)
+            mock_engine.work_dir = str(getitune_work_dir)
             mock_engine.optimize.side_effect = RuntimeError("NNCF exploded")
             mock_init_engine.return_value = mock_engine
             mock_prep_ds.return_value = Mock()
@@ -800,7 +800,7 @@ class TestOTXQuantizerExecute:
                 quantizer.execute(params)
 
         # Workspace must be cleaned up despite the failure
-        assert not otx_work_dir.exists()
+        assert not getitune_work_dir.exists()
 
 
 class TestOTXQuantizerHelpers:

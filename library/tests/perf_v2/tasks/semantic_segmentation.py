@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX semantic segmentation performance benchmark."""
+"""Geti Tune semantic segmentation performance benchmark."""
 
 from __future__ import annotations
 

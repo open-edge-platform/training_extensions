@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom OTX Losses for Instance Segmentation."""
+"""Custom Geti Tune Losses for Instance Segmentation."""
 
 from .accuracy import accuracy
 from .dice_loss import DiceLoss

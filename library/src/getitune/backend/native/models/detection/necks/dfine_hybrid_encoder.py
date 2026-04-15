@@ -645,7 +645,7 @@ class HybridEncoderModule(nn.Module):
                     RepNCSPELAN5(input_dim, hidden_dim, hidden_dim * 2, c4, num_blocks, act=activation)
                 )
             else:
-                # D-FINE style with OTX layers
+                # D-FINE style with Geti Tune layers
                 self.lateral_convs.append(
                     Conv2dModule(
                         hidden_dim,
@@ -812,7 +812,7 @@ class HybridEncoder:
     """
 
     encoder_cfg: ClassVar[dict[str, dict[str, Any]]] = {
-        # D-FINE models (use concat fusion, OTX layers)
+        # D-FINE models (use concat fusion, Geti Tune layers)
         "dfine_hgnetv2_n": {
             "in_channels": [512, 1024],
             "feat_strides": [16, 32],
@@ -841,7 +841,7 @@ class HybridEncoder:
             "hidden_dim": 384,
             "dim_feedforward": 2048,
         },
-        # DEIM-DFINE models (use concat fusion, OTX layers)
+        # DEIM-DFINE models (use concat fusion, Geti Tune layers)
         "deim_dfine_hgnetv2_n": {
             "in_channels": [512, 1024],
             "feat_strides": [16, 32],

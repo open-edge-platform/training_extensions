@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX custom models."""
+"""Module for Geti Tune custom models."""
 
 from .classification import (
     EfficientNet,

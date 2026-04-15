@@ -56,7 +56,7 @@ class LearnableAffineBlock(nn.Module):
 class ConvBNAct(nn.Module):
     """Convolutional block with batch normalization and activation.
 
-        TODO(Eugene): External LAB is embedded. 'Try'? switching to OTX ConvModule implementation in next PR.
+        TODO(Eugene): External LAB is embedded. 'Try'? switching to Geti Tune ConvModule implementation in next PR.
 
     Args:
         in_channels (int): In channels.

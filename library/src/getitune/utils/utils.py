@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX utility functions."""
+"""Geti Tune utility functions."""
 
 from __future__ import annotations
 

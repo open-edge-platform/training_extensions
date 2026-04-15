@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Sample classes for OTX data entities."""
+"""Sample classes for Geti Tune data entities."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 @register_pytree_node
 class OTXSample(Sample):
-    """Base class for OTX data samples."""
+    """Base class for Geti Tune data samples."""
 
     image: torch.Tensor | tv_tensors.Image
     subset: Subset = subset_field()
@@ -68,7 +68,7 @@ class OTXSample(Sample):
 @register_pytree_node
 @register_sample
 class ClassificationSample(OTXSample):
-    """ClassificationSample is a base class for OTX classification items."""
+    """ClassificationSample is a base class for Geti Tune classification items."""
 
     subset: Subset = subset_field()
 
@@ -89,7 +89,7 @@ class ClassificationSample(OTXSample):
 @register_pytree_node
 @register_sample
 class ClassificationMultiLabelSample(OTXSample):
-    """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
+    """ClassificationMultiLabelSample is a base class for Geti Tune multi label classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), multi_label=True)
@@ -108,7 +108,7 @@ class ClassificationMultiLabelSample(OTXSample):
 @register_pytree_node
 @register_sample
 class ClassificationHierarchicalSample(OTXSample):
-    """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
+    """ClassificationHierarchicalSample is a base class for Geti Tune hierarchical classification items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
@@ -127,7 +127,7 @@ class ClassificationHierarchicalSample(OTXSample):
 @register_pytree_node
 @register_sample
 class DetectionSample(OTXSample):
-    """DetectionSample is a base class for OTX detection items."""
+    """DetectionSample is a base class for Geti Tune detection items."""
 
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="RGB", channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
@@ -211,7 +211,7 @@ class InstanceSegmentationSample(OTXSample):
 @register_pytree_node
 @register_sample
 class KeypointSample(OTXSample):
-    """KeypointSample is a base class for OTX keypoint detection items."""
+    """KeypointSample is a base class for Geti Tune keypoint detection items."""
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
@@ -231,7 +231,7 @@ class KeypointSample(OTXSample):
 
 @dataclass
 class OTXSampleBatch:
-    """OTX sample batch implementation.
+    """Geti Tune sample batch implementation.
 
     Attributes:
         images: The batch of images as a BCHW tensor.
@@ -319,7 +319,7 @@ class OTXSampleBatch:
 
 @dataclass
 class OTXPredictionBatch(OTXSampleBatch):
-    """OTX prediction batch implementation.
+    """Geti Tune prediction batch implementation.
 
     Extends OTXSampleBatch with prediction-specific fields.
 
@@ -344,7 +344,7 @@ class OTXPredictionBatch(OTXSampleBatch):
 
 @dataclass
 class OTXPrediction:
-    """OTX prediction data entity for a single sample.
+    """Geti Tune prediction data entity for a single sample.
 
     This is used for storing individual prediction results, e.g., after tile merging.
 

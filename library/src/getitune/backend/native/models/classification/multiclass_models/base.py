@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for classification model entity used in OTX."""
+"""Class definition for classification model entity used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 
 class OTXMulticlassClsModel(OTXModel):
-    """Multiclass classification model used in OTX.
+    """Multiclass classification model used in Geti Tune.
 
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.

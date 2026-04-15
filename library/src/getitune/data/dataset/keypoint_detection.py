@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 class OTXKeypointDetectionDataset(OTXDataset):
-    """OTX Dataset for keypoint detection tasks.
+    """Geti Tune Dataset for keypoint detection tasks.
 
     This dataset handles keypoint detection where specific key points (like body joints)
     are detected and localized in images. It processes Datumaro dataset items and
@@ -66,12 +66,12 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
     def _get_item_impl(self, index: int) -> KeypointSample | None:
         item = self._read_dm_item(index)
-        item.keypoints[:, 2] = torch.clamp(item.keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
+        item.keypoints[:, 2] = torch.clamp(item.keypoints[:, 2], max=1)  # Geti Tune represents visibility as 0 or 1
         return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The keypoint detection task type.

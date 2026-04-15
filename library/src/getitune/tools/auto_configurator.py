@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Auto-Configurator class & util functions for OTX Auto-Configuration."""
+"""Auto-Configurator class & util functions for Geti Tune Auto-Configuration."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from getitune.backend.native.cli.utils import get_otx_root_path, list_models
+from getitune.backend.native.cli.utils import get_getitune_root_path, list_models
 from getitune.backend.native.models.base import DataInputParams, OTXModel
 from getitune.config.data import SamplerConfig, SubsetConfig, TileConfig
 from getitune.data.module import OTXDataModule
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger()
-RECIPE_PATH = get_otx_root_path() / "recipe"
+RECIPE_PATH = get_getitune_root_path() / "recipe"
 
 DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",

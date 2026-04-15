@@ -1,7 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX object detection performance benchmark."""
+"""Geti Tune object detection performance benchmark."""
 
 from __future__ import annotations
 

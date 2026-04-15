@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX data entities."""
+"""Module for Geti Tune data entities."""
 
 from .base import ImageInfo, ImageType
 from .sample import (

@@ -391,7 +391,7 @@ class MaskRCNN(OTXInstanceSegModel):
 
 
 class RotatedMaskRCNNModel(RotatedPredictMixin, MaskRCNN):
-    """Base class for the rotated detection models used in OTX."""
+    """Base class for the rotated detection models used in Geti Tune."""
 
     def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredictionBatch:
         """Perform prediction step for rotated detection."""

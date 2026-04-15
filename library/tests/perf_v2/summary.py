@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX performance benchmark history summary utilities."""
+"""Geti Tune performance benchmark history summary utilities."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ METADATA_ENTRIES = [
     "data_group",
     "data",
     "otx_version",
-    "otx_ref",
+    "getitune_ref",
     "test_branch",
     "test_commit",
     "cpu_info",

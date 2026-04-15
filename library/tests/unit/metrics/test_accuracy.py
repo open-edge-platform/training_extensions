@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Test of Module for OTX custom metrices."""
+"""Test of Module for Geti Tune custom metrices."""
 
 import pytest
 import torch

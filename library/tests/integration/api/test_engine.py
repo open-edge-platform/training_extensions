@@ -1,12 +1,12 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Integration test for the core OTX engine workflow.
+"""Integration test for the core Geti Tune engine workflow.
 
 This single test module replaces the old ``test_engine_api.py`` and
 ``test_geti_interaction.py``.  It is parametrised to cover one
 (small / fast) model architecture per task and exercises the typical
-end-to-end OTX workflow:
+end-to-end Geti Tune workflow:
 
 1. Instantiate ``OTXEngine`` from a recipe config + data root.
 2. Train for 1 epoch.

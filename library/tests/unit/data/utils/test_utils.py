@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Tests for utils for OTX data module."""
+"""Tests for utils for Geti Tune data module."""
 
 from __future__ import annotations
 

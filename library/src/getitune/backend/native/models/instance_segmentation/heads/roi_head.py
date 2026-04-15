@@ -515,7 +515,7 @@ class RoIHead(nn.Module):
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
             rpn_results_list (list[InstanceData]): List of region proposals.
-            entity (TorchDataBatch): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from Geti Tune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

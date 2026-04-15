@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for detection model entity used in OTX."""
+"""Class definition for detection model entity used in Geti Tune."""
 
 # type: ignore[override]
 
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 
 class OTXDetectionModel(OTXModel):
-    """Base class for the detection models used in OTX.
+    """Base class for the detection models used in Geti Tune.
 
     This class is a subclass of OTXModel and provides common functionality for detection models.
     It is not intended to be used directly.

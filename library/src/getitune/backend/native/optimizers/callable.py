@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class OptimizerCallableSupportAdaptiveBS:
-    """Optimizer callable supports OTX adaptive batch size.
+    """Optimizer callable supports Geti Tune adaptive batch size.
 
     It makes OptimizerCallable pickelable and accessible to parameters.
     It is used for adaptive batch size.

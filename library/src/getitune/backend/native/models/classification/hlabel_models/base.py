@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for classification model entity used in OTX."""
+"""Class definition for classification model entity used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 
 class OTXHlabelClsModel(OTXModel):
-    """H-label classification models used in OTX.
+    """H-label classification models used in Geti Tune.
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.

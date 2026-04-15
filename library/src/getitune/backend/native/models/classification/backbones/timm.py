@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Timm Backbone Class for OTX classification.
+"""Timm Backbone Class for Geti Tune classification.
 
 Original papers:
 - 'EfficientNetV2: Smaller Models and Faster Training,' https://arxiv.org/abs/2104.00298,
@@ -40,7 +40,7 @@ class TimmBackbone(nn.Module):
             num_classes=1000,
         )
 
-        self.model.classifier = None  # Detach classifier. Only use 'backbone' part in otx.
+        self.model.classifier = None  # Detach classifier. Only use 'backbone' part in getitune.
         self.num_head_features = self.model.num_features
         self.num_features = self.model.num_features
 

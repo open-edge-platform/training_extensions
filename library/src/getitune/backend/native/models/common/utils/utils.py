@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""Utils for otx detection algo.
+"""Utils for Geti Tune detection algo.
 
 Reference :
     - https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/utils.

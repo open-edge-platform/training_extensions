@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 
 class DFine(RTDETR):
-    """OTX Detection model class for DFine.
+    """Geti Tune Detection model class for DFine.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 class DEIMV2(DEIMDFine):
-    """OTX Detection model class for DEIMV2.
+    """Geti Tune Detection model class for DEIMV2.
 
     DEIMV2 is an improved version of DEIMV1, which introduces DINOV3 backbone and improved decoder.
 

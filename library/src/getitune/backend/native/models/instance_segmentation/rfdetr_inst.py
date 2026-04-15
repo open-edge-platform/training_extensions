@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class RFDETRInst(RFDETRMixin, OTXInstanceSegModel):  # pyrefly: ignore[inconsistent-inheritance]
-    """OTX Instance Segmentation model class for RF-DETR.
+    """Geti Tune Instance Segmentation model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
     that combines a DINOv2 backbone with a lightweight DETR decoder. This implementation

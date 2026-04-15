@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for base model exporter used in OTX."""
+"""Class definition for base model exporter used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class OTXModelExporter:
-    """Base class for the model exporters used in OTX.
+    """Base class for the model exporters used in Geti Tune.
 
     Args:
         task_level_export_parameters (TaskLevelExportParameters): Collection of export parameters

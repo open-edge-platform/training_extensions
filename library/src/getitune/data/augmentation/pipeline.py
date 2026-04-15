@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""CPU and GPU augmentation pipelines for OTX.
+"""CPU and GPU augmentation pipelines for Geti Tune.
 
 This module provides the core augmentation pipeline classes:
 - CPUAugmentationPipeline: Runs in Dataset workers using torchvision.transforms.v2
@@ -220,13 +220,13 @@ class CPUAugmentationPipeline(nn.Module):
     All outputs are fixed-size tensors suitable for batch stacking.
 
     The pipeline supports two types of transforms:
-    1. OTX-style transforms: Have a `forward(*OTXDataItem)` signature and handle
+    1. Geti Tune-style transforms: Have a `forward(*OTXDataItem)` signature and handle
        all data types internally (image, bboxes, masks, etc.)
     2. Native torchvision.v2 transforms: Applied to all tv_tensors extracted
        from the OTXDataItem (image, bboxes, masks, keypoints)
 
     Args:
-        augmentations: List of torchvision.transforms.v2 transforms or OTX transforms.
+        augmentations: List of torchvision.transforms.v2 transforms or Geti Tune transforms.
 
     Example:
         >>> pipeline = CPUAugmentationPipeline([
@@ -357,16 +357,16 @@ class CPUAugmentationPipeline(nn.Module):
 
         Rules:
         - Pure torchvision transforms (module starts with ``torchvision.``) → native.
-        - OTX subclasses of ``tvt_v2.Transform`` that define their own ``forward()``
+        - Geti Tune subclasses of ``tvt_v2.Transform`` that define their own ``forward()``
           (e.g. ``Resize``, ``CachedMosaic``) handle ``OTXSample`` themselves → NOT native.
-        - OTX wrappers that only add ``__call__`` probability gating without a custom
+        - Geti Tune wrappers that only add ``__call__`` probability gating without a custom
           ``forward()`` (e.g. ``RandomIoUCrop``) delegate to the parent torchvision
           ``forward()`` and must go through ``_apply_native_transform`` → native.
         """
         module = type(transform).__module__
         if module.startswith("torchvision."):
             return True
-        # OTX class that is a tvt_v2.Transform subclass: treat as native only when it
+        # Geti Tune class that is a tvt_v2.Transform subclass: treat as native only when it
         # does NOT define its own forward() (i.e. it relies on the parent's forward).
         if isinstance(transform, tvt_v2.Transform):
             return "forward" not in type(transform).__dict__
@@ -402,12 +402,12 @@ class CPUAugmentationPipeline(nn.Module):
             inputs.image = result
         else:
             # Reverse mapping: torchvision key → OTXSample attribute name
-            tv_to_otx = {"boxes": "bboxes", "labels": "label"}
+            tv_to_getitune = {"boxes": "bboxes", "labels": "label"}
 
             result = transform(transformable)
             if isinstance(result, dict):
                 for key, value in result.items():
-                    attr = tv_to_otx.get(key, key)
+                    attr = tv_to_getitune.get(key, key)
                     setattr(inputs, attr, value)
             else:
                 # Single result, assume it's the image

@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""SSD object detector for the OTX detection.
+"""SSD object detector for the Geti Tune detection.
 
 Implementation modified from mmdet.models.detectors.single_stage.
 Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/detectors/single_stage.py

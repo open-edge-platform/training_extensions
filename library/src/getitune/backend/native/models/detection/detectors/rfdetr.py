@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""RF-DETR detector wrapper for OTX integration.
+"""RF-DETR detector wrapper for Geti Tune integration.
 
 RF-DETR is a state-of-the-art real-time object detector from Roboflow based on
 DINOv2 backbone with a lightweight DETR decoder.
@@ -27,9 +27,9 @@ if TYPE_CHECKING:
 
 
 class RFDETRDetector(BaseModule):
-    """Wrapper around RF-DETR's LWDETR model for OTX integration.
+    """Wrapper around RF-DETR's LWDETR model for Geti Tune integration.
 
-    This wrapper handles the interface between OTX's training pipeline and
+    This wrapper handles the interface between Geti Tune's training pipeline and
     the rfdetr package's LWDETR model and SetCriterion.
 
     Args:

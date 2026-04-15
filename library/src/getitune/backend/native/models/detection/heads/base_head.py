@@ -76,7 +76,7 @@ class BaseDenseHead(BaseModule):
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (TorchDataBatch): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from Geti Tune dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
@@ -98,7 +98,7 @@ class BaseDenseHead(BaseModule):
         Args:
             x (tuple[Tensor]): Multi-level features from the
                 upstream network, each is a 4D-tensor.
-            entity (TorchDataBatch): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from Geti Tune dataset.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
 

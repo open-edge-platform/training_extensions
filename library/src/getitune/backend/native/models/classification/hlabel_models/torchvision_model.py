@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Torchvision model for the OTX classification."""
+"""Torchvision model for the Geti Tune classification."""
 
 from __future__ import annotations
 

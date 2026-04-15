@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for detection model entity used in OTX."""
+"""Class definition for detection model entity used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class OVSegmentationModel(OVModel):
         outputs: list[ImageResultWithSoftPrediction],
         inputs: OTXSampleBatch,
     ) -> OTXPredictionBatch:
-        """Customize the outputs of the model for OTX pipeline.
+        """Customize the outputs of the model for Geti Tune pipeline.
 
         Args:
             outputs (list[ImageResultWithSoftPrediction]): List of model outputs with soft predictions.

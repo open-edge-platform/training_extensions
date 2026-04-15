@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX performance benchmark tests."""
+"""Geti Tune performance benchmark tests."""
 
 from getitune.types.task import OTXTaskType
 

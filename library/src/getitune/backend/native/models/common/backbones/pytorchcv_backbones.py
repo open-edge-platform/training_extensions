@@ -92,7 +92,7 @@ def init_weights(self: nn.Module, pretrained: bool = True) -> None:
 
 
 def _pytorchcv_model_reduce(self) -> nn.Module:  # noqa: ANN001
-    return (build_model_including_pytorchcv, (self.otx_cfg,))
+    return (build_model_including_pytorchcv, (self.getitune_cfg,))
 
 
 def build_model_including_pytorchcv(
@@ -108,7 +108,7 @@ def build_model_including_pytorchcv(
     model = _build_pytorchcv_model(**args)
 
     # support pickle
-    model.otx_cfg = args
+    model.getitune_cfg = args
     model.__class__.__reduce__ = _pytorchcv_model_reduce.__get__(model, model.__class__)
 
     return model

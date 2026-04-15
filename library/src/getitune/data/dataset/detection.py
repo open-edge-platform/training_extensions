@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
-    """OTX Dataset for object detection tasks.
+    """Geti Tune Dataset for object detection tasks.
 
     This dataset handles object detection where each image contains multiple objects with
     bounding box annotations. It processes Datumaro dataset items and converts them into
@@ -88,7 +88,7 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The object detection task type.

@@ -12,7 +12,7 @@ from loguru import logger
 from app.models import Task, TaskType
 
 
-def get_otx_task_type_by_task(task: Task) -> OTXTaskType:
+def get_getitune_task_type_by_task(task: Task) -> OTXTaskType:
     """Map internal Task to OTXTaskType."""
     match task.task_type:
         case TaskType.CLASSIFICATION:
@@ -42,7 +42,7 @@ def get_metric_by_task(task: Task) -> MetricCallable:
             raise ValueError(f"Unsupported task type: {task.task_type}")
 
 
-def get_otx_dataset_class_by_task_type(otx_task_type: OTXTaskType) -> type[OTXDataset]:
+def get_getitune_dataset_class_by_task_type(getitune_task_type: OTXTaskType) -> type[OTXDataset]:
     """Get the OTXDataset class corresponding to the given OTXTaskType."""
     otx_task_type_to_class: dict[OTXTaskType, type[OTXDataset]] = {
         OTXTaskType.MULTI_CLASS_CLS: OTXMulticlassClsDataset,
@@ -51,9 +51,9 @@ def get_otx_dataset_class_by_task_type(otx_task_type: OTXTaskType) -> type[OTXDa
         OTXTaskType.INSTANCE_SEGMENTATION: OTXInstanceSegDataset,
     }
     try:
-        return otx_task_type_to_class[otx_task_type]
+        return otx_task_type_to_class[getitune_task_type]
     except KeyError:
-        raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
+        raise ValueError(f"Unsupported Geti Tune task type: {getitune_task_type}")
 
 
 def convert_metrics(metrics: dict) -> dict[str, float]:

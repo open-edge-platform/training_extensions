@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for OTX Dice metric."""
+"""Unit tests for Geti Tune Dice metric."""
 
 from __future__ import annotations
 

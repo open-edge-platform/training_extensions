@@ -1,4 +1,4 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Unit test of utils of OTX algo."""
+"""Unit test of utils of Geti Tune algo."""

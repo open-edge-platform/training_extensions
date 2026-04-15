@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX APIs for User-friendliness."""
+"""Geti Tune APIs for User-friendliness."""
 
 from __future__ import annotations
 
@@ -14,24 +14,24 @@ from pathlib import Path
 from getitune.types.task import OTXTaskType
 
 
-def get_otx_root_path() -> Path:
-    """Return the root path of the otx module.
+def get_getitune_root_path() -> Path:
+    """Return the root path of the getitune module.
 
     Returns:
-        str: The root path of the otx module.
+        str: The root path of the getitune module.
 
     Raises:
-        ModuleNotFoundError: If the otx module is not found.
+        ModuleNotFoundError: If the getitune module is not found.
     """
-    otx_module = importlib.import_module("getitune")
-    if otx_module:
-        file_path = inspect.getfile(otx_module)
+    getitune_module = importlib.import_module("getitune")
+    if getitune_module:
+        file_path = inspect.getfile(getitune_module)
         return Path(file_path).parent
-    msg = "Cannot found otx."
+    msg = "Cannot find getitune."
     raise ModuleNotFoundError(msg)
 
 
-RECIPE_PATH = get_otx_root_path() / "recipe"
+RECIPE_PATH = get_getitune_root_path() / "recipe"
 
 
 def list_models(
@@ -83,7 +83,7 @@ def list_models(
         from rich.table import Table
 
         console = Console()
-        table = Table(title="OTX Recipes", show_header=True, header_style="bold magenta")
+        table = Table(title="Geti Tune Recipes", show_header=True, header_style="bold magenta")
         table.add_column("Task")
         table.add_column("Model Name")
         table.add_column("Recipe Path")

@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX instance segmentation performance benchmark."""
+"""Geti Tune instance segmentation performance benchmark."""
 
 from __future__ import annotations
 

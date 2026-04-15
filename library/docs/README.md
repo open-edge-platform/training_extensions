@@ -1,15 +1,15 @@
-# OTX 2.0 Documentation
+# Geti Tune Documentation
 
 ## Introduction
 
-This is the source code for the OTX documentation. It is built using sphinx-design and myst parser.
+This is the source code for the Geti Tune documentation. It is built using sphinx-design and myst parser.
 
 ## Installation
 
 To install the dependencies, run the following command:
 
 ```bash
-pip install otx[docs]
+pip install getitune[docs]
 ```
 
 ## Build

@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Module for OTX keypoint detection models."""
+"""Module for Geti Tune keypoint detection models."""
 
 from .rtmpose import RTMPose
 

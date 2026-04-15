@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of OTX RTMDetInst architecture."""
+"""Test of Geti Tune RTMDetInst architecture."""
 
 import torch
 

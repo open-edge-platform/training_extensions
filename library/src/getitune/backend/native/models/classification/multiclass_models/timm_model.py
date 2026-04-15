@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""TIMM wrapper model class for OTX."""
+"""TIMM wrapper model class for Geti Tune."""
 
 from __future__ import annotations
 

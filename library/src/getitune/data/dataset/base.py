@@ -120,7 +120,7 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
 class OTXDataset(TorchDataset):
     """Base OTXDataset using new Datumaro experimental Dataset.
 
-    This class defines the basic logic and interface for OTX datasets, providing
+    This class defines the basic logic and interface for Geti Tune datasets, providing
     functionality for data transformation, image decoding, and label handling.
 
     Args:
@@ -232,5 +232,5 @@ class OTXDataset(TorchDataset):
 
     @property
     def task_type(self) -> OTXTaskType | None:
-        """OTX Task Type for the dataset. Can be None if no task is defined."""
+        """Geti Tune Task Type for the dataset. Can be None if no task is defined."""
         return None

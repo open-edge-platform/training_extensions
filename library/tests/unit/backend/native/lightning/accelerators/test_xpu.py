@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Test for otx.algo.accelerators.xpu"""
+"""Test for getitune.algo.accelerators.xpu"""
 
 import pytest
 import torch

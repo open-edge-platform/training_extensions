@@ -126,7 +126,7 @@ def ignore_aliases(self: yaml.representer.SafeRepresenter, data: Any) -> bool:  
     return None
 
 
-def otx_str_type_representer(
+def getitune_str_type_representer(
     dumper: yaml.Dumper | yaml.representer.SafeRepresenter,
     data: OTXTaskType,
 ) -> yaml.ScalarNode:
@@ -156,7 +156,7 @@ def register_configs() -> None:
     yaml.SafeDumper.add_representer(dtype, dtype_representer)
     yaml.SafeDumper.add_representer(_SpecialForm, any_representer)  # typing.Any for DictConfig
     yaml.SafeDumper.ignore_aliases = ignore_aliases  # type: ignore  # noqa: PGH003
-    yaml.SafeDumper.add_representer(OTXTaskType, otx_str_type_representer)
+    yaml.SafeDumper.add_representer(OTXTaskType, getitune_str_type_representer)
 
 
 register_configs()

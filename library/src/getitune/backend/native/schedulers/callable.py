@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 class SchedulerCallableSupportAdaptiveBS:
-    """LR scheduler callable supports OTX adaptive batch size.
+    """LR scheduler callable supports Geti Tune adaptive batch size.
 
     It makes SchedulerCallable pickelable and accessible to parameters.
     It is used for adaptive batch size.

@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 
 class RTDETR(OTXDetectionModel):
-    """OTX Detection model class for RTDETR.
+    """Geti Tune Detection model class for RTDETR.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.

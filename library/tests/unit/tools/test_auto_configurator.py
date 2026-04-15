@@ -75,7 +75,7 @@ class TestAutoConfigurator:
         assert len(default_config["config"]) > 0
         assert str(default_config["config"][0]) == str(target_config)
 
-        # OTX-Mobilenet-v2
+        # Geti Tune-Mobilenet-v2
         # new_config
         model_name = "deit_tiny"
         new_config = auto_configurator._load_default_config(
@@ -153,7 +153,7 @@ class TestAutoConfigurator:
         assert any("Resize" in aug.get("class_path", "") for aug in datamodule.test_subset.augmentations_cpu)
 
         updated_datamodule = auto_configurator.update_ov_subset_pipeline(datamodule, subset="test")
-        # OV recipes now use Resize (preprocessing moved from ModelAPI to OTX)
+        # OV recipes now use Resize (preprocessing moved from ModelAPI to Geti Tune)
         assert len(updated_datamodule.test_subset.augmentations_cpu) == 1
         assert "Resize" in updated_datamodule.test_subset.augmentations_cpu[0]["class_path"]
         assert not updated_datamodule.tile_config.enable_tiler

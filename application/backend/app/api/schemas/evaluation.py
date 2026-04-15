@@ -23,7 +23,7 @@ class EvaluationMetricName(StrEnum):
     MAR_100 = "mAR@100"
 
 
-# Mapping from raw metric names (returned by OTX) to user-friendly metric names (returned by the API).
+# Mapping from raw metric names (returned by Geti Tune) to user-friendly metric names (returned by the API).
 # All keys in this mapping are lowercase; the mapping is applied in a case-insensitive manner.
 RAW_METRICS_TO_API_METRICS = {
     "accuracy": EvaluationMetricName.ACCURACY,

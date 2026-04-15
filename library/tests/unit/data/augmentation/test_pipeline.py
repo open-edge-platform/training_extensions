@@ -315,7 +315,7 @@ class TestCPUAugmentationPipelineForward:
         assert result.image.max() <= 1.0
 
     def test_custom_transform_called(self):
-        """OTX-style transform (non-torchvision) should be called with sample."""
+        """Geti Tune-style transform (non-torchvision) should be called with sample."""
 
         class _IdentityTransform(nn.Module):
             def forward(self, sample):  # noqa: ANN202

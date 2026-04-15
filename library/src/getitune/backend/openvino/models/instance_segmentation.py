@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for instance segmentation model entity used in OTX."""
+"""Class definition for instance segmentation model entity used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -110,7 +110,7 @@ class OVInstanceSegmentationModel(OVModel):
         outputs: list[InstanceSegmentationResult],
         inputs: OTXSampleBatch,
     ) -> OTXPredictionBatch:
-        """Customize the model outputs for OTX compatibility.
+        """Customize the model outputs for Geti Tune compatibility.
 
         Args:
             outputs (list[InstanceSegmentationResult]): Model outputs.

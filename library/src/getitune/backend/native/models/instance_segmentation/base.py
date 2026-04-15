@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for instance segmentation model entity used in OTX."""
+"""Class definition for instance segmentation model entity used in Geti Tune."""
 
 # type: ignore[override]
 
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
 
 class OTXInstanceSegModel(OTXModel):
-    """Base class for the Instance Segmentation models used in OTX.
+    """Base class for the Instance Segmentation models used in Geti Tune.
 
     NOTE: OTXInstanceSegModel has many duplicate methods to OTXDetectionModel,
     however, it is not a subclass of OTXDetectionModel because it has different

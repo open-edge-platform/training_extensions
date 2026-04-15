@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom Help Formatters for OTX CLI."""
+"""Custom Help Formatters for Geti Tune CLI."""
 
 from __future__ import annotations
 
@@ -101,7 +101,7 @@ def get_verbosity_subcommand() -> dict:
 
 
 INTRO_MARKDOWN = (
-    "# OpenVINO™ Training Extensions CLI Guide\n\n"
+    "# Geti Tune CLI Guide\n\n"
     "Github Repository: [https://github.com/open-edge-platform/training_extensions](https://github.com/open-edge-platform/training_extensions)."
     "\n\n"
     "A better guide is provided by the [documentation](https://open-edge-platform.github.io/training_extensions/stable/)."
@@ -175,10 +175,10 @@ def render_guide(subcommand: str | None = None) -> list:
 
 
 class CustomHelpFormatter(RichHelpFormatter, DefaultHelpFormatter):
-    """A custom help formatter for OTX CLI.
+    """A custom help formatter for Geti Tune CLI.
 
     This formatter extends the RichHelpFormatter and DefaultHelpFormatter classes to provide
-    a more detailed and customizable help output for OTX CLI.
+    a more detailed and customizable help output for Geti Tune CLI.
 
     Attributes:
         verbosity_level : int

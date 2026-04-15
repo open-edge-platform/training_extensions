@@ -206,7 +206,7 @@ def test_namespace_override(fxt_configs) -> None:
             t for t in cfg.data.train_subset.transforms if t["class_path"] == "torchvision.transforms.v2.Normalize"
         )
 
-        # otx.data.augmentation.transforms.Resize
+        # getitune.data.augmentation.transforms.Resize
         assert (
             resize_transform["init_args"]["keep_ratio"]
             == overrides.train_subset.transforms[0]["init_args"]["keep_ratio"]

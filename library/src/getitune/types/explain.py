@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX explain type definition."""
+"""Geti Tune explain type definition."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ FeatureMapType = torch.Tensor | Sequence[torch.Tensor] | dict[str, torch.Tensor]
 
 
 class TargetExplainGroup(str, Enum):
-    """OTX target explain group definition.
+    """Geti Tune target explain group definition.
 
     Enum contains the following values:
         IMAGE - This implies that single global saliency map will be generated for input image.

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class OTXInstanceSegDataset(OTXDataset):
-    """Dataset class for instance segmentation tasks in OTX.
+    """Dataset class for instance segmentation tasks in Geti Tune.
 
     This class handles loading images and their masks.
 
@@ -76,7 +76,7 @@ class OTXInstanceSegDataset(OTXDataset):
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The instance segmentation task type.

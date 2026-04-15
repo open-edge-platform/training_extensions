@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Test of OTX ATSS architecture."""
+"""Test of Geti Tune ATSS architecture."""
 
 import pytest
 import torch

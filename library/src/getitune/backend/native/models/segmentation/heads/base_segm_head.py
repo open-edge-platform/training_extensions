@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Base head for OTX segmentation models."""
+"""Base head for Geti Tune segmentation models."""
 
 from __future__ import annotations
 

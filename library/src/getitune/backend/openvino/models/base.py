@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for base model entity used in OTX."""
+"""Class definition for base model entity used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -258,7 +258,7 @@ class OVModel:
         outputs: list[Result],
         inputs: OTXSampleBatch,
     ) -> OTXPredictionBatch:
-        """Customize the model outputs to OTX format.
+        """Customize the model outputs to Geti Tune format.
 
         Args:
             outputs (list[Result]): The model outputs.

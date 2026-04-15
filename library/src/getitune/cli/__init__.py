@@ -10,9 +10,9 @@ from getitune.cli.cli import OTXCLI
 
 
 def main() -> None:
-    """Entry point for OTX CLI.
+    """Entry point for Geti Tune CLI.
 
-    This function is a single entry point for all OTX CLI related operations:
+    This function is a single entry point for all Geti Tune CLI related operations:
     """
     start = time()
     OTXCLI()

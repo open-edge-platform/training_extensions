@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX tile dataset."""
+"""Geti Tune tile dataset."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 
 class OTXTileDatasetFactory:
-    """OTX tile dataset factory."""
+    """Geti Tune tile dataset factory."""
 
     @classmethod
     def create(
@@ -52,7 +52,7 @@ class OTXTileDatasetFactory:
               type due to different annotation format and data entity.
 
         Args:
-            task (OTXTaskType): OTX task type.
+            task (OTXTaskType): Geti Tune task type.
             dataset (OTXDataset): OTX dataset.
             tile_config (TilerConfig): Tile configuration.
 
@@ -90,7 +90,7 @@ class OTXTileDatasetFactory:
 
 
 class OTXTileDataset(OTXDataset):
-    """OTX tile dataset base class.
+    """Geti Tune tile dataset base class.
 
     Args:
         dataset (OTXDataset): OTX dataset.
@@ -180,12 +180,12 @@ class OTXTileDataset(OTXDataset):
 
 
 class OTXTileDetTestDataset(OTXTileDataset):
-    """OTX tile detection test dataset.
+    """Geti Tune tile detection test dataset.
 
     OTXTileDetTestDataset wraps a list of tiles (DetDataEntity) into a single TileDetDataEntity for testing/predicting.
 
     Args:
-        dataset (OTXDetDataset): OTX detection dataset.
+        dataset (OTXDetDataset): Geti Tune detection dataset.
         tile_config (TilerConfig): Tile configuration.
     """
 
@@ -227,7 +227,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
 
 
 class OTXTileInstSegTestDataset(OTXTileDataset):
-    """OTX tile inst-seg test dataset.
+    """Geti Tune tile inst-seg test dataset.
 
     OTXTileDetTestDataset wraps a list of tiles (TorchDataItem) into a single TileDetDataEntity
     for testing/predicting.
@@ -276,7 +276,7 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
 
 
 class OTXTileSemanticSegTestDataset(OTXTileDataset):
-    """OTX tile semantic-seg test dataset.
+    """Geti Tune tile semantic-seg test dataset.
 
     OTXTileSemanticSegTestDataset wraps a list of tiles (SegDataEntity) into a single TileSegDataEntity
     for testing/predicting.

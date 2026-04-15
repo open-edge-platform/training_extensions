@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Warm-up schedulers for the OTX2.0."""
+"""Warm-up schedulers for the Geti Tune2.0."""
 
 from __future__ import annotations
 

@@ -12,7 +12,7 @@ Exports
 - :func:`hierMetricCollectionCallable` - returns a ``torchmetrics.MetricCollection`` containing the above metrics.
 - :data:`hierMetricCollection` - ``MetricCallable`` alias for integration.
 
-All metrics are compatible with OTX-style :class:`otx.types.label.HLabelInfo`.
+All metrics are compatible with Geti Tune-style :class:`getitune.types.label.HLabelInfo`.
 
 """
 

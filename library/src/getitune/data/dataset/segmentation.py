@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class OTXSegmentationDataset(OTXDataset):
-    """OTX Dataset for semantic segmentation tasks.
+    """Geti Tune Dataset for semantic segmentation tasks.
 
     This dataset handles semantic segmentation where each pixel in an image is classified
     into one of multiple classes. It processes Datumaro dataset items and converts them
@@ -71,7 +71,7 @@ class OTXSegmentationDataset(OTXDataset):
 
     @property
     def task_type(self) -> OTXTaskType:
-        """OTX Task Type for the dataset.
+        """Geti Tune Task Type for the dataset.
 
         Returns:
             OTXTaskType: The semantic segmentation task type.

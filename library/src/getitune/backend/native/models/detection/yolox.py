@@ -47,7 +47,7 @@ _RAW_UINT8_MODELS: frozenset[str] = frozenset({"yolox_s", "yolox_l", "yolox_x"})
 
 
 class YOLOX(OTXDetectionModel):
-    """OTX Detection model class for YOLOX.
+    """Geti Tune Detection model class for YOLOX.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.

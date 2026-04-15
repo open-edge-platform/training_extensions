@@ -1,9 +1,9 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Torchvision kernel registrations for OTX data entities.
+"""Torchvision kernel registrations for Geti Tune data entities.
 
-This module registers torchvision v2 functional kernels for OTX-specific
+This module registers torchvision v2 functional kernels for Geti Tune-specific
 tensor types (``ImageInfo``), enabling these types to be processed by
 standard torchvision transforms.
 """

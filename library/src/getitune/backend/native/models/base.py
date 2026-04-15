@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Class definition for base model entity used in OTX."""
+"""Class definition for base model entity used in Geti Tune."""
 
 # mypy: disable-error-code="arg-type"
 
@@ -118,7 +118,7 @@ DefaultSchedulerCallable = _default_scheduler_callable
 
 
 class OTXModel(LightningModule):
-    """Base class for the models used in OTX.
+    """Base class for the models used in Geti Tune.
 
     This class is a subclass of `LightningModule`. It is not intended to be used directly.
 
@@ -416,7 +416,7 @@ class OTXModel(LightningModule):
 
     @property
     def metric(self) -> Metric | MetricCollection:
-        """Metric module for this OTX model."""
+        """Metric module for this Geti Tune model."""
         return self._metric
 
     @abstractmethod
@@ -469,7 +469,7 @@ class OTXModel(LightningModule):
         checkpoint.pop(
             "datamodule_hyper_parameters",
             None,
-        )  # Remove datamodule_hyper_parameters to prevent storing OTX classes
+        )  # Remove datamodule_hyper_parameters to prevent storing Geti Tune classes
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
@@ -603,7 +603,7 @@ class OTXModel(LightningModule):
         """Create a PyTorch model for this class."""
 
     def _customize_inputs(self, inputs: OTXSampleBatch) -> dict[str, Any]:
-        """Customize OTX input batch data entity if needed for your model."""
+        """Customize Geti Tune input batch data entity if needed for your model."""
         raise NotImplementedError
 
     def _customize_outputs(
@@ -611,7 +611,7 @@ class OTXModel(LightningModule):
         outputs: Any,  # noqa: ANN401
         inputs: OTXSampleBatch,
     ) -> OTXPredictionBatch | OTXBatchLossEntity:
-        """Customize OTX output batch data entity if needed for model."""
+        """Customize Geti Tune output batch data entity if needed for model."""
         raise NotImplementedError
 
     def forward(

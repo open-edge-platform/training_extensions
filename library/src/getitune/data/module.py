@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""LightningDataModule extension for OTX."""
+"""LightningDataModule extension for Geti Tune."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 _MP_CONTEXT = multiprocessing.get_context("spawn")
 
-# Mapping from OTX subset config names to Datumaro experimental Subset enums
+# Mapping from Geti Tune subset config names to Datumaro experimental Subset enums
 _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
     "train": Subset.TRAINING,
     "val": Subset.VALIDATION,
@@ -48,9 +48,9 @@ _SUBSET_NAME_TO_ENUM: dict[str, Subset] = {
 
 
 class OTXDataModule(LightningDataModule):
-    """LightningDataModule extension for OTX.
+    """LightningDataModule extension for Geti Tune.
 
-    Handles data loading, transformation, and preparation for OTX pipelines.
+    Handles data loading, transformation, and preparation for Geti Tune pipelines.
 
     Args:
         task (OTXTaskType): Task type (e.g., classification, detection).

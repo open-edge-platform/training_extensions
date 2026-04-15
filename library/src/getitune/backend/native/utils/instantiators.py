@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Instantiator functions for OTX engine components."""
+"""Instantiator functions for Geti Tune engine components."""
 
 from __future__ import annotations
 

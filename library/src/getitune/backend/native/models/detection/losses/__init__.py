@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Custom OTX Losses for Object Detection."""
+"""Custom Geti Tune Losses for Object Detection."""
 
 from .atss_loss import ATSSCriterion
 from .dfine_loss import DFINECriterion

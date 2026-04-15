@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""Utils for otx detection algo.
+"""Utils for Geti Tune detection algo.
 
 Reference :
     - https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/utils.
@@ -225,7 +225,7 @@ def round_up(x: int | Tensor, div: int = 1) -> int | Tensor:
 def generate_anchors(image_size: tuple[int, int], strides: list[int]) -> tuple[Tensor, Tensor]:
     """Find the anchor maps for each height and width.
 
-    TODO (sungchul): check if it can be integrated with otx anchor generators
+    TODO (sungchul): check if it can be integrated with Geti Tune anchor generators
 
     Args:
         image_size (tuple[int, int]): the image size of augmented image size.

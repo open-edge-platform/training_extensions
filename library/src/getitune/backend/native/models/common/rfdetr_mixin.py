@@ -109,13 +109,13 @@ class RFDETRMixin:
         self,
         entity: OTXSampleBatch,
     ) -> dict[str, Any]:
-        """Convert OTX batch format to RF-DETR input format.
+        """Convert Geti Tune batch format to RF-DETR input format.
 
         Handles both detection (boxes + labels) and instance segmentation
         (boxes + labels + masks) depending on what the entity contains.
 
         Args:
-            entity: OTX data batch.
+            entity: Geti Tune data batch.
 
         Returns:
             Dict with 'images' and 'targets' for the model.
@@ -174,7 +174,7 @@ class RFDETRMixin:
         outputs: tuple[torch.Tensor, ...] | dict[str, Any],
         inputs: OTXSampleBatch,
     ) -> OTXPredictionBatch | OTXBatchLossEntity:
-        """Convert model outputs to OTX format.
+        """Convert model outputs to Geti Tune format.
 
         Handles both detection and instance segmentation outputs.
         When the postprocessor returns masks (4th element is not ``None``),
@@ -182,7 +182,7 @@ class RFDETRMixin:
 
         Args:
             outputs: Model outputs (loss dict during training, predictions during inference).
-            inputs: Original OTX data batch.
+            inputs: Original Geti Tune data batch.
 
         Returns:
             ``OTXPredictionBatch`` during inference, ``OTXBatchLossEntity`` during training.

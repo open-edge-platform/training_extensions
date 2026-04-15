@@ -1,7 +1,7 @@
 # Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for OTX Dice metric used for the OTX semantic segmentation task."""
+"""Module for Geti Tune Dice metric used for the Geti Tune semantic segmentation task."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def _segm_callable(label_info: SegLabelInfo) -> MetricCollection:
 
 
 class OTXDice(DiceScore):
-    """Dice metric used for the OTX semantic segmentation task."""
+    """Dice metric used for the Geti Tune semantic segmentation task."""
 
     def __init__(
         self,

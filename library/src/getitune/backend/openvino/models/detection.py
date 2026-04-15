@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for detection model entity used in OTX."""
+"""Class definition for detection model entity used in Geti Tune."""
 
 from __future__ import annotations
 

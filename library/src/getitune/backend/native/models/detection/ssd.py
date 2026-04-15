@@ -3,7 +3,7 @@
 
 # Copyright (c) OpenMMLab. All rights reserved.
 
-"""SSD object detector for the OTX detection.
+"""SSD object detector for the Geti Tune detection.
 
 Implementation modified from mmdet.models.detectors.single_stage.
 Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/detectors/single_stage.py
@@ -46,7 +46,7 @@ logger = logging.getLogger()
 
 
 class SSD(OTXDetectionModel):
-    """OTX Detection model class for SSD.
+    """Geti Tune Detection model class for SSD.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
@@ -180,7 +180,7 @@ class SSD(OTXDetectionModel):
         raise ValueError(msg)
 
     def setup(self, stage: str) -> None:
-        """Callback for setup OTX SSD Model.
+        """Callback for setup Geti Tune SSD Model.
 
         OTXSSD requires auto anchor generating w.r.t. training dataset for better accuracy.
         This callback will provide training dataset to model's anchor generator.

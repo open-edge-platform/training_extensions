@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for classification model entity used in OTX."""
+"""Class definition for classification model entity used in Geti Tune."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class OVHlabelClassificationModel(OVModel):
     """Hierarchical classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX classification model compatible for OTX testing pipeline.
+    and create the Geti Tune classification model compatible for OTX testing pipeline.
     """
 
     def __init__(
