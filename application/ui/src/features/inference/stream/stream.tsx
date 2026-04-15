@@ -1,42 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef, type Dispatch, type RefObject, type SetStateAction } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { View } from '@geti/ui';
 
-import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
 
-const useSetTargetSizeBasedOnVideo = (
-    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,
-    videoRef: RefObject<HTMLVideoElement | null>
-) => {
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const onLoaded = () => {
-            if (video.videoWidth && video.videoHeight) {
-                setSize({ width: video.videoWidth, height: video.videoHeight });
-            }
-        };
-
-        const resizeObserver = new ResizeObserver(() => {
-            if (video.videoWidth && video.videoHeight) {
-                setSize({ width: video.videoWidth, height: video.videoHeight });
-            }
-        });
-
-        video.addEventListener('loadedmetadata', onLoaded);
-        resizeObserver.observe(video);
-
-        return () => {
-            video.removeEventListener('loadedmetadata', onLoaded);
-            resizeObserver.disconnect();
-        };
-    }, [setSize, videoRef]);
-};
+import classes from './stream.module.scss';
 
 const useStreamToVideo = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -84,37 +55,16 @@ const useStreamToVideo = () => {
     return videoRef;
 };
 
-export const Stream = ({
-    size,
-    setSize,
-}: {
-    size: { width: number; height: number };
-    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>;
-}) => {
+export const Stream = () => {
     const videoRef = useStreamToVideo();
-
-    useSetTargetSizeBasedOnVideo(setSize, videoRef);
-
     const { status } = useWebRTCConnection();
 
     return (
-        <ZoomTransform target={size}>
-            <View gridArea={'innercanvas'}>
-                {status === 'connected' && (
-                    // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        width={size.width}
-                        height={size.height}
-                        controls={false}
-                        style={{
-                            background: 'var(--spectrum-global-color-gray-200)',
-                        }}
-                    />
-                )}
-            </View>
-        </ZoomTransform>
+        <View gridArea={'innercanvas'} width={'100%'} height={'100%'}>
+            {status === 'connected' && (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video ref={videoRef} autoPlay playsInline controls={false} className={classes.video} />
+            )}
+        </View>
     );
 };

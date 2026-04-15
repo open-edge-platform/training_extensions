@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { dimensionValue, Flex, Loading, toast, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
@@ -14,7 +14,6 @@ import { useWebRTCConnection } from './web-rtc-connection-provider';
 import classes from './stream.module.scss';
 
 export const StreamContainer = () => {
-    const [size, setSize] = useState({ height: 608, width: 892 });
     const { start, stop, status } = useWebRTCConnection();
     const { data: pipeline } = usePipeline();
 
@@ -35,7 +34,7 @@ export const StreamContainer = () => {
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
             <div className={classes.canvasContainer} onClick={handleClick}>
-                <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                <View backgroundColor={'gray-200'} height={'100%'}>
                     {isStopped && (
                         <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
                             <Flex
@@ -62,7 +61,7 @@ export const StreamContainer = () => {
 
                     {isConnected && (
                         <View position='relative' width='100%' height='100%' UNSAFE_className={classes.streamWrapper}>
-                            <Stream size={size} setSize={setSize} />
+                            <Stream />
 
                             <Flex
                                 position='absolute'
