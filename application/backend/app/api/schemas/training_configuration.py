@@ -88,8 +88,8 @@ class FloatRangeParameterView(_BaseConfigurableParameterView):
     value_type: Literal["float_range"] = "float_range"
     value: tuple[float, float] = Field(title="Actual value of the parameter")
     default_value: tuple[float, float] = Field(title="Default value of the parameter")
-    min_value: int | float | None = Field(default=None, title="Minimum value for range elements. None if unbounded")
-    max_value: int | float | None = Field(default=None, title="Maximum value for range elements. None if unbounded")
+    min_value: float = Field(title="Minimum value for range elements.")
+    max_value: float = Field(title="Maximum value for range elements.")
 
 
 def _parameter_view_discriminator(v: dict | _BaseConfigurableParameterView) -> str:
@@ -174,16 +174,19 @@ class TrainingConfigurationView(BaseModel):
         return min_value, max_value
 
     @classmethod
-    def _extract_range_bounds(cls, field_info: FieldInfo) -> tuple[float | None, float | None]:
+    def _extract_range_bounds(cls, field_info: FieldInfo) -> tuple[float, float]:
         """Extract min_value/max_value bounds for float_range fields from json_schema_extra."""
-        min_value = None
-        max_value = None
-        if isinstance(field_info.json_schema_extra, dict):
-            if "min_value" in field_info.json_schema_extra:
-                min_value = field_info.json_schema_extra["min_value"]
-            if "max_value" in field_info.json_schema_extra:
-                max_value = field_info.json_schema_extra["max_value"]
-        return min_value, max_value  # pyrefly: ignore[bad-return]
+        if not isinstance(field_info.json_schema_extra, dict):
+            raise ValueError(
+                f"Field '{field_info.title}' must have a json_schema_extra to define min and max range parameters"
+            )
+        min_value = field_info.json_schema_extra["min_value"]
+        max_value = field_info.json_schema_extra["max_value"]
+        if not isinstance(min_value, float) or not isinstance(max_value, float):
+            raise ValueError(
+                f"Field '{field_info.title}' must have float min and max in json_schema_extra for range parameters"
+            )
+        return min_value, max_value
 
     @classmethod
     def _get_value_type(cls, field_info: FieldInfo) -> Literal["bool", "int", "float", "str", "float_range"]:  # noqa: C901, PLR0911
