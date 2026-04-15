@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 
-import { dimensionValue, Flex, Loading, toast, View } from '@geti/ui';
+import { dimensionValue, Flex, Loading, Text, toast, View } from '@geti/ui';
 import { Pause, Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
@@ -41,6 +41,8 @@ export const StreamContainer = () => {
                                 UNSAFE_className={clsx(classes.playPauseButton, {
                                     [classes.playButtonDisabled]: !isPipelineRunning,
                                 })}
+                                justifyContent={'center'}
+                                alignItems={'center'}
                             >
                                 <Play
                                     color={'currentColor'}
@@ -49,6 +51,7 @@ export const StreamContainer = () => {
                                     aria-label={isPipelineRunning ? 'Start stream' : 'Enable pipeline to start stream'}
                                     aria-disabled={!isPipelineRunning}
                                 />
+                                <Text>Start stream</Text>
                             </Flex>
                         </Flex>
                     )}

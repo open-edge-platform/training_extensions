@@ -11,12 +11,10 @@
 }
 
 .playPauseButton {
-    padding: var(--spectrum-global-dimension-size-85);
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-150)
+        var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-100);
     border-radius: var(--spectrum-alias-border-radius-medium);
     background-color: rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .playButtonDisabled {
