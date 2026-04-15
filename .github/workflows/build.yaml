@@ -113,7 +113,7 @@ jobs:
 
       - name: Sign container image
         if: github.event_name != 'pull_request'
-        uses: open-edge-platform/geti-ci/actions/sign-image@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
+        uses: open-edge-platform/geti-ci/actions/sign-image@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           image-uri: ${{ steps.primary-tag.outputs.tag }}
 
