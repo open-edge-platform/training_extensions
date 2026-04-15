@@ -5,8 +5,8 @@ import React from 'react';
 
 import ReactDOM from 'react-dom/client';
 
-import { setupTauriStorageCleanup } from './hooks/storage/storage-cleanup-registry';
 import { Providers } from './providers';
+import { setupTauriStorageCleanup } from './tauri/utils/storage-cleanup-registry/storage-cleanup-registry';
 
 import './index.css';
 
