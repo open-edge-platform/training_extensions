@@ -16,17 +16,6 @@ import type {
 } from '../../../../constants/shared-types';
 import { isParameter, isParameterGroup } from '../../model-listing/model-training-parameters/utils';
 
-const getDecimalPoints = (value: number): number => {
-    // When log10 returns 0 (log10(1) = 0) we need to return 1
-    return Math.abs(Math.ceil(Math.log10(value))) || 1;
-};
-
-export const getFloatingPointStep = (minValue: number, maxValue: number): number => {
-    const exponent = getDecimalPoints(maxValue - minValue);
-
-    return 1 / Math.pow(10, exponent + 3);
-};
-
 export const isBoolEnableParameter = (parameter: ConfigurableParameter) => {
     return parameter.value_type === 'bool' && parameter.key === 'enable';
 };

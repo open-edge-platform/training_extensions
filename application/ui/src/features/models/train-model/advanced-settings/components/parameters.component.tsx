@@ -287,7 +287,11 @@ const ParameterField = ({ parameter, onChange, isDisabled }: ParameterFieldProps
         return (
             <RangeParameterField
                 value={parameter.value}
-                defaultValue={parameter.default_value}
+                // TODO: Replace these two lines with `max_value` and `min_value`
+                maxValue={parameter.default_value[1]}
+                minValue={parameter.default_value[0]}
+                //maxValue={parameter.max_value}
+                //minValue={parameter.min_value}
                 onChange={handleChange}
                 isDisabled={isDisabled}
                 name={parameter.name}

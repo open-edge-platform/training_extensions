@@ -24,14 +24,7 @@ describe('RangeParameterField', () => {
         isDisabled?: boolean;
     }) => {
         return render(
-            <RangeParameterField
-                defaultValue={defaultValue}
-                value={value}
-                onChange={onChange}
-                name={name}
-                isDisabled={isDisabled}
-                step={0.001}
-            />
+            <RangeParameterField value={value} onChange={onChange} name={name} isDisabled={isDisabled} step={0.001} />
         );
     };
 
