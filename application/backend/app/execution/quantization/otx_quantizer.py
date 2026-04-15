@@ -8,11 +8,11 @@ from pathlib import Path
 from uuid import UUID
 
 from datumaro.experimental.fields import Subset
-from loguru import logger
 from getitune.backend.openvino.engine import OVEngine
 from getitune.config.data import SamplerConfig, SubsetConfig
 from getitune.data.factory import TransformLibFactory
 from getitune.data.module import OTXDataModule
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.execution.base import Execution, step

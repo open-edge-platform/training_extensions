@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Any, ClassVar
 from warnings import warn
 
-from loguru import logger
 from getitune.backend.native.cli.utils import get_otx_root_path
 from getitune.tools.auto_configurator import AutoConfigurator
+from loguru import logger
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 

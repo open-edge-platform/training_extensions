@@ -13,9 +13,6 @@ import polars as pl
 import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
-from jsonargparse import ArgumentParser, Namespace
-from lightning import Callback
-from loguru import logger
 from getitune import OTXTaskType
 from getitune.backend.native.engine import OTXEngine
 from getitune.backend.native.models.base import DataInputParams, OTXModel
@@ -26,6 +23,9 @@ from getitune.data.module import OTXDataModule
 from getitune.types.device import DeviceType as OTXDeviceType
 from getitune.types.export import OTXExportFormatType
 from getitune.types.precision import OTXPrecisionType
+from jsonargparse import ArgumentParser, Namespace
+from lightning import Callback
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.jobs.exec.exceptions import CancelledExc
