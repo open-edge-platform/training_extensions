@@ -31,6 +31,7 @@ export const useGetDatasetRevisionItems = ({ datasetRevisionId, subset }: UseGet
         },
         {
             pageParamName: 'offset',
+            initialPageParam: 0,
             getNextPageParam: ({
                 pagination,
             }: {

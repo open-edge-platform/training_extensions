@@ -34,7 +34,6 @@ export default defineConfig({
         launchOptions: {
             slowMo: 100,
             headless: true,
-            devtools: true,
         },
         timezoneId: 'UTC',
         actionTimeout: ACTION_TIMEOUT,

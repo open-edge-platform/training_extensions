@@ -41,7 +41,6 @@ describe('useUndoRedoState', (): void => {
         const auxMethod = method === 'undo' ? 'redo' : 'undo';
         useEffect(() => {
             setValue(1);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, []);
         return (
             <div>

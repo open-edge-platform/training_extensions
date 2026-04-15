@@ -16,8 +16,10 @@ interface GhostPoint {
     point: Point;
 }
 
-interface ResizeAnchorsProps
-    extends Pick<EditPointsProps, 'shape' | 'moveAnchorTo' | 'addPoint' | 'onComplete' | 'zoom'> {
+interface ResizeAnchorsProps extends Pick<
+    EditPointsProps,
+    'shape' | 'moveAnchorTo' | 'addPoint' | 'onComplete' | 'zoom'
+> {
     svgRef: RefObject<SVGRectElement | null>;
 }
 

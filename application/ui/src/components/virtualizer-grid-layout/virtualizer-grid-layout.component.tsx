@@ -18,8 +18,10 @@ interface GridItem {
     [key: string]: unknown;
 }
 
-interface VirtualizerGridLayoutProps<T extends GridItem>
-    extends Pick<AriaComponentsListBoxProps, 'selectedKeys' | 'onSelectionChange'> {
+interface VirtualizerGridLayoutProps<T extends GridItem> extends Pick<
+    AriaComponentsListBoxProps,
+    'selectedKeys' | 'onSelectionChange'
+> {
     items: T[];
     ariaLabel: string;
     scrollToIndex?: number;

@@ -46,6 +46,7 @@ export const useGetDatasetItems = ({ subset, annotationStatus }: UseGetDatasetIt
         },
         {
             pageParamName: 'offset',
+            initialPageParam: 0,
             getNextPageParam: ({
                 pagination,
             }: {

@@ -67,8 +67,6 @@ export const MagneticLasso = () => {
 
     useEffect(() => {
         updateBuildMapAfterUndoRedo();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode, segments]);
 
     const updateBuildMapAfterUndoRedo = (): void => {

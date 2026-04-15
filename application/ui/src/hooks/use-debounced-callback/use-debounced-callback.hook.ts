@@ -21,7 +21,6 @@ export const useDebouncedCallback = (callback: Callback, delay: number): Debounc
         return () => {
             debouncedCallback.cancel?.();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return debouncedCallback;

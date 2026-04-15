@@ -67,6 +67,7 @@ export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions
         },
         {
             pageParamName: 'offset',
+            initialPageParam: 0,
             getNextPageParam: ({
                 pagination,
             }: {

@@ -8,7 +8,6 @@ import { debounce } from 'lodash-es';
 type AnyFunction = (...args: never[]) => void;
 
 export const useDebounce = <T extends AnyFunction>(callback: T, delay: number, deps: DependencyList) => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedCallback = useMemo(() => debounce(callback, delay), deps);
 
     useEffect(() => {
